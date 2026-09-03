@@ -1,20 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgAddonRepository } from '../../ports/org-addon.repository';
-import { UnexpectedAddonError } from '../../addons.errors';
+import { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
+import { UnexpectedAddonError } from 'src/iam/addons/application/addons.errors';
 import { IsAddonActiveQuery } from './is-addon-active.query';
 
 @Injectable()
 export class IsAddonActiveUseCase {
-  constructor(
-    @InjectPinoLogger(IsAddonActiveUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly orgAddonRepository: OrgAddonRepository,
-  ) {}
+  private readonly logger = new Logger(IsAddonActiveUseCase.name);
+
+  constructor(private readonly orgAddonRepository: OrgAddonRepository) {}
 
   async execute(query: IsAddonActiveQuery): Promise<boolean> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
         type: query.type,

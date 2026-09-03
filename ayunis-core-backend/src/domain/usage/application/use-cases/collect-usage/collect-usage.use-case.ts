@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID, type UUID } from 'crypto';
 import { CollectUsageCommand } from './collect-usage.command';
-import { Usage } from '../../../domain/usage.entity';
-import { UsageRepository } from '../../ports/usage.repository';
+import { Usage } from 'src/domain/usage/domain/usage.entity';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import {
   InvalidUsageDataError,
   UsageCollectionFailedError,
   UnexpectedUsageError,
-} from '../../usage.errors';
-import { UsageCollectedEvent } from '../../events/usage-collected.event';
-import { ApplicationError } from '../../../../../common/errors/base.error';
-import { ContextService } from '../../../../../common/context/services/context.service';
-import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
-import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
+} from 'src/domain/usage/application/usage.errors';
+import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
+import { GetCreditsPerEuroUseCase } from 'src/iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
+import { PlatformConfigNotFoundError } from 'src/iam/platform-config/application/platform-config.errors';
 
 interface UsagePrincipal {
   userId: UUID | undefined;
@@ -24,13 +23,13 @@ interface UsagePrincipal {
 
 @Injectable()
 export class CollectUsageUseCase {
+  private readonly logger = new Logger(CollectUsageUseCase.name);
+
   constructor(
     private readonly usageRepository: UsageRepository,
     private readonly contextService: ContextService,
     private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
     private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(CollectUsageUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async execute(command: CollectUsageCommand): Promise<void> {
@@ -98,7 +97,7 @@ export class CollectUsageUseCase {
     command: CollectUsageCommand,
     principal: UsagePrincipal,
   ): void {
-    this.logger.info(
+    this.logger.log(
       {
         ...principal,
         modelId: command.modelId,
@@ -119,7 +118,7 @@ export class CollectUsageUseCase {
     const usage = this.createUsage(command, principal, cost, creditsConsumed);
     await this.usageRepository.save(usage);
     this.emitUsageCollected(usage, command.model.name);
-    this.logger.info(
+    this.logger.log(
       {
         ...principal,
         modelId: command.modelId,

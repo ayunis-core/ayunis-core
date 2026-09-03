@@ -1,15 +1,14 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetPermittedModelsUseCase } from './get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from './get-permitted-models.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import type { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('GetPermittedModelsUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: GetPermittedModelsUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let mockContextService: any;
@@ -30,10 +29,6 @@ describe('GetPermittedModelsUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetPermittedModelsUseCase.name),
-          useValue: logger,
-        },
         GetPermittedModelsUseCase,
         {
           provide: PermittedModelsRepository,

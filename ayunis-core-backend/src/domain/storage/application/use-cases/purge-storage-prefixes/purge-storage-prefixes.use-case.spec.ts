@@ -1,31 +1,29 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { PurgeStoragePrefixesUseCase } from './purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from './purge-storage-prefixes.command';
-import { ListObjectsUseCase } from '../list-objects/list-objects.use-case';
-import { DeleteObjectUseCase } from '../delete-object/delete-object.use-case';
-import { ObjectNotFoundError } from '../../storage.errors';
+import { ListObjectsUseCase } from 'src/domain/storage/application/use-cases/list-objects/list-objects.use-case';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 
 describe('PurgeStoragePrefixesUseCase', () => {
   let useCase: PurgeStoragePrefixesUseCase;
   let listObjectsUseCase: { execute: jest.Mock };
   let deleteObjectUseCase: { execute: jest.Mock };
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   beforeEach(async () => {
     listObjectsUseCase = { execute: jest.fn().mockResolvedValue([]) };
     deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PurgeStoragePrefixesUseCase,
-        {
-          provide: getLoggerToken(PurgeStoragePrefixesUseCase.name),
-          useValue: logger,
-        },
         { provide: ListObjectsUseCase, useValue: listObjectsUseCase },
         { provide: DeleteObjectUseCase, useValue: deleteObjectUseCase },
       ],

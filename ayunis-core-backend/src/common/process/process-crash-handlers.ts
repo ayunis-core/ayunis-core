@@ -1,6 +1,5 @@
+import { Logger } from '@nestjs/common';
 import { Appsignal, sendError } from '@appsignal/nodejs';
-import { PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerConfig } from '../logger/pino-logger.config';
 
 const APPSIGNAL_STOP_TIMEOUT_MS = 2_000;
 const FAILURE_EXIT_CODE = 1;
@@ -29,7 +28,9 @@ function stringifyRejectionReason(reason: unknown): string {
 export class ProcessCrashHandlers {
   private fatalShutdownStarted = false;
 
-  constructor(private readonly logger: PinoLogger = createCrashLogger()) {}
+  constructor(
+    private readonly logger: Logger = new Logger(ProcessCrashHandlers.name),
+  ) {}
 
   register(): void {
     process.on('unhandledRejection', this.handleUnhandledRejection);
@@ -111,13 +112,10 @@ export class ProcessCrashHandlers {
  * handlers of its own, so this module alone owns the crash path (log,
  * report, exit policy). Skipped under test — the spec constructs its own
  * instances and must not attach global listeners to the Jest worker process.
+ *
+ * A crash before `installNestLogger` runs falls back to Nest's console logger;
+ * once bootstrap installs Pino the same instance emits structured JSON.
  */
 if (process.env.NODE_ENV !== 'test') {
   new ProcessCrashHandlers().register();
-}
-
-function createCrashLogger(): PinoLogger {
-  const logger = new PinoLogger(createPinoLoggerConfig());
-  logger.setContext(ProcessCrashHandlers.name);
-  return logger;
 }

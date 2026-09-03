@@ -9,8 +9,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   ApiTags,
@@ -22,16 +22,16 @@ import {
 } from '@nestjs/swagger';
 
 // Import use cases
-import { CreateShareUseCase } from '../../application/use-cases/create-share/create-share.use-case';
+import { CreateShareUseCase } from 'src/domain/shares/application/use-cases/create-share/create-share.use-case';
 import {
   CreateOrgSkillShareCommand,
   CreateTeamSkillShareCommand,
   CreateOrgKnowledgeBaseShareCommand,
   CreateTeamKnowledgeBaseShareCommand,
-} from '../../application/use-cases/create-share/create-share.command';
-import { DeleteShareUseCase } from '../../application/use-cases/delete-share/delete-share.use-case';
-import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
-import { GetSharesQuery } from '../../application/use-cases/get-shares/get-shares.query';
+} from 'src/domain/shares/application/use-cases/create-share/create-share.command';
+import { DeleteShareUseCase } from 'src/domain/shares/application/use-cases/delete-share/delete-share.use-case';
+import { GetSharesUseCase } from 'src/domain/shares/application/use-cases/get-shares/get-shares.use-case';
+import { GetSharesQuery } from 'src/domain/shares/application/use-cases/get-shares/get-shares.query';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 
@@ -42,18 +42,18 @@ import {
   CreateKnowledgeBaseShareDto,
 } from './dto/create-share.dto';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
-import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
-import { TeamShareScope } from '../../domain/share-scope.entity';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { TeamShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('shares')
 @Controller('shares')
 export class SharesController {
+  private readonly logger = new Logger(SharesController.name);
+
   constructor(
-    @InjectPinoLogger(SharesController.name)
-    private readonly logger: PinoLogger,
     private readonly createShareUseCase: CreateShareUseCase,
     private readonly deleteShareUseCase: DeleteShareUseCase,
     private readonly getSharesUseCase: GetSharesUseCase,
@@ -82,7 +82,7 @@ export class SharesController {
   async createSkillShare(
     @Body() dto: CreateSkillShareDto,
   ): Promise<ShareResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId: dto.skillId,
         teamId: dto.teamId,
@@ -128,7 +128,7 @@ export class SharesController {
   async createKnowledgeBaseShare(
     @Body() dto: CreateKnowledgeBaseShareDto,
   ): Promise<ShareResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: dto.knowledgeBaseId,
         teamId: dto.teamId,
@@ -186,7 +186,7 @@ export class SharesController {
     @Query('entityId', ParseUUIDPipe) entityId: UUID,
     @Query('entityType') entityType: SharedEntityType,
   ): Promise<ShareResponseDto[]> {
-    this.logger.info({ entityId, entityType }, 'getShares');
+    this.logger.log({ entityId, entityType }, 'getShares');
 
     const shares = await this.getSharesUseCase.execute(
       new GetSharesQuery(entityId, entityType),
@@ -230,7 +230,7 @@ export class SharesController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteShare(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ id }, 'deleteShare');
+    this.logger.log({ id }, 'deleteShare');
 
     await this.deleteShareUseCase.execute(id);
   }

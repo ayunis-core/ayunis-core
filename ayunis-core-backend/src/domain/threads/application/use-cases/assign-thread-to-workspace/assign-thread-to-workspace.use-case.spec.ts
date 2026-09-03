@@ -1,6 +1,4 @@
 import { Test } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -32,10 +30,6 @@ describe('AssignThreadToWorkspaceUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         AssignThreadToWorkspaceUseCase,
-        {
-          provide: getLoggerToken(AssignThreadToWorkspaceUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ThreadsRepository, useValue: threadsRepository },
         { provide: FindWorkspaceUseCase, useValue: findWorkspaceUseCase },
         {

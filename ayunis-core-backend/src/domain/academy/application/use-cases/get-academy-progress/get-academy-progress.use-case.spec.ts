@@ -1,15 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { GetAcademyProgressUseCase } from './get-academy-progress.use-case';
 import { GetAcademyProgressQuery } from './get-academy-progress.query';
-import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
+import { AcademyChapterProgressRepository } from 'src/domain/academy/application/ports/academy-chapter-progress.repository';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
 import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
-import { certificateExpiresAt } from '../../util/certificate-validity';
+import { certificateExpiresAt } from 'src/domain/academy/application/util/certificate-validity';
 
 describe('GetAcademyProgressUseCase', () => {
   let useCase: GetAcademyProgressUseCase;
@@ -22,10 +20,6 @@ describe('GetAcademyProgressUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetAcademyProgressUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         GetAcademyProgressUseCase,
         {
           provide: AcademyChapterProgressRepository,

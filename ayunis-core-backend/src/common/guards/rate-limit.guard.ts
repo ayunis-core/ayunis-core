@@ -1,14 +1,18 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import {
   RATE_LIMIT_KEY,
   RateLimitOptions,
-} from '../decorators/rate-limit.decorator';
-import { RateLimitExceededError } from '../errors/rate-limit-exceeded.error';
-import { getClientIp } from '../util/ip.util';
+} from 'src/common/decorators/rate-limit.decorator';
+import { RateLimitExceededError } from 'src/common/errors/rate-limit-exceeded.error';
+import { getClientIp } from 'src/common/util/ip.util';
 
 interface RateLimitRecord {
   count: number;
@@ -17,12 +21,12 @@ interface RateLimitRecord {
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
+  private readonly logger = new Logger(RateLimitGuard.name);
+
   private readonly store = new Map<string, RateLimitRecord>();
   private cleanupCounter = 0;
 
   constructor(
-    @InjectPinoLogger(RateLimitGuard.name)
-    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly configService: ConfigService,
   ) {}

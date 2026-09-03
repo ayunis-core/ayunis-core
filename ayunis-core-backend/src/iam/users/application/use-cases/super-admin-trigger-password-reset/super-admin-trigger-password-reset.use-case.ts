@@ -1,26 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { SuperAdminTriggerPasswordResetResult } from './super-admin-trigger-password-reset.result';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UsersRepository } from '../../ports/users.repository';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
-import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
-import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send-password-reset-email.command';
+import { SendPasswordResetEmailUseCase } from 'src/iam/users/application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
+import { SendPasswordResetEmailCommand } from 'src/iam/users/application/use-cases/send-password-reset-email/send-password-reset-email.command';
 import {
   UserInvalidInputError,
   UserNotFoundError,
   UserUnexpectedError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 
 @Injectable()
 export class SuperAdminTriggerPasswordResetUseCase {
+  private readonly logger = new Logger(
+    SuperAdminTriggerPasswordResetUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(SuperAdminTriggerPasswordResetUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
@@ -30,7 +31,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
   async execute(
     command: SuperAdminTriggerPasswordResetCommand,
   ): Promise<SuperAdminTriggerPasswordResetResult> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.userId,
       },
@@ -50,7 +51,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
 
       const resetUrl = await this.sendResetEmail(user);
 
-      this.logger.info(
+      this.logger.log(
         {
           userId: command.userId,
           email: user.email,

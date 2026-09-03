@@ -1,6 +1,4 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { AddMessageToThreadUseCase } from './add-message-to-thread.use-case';
 import { AddMessageCommand } from './add-message.command';
@@ -8,7 +6,7 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ThreadMessageAddedEvent } from '../../events/thread-message-added.event';
+import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 
 describe('AddMessageToThreadUseCase', () => {
@@ -28,10 +26,6 @@ describe('AddMessageToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddMessageToThreadUseCase,
-        {
-          provide: getLoggerToken(AddMessageToThreadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],

@@ -1,6 +1,5 @@
 import { checkIn } from '@appsignal/nodejs';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import type { SweepOrphanStorageUseCase } from '../../application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
+import type { SweepOrphanStorageUseCase } from 'src/domain/storage/application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
 import { OrphanStorageSweepTask } from './orphan-storage-sweep.task';
 
 jest.mock('@appsignal/nodejs', () => ({
@@ -28,7 +27,7 @@ describe('OrphanStorageSweepTask', () => {
     jest.clearAllMocks();
     cronMock.mockImplementation((_identifier, callback) => callback());
     execute = jest.fn().mockResolvedValue(successfulSweep);
-    task = new OrphanStorageSweepTask(createPinoLoggerMock(), {
+    task = new OrphanStorageSweepTask({
       execute,
     } as unknown as SweepOrphanStorageUseCase);
   });

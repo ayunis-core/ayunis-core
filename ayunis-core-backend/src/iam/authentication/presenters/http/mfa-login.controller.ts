@@ -6,8 +6,8 @@ import {
   Post,
   Req,
   Res,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -46,9 +46,9 @@ import {
 @ApiTags('Authentication')
 @Controller('auth/mfa')
 export class MfaLoginController {
+  private readonly logger = new Logger(MfaLoginController.name);
+
   constructor(
-    @InjectPinoLogger(MfaLoginController.name)
-    private readonly logger: PinoLogger,
     private readonly mfaPendingJwtService: MfaPendingJwtService,
     private readonly verifyMfaCodeUseCase: VerifyMfaCodeUseCase,
     private readonly setupTotpUseCase: SetupTotpUseCase,
@@ -74,7 +74,7 @@ export class MfaLoginController {
     @Body() dto: MfaCodeRequestDto,
   ) {
     const payload = this.readPendingToken(req);
-    this.logger.info({ userId: payload.sub }, 'verify');
+    this.logger.log({ userId: payload.sub }, 'verify');
 
     await this.verifyMfaCodeUseCase.execute(
       new VerifyMfaCodeCommand(payload.sub, dto.code),
@@ -99,7 +99,7 @@ export class MfaLoginController {
     if (!payload.enrollmentRequired) {
       throw new MfaEnrollmentNotAllowedError();
     }
-    this.logger.info({ userId: payload.sub }, 'setup');
+    this.logger.log({ userId: payload.sub }, 'setup');
 
     const user = await this.findUserByIdUseCase.execute(
       new FindUserByIdQuery(payload.sub),
@@ -129,7 +129,7 @@ export class MfaLoginController {
     if (!payload.enrollmentRequired) {
       throw new MfaEnrollmentNotAllowedError();
     }
-    this.logger.info({ userId: payload.sub }, 'confirmSetup');
+    this.logger.log({ userId: payload.sub }, 'confirmSetup');
 
     const recoveryCodes = await this.confirmTotpUseCase.execute(
       new ConfirmTotpCommand(payload.sub, dto.code),

@@ -1,9 +1,8 @@
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { CollectUsageUseCase } from '../use-cases/collect-usage/collect-usage.use-case';
-import { RunUsageCollectionEvent } from '../events/run-usage-collection.event';
+import type { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
+import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run-usage-collection.event';
 import { CollectUsageAsyncService } from './collect-usage-async.service';
 
 const model = {
@@ -26,7 +25,6 @@ describe('CollectUsageAsyncService run telemetry', () => {
     collectUsageUseCase,
     { get: jest.fn() } as unknown as ContextService,
     eventEmitter,
-    createPinoLoggerMock(),
   );
 
   beforeEach(() => {

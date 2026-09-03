@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -16,9 +15,9 @@ import { SetApiKeyCreditLimitCommand } from './set-api-key-credit-limit.command'
 
 @Injectable()
 export class SetApiKeyCreditLimitUseCase {
+  private readonly logger = new Logger(SetApiKeyCreditLimitUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SetApiKeyCreditLimitUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly listApiKeysByOrgUseCase: ListApiKeysByOrgUseCase,
@@ -39,7 +38,7 @@ export class SetApiKeyCreditLimitUseCase {
       );
     }
 
-    this.logger.info(
+    this.logger.log(
       { orgId, apiKeyId: command.apiKeyId },
       'Setting API key credit limit',
     );

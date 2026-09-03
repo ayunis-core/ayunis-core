@@ -1,21 +1,20 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { DisableMcpIntegrationCommand } from './disable-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DisableMcpIntegrationUseCase {
+  private readonly logger = new Logger(DisableMcpIntegrationUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DisableMcpIntegrationUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
@@ -23,7 +22,7 @@ export class DisableMcpIntegrationUseCase {
   async execute(
     command: DisableMcpIntegrationCommand,
   ): Promise<McpIntegration> {
-    this.logger.info({ id: command.integrationId }, 'disableMcpIntegration');
+    this.logger.log({ id: command.integrationId }, 'disableMcpIntegration');
 
     try {
       const orgId = this.contextService.get('orgId');

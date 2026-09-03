@@ -7,8 +7,8 @@ import {
   ParseUUIDPipe,
   Patch,
   Put,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiForbiddenResponse,
   ApiOkResponse,
@@ -58,9 +58,9 @@ interface SsoAuditEvent {
 @ApiForbiddenResponse({ description: 'The requester is not a super admin' })
 @ApiParam({ name: 'orgId', format: 'uuid' })
 export class SuperAdminSsoConnectionsController {
+  private readonly logger = new Logger(SuperAdminSsoConnectionsController.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminSsoConnectionsController.name)
-    private readonly logger: PinoLogger,
     private readonly getConnectionUseCase: GetOrgSsoConnectionUseCase,
     private readonly configureConnectionUseCase: ConfigureOrgSsoConnectionUseCase,
     private readonly setEnabledUseCase: SetOrgSsoEnabledUseCase,
@@ -203,7 +203,7 @@ export class SuperAdminSsoConnectionsController {
   private audit(event: SsoAuditEvent): void {
     const connection = this.responseMapper.toDto(event.connection);
 
-    this.logger.info(
+    this.logger.log(
       {
         operation: event.operation,
         actorId: event.actorId,

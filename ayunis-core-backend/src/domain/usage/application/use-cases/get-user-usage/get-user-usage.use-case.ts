@@ -1,25 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetUserUsageQuery } from './get-user-usage.query';
 import {
   UsageRepository,
   type UserUsageResult,
-} from '../../ports/usage.repository';
+} from 'src/domain/usage/application/ports/usage.repository';
 import {
   InvalidPaginationError,
   UnexpectedUsageError,
-} from '../../usage.errors';
-import { validateOptionalDateRange } from '../../usage.utils';
+} from 'src/domain/usage/application/usage.errors';
+import { validateOptionalDateRange } from 'src/domain/usage/application/usage.utils';
 import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetUserUsageUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-    @InjectPinoLogger(GetUserUsageUseCase.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(GetUserUsageUseCase.name);
+
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   async execute(query: GetUserUsageQuery): Promise<UserUsageResult> {
     this.validateQuery(query);

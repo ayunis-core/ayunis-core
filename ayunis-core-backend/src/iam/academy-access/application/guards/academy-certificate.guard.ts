@@ -1,15 +1,19 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
 import { buildAccessDeniedAuditContext } from 'src/common/util/access-denied-audit.util';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import type { ApiKeyPrincipal } from 'src/iam/authentication/application/strategies/api-key.strategy';
-import { EvaluateAcademyAccessUseCase } from '../use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
-import { EvaluateAcademyAccessQuery } from '../use-cases/evaluate-academy-access/evaluate-academy-access.query';
-import { AcademyCertificateRequiredError } from '../academy-access.errors';
-import { REQUIRE_ACADEMY_CERTIFICATE_KEY } from '../decorators/academy-certificate.decorator';
+import { EvaluateAcademyAccessUseCase } from 'src/iam/academy-access/application/use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
+import { EvaluateAcademyAccessQuery } from 'src/iam/academy-access/application/use-cases/evaluate-academy-access/evaluate-academy-access.query';
+import { AcademyCertificateRequiredError } from 'src/iam/academy-access/application/academy-access.errors';
+import { REQUIRE_ACADEMY_CERTIFICATE_KEY } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 interface RequestWithUser extends Request {
   user?: ActiveUser | ApiKeyPrincipal;
@@ -27,9 +31,9 @@ const UNGATED_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'DELETE']);
 
 @Injectable()
 export class AcademyCertificateGuard implements CanActivate {
+  private readonly logger = new Logger(AcademyCertificateGuard.name);
+
   constructor(
-    @InjectPinoLogger(AcademyCertificateGuard.name)
-    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly evaluateAcademyAccessUseCase: EvaluateAcademyAccessUseCase,
   ) {}

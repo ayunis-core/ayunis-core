@@ -1,18 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { RevertArtifactUseCase } from './revert-artifact.use-case';
 import { RevertArtifactCommand } from './revert-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import {
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -68,10 +66,6 @@ describe('RevertArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RevertArtifactUseCase,
-        {
-          provide: getLoggerToken(RevertArtifactUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -277,10 +271,6 @@ describe('RevertArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RevertArtifactUseCase,
-        {
-          provide: getLoggerToken(RevertArtifactUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

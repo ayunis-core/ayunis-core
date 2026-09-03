@@ -1,18 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { ResendExpiredInviteCommand } from './resend-expired-invite.command';
 import { ConfigService } from '@nestjs/config';
-import { InviteJwtService } from '../../services/invite-jwt.service';
+import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import {
   InviteNotFoundError,
   InviteNotExpiredError,
   InviteAlreadyAcceptedError,
   UnexpectedInviteError,
-} from '../../invites.errors';
+} from 'src/iam/invites/application/invites.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { getInviteExpiresAt } from '../../services/invite-expiration.util';
+import { getInviteExpiresAt } from 'src/iam/invites/application/services/invite-expiration.util';
 
 interface ResendExpiredInviteResult {
   token: string;
@@ -21,9 +20,9 @@ interface ResendExpiredInviteResult {
 
 @Injectable()
 export class ResendExpiredInviteUseCase {
+  private readonly logger = new Logger(ResendExpiredInviteUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ResendExpiredInviteUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly configService: ConfigService,
@@ -33,7 +32,7 @@ export class ResendExpiredInviteUseCase {
   async execute(
     command: ResendExpiredInviteCommand,
   ): Promise<ResendExpiredInviteResult> {
-    this.logger.info({ inviteId: command.inviteId }, 'execute');
+    this.logger.log({ inviteId: command.inviteId }, 'execute');
 
     try {
       // 1. Find the existing invite

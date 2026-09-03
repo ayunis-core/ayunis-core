@@ -1,10 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { RemoveSourceFromSkillCommand } from './remove-source-from-skill.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
@@ -12,9 +14,9 @@ import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/de
 
 @Injectable()
 export class RemoveSourceFromSkillUseCase {
+  private readonly logger = new Logger(RemoveSourceFromSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RemoveSourceFromSkillUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
@@ -22,7 +24,7 @@ export class RemoveSourceFromSkillUseCase {
 
   @Transactional()
   async execute(command: RemoveSourceFromSkillCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId: command.skillId,
         sourceId: command.sourceId,

@@ -1,13 +1,15 @@
-import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { MarkSourceFailedUseCase } from './mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from './mark-source-failed.command';
-import { SourceRepository } from '../../ports/source.repository';
-import { createMockSourceRepository } from '../../testing/source.fixtures';
-import { SourceNotFoundError } from '../../sources.errors';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import { SourceNotFoundError } from 'src/domain/sources/application/sources.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -15,21 +17,17 @@ import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 describe('MarkSourceFailedUseCase', () => {
   let useCase: MarkSourceFailedUseCase;
   let mockSourceRepository: jest.Mocked<SourceRepository>;
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   const sourceId = '44444444-4444-4444-4444-444444444444' as UUID;
 
   beforeEach(async () => {
     mockSourceRepository = createMockSourceRepository();
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MarkSourceFailedUseCase,
-        {
-          provide: getLoggerToken(MarkSourceFailedUseCase.name),
-          useValue: logger,
-        },
         { provide: SourceRepository, useValue: mockSourceRepository },
       ],
     }).compile();

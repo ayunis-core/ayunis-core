@@ -1,16 +1,14 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateRegularUserUseCase } from './create-regular-user.use-case';
 import { CreateRegularUserCommand } from './create-regular-user.command';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UserAlreadyExistsError } from '../../users.errors';
+import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
 import type { UUID } from 'crypto';
-import { CreateUserUseCase } from '../create-user/create-user.use-case';
+import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
 
 describe('CreateRegularUserUseCase', () => {
   let useCase: CreateRegularUserUseCase;
@@ -36,10 +34,6 @@ describe('CreateRegularUserUseCase', () => {
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: HashTextUseCase, useValue: mockHashTextUseCase },
         { provide: CreateUserUseCase, useValue: mockCreateUserUseCase },
-        {
-          provide: getLoggerToken(CreateRegularUserUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

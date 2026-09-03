@@ -1,6 +1,5 @@
 import type { UUID } from 'crypto';
 import type { Repository } from 'typeorm';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import type { KnowledgeBaseRecord } from './schema/knowledge-base.record';
 import type { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
@@ -34,7 +33,6 @@ describe('LocalKnowledgeBaseRepository', () => {
       toDomain: jest.fn((record: KnowledgeBaseRecord) => record),
     } as unknown as KnowledgeBaseMapper;
     const repository = new LocalKnowledgeBaseRepository(
-      createPinoLoggerMock(),
       knowledgeBaseRepository,
       {} as Repository<SourceRecord>,
       mapper,
@@ -85,7 +83,6 @@ describe('LocalKnowledgeBaseRepository', () => {
       Pick<Repository<SourceRecord>, 'createQueryBuilder'>
     >;
     const repository = new LocalKnowledgeBaseRepository(
-      createPinoLoggerMock(),
       {} as Repository<KnowledgeBaseRecord>,
       sourceRepository as unknown as Repository<SourceRecord>,
       {} as KnowledgeBaseMapper,
@@ -117,7 +114,6 @@ describe('LocalKnowledgeBaseRepository', () => {
       Pick<Repository<SourceRecord>, 'createQueryBuilder'>
     >;
     const repository = new LocalKnowledgeBaseRepository(
-      createPinoLoggerMock(),
       {} as Repository<KnowledgeBaseRecord>,
       sourceRepository as unknown as Repository<SourceRecord>,
       {} as KnowledgeBaseMapper,

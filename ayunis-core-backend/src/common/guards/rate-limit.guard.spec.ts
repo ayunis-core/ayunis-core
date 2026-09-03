@@ -1,17 +1,14 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { createPinoLoggerMock } from '../testing/pino-logger.mock';
 import type { Reflector } from '@nestjs/core';
 import type { ConfigService } from '@nestjs/config';
 import { RateLimitGuard } from './rate-limit.guard';
-import { RateLimitExceededError } from '../errors/rate-limit-exceeded.error';
-import type { RateLimitOptions } from '../decorators/rate-limit.decorator';
+import { RateLimitExceededError } from 'src/common/errors/rate-limit-exceeded.error';
+import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorator';
 
 describe('RateLimitGuard', () => {
   let guard: RateLimitGuard;
   let reflector: jest.Mocked<Reflector>;
   let configService: jest.Mocked<ConfigService>;
-  const logger = createPinoLoggerMock();
-
   const clientIp = '203.0.113.7';
 
   function createContext(handlerName = 'create'): ExecutionContext {
@@ -31,7 +28,7 @@ describe('RateLimitGuard', () => {
       get: jest.fn(),
     } as unknown as jest.Mocked<ConfigService>;
 
-    guard = new RateLimitGuard(logger, reflector, configService);
+    guard = new RateLimitGuard(reflector, configService);
   });
 
   afterEach(() => {

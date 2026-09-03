@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetActiveSubscriptionQuery } from './get-active-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import {
   SubscriptionNotFoundError,
   MultipleActiveSubscriptionsError,
-} from '../../subscription.errors';
-import { isActive } from '../../util/is-active';
+} from 'src/iam/subscriptions/application/subscription.errors';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
-import { computeAvailableSeats } from '../../util/compute-available-seats';
-import { getNextRenewalDate } from '../../util/get-next-renewal-date';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import { computeAvailableSeats } from 'src/iam/subscriptions/application/util/compute-available-seats';
+import { getNextRenewalDate } from 'src/iam/subscriptions/application/util/get-next-renewal-date';
 
 @Injectable()
 export class GetActiveSubscriptionUseCase {
+  private readonly logger = new Logger(GetActiveSubscriptionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetActiveSubscriptionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
@@ -32,7 +31,7 @@ export class GetActiveSubscriptionUseCase {
     availableSeats: number | null;
     nextRenewalDate: Date;
   }> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
         requestingUserId: query.requestingUserId,

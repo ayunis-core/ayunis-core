@@ -6,8 +6,8 @@ import {
   Res,
   UseInterceptors,
   UploadedFiles,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiOperation,
@@ -37,7 +37,7 @@ import {
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto as ToolResultContentDto,
   ThinkingMessageContentResponseDto,
-} from '../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
+} from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 import { RunInputMapper } from './mappers/run-input.mapper';
 import {
   RunSessionResponseDto,
@@ -47,8 +47,8 @@ import {
   RunMasksResponseDto,
 } from './dto/run-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
-import { SendMessageUseCase } from '../../application/use-cases/send-message/send-message.use-case';
-import { SendMessageCommand } from '../../application/use-cases/send-message/send-message.command';
+import { SendMessageUseCase } from 'src/domain/runs/application/use-cases/send-message/send-message.use-case';
+import { SendMessageCommand } from 'src/domain/runs/application/use-cases/send-message/send-message.command';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 import { Response } from 'express';
@@ -88,12 +88,12 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 @RequireAcademyCertificate()
 @Controller('runs')
 export class RunsController {
+  private readonly logger = new Logger(RunsController.name);
+
   constructor(
     private readonly sendMessageUseCase: SendMessageUseCase,
     private readonly requestValidator: SendMessageRequestValidator,
     private readonly ssePresenter: RunSsePresenter,
-    @InjectPinoLogger(RunsController.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   @Post('send-message')
@@ -115,7 +115,7 @@ export class RunsController {
   ): Promise<void> {
     const uploadedFiles = files ?? [];
 
-    this.logger.info(
+    this.logger.log(
       {
         userId,
         threadId: sendMessageDto.threadId,

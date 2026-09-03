@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -23,11 +22,11 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalArtifactsRepository extends ArtifactsRepository {
+  private readonly logger = new Logger(LocalArtifactsRepository.name);
+
   // TypeORM and mapper dependencies are injected individually by NestJS.
-  // eslint-disable-next-line max-params
+
   constructor(
-    @InjectPinoLogger(LocalArtifactsRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(ArtifactRecord)
     private readonly artifactRepo: Repository<ArtifactRecord>,
     @InjectRepository(DocumentArtifactRecord)
@@ -41,7 +40,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   async create(artifact: Artifact): Promise<Artifact> {
-    this.logger.info(
+    this.logger.log(
       {
         id: artifact.id,
         type: artifact.type,
@@ -118,7 +117,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   async addVersion(version: ArtifactVersion): Promise<ArtifactVersion> {
-    this.logger.info(
+    this.logger.log(
       {
         artifactId: version.artifactId,
         versionNumber: version.versionNumber,
@@ -207,7 +206,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     expectedCurrentVersionNumber: number;
     letterheadId?: UUID | null;
   }): void {
-    this.logger.info(
+    this.logger.log(
       {
         artifactId: params.version.artifactId,
         versionNumber: params.version.versionNumber,

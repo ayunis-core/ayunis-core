@@ -15,8 +15,8 @@ import {
   HttpCode,
   HttpStatus,
   StreamableFile,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -33,20 +33,20 @@ import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/
 import type { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { CreateLetterheadUseCase } from '../../application/use-cases/create-letterhead/create-letterhead.use-case';
-import { FindAllLetterheadsUseCase } from '../../application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
-import { FindLetterheadUseCase } from '../../application/use-cases/find-letterhead/find-letterhead.use-case';
-import { UpdateLetterheadUseCase } from '../../application/use-cases/update-letterhead/update-letterhead.use-case';
-import { DeleteLetterheadUseCase } from '../../application/use-cases/delete-letterhead/delete-letterhead.use-case';
-import { CreateLetterheadCommand } from '../../application/use-cases/create-letterhead/create-letterhead.command';
-import { FindLetterheadQuery } from '../../application/use-cases/find-letterhead/find-letterhead.query';
-import { UpdateLetterheadCommand } from '../../application/use-cases/update-letterhead/update-letterhead.command';
-import { DeleteLetterheadCommand } from '../../application/use-cases/delete-letterhead/delete-letterhead.command';
+import { CreateLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/create-letterhead/create-letterhead.use-case';
+import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { UpdateLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/update-letterhead/update-letterhead.use-case';
+import { DeleteLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/delete-letterhead/delete-letterhead.use-case';
+import { CreateLetterheadCommand } from 'src/domain/letterheads/application/use-cases/create-letterhead/create-letterhead.command';
+import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
+import { UpdateLetterheadCommand } from 'src/domain/letterheads/application/use-cases/update-letterhead/update-letterhead.command';
+import { DeleteLetterheadCommand } from 'src/domain/letterheads/application/use-cases/delete-letterhead/delete-letterhead.command';
 import { CreateLetterheadDto } from './dtos/create-letterhead.dto';
 import { UpdateLetterheadDto } from './dtos/update-letterhead.dto';
 import { LetterheadResponseDto } from './dtos/letterhead-response.dto';
 import { LetterheadDtoMapper } from './mappers/letterhead-dto.mapper';
-import type { PageMargins } from '../../domain/value-objects/page-margins';
+import type { PageMargins } from 'src/domain/letterheads/domain/value-objects/page-margins';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -101,9 +101,9 @@ function parseMargins(value: unknown, label: string): PageMargins {
 @ApiTags('letterheads')
 @Controller('letterheads')
 export class LetterheadsController {
+  private readonly logger = new Logger(LetterheadsController.name);
+
   constructor(
-    @InjectPinoLogger(LetterheadsController.name)
-    private readonly logger: PinoLogger,
     private readonly createLetterheadUseCase: CreateLetterheadUseCase,
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
@@ -136,7 +136,7 @@ export class LetterheadsController {
     @Body() dto: CreateLetterheadDto,
     @UploadedFiles() files: UploadedFileFields,
   ): Promise<LetterheadResponseDto> {
-    this.logger.info('create');
+    this.logger.log('create');
 
     const firstPageFile = files.firstPagePdf?.[0];
     if (!firstPageFile) {
@@ -174,7 +174,7 @@ export class LetterheadsController {
     type: [LetterheadResponseDto],
   })
   async findAll(): Promise<LetterheadResponseDto[]> {
-    this.logger.info('findAll');
+    this.logger.log('findAll');
     const letterheads = await this.findAllLetterheadsUseCase.execute();
     return letterheads.map((l) => this.letterheadDtoMapper.toDto(l));
   }
@@ -196,7 +196,7 @@ export class LetterheadsController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<LetterheadResponseDto> {
-    this.logger.info({ id }, 'findOne');
+    this.logger.log({ id }, 'findOne');
     const letterhead = await this.findLetterheadUseCase.execute(
       new FindLetterheadQuery({ letterheadId: id }),
     );
@@ -301,7 +301,7 @@ export class LetterheadsController {
     @Body() dto: UpdateLetterheadDto,
     @UploadedFiles() files: UploadedFileFields,
   ): Promise<LetterheadResponseDto> {
-    this.logger.info({ id }, 'update');
+    this.logger.log({ id }, 'update');
 
     const letterhead = await this.updateLetterheadUseCase.execute(
       this.toUpdateCommand(id, dto, files),
@@ -345,7 +345,7 @@ export class LetterheadsController {
   @ApiResponse({ status: 204, description: 'Letterhead deleted' })
   @ApiResponse({ status: 404, description: 'Letterhead not found' })
   async remove(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
     await this.deleteLetterheadUseCase.execute(
       new DeleteLetterheadCommand({ letterheadId: id }),
     );

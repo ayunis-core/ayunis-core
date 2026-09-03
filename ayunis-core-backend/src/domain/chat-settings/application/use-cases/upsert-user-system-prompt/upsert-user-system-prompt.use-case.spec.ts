@@ -1,7 +1,6 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UpsertUserSystemPromptUseCase } from './upsert-user-system-prompt.use-case';
 import { UpsertUserSystemPromptCommand } from './upsert-user-system-prompt.command';
-import type { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
+import type { UserSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/user-system-prompts.repository';
 import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -25,7 +24,6 @@ describe('UpsertUserSystemPromptUseCase', () => {
     };
 
     useCase = new UpsertUserSystemPromptUseCase(
-      createPinoLoggerMock(),
       repository,
       contextService as unknown as ContextService,
     );

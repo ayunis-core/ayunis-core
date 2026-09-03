@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { EntityManager, Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -60,7 +59,6 @@ describe('LocalSkillRepository', () => {
     };
 
     repository = new LocalSkillRepository(
-      createPinoLoggerMock(),
       skillRepo,
       skillMapper as unknown as SkillMapper,
       {} as LocalSkillAccessiblePageFinder,
@@ -159,7 +157,6 @@ describe('LocalSkillRepository', () => {
       toDomain: jest.fn((record: SkillRecord) => record),
     } as unknown as SkillMapper;
     const repository = new LocalSkillRepository(
-      createPinoLoggerMock(),
       skillRepository,
       mapper,
       new LocalSkillAccessiblePageFinder(skillRepository),

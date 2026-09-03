@@ -1,16 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { GetUserMcpConfigQuery } from './get-user-mcp-config.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationNotConfigurableError,
-} from '../../mcp.errors';
-import { SchemaConfiguredMcpIntegration } from '../../../domain/integrations/schema-configured-mcp-integration.entity';
-import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
+} from 'src/domain/mcp/application/mcp.errors';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
+import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 
 export interface UserMcpConfigResult {
   hasConfig: boolean;
@@ -20,16 +19,16 @@ export interface UserMcpConfigResult {
 
 @Injectable()
 export class GetUserMcpConfigUseCase {
+  private readonly logger = new Logger(GetUserMcpConfigUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetUserMcpConfigUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly integrationRepository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: GetUserMcpConfigQuery): Promise<UserMcpConfigResult> {
-    this.logger.info({ integrationId: query.integrationId }, 'execute');
+    this.logger.log({ integrationId: query.integrationId }, 'execute');
 
     const userId = this.contextService.get('userId');
     if (!userId) {

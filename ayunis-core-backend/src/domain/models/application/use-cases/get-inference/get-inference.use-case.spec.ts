@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
 import { GetInferenceUseCase } from './get-inference.use-case';
 import { GetInferenceCommand } from './get-inference.command';
@@ -6,7 +6,7 @@ import {
   InferenceFailedError,
   InferenceTokenLimitError,
   ModelRateLimitExceededError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import {
   ProviderConnectionError,
   ProviderServerError,
@@ -15,7 +15,7 @@ import {
 import {
   InferenceResponse,
   type InferenceInput,
-} from '../../ports/inference.handler';
+} from 'src/domain/models/application/ports/inference.handler';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
@@ -39,21 +39,14 @@ function makeCommand(acceptTokenLimitCompletion = false): GetInferenceCommand {
   });
 }
 
-function useCaseWithFailingHandler(
-  error: Error,
-  logger = createPinoLoggerMock(),
-): GetInferenceUseCase {
+function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
   const registry = {
     getHandler: () => ({ answer: () => Promise.reject(error) }),
   };
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
-  return new GetInferenceUseCase(
-    logger,
-    registry as never,
-    contextService as never,
-  );
+  return new GetInferenceUseCase(registry as never, contextService as never);
 }
 
 function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
@@ -63,11 +56,7 @@ function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
-  return new GetInferenceUseCase(
-    createPinoLoggerMock(),
-    registry as never,
-    contextService as never,
-  );
+  return new GetInferenceUseCase(registry as never, contextService as never);
 }
 
 describe('GetInferenceUseCase error mapping', () => {
@@ -137,11 +126,9 @@ describe('GetInferenceUseCase error mapping', () => {
         requestID: 'req_mistral_123',
       },
     );
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
 
-    const result = useCaseWithFailingHandler(upstream, logger).execute(
-      makeCommand(),
-    );
+    const result = useCaseWithFailingHandler(upstream).execute(makeCommand());
 
     await expect(result).rejects.toMatchObject({
       metadata: {
@@ -251,7 +238,6 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
     };
     const contextService = { get: () => randomUUID() };
     const useCase = new GetInferenceUseCase(
-      createPinoLoggerMock(),
       registry as never,
       contextService as never,
     );

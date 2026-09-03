@@ -1,32 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { StartUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { StartUrlCrawlCommand } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
   KnowledgeBaseSourceLimitExceededError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.command';
 
 @Injectable()
 export class AddUrlToKnowledgeBaseUseCase {
+  private readonly logger = new Logger(AddUrlToKnowledgeBaseUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddUrlToKnowledgeBaseUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly startUrlCrawlUseCase: StartUrlCrawlUseCase,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
   async execute(command: AddUrlToKnowledgeBaseCommand): Promise<TextSource> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,
         url: command.url,

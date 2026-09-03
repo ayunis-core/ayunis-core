@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { BudgetWarningTemplate } from 'src/common/email-templates/domain/email-template.entity';
@@ -12,7 +11,7 @@ import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.comma
 import {
   BudgetWarningEmailRenderingFailedError,
   BudgetWarningEmailSendingFailedError,
-} from '../../budget-alerts.errors';
+} from 'src/iam/budget-alerts/application/budget-alerts.errors';
 
 // Where an admin can act on the warning: org budgets are only visible on the
 // usage page (raising them goes through the provider), team limits live on the
@@ -28,9 +27,9 @@ const SETTINGS_PATH_BY_SCOPE: Record<
 
 @Injectable()
 export class SendBudgetWarningEmailUseCase {
+  private readonly logger = new Logger(SendBudgetWarningEmailUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SendBudgetWarningEmailUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly sendEmailUseCase: SendEmailUseCase,
     private readonly renderTemplateUseCase: RenderTemplateUseCase,
     private readonly configService: ConfigService,
@@ -38,7 +37,7 @@ export class SendBudgetWarningEmailUseCase {
 
   @HandleUnexpectedErrors(BudgetWarningEmailSendingFailedError)
   async execute(command: SendBudgetWarningEmailCommand): Promise<void> {
-    this.logger.info({ scope: command.scope }, 'execute');
+    this.logger.log({ scope: command.scope }, 'execute');
 
     const template = this.buildTemplate(command);
     const content = this.renderTemplateUseCase.execute(

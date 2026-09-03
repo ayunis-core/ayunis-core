@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute-run/execute-run.use-case';
@@ -40,14 +39,14 @@ import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execut
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
+  private readonly logger = new Logger(ExecuteRunAndSetTitleUseCase.name);
+
   constructor(
     private readonly executeRunUseCase: ExecuteRunUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
     private readonly contextService: ContextService,
-    @InjectPinoLogger(ExecuteRunAndSetTitleUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async *execute(
@@ -177,7 +176,7 @@ export class ExecuteRunAndSetTitleUseCase {
         ? await this.anonymizeText(firstUserMessage)
         : firstUserMessage;
 
-      this.logger.info(
+      this.logger.log(
         { threadId: command.threadId, isAnonymous: thread.isAnonymous },
         'Generating thread title',
       );
@@ -241,7 +240,7 @@ export class ExecuteRunAndSetTitleUseCase {
       new AnonymizeTextForOrgCommand(text, orgId),
     );
     if (result.replacements.length > 0) {
-      this.logger.info(
+      this.logger.log(
         {
           originalLength: text.length,
           anonymizedLength: result.anonymizedText.length,

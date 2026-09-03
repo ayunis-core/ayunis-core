@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, IsNull, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -10,9 +9,11 @@ import { OrgRetentionPolicyMapper } from './mappers/org-retention-policy.mapper'
 
 @Injectable()
 export class PostgresRetentionPoliciesRepository extends RetentionPoliciesRepository {
+  private readonly logger = new Logger(
+    PostgresRetentionPoliciesRepository.name,
+  );
+
   constructor(
-    @InjectPinoLogger(PostgresRetentionPoliciesRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(OrgRetentionPolicyRecord)
     private readonly repository: Repository<OrgRetentionPolicyRecord>,
   ) {

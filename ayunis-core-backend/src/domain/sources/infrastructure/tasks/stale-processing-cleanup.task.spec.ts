@@ -1,5 +1,4 @@
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import type { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { StaleProcessingCleanupTask } from './stale-processing-cleanup.task';
@@ -21,7 +20,6 @@ describe('StaleProcessingCleanupTask', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     task = new StaleProcessingCleanupTask(
-      createPinoLoggerMock(),
       sourceRepository as unknown as SourceRepository,
       markSourceFailedUseCase as unknown as MarkSourceFailedUseCase,
     );

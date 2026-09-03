@@ -1,6 +1,5 @@
 import type { UUID } from 'crypto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { ListSourcesByWorkspaceUseCase } from './list-sources-by-workspace.use-case';
@@ -18,10 +17,7 @@ describe('ListSourcesByWorkspaceUseCase', () => {
     const repository = {
       findPaginatedByWorkspaceId: jest.fn().mockResolvedValue(page),
     } as unknown as jest.Mocked<SourceRepository>;
-    const useCase = new ListSourcesByWorkspaceUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    const useCase = new ListSourcesByWorkspaceUseCase(repository);
 
     const result = await useCase.execute(
       new ListSourcesByWorkspaceQuery({

@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { RunEvent, RunEventPayload } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -51,7 +51,7 @@ async function* eventsFrom(
 
 async function collect(
   events: AsyncIterable<RunEvent>,
-  logger = createPinoLoggerMock(),
+  logger = createLoggerMock(),
 ): Promise<RunStreamItem[]> {
   const items: RunStreamItem[] = [];
   for await (const item of adaptRunEventsToStream(events, threadId, logger)) {
@@ -64,7 +64,7 @@ async function collectWithOutcome(events: AsyncIterable<RunEvent>) {
   const generator = adaptRunEventsToStream(
     events,
     threadId,
-    createPinoLoggerMock(),
+    createLoggerMock(),
   );
   const items: RunStreamItem[] = [];
   for (;;) {
@@ -322,7 +322,7 @@ describe('adaptRunEventsToStream', () => {
   });
 
   it('surfaces a critical finalization failure with its execution path', async () => {
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
     const result = collect(
       eventsFrom([
         {
@@ -340,7 +340,6 @@ describe('adaptRunEventsToStream', () => {
         },
         { type: 'run_end', status: 'max_iterations', usage: {} },
       ]),
-      logger,
     );
 
     await expect(result).rejects.toMatchObject<
@@ -383,7 +382,7 @@ describe('adaptRunEventsToStream', () => {
   });
 
   it('maps other error events to a client-safe run error', async () => {
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
     const details = { provider: 'test-provider', statusCode: 503 };
 
     await expect(
@@ -397,7 +396,6 @@ describe('adaptRunEventsToStream', () => {
           },
           { type: 'run_end', status: 'error', usage: {} },
         ]),
-        logger,
       ),
     ).rejects.toMatchObject<Partial<RunExecutionFailedError>>({
       message: 'Run execution failed: Agent runtime failed',

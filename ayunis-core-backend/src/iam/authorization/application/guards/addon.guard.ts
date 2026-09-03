@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -9,7 +13,7 @@ import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { IsAddonActiveUseCase } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.use-case';
 import { IsAddonActiveQuery } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.query';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
-import { REQUIRE_ADDON_KEY } from '../decorators/addon.decorator';
+import { REQUIRE_ADDON_KEY } from 'src/iam/authorization/application/decorators/addon.decorator';
 
 interface RequestWithUser extends Request {
   user?: ActiveUser | ApiKeyPrincipal;
@@ -17,9 +21,9 @@ interface RequestWithUser extends Request {
 
 @Injectable()
 export class AddonGuard implements CanActivate {
+  private readonly logger = new Logger(AddonGuard.name);
+
   constructor(
-    @InjectPinoLogger(AddonGuard.name)
-    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly isAddonActiveUseCase: IsAddonActiveUseCase,
   ) {}

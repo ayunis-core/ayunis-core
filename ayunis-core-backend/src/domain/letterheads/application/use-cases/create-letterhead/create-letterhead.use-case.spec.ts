@@ -1,17 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { PDFDocument } from 'pdf-lib';
 import { CreateLetterheadUseCase } from './create-letterhead.use-case';
 import { CreateLetterheadCommand } from './create-letterhead.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { LetterheadInvalidPdfError } from '../../letterheads.errors';
+import { LetterheadInvalidPdfError } from 'src/domain/letterheads/application/letterheads.errors';
 
 async function createSinglePagePdf(): Promise<Buffer> {
   const doc = await PDFDocument.create();
@@ -62,10 +60,6 @@ describe('CreateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateLetterheadUseCase,
-        {
-          provide: getLoggerToken(CreateLetterheadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
@@ -181,10 +175,6 @@ describe('CreateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateLetterheadUseCase,
-        {
-          provide: getLoggerToken(CreateLetterheadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },

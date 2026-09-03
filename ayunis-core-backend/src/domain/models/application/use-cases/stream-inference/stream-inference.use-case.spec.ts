@@ -1,13 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { EMPTY, firstValueFrom, throwError } from 'rxjs';
 import { randomUUID } from 'crypto';
 import { StreamInferenceUseCase } from './stream-inference.use-case';
-import { StreamInferenceInput } from '../../ports/stream-inference.handler';
+import { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
 import {
   InferenceAbortedError,
   InferenceFailedError,
   ModelRateLimitExceededError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import {
   ProviderConnectionError,
@@ -31,14 +31,11 @@ function makeInput(): StreamInferenceInput {
   });
 }
 
-function useCaseWithFailingHandler(
-  error: unknown,
-  logger = createPinoLoggerMock(),
-): StreamInferenceUseCase {
+function useCaseWithFailingHandler(error: unknown): StreamInferenceUseCase {
   const registry = {
     getHandler: () => ({ answer: () => throwError(() => error) }),
   };
-  return new StreamInferenceUseCase(logger, registry as never);
+  return new StreamInferenceUseCase(registry as never);
 }
 
 describe('StreamInferenceUseCase error mapping', () => {
@@ -127,10 +124,10 @@ describe('StreamInferenceUseCase error mapping', () => {
         request_id: 'req_azure_123',
       },
     );
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
 
     const result = firstValueFrom(
-      useCaseWithFailingHandler(upstream, logger).execute(makeInput()),
+      useCaseWithFailingHandler(upstream).execute(makeInput()),
     );
 
     await expect(result).rejects.toMatchObject({
@@ -204,10 +201,7 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
         },
       }),
     };
-    const useCase = new StreamInferenceUseCase(
-      createPinoLoggerMock(),
-      registry as never,
-    );
+    const useCase = new StreamInferenceUseCase(registry as never);
 
     useCase.execute(
       new StreamInferenceInput({

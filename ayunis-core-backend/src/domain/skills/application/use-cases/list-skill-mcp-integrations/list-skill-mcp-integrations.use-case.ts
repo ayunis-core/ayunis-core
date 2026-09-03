@@ -1,24 +1,31 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ListSkillMcpIntegrationsQuery } from './list-skill-mcp-integrations.query';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 @Injectable()
 export class ListSkillMcpIntegrationsUseCase {
+  private readonly logger = new Logger(ListSkillMcpIntegrationsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ListSkillMcpIntegrationsUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
@@ -29,7 +36,7 @@ export class ListSkillMcpIntegrationsUseCase {
   async execute(
     query: ListSkillMcpIntegrationsQuery,
   ): Promise<McpIntegration[]> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId: query.skillId,
       },

@@ -1,10 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
@@ -14,9 +13,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
  */
 @Injectable()
 export class GetKnowledgeBasesByIdsUseCase {
+  private readonly logger = new Logger(GetKnowledgeBasesByIdsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetKnowledgeBasesByIdsUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(KnowledgeBaseRepository)
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly contextService: ContextService,
@@ -29,7 +28,7 @@ export class GetKnowledgeBasesByIdsUseCase {
    * @returns Array of KnowledgeBase entities (missing/unauthorized IDs omitted)
    */
   async execute(query: GetKnowledgeBasesByIdsQuery): Promise<KnowledgeBase[]> {
-    this.logger.info(
+    this.logger.log(
       {
         count: query.knowledgeBaseIds.length,
       },

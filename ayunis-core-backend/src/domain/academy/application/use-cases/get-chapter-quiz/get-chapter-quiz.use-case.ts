@@ -1,28 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
 import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   ChapterNotFoundError,
   QuizNotAvailableError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
-import { DRAWN_QUESTION_COUNT } from '../../quiz.constants';
+} from 'src/domain/academy/application/academy.errors';
+import { DRAWN_QUESTION_COUNT } from 'src/domain/academy/application/quiz.constants';
 import { GetChapterQuizQuery } from './get-chapter-quiz.query';
 
 @Injectable()
 export class GetChapterQuizUseCase {
+  private readonly logger = new Logger(GetChapterQuizUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetChapterQuizUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly chapterRepository: AcademyChapterRepository,
     private readonly quizQuestionRepository: AcademyQuizQuestionRepository,
   ) {}
 
   async execute(query: GetChapterQuizQuery): Promise<AcademyQuizQuestion[]> {
-    this.logger.info({ chapterId: query.chapterId }, 'Getting chapter quiz');
+    this.logger.log({ chapterId: query.chapterId }, 'Getting chapter quiz');
     try {
       const chapter = await this.chapterRepository.findOne(query.chapterId);
       if (!chapter) {

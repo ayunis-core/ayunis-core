@@ -2,7 +2,6 @@ import { BadRequestException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UploadedDocument } from 'src/common/http/document-upload';
 import { KnowledgeBasesController } from './knowledge-bases.controller';
 
@@ -20,7 +19,6 @@ describe('KnowledgeBasesController', () => {
     };
     const unlink = jest.spyOn(fs.promises, 'unlink').mockResolvedValue();
     const controller = new KnowledgeBasesController(
-      createPinoLoggerMock(),
       null as never,
       null as never,
       null as never,

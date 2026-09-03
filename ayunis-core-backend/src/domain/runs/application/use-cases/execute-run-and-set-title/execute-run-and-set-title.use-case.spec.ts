@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID, type UUID } from 'crypto';
 import { ExecuteRunAndSetTitleUseCase } from './execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
@@ -91,7 +90,6 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       generateAndSetThreadTitleUseCase,
       anonymizeTextForOrgUseCase,
       contextService,
-      createPinoLoggerMock(),
     );
   });
 

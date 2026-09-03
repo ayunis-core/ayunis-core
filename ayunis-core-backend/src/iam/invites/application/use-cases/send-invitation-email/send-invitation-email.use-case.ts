@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { SendInvitationEmailCommand } from './send-invitation-email.command';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
@@ -12,13 +11,13 @@ import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
-import { InviteEmailSendingFailedError } from '../../invites.errors';
+import { InviteEmailSendingFailedError } from 'src/iam/invites/application/invites.errors';
 
 @Injectable()
 export class SendInvitationEmailUseCase {
+  private readonly logger = new Logger(SendInvitationEmailUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SendInvitationEmailUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly sendEmailUseCase: SendEmailUseCase,
     private readonly configService: ConfigService,
     private readonly renderTemplateUseCase: RenderTemplateUseCase,
@@ -29,7 +28,7 @@ export class SendInvitationEmailUseCase {
   // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   async execute(command: SendInvitationEmailCommand): Promise<void> {
     try {
-      this.logger.info(
+      this.logger.log(
         {
           inviteId: command.invite.id,
           email: command.invite.email,

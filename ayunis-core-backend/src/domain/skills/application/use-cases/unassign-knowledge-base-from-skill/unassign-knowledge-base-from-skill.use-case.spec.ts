@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,14 +10,14 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnassignKnowledgeBaseFromSkillUseCase } from './unassign-knowledge-base-from-skill.use-case';
 import { UnassignKnowledgeBaseFromSkillCommand } from './unassign-knowledge-base-from-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import {
   SkillNotFoundError,
   SkillKnowledgeBaseNotAssignedError,
   UnexpectedSkillError,
-} from '../../skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 import type { UUID } from 'crypto';
 
 describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
@@ -47,10 +45,6 @@ describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UnassignKnowledgeBaseFromSkillUseCase,
-        {
-          provide: getLoggerToken(UnassignKnowledgeBaseFromSkillUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

@@ -1,7 +1,5 @@
-import { HttpException } from '@nestjs/common';
-import { PinoLogger } from 'nestjs-pino';
-import { ApplicationError } from '../errors/base.error';
-import { createPinoLoggerConfig } from '../logger/pino-logger.config';
+import { HttpException, Logger } from '@nestjs/common';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 type UnexpectedErrorClass = new (error: Error) => ApplicationError;
 
@@ -18,7 +16,7 @@ export function HandleUnexpectedErrors(UnexpectedError: UnexpectedErrorClass) {
       return;
     }
 
-    const logger = createDecoratorLogger(target.constructor.name);
+    const logger = new Logger(target.constructor.name);
 
     descriptor.value = async function (
       this: unknown,
@@ -44,12 +42,6 @@ function isExpectedError(
   error: unknown,
 ): error is ApplicationError | HttpException {
   return error instanceof ApplicationError || error instanceof HttpException;
-}
-
-function createDecoratorLogger(context: string): PinoLogger {
-  const logger = new PinoLogger(createPinoLoggerConfig());
-  logger.setContext(context);
-  return logger;
 }
 
 function toError(cause: unknown): Error {

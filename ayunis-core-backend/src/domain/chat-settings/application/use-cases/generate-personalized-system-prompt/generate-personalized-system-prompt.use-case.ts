@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GeneratePersonalizedSystemPromptCommand } from './generate-personalized-system-prompt.command';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
-import { UpsertUserSystemPromptUseCase } from '../upsert-user-system-prompt/upsert-user-system-prompt.use-case';
-import { UpsertUserSystemPromptCommand } from '../upsert-user-system-prompt/upsert-user-system-prompt.command';
+import { UpsertUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.use-case';
+import { UpsertUserSystemPromptCommand } from 'src/domain/chat-settings/application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { PersonalizedSystemPromptGenerationError } from '../../chat-settings.errors';
+import { PersonalizedSystemPromptGenerationError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
@@ -32,9 +31,11 @@ export interface GeneratePersonalizedSystemPromptResult {
 
 @Injectable()
 export class GeneratePersonalizedSystemPromptUseCase {
+  private readonly logger = new Logger(
+    GeneratePersonalizedSystemPromptUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(GeneratePersonalizedSystemPromptUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
     private readonly upsertUserSystemPromptUseCase: UpsertUserSystemPromptUseCase,
@@ -54,7 +55,7 @@ export class GeneratePersonalizedSystemPromptUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info({ userId }, 'execute');
+    this.logger.log({ userId }, 'execute');
 
     try {
       const permittedModel = await this.getDefaultModelUseCase.execute(

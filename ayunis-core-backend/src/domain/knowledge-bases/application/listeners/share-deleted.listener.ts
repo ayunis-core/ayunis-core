@@ -1,5 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
@@ -19,9 +18,9 @@ import {
 
 @Injectable()
 export class KnowledgeBaseShareDeletedListener {
+  private readonly logger = new Logger(KnowledgeBaseShareDeletedListener.name);
+
   constructor(
-    @InjectPinoLogger(KnowledgeBaseShareDeletedListener.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     @Inject(SharesRepository)
@@ -36,7 +35,7 @@ export class KnowledgeBaseShareDeletedListener {
       return;
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: event.entityId,
         ownerId: event.ownerId,
@@ -70,7 +69,7 @@ export class KnowledgeBaseShareDeletedListener {
       affectedSkillIds,
     );
 
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: event.entityId,
         affectedSkillCount: affectedSkillIds.length,
@@ -115,7 +114,7 @@ export class KnowledgeBaseShareDeletedListener {
         ),
       );
 
-      this.logger.info(
+      this.logger.log(
         {
           skillId: skill.id,
           userCount: allUserIds.length,

@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { DocumentProcessingPort } from '../../ports/document-processing.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
 import { EnqueueDocumentProcessingCommand } from './enqueue-document-processing.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 @Injectable()
 export class EnqueueDocumentProcessingUseCase {
+  private readonly logger = new Logger(EnqueueDocumentProcessingUseCase.name);
+
   constructor(
-    @InjectPinoLogger(EnqueueDocumentProcessingUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly documentProcessingPort: DocumentProcessingPort,
   ) {}
 

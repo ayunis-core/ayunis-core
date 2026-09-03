@@ -1,25 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetModelDistributionQuery } from './get-model-distribution.query';
-import { UsageRepository } from '../../ports/usage.repository';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import {
   InvalidDateRangeError,
   UnexpectedUsageError,
-} from '../../usage.errors';
+} from 'src/domain/usage/application/usage.errors';
 import {
   validateOptionalDateRange,
   processModelDistribution,
-} from '../../usage.utils';
+} from 'src/domain/usage/application/usage.utils';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetModelDistributionUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-    @InjectPinoLogger(GetModelDistributionUseCase.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(GetModelDistributionUseCase.name);
+
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   async execute(
     query: GetModelDistributionQuery,
@@ -30,7 +27,7 @@ export class GetModelDistributionUseCase {
       throw new InvalidDateRangeError('Max models must be greater than 0');
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         organizationId: query.organizationId,
         maxModels: query.maxModels,

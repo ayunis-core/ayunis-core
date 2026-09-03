@@ -1,5 +1,4 @@
-import { Body, Controller, Delete, Get, Put } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Body, Controller, Delete, Get, Put, Logger } from '@nestjs/common';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
@@ -15,19 +14,19 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { DeleteUserDefaultModelUseCase } from '../../application/use-cases/delete-user-default-model/delete-user-default-model.use-case';
-import { DeleteUserDefaultModelCommand } from '../../application/use-cases/delete-user-default-model/delete-user-default-model.command';
-import { GetDefaultModelUseCase } from '../../application/use-cases/get-default-model/get-default-model.use-case';
-import { GetDefaultModelQuery } from '../../application/use-cases/get-default-model/get-default-model.query';
-import { GetOrgDefaultModelUseCase } from '../../application/use-cases/get-org-default-model/get-org-default-model.use-case';
-import { GetOrgDefaultModelQuery } from '../../application/use-cases/get-org-default-model/get-org-default-model.query';
-import { GetUserDefaultModelUseCase } from '../../application/use-cases/get-user-default-model/get-user-default-model.use-case';
-import { GetUserDefaultModelQuery } from '../../application/use-cases/get-user-default-model/get-user-default-model.query';
-import { SetOrgDefaultLanguageModelUseCase } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
-import { SetOrgDefaultLanguageModelCommand } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
-import { SetUserDefaultLanguageModelUseCase } from '../../application/use-cases/set-user-default-language-model/set-user-default-language-model.use-case';
-import { SetUserDefaultLanguageModelCommand } from '../../application/use-cases/set-user-default-language-model/set-user-default-language-model.command';
-import { ModelNotFoundError } from '../../application/models.errors';
+import { DeleteUserDefaultModelUseCase } from 'src/domain/models/application/use-cases/delete-user-default-model/delete-user-default-model.use-case';
+import { DeleteUserDefaultModelCommand } from 'src/domain/models/application/use-cases/delete-user-default-model/delete-user-default-model.command';
+import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
+import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
+import { GetOrgDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-org-default-model/get-org-default-model.use-case';
+import { GetOrgDefaultModelQuery } from 'src/domain/models/application/use-cases/get-org-default-model/get-org-default-model.query';
+import { GetUserDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-user-default-model/get-user-default-model.use-case';
+import { GetUserDefaultModelQuery } from 'src/domain/models/application/use-cases/get-user-default-model/get-user-default-model.query';
+import { SetOrgDefaultLanguageModelUseCase } from 'src/domain/models/application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
+import { SetOrgDefaultLanguageModelCommand } from 'src/domain/models/application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
+import { SetUserDefaultLanguageModelUseCase } from 'src/domain/models/application/use-cases/set-user-default-language-model/set-user-default-language-model.use-case';
+import { SetUserDefaultLanguageModelCommand } from 'src/domain/models/application/use-cases/set-user-default-language-model/set-user-default-language-model.command';
+import { ModelNotFoundError } from 'src/domain/models/application/models.errors';
 import {
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
@@ -39,10 +38,9 @@ import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 @ApiTags('models')
 @Controller('models')
 export class ModelsDefaultsController {
-  constructor(
-    @InjectPinoLogger(ModelsDefaultsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(ModelsDefaultsController.name);
 
+  constructor(
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
     private readonly setUserDefaultLanguageModelUseCase: SetUserDefaultLanguageModelUseCase,
     private readonly deleteUserDefaultModelUseCase: DeleteUserDefaultModelUseCase,

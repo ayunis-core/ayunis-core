@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 
 /**
  * Lists the ids of all orgs holding an active usage-based subscription — the
@@ -11,14 +10,16 @@ import { UnexpectedSubscriptionError } from '../../subscription.errors';
  */
 @Injectable()
 export class ListUsageBasedSubscriptionOrgIdsUseCase {
+  private readonly logger = new Logger(
+    ListUsageBasedSubscriptionOrgIdsUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(ListUsageBasedSubscriptionOrgIdsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   async execute(): Promise<UUID[]> {
-    this.logger.info('execute');
+    this.logger.log('execute');
     try {
       return await this.subscriptionRepository.findActiveUsageBasedOrgIds(
         new Date(),

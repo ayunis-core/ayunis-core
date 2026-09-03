@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
 import {
@@ -7,8 +6,8 @@ import {
   INTERNAL_SERVER_ERROR_MESSAGE,
 } from 'src/common/errors/base.error';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
-import type { RunErrorResponseDto } from '../dto/run-response.dto';
-import { RunEventResponseMapper } from '../mappers/run-event-response.mapper';
+import type { RunErrorResponseDto } from 'src/domain/runs/presenters/http/dto/run-response.dto';
+import { RunEventResponseMapper } from 'src/domain/runs/presenters/http/mappers/run-event-response.mapper';
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
 
@@ -31,11 +30,9 @@ type RunEventSource = (signal: AbortSignal) => AsyncIterable<RunEvent>;
  */
 @Injectable()
 export class RunSsePresenter {
-  constructor(
-    private readonly eventMapper: RunEventResponseMapper,
-    @InjectPinoLogger(RunSsePresenter.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(RunSsePresenter.name);
+
+  constructor(private readonly eventMapper: RunEventResponseMapper) {}
 
   async stream(
     response: Response,
@@ -86,7 +83,7 @@ export class RunSsePresenter {
   ): Promise<void> {
     for await (const event of events) {
       if (state.disconnected) {
-        this.logger.info('Stopping event stream due to client disconnect');
+        this.logger.log('Stopping event stream due to client disconnect');
         break;
       }
 
@@ -112,7 +109,7 @@ export class RunSsePresenter {
     // Object wrapper so TS recognises async mutation from the handlers
     const state: ConnectionState = { disconnected: false };
     const disconnectHandler = () => {
-      this.logger.info({ threadId }, 'Client disconnected from SSE stream');
+      this.logger.log({ threadId }, 'Client disconnected from SSE stream');
       state.disconnected = true;
       abortController.abort();
     };

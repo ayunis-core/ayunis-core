@@ -1,14 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ResolveGeneratedImageUseCase } from './resolve-generated-image.use-case';
 import { ResolveGeneratedImageQuery } from './resolve-generated-image.query';
-import type { ThreadsRepository } from '../../ports/threads.repository';
-import type { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import type { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import type { GetPresignedUrlUseCase } from 'src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.use-case';
 import {
   ThreadNotFoundError,
   GeneratedImageNotFoundError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
 
 describe('ResolveGeneratedImageUseCase', () => {
@@ -39,7 +38,6 @@ describe('ResolveGeneratedImageUseCase', () => {
     } as unknown as jest.Mocked<GetPresignedUrlUseCase>;
 
     useCase = new ResolveGeneratedImageUseCase(
-      createPinoLoggerMock(),
       threadsRepository,
       generatedImagesRepository,
       getPresignedUrlUseCase,

@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credential-encryption.port';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
 
 /**
  * Concrete implementation of credential encryption using AES-256-GCM.
@@ -20,16 +19,14 @@ import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credent
  */
 @Injectable()
 export class McpCredentialEncryptionService extends McpCredentialEncryptionPort {
+  private readonly logger = new Logger(McpCredentialEncryptionService.name);
+
   private readonly algorithm = 'aes-256-gcm';
   private readonly ivLength = 16; // 128 bits
   private readonly authTagLength = 16; // 128 bits
   private readonly encryptionKey: Buffer;
 
-  constructor(
-    @InjectPinoLogger(McpCredentialEncryptionService.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
 
     // Read and validate encryption key from environment
@@ -51,7 +48,7 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
     }
 
     this.encryptionKey = Buffer.from(keyHex, 'hex');
-    this.logger.info('McpCredentialEncryptionService initialized successfully');
+    this.logger.log('McpCredentialEncryptionService initialized successfully');
   }
 
   /**

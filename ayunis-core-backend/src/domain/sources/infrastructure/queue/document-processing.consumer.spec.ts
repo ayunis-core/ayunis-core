@@ -1,11 +1,10 @@
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Job } from 'bullmq';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
+import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
 import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 
@@ -111,7 +110,6 @@ describe('DocumentProcessingConsumer', () => {
     jest.clearAllMocks();
 
     consumer = new DocumentProcessingConsumer(
-      createPinoLoggerMock(),
       contextService as never,
       retrieveFileContentUseCase as never,
       splitTextUseCase as never,

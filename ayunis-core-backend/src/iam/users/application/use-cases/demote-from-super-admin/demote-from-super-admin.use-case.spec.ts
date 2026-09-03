@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -13,7 +11,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { DemoteFromSuperAdminUseCase } from './demote-from-super-admin.use-case';
 import { DemoteFromSuperAdminCommand } from './demote-from-super-admin.command';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -23,7 +21,7 @@ import {
   UserNotSuperAdminError,
   UserSelfDemotionNotAllowedError,
   UserLastSuperAdminError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 
 describe('DemoteFromSuperAdminUseCase', () => {
   let useCase: DemoteFromSuperAdminUseCase;
@@ -39,10 +37,6 @@ describe('DemoteFromSuperAdminUseCase', () => {
       providers: [
         DemoteFromSuperAdminUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
-        {
-          provide: getLoggerToken(DemoteFromSuperAdminUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

@@ -7,8 +7,8 @@ import {
   Param,
   Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -27,10 +27,10 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateLanguageModelCommand } from '../../application/use-cases/create-language-model/create-language-model.command';
-import { CreateLanguageModelUseCase } from '../../application/use-cases/create-language-model/create-language-model.use-case';
-import { UpdateLanguageModelCommand } from '../../application/use-cases/update-language-model/update-language-model.command';
-import { UpdateLanguageModelUseCase } from '../../application/use-cases/update-language-model/update-language-model.use-case';
+import { CreateLanguageModelCommand } from 'src/domain/models/application/use-cases/create-language-model/create-language-model.command';
+import { CreateLanguageModelUseCase } from 'src/domain/models/application/use-cases/create-language-model/create-language-model.use-case';
+import { UpdateLanguageModelCommand } from 'src/domain/models/application/use-cases/update-language-model/update-language-model.command';
+import { UpdateLanguageModelUseCase } from 'src/domain/models/application/use-cases/update-language-model/update-language-model.use-case';
 import { CreateLanguageModelRequestDto } from './dto/create-language-model-request.dto';
 import { LanguageModelResponseDto } from './dto/language-model-response.dto';
 import { UpdateLanguageModelRequestDto } from './dto/update-language-model-request.dto';
@@ -45,10 +45,11 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   LanguageModelResponseDto,
 )
 export class SuperAdminLanguageCatalogModelsController {
-  constructor(
-    @InjectPinoLogger(SuperAdminLanguageCatalogModelsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(
+    SuperAdminLanguageCatalogModelsController.name,
+  );
 
+  constructor(
     private readonly createLanguageModelUseCase: CreateLanguageModelUseCase,
     private readonly updateLanguageModelUseCase: UpdateLanguageModelUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -84,7 +85,7 @@ export class SuperAdminLanguageCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { modelName: dto.name, userId },
       'Creating language model by super admin',
     );
@@ -92,7 +93,7 @@ export class SuperAdminLanguageCatalogModelsController {
     const model = await this.createLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-    this.logger.info(
+    this.logger.log(
       { modelId: model.id },
       'Successfully created language model',
     );
@@ -136,7 +137,7 @@ export class SuperAdminLanguageCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { modelId: id, userId },
       'Updating language model by super admin',
     );
@@ -144,7 +145,7 @@ export class SuperAdminLanguageCatalogModelsController {
     const model = await this.updateLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-    this.logger.info({ modelId: id }, 'Successfully updated language model');
+    this.logger.log({ modelId: id }, 'Successfully updated language model');
     return responseDto;
   }
 }

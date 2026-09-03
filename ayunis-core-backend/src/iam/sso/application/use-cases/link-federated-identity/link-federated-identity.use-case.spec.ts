@@ -1,5 +1,4 @@
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { FederatedIdentityAlreadyExistsError } from 'src/iam/sso/application/ports/federated-identities.repository';
 import { LinkFederatedIdentityCommand } from 'src/iam/sso/application/use-cases/link-federated-identity/link-federated-identity.command';
 import { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-cases/link-federated-identity/link-federated-identity.use-case';
@@ -32,7 +31,6 @@ describe(LinkFederatedIdentityUseCase.name, () => {
   const lock = { acquireIdentity: jest.fn(), acquireEmail: jest.fn() };
   const findUser = { execute: jest.fn() };
   const useCase = new LinkFederatedIdentityUseCase(
-    createPinoLoggerMock(),
     identities,
     lock,
     findUser as unknown as FindUserByIdUseCase,

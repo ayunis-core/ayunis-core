@@ -1,13 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { GetFairUseLimitsUseCase } from './get-fair-use-limits.use-case';
-import type { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
+import type { PlatformConfigRepositoryPort } from 'src/iam/platform-config/application/ports/platform-config.repository';
 import { PlatformConfig } from 'src/iam/platform-config/domain/platform-config.entity';
 import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 
 describe('GetFairUseLimitsUseCase', () => {
   let useCase: GetFairUseLimitsUseCase;
   let repository: jest.Mocked<PlatformConfigRepositoryPort>;
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
 
   const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
   const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -19,7 +19,7 @@ describe('GetFairUseLimitsUseCase', () => {
       setMany: jest.fn(),
     };
 
-    useCase = new GetFairUseLimitsUseCase(logger, repository);
+    useCase = new GetFairUseLimitsUseCase(repository);
     logger.warn.mockClear();
   });
 

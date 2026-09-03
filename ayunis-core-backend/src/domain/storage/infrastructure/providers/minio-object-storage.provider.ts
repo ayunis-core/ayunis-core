@@ -1,5 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
 import { Readable } from 'stream';
@@ -7,14 +6,14 @@ import {
   ObjectStoragePort,
   type PresignedUrlResponseOverrides,
   type StorageObjectSummary,
-} from '../../application/ports/object-storage.port';
+} from 'src/domain/storage/application/ports/object-storage.port';
 import storageConfig from 'src/config/storage.config';
-import { StorageObjectUpload } from '../../domain/storage-object-upload.entity';
-import { StorageObject } from '../../domain/storage-object.entity';
-import { StorageUrl } from '../../domain/storage-url.entity';
-import { PresignedUrl } from '../../domain/presigned-url.entity';
-import { StorageBucket } from '../../domain/storage-bucket.entity';
-import { ObjectNotFoundError } from '../../application/storage.errors';
+import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
+import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import { PresignedUrl } from 'src/domain/storage/domain/presigned-url.entity';
+import { StorageBucket } from 'src/domain/storage/domain/storage-bucket.entity';
+import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 
 /**
  * S3 error codes minio raises for a key that is not there. `NotFound` comes
@@ -32,12 +31,12 @@ export class MinioObjectStorageProvider
   extends ObjectStoragePort
   implements OnModuleInit
 {
+  private readonly logger = new Logger(MinioObjectStorageProvider.name);
+
   private client: Minio.Client;
   private defaultBucket: string;
 
   constructor(
-    @InjectPinoLogger(MinioObjectStorageProvider.name)
-    private readonly logger: PinoLogger,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,
   ) {
@@ -68,16 +67,16 @@ export class MinioObjectStorageProvider
   private async connectWithRetry(maxRetries = 10, delay = 2000): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        this.logger.info({ attempt, maxRetries }, 'Connecting to MinIO');
+        this.logger.log({ attempt, maxRetries }, 'Connecting to MinIO');
         const bucketExists = await this.client.bucketExists(this.defaultBucket);
         if (!bucketExists) {
           await this.client.makeBucket(this.defaultBucket, 'eu-central-1');
-          this.logger.info(
+          this.logger.log(
             { bucket: this.defaultBucket },
             'Created MinIO bucket',
           );
         }
-        this.logger.info('MinIO connection successful');
+        this.logger.log('MinIO connection successful');
         return;
       } catch (error) {
         this.logger.warn(

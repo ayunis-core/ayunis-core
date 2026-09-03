@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { EditDocumentTool } from '../../domain/tools/edit-document-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ApplyEditsToArtifactUseCase } from 'src/domain/artifacts/application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.use-case';
 import { ApplyEditsToArtifactCommand } from 'src/domain/artifacts/application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.command';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -18,9 +17,9 @@ import {
 
 @Injectable()
 export class EditDocumentToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(EditDocumentToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(EditDocumentToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly applyEditsToArtifactUseCase: ApplyEditsToArtifactUseCase,
   ) {
     super();
@@ -32,7 +31,7 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.info('Executing edit_document tool');
+    this.logger.log('Executing edit_document tool');
 
     try {
       const validatedInput = tool.validateParams(input);

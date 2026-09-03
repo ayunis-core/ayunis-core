@@ -10,8 +10,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -26,18 +26,18 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetTeamPermittedModelsUseCase } from '../../application/use-cases/get-team-permitted-models/get-team-permitted-models.use-case';
-import { GetTeamPermittedModelsQuery } from '../../application/use-cases/get-team-permitted-models/get-team-permitted-models.query';
-import { GetTeamPermittedImageGenerationModelsUseCase } from '../../application/use-cases/get-team-permitted-image-generation-models/get-team-permitted-image-generation-models.use-case';
-import { GetTeamPermittedImageGenerationModelsQuery } from '../../application/use-cases/get-team-permitted-image-generation-models/get-team-permitted-image-generation-models.query';
-import { CreateTeamPermittedModelUseCase } from '../../application/use-cases/create-team-permitted-model/create-team-permitted-model.use-case';
-import { CreateTeamPermittedModelCommand } from '../../application/use-cases/create-team-permitted-model/create-team-permitted-model.command';
-import { DeleteTeamPermittedModelUseCase } from '../../application/use-cases/delete-team-permitted-model/delete-team-permitted-model.use-case';
-import { DeleteTeamPermittedModelCommand } from '../../application/use-cases/delete-team-permitted-model/delete-team-permitted-model.command';
-import { UpdateTeamPermittedModelUseCase } from '../../application/use-cases/update-team-permitted-model/update-team-permitted-model.use-case';
-import { UpdateTeamPermittedModelCommand } from '../../application/use-cases/update-team-permitted-model/update-team-permitted-model.command';
-import { SetTeamDefaultModelUseCase } from '../../application/use-cases/set-team-default-model/set-team-default-model.use-case';
-import { SetTeamDefaultModelCommand } from '../../application/use-cases/set-team-default-model/set-team-default-model.command';
+import { GetTeamPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-team-permitted-models/get-team-permitted-models.use-case';
+import { GetTeamPermittedModelsQuery } from 'src/domain/models/application/use-cases/get-team-permitted-models/get-team-permitted-models.query';
+import { GetTeamPermittedImageGenerationModelsUseCase } from 'src/domain/models/application/use-cases/get-team-permitted-image-generation-models/get-team-permitted-image-generation-models.use-case';
+import { GetTeamPermittedImageGenerationModelsQuery } from 'src/domain/models/application/use-cases/get-team-permitted-image-generation-models/get-team-permitted-image-generation-models.query';
+import { CreateTeamPermittedModelUseCase } from 'src/domain/models/application/use-cases/create-team-permitted-model/create-team-permitted-model.use-case';
+import { CreateTeamPermittedModelCommand } from 'src/domain/models/application/use-cases/create-team-permitted-model/create-team-permitted-model.command';
+import { DeleteTeamPermittedModelUseCase } from 'src/domain/models/application/use-cases/delete-team-permitted-model/delete-team-permitted-model.use-case';
+import { DeleteTeamPermittedModelCommand } from 'src/domain/models/application/use-cases/delete-team-permitted-model/delete-team-permitted-model.command';
+import { UpdateTeamPermittedModelUseCase } from 'src/domain/models/application/use-cases/update-team-permitted-model/update-team-permitted-model.use-case';
+import { UpdateTeamPermittedModelCommand } from 'src/domain/models/application/use-cases/update-team-permitted-model/update-team-permitted-model.command';
+import { SetTeamDefaultModelUseCase } from 'src/domain/models/application/use-cases/set-team-default-model/set-team-default-model.use-case';
+import { SetTeamDefaultModelCommand } from 'src/domain/models/application/use-cases/set-team-default-model/set-team-default-model.command';
 import { CreateTeamPermittedModelDto } from './dto/create-team-permitted-model.dto';
 import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { SetTeamDefaultModelDto } from './dto/set-team-default-model.dto';
@@ -56,10 +56,9 @@ import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
   PermittedImageGenerationModelResponseDto,
 )
 export class TeamPermittedModelsController {
-  constructor(
-    @InjectPinoLogger(TeamPermittedModelsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(TeamPermittedModelsController.name);
 
+  constructor(
     private readonly getTeamPermittedModelsUseCase: GetTeamPermittedModelsUseCase,
     private readonly getTeamPermittedImageGenerationModelsUseCase: GetTeamPermittedImageGenerationModelsUseCase,
     private readonly createTeamPermittedModelUseCase: CreateTeamPermittedModelUseCase,
@@ -86,7 +85,7 @@ export class TeamPermittedModelsController {
     @Param('teamId', ParseUUIDPipe) teamId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto[]> {
-    this.logger.info({ teamId }, 'listTeamPermittedModels');
+    this.logger.log({ teamId }, 'listTeamPermittedModels');
     const query = new GetTeamPermittedModelsQuery(teamId, orgId);
     const models = await this.getTeamPermittedModelsUseCase.execute(query);
     return models.map((model) =>
@@ -114,7 +113,7 @@ export class TeamPermittedModelsController {
     @Param('teamId', ParseUUIDPipe) teamId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedImageGenerationModelResponseDto[]> {
-    this.logger.info({ teamId }, 'listTeamImageGenerationModels');
+    this.logger.log({ teamId }, 'listTeamImageGenerationModels');
     const query = new GetTeamPermittedImageGenerationModelsQuery(teamId, orgId);
     const models =
       await this.getTeamPermittedImageGenerationModelsUseCase.execute(query);
@@ -156,7 +155,7 @@ export class TeamPermittedModelsController {
   ): Promise<
     PermittedLanguageModelResponseDto | PermittedImageGenerationModelResponseDto
   > {
-    this.logger.info(
+    this.logger.log(
       {
         teamId,
         modelId: dto.modelId,
@@ -192,7 +191,7 @@ export class TeamPermittedModelsController {
     @Body() dto: UpdatePermittedModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         teamId,
         permittedModelId: id,
@@ -225,7 +224,7 @@ export class TeamPermittedModelsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         teamId,
         permittedModelId: id,
@@ -254,7 +253,7 @@ export class TeamPermittedModelsController {
     @Body() dto: SetTeamDefaultModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         teamId,
         permittedModelId: dto.permittedModelId,

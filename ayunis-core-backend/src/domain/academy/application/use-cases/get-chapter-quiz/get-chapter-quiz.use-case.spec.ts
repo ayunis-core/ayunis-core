@@ -1,19 +1,17 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { GetChapterQuizUseCase } from './get-chapter-quiz.use-case';
 import { GetChapterQuizQuery } from './get-chapter-quiz.query';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   ChapterNotFoundError,
   QuizNotAvailableError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 
 function makePool(chapterId: UUID, count: number): AcademyQuizQuestion[] {
   return Array.from(
@@ -46,10 +44,6 @@ describe('GetChapterQuizUseCase', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetChapterQuizUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         GetChapterQuizUseCase,
         { provide: AcademyChapterRepository, useValue: { findOne: jest.fn() } },
         {

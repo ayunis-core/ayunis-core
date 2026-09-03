@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
@@ -25,11 +24,11 @@ type McpIntegrationMeta = { name: string; logoUrl: string | null };
  */
 @Injectable()
 export class McpToolAssemblerService {
+  private readonly logger = new Logger(McpToolAssemblerService.name);
+
   constructor(
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
-    @InjectPinoLogger(McpToolAssemblerService.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   /**

@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { Model } from '../../domain/model.entity';
-import { EmbeddingModel } from '../../domain/models/embedding.model';
-import { ImageGenerationModel } from '../../domain/models/image-generation.model';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { PermittedModelScope } from '../../domain/value-objects/permitted-model-scope.enum';
-import type { PermittedModel } from '../../domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../ports/permitted-models.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import type { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   ImageGenerationModelProviderNotSupportedError,
   MultipleEmbeddingModelsNotAllowedError,
   MultipleImageGenerationModelsNotAllowedError,
-} from '../models.errors';
+} from 'src/domain/models/application/models.errors';
 
 export const SUPPORTED_IMAGE_GENERATION_PROVIDERS: ModelProvider[] = [
   ModelProvider.AZURE,
@@ -19,10 +18,9 @@ export const SUPPORTED_IMAGE_GENERATION_PROVIDERS: ModelProvider[] = [
 
 @Injectable()
 export class ModelPolicyService {
-  constructor(
-    @InjectPinoLogger(ModelPolicyService.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(ModelPolicyService.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
   ) {}
 

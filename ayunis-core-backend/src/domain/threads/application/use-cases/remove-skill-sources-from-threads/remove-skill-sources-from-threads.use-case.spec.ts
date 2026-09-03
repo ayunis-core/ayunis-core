@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 
 import { randomUUID } from 'crypto';
 import { RemoveSkillSourcesFromThreadsUseCase } from './remove-skill-sources-from-threads.use-case';
 import { RemoveSkillSourcesFromThreadsCommand } from './remove-skill-sources-from-threads.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 
 describe('RemoveSkillSourcesFromThreadsUseCase', () => {
   let useCase: RemoveSkillSourcesFromThreadsUseCase;
@@ -20,10 +18,6 @@ describe('RemoveSkillSourcesFromThreadsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveSkillSourcesFromThreadsUseCase,
-        {
-          provide: getLoggerToken(RemoveSkillSourcesFromThreadsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
       ],
     }).compile();

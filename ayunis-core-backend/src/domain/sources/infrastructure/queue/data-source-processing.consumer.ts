@@ -1,5 +1,4 @@
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-
+import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -19,19 +18,19 @@ import type { DataSourceFileKind } from 'src/domain/sources/domain/data-source-f
 import type {
   DataSourceProcessingJobData,
   DataSourceProcessingTarget,
-} from '../../application/ports/data-source-processing.port';
+} from 'src/domain/sources/application/ports/data-source-processing.port';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
-} from '../../application/util/minio-processing-file.helpers';
+} from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
 @Processor(DATA_SOURCE_PROCESSING_QUEUE, { concurrency: 2 })
 export class DataSourceProcessingConsumer extends WorkerHost {
+  private readonly logger = new Logger(DataSourceProcessingConsumer.name);
+
   constructor(
-    @InjectPinoLogger(DataSourceProcessingConsumer.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
@@ -43,7 +42,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
   }
 
   async process(job: Job<DataSourceProcessingJobData>): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         fileName: job.data.fileName,
         jobId: job.id,
@@ -75,7 +74,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       const sheets = await this.parseFile(fileBuffer, kind);
       await this.fillSources(pending, sheets);
       await this.cleanupMinioFile(minioPath);
-      this.logger.info(
+      this.logger.log(
         { fileName, sources: pending.length },
         'Data source processing complete',
       );

@@ -1,12 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeGetTextToolHandler } from './knowledge-get-text-tool.handler';
 import { GetKnowledgeBaseDocumentTextUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
-import type { KnowledgeGetTextTool } from '../../domain/tools/knowledge-get-text-tool.entity';
+import type { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
 import { randomUUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -72,11 +70,6 @@ describe('KnowledgeGetTextToolHandler', () => {
         {
           provide: toolsConfig.KEY,
           useValue: mockToolsConfig,
-        },
-
-        {
-          provide: getLoggerToken(KnowledgeGetTextToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

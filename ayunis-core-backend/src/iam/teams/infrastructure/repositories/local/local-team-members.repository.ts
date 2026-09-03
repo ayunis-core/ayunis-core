@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,21 +10,21 @@ import { Paginated, PaginatedQueryParams } from 'src/common/pagination';
 
 @Injectable()
 export class LocalTeamMembersRepository extends TeamMembersRepository {
+  private readonly logger = new Logger(LocalTeamMembersRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalTeamMembersRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(TeamMemberRecord)
     private readonly teamMemberRepository: Repository<TeamMemberRecord>,
   ) {
     super();
-    this.logger.info('constructor');
+    this.logger.log('constructor');
   }
 
   async findByTeamId(
     teamId: UUID,
     pagination: PaginatedQueryParams,
   ): Promise<Paginated<TeamMember>> {
-    this.logger.info({ teamId, pagination }, 'findByTeamId');
+    this.logger.log({ teamId, pagination }, 'findByTeamId');
 
     const [records, total] = await this.teamMemberRepository.findAndCount({
       where: { teamId },
@@ -55,7 +54,7 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     teamId: UUID,
     userId: UUID,
   ): Promise<TeamMember | null> {
-    this.logger.info({ teamId, userId }, 'findByTeamIdAndUserId');
+    this.logger.log({ teamId, userId }, 'findByTeamIdAndUserId');
 
     const record = await this.teamMemberRepository.findOne({
       where: { teamId, userId },
@@ -72,7 +71,7 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
   }
 
   async create(teamMember: TeamMember): Promise<TeamMember> {
-    this.logger.info(
+    this.logger.log(
       {
         id: teamMember.id,
         teamId: teamMember.teamId,
@@ -101,21 +100,21 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
 
     await this.teamMemberRepository.delete(id);
     this.logger.debug({ id }, 'Team member deleted successfully');
   }
 
   async deleteByTeamIdAndUserId(teamId: UUID, userId: UUID): Promise<void> {
-    this.logger.info({ teamId, userId }, 'deleteByTeamIdAndUserId');
+    this.logger.log({ teamId, userId }, 'deleteByTeamIdAndUserId');
 
     await this.teamMemberRepository.delete({ teamId, userId });
     this.logger.debug({ teamId, userId }, 'Team member deleted successfully');
   }
 
   async findAllUserIdsByTeamId(teamId: UUID): Promise<UUID[]> {
-    this.logger.info({ teamId }, 'findAllUserIdsByTeamId');
+    this.logger.log({ teamId }, 'findAllUserIdsByTeamId');
 
     const records = await this.teamMemberRepository.find({
       where: { teamId },
@@ -134,7 +133,7 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
   }
 
   async countByTeamIds(teamIds: UUID[]): Promise<Map<UUID, number>> {
-    this.logger.info({ count: teamIds.length }, 'countByTeamIds');
+    this.logger.log({ count: teamIds.length }, 'countByTeamIds');
 
     const counts = new Map<UUID, number>(teamIds.map((id) => [id, 0]));
     if (teamIds.length === 0) {

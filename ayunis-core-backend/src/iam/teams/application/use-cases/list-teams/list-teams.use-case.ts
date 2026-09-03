@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { TeamsRepository } from '../../ports/teams.repository';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
-import { UnexpectedTeamError } from '../../teams.errors';
+import { Injectable, Logger } from '@nestjs/common';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -10,9 +9,9 @@ import { TeamWithMemberCount } from './team-with-member-count.view';
 
 @Injectable()
 export class ListTeamsUseCase {
+  private readonly logger = new Logger(ListTeamsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ListTeamsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly contextService: ContextService,
@@ -25,7 +24,7 @@ export class ListTeamsUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info({ orgId }, 'listTeams');
+    this.logger.log({ orgId }, 'listTeams');
 
     try {
       const teams = await this.teamsRepository.findByOrgId(orgId);

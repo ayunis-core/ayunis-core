@@ -1,22 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import { FindActiveAlwaysOnTemplatesQuery } from './find-active-always-on-templates.query';
-import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
+import { UnexpectedSkillTemplateError } from 'src/domain/skill-templates/application/skill-templates.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 const CACHE_TTL_MS = 60_000;
 
 @Injectable()
 export class FindActiveAlwaysOnTemplatesUseCase {
+  private readonly logger = new Logger(FindActiveAlwaysOnTemplatesUseCase.name);
+
   private cachedTemplates: SkillTemplate[] | null = null;
   private cacheExpiresAt = 0;
 
   constructor(
-    @InjectPinoLogger(FindActiveAlwaysOnTemplatesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 

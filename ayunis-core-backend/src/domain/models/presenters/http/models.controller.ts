@@ -8,8 +8,8 @@ import {
   Param,
   Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiExtraModels,
@@ -25,32 +25,32 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetConfiguredModelsByTypeQuery } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
-import { GetConfiguredModelsByTypeUseCase } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
-import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
-import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
-import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
-import { DeletePermittedModelUseCase } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
-import { GetEffectiveLanguageModelsQuery } from '../../application/use-cases/get-effective-language-models/get-effective-language-models.query';
-import { GetEffectiveLanguageModelsUseCase } from '../../application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
-import { GetModelProviderInfoQuery } from '../../application/use-cases/get-model-provider-info/get-model-provider-info.query';
-import { GetModelProviderInfoUseCase } from '../../application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
-import { GetPermittedLanguageModelsQuery } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
-import { GetPermittedLanguageModelsUseCase } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
-import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
-import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
-import { IsEmbeddingModelEnabledQuery } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.query';
-import { IsEmbeddingModelEnabledUseCase } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
-import { UpdatePermittedModelCommand } from '../../application/use-cases/update-permitted-model/update-permitted-model.command';
-import { UpdatePermittedModelUseCase } from '../../application/use-cases/update-permitted-model/update-permitted-model.use-case';
-import { ModelProviderInfoRegistry } from '../../application/registry/model-provider-info.registry';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { ModelType } from '../../domain/value-objects/model-type.enum';
+import { GetConfiguredModelsByTypeQuery } from 'src/domain/models/application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
+import { GetConfiguredModelsByTypeUseCase } from 'src/domain/models/application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
+import { CreatePermittedModelCommand } from 'src/domain/models/application/use-cases/create-permitted-model/create-permitted-model.command';
+import { CreatePermittedModelUseCase } from 'src/domain/models/application/use-cases/create-permitted-model/create-permitted-model.use-case';
+import { DeletePermittedModelCommand } from 'src/domain/models/application/use-cases/delete-permitted-model/delete-permitted-model.command';
+import { DeletePermittedModelUseCase } from 'src/domain/models/application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
+import { GetEffectiveLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.query';
+import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
+import { GetModelProviderInfoQuery } from 'src/domain/models/application/use-cases/get-model-provider-info/get-model-provider-info.query';
+import { GetModelProviderInfoUseCase } from 'src/domain/models/application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
+import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
+import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
+import { GetPermittedModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.query';
+import { GetPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.use-case';
+import { IsEmbeddingModelEnabledQuery } from 'src/domain/models/application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.query';
+import { IsEmbeddingModelEnabledUseCase } from 'src/domain/models/application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
+import { UpdatePermittedModelCommand } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.command';
+import { UpdatePermittedModelUseCase } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.use-case';
+import { ModelProviderInfoRegistry } from 'src/domain/models/application/registry/model-provider-info.registry';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
   PermittedLanguageModel,
-} from '../../domain/permitted-model.entity';
+} from 'src/domain/models/domain/permitted-model.entity';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { EmbeddingModelEnabledResponseDto } from './dto/embedding-model-enabled-response.dto';
 import { ModelProviderInfoResponseDto } from './dto/model-provider-info-response.dto';
@@ -66,10 +66,9 @@ import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-re
 @ApiTags('models')
 @Controller('models')
 export class ModelsController {
-  constructor(
-    @InjectPinoLogger(ModelsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(ModelsController.name);
 
+  constructor(
     private readonly createPermittedModelUseCase: CreatePermittedModelUseCase,
     private readonly getConfiguredModelsByTypeUseCase: GetConfiguredModelsByTypeUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
@@ -103,7 +102,7 @@ export class ModelsController {
   async getAvailableLanguageModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.info('getAvailableLanguageModels');
+    this.logger.log('getAvailableLanguageModels');
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.LANGUAGE),
     );
@@ -134,7 +133,7 @@ export class ModelsController {
   async getAvailableEmbeddingModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.info('getAvailableEmbeddingModels');
+    this.logger.log('getAvailableEmbeddingModels');
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.EMBEDDING),
     );
@@ -164,7 +163,7 @@ export class ModelsController {
   async getAvailableImageGenerationModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.info('getAvailableImageGenerationModels');
+    this.logger.log('getAvailableImageGenerationModels');
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.IMAGE_GENERATION),
     );
@@ -188,7 +187,7 @@ export class ModelsController {
   })
   @ApiExtraModels(ModelProviderInfoResponseDto)
   getProviders(): ModelProviderInfoResponseDto[] {
-    this.logger.info('getProviders');
+    this.logger.log('getProviders');
     return this.modelProviderInfoRegistry
       .getAllProviderInfos()
       .map((info) => this.modelProviderInfoResponseDtoMapper.toDto(info));
@@ -369,7 +368,7 @@ export class ModelsController {
   getModelProviderInfo(
     @Param('provider') provider: ModelProvider,
   ): ModelProviderInfoResponseDto {
-    this.logger.info({ provider }, 'getModelProviderInfo');
+    this.logger.log({ provider }, 'getModelProviderInfo');
     const query = new GetModelProviderInfoQuery(provider);
     const entity = this.getModelProviderInfoUseCase.execute(query);
     return this.modelProviderInfoResponseDtoMapper.toDto(entity);

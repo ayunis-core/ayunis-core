@@ -10,8 +10,8 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -37,35 +37,35 @@ import { McpIntegrationResponseMapper } from './mappers/mcp-integration-response
 import { PredefinedConfigDtoMapper } from './mappers/predefined-config-dto.mapper';
 
 // Use Cases
-import { CreateMcpIntegrationUseCase } from '../../application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
-import { GetMcpIntegrationUseCase } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
-import { ListOrgMcpIntegrationsUseCase } from '../../application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
-import { ListAvailableMcpIntegrationsUseCase } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
-import { UpdateMcpIntegrationUseCase } from '../../application/use-cases/update-mcp-integration/update-mcp-integration.use-case';
-import { DeleteMcpIntegrationUseCase } from '../../application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case';
-import { EnableMcpIntegrationUseCase } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case';
-import { DisableMcpIntegrationUseCase } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case';
-import { ValidateMcpIntegrationUseCase } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
-import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
-import { InstallMarketplaceIntegrationUseCase } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
-import { SetUserMcpConfigUseCase } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
-import { GetUserMcpConfigUseCase } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
+import { CreateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
+import { GetMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
+import { ListOrgMcpIntegrationsUseCase } from 'src/domain/mcp/application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
+import { ListAvailableMcpIntegrationsUseCase } from 'src/domain/mcp/application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
+import { UpdateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/update-mcp-integration/update-mcp-integration.use-case';
+import { DeleteMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case';
+import { EnableMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case';
+import { DisableMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case';
+import { ValidateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
+import { ListPredefinedMcpIntegrationConfigsUseCase } from 'src/domain/mcp/application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
+import { InstallMarketplaceIntegrationUseCase } from 'src/domain/mcp/application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { SetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
+import { GetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 
 // Commands and Queries
-import { CreatePredefinedMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command';
-import { CreateCustomMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-custom-mcp-integration.command';
-import { GetMcpIntegrationQuery } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.query';
-import { UpdateMcpIntegrationCommand } from '../../application/use-cases/update-mcp-integration/update-mcp-integration.command';
-import { DeleteMcpIntegrationCommand } from '../../application/use-cases/delete-mcp-integration/delete-mcp-integration.command';
-import { EnableMcpIntegrationCommand } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.command';
-import { DisableMcpIntegrationCommand } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.command';
-import { ValidateMcpIntegrationCommand } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.command';
-import { InstallMarketplaceIntegrationCommand } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.command';
-import { SetUserMcpConfigCommand } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.command';
-import { GetUserMcpConfigQuery } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.query';
-import { CredentialFieldValue } from '../../domain/predefined-mcp-integration-config';
+import { CreatePredefinedMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command';
+import { CreateCustomMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/create-mcp-integration/create-custom-mcp-integration.command';
+import { GetMcpIntegrationQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integration/get-mcp-integration.query';
+import { UpdateMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/update-mcp-integration/update-mcp-integration.command';
+import { DeleteMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/delete-mcp-integration/delete-mcp-integration.command';
+import { EnableMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/enable-mcp-integration/enable-mcp-integration.command';
+import { DisableMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/disable-mcp-integration/disable-mcp-integration.command';
+import { ValidateMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.command';
+import { InstallMarketplaceIntegrationCommand } from 'src/domain/mcp/application/use-cases/install-marketplace-integration/install-marketplace-integration.command';
+import { SetUserMcpConfigCommand } from 'src/domain/mcp/application/use-cases/set-user-mcp-config/set-user-mcp-config.command';
+import { GetUserMcpConfigQuery } from 'src/domain/mcp/application/use-cases/get-user-mcp-config/get-user-mcp-config.query';
+import { CredentialFieldValue } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import { ConfigService } from '@nestjs/config';
-import { McpOAuthAuthorizationService } from '../../application/services/mcp-oauth-authorization.service';
+import { McpOAuthAuthorizationService } from 'src/domain/mcp/application/services/mcp-oauth-authorization.service';
 import {
   CompleteMcpOAuthDto,
   McpOAuthAuthorizationUrlDto,
@@ -75,9 +75,9 @@ import {
 @ApiTags('mcp-integrations')
 @Controller('mcp-integrations')
 export class McpIntegrationsController {
+  private readonly logger = new Logger(McpIntegrationsController.name);
+
   constructor(
-    @InjectPinoLogger(McpIntegrationsController.name)
-    private readonly logger: PinoLogger,
     private readonly createMcpIntegrationUseCase: CreateMcpIntegrationUseCase,
     private readonly getMcpIntegrationUseCase: GetMcpIntegrationUseCase,
     private readonly listOrgMcpIntegrationsUseCase: ListOrgMcpIntegrationsUseCase,
@@ -142,7 +142,7 @@ export class McpIntegrationsController {
   async createPredefined(
     @Body() dto: CreatePredefinedIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.info({ slug: dto.slug }, 'createPredefined');
+    this.logger.log({ slug: dto.slug }, 'createPredefined');
 
     // Map DTO config values to domain credential fields
     const credentialFields: CredentialFieldValue[] = dto.configValues.map(
@@ -175,7 +175,7 @@ export class McpIntegrationsController {
   async createCustom(
     @Body() dto: CreateCustomIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.info({ name: dto.name, url: dto.serverUrl }, 'createCustom');
+    this.logger.log({ name: dto.name, url: dto.serverUrl }, 'createCustom');
 
     const isCloud =
       this.configService.get<boolean>('app.isCloudHosted') ?? false;
@@ -213,7 +213,7 @@ export class McpIntegrationsController {
     type: [McpIntegrationResponseDto],
   })
   async list(): Promise<McpIntegrationResponseDto[]> {
-    this.logger.info('listOrgMcpIntegrations');
+    this.logger.log('listOrgMcpIntegrations');
 
     const integrations = await this.listOrgMcpIntegrationsUseCase.execute();
 
@@ -231,7 +231,7 @@ export class McpIntegrationsController {
     type: [PredefinedConfigResponseDto],
   })
   listPredefinedConfigs(): PredefinedConfigResponseDto[] {
-    this.logger.info('listPredefinedConfigs');
+    this.logger.log('listPredefinedConfigs');
 
     const configs = this.listPredefinedConfigsUseCase.execute();
 
@@ -248,7 +248,7 @@ export class McpIntegrationsController {
     type: [McpIntegrationResponseDto],
   })
   async listAvailable(): Promise<McpIntegrationResponseDto[]> {
-    this.logger.info('listAvailableMcpIntegrations');
+    this.logger.log('listAvailableMcpIntegrations');
 
     const available = await this.listAvailableMcpIntegrationsUseCase.execute();
 
@@ -272,7 +272,7 @@ export class McpIntegrationsController {
   async getById(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.info({ id }, 'getById');
+    this.logger.log({ id }, 'getById');
 
     const integration = await this.getMcpIntegrationUseCase.execute(
       new GetMcpIntegrationQuery(id),
@@ -297,7 +297,7 @@ export class McpIntegrationsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateMcpIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.info({ id }, 'update');
+    this.logger.log({ id }, 'update');
 
     const command = new UpdateMcpIntegrationCommand({
       integrationId: id,
@@ -321,7 +321,7 @@ export class McpIntegrationsController {
   @ApiResponse({ status: 204, description: 'Integration deleted successfully' })
   @ApiResponse({ status: 404, description: 'Integration not found' })
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
 
     await this.deleteMcpIntegrationUseCase.execute(
       new DeleteMcpIntegrationCommand(id),
@@ -341,7 +341,7 @@ export class McpIntegrationsController {
   async enable(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.info({ id }, 'enable');
+    this.logger.log({ id }, 'enable');
 
     const integration = await this.enableMcpIntegrationUseCase.execute(
       new EnableMcpIntegrationCommand(id),
@@ -363,7 +363,7 @@ export class McpIntegrationsController {
   async disable(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.info({ id }, 'disable');
+    this.logger.log({ id }, 'disable');
 
     const integration = await this.disableMcpIntegrationUseCase.execute(
       new DisableMcpIntegrationCommand(id),
@@ -394,7 +394,7 @@ export class McpIntegrationsController {
   async installFromMarketplace(
     @Body() dto: InstallMarketplaceIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         identifier: dto.identifier,
       },
@@ -427,7 +427,7 @@ export class McpIntegrationsController {
   async getUserConfig(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<UserConfigResponseDto> {
-    this.logger.info({ id }, 'getUserConfig');
+    this.logger.log({ id }, 'getUserConfig');
 
     const result = await this.getUserMcpConfigUseCase.execute(
       new GetUserMcpConfigQuery(id),
@@ -457,7 +457,7 @@ export class McpIntegrationsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: SetUserConfigDto,
   ): Promise<UserConfigResponseDto> {
-    this.logger.info({ id }, 'setUserConfig');
+    this.logger.log({ id }, 'setUserConfig');
 
     const command = new SetUserMcpConfigCommand(id, dto.configValues);
 
@@ -477,7 +477,7 @@ export class McpIntegrationsController {
   async validate(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<ValidationResponseDto> {
-    this.logger.info({ id }, 'validate');
+    this.logger.log({ id }, 'validate');
 
     const result = await this.validateMcpIntegrationUseCase.execute(
       new ValidateMcpIntegrationCommand(id),

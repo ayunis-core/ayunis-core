@@ -1,16 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
-import { SkillRepository } from '../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 
 @Injectable()
 export class ShareDeletedListener {
+  private readonly logger = new Logger(ShareDeletedListener.name);
+
   constructor(
-    @InjectPinoLogger(ShareDeletedListener.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly shareScopeResolver: ShareScopeResolverService,
@@ -22,7 +21,7 @@ export class ShareDeletedListener {
       return;
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         skillId: event.entityId,
         ownerId: event.ownerId,

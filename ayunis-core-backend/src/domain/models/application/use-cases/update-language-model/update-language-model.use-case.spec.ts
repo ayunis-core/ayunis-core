@@ -1,5 +1,4 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateLanguageModelUseCase } from './update-language-model.use-case';
@@ -16,7 +15,7 @@ import {
 import type { UUID } from 'crypto';
 
 describe('UpdateLanguageModelUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: UpdateLanguageModelUseCase;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let clearDefaultsUseCase: jest.Mocked<ClearDefaultsByCatalogModelIdUseCase>;
@@ -39,10 +38,6 @@ describe('UpdateLanguageModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(UpdateLanguageModelUseCase.name),
-          useValue: logger,
-        },
         UpdateLanguageModelUseCase,
         { provide: ModelsRepository, useValue: mockModelsRepository },
         {
@@ -59,7 +54,7 @@ describe('UpdateLanguageModelUseCase', () => {
     clearDefaultsUseCase = module.get(ClearDefaultsByCatalogModelIdUseCase);
 
     // Mock logger
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.debug.mockImplementation();
   });
 
@@ -284,7 +279,7 @@ describe('UpdateLanguageModelUseCase', () => {
       modelsRepository.save.mockResolvedValue();
       clearDefaultsUseCase.execute.mockResolvedValue();
 
-      const logSpy = logger.info;
+      const logSpy = logger.log;
 
       // Act
       await useCase.execute(command);
@@ -382,7 +377,7 @@ describe('UpdateLanguageModelUseCase', () => {
       modelsRepository.findOne.mockResolvedValue(existingModel);
       modelsRepository.save.mockResolvedValue();
 
-      const logSpy = logger.info;
+      const logSpy = logger.log;
 
       // Act
       await useCase.execute(command);

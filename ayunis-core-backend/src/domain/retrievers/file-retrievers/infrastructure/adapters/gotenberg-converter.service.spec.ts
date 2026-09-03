@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import axios from 'axios';
@@ -10,7 +8,7 @@ import {
   FileRetrievalFailedError,
   FileTooLargeError,
   UnprocessableDocumentError,
-} from '../../application/file-retriever.errors';
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 jest.mock('axios');
 
@@ -28,10 +26,6 @@ describe('GotenbergConverterService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GotenbergConverterService,
-        {
-          provide: getLoggerToken(GotenbergConverterService.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: gotenbergConfig.KEY,
           useValue: { url: 'https://gotenberg:3000' },

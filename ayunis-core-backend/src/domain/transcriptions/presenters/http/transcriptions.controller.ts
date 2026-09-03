@@ -5,12 +5,12 @@ import {
   UploadedFile,
   Body,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TranscribeUseCase } from '../../application/use-cases/transcribe/transcribe.use-case';
-import { TranscribeCommand } from '../../application/use-cases/transcribe/transcribe.command';
+import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 import { TranscriptionResponseDto } from './dtos/transcription-response.dto';
 import { ApiTranscribe } from './decorators/api-transcribe.decorator';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
@@ -20,11 +20,9 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 @RequireAcademyCertificate()
 @Controller('transcriptions')
 export class TranscriptionsController {
-  constructor(
-    @InjectPinoLogger(TranscriptionsController.name)
-    private readonly logger: PinoLogger,
-    private readonly transcribeUseCase: TranscribeUseCase,
-  ) {}
+  private readonly logger = new Logger(TranscriptionsController.name);
+
+  constructor(private readonly transcribeUseCase: TranscribeUseCase) {}
 
   @Post()
   @UseInterceptors(
@@ -43,7 +41,7 @@ export class TranscriptionsController {
       throw new BadRequestException('No audio file provided');
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         fileName: file.originalname,
         mimeType: file.mimetype,

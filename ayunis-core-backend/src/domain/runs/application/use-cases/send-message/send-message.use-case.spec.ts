@@ -1,11 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
-import type { ExecuteRunAndSetTitleUseCase } from '../execute-run-and-set-title/execute-run-and-set-title.use-case';
-import { ExecuteRunAndSetTitleCommand } from '../execute-run-and-set-title/execute-run-and-set-title.command';
-import type { RunEvent } from '../../run-events';
+import type { ExecuteRunAndSetTitleUseCase } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
+import { ExecuteRunAndSetTitleCommand } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
+import type { RunEvent } from 'src/domain/runs/application/run-events';
 import { SendMessageCommand } from './send-message.command';
 import { SendMessageUseCase } from './send-message.use-case';
 
@@ -68,7 +67,6 @@ describe('SendMessageUseCase', () => {
       executeRunAndSetTitleUseCase as unknown as ExecuteRunAndSetTitleUseCase,
       incrementTrialMessagesUseCase as unknown as IncrementTrialMessagesUseCase,
       contextService as unknown as ContextService,
-      createPinoLoggerMock(),
     );
   });
 

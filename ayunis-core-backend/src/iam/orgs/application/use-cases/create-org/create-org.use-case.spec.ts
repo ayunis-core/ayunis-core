@@ -1,6 +1,4 @@
 import type { TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -43,10 +41,6 @@ describe('CreateOrgUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateOrgUseCase,
-        {
-          provide: getLoggerToken(CreateOrgUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: OrgsRepository, useValue: mockOrgsRepository },
         {
           provide: EventEmitter2,

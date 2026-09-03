@@ -1,21 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import {
   ModelNotFoundByIdError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { ModelsRepository } from '../../ports/models.repository';
-import { ModelPolicyService } from '../../services/model-policy.service';
+} from 'src/domain/models/application/models.errors';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 import { UpdateImageGenerationModelCommand } from './update-image-generation-model.command';
 
 @Injectable()
 export class UpdateImageGenerationModelUseCase {
-  constructor(
-    @InjectPinoLogger(UpdateImageGenerationModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(UpdateImageGenerationModelUseCase.name);
 
+  constructor(
     private readonly modelsRepository: ModelsRepository,
     private readonly modelPolicy: ModelPolicyService,
   ) {}

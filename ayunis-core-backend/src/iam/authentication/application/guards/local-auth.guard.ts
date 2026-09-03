@@ -1,13 +1,11 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class LocalAuthGuard extends AuthGuard('local') {
-  constructor(
-    @InjectPinoLogger(LocalAuthGuard.name)
-    private readonly logger: PinoLogger,
-  ) {
+  private readonly logger = new Logger(LocalAuthGuard.name);
+
+  constructor() {
     super();
   }
 

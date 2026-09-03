@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { GetLatestSubscriptionUseCase } from './get-latest-subscription.use-case';
 import { GetLatestSubscriptionQuery } from './get-latest-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
@@ -14,7 +12,7 @@ import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { SubscriptionNotFoundError } from '../../subscription.errors';
+import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -83,10 +81,6 @@ describe('GetLatestSubscriptionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetLatestSubscriptionUseCase,
-        {
-          provide: getLoggerToken(GetLatestSubscriptionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SubscriptionRepository,
           useValue: { findLatestByOrgId: jest.fn() },

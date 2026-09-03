@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LoginUseCase } from './login.use-case';
@@ -36,10 +34,6 @@ describe('LoginUseCase', () => {
         {
           provide: AuthorizeUserLoginUseCase,
           useValue: authorizeUserLogin,
-        },
-        {
-          provide: getLoggerToken(LoginUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

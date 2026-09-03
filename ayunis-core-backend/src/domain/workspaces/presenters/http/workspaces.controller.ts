@@ -10,8 +10,8 @@ import {
   Patch,
   Post,
   Query,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiOperation,
   ApiParam,
@@ -43,9 +43,9 @@ import { WorkspaceListResponseDto } from './dtos/workspace-list-response.dto';
 @Controller('workspaces')
 @RequireFeature(FeatureFlag.Workspaces)
 export class WorkspacesController {
+  private readonly logger = new Logger(WorkspacesController.name);
+
   constructor(
-    @InjectPinoLogger(WorkspacesController.name)
-    private readonly logger: PinoLogger,
     private readonly createWorkspaceUseCase: CreateWorkspaceUseCase,
     private readonly findAllWorkspacesUseCase: FindAllWorkspacesUseCase,
     private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
@@ -62,7 +62,7 @@ export class WorkspacesController {
     type: WorkspaceResponseDto,
   })
   async create(@Body() dto: CreateWorkspaceDto): Promise<WorkspaceResponseDto> {
-    this.logger.info('create');
+    this.logger.log('create');
     const workspace = await this.createWorkspaceUseCase.execute(
       new CreateWorkspaceCommand({
         name: dto.name,
@@ -92,7 +92,7 @@ export class WorkspacesController {
   async findAll(
     @Query() queryParams: FindAllWorkspacesQueryParamsDto,
   ): Promise<WorkspaceListResponseDto> {
-    this.logger.info('findAll');
+    this.logger.log('findAll');
     const page = await this.findAllWorkspacesUseCase.execute(
       new FindAllWorkspacesQuery(queryParams),
     );
@@ -116,7 +116,7 @@ export class WorkspacesController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<WorkspaceResponseDto> {
-    this.logger.info({ id }, 'findOne');
+    this.logger.log({ id }, 'findOne');
     const workspace = await this.findWorkspaceUseCase.execute(
       new FindWorkspaceQuery(id),
     );
@@ -141,7 +141,7 @@ export class WorkspacesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateWorkspaceDto,
   ): Promise<WorkspaceResponseDto> {
-    this.logger.info({ id }, 'update');
+    this.logger.log({ id }, 'update');
     const workspace = await this.updateWorkspaceUseCase.execute(
       new UpdateWorkspaceCommand({
         id,
@@ -168,7 +168,7 @@ export class WorkspacesController {
   @ApiResponse({ status: 204, description: 'The workspace was deleted' })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async remove(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ id }, 'remove');
+    this.logger.log({ id }, 'remove');
     await this.deleteWorkspaceUseCase.execute(new DeleteWorkspaceCommand(id));
   }
 }

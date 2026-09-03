@@ -1,26 +1,24 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { McpClientService } from './mcp-client.service';
-import { McpClientPort } from '../ports/mcp-client.port';
-import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
+import { McpClientPort } from 'src/domain/mcp/application/ports/mcp-client.port';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { randomUUID } from 'crypto';
-import { aCustomMcpIntegration } from '../testing/mcp-integration.fixtures';
-import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { McpIntegrationUserConfig } from '../../domain/mcp-integration-user-config.entity';
-import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
-import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import {
   McpAuthenticationError,
   McpUserAuthorizationRequiredError,
-} from '../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 
 class MockMcpClientPort extends McpClientPort {
   listTools = jest.fn();
@@ -76,11 +74,6 @@ describe('McpClientService', () => {
         {
           provide: McpIntegrationUserConfigRepositoryPort,
           useValue: userConfigRepo,
-        },
-
-        {
-          provide: getLoggerToken(McpClientService.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

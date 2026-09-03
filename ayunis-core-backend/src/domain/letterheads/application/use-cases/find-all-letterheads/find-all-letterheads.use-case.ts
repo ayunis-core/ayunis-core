@@ -1,23 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { UnexpectedLetterheadError } from '../../letterheads.errors';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { UnexpectedLetterheadError } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 @Injectable()
 export class FindAllLetterheadsUseCase {
+  private readonly logger = new Logger(FindAllLetterheadsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindAllLetterheadsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(): Promise<Letterhead[]> {
-    this.logger.info('Finding all letterheads');
+    this.logger.log('Finding all letterheads');
 
     try {
       const orgId = this.contextService.get('orgId');

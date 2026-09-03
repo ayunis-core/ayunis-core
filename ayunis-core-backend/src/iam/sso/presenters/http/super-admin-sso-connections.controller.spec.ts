@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { SYSTEM_ROLES_KEY } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
 import { GetOrgSsoConnectionQuery } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.query';
@@ -15,7 +15,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 const SUPER_ADMIN_ID = '33333333-3333-3333-3333-333333333333';
 
 function createController() {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   const getConnection = { execute: jest.fn() };
   const configureConnection = { execute: jest.fn() };
   const setEnabled = { execute: jest.fn() };
@@ -23,7 +23,6 @@ function createController() {
   const setIdp = { execute: jest.fn() };
   return {
     controller: new SuperAdminSsoConnectionsController(
-      logger,
       getConnection as never,
       configureConnection as never,
       setEnabled as never,
@@ -84,7 +83,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
       ),
     );
     expect(result.connection).toMatchObject({ orgId: TEST_ORG_ID });
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       expect.objectContaining({
         connection: expect.objectContaining({
           emailDomains: connection.emailDomains,
@@ -118,7 +117,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
       }),
     );
     expect(result.connection).toMatchObject({ enabled: true });
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmation: {
           confirmed: true,

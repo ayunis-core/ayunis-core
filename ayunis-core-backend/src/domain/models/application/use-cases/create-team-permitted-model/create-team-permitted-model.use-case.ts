@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   ModelNotFoundError,
@@ -18,9 +17,9 @@ import { CreateTeamPermittedModelCommand } from './create-team-permitted-model.c
 
 @Injectable()
 export class CreateTeamPermittedModelUseCase {
+  private readonly logger = new Logger(CreateTeamPermittedModelUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateTeamPermittedModelUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelsRepository: ModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
@@ -31,7 +30,7 @@ export class CreateTeamPermittedModelUseCase {
   async execute(
     command: CreateTeamPermittedModelCommand,
   ): Promise<PermittedModel> {
-    this.logger.info(
+    this.logger.log(
       {
         modelId: command.modelId,
         orgId: command.orgId,

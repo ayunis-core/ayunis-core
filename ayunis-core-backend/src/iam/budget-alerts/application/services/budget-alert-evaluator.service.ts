@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 
 import { OrgContextRunner } from 'src/common/context/services/org-context-runner.service';
 
-import { EvaluateBudgetAlertsForOrgQuery } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.query';
-import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
+import { EvaluateBudgetAlertsForOrgQuery } from 'src/iam/budget-alerts/application/use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.query';
+import { EvaluateBudgetAlertsForOrgUseCase } from 'src/iam/budget-alerts/application/use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
 
 /**
  * Single entrypoint for running a budget-alert evaluation. Serializes runs
@@ -16,11 +15,11 @@ import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-
  */
 @Injectable()
 export class BudgetAlertEvaluator {
+  private readonly logger = new Logger(BudgetAlertEvaluator.name);
+
   private readonly inFlight = new Map<UUID, Promise<void>>();
 
   constructor(
-    @InjectPinoLogger(BudgetAlertEvaluator.name)
-    private readonly logger: PinoLogger,
     private readonly orgContextRunner: OrgContextRunner,
     private readonly evaluateBudgetAlertsForOrgUseCase: EvaluateBudgetAlertsForOrgUseCase,
   ) {}

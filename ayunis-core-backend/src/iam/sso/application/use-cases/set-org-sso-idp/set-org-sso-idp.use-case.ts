@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import {
@@ -15,16 +14,14 @@ import { normalizeZitadelIdpId } from 'src/iam/sso/domain/sso-connection-values'
 
 @Injectable()
 export class SetOrgSsoIdpUseCase {
-  constructor(
-    @InjectPinoLogger(SetOrgSsoIdpUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: OrgSsoConnectionsRepository,
-  ) {}
+  private readonly logger = new Logger(SetOrgSsoIdpUseCase.name);
+
+  constructor(private readonly repository: OrgSsoConnectionsRepository) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
   async execute(command: SetOrgSsoIdpCommand): Promise<OrgSsoConnection> {
     const zitadelIdpId = this.normalizeIdpId(command.zitadelIdpId);
-    this.logger.info(
+    this.logger.log(
       { orgId: command.orgId, zitadelIdpId },
       'Setting organization SSO identity provider hint',
     );

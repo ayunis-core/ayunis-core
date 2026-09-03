@@ -10,8 +10,8 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -26,17 +26,17 @@ import {
 import type { UUID } from 'crypto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateSkillTemplateUseCase } from '../../application/use-cases/create-skill-template/create-skill-template.use-case';
-import { CreateSkillTemplateCommand } from '../../application/use-cases/create-skill-template/create-skill-template.command';
-import { UpdateSkillTemplateUseCase } from '../../application/use-cases/update-skill-template/update-skill-template.use-case';
-import { UpdateSkillTemplateCommand } from '../../application/use-cases/update-skill-template/update-skill-template.command';
-import { DeleteSkillTemplateUseCase } from '../../application/use-cases/delete-skill-template/delete-skill-template.use-case';
-import { DeleteSkillTemplateCommand } from '../../application/use-cases/delete-skill-template/delete-skill-template.command';
-import { FindAllSkillTemplatesUseCase } from '../../application/use-cases/find-all-skill-templates/find-all-skill-templates.use-case';
-import { FindOneSkillTemplateUseCase } from '../../application/use-cases/find-one-skill-template/find-one-skill-template.use-case';
-import { FindAllSkillTemplatesQuery } from '../../application/use-cases/find-all-skill-templates/find-all-skill-templates.query';
-import { FindOneSkillTemplateQuery } from '../../application/use-cases/find-one-skill-template/find-one-skill-template.query';
-import { InvalidSkillTemplateNameError } from '../../domain/skill-template.entity';
+import { CreateSkillTemplateUseCase } from 'src/domain/skill-templates/application/use-cases/create-skill-template/create-skill-template.use-case';
+import { CreateSkillTemplateCommand } from 'src/domain/skill-templates/application/use-cases/create-skill-template/create-skill-template.command';
+import { UpdateSkillTemplateUseCase } from 'src/domain/skill-templates/application/use-cases/update-skill-template/update-skill-template.use-case';
+import { UpdateSkillTemplateCommand } from 'src/domain/skill-templates/application/use-cases/update-skill-template/update-skill-template.command';
+import { DeleteSkillTemplateUseCase } from 'src/domain/skill-templates/application/use-cases/delete-skill-template/delete-skill-template.use-case';
+import { DeleteSkillTemplateCommand } from 'src/domain/skill-templates/application/use-cases/delete-skill-template/delete-skill-template.command';
+import { FindAllSkillTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-all-skill-templates/find-all-skill-templates.use-case';
+import { FindOneSkillTemplateUseCase } from 'src/domain/skill-templates/application/use-cases/find-one-skill-template/find-one-skill-template.use-case';
+import { FindAllSkillTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-all-skill-templates/find-all-skill-templates.query';
+import { FindOneSkillTemplateQuery } from 'src/domain/skill-templates/application/use-cases/find-one-skill-template/find-one-skill-template.query';
+import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { CreateSkillTemplateDto } from './dto/create-skill-template.dto';
 import { UpdateSkillTemplateDto } from './dto/update-skill-template.dto';
 import { SkillTemplateResponseDto } from './dto/skill-template-response.dto';
@@ -46,9 +46,9 @@ import { SkillTemplateResponseMapper } from './mappers/skill-template-response.m
 @Controller('super-admin/skill-templates')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminSkillTemplatesController {
+  private readonly logger = new Logger(SuperAdminSkillTemplatesController.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminSkillTemplatesController.name)
-    private readonly logger: PinoLogger,
     private readonly createSkillTemplateUseCase: CreateSkillTemplateUseCase,
     private readonly updateSkillTemplateUseCase: UpdateSkillTemplateUseCase,
     private readonly deleteSkillTemplateUseCase: DeleteSkillTemplateUseCase,
@@ -82,7 +82,7 @@ export class SuperAdminSkillTemplatesController {
   async create(
     @Body() dto: CreateSkillTemplateDto,
   ): Promise<SkillTemplateResponseDto> {
-    this.logger.info({ name: dto.name }, 'Creating skill template');
+    this.logger.log({ name: dto.name }, 'Creating skill template');
 
     try {
       const command = new CreateSkillTemplateCommand({
@@ -97,7 +97,7 @@ export class SuperAdminSkillTemplatesController {
 
       const template = await this.createSkillTemplateUseCase.execute(command);
 
-      this.logger.info(
+      this.logger.log(
         { skillTemplateId: template.id },
         'Successfully created skill template',
       );
@@ -128,13 +128,13 @@ export class SuperAdminSkillTemplatesController {
     description: 'Internal server error',
   })
   async findAll(): Promise<SkillTemplateResponseDto[]> {
-    this.logger.info('Finding all skill templates');
+    this.logger.log('Finding all skill templates');
 
     const templates = await this.findAllSkillTemplatesUseCase.execute(
       new FindAllSkillTemplatesQuery(),
     );
 
-    this.logger.info(
+    this.logger.log(
       { count: templates.length },
       'Successfully retrieved skill templates',
     );
@@ -170,13 +170,13 @@ export class SuperAdminSkillTemplatesController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillTemplateResponseDto> {
-    this.logger.info({ skillTemplateId: id }, 'Finding skill template');
+    this.logger.log({ skillTemplateId: id }, 'Finding skill template');
 
     const template = await this.findOneSkillTemplateUseCase.execute(
       new FindOneSkillTemplateQuery(id),
     );
 
-    this.logger.info(
+    this.logger.log(
       { skillTemplateId: id },
       'Successfully retrieved skill template',
     );
@@ -216,12 +216,12 @@ export class SuperAdminSkillTemplatesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateSkillTemplateDto,
   ): Promise<SkillTemplateResponseDto> {
-    this.logger.info({ skillTemplateId: id }, 'Updating skill template');
+    this.logger.log({ skillTemplateId: id }, 'Updating skill template');
     try {
       const command = this.createUpdateCommand(id, dto);
       const template = await this.updateSkillTemplateUseCase.execute(command);
 
-      this.logger.info(
+      this.logger.log(
         { skillTemplateId: id },
         'Successfully updated skill template',
       );
@@ -260,13 +260,13 @@ export class SuperAdminSkillTemplatesController {
     description: 'Internal server error',
   })
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ skillTemplateId: id }, 'Deleting skill template');
+    this.logger.log({ skillTemplateId: id }, 'Deleting skill template');
 
     await this.deleteSkillTemplateUseCase.execute(
       new DeleteSkillTemplateCommand({ skillTemplateId: id }),
     );
 
-    this.logger.info(
+    this.logger.log(
       { skillTemplateId: id },
       'Successfully deleted skill template',
     );

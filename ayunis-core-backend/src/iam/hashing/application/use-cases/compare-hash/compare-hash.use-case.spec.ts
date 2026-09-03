@@ -1,11 +1,9 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CompareHashUseCase } from './compare-hash.use-case';
 import { CompareHashCommand } from './compare-hash.command';
-import { HashingHandler } from '../../ports/hashing.handler';
-import { ComparisonFailedError } from '../../hashing.errors';
+import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handler';
+import { ComparisonFailedError } from 'src/iam/hashing/application/hashing.errors';
 
 describe('CompareHashUseCase', () => {
   let useCase: CompareHashUseCase;
@@ -22,10 +20,6 @@ describe('CompareHashUseCase', () => {
         {
           provide: HashingHandler,
           useValue: mockHashingHandler,
-        },
-        {
-          provide: getLoggerToken(CompareHashUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

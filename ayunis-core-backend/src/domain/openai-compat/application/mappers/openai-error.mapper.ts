@@ -1,5 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, HttpException, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { mappedError } from './openai-error-helpers';
 import type { MappedOpenAIError } from './openai-error.types';
@@ -7,10 +6,7 @@ import { envelope } from './openai-error-helpers';
 
 @Injectable()
 export class OpenAIErrorMapper {
-  constructor(
-    @InjectPinoLogger(OpenAIErrorMapper.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(OpenAIErrorMapper.name);
 
   /**
    * Convert any thrown value into an OpenAI error envelope. Domain errors

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,18 +10,18 @@ import { UUID } from 'crypto';
 
 @Injectable()
 export class LocalTeamsRepository extends TeamsRepository {
+  private readonly logger = new Logger(LocalTeamsRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalTeamsRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(TeamRecord)
     private readonly teamRepository: Repository<TeamRecord>,
   ) {
     super();
-    this.logger.info('constructor');
+    this.logger.log('constructor');
   }
 
   async findById(id: UUID): Promise<Team | null> {
-    this.logger.info({ id }, 'findById');
+    this.logger.log({ id }, 'findById');
 
     const teamRecord = await this.teamRepository.findOne({
       where: { id },
@@ -38,7 +37,7 @@ export class LocalTeamsRepository extends TeamsRepository {
   }
 
   async findByOrgId(orgId: UUID): Promise<Team[]> {
-    this.logger.info({ orgId }, 'findByOrgId');
+    this.logger.log({ orgId }, 'findByOrgId');
 
     const teamRecords = await this.teamRepository.find({
       where: { orgId },
@@ -50,7 +49,7 @@ export class LocalTeamsRepository extends TeamsRepository {
   }
 
   async findByNameAndOrgId(name: string, orgId: UUID): Promise<Team | null> {
-    this.logger.info({ name, orgId }, 'findByNameAndOrgId');
+    this.logger.log({ name, orgId }, 'findByNameAndOrgId');
 
     const teamRecord = await this.teamRepository.findOne({
       where: { name, orgId },
@@ -65,7 +64,7 @@ export class LocalTeamsRepository extends TeamsRepository {
   }
 
   async findByUserId(userId: UUID): Promise<Team[]> {
-    this.logger.info({ userId }, 'findByUserId');
+    this.logger.log({ userId }, 'findByUserId');
 
     const teamRecords = await this.teamRepository
       .createQueryBuilder('team')
@@ -85,7 +84,7 @@ export class LocalTeamsRepository extends TeamsRepository {
   }
 
   async create(team: Team): Promise<Team> {
-    this.logger.info(
+    this.logger.log(
       {
         id: team.id,
         name: team.name,
@@ -109,7 +108,7 @@ export class LocalTeamsRepository extends TeamsRepository {
   }
 
   async update(team: Team): Promise<Team> {
-    this.logger.info(
+    this.logger.log(
       {
         id: team.id,
         name: team.name,
@@ -132,7 +131,7 @@ export class LocalTeamsRepository extends TeamsRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
 
     await this.teamRepository.delete(id);
     this.logger.debug({ id }, 'Team deleted successfully');

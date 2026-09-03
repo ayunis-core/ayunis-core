@@ -1,17 +1,16 @@
-import { CodeExecutionTool } from '../../domain/tools/code-execution-tool.entity';
+import { CodeExecutionTool } from 'src/domain/tools/domain/tools/code-execution-tool.entity';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 import { UUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { getAyunisCodeExecutionService } from 'src/common/clients/code-execution/generated/ayunisCodeExecutionService';
 import type {
   ExecutionRequest,
   ExecutionResponse,
 } from 'src/common/clients/code-execution/generated/ayunisCodeExecutionService.schemas';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
@@ -27,9 +26,9 @@ import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-t
 
 @Injectable()
 export class CodeExecutionToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(CodeExecutionToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(CodeExecutionToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
@@ -222,7 +221,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
         new AddSourceCommand(thread, source),
       );
 
-      this.logger.info(
+      this.logger.log(
         { sourceId: source.id, threadId, name: sourceName },
         'Created and attached CSV source',
       );

@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 
@@ -27,7 +26,7 @@ describe('PdfLetterheadCompositor', () => {
   let compositor: PdfLetterheadCompositor;
 
   beforeEach(() => {
-    compositor = new PdfLetterheadCompositor(createPinoLoggerMock());
+    compositor = new PdfLetterheadCompositor();
   });
 
   it('should composite a single-page content PDF with first-page background', async () => {

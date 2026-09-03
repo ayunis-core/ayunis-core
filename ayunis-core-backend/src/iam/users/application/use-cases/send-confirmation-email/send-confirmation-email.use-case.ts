@@ -1,14 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { SendConfirmationEmailCommand } from './send-confirmation-email.command';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
-import { EmailConfirmationJwtService } from '../../services/email-confirmation-jwt.service';
+import { EmailConfirmationJwtService } from 'src/iam/users/application/services/email-confirmation-jwt.service';
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
 import { ConfigService } from '@nestjs/config';
 import {
   UserEmailAlreadyVerifiedError,
   UserUnexpectedError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { EmailConfirmationTemplate } from 'src/common/email-templates/domain/email-template.entity';
 import { RenderTemplateUseCase } from 'src/common/email-templates/application/use-cases/render-template/render-template.use-case';
@@ -17,9 +16,9 @@ import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class SendConfirmationEmailUseCase {
+  private readonly logger = new Logger(SendConfirmationEmailUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SendConfirmationEmailUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly emailConfirmationJwtService: EmailConfirmationJwtService,
     private readonly sendEmailUseCase: SendEmailUseCase,
     private readonly configService: ConfigService,

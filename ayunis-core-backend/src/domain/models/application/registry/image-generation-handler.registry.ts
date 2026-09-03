@@ -1,20 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { ImageGenerationHandler } from '../ports/image-generation.handler';
-import { ModelProviderNotSupportedError } from '../models.errors';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ImageGenerationHandler } from 'src/domain/models/application/ports/image-generation.handler';
+import { ModelProviderNotSupportedError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class ImageGenerationHandlerRegistry {
+  private readonly logger = new Logger(ImageGenerationHandlerRegistry.name);
+
   private readonly handlers = new Map<ModelProvider, ImageGenerationHandler>();
   private mockHandler?: ImageGenerationHandler;
 
-  constructor(
-    @InjectPinoLogger(ImageGenerationHandlerRegistry.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly configService: ConfigService) {}
 
   register(provider: ModelProvider, handler: ImageGenerationHandler): void {
     this.handlers.set(provider, handler);
@@ -32,7 +29,7 @@ export class ImageGenerationHandlerRegistry {
           'Mock image generation handler not registered. Call registerMockHandler() before using getHandler() when mock inference is enabled.',
         );
       }
-      this.logger.info('Using mock handler for image generation');
+      this.logger.log('Using mock handler for image generation');
       return this.mockHandler;
     }
     const handler = this.handlers.get(provider);

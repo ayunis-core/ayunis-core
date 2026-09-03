@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ListApiKeysByOrgUseCase } from './list-api-keys-by-org.use-case';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { UnexpectedApiKeyError } from '../../api-keys.errors';
+import { UnexpectedApiKeyError } from 'src/iam/api-keys/application/api-keys.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('ListApiKeysByOrgUseCase', () => {
@@ -37,10 +35,6 @@ describe('ListApiKeysByOrgUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListApiKeysByOrgUseCase,
-        {
-          provide: getLoggerToken(ListApiKeysByOrgUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ApiKeysRepository, useValue: mockApiKeysRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
@@ -11,7 +10,7 @@ import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal
 import {
   InvalidSubscriptionDataError,
   TooManyUsedSeatsError,
-} from '../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
@@ -51,9 +50,9 @@ export interface BuildSubscriptionParams {
  */
 @Injectable()
 export class SubscriptionFactory {
+  private readonly logger = new Logger(SubscriptionFactory.name);
+
   constructor(
-    @InjectPinoLogger(SubscriptionFactory.name)
-    private readonly logger: PinoLogger,
     private readonly configService: ConfigService,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
@@ -74,7 +73,7 @@ export class SubscriptionFactory {
       );
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId: params.orgId,
         monthlyCredits: params.monthlyCredits,
@@ -95,7 +94,7 @@ export class SubscriptionFactory {
   ): Promise<SeatBasedSubscription> {
     const noOfSeats = params.noOfSeats ?? 1;
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId: params.orgId,
         noOfSeats,

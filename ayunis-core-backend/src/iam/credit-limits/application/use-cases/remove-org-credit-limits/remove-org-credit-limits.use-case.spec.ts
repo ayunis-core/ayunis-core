@@ -1,12 +1,10 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import {
   createMockCreditLimitRepository,
   TEST_ORG_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { RemoveOrgCreditLimitsUseCase } from './remove-org-credit-limits.use-case';
 import { RemoveOrgCreditLimitsCommand } from './remove-org-credit-limits.command';
 
@@ -22,10 +20,6 @@ describe('RemoveOrgCreditLimitsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveOrgCreditLimitsUseCase,
-        {
-          provide: getLoggerToken(RemoveOrgCreditLimitsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: CreditLimitRepository, useValue: repository },
       ],
     }).compile();

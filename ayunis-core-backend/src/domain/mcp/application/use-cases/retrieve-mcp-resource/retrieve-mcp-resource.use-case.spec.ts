@@ -1,28 +1,29 @@
-import type { PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { RetrieveMcpResourceUseCase } from './retrieve-mcp-resource.use-case';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   McpUnauthenticatedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('RetrieveMcpResourceUseCase', () => {
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
   let useCase: RetrieveMcpResourceUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: jest.Mocked<McpClientService>;
@@ -54,7 +55,7 @@ describe('RetrieveMcpResourceUseCase', () => {
     });
 
   beforeAll(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RetrieveMcpResourceUseCase,
@@ -76,11 +77,6 @@ describe('RetrieveMcpResourceUseCase', () => {
           useValue: {
             get: jest.fn(),
           },
-        },
-
-        {
-          provide: getLoggerToken(RetrieveMcpResourceUseCase.name),
-          useValue: logger,
         },
       ],
     }).compile();
@@ -119,7 +115,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         undefined,
         mockUserId,
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         {
           integrationId: mockIntegrationId,
           url: mockResourceUri,

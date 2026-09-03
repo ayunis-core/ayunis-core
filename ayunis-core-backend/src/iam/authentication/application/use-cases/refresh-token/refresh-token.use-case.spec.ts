@@ -1,16 +1,14 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
 import { RefreshTokenCommand } from './refresh-token.command';
-import type { AuthenticationRepository } from '../../ports/authentication.repository';
-import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
+import type { AuthenticationRepository } from 'src/iam/authentication/application/ports/authentication.repository';
+import { AUTHENTICATION_REPOSITORY } from 'src/iam/authentication/application/tokens/authentication-repository.token';
 import { JwtService } from '@nestjs/jwt';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { InvalidTokenError } from '../../authentication.errors';
+import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { RotateSessionUseCase } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.use-case';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
 import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
@@ -55,10 +53,6 @@ describe('RefreshTokenUseCase', () => {
         { provide: FindUserByIdUseCase, useValue: mockFindUserByIdUseCase },
         { provide: RotateSessionUseCase, useValue: mockRotateSessionUseCase },
         { provide: CreateSessionUseCase, useValue: mockCreateSessionUseCase },
-        {
-          provide: getLoggerToken(RefreshTokenUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

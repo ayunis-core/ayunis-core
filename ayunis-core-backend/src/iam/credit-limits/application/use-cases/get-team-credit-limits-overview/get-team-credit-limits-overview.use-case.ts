@@ -1,24 +1,23 @@
 import type { UUID } from 'crypto';
 import type { TeamCreditLimitOverviewItem } from './team-credit-limit.view';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { GetMonthlyCreditUsageForTeamQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.query';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
-import { selectTeamCreditLimits } from '../../utils/select-team-credit-limits';
-import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
+import { selectTeamCreditLimits } from 'src/iam/credit-limits/application/utils/select-team-credit-limits';
+import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { GetTeamCreditLimitsOverviewQuery } from './get-team-credit-limits-overview.query';
 
 @Injectable()
 export class GetTeamCreditLimitsOverviewUseCase {
+  private readonly logger = new Logger(GetTeamCreditLimitsOverviewUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetTeamCreditLimitsOverviewUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly listTeamsUseCase: ListTeamsUseCase,
@@ -34,7 +33,7 @@ export class GetTeamCreditLimitsOverviewUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info({ orgId }, 'Listing team credit limits');
+    this.logger.log({ orgId }, 'Listing team credit limits');
 
     const limits = await this.creditLimitRepository.findTeamLimits(orgId);
     return this.enrich(orgId, limits, query.since);

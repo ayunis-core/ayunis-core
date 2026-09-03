@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
@@ -10,9 +9,11 @@ import { UnexpectedSkillError } from 'src/domain/skills/application/skills.error
 
 @Injectable()
 export class FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase {
+  private readonly logger = new Logger(
+    FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
   ) {}
@@ -24,7 +25,7 @@ export class FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase {
     );
     const skillIds = [...new Set(shares.map((share) => share.entityId))];
 
-    this.logger.info(
+    this.logger.log(
       { sharedSkillCount: skillIds.length },
       'findKnowledgeBaseIdsAccessibleViaSharedSkills',
     );

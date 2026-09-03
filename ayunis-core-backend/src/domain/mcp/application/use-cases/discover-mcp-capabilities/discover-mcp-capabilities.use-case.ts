@@ -1,5 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import {
@@ -53,9 +52,9 @@ export interface CapabilitiesResult {
  */
 @Injectable()
 export class DiscoverMcpCapabilitiesUseCase {
+  private readonly logger = new Logger(DiscoverMcpCapabilitiesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DiscoverMcpCapabilitiesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
@@ -66,7 +65,7 @@ export class DiscoverMcpCapabilitiesUseCase {
   async execute(
     query: DiscoverMcpCapabilitiesQuery,
   ): Promise<CapabilitiesResult> {
-    this.logger.info({ id: query.integrationId }, 'discoverMcpCapabilities');
+    this.logger.log({ id: query.integrationId }, 'discoverMcpCapabilities');
 
     const integration = await this.getAuthorizedIntegration(
       query.integrationId,
@@ -168,7 +167,7 @@ export class DiscoverMcpCapabilitiesUseCase {
       this.mapToMcpPrompt(prompt, integrationId),
     );
 
-    this.logger.info(
+    this.logger.log(
       {
         id: integrationId,
         name: integration.name,

@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.query';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -22,9 +21,9 @@ import {
 
 @Injectable()
 export class ActivateSkillToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(ActivateSkillToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(ActivateSkillToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly findSkillByNameUseCase: FindSkillByNameUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly skillActivationService: SkillActivationService,
@@ -40,7 +39,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { threadId } = context;
-    this.logger.info({ name: tool.name, input: input }, 'execute');
+    this.logger.log({ name: tool.name, input: input }, 'execute');
 
     try {
       const validatedInput = tool.validateParams(input);

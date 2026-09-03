@@ -1,26 +1,25 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { MarketplaceInstallFailedError } from '../../skills.errors';
-import { MarketplaceSkillInstallationService } from '../../services/marketplace-skill-installation.service';
-import { MarketplaceSkillInstalledEvent } from '../../events/marketplace-skill-installed.event';
+import { MarketplaceInstallFailedError } from 'src/domain/skills/application/skills.errors';
+import { MarketplaceSkillInstallationService } from 'src/domain/skills/application/services/marketplace-skill-installation.service';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 
 @Injectable()
 export class InstallSkillFromMarketplaceUseCase {
+  private readonly logger = new Logger(InstallSkillFromMarketplaceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(InstallSkillFromMarketplaceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillInstallationService: MarketplaceSkillInstallationService,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: InstallSkillFromMarketplaceCommand): Promise<Skill> {
-    this.logger.info({ identifier: command.identifier }, 'execute');
+    this.logger.log({ identifier: command.identifier }, 'execute');
 
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');

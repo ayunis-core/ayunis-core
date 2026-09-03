@@ -1,11 +1,9 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { UploadObjectUseCase } from './upload-object.use-case';
 import { UploadObjectCommand } from './upload-object.command';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import storageConfig from 'src/config/storage.config';
 import {
@@ -13,7 +11,7 @@ import {
   InvalidObjectNameError,
   StoragePermissionDeniedError,
   UploadFailedError,
-} from '../../storage.errors';
+} from 'src/domain/storage/application/storage.errors';
 
 describe('UploadObjectUseCase', () => {
   let useCase: UploadObjectUseCase;
@@ -34,10 +32,6 @@ describe('UploadObjectUseCase', () => {
       imports: [ConfigModule.forFeature(storageConfig)],
       providers: [
         UploadObjectUseCase,
-        {
-          provide: getLoggerToken(UploadObjectUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ObjectStoragePort, useValue: mockObjectStorage },
         {
           provide: storageConfig.KEY,

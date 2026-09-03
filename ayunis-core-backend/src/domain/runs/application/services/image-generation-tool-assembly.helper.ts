@@ -1,4 +1,4 @@
-import type { PinoLogger } from 'nestjs-pino';
+import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
@@ -15,7 +15,7 @@ export async function assembleImageGenerationTools(args: {
   orgId: UUID | undefined;
   getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase;
   assembleToolsUseCase: AssembleToolUseCase;
-  logger: PinoLogger;
+  logger: Logger;
 }): Promise<Tool[]> {
   const {
     orgId,

@@ -1,16 +1,15 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { UpdateMcpIntegrationUseCase } from './update-mcp-integration.use-case';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
-import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import type { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { McpConfigService } from '../../services/mcp-config.service';
-import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
-import type { McpClientService } from '../../services/mcp-client.service';
-import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import type { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
+import { ConnectionValidationService } from 'src/domain/mcp/application/services/connection-validation.service';
+import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
+import type { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
+import type { ValidateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
 import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -21,7 +20,7 @@ import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp
 import {
   McpIntegrationNotConfigurableError,
   McpMissingRequiredConfigError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 describe('UpdateMcpIntegrationUseCase', () => {
@@ -73,7 +72,6 @@ describe('UpdateMcpIntegrationUseCase', () => {
     mcpClientService = { invalidateConnections: jest.fn() };
 
     useCase = new UpdateMcpIntegrationUseCase(
-      createPinoLoggerMock(),
       repository,
       context,
       encryption,

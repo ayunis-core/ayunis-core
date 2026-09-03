@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { EmbeddingsHandler } from '../../application/ports/embeddings.handler';
-import { Embedding } from '../../domain/embedding.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { EmbeddingsHandler } from 'src/domain/rag/embeddings/application/ports/embeddings.handler';
+import { Embedding } from 'src/domain/rag/embeddings/domain/embedding.entity';
 import { Mistral } from '@mistralai/mistralai';
 import { ConfigService } from '@nestjs/config';
-import { EmbeddingModel } from '../../domain/embedding-model.entity';
-import { EmbeddingsProvider } from '../../domain/embeddings-provider.enum';
-import { NoEmbeddingsReturnedError } from '../../application/embeddings.errors';
+import { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
+import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
+import { NoEmbeddingsReturnedError } from 'src/domain/rag/embeddings/application/embeddings.errors';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
 
@@ -18,13 +17,11 @@ const EMBEDDINGS_TIMEOUT_MS = 30_000;
 
 @Injectable()
 export class MistralEmbeddingsHandler extends EmbeddingsHandler {
+  private readonly logger = new Logger(MistralEmbeddingsHandler.name);
+
   private readonly mistral: Mistral;
 
-  constructor(
-    @InjectPinoLogger(MistralEmbeddingsHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
     this.mistral = new Mistral({
       apiKey: this.configService.get('embeddings.mistral.apiKey'),
@@ -37,7 +34,7 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
   }
 
   async embed(input: string[], model: EmbeddingModel): Promise<Embedding[]> {
-    this.logger.info({ model: model.name, inputCount: input.length }, 'embed');
+    this.logger.log({ model: model.name, inputCount: input.length }, 'embed');
     const embeddingsBatchResponse = await retryWithBackoff({
       fn: () =>
         this.mistral.embeddings.create({

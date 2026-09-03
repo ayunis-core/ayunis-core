@@ -1,7 +1,6 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindAllSkillsQuery } from './find-all-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -33,16 +32,16 @@ export interface FindAllSkillsResult {
  */
 @Injectable()
 export class FindAllSkillsUseCase {
+  private readonly logger = new Logger(FindAllSkillsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindAllSkillsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: FindAllSkillsQuery): Promise<FindAllSkillsResult> {
-    this.logger.info(query, 'Finding all skills');
+    this.logger.log(query, 'Finding all skills');
 
     const userId = this.contextService.get('userId');
     if (!userId) {

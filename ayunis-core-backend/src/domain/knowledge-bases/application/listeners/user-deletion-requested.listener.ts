@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
 import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { CleanupSourceProcessingCommand } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.command';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 
 /**
  * Cleans up in-flight source processing for a user's knowledge bases when the
@@ -24,9 +23,11 @@ import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
  */
 @Injectable()
 export class KnowledgeBasesUserDeletionRequestedListener {
+  private readonly logger = new Logger(
+    KnowledgeBasesUserDeletionRequestedListener.name,
+  );
+
   constructor(
-    @InjectPinoLogger(KnowledgeBasesUserDeletionRequestedListener.name)
-    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
   ) {}
@@ -52,7 +53,7 @@ export class KnowledgeBasesUserDeletionRequestedListener {
         return;
       }
 
-      this.logger.info(
+      this.logger.log(
         {
           userId: event.userId,
           knowledgeBaseCount: knowledgeBases.length,

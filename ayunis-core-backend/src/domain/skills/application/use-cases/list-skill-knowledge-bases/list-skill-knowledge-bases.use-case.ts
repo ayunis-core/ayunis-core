@@ -1,24 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ListSkillKnowledgeBasesQuery } from './list-skill-knowledge-bases.query';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { GetKnowledgeBasesByIdsQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.query';
-import { UnexpectedSkillError } from '../../skills.errors';
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SkillAccessService } from '../../services/skill-access.service';
+import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 
 @Injectable()
 export class ListSkillKnowledgeBasesUseCase {
+  private readonly logger = new Logger(ListSkillKnowledgeBasesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ListSkillKnowledgeBasesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly getKnowledgeBasesByIdsUseCase: GetKnowledgeBasesByIdsUseCase,
     private readonly skillAccessService: SkillAccessService,
   ) {}
 
   async execute(query: ListSkillKnowledgeBasesQuery): Promise<KnowledgeBase[]> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId: query.skillId,
       },

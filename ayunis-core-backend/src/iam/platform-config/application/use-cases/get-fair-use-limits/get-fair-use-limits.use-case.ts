@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { Injectable, Logger } from '@nestjs/common';
+import { PlatformConfigRepositoryPort } from 'src/iam/platform-config/application/ports/platform-config.repository';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 import {
   FairUseLimit,
   FairUseLimitsByTier,
-} from '../../../domain/fair-use-limits';
+} from 'src/iam/platform-config/domain/fair-use-limits';
 
 const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -37,11 +36,11 @@ const DEFAULT_FAIR_USE_LIMITS: FairUseLimitsByTier = {
 
 @Injectable()
 export class GetFairUseLimitsUseCase {
+  private readonly logger = new Logger(GetFairUseLimitsUseCase.name);
+
   private readonly warnedKeys = new Set<PlatformConfigKey>();
 
   constructor(
-    @InjectPinoLogger(GetFairUseLimitsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly configRepository: PlatformConfigRepositoryPort,
   ) {}
 

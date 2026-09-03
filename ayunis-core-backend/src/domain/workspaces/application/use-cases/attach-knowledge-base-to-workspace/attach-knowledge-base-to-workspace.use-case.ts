@@ -1,21 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {
   UnexpectedWorkspaceError,
   WorkspaceNotFoundError,
-} from '../../workspaces.errors';
+} from 'src/domain/workspaces/application/workspaces.errors';
 import { AttachKnowledgeBaseToWorkspaceCommand } from './attach-knowledge-base-to-workspace.command';
 
 @Injectable()
 export class AttachKnowledgeBaseToWorkspaceUseCase {
+  private readonly logger = new Logger(
+    AttachKnowledgeBaseToWorkspaceUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(AttachKnowledgeBaseToWorkspaceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
     private readonly contextService: ContextService,
@@ -23,7 +24,7 @@ export class AttachKnowledgeBaseToWorkspaceUseCase {
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(command: AttachKnowledgeBaseToWorkspaceCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         workspaceId: command.workspaceId,
         knowledgeBaseId: command.knowledgeBaseId,

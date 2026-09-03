@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
@@ -10,11 +10,11 @@ import {
 import type { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import type { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
-import { REQUIRE_SUBSCRIPTION_KEY } from '../decorators/subscription.decorator';
+import { REQUIRE_SUBSCRIPTION_KEY } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { TrialNotFoundError } from 'src/iam/trials/application/trial.errors';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
-import { SubscriptionRequiredError } from '../authorization.errors';
+import { SubscriptionRequiredError } from 'src/iam/authorization/application/authorization.errors';
 
 interface ContextOverrides {
   options?: unknown;
@@ -58,10 +58,10 @@ describe('SubscriptionGuard', () => {
 
   let hasActiveSubscriptionUseCase: jest.Mocked<HasActiveSubscriptionUseCase>;
   let getTrialUseCase: jest.Mocked<GetTrialUseCase>;
-  let logger: ReturnType<typeof createPinoLoggerMock>;
+  let logger: ReturnType<typeof createLoggerMock>;
 
   beforeEach(() => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     hasActiveSubscriptionUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<HasActiveSubscriptionUseCase>;
@@ -72,7 +72,6 @@ describe('SubscriptionGuard', () => {
 
   const makeGuard = (reflector: Reflector): SubscriptionGuard =>
     new SubscriptionGuard(
-      logger,
       reflector,
       hasActiveSubscriptionUseCase,
       getTrialUseCase,

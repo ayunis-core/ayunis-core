@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,9 +14,11 @@ import { GetApiKeyCreditLimitsOverviewQuery } from './get-api-key-credit-limits-
 
 @Injectable()
 export class GetApiKeyCreditLimitsOverviewUseCase {
+  private readonly logger = new Logger(
+    GetApiKeyCreditLimitsOverviewUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(GetApiKeyCreditLimitsOverviewUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly listApiKeysByOrgUseCase: ListApiKeysByOrgUseCase,
@@ -33,7 +34,7 @@ export class GetApiKeyCreditLimitsOverviewUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info({ orgId }, 'Listing API key credit limits');
+    this.logger.log({ orgId }, 'Listing API key credit limits');
     const limits = await this.creditLimitRepository.findApiKeyLimits(orgId);
     if (limits.length === 0) {
       return [];

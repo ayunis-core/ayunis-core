@@ -1,17 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
-import { UserMcpConfigResult } from '../get-user-mcp-config/get-user-mcp-config.use-case';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import { UserMcpConfigResult } from 'src/domain/mcp/application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
-import { SchemaConfiguredMcpIntegration } from '../../../domain/integrations/schema-configured-mcp-integration.entity';
-import { ConfigField } from '../../../domain/value-objects/integration-config-schema';
-import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
-import { McpConfigService } from '../../services/mcp-config.service';
-import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
+import { ConfigField } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
+import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
@@ -19,15 +18,15 @@ import {
   McpNoUserFieldsError,
   McpInvalidConfigKeysError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 
 @Injectable()
 export class SetUserMcpConfigUseCase {
+  private readonly logger = new Logger(SetUserMcpConfigUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SetUserMcpConfigUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly integrationRepository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
@@ -40,7 +39,7 @@ export class SetUserMcpConfigUseCase {
   async execute(
     command: SetUserMcpConfigCommand,
   ): Promise<UserMcpConfigResult> {
-    this.logger.info({ integrationId: command.integrationId }, 'execute');
+    this.logger.log({ integrationId: command.integrationId }, 'execute');
 
     const userId = this.contextService.get('userId');
     if (!userId) {

@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { StreamInferenceHandler } from '../ports/stream-inference.handler';
-import { ModelProviderNotSupportedError } from '../models.errors';
+import { Injectable, Logger } from '@nestjs/common';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { StreamInferenceHandler } from 'src/domain/models/application/ports/stream-inference.handler';
+import { ModelProviderNotSupportedError } from 'src/domain/models/application/models.errors';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class StreamInferenceHandlerRegistry {
+  private readonly logger = new Logger(StreamInferenceHandlerRegistry.name);
+
   private readonly handlers = new Map<ModelProvider, StreamInferenceHandler>();
   private mockHandler: StreamInferenceHandler;
 
-  constructor(
-    @InjectPinoLogger(StreamInferenceHandlerRegistry.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
-    this.logger.info(StreamInferenceHandlerRegistry.name);
+  constructor(private readonly configService: ConfigService) {
+    this.logger.log(StreamInferenceHandlerRegistry.name);
     // prebuilt handlers are registered in models.module.ts
   }
 
@@ -41,7 +38,7 @@ export class StreamInferenceHandlerRegistry {
   getHandler(provider: ModelProvider): StreamInferenceHandler {
     const mockInference = this.configService.get<boolean>('app.mockInference');
     if (mockInference) {
-      this.logger.info('Using mock handler for streaming');
+      this.logger.log('Using mock handler for streaming');
       return this.mockHandler;
     }
     const handler = this.handlers.get(provider);

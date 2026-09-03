@@ -1,5 +1,4 @@
 import { randomUUID, type UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
@@ -83,7 +82,6 @@ describe('LocalThreadAssignmentsRepository', () => {
       ThreadSourceAssignmentMapper;
 
     repository = new LocalThreadAssignmentsRepository(
-      createPinoLoggerMock(),
       threadRepo as unknown as Repository<ThreadRecord>,
       sourceAssignmentRepo as unknown as Repository<ThreadSourceAssignmentRecord>,
       kbAssignmentRepo,

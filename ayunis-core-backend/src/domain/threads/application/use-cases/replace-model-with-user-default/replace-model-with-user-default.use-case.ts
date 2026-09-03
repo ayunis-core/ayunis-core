@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ReplaceModelWithUserDefaultCommand } from './replace-model-with-user-default.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
-import { ModelReplacementError } from '../../threads.errors';
+import { ModelReplacementError } from 'src/domain/threads/application/threads.errors';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 
 @Injectable()
 export class ReplaceModelWithUserDefaultUseCase {
+  private readonly logger = new Logger(ReplaceModelWithUserDefaultUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ReplaceModelWithUserDefaultUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
   ) {}

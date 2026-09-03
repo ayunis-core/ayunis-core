@@ -1,8 +1,7 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SetUserMcpConfigUseCase } from './set-user-mcp-config.use-case';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
-import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import type { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import type { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import type { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
@@ -10,9 +9,9 @@ import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-object
 import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
-import { McpConfigService } from '../../services/mcp-config.service';
-import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
-import type { McpClientService } from '../../services/mcp-client.service';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
+import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
+import type { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationNotConfigurableError,
@@ -21,9 +20,9 @@ import {
   McpInvalidConfigKeysError,
   McpMissingRequiredConfigError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import type { UUID } from 'crypto';
-import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
+import type { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
 
 describe('SetUserMcpConfigUseCase', () => {
   let useCase: SetUserMcpConfigUseCase;
@@ -112,7 +111,6 @@ describe('SetUserMcpConfigUseCase', () => {
     mcpClientService = { invalidateConnections: jest.fn() };
 
     useCase = new SetUserMcpConfigUseCase(
-      createPinoLoggerMock(),
       integrationRepository,
       userConfigRepository,
       contextService,

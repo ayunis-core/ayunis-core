@@ -1,27 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { AddTeamMemberUseCase } from '../add-team-member/add-team-member.use-case';
-import { AddTeamMemberCommand } from '../add-team-member/add-team-member.command';
+import { Injectable, Logger } from '@nestjs/common';
+import { AddTeamMemberUseCase } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.use-case';
+import { AddTeamMemberCommand } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.command';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import {
   UserAlreadyTeamMemberError,
   UserNotInSameOrgError,
-} from '../../team-members.errors';
+} from 'src/iam/teams/application/team-members.errors';
 import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class BulkAddTeamMembersUseCase {
-  constructor(
-    @InjectPinoLogger(BulkAddTeamMembersUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly addTeamMemberUseCase: AddTeamMemberUseCase,
-  ) {}
+  private readonly logger = new Logger(BulkAddTeamMembersUseCase.name);
+
+  constructor(private readonly addTeamMemberUseCase: AddTeamMemberUseCase) {}
 
   async execute(command: BulkAddTeamMembersCommand): Promise<TeamMember[]> {
     const uniqueUserIds = [...new Set(command.userIds)];
-    this.logger.info(
+    this.logger.log(
       { teamId: command.teamId, count: uniqueUserIds.length },
       'execute',
     );

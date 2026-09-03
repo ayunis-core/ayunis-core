@@ -1,18 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UpsertOrgSystemPromptCommand } from './upsert-org-system-prompt.command';
 import { OrgSystemPrompt } from 'src/domain/chat-settings/domain/org-system-prompt.entity';
-import { OrgSystemPromptsRepository } from '../../ports/org-system-prompts.repository';
+import { OrgSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/org-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnexpectedChatSettingsError } from '../../chat-settings.errors';
+import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpsertOrgSystemPromptUseCase {
+  private readonly logger = new Logger(UpsertOrgSystemPromptUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpsertOrgSystemPromptUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly orgSystemPromptsRepository: OrgSystemPromptsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -24,7 +23,7 @@ export class UpsertOrgSystemPromptUseCase {
     if (!orgId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.info({ orgId }, 'execute');
+    this.logger.log({ orgId }, 'execute');
 
     try {
       const orgSystemPrompt = new OrgSystemPrompt({

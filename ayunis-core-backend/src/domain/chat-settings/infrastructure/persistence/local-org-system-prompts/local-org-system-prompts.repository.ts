@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -10,9 +9,9 @@ import { OrgSystemPromptMapper } from './mappers/org-system-prompt.mapper';
 
 @Injectable()
 export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository {
+  private readonly logger = new Logger(LocalOrgSystemPromptsRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalOrgSystemPromptsRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(OrgSystemPromptRecord)
     private readonly repository: Repository<OrgSystemPromptRecord>,
     private readonly mapper: OrgSystemPromptMapper,
@@ -21,7 +20,7 @@ export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository 
   }
 
   async findByOrgId(orgId: UUID): Promise<OrgSystemPrompt | null> {
-    this.logger.info({ orgId }, 'findByOrgId');
+    this.logger.log({ orgId }, 'findByOrgId');
 
     const record = await this.repository.findOne({ where: { orgId } });
 
@@ -34,7 +33,7 @@ export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository 
   }
 
   async upsert(orgSystemPrompt: OrgSystemPrompt): Promise<OrgSystemPrompt> {
-    this.logger.info({ orgId: orgSystemPrompt.orgId }, 'upsert');
+    this.logger.log({ orgId: orgSystemPrompt.orgId }, 'upsert');
 
     const record = this.mapper.toRecord(orgSystemPrompt);
 
@@ -61,7 +60,7 @@ export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository 
   }
 
   async deleteByOrgId(orgId: UUID): Promise<void> {
-    this.logger.info({ orgId }, 'deleteByOrgId');
+    this.logger.log({ orgId }, 'deleteByOrgId');
 
     await this.repository.delete({ orgId });
 

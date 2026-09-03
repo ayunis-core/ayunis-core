@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Repository } from 'typeorm';
 
 import { LocalThreadsRepository } from './local-threads.repository';
@@ -23,7 +22,6 @@ describe('LocalThreadsRepository', () => {
         .mockResolvedValue(sourceAssignments),
     } as unknown as LocalThreadAssignmentsRepository;
     const repository = new LocalThreadsRepository(
-      createPinoLoggerMock(),
       threadRepository,
       threadMapper,
       assignments,
@@ -73,7 +71,6 @@ describe('LocalThreadsRepository', () => {
       findSourceAssignmentsByThreadId: jest.fn().mockResolvedValue([]),
     } as unknown as LocalThreadAssignmentsRepository;
     const repository = new LocalThreadsRepository(
-      createPinoLoggerMock(),
       threadRepository,
       threadMapper,
       assignments,

@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
-import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
-import { TotpPort } from '../../ports/totp.port';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
+import { TotpSecretEncryptionPort } from 'src/iam/mfa/application/ports/totp-secret-encryption.port';
+import { TotpPort } from 'src/iam/mfa/application/ports/totp.port';
 import { MfaRecoveryCode } from 'src/iam/mfa/domain/mfa-recovery-code.entity';
 import { RECOVERY_CODE_COUNT } from 'src/iam/mfa/domain/mfa.constants';
 import { generateRecoveryCode } from 'src/iam/mfa/domain/recovery-code.generator';
@@ -15,14 +14,14 @@ import {
   MfaAlreadyEnabledError,
   MfaNotEnabledError,
   UnexpectedMfaError,
-} from '../../mfa.errors';
+} from 'src/iam/mfa/application/mfa.errors';
 import { ConfirmTotpCommand } from './confirm-totp.command';
 
 @Injectable()
 export class ConfirmTotpUseCase {
+  private readonly logger = new Logger(ConfirmTotpUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ConfirmTotpUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
     private readonly totpSecretEncryption: TotpSecretEncryptionPort,
@@ -32,7 +31,7 @@ export class ConfirmTotpUseCase {
 
   /** Confirms a pending enrollment and returns the plaintext recovery codes. */
   async execute(command: ConfirmTotpCommand): Promise<string[]> {
-    this.logger.info({ userId: command.userId }, 'confirmTotp');
+    this.logger.log({ userId: command.userId }, 'confirmTotp');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(command.userId);

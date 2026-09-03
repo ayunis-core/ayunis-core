@@ -1,24 +1,23 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { InstallMarketplaceIntegrationUseCase } from './install-marketplace-integration.use-case';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
 import type { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
-import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { McpConfigService } from '../../services/mcp-config.service';
-import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
-import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
-import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
-import { ConnectionValidationService } from '../../services/connection-validation.service';
+import type { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import type { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
+import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
+import type { ValidateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
+import { ConnectionValidationService } from 'src/domain/mcp/application/services/connection-validation.service';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
-import { MarketplaceIntegrationInstalledEvent } from '../../events/marketplace-integration-installed.event';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
 import {
   McpMissingRequiredConfigError,
   DuplicateMarketplaceMcpIntegrationError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import {
   MarketplaceIntegrationNotFoundError,
   MarketplaceUnavailableError,
@@ -180,7 +179,6 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     };
 
     useCase = new InstallMarketplaceIntegrationUseCase(
-      createPinoLoggerMock(),
       getMarketplaceIntegrationUseCase,
       repository,
       configService,

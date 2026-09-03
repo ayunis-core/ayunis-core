@@ -1,15 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import type { PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { HasActiveSubscriptionUseCase } from './has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { SubscriptionError } from '../../subscription.errors';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { SubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
-import { isActive } from '../../util/is-active';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 
 // Mock the isActive utility
 jest.mock('../../util/is-active');
@@ -19,7 +20,7 @@ describe('HasActiveSubscriptionUseCase', () => {
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
   let configService: jest.Mocked<ConfigService>;
   let mockIsActive: jest.MockedFunction<typeof isActive>;
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
 
@@ -39,10 +40,6 @@ describe('HasActiveSubscriptionUseCase', () => {
       providers: [
         HasActiveSubscriptionUseCase,
         {
-          provide: getLoggerToken(HasActiveSubscriptionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
-        {
           provide: SubscriptionRepository,
           useValue: mockSubscriptionRepository,
         },
@@ -56,7 +53,7 @@ describe('HasActiveSubscriptionUseCase', () => {
     subscriptionRepository = module.get(SubscriptionRepository);
     configService = module.get(ConfigService);
     mockIsActive = isActive as jest.MockedFunction<typeof isActive>;
-    logger = module.get(getLoggerToken(HasActiveSubscriptionUseCase.name));
+    logger = createLoggerMock();
   });
 
   afterEach(() => {
@@ -168,7 +165,7 @@ describe('HasActiveSubscriptionUseCase', () => {
       await useCase.execute(query);
 
       // Assert
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         { orgId: query.orgId },
         'Checking active subscription',
       );

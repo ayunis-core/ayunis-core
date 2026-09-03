@@ -1,12 +1,10 @@
 import type { Message as InferenceMessage } from '@ayunis/inference';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
-import { toInferenceMessages } from '../../mappers/message.mapper';
-import { UnexpectedModelError } from '../../models.errors';
+import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
+import { toInferenceMessages } from 'src/domain/models/application/mappers/message.mapper';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 import { MapMessagesToInferenceCommand } from './map-messages-to-inference.command';
 
 /**
@@ -17,17 +15,15 @@ import { MapMessagesToInferenceCommand } from './map-messages-to-inference.comma
  */
 @Injectable()
 export class MapMessagesToInferenceUseCase {
-  constructor(
-    private readonly imageContentService: ImageContentService,
-    @InjectPinoLogger(MapMessagesToInferenceUseCase.name)
-    private readonly logger: PinoLogger = createMapMessagesLogger(),
-  ) {}
+  private readonly logger = new Logger(MapMessagesToInferenceUseCase.name);
+
+  constructor(private readonly imageContentService: ImageContentService) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     command: MapMessagesToInferenceCommand,
   ): Promise<InferenceMessage[]> {
-    this.logger.info(
+    this.logger.log(
       {
         count: command.messages.length,
       },
@@ -40,10 +36,4 @@ export class MapMessagesToInferenceUseCase {
       this.imageContentService,
     );
   }
-}
-
-function createMapMessagesLogger(): PinoLogger {
-  const logger = new PinoLogger(createPinoLoggerConfig());
-  logger.setContext(MapMessagesToInferenceUseCase.name);
-  return logger;
 }

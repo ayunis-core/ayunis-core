@@ -1,24 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { GlobalAnonymizationWhitelistRepository } from '../../ports/global-anonymization-whitelist.repository';
+import { GlobalAnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/global-anonymization-whitelist.repository';
 import {
   GlobalWhitelistWordNotFoundError,
   UnexpectedGlobalAnonymizationWhitelistError,
-} from '../../anonymization-settings.errors';
+} from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import type { DeleteGlobalPiiWhitelistWordCommand } from './delete-global-pii-whitelist-word.command';
 
 @Injectable()
 export class DeleteGlobalPiiWhitelistWordUseCase {
+  private readonly logger = new Logger(
+    DeleteGlobalPiiWhitelistWordUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(DeleteGlobalPiiWhitelistWordUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: GlobalAnonymizationWhitelistRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedGlobalAnonymizationWhitelistError)
   async execute(command: DeleteGlobalPiiWhitelistWordCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         wordId: command.wordId,
       },

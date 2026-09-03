@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
@@ -12,9 +11,9 @@ import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
 @Injectable()
 export class StartOrgSsoLoginUseCase {
+  private readonly logger = new Logger(StartOrgSsoLoginUseCase.name);
+
   constructor(
-    @InjectPinoLogger(StartOrgSsoLoginUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly connections: OrgSsoConnectionsRepository,
     private readonly authorizationTransactions: SsoAuthorizationTransactionService,
   ) {}
@@ -23,7 +22,7 @@ export class StartOrgSsoLoginUseCase {
   async execute(
     command: StartOrgSsoLoginCommand,
   ): Promise<{ authorizationUrl: string; browserBinding: string }> {
-    this.logger.info(
+    this.logger.log(
       { orgId: command.orgId },
       'Starting organization SSO login',
     );

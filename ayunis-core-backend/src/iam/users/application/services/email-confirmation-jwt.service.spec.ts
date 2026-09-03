@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
@@ -9,7 +7,7 @@ import {
   EmailConfirmationJwtService,
   EMAIL_CONFIRMATION_TOKEN_TYPE,
 } from './email-confirmation-jwt.service';
-import { InvalidEmailConfirmationTokenError } from '../users.errors';
+import { InvalidEmailConfirmationTokenError } from 'src/iam/users/application/users.errors';
 
 describe('EmailConfirmationJwtService', () => {
   let service: EmailConfirmationJwtService;
@@ -28,10 +26,6 @@ describe('EmailConfirmationJwtService', () => {
           useValue: { sign: jest.fn(), verify: jest.fn(), decode: jest.fn() },
         },
         { provide: ConfigService, useValue: { get: jest.fn() } },
-        {
-          provide: getLoggerToken(EmailConfirmationJwtService.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

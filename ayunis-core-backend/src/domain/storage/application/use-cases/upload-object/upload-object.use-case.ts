@@ -1,23 +1,22 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
-import { StorageObject } from '../../../domain/storage-object.entity';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { UploadObjectCommand } from './upload-object.command';
-import storageConfig from '../../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 import {
   BucketNotFoundError,
   InvalidObjectNameError,
   StoragePermissionDeniedError,
   UploadFailedError,
-} from '../../storage.errors';
-import { StorageObjectUpload } from '../../../domain/storage-object-upload.entity';
+} from 'src/domain/storage/application/storage.errors';
+import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 
 @Injectable()
 export class UploadObjectUseCase {
+  private readonly logger = new Logger(UploadObjectUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UploadObjectUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,

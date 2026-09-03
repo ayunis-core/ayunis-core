@@ -5,8 +5,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiInternalServerErrorResponse,
@@ -25,11 +25,11 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { DeleteModelCommand } from '../../application/use-cases/delete-model/delete-model.command';
-import { DeleteModelUseCase } from '../../application/use-cases/delete-model/delete-model.use-case';
-import { GetAllModelsUseCase } from '../../application/use-cases/get-all-models/get-all-models.use-case';
-import { GetModelByIdQuery } from '../../application/use-cases/get-model-by-id/get-model-by-id.query';
-import { GetModelByIdUseCase } from '../../application/use-cases/get-model-by-id/get-model-by-id.use-case';
+import { DeleteModelCommand } from 'src/domain/models/application/use-cases/delete-model/delete-model.command';
+import { DeleteModelUseCase } from 'src/domain/models/application/use-cases/delete-model/delete-model.use-case';
+import { GetAllModelsUseCase } from 'src/domain/models/application/use-cases/get-all-models/get-all-models.use-case';
+import { GetModelByIdQuery } from 'src/domain/models/application/use-cases/get-model-by-id/get-model-by-id.query';
+import { GetModelByIdUseCase } from 'src/domain/models/application/use-cases/get-model-by-id/get-model-by-id.use-case';
 import { EmbeddingModelResponseDto } from './dto/embedding-model-response.dto';
 import { ImageGenerationModelResponseDto } from './dto/image-generation-model-response.dto';
 import { LanguageModelResponseDto } from './dto/language-model-response.dto';
@@ -45,10 +45,9 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   ImageGenerationModelResponseDto,
 )
 export class SuperAdminCatalogModelsController {
-  constructor(
-    @InjectPinoLogger(SuperAdminCatalogModelsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(SuperAdminCatalogModelsController.name);
 
+  constructor(
     private readonly getAllModelsUseCase: GetAllModelsUseCase,
     private readonly getModelByIdUseCase: GetModelByIdUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -84,10 +83,10 @@ export class SuperAdminCatalogModelsController {
   async getAllCatalogModels(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelResponseDto[]> {
-    this.logger.info({ userId }, 'Getting all catalog models by super admin');
+    this.logger.log({ userId }, 'Getting all catalog models by super admin');
     const models = await this.getAllModelsUseCase.execute();
     const responseDtos = this.catalogModelResponseDtoMapper.toDtoArray(models);
-    this.logger.info(
+    this.logger.log(
       { modelCount: models.length },
       'Successfully retrieved catalog models',
     );
@@ -131,14 +130,14 @@ export class SuperAdminCatalogModelsController {
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { modelId: id, userId },
       'Getting catalog model by super admin',
     );
     const query = new GetModelByIdQuery(id);
     const model = await this.getModelByIdUseCase.execute(query);
     const responseDto = this.catalogModelResponseDtoMapper.toDto(model);
-    this.logger.info({ modelId: id }, 'Successfully retrieved catalog model');
+    this.logger.log({ modelId: id }, 'Successfully retrieved catalog model');
     return responseDto;
   }
 
@@ -173,12 +172,12 @@ export class SuperAdminCatalogModelsController {
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { modelId: id, userId },
       'Deleting catalog model by super admin',
     );
     const command = new DeleteModelCommand(id);
     await this.deleteModelUseCase.execute(command);
-    this.logger.info({ modelId: id }, 'Successfully deleted catalog model');
+    this.logger.log({ modelId: id }, 'Successfully deleted catalog model');
   }
 }

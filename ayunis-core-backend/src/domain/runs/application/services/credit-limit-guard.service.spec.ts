@@ -1,5 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -49,10 +47,6 @@ describe('CreditLimitGuardService', () => {
         {
           provide: IsUsageBasedSubscriptionUseCase,
           useValue: isUsageBased,
-        },
-        {
-          provide: getLoggerToken(CreditLimitGuardService.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

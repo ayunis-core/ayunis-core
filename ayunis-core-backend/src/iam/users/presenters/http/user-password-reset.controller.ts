@@ -7,8 +7,8 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -22,26 +22,26 @@ import {
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { UserRole } from '../../domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { Public } from 'src/common/guards/public.guard';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ValidatePasswordResetTokenDto } from './dtos/validate-password-reset-token.dto';
-import { TriggerPasswordResetCommand } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.command';
-import { TriggerPasswordResetUseCase } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
-import { ResetPasswordUseCase } from '../../application/use-cases/reset-password/reset-password.use-case';
-import { ResetPasswordCommand } from '../../application/use-cases/reset-password/reset-password.command';
-import { ValidatePasswordResetTokenUseCase } from '../../application/use-cases/validate-password-reset-token/validate-password-reset-token.use-case';
-import { ValidatePasswordResetTokenQuery } from '../../application/use-cases/validate-password-reset-token/validate-password-reset-token.query';
-import { AdminTriggerPasswordResetUseCase } from '../../application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
-import { AdminTriggerPasswordResetCommand } from '../../application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.command';
+import { TriggerPasswordResetCommand } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.command';
+import { TriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
+import { ResetPasswordUseCase } from 'src/iam/users/application/use-cases/reset-password/reset-password.use-case';
+import { ResetPasswordCommand } from 'src/iam/users/application/use-cases/reset-password/reset-password.command';
+import { ValidatePasswordResetTokenUseCase } from 'src/iam/users/application/use-cases/validate-password-reset-token/validate-password-reset-token.use-case';
+import { ValidatePasswordResetTokenQuery } from 'src/iam/users/application/use-cases/validate-password-reset-token/validate-password-reset-token.query';
+import { AdminTriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
+import { AdminTriggerPasswordResetCommand } from 'src/iam/users/application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.command';
 
 @ApiTags('Users')
 @Controller('users')
 export class UserPasswordResetController {
+  private readonly logger = new Logger(UserPasswordResetController.name);
+
   constructor(
-    @InjectPinoLogger(UserPasswordResetController.name)
-    private readonly logger: PinoLogger,
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly validatePasswordResetTokenUseCase: ValidatePasswordResetTokenUseCase,
@@ -70,7 +70,7 @@ export class UserPasswordResetController {
     description: "Not authorized to reset this user's password",
   })
   async triggerPasswordResetForUser(@Param('id') userId: UUID): Promise<void> {
-    this.logger.info({ userId }, 'triggerPasswordResetForUser');
+    this.logger.log({ userId }, 'triggerPasswordResetForUser');
 
     await this.adminTriggerPasswordResetUseCase.execute(
       new AdminTriggerPasswordResetCommand(userId),
@@ -101,7 +101,7 @@ export class UserPasswordResetController {
     description: 'Internal server error while processing the request',
   })
   async forgotPassword(@Body() body: ForgotPasswordDto) {
-    this.logger.info({ email: body.email }, 'forgotPassword');
+    this.logger.log({ email: body.email }, 'forgotPassword');
 
     await this.triggerPasswordResetUseCase.execute(
       new TriggerPasswordResetCommand(body.email),
@@ -135,7 +135,7 @@ export class UserPasswordResetController {
     description: 'Internal server error while processing the request',
   })
   async resetPassword(@Body() body: ResetPasswordDto) {
-    this.logger.info({ hasToken: !!body.resetToken }, 'resetPassword');
+    this.logger.log({ hasToken: !!body.resetToken }, 'resetPassword');
 
     await this.resetPasswordUseCase.execute(
       new ResetPasswordCommand(
@@ -171,7 +171,7 @@ export class UserPasswordResetController {
     description: 'Internal server error while processing the request',
   })
   validateResetToken(@Query() query: ValidatePasswordResetTokenDto) {
-    this.logger.info({ hasToken: !!query.token }, 'validateResetToken');
+    this.logger.log({ hasToken: !!query.token }, 'validateResetToken');
 
     return this.validatePasswordResetTokenUseCase.execute(
       new ValidatePasswordResetTokenQuery(query.token),

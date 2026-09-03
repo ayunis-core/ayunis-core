@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
@@ -23,9 +22,9 @@ export type StartAuthenticatedSessionResult =
 
 @Injectable()
 export class StartAuthenticatedSessionUseCase {
+  private readonly logger = new Logger(StartAuthenticatedSessionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(StartAuthenticatedSessionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly checkMfaLoginRequirement: CheckMfaLoginRequirementUseCase,
     private readonly mfaPendingTokens: MfaPendingJwtService,
     private readonly login: LoginUseCase,
@@ -36,7 +35,7 @@ export class StartAuthenticatedSessionUseCase {
   async execute(
     command: StartAuthenticatedSessionCommand,
   ): Promise<StartAuthenticatedSessionResult> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.user.id,
         authenticationMethod: command.authenticationMethod,

@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
 import { DeleteUserDefaultModelsByModelIdCommand } from './delete-user-default-models-by-model-id.command';
 
 @Injectable()
 export class DeleteUserDefaultModelsByModelIdUseCase {
-  constructor(
-    @InjectPinoLogger(DeleteUserDefaultModelsByModelIdUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(
+    DeleteUserDefaultModelsByModelIdUseCase.name,
+  );
 
+  constructor(
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
   ) {}
 

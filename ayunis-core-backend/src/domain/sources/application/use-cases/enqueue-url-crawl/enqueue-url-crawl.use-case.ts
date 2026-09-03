@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { UrlCrawlProcessingPort } from '../../ports/url-crawl-processing.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { EnqueueUrlCrawlCommand } from './enqueue-url-crawl.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 @Injectable()
 export class EnqueueUrlCrawlUseCase {
+  private readonly logger = new Logger(EnqueueUrlCrawlUseCase.name);
+
   constructor(
-    @InjectPinoLogger(EnqueueUrlCrawlUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly urlCrawlProcessingPort: UrlCrawlProcessingPort,
   ) {}
 

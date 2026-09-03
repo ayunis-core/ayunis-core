@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -17,9 +16,9 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
+  private readonly logger = new Logger(LocalKnowledgeBaseRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalKnowledgeBaseRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(KnowledgeBaseRecord)
     private readonly repository: Repository<KnowledgeBaseRecord>,
     @InjectRepository(SourceRecord)

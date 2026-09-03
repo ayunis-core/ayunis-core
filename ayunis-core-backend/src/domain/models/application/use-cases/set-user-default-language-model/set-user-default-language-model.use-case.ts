@@ -1,19 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { SetUserDefaultLanguageModelCommand } from './set-user-default-language-model.command';
-import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
-import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import {
+  ModelError,
+  PermittedModelNotFoundError,
+} from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class SetUserDefaultLanguageModelUseCase {
-  constructor(
-    @InjectPinoLogger(SetUserDefaultLanguageModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(SetUserDefaultLanguageModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
     private readonly contextService: ContextService,
@@ -22,7 +23,7 @@ export class SetUserDefaultLanguageModelUseCase {
   async execute(
     command: SetUserDefaultLanguageModelCommand,
   ): Promise<PermittedLanguageModel> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.userId,
         permittedModelId: command.permittedModelId,

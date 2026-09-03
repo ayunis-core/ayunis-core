@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { PresidioAnonymizationProvider } from './presidio-anonymization.provider';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
@@ -16,11 +16,11 @@ jest.mock(
 
 describe('PresidioAnonymizationProvider', () => {
   let provider: PresidioAnonymizationProvider;
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    provider = new PresidioAnonymizationProvider(logger);
+    provider = new PresidioAnonymizationProvider();
     mockAnalyzeTextAnalyzePost.mockReset();
   });
 
@@ -117,7 +117,7 @@ describe('PresidioAnonymizationProvider', () => {
 
     await provider.detect('Der Wetterbericht sagt Regen voraus');
 
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       { textLength: 35, detectionCount: 0, durationMs: 356.78 },
       'PII detection complete',
     );

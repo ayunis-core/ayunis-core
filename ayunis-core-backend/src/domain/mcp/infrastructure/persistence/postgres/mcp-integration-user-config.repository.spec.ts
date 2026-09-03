@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import { McpIntegrationUserConfigRepository } from './mcp-integration-user-config.repository';
@@ -21,10 +20,7 @@ describe('McpIntegrationUserConfigRepository', () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<McpIntegrationUserConfigRecord>>;
 
-    repository = new McpIntegrationUserConfigRepository(
-      createPinoLoggerMock(),
-      mockTypeOrmRepo,
-    );
+    repository = new McpIntegrationUserConfigRepository(mockTypeOrmRepo);
   });
 
   describe('save', () => {

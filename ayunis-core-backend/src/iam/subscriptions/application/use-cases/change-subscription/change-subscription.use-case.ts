@@ -1,27 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ChangeSubscriptionCommand } from './change-subscription.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { OldSubscriptionDisposition } from 'src/iam/subscriptions/domain/value-objects/old-subscription-disposition.enum';
 import {
   SubscriptionNotFoundError,
   UnexpectedSubscriptionError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
-import { SubscriptionCancelledEvent } from '../../events/subscription-cancelled.event';
-import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
+import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
+import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
+import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
-import { SubscriptionFactory } from '../../services/subscription-factory.service';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
 
 @Injectable()
 export class ChangeSubscriptionUseCase {
+  private readonly logger = new Logger(ChangeSubscriptionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ChangeSubscriptionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly subscriptionFactory: SubscriptionFactory,
     private readonly eventEmitter: EventEmitter2,
@@ -29,7 +28,7 @@ export class ChangeSubscriptionUseCase {
   ) {}
 
   async execute(command: ChangeSubscriptionCommand): Promise<Subscription> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         type: command.type,

@@ -1,5 +1,4 @@
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-
+import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -16,19 +15,19 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
+import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
-} from '../../application/util/minio-processing-file.helpers';
+} from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
+  private readonly logger = new Logger(DocumentProcessingConsumer.name);
+
   constructor(
-    @InjectPinoLogger(DocumentProcessingConsumer.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
@@ -43,7 +42,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
   async process(job: Job<DocumentProcessingJobData>): Promise<void> {
     const { sourceId, orgId, userId, minioPath, fileName } = job.data;
 
-    this.logger.info(
+    this.logger.log(
       {
         sourceId,
         fileName,
@@ -70,7 +69,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         await this.helper.index(sourceId, orgId, chunks);
         await this.markSourceReady(sourceId, minioPath);
 
-        this.logger.info(
+        this.logger.log(
           {
             sourceId,
             chunks: chunks.length,

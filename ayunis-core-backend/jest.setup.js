@@ -1,3 +1,9 @@
+// Providers build their own `new Logger(Context)`, and no bootstrap installs a
+// logger under test, so Nest would fall back to the console logger and flood
+// test output. `false` disables output while leaving Logger.prototype spyable.
+const { Logger } = require('@nestjs/common');
+Logger.overrideLogger(false);
+
 // Fix for Node.js 25+ compatibility with buffer-equal-constant-time and jsonwebtoken
 // See: https://github.com/auth0/node-jsonwebtoken/issues/947
 

@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -8,20 +7,20 @@ import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/up
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import {
   LetterheadNotFoundError,
   UnexpectedLetterheadError,
-} from '../../letterheads.errors';
-import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
+} from 'src/domain/letterheads/application/letterheads.errors';
+import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { UpdateLetterheadCommand } from './update-letterhead.command';
 
 @Injectable()
 export class UpdateLetterheadUseCase {
+  private readonly logger = new Logger(UpdateLetterheadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateLetterheadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
     private readonly uploadObjectUseCase: UploadObjectUseCase,
@@ -30,7 +29,7 @@ export class UpdateLetterheadUseCase {
   ) {}
 
   async execute(command: UpdateLetterheadCommand): Promise<Letterhead> {
-    this.logger.info(
+    this.logger.log(
       { letterheadId: command.letterheadId },
       'Updating letterhead',
     );

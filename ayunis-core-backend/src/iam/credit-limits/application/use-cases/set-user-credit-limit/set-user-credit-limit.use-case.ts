@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
   CreditLimitTargetNotFoundError,
   InvalidCreditLimitError,
   UnexpectedCreditLimitError,
-} from '../../credit-limits.errors';
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 import { isNonNegativeFinite } from 'src/common/util/number.util';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
@@ -17,9 +16,9 @@ import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
 
 @Injectable()
 export class SetUserCreditLimitUseCase {
+  private readonly logger = new Logger(SetUserCreditLimitUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SetUserCreditLimitUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
@@ -37,7 +36,7 @@ export class SetUserCreditLimitUseCase {
       );
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         userId: command.userId,

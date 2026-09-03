@@ -1,23 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { DeleteOrgCommand } from './delete-org.command';
-import { OrgError, OrgDeletionFailedError } from '../../orgs.errors';
-import { OrgDeletionRequestedEvent } from '../../events/org-deletion-requested.event';
+import {
+  OrgError,
+  OrgDeletionFailedError,
+} from 'src/iam/orgs/application/orgs.errors';
+import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
 import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
 
 @Injectable()
 export class DeleteOrgUseCase {
+  private readonly logger = new Logger(DeleteOrgUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteOrgUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly orgsRepository: OrgsRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: DeleteOrgCommand): Promise<void> {
-    this.logger.info({ id: command.id }, 'delete');
+    this.logger.log({ id: command.id }, 'delete');
 
     try {
       // Listeners resolve org-scoped data the database cascade cannot reach

@@ -1,8 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ListApiKeysByOrgUseCase } from 'src/iam/api-keys/application/use-cases/list-api-keys-by-org/list-api-keys-by-org.use-case';
 import { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import {
@@ -35,10 +33,6 @@ describe('SetApiKeyCreditLimitUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SetApiKeyCreditLimitUseCase,
-        {
-          provide: getLoggerToken(SetApiKeyCreditLimitUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },
         { provide: ListApiKeysByOrgUseCase, useValue: listApiKeys },

@@ -1,5 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetDefaultModelUseCase } from './get-default-model.use-case';
@@ -61,10 +59,6 @@ describe('GetDefaultModelUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetDefaultModelUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         GetDefaultModelUseCase,
         {
           provide: PermittedModelsRepository,

@@ -1,6 +1,8 @@
-import type { PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import {
   EffectiveImageGenerationModelConflictError,
   PermittedImageGenerationModelNotFoundForOrgError,
@@ -14,7 +16,7 @@ describe(assembleImageGenerationTools.name, () => {
   const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
   let getImageModel: jest.Mocked<GetPermittedImageGenerationModelUseCase>;
   let assembleTool: jest.Mocked<AssembleToolUseCase>;
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   beforeEach(() => {
     getImageModel = {
@@ -23,7 +25,7 @@ describe(assembleImageGenerationTools.name, () => {
     assembleTool = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<AssembleToolUseCase>;
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
   });
 
   const execute = (): Promise<Tool[]> =>

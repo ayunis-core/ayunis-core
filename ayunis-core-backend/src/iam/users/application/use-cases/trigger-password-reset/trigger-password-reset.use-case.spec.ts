@@ -1,11 +1,9 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
-import { UsersRepository } from '../../ports/users.repository';
-import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { SendPasswordResetEmailUseCase } from 'src/iam/users/application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
 import { TriggerPasswordResetCommand } from './trigger-password-reset.command';
 import { TriggerPasswordResetUseCase } from './trigger-password-reset.use-case';
 
@@ -22,10 +20,6 @@ describe('TriggerPasswordResetUseCase', () => {
         { provide: UsersRepository, useValue: usersRepository },
         { provide: PasswordSetTokenService, useValue: tokenService },
         { provide: SendPasswordResetEmailUseCase, useValue: emailUseCase },
-        {
-          provide: getLoggerToken(TriggerPasswordResetUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
     useCase = module.get(TriggerPasswordResetUseCase);

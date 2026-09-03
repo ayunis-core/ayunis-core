@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RemoveSourceCommand } from './remove-source.command';
-import { SourceRemovalError, SourceNotFoundError } from '../../threads.errors';
+import {
+  SourceRemovalError,
+  SourceNotFoundError,
+} from 'src/domain/threads/application/threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
@@ -11,16 +13,16 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class RemoveSourceFromThreadUseCase {
+  private readonly logger = new Logger(RemoveSourceFromThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RemoveSourceFromThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: RemoveSourceCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.thread.id,
         sourceId: command.sourceId,

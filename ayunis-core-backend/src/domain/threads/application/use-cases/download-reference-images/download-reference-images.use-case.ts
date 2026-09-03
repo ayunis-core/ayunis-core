@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -7,16 +6,16 @@ import { streamToBuffer } from 'src/common/util/stream-to-buffer.util';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import type { Thread } from '../../../domain/thread.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   GeneratedImageNotFoundError,
   MessageImageNotFoundError,
   ThreadNotFoundError,
   UnexpecteThreadError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
-import { ThreadsRepository } from '../../ports/threads.repository';
-import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+} from 'src/domain/threads/application/threads.errors';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import {
   DownloadReferenceImagesQuery,
   UploadedImageRef,
@@ -37,9 +36,9 @@ const MAX_REFERENCE_IMAGE_BYTES = 10 * 1024 * 1024;
 
 @Injectable()
 export class DownloadReferenceImagesUseCase {
+  private readonly logger = new Logger(DownloadReferenceImagesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DownloadReferenceImagesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly threadsRepository: ThreadsRepository,
     private readonly generatedImagesRepository: GeneratedImagesRepository,
@@ -50,7 +49,7 @@ export class DownloadReferenceImagesUseCase {
   async execute(
     query: DownloadReferenceImagesQuery,
   ): Promise<ReferenceImageDownload[]> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: query.threadId,
         uploadedImageCount: query.uploadedImageRefs.length,

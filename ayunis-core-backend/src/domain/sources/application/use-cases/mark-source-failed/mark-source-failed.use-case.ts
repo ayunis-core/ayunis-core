@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import {
   SourceNotFoundError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { MarkSourceFailedCommand } from './mark-source-failed.command';
 
 @Injectable()
 export class MarkSourceFailedUseCase {
-  constructor(
-    @InjectPinoLogger(MarkSourceFailedUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(MarkSourceFailedUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   async execute(command: MarkSourceFailedCommand): Promise<void> {
     try {

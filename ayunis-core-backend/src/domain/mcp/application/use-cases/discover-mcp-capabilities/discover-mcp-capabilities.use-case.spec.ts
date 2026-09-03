@@ -1,9 +1,11 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
+import { Logger } from '@nestjs/common';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-case';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
@@ -26,7 +28,7 @@ import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 
 describe('DiscoverMcpCapabilitiesUseCase', () => {
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
   let useCase: DiscoverMcpCapabilitiesUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: jest.Mocked<McpClientService>;
@@ -87,7 +89,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     });
 
   beforeAll(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DiscoverMcpCapabilitiesUseCase,
@@ -113,11 +115,6 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
             get: jest.fn(),
           },
         },
-
-        {
-          provide: getLoggerToken(DiscoverMcpCapabilitiesUseCase.name),
-          useValue: logger,
-        },
       ],
     }).compile();
 
@@ -127,7 +124,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     contextService = module.get(ContextService);
     capabilityCache = module.get(McpCapabilityCacheService);
     decoratorErrorSpy = jest
-      .spyOn(PinoLogger.prototype, 'error')
+      .spyOn(Logger.prototype, 'error')
       .mockImplementation();
   });
 
@@ -200,13 +197,13 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         mockUserId,
         capabilityDiscoveryOptions,
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         {
           id: mockIntegrationId,
         },
         'discoverMcpCapabilities',
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         expect.objectContaining({
           id: mockIntegrationId,
           name: integration.name,

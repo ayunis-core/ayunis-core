@@ -8,8 +8,8 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import {
   ApiBody,
@@ -24,12 +24,12 @@ import {
 } from '@nestjs/swagger';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateQuizQuestionUseCase } from '../../application/use-cases/create-quiz-question/create-quiz-question.use-case';
-import { CreateQuizQuestionCommand } from '../../application/use-cases/create-quiz-question/create-quiz-question.command';
-import { UpdateQuizQuestionUseCase } from '../../application/use-cases/update-quiz-question/update-quiz-question.use-case';
-import { UpdateQuizQuestionCommand } from '../../application/use-cases/update-quiz-question/update-quiz-question.command';
-import { DeleteQuizQuestionUseCase } from '../../application/use-cases/delete-quiz-question/delete-quiz-question.use-case';
-import { DeleteQuizQuestionCommand } from '../../application/use-cases/delete-quiz-question/delete-quiz-question.command';
+import { CreateQuizQuestionUseCase } from 'src/domain/academy/application/use-cases/create-quiz-question/create-quiz-question.use-case';
+import { CreateQuizQuestionCommand } from 'src/domain/academy/application/use-cases/create-quiz-question/create-quiz-question.command';
+import { UpdateQuizQuestionUseCase } from 'src/domain/academy/application/use-cases/update-quiz-question/update-quiz-question.use-case';
+import { UpdateQuizQuestionCommand } from 'src/domain/academy/application/use-cases/update-quiz-question/update-quiz-question.command';
+import { DeleteQuizQuestionUseCase } from 'src/domain/academy/application/use-cases/delete-quiz-question/delete-quiz-question.use-case';
+import { DeleteQuizQuestionCommand } from 'src/domain/academy/application/use-cases/delete-quiz-question/delete-quiz-question.command';
 import { CreateQuizQuestionRequestDto } from './dto/create-quiz-question-request.dto';
 import { UpdateQuizQuestionRequestDto } from './dto/update-quiz-question-request.dto';
 import { QuizQuestionResponseDto } from './dto/quiz-question-response.dto';
@@ -39,9 +39,11 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('super-admin/academy')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminAcademyQuizQuestionsController {
+  private readonly logger = new Logger(
+    SuperAdminAcademyQuizQuestionsController.name,
+  );
+
   constructor(
-    @InjectPinoLogger(SuperAdminAcademyQuizQuestionsController.name)
-    private readonly logger: PinoLogger,
     private readonly createQuizQuestionUseCase: CreateQuizQuestionUseCase,
     private readonly updateQuizQuestionUseCase: UpdateQuizQuestionUseCase,
     private readonly deleteQuizQuestionUseCase: DeleteQuizQuestionUseCase,
@@ -77,7 +79,7 @@ export class SuperAdminAcademyQuizQuestionsController {
     @Param('chapterId', ParseUUIDPipe) chapterId: UUID,
     @Body() dto: CreateQuizQuestionRequestDto,
   ): Promise<QuizQuestionResponseDto> {
-    this.logger.info({ chapterId }, 'Creating academy quiz question');
+    this.logger.log({ chapterId }, 'Creating academy quiz question');
     const quizQuestion = await this.createQuizQuestionUseCase.execute(
       new CreateQuizQuestionCommand({
         chapterId,
@@ -120,7 +122,7 @@ export class SuperAdminAcademyQuizQuestionsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateQuizQuestionRequestDto,
   ): Promise<QuizQuestionResponseDto> {
-    this.logger.info({ quizQuestionId: id }, 'Updating academy quiz question');
+    this.logger.log({ quizQuestionId: id }, 'Updating academy quiz question');
     const quizQuestion = await this.updateQuizQuestionUseCase.execute(
       new UpdateQuizQuestionCommand({
         quizQuestionId: id,
@@ -156,7 +158,7 @@ export class SuperAdminAcademyQuizQuestionsController {
   async deleteQuizQuestion(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<void> {
-    this.logger.info({ quizQuestionId: id }, 'Deleting academy quiz question');
+    this.logger.log({ quizQuestionId: id }, 'Deleting academy quiz question');
     await this.deleteQuizQuestionUseCase.execute(
       new DeleteQuizQuestionCommand({ quizQuestionId: id }),
     );

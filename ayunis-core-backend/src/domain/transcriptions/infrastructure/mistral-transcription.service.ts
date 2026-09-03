@@ -1,23 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
-import { TranscriptionPort } from '../application/ports/transcription.port';
-import { TranscriptionFailedError } from '../application/transcription.errors';
+import { TranscriptionPort } from 'src/domain/transcriptions/application/ports/transcription.port';
+import { TranscriptionFailedError } from 'src/domain/transcriptions/application/transcription.errors';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 
 @Injectable()
 export class MistralTranscriptionService extends TranscriptionPort {
+  private readonly logger = new Logger(MistralTranscriptionService.name);
+
   private readonly client: Mistral;
   private readonly model: string;
 
-  constructor(
-    @InjectPinoLogger(MistralTranscriptionService.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('models.mistral.apiKey'),
@@ -35,7 +32,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
     mimeType: string,
     language?: string,
   ): Promise<string> {
-    this.logger.info(
+    this.logger.log(
       {
         fileName,
         fileSize: file.length,
@@ -55,7 +52,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
 
       const transcriptedText = response.text.trim() || '';
 
-      this.logger.info(
+      this.logger.log(
         {
           fileName,
           textLength: transcriptedText.length,
@@ -95,7 +92,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
       ...(language && { language }),
     };
 
-    this.logger.info(
+    this.logger.log(
       {
         model: this.model,
         language,

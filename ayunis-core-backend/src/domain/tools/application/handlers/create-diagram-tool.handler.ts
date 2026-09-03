@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { CreateDiagramTool } from '../../domain/tools/create-diagram-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { CreateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.use-case';
 import { CreateArtifactCommand } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.command';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -13,11 +12,9 @@ import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact
 
 @Injectable()
 export class CreateDiagramToolHandler extends ToolExecutionHandler {
-  constructor(
-    @InjectPinoLogger(CreateDiagramToolHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly createArtifactUseCase: CreateArtifactUseCase,
-  ) {
+  private readonly logger = new Logger(CreateDiagramToolHandler.name);
+
+  constructor(private readonly createArtifactUseCase: CreateArtifactUseCase) {
     super();
   }
 
@@ -27,7 +24,7 @@ export class CreateDiagramToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.info('Executing create_diagram tool');
+    this.logger.log('Executing create_diagram tool');
 
     try {
       const validatedInput = tool.validateParams(input);

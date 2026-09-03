@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
@@ -34,10 +33,9 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 
 @Injectable()
 export class DeletePermittedModelUseCase {
-  constructor(
-    @InjectPinoLogger(DeletePermittedModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(DeletePermittedModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
@@ -49,7 +47,7 @@ export class DeletePermittedModelUseCase {
 
   @Transactional()
   async execute(command: DeletePermittedModelCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         modelId: command.permittedModelId,
         orgId: command.orgId,

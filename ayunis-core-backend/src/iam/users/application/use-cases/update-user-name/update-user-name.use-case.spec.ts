@@ -1,11 +1,9 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateUserNameUseCase } from './update-user-name.use-case';
 import { UpdateUserNameCommand } from './update-user-name.command';
-import { UserUpdatedEvent } from '../../events/user-updated.event';
-import { UsersRepository } from '../../ports/users.repository';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
@@ -30,10 +28,6 @@ describe('UpdateUserNameUseCase', () => {
         UpdateUserNameUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: EventEmitter2, useValue: mockEventEmitter },
-        {
-          provide: getLoggerToken(UpdateUserNameUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

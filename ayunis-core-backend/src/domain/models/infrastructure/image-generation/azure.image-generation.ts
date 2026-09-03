@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APIError, AzureOpenAI, toFile } from 'openai';
 import type { ImageEditParams, ImagesResponse } from 'openai/resources/images';
@@ -8,8 +7,8 @@ import {
   ImageGenerationHandler,
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../application/ports/image-generation.handler';
-import { ImageGenerationFailedError } from '../../application/models.errors';
+} from 'src/domain/models/application/ports/image-generation.handler';
+import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
 
 const VALID_SIZES = ['1024x1024', '1024x1536', '1536x1024', 'auto'] as const;
 type ImageSize = (typeof VALID_SIZES)[number];
@@ -49,6 +48,8 @@ function isValidQuality(value: string): value is ImageQuality {
 
 @Injectable()
 export class AzureImageGenerationHandler extends ImageGenerationHandler {
+  private readonly logger = new Logger(AzureImageGenerationHandler.name);
+
   // Keyed by deployment: the SDK only prefixes /deployments/{name} when the
   // client is constructed with `deployment` — for images.edit the body is
   // multipart FormData by the time buildRequest looks for a model name, so a
@@ -56,11 +57,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
   // is a singleton serving every org's model, hence one client per name.
   private readonly clients = new Map<string, AzureOpenAI>();
 
-  constructor(
-    @InjectPinoLogger(AzureImageGenerationHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
   }
 
@@ -102,7 +99,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
   }
 
   async generate(input: ImageGenerationInput): Promise<ImageGenerationResult> {
-    this.logger.info(
+    this.logger.log(
       {
         model: input.model.name,
         size: input.size,
@@ -187,7 +184,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
         }
       : undefined;
 
-    this.logger.info(
+    this.logger.log(
       {
         model: modelName,
         sizeBytes: imageBuffer.length,

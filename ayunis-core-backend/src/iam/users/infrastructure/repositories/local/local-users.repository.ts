@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   UsersRepository,
   UsersPagination,
@@ -25,13 +24,13 @@ import { exactEmail } from 'src/common/db/exact-email.operator';
 
 @Injectable()
 export class LocalUsersRepository extends UsersRepository {
+  private readonly logger = new Logger(LocalUsersRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalUsersRepository.name)
-    private readonly logger: PinoLogger,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
-    this.logger.info('constructor');
+    this.logger.log('constructor');
   }
 
   // Outside an active transaction txHost.tx resolves to the adapter's fallback
@@ -45,7 +44,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async findOneById(id: UUID): Promise<User | null> {
-    this.logger.info({ id }, 'findOneById');
+    this.logger.log({ id }, 'findOneById');
     const userEntity = await this.users.findOne({ where: { id } });
     if (!userEntity) {
       this.logger.warn({ id }, 'User not found by ID');
@@ -55,7 +54,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async findManyByIdsAndOrgId(ids: UUID[], orgId: UUID): Promise<User[]> {
-    this.logger.info({ idCount: ids.length, orgId }, 'findManyByIdsAndOrgId');
+    this.logger.log({ idCount: ids.length, orgId }, 'findManyByIdsAndOrgId');
 
     if (ids.length === 0) {
       return [];
@@ -69,7 +68,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
-    this.logger.info({ email }, 'findOneByEmail');
+    this.logger.log({ email }, 'findOneByEmail');
     const userRecord = await this.users.findOne({
       where: { email: exactEmail(email) },
     });
@@ -81,7 +80,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async findManyByEmails(emails: string[]): Promise<User[]> {
-    this.logger.info({ emailCount: emails.length }, 'findManyByEmails');
+    this.logger.log({ emailCount: emails.length }, 'findManyByEmails');
 
     if (emails.length === 0) {
       return [];
@@ -107,7 +106,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async findManyBySystemRole(role: SystemRole): Promise<User[]> {
-    this.logger.info({ role }, 'findManyBySystemRole');
+    this.logger.log({ role }, 'findManyBySystemRole');
 
     const userRecords = await this.users.find({
       where: { systemRole: role },
@@ -118,7 +117,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async findAdminsByOrgId(orgId: UUID): Promise<User[]> {
-    this.logger.info({ orgId }, 'findAdminsByOrgId');
+    this.logger.log({ orgId }, 'findAdminsByOrgId');
     const userRecords = await this.users.find({
       where: { orgId, role: UserRole.ADMIN },
       order: { createdAt: 'DESC' },
@@ -134,7 +133,7 @@ export class LocalUsersRepository extends UsersRepository {
     // The search term is free text over member names and emails, so it is
     // counted rather than logged — it would otherwise persist personal data in
     // centralized logs for their whole retention period.
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         limit: pagination.limit,
@@ -175,7 +174,7 @@ export class LocalUsersRepository extends UsersRepository {
     pagination: UsersPagination,
     filters?: UsersFilters,
   ): Promise<Paginated<SuperAdminUserListItem>> {
-    this.logger.info(
+    this.logger.log(
       {
         limit: pagination.limit,
         offset: pagination.offset,
@@ -217,7 +216,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async findAllIdsByOrgId(orgId: UUID): Promise<UUID[]> {
-    this.logger.info({ orgId }, 'findAllIdsByOrgId');
+    this.logger.log({ orgId }, 'findAllIdsByOrgId');
     const users = await this.users.find({
       where: { orgId },
       select: { id: true },
@@ -229,7 +228,7 @@ export class LocalUsersRepository extends UsersRepository {
     orgId: UUID,
     filters?: UsersFilters,
   ): Promise<UserSummary[]> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         hasSearch: filters?.search !== undefined,
@@ -249,7 +248,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async create(user: User): Promise<User> {
-    this.logger.info({ userId: user.id, email: user.email }, 'create');
+    this.logger.log({ userId: user.id, email: user.email }, 'create');
     // Check if user already exists by email (case-insensitive)
     const existingUser = await this.users.findOne({
       where: { email: exactEmail(user.email) },
@@ -285,7 +284,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async update(user: User): Promise<User> {
-    this.logger.info({ userId: user.id }, 'update');
+    this.logger.log({ userId: user.id }, 'update');
     const userEntity = UserMapper.toEntity(user);
     userEntity.updatedAt = new Date();
     const result = await this.users
@@ -376,7 +375,7 @@ export class LocalUsersRepository extends UsersRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
     // Verify user exists
     const existingUser = await this.users.findOne({ where: { id } });
 

@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { AnonymizeTextForOrgUseCase } from './anonymize-text-for-org.use-case';
 import { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.command';
@@ -7,7 +6,7 @@ import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
-import type { GetGlobalPiiWhitelistUseCase } from '../get-global-pii-whitelist/get-global-pii-whitelist.use-case';
+import type { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
 
 describe('AnonymizeTextForOrgUseCase', () => {
@@ -27,7 +26,6 @@ describe('AnonymizeTextForOrgUseCase', () => {
       replacements: [],
     });
     useCase = new AnonymizeTextForOrgUseCase(
-      createPinoLoggerMock(),
       {
         findByOrgId,
         replaceForOrg: jest.fn(),

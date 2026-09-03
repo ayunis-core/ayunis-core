@@ -1,24 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { MarketplaceClient } from '../../ports/marketplace-client.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import { GetMarketplaceSkillQuery } from './get-marketplace-skill.query';
 import { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
-} from '../../marketplace.errors';
+} from 'src/domain/marketplace/application/marketplace.errors';
 
 @Injectable()
 export class GetMarketplaceSkillUseCase {
-  constructor(
-    @InjectPinoLogger(GetMarketplaceSkillUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly marketplaceClient: MarketplaceClient,
-  ) {}
+  private readonly logger = new Logger(GetMarketplaceSkillUseCase.name);
+
+  constructor(private readonly marketplaceClient: MarketplaceClient) {}
 
   async execute(query: GetMarketplaceSkillQuery): Promise<SkillResponseDto> {
-    this.logger.info({ identifier: query.identifier }, 'execute');
+    this.logger.log({ identifier: query.identifier }, 'execute');
 
     try {
       const skill = await this.marketplaceClient.getSkillByIdentifier(

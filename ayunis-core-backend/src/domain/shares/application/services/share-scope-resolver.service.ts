@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import {
   RemainingShareScope,
   ShareDeletedEvent,
-} from '../events/share-deleted.event';
+} from 'src/domain/shares/application/events/share-deleted.event';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { FindAllUserIdsByOrgIdQuery } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.query';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
@@ -13,9 +12,9 @@ import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases
 
 @Injectable()
 export class ShareScopeResolverService {
+  private readonly logger = new Logger(ShareScopeResolverService.name);
+
   constructor(
-    @InjectPinoLogger(ShareScopeResolverService.name)
-    private readonly logger: PinoLogger,
     private readonly findAllUserIdsByOrgId: FindAllUserIdsByOrgIdUseCase,
     private readonly findAllUserIdsByTeamId: FindAllUserIdsByTeamIdUseCase,
   ) {}

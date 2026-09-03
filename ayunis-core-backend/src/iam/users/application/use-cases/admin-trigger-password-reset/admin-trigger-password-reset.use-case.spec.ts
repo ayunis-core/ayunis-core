@@ -1,14 +1,12 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UsersRepository } from '../../ports/users.repository';
-import { UserInvalidInputError } from '../../users.errors';
-import { TriggerPasswordResetUseCase } from '../trigger-password-reset/trigger-password-reset.use-case';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { UserInvalidInputError } from 'src/iam/users/application/users.errors';
+import { TriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { AdminTriggerPasswordResetCommand } from './admin-trigger-password-reset.command';
 import { AdminTriggerPasswordResetUseCase } from './admin-trigger-password-reset.use-case';
 
@@ -46,10 +44,6 @@ describe('AdminTriggerPasswordResetUseCase', () => {
         {
           provide: TriggerPasswordResetUseCase,
           useValue: triggerPasswordResetUseCase,
-        },
-        {
-          provide: getLoggerToken(AdminTriggerPasswordResetUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

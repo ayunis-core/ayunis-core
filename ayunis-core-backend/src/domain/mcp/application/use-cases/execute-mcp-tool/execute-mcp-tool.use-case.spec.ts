@@ -1,16 +1,17 @@
-import type { PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { setError } from '@appsignal/nodejs';
 import { ExecuteMcpToolUseCase } from './execute-mcp-tool.use-case';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
@@ -19,7 +20,7 @@ import {
   McpIntegrationDisabledError,
   McpUnauthenticatedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 
 jest.mock('@appsignal/nodejs', () => ({
   setError: jest.fn(),
@@ -57,7 +58,7 @@ const buildCustom = () =>
   });
 
 describe('ExecuteMcpToolUseCase', () => {
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
   let useCase: ExecuteMcpToolUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: {
@@ -66,7 +67,7 @@ describe('ExecuteMcpToolUseCase', () => {
   let contextService: jest.Mocked<ContextService>;
 
   beforeAll(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     repository = {
       findById: jest.fn(),
       save: jest.fn(),
@@ -91,11 +92,6 @@ describe('ExecuteMcpToolUseCase', () => {
         { provide: McpIntegrationsRepositoryPort, useValue: repository },
         { provide: McpClientService, useValue: mcpClientService },
         { provide: ContextService, useValue: contextService },
-
-        {
-          provide: getLoggerToken(ExecuteMcpToolUseCase.name),
-          useValue: logger,
-        },
       ],
     }).compile();
 
@@ -133,7 +129,7 @@ describe('ExecuteMcpToolUseCase', () => {
       },
       mockUserId,
     );
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       {
         operation: 'execute_tool',
         integration: {

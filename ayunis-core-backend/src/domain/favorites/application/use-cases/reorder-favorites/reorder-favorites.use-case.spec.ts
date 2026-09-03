@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { FavoritesRepository } from '../../ports/favorites-repository.port';
-import { Favorite } from '../../../domain/favorite.entity';
-import { FavoriteReferenceType } from '../../../domain/value-objects/favorite-reference-type.enum';
+import type { FavoritesRepository } from 'src/domain/favorites/application/ports/favorites-repository.port';
+import { Favorite } from 'src/domain/favorites/domain/favorite.entity';
+import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
 import { ReorderFavoritesCommand } from './reorder-favorites.command';
 import { ReorderFavoritesUseCase } from './reorder-favorites.use-case';
 
@@ -18,7 +17,6 @@ describe('ReorderFavoritesUseCase', () => {
     const second = createFavorite(SECOND_FAVORITE_ID, 1);
     const repository = createRepository([first, second]);
     const useCase = new ReorderFavoritesUseCase(
-      createPinoLoggerMock(),
       repository,
       createContextService(),
     );

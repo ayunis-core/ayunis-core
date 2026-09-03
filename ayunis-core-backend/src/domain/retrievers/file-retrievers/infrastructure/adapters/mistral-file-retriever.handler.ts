@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   FileRetrieverHandler,
   type FileRetrieverProcessOptions,
@@ -41,6 +40,8 @@ function isFileNotFound(error: unknown): boolean {
 
 @Injectable()
 export class MistralFileRetrieverHandler extends FileRetrieverHandler {
+  private readonly logger = new Logger(MistralFileRetrieverHandler.name);
+
   private readonly client: Mistral;
   private readonly MODEL_NAME = 'mistral-ocr-latest';
   // Per-attempt timeout for the Mistral file APIs (upload, signed URL, OCR,
@@ -50,11 +51,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   // 5-minute slice per attempt (AYC-422).
   private readonly TIMEOUT_MS = 120 * 1000;
 
-  constructor(
-    @InjectPinoLogger(MistralFileRetrieverHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('retrieval.mistral.apiKey'),

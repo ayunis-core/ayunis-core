@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateSsoLoginTransactions1786517800442 implements MigrationInterface {
   name = 'CreateSsoLoginTransactions1786517800442';

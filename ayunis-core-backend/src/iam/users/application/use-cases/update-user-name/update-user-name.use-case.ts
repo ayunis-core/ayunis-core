@@ -1,24 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { UpdateUserNameCommand } from './update-user-name.command';
 import { User } from 'src/iam/users/domain/user.entity';
-import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
+import {
+  UserNotFoundError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UserUpdatedEvent } from '../../events/user-updated.event';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
 
 @Injectable()
 export class UpdateUserNameUseCase {
+  private readonly logger = new Logger(UpdateUserNameUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateUserNameUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: UpdateUserNameCommand): Promise<User> {
-    this.logger.info(
+    this.logger.log(
       { userId: command.userId, name: command.newName },
       'updateUserName',
     );
@@ -46,7 +48,7 @@ export class UpdateUserNameUseCase {
     this.logger.debug({ userId: user.id, name: user.name }, 'user found');
     user.name = command.newName;
     const updatedUser = await this.usersRepository.update(user);
-    this.logger.info(
+    this.logger.log(
       { userId: updatedUser.id, name: updatedUser.name },
       'user name updated successfully',
     );

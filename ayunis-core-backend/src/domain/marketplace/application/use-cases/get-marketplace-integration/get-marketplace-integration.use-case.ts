@@ -1,26 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { MarketplaceClient } from '../../ports/marketplace-client.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import { GetMarketplaceIntegrationQuery } from './get-marketplace-integration.query';
 import { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   MarketplaceIntegrationNotFoundError,
   MarketplaceUnavailableError,
-} from '../../marketplace.errors';
+} from 'src/domain/marketplace/application/marketplace.errors';
 
 @Injectable()
 export class GetMarketplaceIntegrationUseCase {
-  constructor(
-    @InjectPinoLogger(GetMarketplaceIntegrationUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly marketplaceClient: MarketplaceClient,
-  ) {}
+  private readonly logger = new Logger(GetMarketplaceIntegrationUseCase.name);
+
+  constructor(private readonly marketplaceClient: MarketplaceClient) {}
 
   async execute(
     query: GetMarketplaceIntegrationQuery,
   ): Promise<IntegrationResponseDto> {
-    this.logger.info({ identifier: query.identifier }, 'execute');
+    this.logger.log({ identifier: query.identifier }, 'execute');
 
     try {
       const integration =

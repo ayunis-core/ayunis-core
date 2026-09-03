@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { TeamsRepository } from '../../ports/teams.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import { FindTeamsByUserIdQuery } from './find-teams-by-user-id.query';
-import { UnexpectedTeamError } from '../../teams.errors';
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class FindTeamsByUserIdUseCase {
-  constructor(
-    @InjectPinoLogger(FindTeamsByUserIdUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly teamsRepository: TeamsRepository,
-  ) {}
+  private readonly logger = new Logger(FindTeamsByUserIdUseCase.name);
+
+  constructor(private readonly teamsRepository: TeamsRepository) {}
 
   async execute(query: FindTeamsByUserIdQuery): Promise<Team[]> {
-    this.logger.info({ userId: query.userId }, 'execute');
+    this.logger.log({ userId: query.userId }, 'execute');
 
     try {
       return await this.teamsRepository.findByUserId(query.userId);

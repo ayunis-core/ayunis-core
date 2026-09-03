@@ -1,24 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class FindKnowledgeBaseUseCase {
+  private readonly logger = new Logger(FindKnowledgeBaseUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindKnowledgeBaseUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
   ) {}
 
   async execute(query: FindKnowledgeBaseQuery): Promise<KnowledgeBase> {
-    this.logger.info(
+    this.logger.log(
       {
         id: query.id,
         userId: query.userId,

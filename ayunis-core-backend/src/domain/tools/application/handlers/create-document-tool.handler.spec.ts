@@ -1,14 +1,12 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { CreateDocumentToolHandler } from './create-document-tool.handler';
 import { CreateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.use-case';
-import { CreateDocumentTool } from '../../domain/tools/create-document-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 describe('CreateDocumentToolHandler', () => {
   let handler: CreateDocumentToolHandler;
@@ -29,11 +27,6 @@ describe('CreateDocumentToolHandler', () => {
         {
           provide: CreateArtifactUseCase,
           useValue: mockCreateArtifactUseCase,
-        },
-
-        {
-          provide: getLoggerToken(CreateDocumentToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

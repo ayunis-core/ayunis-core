@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { CreateOrgCommand } from './create-org.command';
@@ -16,9 +15,9 @@ import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class CreateOrgUseCase {
+  private readonly logger = new Logger(CreateOrgUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateOrgUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly orgsRepository: OrgsRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly seedDefaultRolePermissionsUseCase: SeedDefaultRolePermissionsUseCase,
@@ -26,7 +25,7 @@ export class CreateOrgUseCase {
   @Transactional()
   @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(command: CreateOrgCommand): Promise<Org> {
-    this.logger.info({ name: command.name }, 'create');
+    this.logger.log({ name: command.name }, 'create');
 
     if (!command.name || command.name.trim() === '') {
       this.logger.warn('Attempted to create organization with empty name');

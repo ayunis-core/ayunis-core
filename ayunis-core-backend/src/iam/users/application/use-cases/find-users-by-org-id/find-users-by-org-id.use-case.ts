@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { UsersRepository } from '../../ports/users.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
 import { User } from 'src/iam/users/domain/user.entity';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -13,16 +12,16 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 
 @Injectable()
 export class FindUsersByOrgIdUseCase {
+  private readonly logger = new Logger(FindUsersByOrgIdUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindUsersByOrgIdUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly contextService: ContextService,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
   ) {}
 
   async execute(query: FindUsersByOrgIdQuery): Promise<Paginated<User>> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
         limit: query.limit,

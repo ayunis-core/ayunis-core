@@ -1,13 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
 import {
   RawUrlResponse,
   UrlRetrieverHandler,
   UrlRetrieverInput,
-} from '../application/ports/url-retriever.handler';
-import { UrlRetrieverResult } from '../domain/url-retriever-result.entity';
+} from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
+import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import {
   UrlRetrieverRetrievalError,
   UrlRetrieverTimeoutError,
@@ -15,7 +14,7 @@ import {
   UrlRetrieverParsingError,
   UrlRetrieverTooManyRedirectsError,
   UrlRetrieverContentTooLargeError,
-} from '../application/url-retriever.errors';
+} from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 
@@ -28,17 +27,15 @@ const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 
 @Injectable()
 export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
+  private readonly logger = new Logger(CheerioUrlRetrieverHandler.name);
+
   private readonly defaultTimeout: number;
   private readonly maxDownloadBytes: number;
 
   // `url.timeout` and `url.maxDownloadBytes` always resolve — the `url` config
   // factory applies its own defaults (5s / 25 MB) — so read them with
   // getOrThrow rather than duplicating those defaults as dead fallbacks here.
-  constructor(
-    @InjectPinoLogger(CheerioUrlRetrieverHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
     this.defaultTimeout = this.configService.getOrThrow<number>('url.timeout');
     this.maxDownloadBytes = this.configService.getOrThrow<number>(

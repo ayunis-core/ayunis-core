@@ -1,30 +1,32 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { Test } from '@nestjs/testing';
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { DeleteThreadUseCase } from './delete-thread.use-case';
 import { DeleteThreadCommand } from './delete-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
-import { ThreadDeletionRequestedEvent } from '../../events/thread-deletion-requested.event';
+import { ThreadDeletionRequestedEvent } from 'src/domain/threads/application/events/thread-deletion-requested.event';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let purgeStoragePrefixesUseCase: { execute: jest.Mock };
   let eventEmitter: { emitAsync: jest.Mock };
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
 
   beforeEach(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const mockThreadsRepository = {
       findOne: jest.fn(),
       delete: jest.fn(),
@@ -50,10 +52,6 @@ describe('DeleteThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteThreadUseCase,
-        {
-          provide: getLoggerToken(DeleteThreadUseCase.name),
-          useValue: logger,
-        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
         {

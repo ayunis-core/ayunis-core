@@ -37,7 +37,7 @@ export class DoSomethingUseCase {
   // Error handling — REQUIRED on every execute(), see Rule 1
   @HandleUnexpectedErrors(UnexpectedEntityError)
   async execute(command: DoSomethingCommand): Promise<Entity> {
-    this.logger.log('Doing something', { entityId: command.entityId });
+    this.logger.log({ entityId: command.entityId }, 'Doing something');
 
     // 1. Auth context — handling varies by project, see Rule 6 below
 
@@ -186,14 +186,18 @@ export class UnexpectedEntityError extends EntityError {
 
 Every module MUST have an `Unexpected*Error` class for the `@HandleUnexpectedErrors` decorator.
 
-### 9. Logger — use the class name, log entry
+### 9. Logger — use the class name, log entry, metadata first
 
 ```typescript
 private readonly logger = new Logger(MyUseCase.name);
 
 // At the start of execute():
-this.logger.log('Descriptive action', { relevantId: command.id });
+this.logger.log({ relevantId: command.id }, 'Descriptive action');
 ```
+
+Metadata goes in the **first** argument. Nest's logger treats the last argument
+as the context, so `logger.log('Descriptive action', { relevantId })` silently
+drops the object instead of emitting structured fields.
 
 Unexpected-error logging is handled by the `@HandleUnexpectedErrors` decorator — do not add your own error logging for the boundary.
 
@@ -210,4 +214,4 @@ When creating or modifying a use case, verify:
 - [ ] Broader reusable responsibilities are delegated to application services or ports
 - [ ] Use cases do not import concrete infrastructure services or adapters
 - [ ] Module has an `Unexpected*Error` class in its errors file
-- [ ] Logger uses class name, logs entry point (error logging is the decorator's job)
+- [ ] Logger uses class name, logs entry point with metadata first (error logging is the decorator's job)

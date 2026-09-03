@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
@@ -103,7 +102,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const mcpToolAssembler = new (McpToolAssemblerService as any)(
       discoverMcpCapabilitiesUseCase,
       getMcpIntegrationsByIdsUseCase,
-      createPinoLoggerMock(),
     );
 
     const service = new (ToolAssemblyService as any)(
@@ -120,7 +118,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
       getOrgChatSettingsUseCase,
-      createPinoLoggerMock(),
     );
 
     return {

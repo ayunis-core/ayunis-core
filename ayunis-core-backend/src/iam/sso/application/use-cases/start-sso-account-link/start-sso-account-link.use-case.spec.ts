@@ -1,6 +1,5 @@
 import type { UUID } from 'crypto';
 import { createHash } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { StartSsoAccountLinkCommand } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.command';
 import { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
@@ -32,7 +31,6 @@ describe(StartSsoAccountLinkUseCase.name, () => {
       validateCallback: jest.fn(),
     };
     const useCase = new StartSsoAccountLinkUseCase(
-      createPinoLoggerMock(),
       connections,
       new SsoAuthorizationTransactionService(transactions, broker, {
         encrypt: jest.fn((value: string) => `encrypted:${value}`),
@@ -64,7 +62,6 @@ describe(StartSsoAccountLinkUseCase.name, () => {
       anEnabledSsoConnection({ enabled: false }),
     );
     const useCase = new StartSsoAccountLinkUseCase(
-      createPinoLoggerMock(),
       connections,
       new SsoAuthorizationTransactionService(
         { save: jest.fn(), consume: jest.fn(), deleteExpired: jest.fn() },

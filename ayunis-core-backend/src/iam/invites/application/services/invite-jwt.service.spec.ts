@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { InviteJwtService, INVITE_TOKEN_TYPE } from './invite-jwt.service';
-import { InvalidInviteTokenError } from '../invites.errors';
+import { InvalidInviteTokenError } from 'src/iam/invites/application/invites.errors';
 
 describe('InviteJwtService', () => {
   let service: InviteJwtService;
@@ -19,10 +17,6 @@ describe('InviteJwtService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InviteJwtService,
-        {
-          provide: getLoggerToken(InviteJwtService.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: JwtService,
           useValue: { sign: jest.fn(), verify: jest.fn() },

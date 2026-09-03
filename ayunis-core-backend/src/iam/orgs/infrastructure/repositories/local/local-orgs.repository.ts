@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   OrgsRepository,
   OrgsPagination,
@@ -23,13 +22,13 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
+  private readonly logger = new Logger(LocalOrgsRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalOrgsRepository.name)
-    private readonly logger: PinoLogger,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
-    this.logger.info('constructor');
+    this.logger.log('constructor');
   }
 
   private getManager(): EntityManager {
@@ -41,7 +40,7 @@ export class LocalOrgsRepository extends OrgsRepository {
   }
 
   async findById(id: UUID): Promise<Org> {
-    this.logger.info({ id }, 'findById');
+    this.logger.log({ id }, 'findById');
 
     try {
       const orgEntity = await this.orgRepository.findOne({
@@ -67,7 +66,7 @@ export class LocalOrgsRepository extends OrgsRepository {
   }
 
   async findByUserId(userId: UUID): Promise<Org> {
-    this.logger.info({ userId }, 'findByUserId');
+    this.logger.log({ userId }, 'findByUserId');
 
     const orgEntity = await this.orgRepository.findOne({
       where: { users: { id: userId } },
@@ -92,7 +91,7 @@ export class LocalOrgsRepository extends OrgsRepository {
     pagination: OrgsPagination,
     filters?: OrgsFilters,
   ): Promise<Paginated<Org>> {
-    this.logger.info(
+    this.logger.log(
       {
         limit: pagination.limit,
         offset: pagination.offset,
@@ -142,7 +141,7 @@ export class LocalOrgsRepository extends OrgsRepository {
   }
 
   async create(org: Org): Promise<Org> {
-    this.logger.info({ id: org.id, name: org.name }, 'create');
+    this.logger.log({ id: org.id, name: org.name }, 'create');
 
     try {
       const orgEntity = OrgMapper.toEntity(org);
@@ -175,7 +174,7 @@ export class LocalOrgsRepository extends OrgsRepository {
   }
 
   async updateName(id: UUID, name: string): Promise<Org> {
-    this.logger.info({ id, name }, 'updateName');
+    this.logger.log({ id, name }, 'updateName');
 
     try {
       // Targeted UPDATE ... RETURNING instead of save(): the org record's
@@ -228,7 +227,7 @@ export class LocalOrgsRepository extends OrgsRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
 
     try {
       // Verify org exists

@@ -1,5 +1,4 @@
-import { Module, type OnModuleInit } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Module, type OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersModule } from 'src/iam/users/users.module';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
@@ -20,11 +19,9 @@ import { WebhookDispatchListener } from './listeners/webhook-dispatch.listener';
   ],
 })
 export class WebhooksModule implements OnModuleInit {
-  constructor(
-    @InjectPinoLogger(WebhooksModule.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {}
+  private readonly logger = new Logger(WebhooksModule.name);
+
+  constructor(private readonly configService: ConfigService) {}
 
   /**
    * Fail loud at boot if webhook delivery is configured without a signing

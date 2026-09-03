@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -14,16 +13,16 @@ import { FindWorkspaceQuery } from './find-workspace.query';
 
 @Injectable()
 export class FindWorkspaceUseCase {
+  private readonly logger = new Logger(FindWorkspaceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindWorkspaceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(query: FindWorkspaceQuery): Promise<Workspace> {
-    this.logger.info({ workspaceId: query.id }, 'Finding workspace');
+    this.logger.log({ workspaceId: query.id }, 'Finding workspace');
 
     const workspace = await this.workspacesRepository.findById(
       this.resolveUserId(),

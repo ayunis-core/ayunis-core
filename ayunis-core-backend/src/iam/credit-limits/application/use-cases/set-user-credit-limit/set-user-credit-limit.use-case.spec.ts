@@ -1,22 +1,20 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
   CreditLimitTargetNotFoundError,
   InvalidCreditLimitError,
-} from '../../credit-limits.errors';
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 import {
   aUserCreditLimit,
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_USER_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { SetUserCreditLimitUseCase } from './set-user-credit-limit.use-case';
 import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
 
@@ -40,10 +38,6 @@ describe('SetUserCreditLimitUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SetUserCreditLimitUseCase,
-        {
-          provide: getLoggerToken(SetUserCreditLimitUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },
         { provide: FindUsersByIdsUseCase, useValue: findUsersByIds },

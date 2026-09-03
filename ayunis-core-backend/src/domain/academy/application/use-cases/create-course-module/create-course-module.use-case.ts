@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
 import {
   ChapterNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 import { CreateCourseModuleCommand } from './create-course-module.command';
 
 @Injectable()
 export class CreateCourseModuleUseCase {
+  private readonly logger = new Logger(CreateCourseModuleUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateCourseModuleUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly chapterRepository: AcademyChapterRepository,
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
@@ -22,7 +21,7 @@ export class CreateCourseModuleUseCase {
   async execute(
     command: CreateCourseModuleCommand,
   ): Promise<AcademyCourseModule> {
-    this.logger.info(
+    this.logger.log(
       {
         chapterId: command.chapterId,
         title: command.title,

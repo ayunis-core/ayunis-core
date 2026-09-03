@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -10,9 +9,9 @@ import { ApiKeyMapper } from './mappers/api-key.mapper';
 
 @Injectable()
 export class LocalApiKeysRepository extends ApiKeysRepository {
+  private readonly logger = new Logger(LocalApiKeysRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalApiKeysRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(ApiKeyRecord)
     private readonly apiKeyRepository: Repository<ApiKeyRecord>,
   ) {
@@ -20,7 +19,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   }
 
   async findById(id: UUID): Promise<ApiKey | null> {
-    this.logger.info({ id }, 'findById');
+    this.logger.log({ id }, 'findById');
 
     const record = await this.apiKeyRepository.findOne({ where: { id } });
     if (!record) {
@@ -30,7 +29,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   }
 
   async findByOrgId(orgId: UUID): Promise<ApiKey[]> {
-    this.logger.info({ orgId }, 'findByOrgId');
+    this.logger.log({ orgId }, 'findByOrgId');
 
     const records = await this.apiKeyRepository.find({
       where: { orgId },
@@ -40,7 +39,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   }
 
   async findByPrefix(prefix: string): Promise<ApiKey | null> {
-    this.logger.info('findByPrefix');
+    this.logger.log('findByPrefix');
 
     const record = await this.apiKeyRepository.findOne({ where: { prefix } });
     if (!record) {
@@ -50,7 +49,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   }
 
   async create(apiKey: ApiKey): Promise<ApiKey> {
-    this.logger.info({ id: apiKey.id, orgId: apiKey.orgId }, 'create');
+    this.logger.log({ id: apiKey.id, orgId: apiKey.orgId }, 'create');
 
     const record = ApiKeyMapper.toRecord(apiKey);
     const saved = await this.apiKeyRepository.save(record);
@@ -60,7 +59,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   // Conditional UPDATE so concurrent revokes preserve the original revoked_at
   // timestamp — a second call with revoked_at already set is a no-op.
   async revoke(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'revoke');
+    this.logger.log({ id }, 'revoke');
 
     await this.apiKeyRepository
       .createQueryBuilder()

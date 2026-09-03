@@ -1,29 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { UpdateSkillTemplateCommand } from './update-skill-template.command';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
-import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
-import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import {
   DuplicateSkillTemplateNameError,
   SkillTemplateNotFoundError,
   UnexpectedSkillTemplateError,
-} from '../../skill-templates.errors';
-import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
+} from 'src/domain/skill-templates/application/skill-templates.errors';
+import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpdateSkillTemplateUseCase {
+  private readonly logger = new Logger(UpdateSkillTemplateUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateSkillTemplateUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   async execute(command: UpdateSkillTemplateCommand): Promise<SkillTemplate> {
-    this.logger.info(
+    this.logger.log(
       { skillTemplateId: command.skillTemplateId },
       'Updating skill template',
     );

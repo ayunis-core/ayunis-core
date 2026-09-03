@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { checkIn } from '@appsignal/nodejs';
-import { SweepOrphanStorageUseCase } from '../../application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
+import { SweepOrphanStorageUseCase } from 'src/domain/storage/application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
 
 /**
  * Nightly job that purges object-storage blobs owned by orgs that no longer
@@ -12,11 +11,11 @@ import { SweepOrphanStorageUseCase } from '../../application/use-cases/sweep-orp
  */
 @Injectable()
 export class OrphanStorageSweepTask {
+  private readonly logger = new Logger(OrphanStorageSweepTask.name);
+
   private isRunning = false;
 
   constructor(
-    @InjectPinoLogger(OrphanStorageSweepTask.name)
-    private readonly logger: PinoLogger,
     private readonly sweepOrphanStorageUseCase: SweepOrphanStorageUseCase,
   ) {}
 
@@ -30,12 +29,12 @@ export class OrphanStorageSweepTask {
     }
 
     this.isRunning = true;
-    this.logger.info('Starting scheduled orphan storage sweep');
+    this.logger.log('Starting scheduled orphan storage sweep');
 
     try {
       await checkIn.cron('orphan_storage_sweep', async () => {
         const result = await this.sweepOrphanStorageUseCase.execute();
-        this.logger.info(
+        this.logger.log(
           {
             ...result,
           },

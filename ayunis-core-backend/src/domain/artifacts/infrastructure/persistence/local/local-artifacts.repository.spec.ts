@@ -1,5 +1,4 @@
 import type { Repository, SelectQueryBuilder } from 'typeorm';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { LocalArtifactsRepository } from './local-artifacts.repository';
 import type { ArtifactMapper } from './mappers/artifact.mapper';
@@ -30,7 +29,6 @@ describe('LocalArtifactsRepository', () => {
     const documentArtifactRepository = {} as Repository<DocumentArtifactRecord>;
     const versionMapper = {} as ArtifactVersionMapper;
     const repository = new LocalArtifactsRepository(
-      createPinoLoggerMock(),
       artifactRepository,
       documentArtifactRepository,
       versionRepository,

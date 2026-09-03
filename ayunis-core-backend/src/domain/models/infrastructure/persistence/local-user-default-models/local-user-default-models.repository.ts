@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -10,10 +9,9 @@ import { UserDefaultModelMapper } from './mappers/user-default-model.mapper';
 
 @Injectable()
 export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepository {
-  constructor(
-    @InjectPinoLogger(LocalUserDefaultModelsRepository.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(LocalUserDefaultModelsRepository.name);
 
+  constructor(
     @InjectRepository(UserDefaultModelRecord)
     private readonly userDefaultModelRepository: Repository<UserDefaultModelRecord>,
     private readonly userDefaultModelMapper: UserDefaultModelMapper,
@@ -22,7 +20,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
   }
 
   async findByUserId(userId: UUID): Promise<PermittedLanguageModel | null> {
-    this.logger.info({ userId }, 'findByUserId');
+    this.logger.log({ userId }, 'findByUserId');
 
     const userDefaultModel = await this.userDefaultModelRepository.findOne({
       where: { userId },
@@ -51,7 +49,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     permittedModel: PermittedLanguageModel,
     userId: UUID,
   ): Promise<PermittedLanguageModel> {
-    this.logger.info({ userId, modelId: permittedModel.id }, 'create');
+    this.logger.log({ userId, modelId: permittedModel.id }, 'create');
 
     // First, delete any existing default model for this user
     await this.userDefaultModelRepository.delete({ userId });
@@ -81,7 +79,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     permittedModel: PermittedLanguageModel,
     userId: UUID,
   ): Promise<PermittedLanguageModel> {
-    this.logger.info({ userId, modelId: permittedModel.id }, 'update');
+    this.logger.log({ userId, modelId: permittedModel.id }, 'update');
 
     // Delete existing and create new (simpler than complex update logic)
     await this.userDefaultModelRepository.delete({ userId });
@@ -111,7 +109,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     permittedModel: PermittedLanguageModel,
     userId: UUID,
   ): Promise<PermittedLanguageModel> {
-    this.logger.info({ userId, modelId: permittedModel.id }, 'setAsDefault');
+    this.logger.log({ userId, modelId: permittedModel.id }, 'setAsDefault');
 
     // Delete any existing default model for this user (handles both create and update)
     await this.userDefaultModelRepository.delete({ userId });
@@ -159,7 +157,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     permittedModel: PermittedLanguageModel,
     userId: UUID,
   ): Promise<void> {
-    this.logger.info({ userId, modelId: permittedModel.id }, 'delete');
+    this.logger.log({ userId, modelId: permittedModel.id }, 'delete');
 
     const result = await this.userDefaultModelRepository.delete({
       userId,
@@ -189,7 +187,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
   }
 
   async deleteByModelId(modelId: UUID): Promise<void> {
-    this.logger.info({ modelId }, 'deleteByModelId');
+    this.logger.log({ modelId }, 'deleteByModelId');
     const result = await this.userDefaultModelRepository.delete({
       model: { id: modelId },
     });
@@ -208,7 +206,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       return;
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         count: permittedModelIds.length,
       },

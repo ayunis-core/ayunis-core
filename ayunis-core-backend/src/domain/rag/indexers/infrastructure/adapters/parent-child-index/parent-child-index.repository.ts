@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ParentChunkRecord } from './infrastructure/persistence/schema/parent-chunk.record';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,9 +16,9 @@ const EMBEDDING_COLUMNS: Record<number, string> = {
 
 @Injectable()
 export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPort {
+  private readonly logger = new Logger(ParentChildIndexerRepository.name);
+
   constructor(
-    @InjectPinoLogger(ParentChildIndexerRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(ParentChunkRecord)
     private readonly parentChunkRepository: Repository<ParentChunkRecord>,
     private readonly parentChildIndexerMapper: ParentChildIndexerMapper,

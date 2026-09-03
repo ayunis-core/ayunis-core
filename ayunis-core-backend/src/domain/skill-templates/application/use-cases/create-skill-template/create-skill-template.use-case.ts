@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
@@ -9,20 +8,20 @@ import { DistributionMode } from 'src/domain/skill-templates/domain/distribution
 import {
   DuplicateSkillTemplateNameError,
   UnexpectedSkillTemplateError,
-} from '../../skill-templates.errors';
+} from 'src/domain/skill-templates/application/skill-templates.errors';
 import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateSkillTemplateUseCase {
+  private readonly logger = new Logger(CreateSkillTemplateUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateSkillTemplateUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   async execute(command: CreateSkillTemplateCommand): Promise<SkillTemplate> {
-    this.logger.info({ name: command.name }, 'Creating skill template');
+    this.logger.log({ name: command.name }, 'Creating skill template');
     try {
       const existing = await this.skillTemplateRepository.findByName(
         command.name,

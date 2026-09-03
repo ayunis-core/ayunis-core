@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { IndexRegistry } from '../../indexer.registry';
+import { Injectable, Logger } from '@nestjs/common';
+import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 import {
   SearchContentQuery,
   SearchMultiContentQuery,
 } from './search-content.query';
 import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
-import { UnexpectedIndexError } from '../../indexer.errors';
+import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class SearchContentUseCase {
-  constructor(
-    @InjectPinoLogger(SearchContentUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly indexRegistry: IndexRegistry,
-  ) {}
+  private readonly logger = new Logger(SearchContentUseCase.name);
+
+  constructor(private readonly indexRegistry: IndexRegistry) {}
 
   async execute(query: SearchContentQuery): Promise<IndexEntry[]> {
     try {

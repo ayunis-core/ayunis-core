@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { RevokeAllSessionsForUserUseCase } from './revoke-all-sessions-for-user.use-case';
 import { RevokeAllSessionsForUserCommand } from './revoke-all-sessions-for-user.command';
 import {
   createMockRefreshTokensRepository,
   TEST_USER_ID,
-} from '../../testing/refresh-token.fixtures';
+} from 'src/iam/sessions/application/testing/refresh-token.fixtures';
 
 describe('RevokeAllSessionsForUserUseCase', () => {
   let useCase: RevokeAllSessionsForUserUseCase;
@@ -12,10 +11,7 @@ describe('RevokeAllSessionsForUserUseCase', () => {
 
   beforeEach(() => {
     repository = createMockRefreshTokensRepository();
-    useCase = new RevokeAllSessionsForUserUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    useCase = new RevokeAllSessionsForUserUseCase(repository);
   });
 
   afterEach(() => jest.clearAllMocks());

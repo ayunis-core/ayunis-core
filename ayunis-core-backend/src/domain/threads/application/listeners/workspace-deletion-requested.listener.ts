@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
@@ -28,9 +27,11 @@ import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/applicati
  */
 @Injectable()
 export class ThreadsWorkspaceDeletionRequestedListener {
+  private readonly logger = new Logger(
+    ThreadsWorkspaceDeletionRequestedListener.name,
+  );
+
   constructor(
-    @InjectPinoLogger(ThreadsWorkspaceDeletionRequestedListener.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
     private readonly removeFavoriteReferenceUseCase: RemoveFavoriteReferenceUseCase,
@@ -49,7 +50,7 @@ export class ThreadsWorkspaceDeletionRequestedListener {
         return;
       }
 
-      this.logger.info(
+      this.logger.log(
         {
           workspaceId: event.workspaceId,
           threadCount: threadIds.length,

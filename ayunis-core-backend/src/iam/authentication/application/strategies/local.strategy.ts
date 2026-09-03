@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ValidateUserUseCase } from 'src/iam/users/application/use-cases/validate-user/validate-user.use-case';
 import { ValidateUserQuery } from 'src/iam/users/application/use-cases/validate-user/validate-user.query';
@@ -12,11 +11,9 @@ import {
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    @InjectPinoLogger(LocalStrategy.name)
-    private readonly logger: PinoLogger,
-    private validateUserUseCase: ValidateUserUseCase,
-  ) {
+  private readonly logger = new Logger(LocalStrategy.name);
+
+  constructor(private validateUserUseCase: ValidateUserUseCase) {
     super({ usernameField: 'email' });
   }
 

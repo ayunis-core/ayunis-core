@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { azure } from '@ayunis/provider-openai';
 import type { ModelProvider } from '@ayunis/inference';
@@ -10,13 +9,10 @@ import type { Model } from 'src/domain/models/domain/model.entity';
 @Injectable()
 export class AzureStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
-    @InjectPinoLogger('RuntimeStreamInferenceHandler')
-    logger: PinoLogger,
-
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
-    super(logger, imageContentService);
+    super(imageContentService);
   }
 
   protected createProvider(model: Model): ModelProvider {

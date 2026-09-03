@@ -11,8 +11,8 @@ import {
   HttpStatus,
   Res,
   StreamableFile,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Response } from 'express';
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -27,14 +27,14 @@ import {
   ApiSourceListResponse,
   ApiThreadIdParam,
 } from './decorators/thread-sources.decorators';
-import { FindThreadUseCase } from '../../application/use-cases/find-thread/find-thread.use-case';
-import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
-import { AddFileSourceToThreadUseCase } from '../../application/use-cases/add-file-source-to-thread/add-file-source-to-thread.use-case';
-import { AddFileSourceToThreadCommand } from '../../application/use-cases/add-file-source-to-thread/add-file-source-to-thread.command';
-import { RemoveSourceFromThreadUseCase } from '../../application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
-import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-sources/get-thread-sources.use-case';
-import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
-import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { AddFileSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-file-source-to-thread/add-file-source-to-thread.use-case';
+import { AddFileSourceToThreadCommand } from 'src/domain/threads/application/use-cases/add-file-source-to-thread/add-file-source-to-thread.command';
+import { RemoveSourceFromThreadUseCase } from 'src/domain/threads/application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
+import { GetThreadSourcesUseCase } from 'src/domain/threads/application/use-cases/get-thread-sources/get-thread-sources.use-case';
+import { RemoveSourceCommand } from 'src/domain/threads/application/use-cases/remove-source-from-thread/remove-source.command';
+import { FindThreadSourcesQuery } from 'src/domain/threads/application/use-cases/get-thread-sources/get-thread-sources.query';
 import {
   FileSourceResponseDto,
   UrlSourceResponseDto,
@@ -50,16 +50,16 @@ import {
   SourceNotReadyError,
 } from 'src/domain/sources/application/sources.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { SourceNotFoundError as SourceNotFoundInThreadError } from '../../application/threads.errors';
+import { SourceNotFoundError as SourceNotFoundInThreadError } from 'src/domain/threads/application/threads.errors';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadSourcesController {
+  private readonly logger = new Logger(ThreadSourcesController.name);
+
   constructor(
-    @InjectPinoLogger(ThreadSourcesController.name)
-    private readonly logger: PinoLogger,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addFileSourceToThreadUseCase: AddFileSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
@@ -79,7 +79,7 @@ export class ThreadSourcesController {
   ): Promise<
     (FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]
   > {
-    this.logger.info({ threadId }, 'getThreadSources');
+    this.logger.log({ threadId }, 'getThreadSources');
     const sources = await this.getThreadSourcesUseCase.execute(
       new FindThreadSourcesQuery(threadId),
     );
@@ -100,10 +100,7 @@ export class ThreadSourcesController {
       throw new BadRequestException('No file was provided in the request');
     }
 
-    this.logger.info(
-      { threadId, fileName: file.originalname },
-      'addFileSource',
-    );
+    this.logger.log({ threadId, fileName: file.originalname }, 'addFileSource');
     try {
       const sources = await this.addFileSourceToThreadUseCase.execute(
         new AddFileSourceToThreadCommand({ threadId, file }),
@@ -134,7 +131,7 @@ export class ThreadSourcesController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
   ): Promise<void> {
-    this.logger.info({ threadId, sourceId }, 'removeSource');
+    this.logger.log({ threadId, sourceId }, 'removeSource');
 
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),
@@ -151,7 +148,7 @@ export class ThreadSourcesController {
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.info({ threadId, sourceId }, 'downloadSource');
+    this.logger.log({ threadId, sourceId }, 'downloadSource');
 
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),

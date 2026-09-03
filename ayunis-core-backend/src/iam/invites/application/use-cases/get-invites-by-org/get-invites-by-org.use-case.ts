@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { GetInvitesByOrgQuery } from './get-invites-by-org.query';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
-import { UnauthorizedInviteAccessError } from '../../invites.errors';
+import { UnauthorizedInviteAccessError } from 'src/iam/invites/application/invites.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -12,16 +11,16 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class GetInvitesByOrgUseCase {
+  private readonly logger = new Logger(GetInvitesByOrgUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetInvitesByOrgUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: GetInvitesByOrgQuery): Promise<Paginated<Invite>> {
     try {
-      this.logger.info(
+      this.logger.log(
         {
           orgId: query.orgId,
           requestingUserId: query.requestingUserId,

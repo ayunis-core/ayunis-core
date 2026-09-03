@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import { McpIntegrationsRepository } from './mcp-integrations.repository';
@@ -69,7 +68,6 @@ describe('McpIntegrationsRepository', () => {
     });
 
     repository = new McpIntegrationsRepository(
-      createPinoLoggerMock(),
       ormRepository as unknown as Repository<McpIntegrationRecord>,
       authRepository as unknown as Repository<McpIntegrationAuthRecord>,
       predefinedRepository as unknown as Repository<PredefinedMcpIntegrationRecord>,

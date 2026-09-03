@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { FindAllThreadsQuery } from './find-all-threads.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class FindAllThreadsUseCase {
-  constructor(
-    @InjectPinoLogger(FindAllThreadsUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly threadsRepository: ThreadsRepository,
-  ) {}
+  private readonly logger = new Logger(FindAllThreadsUseCase.name);
+
+  constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(query: FindAllThreadsQuery): Promise<Paginated<Thread>> {
     const { search: text, ...safeFilters } = query.filters ?? {};
-    this.logger.info(
+    this.logger.log(
       {
         userId: query.userId,
         ...safeFilters,

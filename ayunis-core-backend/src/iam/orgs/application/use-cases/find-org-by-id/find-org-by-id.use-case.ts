@@ -1,20 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { FindOrgByIdQuery } from './find-org-by-id.query';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgError, OrgNotFoundError } from '../../orgs.errors';
+import {
+  OrgError,
+  OrgNotFoundError,
+} from 'src/iam/orgs/application/orgs.errors';
 
 @Injectable()
 export class FindOrgByIdUseCase {
-  constructor(
-    @InjectPinoLogger(FindOrgByIdUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly orgsRepository: OrgsRepository,
-  ) {}
+  private readonly logger = new Logger(FindOrgByIdUseCase.name);
+
+  constructor(private readonly orgsRepository: OrgsRepository) {}
 
   async execute(query: FindOrgByIdQuery): Promise<Org> {
-    this.logger.info({ id: query.id }, 'findById');
+    this.logger.log({ id: query.id }, 'findById');
     try {
       const org = await this.orgsRepository.findById(query.id);
       this.logger.debug({ id: query.id }, 'Organization found');

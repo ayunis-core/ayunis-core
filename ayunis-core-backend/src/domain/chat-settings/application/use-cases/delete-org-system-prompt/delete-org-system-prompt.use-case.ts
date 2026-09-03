@@ -1,16 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { OrgSystemPromptsRepository } from '../../ports/org-system-prompts.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { OrgSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/org-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnexpectedChatSettingsError } from '../../chat-settings.errors';
+import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteOrgSystemPromptUseCase {
+  private readonly logger = new Logger(DeleteOrgSystemPromptUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteOrgSystemPromptUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly orgSystemPromptsRepository: OrgSystemPromptsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -20,7 +19,7 @@ export class DeleteOrgSystemPromptUseCase {
     if (!orgId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.info({ orgId }, 'execute');
+    this.logger.log({ orgId }, 'execute');
 
     try {
       await this.orgSystemPromptsRepository.deleteByOrgId(orgId);

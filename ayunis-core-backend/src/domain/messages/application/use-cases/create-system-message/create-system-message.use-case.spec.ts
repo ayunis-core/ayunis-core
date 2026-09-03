@@ -1,14 +1,12 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateSystemMessageUseCase } from './create-system-message.use-case';
-import type { MessagesRepository } from '../../ports/messages.repository';
-import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
+import type { MessagesRepository } from 'src/domain/messages/application/ports/messages.repository';
+import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import { CreateSystemMessageCommand } from './create-system-message.command';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { MessageCreationError } from '../../messages.errors';
+import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
 import { randomUUID } from 'crypto';
 
 describe('CreateSystemMessageUseCase', () => {
@@ -24,10 +22,6 @@ describe('CreateSystemMessageUseCase', () => {
       providers: [
         CreateSystemMessageUseCase,
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
-        {
-          provide: getLoggerToken(CreateSystemMessageUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 
@@ -172,7 +166,7 @@ describe('CreateSystemMessageUseCase', () => {
         .spyOn(mockMessagesRepository, 'create')
         .mockResolvedValue(expectedMessage);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'info');
+      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
 
       // Act
       await useCase.execute(command);

@@ -1,9 +1,7 @@
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { OnboardingRepository } from '../../ports/onboarding.repository';
+import { OnboardingRepository } from 'src/iam/onboarding/application/ports/onboarding.repository';
 import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 import { MarkWelcomeVideoSeenCommand } from './mark-welcome-video-seen.command';
 import { MarkWelcomeVideoSeenUseCase } from './mark-welcome-video-seen.use-case';
@@ -22,10 +20,6 @@ describe('MarkWelcomeVideoSeenUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MarkWelcomeVideoSeenUseCase,
-        {
-          provide: getLoggerToken(MarkWelcomeVideoSeenUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: OnboardingRepository, useValue: onboardingRepository },
       ],
     }).compile();

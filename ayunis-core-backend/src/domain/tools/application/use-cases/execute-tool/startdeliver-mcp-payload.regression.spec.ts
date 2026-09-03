@@ -1,14 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
-import { McpIntegrationTool } from '../../../domain/tools/mcp-integration-tool.entity';
-import { McpIntegrationToolHandler } from '../../handlers/mcp-integration-tool.handler';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { McpIntegrationToolHandler } from 'src/domain/tools/application/handlers/mcp-integration-tool.handler';
 import type { ExecuteMcpToolUseCase } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import type { ExecuteMcpToolCommand } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.command';
 import { ExecuteToolUseCase } from './execute-tool.use-case';
 import { ExecuteToolCommand } from './execute-tool.command';
-import type { ToolHandlerRegistry } from '../../tool-handler.registry';
-import type { ToolExecutionContext } from '../../ports/execution.handler';
+import type { ToolHandlerRegistry } from 'src/domain/tools/application/tool-handler.registry';
+import type { ToolExecutionContext } from 'src/domain/tools/application/ports/execution.handler';
 
 // Regression for the Startdeliver ticket (AYC-413): a plain customer name
 // search must not carry the optional date filters (customfieldChurnDate,
@@ -55,14 +54,11 @@ describe('Startdeliver MCP payload regression (AYC-413)', () => {
         return Promise.resolve({ isError: false, content: [] });
       },
     } as unknown as ExecuteMcpToolUseCase;
-    const handler = new McpIntegrationToolHandler(
-      createPinoLoggerMock(),
-      executeMcpTool,
-    );
+    const handler = new McpIntegrationToolHandler(executeMcpTool);
     const registry = {
       getHandler: () => handler,
     } as unknown as ToolHandlerRegistry;
-    const useCase = new ExecuteToolUseCase(createPinoLoggerMock(), registry);
+    const useCase = new ExecuteToolUseCase(registry);
 
     // What a strict-mode model (or an imitating Claude/Opus turn) emits for
     // the search "Stadt Ladenburg": nulls for every optional date filter.

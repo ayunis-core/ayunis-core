@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { FavoriteReferenceResolver } from '../../services/favorite-reference-resolver.service';
-import type { FavoritesRepository } from '../../ports/favorites-repository.port';
-import { FavoriteReferenceType } from '../../../domain/value-objects/favorite-reference-type.enum';
-import { Favorite } from '../../../domain/favorite.entity';
+import type { FavoriteReferenceResolver } from 'src/domain/favorites/application/services/favorite-reference-resolver.service';
+import type { FavoritesRepository } from 'src/domain/favorites/application/ports/favorites-repository.port';
+import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
+import { Favorite } from 'src/domain/favorites/domain/favorite.entity';
 import { ToggleFavoriteCommand } from './toggle-favorite.command';
 import { ToggleFavoriteUseCase } from './toggle-favorite.use-case';
 
@@ -76,12 +75,7 @@ function setup(current: Favorite[] = []) {
   return {
     repository,
     resolver,
-    useCase: new ToggleFavoriteUseCase(
-      createPinoLoggerMock(),
-      repository,
-      resolver,
-      context,
-    ),
+    useCase: new ToggleFavoriteUseCase(repository, resolver, context),
   };
 }
 

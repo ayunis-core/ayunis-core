@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -90,7 +89,6 @@ describe('ToolResultCollectorService', () => {
       { execute: anonymize } as unknown as AnonymizeTextForThreadUseCase,
       { get: jest.fn().mockReturnValue(userId) } as unknown as ContextService,
       { emitAsync } as never,
-      createPinoLoggerMock(),
     );
   });
 

@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { DemoteFromSuperAdminCommand } from './demote-from-super-admin.command';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import {
@@ -10,20 +9,18 @@ import {
   UserUnexpectedError,
   UserSelfDemotionNotAllowedError,
   UserLastSuperAdminError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DemoteFromSuperAdminUseCase {
-  constructor(
-    @InjectPinoLogger(DemoteFromSuperAdminUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly usersRepository: UsersRepository,
-  ) {}
+  private readonly logger = new Logger(DemoteFromSuperAdminUseCase.name);
+
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   @Transactional()
   async execute(command: DemoteFromSuperAdminCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.userId,
         requestingUserId: command.requestingUserId,

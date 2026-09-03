@@ -1,14 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetSourcesByIdsUseCase } from './get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from './get-sources-by-ids.query';
-import type { SourceRepository } from '../../ports/source.repository';
-import { createMockSourceRepository } from '../../testing/source.fixtures';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 class StubSource extends Source {
   constructor(id: UUID) {
@@ -28,10 +27,7 @@ describe('GetSourcesByIdsUseCase', () => {
   beforeEach(() => {
     sourceRepository = createMockSourceRepository();
 
-    useCase = new GetSourcesByIdsUseCase(
-      createPinoLoggerMock(),
-      sourceRepository,
-    );
+    useCase = new GetSourcesByIdsUseCase(sourceRepository);
   });
 
   it('should return sources matching the provided IDs', async () => {

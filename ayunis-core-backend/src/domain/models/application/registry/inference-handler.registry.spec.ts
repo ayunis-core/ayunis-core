@@ -1,13 +1,12 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { InferenceHandlerRegistry } from './inference-handler.registry';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import type { InferenceHandler } from '../ports/inference.handler';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import type { InferenceHandler } from 'src/domain/models/application/ports/inference.handler';
 // Token not used currently; register directly in the factory below
 const MISTRAL_INFERENCE_HANDLER = 'MISTRAL_INFERENCE_HANDLER';
-import type { MistralInferenceHandler } from '../../infrastructure/inference/mistral.inference';
+import type { MistralInferenceHandler } from 'src/domain/models/infrastructure/inference/mistral.inference';
 
 describe('InferenceHandlerRegistry', () => {
   let registry: InferenceHandlerRegistry;
@@ -39,10 +38,7 @@ describe('InferenceHandlerRegistry', () => {
             mistralHandler: MistralInferenceHandler,
             configService: any,
           ) => {
-            const registry = new InferenceHandlerRegistry(
-              createPinoLoggerMock(),
-              configService,
-            );
+            const registry = new InferenceHandlerRegistry(configService);
             registry.register(ModelProvider.MISTRAL, mistralHandler);
             return registry;
           },

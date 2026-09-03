@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
 import { setError } from '@appsignal/nodejs';
 import { McpToolAssemblerService } from './mcp-tool-assembler.service';
@@ -30,8 +30,8 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
         .fn()
         .mockResolvedValue([{ id: integrationId, name: 'Test Integration' }]),
     } as unknown as GetMcpIntegrationsByIdsUseCase;
-    const logger = createPinoLoggerMock();
-    const service = new McpToolAssemblerService(discover, getByIds, logger);
+    const logger = createLoggerMock();
+    const service = new McpToolAssemblerService(discover, getByIds);
     return { service, logger };
   };
 

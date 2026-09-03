@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { GetSourcesByKnowledgeBaseIdUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
@@ -10,14 +9,14 @@ import { DeleteKnowledgeBaseCommand } from './delete-knowledge-base.command';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteKnowledgeBaseUseCase {
+  private readonly logger = new Logger(DeleteKnowledgeBaseUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteKnowledgeBaseUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly getSourcesByKnowledgeBaseIdUseCase: GetSourcesByKnowledgeBaseIdUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
@@ -25,7 +24,7 @@ export class DeleteKnowledgeBaseUseCase {
 
   @Transactional()
   async execute(command: DeleteKnowledgeBaseCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,
         userId: command.userId,

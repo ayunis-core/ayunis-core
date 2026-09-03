@@ -1,20 +1,18 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Readable } from 'stream';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { ExportArtifactUseCase } from './export-artifact.use-case';
 import { ExportArtifactCommand } from './export-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
-import { DocumentExportPort } from '../../ports/document-export.port';
-import { SpreadsheetExportPort } from '../../ports/spreadsheet-export.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
+import { DocumentExportPort } from 'src/domain/artifacts/application/ports/document-export.port';
+import { SpreadsheetExportPort } from 'src/domain/artifacts/application/ports/spreadsheet-export.port';
 import {
   ArtifactExportTimeoutError,
   ArtifactNotFoundError,
   ArtifactNotExportableError,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import {
   DocumentArtifact,
   SpreadsheetArtifact,
@@ -98,10 +96,6 @@ describe('ExportArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExportArtifactUseCase,
-        {
-          provide: getLoggerToken(ExportArtifactUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: DocumentExportPort, useValue: mockExportPort },
         { provide: SpreadsheetExportPort, useValue: mockSpreadsheetExportPort },
@@ -427,10 +421,6 @@ describe('ExportArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExportArtifactUseCase,
-        {
-          provide: getLoggerToken(ExportArtifactUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: DocumentExportPort, useValue: documentExportPort },
         { provide: SpreadsheetExportPort, useValue: spreadsheetExportPort },

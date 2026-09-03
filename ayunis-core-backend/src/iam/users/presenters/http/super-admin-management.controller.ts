@@ -8,8 +8,8 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -22,11 +22,11 @@ import {
   ApiConflictResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { FindSuperAdminsUseCase } from '../../application/use-cases/find-super-admins/find-super-admins.use-case';
-import { PromoteToSuperAdminUseCase } from '../../application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
-import { PromoteToSuperAdminCommand } from '../../application/use-cases/promote-to-super-admin/promote-to-super-admin.command';
-import { DemoteFromSuperAdminUseCase } from '../../application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
-import { DemoteFromSuperAdminCommand } from '../../application/use-cases/demote-from-super-admin/demote-from-super-admin.command';
+import { FindSuperAdminsUseCase } from 'src/iam/users/application/use-cases/find-super-admins/find-super-admins.use-case';
+import { PromoteToSuperAdminUseCase } from 'src/iam/users/application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
+import { PromoteToSuperAdminCommand } from 'src/iam/users/application/use-cases/promote-to-super-admin/promote-to-super-admin.command';
+import { DemoteFromSuperAdminUseCase } from 'src/iam/users/application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
+import { DemoteFromSuperAdminCommand } from 'src/iam/users/application/use-cases/demote-from-super-admin/demote-from-super-admin.command';
 import { SuperAdminUserResponseDtoMapper } from './mappers/super-admin-user-response-dto.mapper';
 import { SuperAdminUserResponseDto } from './dtos/super-admin-user-response.dto';
 import { PromoteToSuperAdminDto } from './dtos/promote-to-super-admin.dto';
@@ -42,9 +42,9 @@ import {
 @Controller('super-admin/super-admins')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminManagementController {
+  private readonly logger = new Logger(SuperAdminManagementController.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminManagementController.name)
-    private readonly logger: PinoLogger,
     private readonly findSuperAdminsUseCase: FindSuperAdminsUseCase,
     private readonly promoteToSuperAdminUseCase: PromoteToSuperAdminUseCase,
     private readonly demoteFromSuperAdminUseCase: DemoteFromSuperAdminUseCase,
@@ -67,7 +67,7 @@ export class SuperAdminManagementController {
     description: 'User not authenticated or not authorized as super admin',
   })
   async listSuperAdmins(): Promise<SuperAdminUserResponseDto[]> {
-    this.logger.info('listSuperAdmins');
+    this.logger.log('listSuperAdmins');
 
     const superAdmins = await this.findSuperAdminsUseCase.execute();
 
@@ -101,7 +101,7 @@ export class SuperAdminManagementController {
   async promoteToSuperAdmin(
     @Body() dto: PromoteToSuperAdminDto,
   ): Promise<SuperAdminUserResponseDto> {
-    this.logger.info('promoteToSuperAdmin');
+    this.logger.log('promoteToSuperAdmin');
 
     const user = await this.promoteToSuperAdminUseCase.execute(
       new PromoteToSuperAdminCommand({ email: dto.email }),
@@ -146,7 +146,7 @@ export class SuperAdminManagementController {
     @Param('userId', ParseUUIDPipe) userId: UUID,
     @CurrentUser(UserProperty.ID) requestingUserId: UUID,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       `demoteFromSuperAdmin userId=${userId} requestingUserId=${requestingUserId}`,
     );
 

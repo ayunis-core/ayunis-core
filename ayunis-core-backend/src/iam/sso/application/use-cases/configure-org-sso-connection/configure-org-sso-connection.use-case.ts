@@ -1,6 +1,5 @@
 import { Transactional } from '@nestjs-cls/transactional';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
@@ -42,9 +41,9 @@ type SsoRoutingConfigurationInput = Omit<
 
 @Injectable()
 export class ConfigureOrgSsoConnectionUseCase {
+  private readonly logger = new Logger(ConfigureOrgSsoConnectionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ConfigureOrgSsoConnectionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: OrgSsoConnectionsRepository,
     private readonly findOrgById: FindOrgByIdUseCase,
   ) {}
@@ -54,7 +53,7 @@ export class ConfigureOrgSsoConnectionUseCase {
     command: ConfigureOrgSsoConnectionCommand,
   ): Promise<OrgSsoConnection> {
     const input = this.normalizeConfiguration(command);
-    this.logger.info(
+    this.logger.log(
       { orgId: command.orgId, domainCount: input.emailDomains.length },
       'Configuring organization SSO connection',
     );

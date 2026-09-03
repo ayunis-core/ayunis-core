@@ -9,8 +9,8 @@ import {
   Patch,
   Post,
   Put,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiExtraModels,
@@ -30,24 +30,24 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
-import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
-import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
-import { DeletePermittedModelUseCase } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
-import { GetConfiguredModelsByTypeQuery } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
-import { GetConfiguredModelsByTypeUseCase } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
-import { ModelType } from '../../domain/value-objects/model-type.enum';
-import { SetOrgDefaultLanguageModelCommand } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
-import { SetOrgDefaultLanguageModelUseCase } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
-import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
-import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
-import { UpdatePermittedModelCommand } from '../../application/use-cases/update-permitted-model/update-permitted-model.command';
-import { UpdatePermittedModelUseCase } from '../../application/use-cases/update-permitted-model/update-permitted-model.use-case';
+import { CreatePermittedModelCommand } from 'src/domain/models/application/use-cases/create-permitted-model/create-permitted-model.command';
+import { CreatePermittedModelUseCase } from 'src/domain/models/application/use-cases/create-permitted-model/create-permitted-model.use-case';
+import { DeletePermittedModelCommand } from 'src/domain/models/application/use-cases/delete-permitted-model/delete-permitted-model.command';
+import { DeletePermittedModelUseCase } from 'src/domain/models/application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
+import { GetConfiguredModelsByTypeQuery } from 'src/domain/models/application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
+import { GetConfiguredModelsByTypeUseCase } from 'src/domain/models/application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import { SetOrgDefaultLanguageModelCommand } from 'src/domain/models/application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
+import { SetOrgDefaultLanguageModelUseCase } from 'src/domain/models/application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
+import { GetPermittedModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.query';
+import { GetPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.use-case';
+import { UpdatePermittedModelCommand } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.command';
+import { UpdatePermittedModelUseCase } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.use-case';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
   PermittedLanguageModel,
-} from '../../domain/permitted-model.entity';
+} from 'src/domain/models/domain/permitted-model.entity';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto';
 import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-model-response.dto';
@@ -82,10 +82,11 @@ const permittedModelResponseSchema = {
   ModelWithConfigResponseDto,
 )
 export class SuperAdminPermittedModelsController {
-  constructor(
-    @InjectPinoLogger(SuperAdminPermittedModelsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(
+    SuperAdminPermittedModelsController.name,
+  );
 
+  constructor(
     private readonly createPermittedModelUseCase: CreatePermittedModelUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
@@ -113,7 +114,7 @@ export class SuperAdminPermittedModelsController {
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Getting available language models for org by super admin',
     );
@@ -146,7 +147,7 @@ export class SuperAdminPermittedModelsController {
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Getting available embedding models for org by super admin',
     );
@@ -179,7 +180,7 @@ export class SuperAdminPermittedModelsController {
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Getting available image-generation models for org by super admin',
     );
@@ -232,7 +233,7 @@ export class SuperAdminPermittedModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() setOrgDefaultModelDto: SetOrgDefaultModelDto,
   ): Promise<PermittedLanguageModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Managing org default model by super admin',
     );
@@ -286,7 +287,7 @@ export class SuperAdminPermittedModelsController {
       | PermittedImageGenerationModelResponseDto
     )[]
   > {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Getting permitted models for org by super admin',
     );
@@ -330,7 +331,7 @@ export class SuperAdminPermittedModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreatePermittedModelDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { modelId: dto.modelId, orgId, userId },
       'Creating permitted model for org by super admin',
     );
@@ -451,7 +452,7 @@ export class SuperAdminPermittedModelsController {
     const models = await this.getPermittedModelsUseCase.execute(
       new GetPermittedModelsQuery(orgId),
     );
-    this.logger.info(
+    this.logger.log(
       { modelCount: models.length, orgId },
       'Successfully retrieved permitted models for org',
     );
@@ -483,14 +484,14 @@ export class SuperAdminPermittedModelsController {
   }
 
   private logDelete(id: UUID, orgId: UUID, userId: UUID): void {
-    this.logger.info(
+    this.logger.log(
       { permittedModelId: id, orgId, userId },
       'Deleting permitted model for org by super admin',
     );
   }
 
   private logUpdate(id: UUID, orgId: UUID, userId: UUID): void {
-    this.logger.info(
+    this.logger.log(
       { permittedModelId: id, orgId, userId },
       'Updating permitted model for org by super admin',
     );

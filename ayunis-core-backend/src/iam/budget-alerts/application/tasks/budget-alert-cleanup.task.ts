@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { CleanupBudgetAlertNotificationsUseCase } from '../use-cases/cleanup-budget-alert-notifications/cleanup-budget-alert-notifications.use-case';
+import { CleanupBudgetAlertNotificationsUseCase } from 'src/iam/budget-alerts/application/use-cases/cleanup-budget-alert-notifications/cleanup-budget-alert-notifications.use-case';
 
 /**
  * Purges budget-alert notification markers older than the retention window.
@@ -10,15 +9,15 @@ import { CleanupBudgetAlertNotificationsUseCase } from '../use-cases/cleanup-bud
  */
 @Injectable()
 export class BudgetAlertCleanupTask {
+  private readonly logger = new Logger(BudgetAlertCleanupTask.name);
+
   constructor(
-    @InjectPinoLogger(BudgetAlertCleanupTask.name)
-    private readonly logger: PinoLogger,
     private readonly cleanupBudgetAlertNotificationsUseCase: CleanupBudgetAlertNotificationsUseCase,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async handleCleanup(): Promise<void> {
-    this.logger.info('Purging expired budget alert notifications');
+    this.logger.log('Purging expired budget alert notifications');
     try {
       await this.cleanupBudgetAlertNotificationsUseCase.execute();
     } catch (error) {

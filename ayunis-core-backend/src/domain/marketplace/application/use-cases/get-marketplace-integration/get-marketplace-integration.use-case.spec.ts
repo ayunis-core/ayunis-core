@@ -1,11 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetMarketplaceIntegrationUseCase } from './get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from './get-marketplace-integration.query';
-import type { MarketplaceClient } from '../../ports/marketplace-client.port';
+import type { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import {
   MarketplaceIntegrationNotFoundError,
   MarketplaceUnavailableError,
-} from '../../marketplace.errors';
+} from 'src/domain/marketplace/application/marketplace.errors';
 import type { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 
 describe('GetMarketplaceIntegrationUseCase', () => {
@@ -55,10 +54,7 @@ describe('GetMarketplaceIntegrationUseCase', () => {
       getIntegrationByIdentifier: jest.fn(),
     };
 
-    useCase = new GetMarketplaceIntegrationUseCase(
-      createPinoLoggerMock(),
-      marketplaceClient,
-    );
+    useCase = new GetMarketplaceIntegrationUseCase(marketplaceClient);
   });
 
   it('should return integration details when integration is found', async () => {

@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,14 +10,14 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { UpdateSkillUseCase } from './update-skill.use-case';
 import { UpdateSkillCommand } from './update-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
 import {
   SkillNotFoundError,
   DuplicateSkillNameError,
-} from '../../skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 
 describe('UpdateSkillUseCase', () => {
   let useCase: UpdateSkillUseCase;
@@ -45,10 +43,6 @@ describe('UpdateSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateSkillUseCase,
-        {
-          provide: getLoggerToken(UpdateSkillUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

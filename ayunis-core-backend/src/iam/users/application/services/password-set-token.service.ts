@@ -1,13 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes, type UUID } from 'crypto';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { sha256Hex } from 'src/common/util/sha256.util';
 import { getMillisecondsFromJwtExpiry } from 'src/common/util/jwt.util';
-import { PasswordSetToken } from '../../domain/password-set-token.entity';
-import { PasswordSetTokenPurpose } from '../../domain/value-objects/password-set-token-purpose.enum';
-import { PasswordSetTokensRepository } from '../ports/password-set-tokens.repository';
+import { PasswordSetToken } from 'src/iam/users/domain/password-set-token.entity';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
 
 /**
  * Issues and validates opaque, single-use password-set tokens. The plaintext
@@ -16,9 +15,9 @@ import { PasswordSetTokensRepository } from '../ports/password-set-tokens.reposi
  */
 @Injectable()
 export class PasswordSetTokenService {
+  private readonly logger = new Logger(PasswordSetTokenService.name);
+
   constructor(
-    @InjectPinoLogger(PasswordSetTokenService.name)
-    private readonly logger: PinoLogger,
     private readonly configService: ConfigService,
     private readonly passwordSetTokensRepository: PasswordSetTokensRepository,
   ) {}
@@ -27,7 +26,7 @@ export class PasswordSetTokenService {
     userId: UUID;
     purpose: PasswordSetTokenPurpose;
   }): Promise<string> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: params.userId,
         purpose: params.purpose,

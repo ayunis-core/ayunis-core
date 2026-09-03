@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { OpenAIErrorMapper } from './openai-error.mapper';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
@@ -10,7 +9,7 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { OpenAIModelNotFoundError } from '../openai-compat.errors';
+import { OpenAIModelNotFoundError } from 'src/domain/openai-compat/application/openai-compat.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 class UnexpectedOpenAIError extends ApplicationError {
@@ -22,7 +21,7 @@ class UnexpectedOpenAIError extends ApplicationError {
 }
 
 describe('OpenAIErrorMapper', () => {
-  const mapper = new OpenAIErrorMapper(createPinoLoggerMock());
+  const mapper = new OpenAIErrorMapper();
 
   describe('429 → rate_limit_error (regression for AYC-92 / AYC-78 finding I5)', () => {
     it('maps QuotaExceededError (HTTP 429) to rate_limit_error', () => {

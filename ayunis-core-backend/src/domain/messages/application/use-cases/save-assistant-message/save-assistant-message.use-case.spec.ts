@@ -1,20 +1,18 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SaveAssistantMessageUseCase } from './save-assistant-message.use-case';
-import type { MessagesRepository } from '../../ports/messages.repository';
-import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
+import type { MessagesRepository } from 'src/domain/messages/application/ports/messages.repository';
+import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import { SaveAssistantMessageCommand } from './save-assistant-message.command';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import {
   MessageCreationError,
   MessageThreadMissingError,
-} from '../../messages.errors';
+} from 'src/domain/messages/application/messages.errors';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';
+import { AssistantMessageCreatedEvent } from 'src/domain/messages/application/events/assistant-message-created.event';
 
 describe('SaveAssistantMessageUseCase', () => {
   let useCase: SaveAssistantMessageUseCase;
@@ -41,10 +39,6 @@ describe('SaveAssistantMessageUseCase', () => {
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
-        {
-          provide: getLoggerToken(SaveAssistantMessageUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

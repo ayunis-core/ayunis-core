@@ -1,10 +1,8 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SkillShareAuthorizationStrategy } from './skill-share-authorization.strategy';
-import { SkillRepository } from '../ports/skill.repository';
-import type { Skill } from '../../domain/skill.entity';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import { randomUUID } from 'crypto';
 
 describe('SkillShareAuthorizationStrategy', () => {
@@ -33,10 +31,6 @@ describe('SkillShareAuthorizationStrategy', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SkillShareAuthorizationStrategy,
-        {
-          provide: getLoggerToken(SkillShareAuthorizationStrategy.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SkillRepository,
           useValue: mockSkillRepository,

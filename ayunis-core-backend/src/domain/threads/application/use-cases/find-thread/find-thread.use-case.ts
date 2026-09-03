@@ -1,9 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { FindThreadQuery } from './find-thread.query';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { CountMessagesTokensUseCase } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.use-case';
@@ -18,16 +17,16 @@ export interface FindThreadResult {
 
 @Injectable()
 export class FindThreadUseCase {
+  private readonly logger = new Logger(FindThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly countMessagesTokensUseCase: CountMessagesTokensUseCase,
   ) {}
 
   async execute(query: FindThreadQuery): Promise<FindThreadResult> {
-    this.logger.info({ threadId: query.id }, 'findOne');
+    this.logger.log({ threadId: query.id }, 'findOne');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {

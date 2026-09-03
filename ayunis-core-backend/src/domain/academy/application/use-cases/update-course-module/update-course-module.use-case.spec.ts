@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { UpdateCourseModuleUseCase } from './update-course-module.use-case';
 import { UpdateCourseModuleCommand } from './update-course-module.command';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
-import { CourseModuleNotFoundError } from '../../academy.errors';
+import { CourseModuleNotFoundError } from 'src/domain/academy/application/academy.errors';
 
 describe('UpdateCourseModuleUseCase', () => {
   let useCase: UpdateCourseModuleUseCase;
@@ -21,10 +19,6 @@ describe('UpdateCourseModuleUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(UpdateCourseModuleUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         UpdateCourseModuleUseCase,
         {
           provide: AcademyCourseModuleRepository,

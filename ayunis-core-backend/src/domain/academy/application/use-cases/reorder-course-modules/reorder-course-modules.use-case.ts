@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
 import {
   ChapterNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
-import { assertSameIdSet } from '../../util/reorder-validation';
+} from 'src/domain/academy/application/academy.errors';
+import { assertSameIdSet } from 'src/domain/academy/application/util/reorder-validation';
 import { ReorderCourseModulesCommand } from './reorder-course-modules.command';
 
 @Injectable()
 export class ReorderCourseModulesUseCase {
+  private readonly logger = new Logger(ReorderCourseModulesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ReorderCourseModulesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly chapterRepository: AcademyChapterRepository,
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
 
   async execute(command: ReorderCourseModulesCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         chapterId: command.chapterId,
         count: command.courseModuleIds.length,

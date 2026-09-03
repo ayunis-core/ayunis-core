@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -14,9 +13,9 @@ import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models
 
 @Injectable()
 export class GetEffectiveLanguageModelsUseCase {
+  private readonly logger = new Logger(GetEffectiveLanguageModelsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetEffectiveLanguageModelsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly scopeResolver: EffectiveModelScopeResolverService,
     private readonly contextService: ContextService,
@@ -26,7 +25,7 @@ export class GetEffectiveLanguageModelsUseCase {
   async execute(
     query: GetEffectiveLanguageModelsQuery,
   ): Promise<EffectiveLanguageModelsResult> {
-    this.logger.info(
+    this.logger.log(
       { userId: query.userId, orgId: query.orgId },
       'Resolving effective language models',
     );

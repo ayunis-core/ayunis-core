@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
+import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { RemoveTeamCreditLimitCommand } from './remove-team-credit-limit.command';
 
 @Injectable()
 export class RemoveTeamCreditLimitUseCase {
+  private readonly logger = new Logger(RemoveTeamCreditLimitUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RemoveTeamCreditLimitUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -22,7 +21,7 @@ export class RemoveTeamCreditLimitUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         teamId: command.teamId,

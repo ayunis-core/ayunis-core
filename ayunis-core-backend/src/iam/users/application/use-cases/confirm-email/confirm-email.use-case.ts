@@ -1,34 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfirmEmailCommand } from './confirm-email.command';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import {
   UserEmailMismatchError,
   UserNotFoundError,
   InvalidEmailConfirmationTokenError,
   UserUnexpectedError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 import {
   EmailConfirmationJwtService,
   EmailConfirmationJwtPayload,
-} from '../../services/email-confirmation-jwt.service';
+} from 'src/iam/users/application/services/email-confirmation-jwt.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UserUpdatedEvent } from '../../events/user-updated.event';
-import type { User } from '../../../domain/user.entity';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class ConfirmEmailUseCase {
+  private readonly logger = new Logger(ConfirmEmailUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ConfirmEmailUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly emailConfirmationJwtService: EmailConfirmationJwtService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: ConfirmEmailCommand): Promise<void> {
-    this.logger.info({ hasToken: !!command.token }, 'execute');
+    this.logger.log({ hasToken: !!command.token }, 'execute');
     const payload = this.verifyToken(command.token);
     try {
       await this.confirmEmail(payload);

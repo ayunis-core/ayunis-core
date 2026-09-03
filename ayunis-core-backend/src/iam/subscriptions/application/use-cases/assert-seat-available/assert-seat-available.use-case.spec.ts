@@ -7,7 +7,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import type { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { AssertSeatAvailableUseCase } from 'src/iam/subscriptions/application/use-cases/assert-seat-available/assert-seat-available.use-case';
 import { AssertSeatAvailableCommand } from 'src/iam/subscriptions/application/use-cases/assert-seat-available/assert-seat-available.command';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
@@ -129,7 +128,6 @@ describe(AssertSeatAvailableUseCase.name, () => {
 
   function createUseCase(isCloudHosted: boolean): AssertSeatAvailableUseCase {
     return new AssertSeatAvailableUseCase(
-      createPinoLoggerMock(),
       subscriptions,
       new AcquireSeatAllocationLockUseCase(allocationLock),
       countUsers as unknown as CountUsersByOrgIdUseCase,

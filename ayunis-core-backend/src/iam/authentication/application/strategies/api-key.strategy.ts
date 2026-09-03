@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-http-bearer';
 import type { UUID } from 'crypto';
@@ -19,11 +18,9 @@ export interface ApiKeyPrincipal {
 
 @Injectable()
 export class ApiKeyStrategy extends PassportStrategy(Strategy, 'api-key') {
-  constructor(
-    @InjectPinoLogger(ApiKeyStrategy.name)
-    private readonly logger: PinoLogger,
-    private readonly validateApiKey: ValidateApiKeyUseCase,
-  ) {
+  private readonly logger = new Logger(ApiKeyStrategy.name);
+
+  constructor(private readonly validateApiKey: ValidateApiKeyUseCase) {
     super();
   }
 

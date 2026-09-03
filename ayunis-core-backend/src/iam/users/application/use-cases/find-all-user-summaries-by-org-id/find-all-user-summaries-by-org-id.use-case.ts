@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { UserSummary } from 'src/iam/users/domain/user-summary';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
@@ -18,17 +17,15 @@ import { FindAllUserSummariesByOrgIdQuery } from './find-all-user-summaries-by-o
  */
 @Injectable()
 export class FindAllUserSummariesByOrgIdUseCase {
-  constructor(
-    @InjectPinoLogger(FindAllUserSummariesByOrgIdUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly usersRepository: UsersRepository,
-  ) {}
+  private readonly logger = new Logger(FindAllUserSummariesByOrgIdUseCase.name);
+
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(
     query: FindAllUserSummariesByOrgIdQuery,
   ): Promise<UserSummary[]> {
-    this.logger.info({ orgId: query.orgId }, 'execute');
+    this.logger.log({ orgId: query.orgId }, 'execute');
     return this.usersRepository.findAllSummariesByOrgId(query.orgId, {
       search: query.search,
     });

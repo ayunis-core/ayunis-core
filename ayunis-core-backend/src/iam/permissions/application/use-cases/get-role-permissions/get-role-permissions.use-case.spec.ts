@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetRolePermissionsUseCase } from './get-role-permissions.use-case';
 import { GetRolePermissionsQuery } from './get-role-permissions.query';
-import type { RolePermissionsRepository } from '../../ports/role-permissions.repository';
-import { RolePermission } from '../../../domain/role-permission.entity';
+import type { RolePermissionsRepository } from 'src/iam/permissions/application/ports/role-permissions.repository';
+import { RolePermission } from 'src/iam/permissions/domain/role-permission.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { Permission } from '../../../domain/value-objects/permission.enum';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import type { UUID } from 'crypto';
 
 describe('GetRolePermissionsUseCase', () => {
@@ -15,7 +14,6 @@ describe('GetRolePermissionsUseCase', () => {
   beforeEach(() => {
     repository = { findByOrgId: jest.fn() };
     useCase = new GetRolePermissionsUseCase(
-      createPinoLoggerMock(),
       repository as unknown as RolePermissionsRepository,
     );
   });

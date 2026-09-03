@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EventEmitter } from 'events';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
-import type { RunEventResponseMapper } from '../mappers/run-event-response.mapper';
+import type { RunEventResponseMapper } from 'src/domain/runs/presenters/http/mappers/run-event-response.mapper';
 import { RunSsePresenter } from './run-sse.presenter';
 
 const THREAD_ID = 'f4b2e1d0-3c5a-4b7e-9d8f-1a2b3c4d5e6f' as UUID;
@@ -59,7 +58,6 @@ describe('RunSsePresenter', () => {
     jest.clearAllMocks();
     presenter = new RunSsePresenter(
       eventMapper as unknown as RunEventResponseMapper,
-      createPinoLoggerMock(),
     );
     response = new FakeSseResponse();
   });

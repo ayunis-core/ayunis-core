@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { ShareScopeResolverService } from './share-scope-resolver.service';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
-import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import { ShareDeletedEvent } from '../events/share-deleted.event';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { randomUUID } from 'crypto';
 
 describe('ShareScopeResolverService', () => {
@@ -27,10 +25,6 @@ describe('ShareScopeResolverService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ShareScopeResolverService,
-        {
-          provide: getLoggerToken(ShareScopeResolverService.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: FindAllUserIdsByOrgIdUseCase,
           useValue: findAllUserIdsByOrgId,

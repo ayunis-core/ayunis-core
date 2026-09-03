@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { GetCurrentUserCommand } from './get-current-user.command';
-import { ActiveUser } from '../../../domain/active-user.entity';
-import { InvalidTokenError } from '../../authentication.errors';
-import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
@@ -23,15 +22,15 @@ interface JwtPayload {
 
 @Injectable()
 export class GetCurrentUserUseCase {
+  private readonly logger = new Logger(GetCurrentUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetCurrentUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
   ) {}
 
   async execute(command: GetCurrentUserCommand): Promise<ActiveUser> {
-    this.logger.info('getCurrentUser');
+    this.logger.log('getCurrentUser');
 
     try {
       const payload = this.jwtService.verify<Partial<JwtPayload>>(

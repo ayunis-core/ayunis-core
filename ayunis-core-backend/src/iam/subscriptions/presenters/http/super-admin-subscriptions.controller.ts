@@ -8,8 +8,8 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -24,14 +24,14 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { GetLatestSubscriptionUseCase } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
-import { GetLatestSubscriptionQuery } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.query';
-import { CreateSubscriptionUseCase } from '../../application/use-cases/create-subscription/create-subscription.use-case';
-import { ChangeSubscriptionUseCase } from '../../application/use-cases/change-subscription/change-subscription.use-case';
-import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-subscription/cancel-subscription.use-case';
-import { CancelSubscriptionCommand } from '../../application/use-cases/cancel-subscription/cancel-subscription.command';
-import { UncancelSubscriptionUseCase } from '../../application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
-import { UncancelSubscriptionCommand } from '../../application/use-cases/uncancel-subscription/uncancel-subscription.command';
+import { GetLatestSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
+import { GetLatestSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-latest-subscription/get-latest-subscription.query';
+import { CreateSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/create-subscription/create-subscription.use-case';
+import { ChangeSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/change-subscription/change-subscription.use-case';
+import { CancelSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/cancel-subscription/cancel-subscription.use-case';
+import { CancelSubscriptionCommand } from 'src/iam/subscriptions/application/use-cases/cancel-subscription/cancel-subscription.command';
+import { UncancelSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
+import { UncancelSubscriptionCommand } from 'src/iam/subscriptions/application/use-cases/uncancel-subscription/uncancel-subscription.command';
 import {
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -47,20 +47,20 @@ import {
   toBillingInfoParams,
 } from './super-admin-subscription.mappers';
 
-import { UpdateSeatsCommand } from '../../application/use-cases/update-seats/update-seats.command';
+import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
 import { UpdateSeatsDto } from './dto/update-seats.dto';
 import { UpdateSeatsWithAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats-with-allocation-lock/update-seats-with-allocation-lock.use-case';
 import { UpdateBillingInfoDto } from './dto/update-billing-info.dto';
-import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-billing-info/update-billing-info.use-case';
-import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
-import { UpdateStartDateUseCase } from '../../application/use-cases/update-start-date/update-start-date.use-case';
-import { UpdateStartDateCommand } from '../../application/use-cases/update-start-date/update-start-date.command';
-import { UpdateMonthlyCreditsUseCase } from '../../application/use-cases/update-monthly-credits/update-monthly-credits.use-case';
-import { UpdateMonthlyCreditsCommand } from '../../application/use-cases/update-monthly-credits/update-monthly-credits.command';
+import { UpdateBillingInfoUseCase } from 'src/iam/subscriptions/application/use-cases/update-billing-info/update-billing-info.use-case';
+import { UpdateBillingInfoCommand } from 'src/iam/subscriptions/application/use-cases/update-billing-info/update-billing-info.command';
+import { UpdateStartDateUseCase } from 'src/iam/subscriptions/application/use-cases/update-start-date/update-start-date.use-case';
+import { UpdateStartDateCommand } from 'src/iam/subscriptions/application/use-cases/update-start-date/update-start-date.command';
+import { UpdateMonthlyCreditsUseCase } from 'src/iam/subscriptions/application/use-cases/update-monthly-credits/update-monthly-credits.use-case';
+import { UpdateMonthlyCreditsCommand } from 'src/iam/subscriptions/application/use-cases/update-monthly-credits/update-monthly-credits.command';
 import { UpdateMonthlyCreditsDto } from './dto/update-monthly-credits.dto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { SubscriptionNotFoundError } from '../../application/subscription.errors';
+import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import { UpdateStartDateDto } from './dto/update-start-date.dto';
 
 const UNAUTHORIZED_DESCRIPTION =
@@ -81,9 +81,9 @@ const INTERNAL_ERROR_DESCRIPTION = 'Internal server error';
   UpdateMonthlyCreditsDto,
 )
 export class SuperAdminSubscriptionsController {
+  private readonly logger = new Logger(SuperAdminSubscriptionsController.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminSubscriptionsController.name)
-    private readonly logger: PinoLogger,
     private readonly getLatestSubscriptionUseCase: GetLatestSubscriptionUseCase,
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
     private readonly changeSubscriptionUseCase: ChangeSubscriptionUseCase,
@@ -117,7 +117,7 @@ export class SuperAdminSubscriptionsController {
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<SubscriptionResponseDtoNullable> {
-    this.logger.info({ orgId, userId }, 'Getting subscription as super admin');
+    this.logger.log({ orgId, userId }, 'Getting subscription as super admin');
 
     try {
       const query = new GetLatestSubscriptionQuery({
@@ -128,7 +128,7 @@ export class SuperAdminSubscriptionsController {
       const result = await this.getLatestSubscriptionUseCase.execute(query);
 
       const responseDto = this.subscriptionResponseMapper.toDto(result);
-      this.logger.info({ orgId }, 'Successfully retrieved subscription');
+      this.logger.log({ orgId }, 'Successfully retrieved subscription');
 
       return { subscription: responseDto };
     } catch (error) {
@@ -170,11 +170,11 @@ export class SuperAdminSubscriptionsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() createSubscriptionDto: CreateSubscriptionRequestDto,
   ): Promise<void> {
-    this.logger.info({ orgId, userId }, 'Creating subscription as super admin');
+    this.logger.log({ orgId, userId }, 'Creating subscription as super admin');
     await this.createSubscriptionUseCase.execute(
       toCreateCommand(orgId, userId, createSubscriptionDto),
     );
-    this.logger.info({ orgId }, 'Successfully created subscription');
+    this.logger.log({ orgId }, 'Successfully created subscription');
   }
 
   @Post(':orgId/change')
@@ -204,11 +204,11 @@ export class SuperAdminSubscriptionsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() changeSubscriptionDto: ChangeSubscriptionRequestDto,
   ): Promise<void> {
-    this.logger.info({ orgId, userId }, 'Changing subscription as super admin');
+    this.logger.log({ orgId, userId }, 'Changing subscription as super admin');
     await this.changeSubscriptionUseCase.execute(
       toChangeCommand(orgId, userId, changeSubscriptionDto),
     );
-    this.logger.info({ orgId }, 'Successfully changed subscription');
+    this.logger.log({ orgId }, 'Successfully changed subscription');
   }
 
   @Put(':orgId/seats')
@@ -238,7 +238,7 @@ export class SuperAdminSubscriptionsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() updateSeatsDto: UpdateSeatsDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Updating subscription seats as super admin',
     );
@@ -248,7 +248,7 @@ export class SuperAdminSubscriptionsController {
       noOfSeats: updateSeatsDto.noOfSeats,
     });
     await this.updateSeatsUseCase.execute(command);
-    this.logger.info({ orgId }, 'Successfully updated subscription seats');
+    this.logger.log({ orgId }, 'Successfully updated subscription seats');
   }
 
   @Put(':orgId/monthly-credits')
@@ -276,7 +276,7 @@ export class SuperAdminSubscriptionsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() updateMonthlyCreditsDto: UpdateMonthlyCreditsDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Updating monthly credits as super admin',
     );
@@ -286,7 +286,7 @@ export class SuperAdminSubscriptionsController {
       monthlyCredits: updateMonthlyCreditsDto.monthlyCredits,
     });
     await this.updateMonthlyCreditsUseCase.execute(command);
-    this.logger.info({ orgId }, 'Successfully updated monthly credits');
+    this.logger.log({ orgId }, 'Successfully updated monthly credits');
   }
 
   @Put(':orgId/billing-info')
@@ -316,7 +316,7 @@ export class SuperAdminSubscriptionsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() updateBillingInfoDto: UpdateBillingInfoDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Updating subscription billing info as super admin',
     );
@@ -326,7 +326,7 @@ export class SuperAdminSubscriptionsController {
       billingInfo: toBillingInfoParams(updateBillingInfoDto),
     });
     await this.updateBillingInfoUseCase.execute(command);
-    this.logger.info(
+    this.logger.log(
       { orgId },
       'Successfully updated subscription billing info',
     );
@@ -359,7 +359,7 @@ export class SuperAdminSubscriptionsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() updateStartDateDto: UpdateStartDateDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Updating subscription start date as super admin',
     );
@@ -371,7 +371,7 @@ export class SuperAdminSubscriptionsController {
     });
 
     await this.updateStartDateUseCase.execute(command);
-    this.logger.info({ orgId }, 'Successfully updated subscription start date');
+    this.logger.log({ orgId }, 'Successfully updated subscription start date');
   }
 
   @Delete(':orgId')
@@ -400,7 +400,7 @@ export class SuperAdminSubscriptionsController {
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Cancelling subscription as super admin',
     );
@@ -410,7 +410,7 @@ export class SuperAdminSubscriptionsController {
       requestingUserId: userId,
     });
     await this.cancelSubscriptionUseCase.execute(command);
-    this.logger.info({ orgId }, 'Successfully cancelled subscription');
+    this.logger.log({ orgId }, 'Successfully cancelled subscription');
   }
 
   @Post(':orgId/uncancel')
@@ -439,7 +439,7 @@ export class SuperAdminSubscriptionsController {
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { orgId, userId },
       'Uncancelling subscription as super admin',
     );
@@ -450,6 +450,6 @@ export class SuperAdminSubscriptionsController {
     });
 
     await this.uncancelSubscriptionUseCase.execute(command);
-    this.logger.info({ orgId }, 'Successfully uncancelled subscription');
+    this.logger.log({ orgId }, 'Successfully uncancelled subscription');
   }
 }

@@ -1,13 +1,12 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeactivateAddonUseCase } from './deactivate-addon.use-case';
 import { DeactivateAddonCommand } from './deactivate-addon.command';
-import type { OrgAddonRepository } from '../../ports/org-addon.repository';
+import type { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
 import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
-import { AddonDeactivatedEvent } from '../../events/addon-deactivated.event';
-import { UnexpectedAddonError } from '../../addons.errors';
+import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
+import { UnexpectedAddonError } from 'src/iam/addons/application/addons.errors';
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111' as UUID;
 const SUPER_ADMIN_ID = '99999999-9999-9999-9999-999999999999' as UUID;
@@ -33,11 +32,7 @@ describe('DeactivateAddonUseCase', () => {
     });
     const repo = makeRepo(existing);
     const eventEmitter = makeEventEmitter();
-    const useCase = new DeactivateAddonUseCase(
-      createPinoLoggerMock(),
-      repo,
-      eventEmitter,
-    );
+    const useCase = new DeactivateAddonUseCase(repo, eventEmitter);
 
     await useCase.execute(
       new DeactivateAddonCommand(
@@ -61,11 +56,7 @@ describe('DeactivateAddonUseCase', () => {
   it('is a no-op without an event when the addon is already inactive', async () => {
     const repo = makeRepo(null);
     const eventEmitter = makeEventEmitter();
-    const useCase = new DeactivateAddonUseCase(
-      createPinoLoggerMock(),
-      repo,
-      eventEmitter,
-    );
+    const useCase = new DeactivateAddonUseCase(repo, eventEmitter);
 
     await useCase.execute(
       new DeactivateAddonCommand(
@@ -86,11 +77,7 @@ describe('DeactivateAddonUseCase', () => {
     });
     const repo = makeRepo(existing);
     (repo.delete as jest.Mock).mockRejectedValue(new Error('deadlock'));
-    const useCase = new DeactivateAddonUseCase(
-      createPinoLoggerMock(),
-      repo,
-      makeEventEmitter(),
-    );
+    const useCase = new DeactivateAddonUseCase(repo, makeEventEmitter());
 
     await expect(
       useCase.execute(

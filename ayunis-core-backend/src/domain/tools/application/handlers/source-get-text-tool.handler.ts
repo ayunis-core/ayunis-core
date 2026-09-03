@@ -1,21 +1,20 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { SourceGetTextTool } from '../../domain/tools/source-get-text-tool.entity';
+import { SourceGetTextTool } from 'src/domain/tools/domain/tools/source-get-text-tool.entity';
 import { UUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import toolsConfig from 'src/config/tools.config';
 import {
   TextExtractionTruncationReason,
   validateTextExtraction,
-} from '../utils/text-extraction.utils';
+} from 'src/domain/tools/application/utils/text-extraction.utils';
 import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { ExtractTextLinesQuery } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.query';
 
@@ -37,9 +36,9 @@ interface SourceGetTextResult {
 
 @Injectable()
 export class SourceGetTextToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(SourceGetTextToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(SourceGetTextToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
     private readonly extractTextLinesUseCase: ExtractTextLinesUseCase,
     @Inject(toolsConfig.KEY)
@@ -54,7 +53,7 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.info({ tool: tool.name, input }, 'execute');
+    this.logger.log({ tool: tool.name, input }, 'execute');
 
     try {
       return await this.getText(tool, input);

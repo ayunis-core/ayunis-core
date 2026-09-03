@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
+import { OrgMfaRequirementsRepository } from 'src/iam/mfa/application/ports/org-mfa-requirements.repository';
 import { OrgMfaRequirement } from 'src/iam/mfa/domain/org-mfa-requirement.entity';
-import { UnexpectedMfaError } from '../../mfa.errors';
+import { UnexpectedMfaError } from 'src/iam/mfa/application/mfa.errors';
 import { GetOrgMfaRequirementQuery } from './get-org-mfa-requirement.query';
 
 @Injectable()
 export class GetOrgMfaRequirementUseCase {
+  private readonly logger = new Logger(GetOrgMfaRequirementUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetOrgMfaRequirementUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly orgMfaRequirementsRepository: OrgMfaRequirementsRepository,
   ) {}
 
   async execute(query: GetOrgMfaRequirementQuery): Promise<OrgMfaRequirement> {
-    this.logger.info({ orgId: query.orgId }, 'getOrgMfaRequirement');
+    this.logger.log({ orgId: query.orgId }, 'getOrgMfaRequirement');
 
     try {
       const requirement = await this.orgMfaRequirementsRepository.findByOrgId(

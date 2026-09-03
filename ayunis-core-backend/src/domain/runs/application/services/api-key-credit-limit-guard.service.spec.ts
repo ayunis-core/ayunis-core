@@ -1,7 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { UUID } from 'crypto';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetMonthlyCreditUsageForApiKeyUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-api-key/get-monthly-credit-usage-for-api-key.use-case';
 import { ApiKeyCreditLimitExceededError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { ResolveCreditLimitForApiKeyUseCase } from 'src/iam/credit-limits/application/use-cases/resolve-credit-limit-for-api-key/resolve-credit-limit-for-api-key.use-case';
@@ -38,10 +36,6 @@ describe('ApiKeyCreditLimitGuardService', () => {
         {
           provide: IsUsageBasedSubscriptionUseCase,
           useValue: isUsageBased,
-        },
-        {
-          provide: getLoggerToken(ApiKeyCreditLimitGuardService.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

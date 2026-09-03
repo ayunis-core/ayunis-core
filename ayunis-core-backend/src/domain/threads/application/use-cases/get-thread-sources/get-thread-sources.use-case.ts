@@ -1,22 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { Source } from '../../../../sources/domain/source.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { Source } from 'src/domain/sources/domain/source.entity';
 import { FindThreadSourcesQuery } from './get-thread-sources.query';
-import { FindThreadUseCase } from '../find-thread/find-thread.use-case';
-import { FindThreadQuery } from '../find-thread/find-thread.query';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetThreadSourcesUseCase {
-  constructor(
-    @InjectPinoLogger(GetThreadSourcesUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly findThreadUseCase: FindThreadUseCase,
-  ) {}
+  private readonly logger = new Logger(GetThreadSourcesUseCase.name);
+
+  constructor(private readonly findThreadUseCase: FindThreadUseCase) {}
 
   async execute(query: FindThreadSourcesQuery): Promise<Source[]> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: query.threadId,
       },

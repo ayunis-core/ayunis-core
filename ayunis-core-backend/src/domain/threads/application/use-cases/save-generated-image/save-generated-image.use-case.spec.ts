@@ -1,14 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { SaveGeneratedImageUseCase } from './save-generated-image.use-case';
 import { SaveGeneratedImageCommand } from './save-generated-image.command';
-import type { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+import type { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import type { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import {
   GeneratedImageSaveFailedError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 
 // Stable UUID for deterministic tests
 const FIXED_UUID = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -42,7 +41,6 @@ describe('SaveGeneratedImageUseCase', () => {
     } as unknown as jest.Mocked<DeleteObjectUseCase>;
 
     useCase = new SaveGeneratedImageUseCase(
-      createPinoLoggerMock(),
       generatedImagesRepository,
       uploadObjectUseCase,
       deleteObjectUseCase,

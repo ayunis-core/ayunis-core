@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PasswordSetTokensRepository } from '../../application/ports/password-set-tokens.repository';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
 
 /**
  * Nightly job that deletes expired or already-used password-set tokens. Runs at
@@ -10,11 +9,11 @@ import { PasswordSetTokensRepository } from '../../application/ports/password-se
  */
 @Injectable()
 export class PasswordSetTokenCleanupTask {
+  private readonly logger = new Logger(PasswordSetTokenCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
-    @InjectPinoLogger(PasswordSetTokenCleanupTask.name)
-    private readonly logger: PinoLogger,
     private readonly passwordSetTokensRepository: PasswordSetTokensRepository,
   ) {}
 
@@ -28,12 +27,12 @@ export class PasswordSetTokenCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.info('Starting scheduled password-set-token cleanup');
+    this.logger.log('Starting scheduled password-set-token cleanup');
 
     try {
       const deleted =
         await this.passwordSetTokensRepository.deleteExpiredOrUsed(new Date());
-      this.logger.info(
+      this.logger.log(
         {
           deleted,
         },

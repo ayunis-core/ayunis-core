@@ -1,28 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { AdminTriggerPasswordResetCommand } from './admin-trigger-password-reset.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UsersRepository } from '../../ports/users.repository';
-import { TriggerPasswordResetUseCase } from '../trigger-password-reset/trigger-password-reset.use-case';
-import { TriggerPasswordResetCommand } from '../trigger-password-reset/trigger-password-reset.command';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { TriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
+import { TriggerPasswordResetCommand } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.command';
 import {
   UserInvalidInputError,
   UserNotFoundError,
   UserUnauthorizedError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 
 @Injectable()
 export class AdminTriggerPasswordResetUseCase {
+  private readonly logger = new Logger(AdminTriggerPasswordResetUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AdminTriggerPasswordResetUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
   ) {}
 
   async execute(command: AdminTriggerPasswordResetCommand): Promise<void> {
-    this.logger.info({ userId: command.userId }, 'adminTriggerPasswordReset');
+    this.logger.log({ userId: command.userId }, 'adminTriggerPasswordReset');
 
     const requestUserOrgId = this.contextService.get('orgId');
     if (!requestUserOrgId) {
@@ -50,7 +49,7 @@ export class AdminTriggerPasswordResetUseCase {
       new TriggerPasswordResetCommand(targetUser.email),
     );
 
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.userId,
         email: targetUser.email,

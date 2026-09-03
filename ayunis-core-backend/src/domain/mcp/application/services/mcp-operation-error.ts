@@ -1,12 +1,12 @@
-import type { PinoLogger } from 'nestjs-pino';
+import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { McpIntegration } from '../../domain/mcp-integration.entity';
-import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
+import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import {
   McpAuthenticationError,
   McpUserAuthorizationRequiredError,
-} from '../mcp.errors';
-import type { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
+} from 'src/domain/mcp/application/mcp.errors';
+import type { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
 import type { McpCapabilityCacheService } from './mcp-capability-cache.service';
 
 interface McpOperationErrorContext {
@@ -16,7 +16,7 @@ interface McpOperationErrorContext {
   userId?: UUID;
   oauthTokens?: McpOAuthUserTokenRepositoryPort;
   capabilityCache?: McpCapabilityCacheService;
-  logger: PinoLogger;
+  logger: Logger;
 }
 
 export async function handleMcpOperationError({

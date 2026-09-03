@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ToolHandlerRegistry } from '../../tool-handler.registry';
-import { ToolExecutionFailedError } from '../../tools.errors';
+import { Injectable, Logger } from '@nestjs/common';
+import { ToolHandlerRegistry } from 'src/domain/tools/application/tool-handler.registry';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ExecuteToolCommand } from './execute-tool.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 
 @Injectable()
 export class ExecuteToolUseCase {
-  constructor(
-    @InjectPinoLogger(ExecuteToolUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly toolHandlerRegistry: ToolHandlerRegistry,
-  ) {}
+  private readonly logger = new Logger(ExecuteToolUseCase.name);
+
+  constructor(private readonly toolHandlerRegistry: ToolHandlerRegistry) {}
 
   async execute(command: ExecuteToolCommand): Promise<string> {
-    this.logger.info(
+    this.logger.log(
       {
         tool: { name: command.tool.name },
         input: command.input,

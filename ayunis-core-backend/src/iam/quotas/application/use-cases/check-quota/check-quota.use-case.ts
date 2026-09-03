@@ -1,18 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { UsageQuotaRepositoryPort } from '../../ports/usage-quota.repository.port';
-import { QuotaLimitResolverService } from '../../services/quota-limit-resolver.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { UsageQuotaRepositoryPort } from 'src/iam/quotas/application/ports/usage-quota.repository.port';
+import { QuotaLimitResolverService } from 'src/iam/quotas/application/services/quota-limit-resolver.service';
 import { CheckQuotaQuery } from './check-quota.query';
-import { QuotaExceededError } from '../../quotas.errors';
+import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.query';
-import type { UsageQuota } from '../../../domain/usage-quota.entity';
+import type { UsageQuota } from 'src/iam/quotas/domain/usage-quota.entity';
 
 @Injectable()
 export class CheckQuotaUseCase {
+  private readonly logger = new Logger(CheckQuotaUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CheckQuotaUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usageQuotaRepository: UsageQuotaRepositoryPort,
     private readonly limitResolver: QuotaLimitResolverService,
     private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,

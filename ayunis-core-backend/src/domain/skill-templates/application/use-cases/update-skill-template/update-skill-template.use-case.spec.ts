@@ -1,12 +1,10 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import type { UUID } from 'crypto';
 import { UpdateSkillTemplateUseCase } from './update-skill-template.use-case';
 import { UpdateSkillTemplateCommand } from './update-skill-template.command';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
@@ -14,7 +12,7 @@ import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain
 import {
   DuplicateSkillTemplateNameError,
   SkillTemplateNotFoundError,
-} from '../../skill-templates.errors';
+} from 'src/domain/skill-templates/application/skill-templates.errors';
 
 describe('UpdateSkillTemplateUseCase', () => {
   let useCase: UpdateSkillTemplateUseCase;
@@ -32,10 +30,6 @@ describe('UpdateSkillTemplateUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateSkillTemplateUseCase,
-        {
-          provide: getLoggerToken(UpdateSkillTemplateUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillTemplateRepository, useValue: mockRepository },
       ],
     }).compile();

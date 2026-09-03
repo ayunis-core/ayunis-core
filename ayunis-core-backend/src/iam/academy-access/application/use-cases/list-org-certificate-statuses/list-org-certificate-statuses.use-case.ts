@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -45,9 +44,9 @@ export interface OrgCertificateStatus {
  */
 @Injectable()
 export class ListOrgCertificateStatusesUseCase {
+  private readonly logger = new Logger(ListOrgCertificateStatusesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ListOrgCertificateStatusesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly getOrgSettingsUseCase: GetOrgAcademyAccessSettingsUseCase,
     private readonly findAllUserSummariesByOrgIdUseCase: FindAllUserSummariesByOrgIdUseCase,
     private readonly getAcademyCompletionsUseCase: GetAcademyCompletionsUseCase,
@@ -57,7 +56,7 @@ export class ListOrgCertificateStatusesUseCase {
   async execute(
     query: ListOrgCertificateStatusesQuery,
   ): Promise<Paginated<OrgCertificateStatus>> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
         status: query.status,

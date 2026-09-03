@@ -1,19 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { FindAllThreadsByOrgWithSourcesQuery } from './find-all-threads-by-org-with-sources.query';
 
 @Injectable()
 export class FindAllThreadsByOrgWithSourcesUseCase {
-  constructor(
-    @InjectPinoLogger(FindAllThreadsByOrgWithSourcesUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly threadsRepository: ThreadsRepository,
-  ) {}
+  private readonly logger = new Logger(
+    FindAllThreadsByOrgWithSourcesUseCase.name,
+  );
+
+  constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(query: FindAllThreadsByOrgWithSourcesQuery): Promise<Thread[]> {
-    this.logger.info({ orgId: query.orgId }, 'execute');
+    this.logger.log({ orgId: query.orgId }, 'execute');
     return this.threadsRepository.findAllByOrgIdWithSources(query.orgId);
   }
 }

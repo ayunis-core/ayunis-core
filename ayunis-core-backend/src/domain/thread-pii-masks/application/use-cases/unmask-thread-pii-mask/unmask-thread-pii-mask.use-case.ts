@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { ThreadPiiMaskRepository } from 'src/domain/thread-pii-masks/application/ports/thread-pii-mask.repository';
@@ -17,15 +16,13 @@ import type { UnmaskThreadPiiMaskCommand } from './unmask-thread-pii-mask.comman
  */
 @Injectable()
 export class UnmaskThreadPiiMaskUseCase {
-  constructor(
-    @InjectPinoLogger(UnmaskThreadPiiMaskUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: ThreadPiiMaskRepository,
-  ) {}
+  private readonly logger = new Logger(UnmaskThreadPiiMaskUseCase.name);
+
+  constructor(private readonly repository: ThreadPiiMaskRepository) {}
 
   async execute(command: UnmaskThreadPiiMaskCommand): Promise<ThreadPiiMask[]> {
     const logContext = { threadId: command.threadId, maskId: command.maskId };
-    this.logger.info(logContext, 'Unmasking thread PII mask');
+    this.logger.log(logContext, 'Unmasking thread PII mask');
 
     try {
       const masks = await this.repository.findByThreadId(command.threadId);

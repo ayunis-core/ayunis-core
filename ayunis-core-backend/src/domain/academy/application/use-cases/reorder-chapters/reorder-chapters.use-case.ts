@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { UnexpectedAcademyError } from '../../academy.errors';
-import { assertSameIdSet } from '../../util/reorder-validation';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
+import { assertSameIdSet } from 'src/domain/academy/application/util/reorder-validation';
 import { ReorderChaptersCommand } from './reorder-chapters.command';
 
 @Injectable()
 export class ReorderChaptersUseCase {
-  constructor(
-    @InjectPinoLogger(ReorderChaptersUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly chapterRepository: AcademyChapterRepository,
-  ) {}
+  private readonly logger = new Logger(ReorderChaptersUseCase.name);
+
+  constructor(private readonly chapterRepository: AcademyChapterRepository) {}
 
   async execute(command: ReorderChaptersCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         count: command.chapterIds.length,
       },

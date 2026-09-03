@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ParentChildIndexerRepository } from './parent-child-index.repository';
@@ -21,10 +19,6 @@ describe('ParentChildIndexerRepository', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ParentChildIndexerRepository,
-        {
-          provide: getLoggerToken(ParentChildIndexerRepository.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: getRepositoryToken(ParentChunkRecord),
           useValue: mockTypeOrmRepo,

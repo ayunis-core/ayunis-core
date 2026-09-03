@@ -1,5 +1,12 @@
-import { Body, Controller, Get, HttpStatus, Put, Query } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Put,
+  Query,
+  Logger,
+} from '@nestjs/common';
 import {
   ApiOperation,
   ApiResponse,
@@ -13,12 +20,12 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { EvaluateAcademyAccessUseCase } from '../../application/use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
-import { EvaluateAcademyAccessQuery } from '../../application/use-cases/evaluate-academy-access/evaluate-academy-access.query';
-import { GetOrgAcademyAccessSettingsUseCase } from '../../application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.use-case';
-import { GetOrgAcademyAccessSettingsQuery } from '../../application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.query';
-import { UpsertOrgAcademyAccessSettingsUseCase } from '../../application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.use-case';
-import { UpsertOrgAcademyAccessSettingsCommand } from '../../application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.command';
+import { EvaluateAcademyAccessUseCase } from 'src/iam/academy-access/application/use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
+import { EvaluateAcademyAccessQuery } from 'src/iam/academy-access/application/use-cases/evaluate-academy-access/evaluate-academy-access.query';
+import { GetOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.use-case';
+import { GetOrgAcademyAccessSettingsQuery } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.query';
+import { UpsertOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.use-case';
+import { UpsertOrgAcademyAccessSettingsCommand } from 'src/iam/academy-access/application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.command';
 import { ListOrgCertificateStatusesUseCase } from 'src/iam/academy-access/application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.use-case';
 import { ListOrgCertificateStatusesQuery } from 'src/iam/academy-access/application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.query';
 import { AcademyAccessStatusResponseDto } from './dto/academy-access-status-response.dto';
@@ -30,9 +37,9 @@ import { PaginatedOrgCertificateStatusesResponseDto } from './dto/org-certificat
 @ApiTags('Academy Access')
 @Controller('academy-access')
 export class AcademyAccessController {
+  private readonly logger = new Logger(AcademyAccessController.name);
+
   constructor(
-    @InjectPinoLogger(AcademyAccessController.name)
-    private readonly logger: PinoLogger,
     private readonly evaluateAcademyAccessUseCase: EvaluateAcademyAccessUseCase,
     private readonly getOrgSettingsUseCase: GetOrgAcademyAccessSettingsUseCase,
     private readonly upsertOrgSettingsUseCase: UpsertOrgAcademyAccessSettingsUseCase,
@@ -85,7 +92,7 @@ export class AcademyAccessController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpsertOrgAcademyAccessSettingsDto,
   ): Promise<OrgAcademyAccessSettingsResponseDto> {
-    this.logger.info({ orgId, mode: dto.mode }, 'upsertOrgSettings');
+    this.logger.log({ orgId, mode: dto.mode }, 'upsertOrgSettings');
 
     const settings = await this.upsertOrgSettingsUseCase.execute(
       new UpsertOrgAcademyAccessSettingsCommand(orgId, dto.mode),
@@ -109,7 +116,7 @@ export class AcademyAccessController {
     // The search term is free text over member names and emails, so it is
     // counted rather than logged — it would otherwise persist personal data in
     // centralized logs for their whole retention period.
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         status: queryParams.status,

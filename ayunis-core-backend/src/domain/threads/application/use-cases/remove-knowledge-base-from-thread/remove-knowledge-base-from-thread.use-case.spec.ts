@@ -1,15 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 
 import { RemoveKnowledgeBaseFromThreadUseCase } from './remove-knowledge-base-from-thread.use-case';
 import { RemoveKnowledgeBaseFromThreadCommand } from './remove-knowledge-base-from-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -39,10 +37,6 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveKnowledgeBaseFromThreadUseCase,
-        {
-          provide: getLoggerToken(RemoveKnowledgeBaseFromThreadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

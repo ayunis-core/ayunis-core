@@ -1,11 +1,10 @@
 import type { UUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { CreateInviteCommand } from './create-invite.command';
 import { ConfigService } from '@nestjs/config';
-import { InviteJwtService } from '../../services/invite-jwt.service';
+import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
@@ -16,14 +15,14 @@ import {
   InvalidSeatsError,
   UnexpectedInviteError,
   UserAlreadyExistsError,
-} from '../../invites.errors';
-import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
+} from 'src/iam/invites/application/invites.errors';
+import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
-import { getInviteExpiresAt } from '../../services/invite-expiration.util';
+import { getInviteExpiresAt } from 'src/iam/invites/application/services/invite-expiration.util';
 
 interface CreateInviteResult {
   token: string;
@@ -32,9 +31,9 @@ interface CreateInviteResult {
 
 @Injectable()
 export class CreateInviteUseCase {
+  private readonly logger = new Logger(CreateInviteUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateInviteUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
@@ -45,7 +44,7 @@ export class CreateInviteUseCase {
   ) {}
 
   async execute(command: CreateInviteCommand): Promise<CreateInviteResult> {
-    this.logger.info(
+    this.logger.log(
       {
         email: command.email,
         orgId: command.orgId,

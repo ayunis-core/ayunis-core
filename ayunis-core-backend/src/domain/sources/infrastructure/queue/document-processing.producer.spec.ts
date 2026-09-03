@@ -1,7 +1,6 @@
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Queue } from 'bullmq';
-import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
+import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
 import { DocumentProcessingProducer } from './document-processing.producer';
 
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
@@ -27,7 +26,6 @@ describe('DocumentProcessingProducer', () => {
       getJob: jest.fn(),
     };
     producer = new DocumentProcessingProducer(
-      createPinoLoggerMock(),
       queue as unknown as Queue<DocumentProcessingJobData>,
     );
   });

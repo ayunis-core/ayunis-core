@@ -1,15 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { DeleteLetterheadUseCase } from './delete-letterhead.use-case';
 import { DeleteLetterheadCommand } from './delete-letterhead.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { LetterheadNotFoundError } from '../../letterheads.errors';
+import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 describe('DeleteLetterheadUseCase', () => {
@@ -42,10 +40,6 @@ describe('DeleteLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteLetterheadUseCase,
-        {
-          provide: getLoggerToken(DeleteLetterheadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
@@ -129,10 +123,6 @@ describe('DeleteLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteLetterheadUseCase,
-        {
-          provide: getLoggerToken(DeleteLetterheadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: DeleteObjectUseCase, useValue: deleteObjectUseCase },

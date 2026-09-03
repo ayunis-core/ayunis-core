@@ -1,24 +1,23 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillRepository } from '../../ports/skill.repository';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillNameResolutionError } from '../../skills.errors';
+import { SkillNameResolutionError } from 'src/domain/skills/application/skills.errors';
 import type { UUID } from 'crypto';
 
 const MAX_NAME_RESOLUTION_ATTEMPTS = 100;
 
 @Injectable()
 export class CreateSkillWithUniqueNameUseCase {
+  private readonly logger = new Logger(CreateSkillWithUniqueNameUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateSkillWithUniqueNameUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
   ) {}
 
   async execute(command: CreateSkillWithUniqueNameCommand): Promise<Skill> {
-    this.logger.info(
+    this.logger.log(
       {
         name: command.name,
         userId: command.userId,

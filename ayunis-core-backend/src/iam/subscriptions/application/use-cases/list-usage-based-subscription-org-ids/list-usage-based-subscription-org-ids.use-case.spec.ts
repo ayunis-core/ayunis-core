@@ -1,10 +1,8 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 import { ListUsageBasedSubscriptionOrgIdsUseCase } from './list-usage-based-subscription-org-ids.use-case';
 
 describe('ListUsageBasedSubscriptionOrgIdsUseCase', () => {
@@ -22,10 +20,6 @@ describe('ListUsageBasedSubscriptionOrgIdsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListUsageBasedSubscriptionOrgIdsUseCase,
-        {
-          provide: getLoggerToken(ListUsageBasedSubscriptionOrgIdsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SubscriptionRepository, useValue: repository },
       ],
     }).compile();

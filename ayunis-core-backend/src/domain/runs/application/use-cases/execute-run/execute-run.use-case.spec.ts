@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { MockProvider, textTurn, toolCallTurn } from '@ayunis/agent-runtime';
 import type {
   ProviderRequest,
@@ -259,7 +258,6 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const addMessageToThreadUseCase = new AddMessageToThreadUseCase(
     contextService,
     eventEmitter,
-    createPinoLoggerMock(),
   );
   const runtimeHistoryMaterializer = {
     materialize: jest
@@ -318,10 +316,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   );
   const collectUsage = inferenceUsageGuard.collectUsage as jest.Mock;
   const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
-  const toolUsageHookFactory = new ToolUsageHookFactory(
-    eventEmitter,
-    createPinoLoggerMock(),
-  );
+  const toolUsageHookFactory = new ToolUsageHookFactory(eventEmitter);
   const toolResultCollector = overrides.toolResultCollector ?? {
     collectToolResults: jest
       .fn()
@@ -360,8 +355,6 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     toolUsageHookFactory,
     contextBudgetHookFactory,
     buildWorkspaceRunContextUseCase,
-    createPinoLoggerMock(),
-    createPinoLoggerMock(),
   );
 
   return {
@@ -973,7 +966,6 @@ describe('ExecuteRunUseCase', () => {
       { execute: jest.fn() } as never,
       { get: jest.fn().mockReturnValue(userId) } as never,
       { emitAsync: jest.fn().mockResolvedValue([]) } as never,
-      createPinoLoggerMock(),
     );
     const { useCase, createSeedToolResult } = buildHarness({
       backendTools: [displayTool, searchTool],
@@ -1017,7 +1009,6 @@ describe('ExecuteRunUseCase', () => {
       { execute: jest.fn() } as never,
       { get: jest.fn().mockReturnValue(userId) } as never,
       { emitAsync: jest.fn().mockResolvedValue([]) } as never,
-      createPinoLoggerMock(),
     );
     const { useCase } = buildHarness({
       backendTools: [displayTool, searchTool],

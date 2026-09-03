@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { TeamsRepository } from '../../ports/teams.repository';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { AddTeamMemberCommand } from './add-team-member.command';
-import { TeamMember } from '../../../domain/team-member.entity';
-import { TeamNotFoundError } from '../../teams.errors';
+import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import {
   UserAlreadyTeamMemberError,
   UserNotInSameOrgError,
-} from '../../team-members.errors';
+} from 'src/iam/teams/application/team-members.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class AddTeamMemberUseCase {
+  private readonly logger = new Logger(AddTeamMemberUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddTeamMemberUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
@@ -31,7 +30,7 @@ export class AddTeamMemberUseCase {
     const orgId = this.contextService.get('orgId');
     if (!orgId) throw new UnauthorizedAccessError();
 
-    this.logger.info(
+    this.logger.log(
       { teamId: command.teamId, userId: command.userId, orgId },
       'execute',
     );

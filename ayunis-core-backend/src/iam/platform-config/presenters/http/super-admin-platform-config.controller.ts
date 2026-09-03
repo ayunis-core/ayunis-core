@@ -5,8 +5,8 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -16,16 +16,16 @@ import {
 } from '@nestjs/swagger';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { GetCreditsPerEuroUseCase } from '../../application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
-import { SetCreditsPerEuroUseCase } from '../../application/use-cases/set-credits-per-euro/set-credits-per-euro.use-case';
-import { SetCreditsPerEuroCommand } from '../../application/use-cases/set-credits-per-euro/set-credits-per-euro.command';
-import { GetFairUseLimitsUseCase } from '../../application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
-import { SetFairUseLimitUseCase } from '../../application/use-cases/set-fair-use-limit/set-fair-use-limit.use-case';
-import { SetFairUseLimitCommand } from '../../application/use-cases/set-fair-use-limit/set-fair-use-limit.command';
-import { SetImageFairUseLimitUseCase } from '../../application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
-import { SetImageFairUseLimitCommand } from '../../application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.command';
-import { SetAppAlertUseCase } from '../../application/use-cases/set-app-alert/set-app-alert.use-case';
-import { SetAppAlertCommand } from '../../application/use-cases/set-app-alert/set-app-alert.command';
+import { GetCreditsPerEuroUseCase } from 'src/iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
+import { SetCreditsPerEuroUseCase } from 'src/iam/platform-config/application/use-cases/set-credits-per-euro/set-credits-per-euro.use-case';
+import { SetCreditsPerEuroCommand } from 'src/iam/platform-config/application/use-cases/set-credits-per-euro/set-credits-per-euro.command';
+import { GetFairUseLimitsUseCase } from 'src/iam/platform-config/application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
+import { SetFairUseLimitUseCase } from 'src/iam/platform-config/application/use-cases/set-fair-use-limit/set-fair-use-limit.use-case';
+import { SetFairUseLimitCommand } from 'src/iam/platform-config/application/use-cases/set-fair-use-limit/set-fair-use-limit.command';
+import { SetImageFairUseLimitUseCase } from 'src/iam/platform-config/application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
+import { SetImageFairUseLimitCommand } from 'src/iam/platform-config/application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.command';
+import { SetAppAlertUseCase } from 'src/iam/platform-config/application/use-cases/set-app-alert/set-app-alert.use-case';
+import { SetAppAlertCommand } from 'src/iam/platform-config/application/use-cases/set-app-alert/set-app-alert.command';
 import { CreditsPerEuroResponseDto } from './dto/credits-per-euro-response.dto';
 import { SetCreditsPerEuroRequestDto } from './dto/set-credits-per-euro-request.dto';
 import { FairUseLimitsResponseDto } from './dto/fair-use-limits-response.dto';
@@ -37,9 +37,9 @@ import { SetAppAlertRequestDto } from './dto/set-app-alert-request.dto';
 @Controller('super-admin/platform-config')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminPlatformConfigController {
+  private readonly logger = new Logger(SuperAdminPlatformConfigController.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminPlatformConfigController.name)
-    private readonly logger: PinoLogger,
     private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
     private readonly setCreditsPerEuroUseCase: SetCreditsPerEuroUseCase,
     private readonly getFairUseLimitsUseCase: GetFairUseLimitsUseCase,
@@ -71,7 +71,7 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async getCreditsPerEuro(): Promise<CreditsPerEuroResponseDto> {
-    this.logger.info('Getting credits-per-euro configuration');
+    this.logger.log('Getting credits-per-euro configuration');
     const creditsPerEuro = await this.getCreditsPerEuroUseCase.execute();
     return { creditsPerEuro };
   }
@@ -100,7 +100,7 @@ export class SuperAdminPlatformConfigController {
   async setCreditsPerEuro(
     @Body() dto: SetCreditsPerEuroRequestDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { creditsPerEuro: dto.creditsPerEuro },
       'Setting credits-per-euro',
     );
@@ -108,7 +108,7 @@ export class SuperAdminPlatformConfigController {
       creditsPerEuro: dto.creditsPerEuro,
     });
     await this.setCreditsPerEuroUseCase.execute(command);
-    this.logger.info('Successfully updated credits-per-euro configuration');
+    this.logger.log('Successfully updated credits-per-euro configuration');
   }
 
   @Get('fair-use-limits')
@@ -130,7 +130,7 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async getFairUseLimits(): Promise<FairUseLimitsResponseDto> {
-    this.logger.info('Getting fair-use limits configuration');
+    this.logger.log('Getting fair-use limits configuration');
     const limits = await this.getFairUseLimitsUseCase.execute();
     return limits;
   }
@@ -157,7 +157,7 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async setFairUseLimit(@Body() dto: SetFairUseLimitRequestDto): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { tier: dto.tier, limit: dto.limit, windowMs: dto.windowMs },
       'Setting fair-use limit',
     );
@@ -167,7 +167,7 @@ export class SuperAdminPlatformConfigController {
       windowMs: dto.windowMs,
     });
     await this.setFairUseLimitUseCase.execute(command);
-    this.logger.info('Successfully updated fair-use limit');
+    this.logger.log('Successfully updated fair-use limit');
   }
 
   @Put('image-fair-use-limit')
@@ -194,7 +194,7 @@ export class SuperAdminPlatformConfigController {
   async setImageFairUseLimit(
     @Body() dto: SetImageFairUseLimitRequestDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { limit: dto.limit, windowMs: dto.windowMs },
       'Setting image fair-use limit',
     );
@@ -203,7 +203,7 @@ export class SuperAdminPlatformConfigController {
       windowMs: dto.windowMs,
     });
     await this.setImageFairUseLimitUseCase.execute(command);
-    this.logger.info('Successfully updated image fair-use limit');
+    this.logger.log('Successfully updated image fair-use limit');
   }
 
   @Put('app-alert')
@@ -229,12 +229,12 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async setAppAlert(@Body() dto: SetAppAlertRequestDto): Promise<void> {
-    this.logger.info({ enabled: dto.enabled }, 'Setting app alert');
+    this.logger.log({ enabled: dto.enabled }, 'Setting app alert');
     const command = new SetAppAlertCommand({
       enabled: dto.enabled,
       message: dto.message,
     });
     await this.setAppAlertUseCase.execute(command);
-    this.logger.info('Successfully updated app alert banner');
+    this.logger.log('Successfully updated app alert banner');
   }
 }

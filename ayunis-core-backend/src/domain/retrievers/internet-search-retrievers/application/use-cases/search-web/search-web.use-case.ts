@@ -1,18 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InternetSearchHandler } from '../../ports/internet-search.handler';
+import { Injectable, Logger } from '@nestjs/common';
+import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { SearchWebCommand } from './search-web.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedInternetSearchError } from '../../internet-search.errors';
+import { UnexpectedInternetSearchError } from 'src/domain/retrievers/internet-search-retrievers/application/internet-search.errors';
 
 @Injectable()
 export class SearchWebUseCase {
-  constructor(
-    @InjectPinoLogger(SearchWebUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly internetSearchHandler: InternetSearchHandler,
-  ) {}
+  private readonly logger = new Logger(SearchWebUseCase.name);
+
+  constructor(private readonly internetSearchHandler: InternetSearchHandler) {}
 
   async execute(command: SearchWebCommand): Promise<InternetSearchResult[]> {
     try {

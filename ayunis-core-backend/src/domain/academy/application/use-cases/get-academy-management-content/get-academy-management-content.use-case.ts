@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
-import { UnexpectedAcademyError } from '../../academy.errors';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
 import { GetAcademyManagementContentQuery } from './get-academy-management-content.query';
 
 /**
@@ -14,17 +13,15 @@ import { GetAcademyManagementContentQuery } from './get-academy-management-conte
  */
 @Injectable()
 export class GetAcademyManagementContentUseCase {
-  constructor(
-    @InjectPinoLogger(GetAcademyManagementContentUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly chapterRepository: AcademyChapterRepository,
-  ) {}
+  private readonly logger = new Logger(GetAcademyManagementContentUseCase.name);
+
+  constructor(private readonly chapterRepository: AcademyChapterRepository) {}
 
   async execute(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _query: GetAcademyManagementContentQuery,
   ): Promise<AcademyChapter[]> {
-    this.logger.info('Getting academy management content');
+    this.logger.log('Getting academy management content');
     try {
       return await this.chapterRepository.findAllWithQuizContent();
     } catch (error) {

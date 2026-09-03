@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { DataSourceProcessingPort } from '../../ports/data-source-processing.port';
+import { DataSourceProcessingPort } from 'src/domain/sources/application/ports/data-source-processing.port';
 import { EnqueueDataSourceProcessingCommand } from './enqueue-data-source-processing.command';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 @Injectable()
 export class EnqueueDataSourceProcessingUseCase {
+  private readonly logger = new Logger(EnqueueDataSourceProcessingUseCase.name);
+
   constructor(
-    @InjectPinoLogger(EnqueueDataSourceProcessingUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly dataSourceProcessingPort: DataSourceProcessingPort,
   ) {}
 

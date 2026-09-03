@@ -1,24 +1,31 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ListSkillSourcesQuery } from './list-skill-sources.query';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 @Injectable()
 export class ListSkillSourcesUseCase {
+  private readonly logger = new Logger(ListSkillSourcesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ListSkillSourcesUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
@@ -27,7 +34,7 @@ export class ListSkillSourcesUseCase {
   ) {}
 
   async execute(query: ListSkillSourcesQuery): Promise<Source[]> {
-    this.logger.info({ skillId: query.skillId }, 'Listing sources for skill');
+    this.logger.log({ skillId: query.skillId }, 'Listing sources for skill');
 
     try {
       const userId = this.contextService.get('userId');

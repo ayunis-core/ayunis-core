@@ -1,5 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -8,7 +7,7 @@ import { ObjectNotFoundError } from 'src/domain/storage/application/storage.erro
 import {
   MessagesRepository,
   MESSAGES_REPOSITORY,
-} from '../../ports/messages.repository';
+} from 'src/domain/messages/application/ports/messages.repository';
 
 /**
  * Image path format: <orgId>/<threadId>/<messageId>/<index>.<ext>
@@ -17,17 +16,17 @@ import {
  */
 @Injectable()
 export class CleanupOrphanedImagesUseCase {
+  private readonly logger = new Logger(CleanupOrphanedImagesUseCase.name);
+
   constructor(
     private readonly objectStoragePort: ObjectStoragePort,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
-    @InjectPinoLogger(CleanupOrphanedImagesUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async execute(): Promise<CleanupResult> {
-    this.logger.info('Starting orphaned images cleanup');
+    this.logger.log('Starting orphaned images cleanup');
 
     const result: CleanupResult = {
       scannedCount: 0,
@@ -42,19 +41,19 @@ export class CleanupOrphanedImagesUseCase {
       const allObjects = await this.objectStoragePort.listObjects();
       result.scannedCount = allObjects.length;
 
-      this.logger.info(
+      this.logger.log(
         { objectCount: allObjects.length },
         'Scanning objects for orphans',
       );
 
       const orphanedPaths = await this.findOrphanedPaths(allObjects);
-      this.logger.info(
+      this.logger.log(
         { imageCount: orphanedPaths.length },
         'Found orphaned images to delete',
       );
       await this.deleteOrphanedPaths(orphanedPaths, result);
 
-      this.logger.info(
+      this.logger.log(
         {
           scanned: result.scannedCount,
           deleted: result.deletedCount,

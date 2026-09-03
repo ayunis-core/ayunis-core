@@ -1,15 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { GetMcpPromptQuery } from './get-mcp-prompt.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 
@@ -35,16 +34,16 @@ interface McpPromptResponse {
 
 @Injectable()
 export class GetMcpPromptUseCase {
+  private readonly logger = new Logger(GetMcpPromptUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetMcpPromptUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: GetMcpPromptQuery): Promise<PromptResult> {
-    this.logger.info(
+    this.logger.log(
       { id: query.integrationId, prompt: query.promptName },
       'getMcpPrompt',
     );
@@ -57,7 +56,7 @@ export class GetMcpPromptUseCase {
         query.args ?? {},
         this.contextService.get('userId'),
       );
-      this.logger.info(
+      this.logger.log(
         {
           id: query.integrationId,
           prompt: query.promptName,

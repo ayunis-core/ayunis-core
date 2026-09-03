@@ -1,27 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
 import { normalizeHost } from 'src/domain/crawl-domain-grants/domain/crawl-domain.util';
 import { InvalidCrawlDomainError } from 'src/domain/crawl-domain-grants/domain/crawl-domain.errors';
-import { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
+import { CrawlDomainGrantRepository } from 'src/domain/crawl-domain-grants/application/ports/crawl-domain-grant.repository';
 import {
   CrawlDomainAlreadyAssignedError,
   InvalidCrawlDomainApplicationError,
   UnexpectedCrawlDomainGrantError,
-} from '../../crawl-domain-grants.errors';
+} from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 import { GrantCrawlDomainCommand } from './grant-crawl-domain.command';
 
 @Injectable()
 export class GrantCrawlDomainUseCase {
+  private readonly logger = new Logger(GrantCrawlDomainUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GrantCrawlDomainUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly crawlDomainGrantRepository: CrawlDomainGrantRepository,
   ) {}
 
   async execute(command: GrantCrawlDomainCommand): Promise<CrawlDomainGrant> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         domain: command.domain,

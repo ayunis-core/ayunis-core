@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { TeamsRepository } from '../../ports/teams.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { DeleteTeamCommand } from './delete-team.command';
-import { TeamNotFoundError } from '../../teams.errors';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class DeleteTeamUseCase {
+  private readonly logger = new Logger(DeleteTeamUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteTeamUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -24,7 +23,7 @@ export class DeleteTeamUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info({ teamId: command.teamId, orgId }, 'execute');
+    this.logger.log({ teamId: command.teamId, orgId }, 'execute');
 
     const team = await this.teamsRepository.findById(command.teamId);
     if (!team) {

@@ -1,24 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import {
   ChapterNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 import { UpdateChapterCommand } from './update-chapter.command';
 
 @Injectable()
 export class UpdateChapterUseCase {
-  constructor(
-    @InjectPinoLogger(UpdateChapterUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly chapterRepository: AcademyChapterRepository,
-  ) {}
+  private readonly logger = new Logger(UpdateChapterUseCase.name);
+
+  constructor(private readonly chapterRepository: AcademyChapterRepository) {}
 
   async execute(command: UpdateChapterCommand): Promise<AcademyChapter> {
-    this.logger.info(
+    this.logger.log(
       {
         chapterId: command.chapterId,
       },

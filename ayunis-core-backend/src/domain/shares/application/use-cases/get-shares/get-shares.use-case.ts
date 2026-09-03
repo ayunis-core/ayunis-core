@@ -3,10 +3,10 @@ import {
   Injectable,
   ForbiddenException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SharesRepository } from '../../ports/shares-repository.port';
-import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { ShareAuthorizationFactory } from 'src/domain/shares/application/factories/share-authorization.factory';
 import { ContextService } from 'src/common/context/services/context.service';
 import { GetSharesQuery } from './get-shares.query';
 import { Share } from 'src/domain/shares/domain/share.entity';
@@ -17,9 +17,9 @@ import { Share } from 'src/domain/shares/domain/share.entity';
  */
 @Injectable()
 export class GetSharesUseCase {
+  private readonly logger = new Logger(GetSharesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetSharesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly authFactory: ShareAuthorizationFactory,
     @Inject(SharesRepository)
     private readonly sharesRepository: SharesRepository,
@@ -34,7 +34,7 @@ export class GetSharesUseCase {
    * @throws ForbiddenException if user cannot view shares for the entity
    */
   async execute(query: GetSharesQuery): Promise<Share[]> {
-    this.logger.info(
+    this.logger.log(
       {
         entityId: query.entityId,
         entityType: query.entityType,

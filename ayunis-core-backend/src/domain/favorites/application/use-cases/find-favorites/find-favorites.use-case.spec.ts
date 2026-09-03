@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { FavoriteReferenceResolver } from '../../services/favorite-reference-resolver.service';
-import type { FavoritesRepository } from '../../ports/favorites-repository.port';
-import { FavoriteReferenceType } from '../../../domain/value-objects/favorite-reference-type.enum';
-import { Favorite } from '../../../domain/favorite.entity';
+import type { FavoriteReferenceResolver } from 'src/domain/favorites/application/services/favorite-reference-resolver.service';
+import type { FavoritesRepository } from 'src/domain/favorites/application/ports/favorites-repository.port';
+import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
+import { Favorite } from 'src/domain/favorites/domain/favorite.entity';
 import { FindFavoritesUseCase } from './find-favorites.use-case';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
@@ -28,12 +27,7 @@ describe('FindFavoritesUseCase', () => {
     const context = {
       get: jest.fn().mockReturnValue(USER_ID),
     } as unknown as ContextService;
-    const useCase = new FindFavoritesUseCase(
-      createPinoLoggerMock(),
-      repository,
-      resolver,
-      context,
-    );
+    const useCase = new FindFavoritesUseCase(repository, resolver, context);
 
     await expect(useCase.execute()).resolves.toBe(resolved);
     expect(resolver.resolveAll).toHaveBeenCalledWith([favorite], USER_ID);

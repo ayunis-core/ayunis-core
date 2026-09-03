@@ -1,13 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { Thread } from '../../../domain/thread.entity';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
 import {
   NoModelProvidedError,
   ThreadCreationError,
   UnexpecteThreadError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -18,9 +17,9 @@ import { FindWorkspaceQuery } from 'src/domain/workspaces/application/use-cases/
 
 @Injectable()
 export class CreateThreadUseCase {
+  private readonly logger = new Logger(CreateThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly contextService: ContextService,
@@ -29,7 +28,7 @@ export class CreateThreadUseCase {
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: CreateThreadCommand): Promise<Thread> {
-    this.logger.info('execute');
+    this.logger.log('execute');
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedException('User not authenticated');

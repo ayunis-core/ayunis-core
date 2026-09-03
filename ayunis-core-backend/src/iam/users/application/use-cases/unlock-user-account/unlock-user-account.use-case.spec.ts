@@ -1,5 +1,4 @@
 import type { ContextService } from 'src/common/context/services/context.service';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import {
   UserNotFoundError,
@@ -22,7 +21,6 @@ describe(UnlockUserAccountUseCase.name, () => {
   };
   const context = { get: jest.fn() };
   const useCase = new UnlockUserAccountUseCase(
-    createPinoLoggerMock(),
     context as unknown as ContextService,
     usersRepository as unknown as UsersRepository,
   );

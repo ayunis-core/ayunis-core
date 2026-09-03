@@ -1,17 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { PreflightCheckCommand } from './preflight-check.command';
-import { TooManyPagesError } from '../../file-retriever.errors';
+import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { detectFileType } from 'src/common/util/file-type';
 import retrievalConfig from 'src/config/retrieval.config';
 import PdfParse from 'pdf-parse';
 
 @Injectable()
 export class PreflightCheckUseCase {
+  private readonly logger = new Logger(PreflightCheckUseCase.name);
+
   constructor(
-    @InjectPinoLogger(PreflightCheckUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}

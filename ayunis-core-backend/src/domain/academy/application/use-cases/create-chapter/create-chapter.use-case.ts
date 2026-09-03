@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
-import { UnexpectedAcademyError } from '../../academy.errors';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
 import { CreateChapterCommand } from './create-chapter.command';
 
 @Injectable()
 export class CreateChapterUseCase {
-  constructor(
-    @InjectPinoLogger(CreateChapterUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly chapterRepository: AcademyChapterRepository,
-  ) {}
+  private readonly logger = new Logger(CreateChapterUseCase.name);
+
+  constructor(private readonly chapterRepository: AcademyChapterRepository) {}
 
   async execute(command: CreateChapterCommand): Promise<AcademyChapter> {
-    this.logger.info({ title: command.title }, 'Creating academy chapter');
+    this.logger.log({ title: command.title }, 'Creating academy chapter');
     try {
       const maxPosition = await this.chapterRepository.findMaxPosition();
       const chapter = new AcademyChapter({

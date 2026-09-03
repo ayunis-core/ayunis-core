@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type {
   SearchInput,
   SearchMultiInput,
 } from 'src/domain/rag/indexers/application/ports/indexer';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
-import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
+import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.command';
 import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
@@ -16,9 +15,9 @@ import type { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapter
 
 @Injectable()
 export class SearchContentUseCase {
+  private readonly logger = new Logger(SearchContentUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SearchContentUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly parentChildIndexerRepository: ParentChildIndexerRepositoryPort,
     private readonly embedTextUseCase: EmbedTextUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,

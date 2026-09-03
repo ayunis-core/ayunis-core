@@ -1,9 +1,8 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateSkillWithUniqueNameUseCase } from './create-skill-with-unique-name.use-case';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
-import type { SkillRepository } from '../../ports/skill.repository';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillNameResolutionError } from '../../skills.errors';
+import { SkillNameResolutionError } from 'src/domain/skills/application/skills.errors';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 
@@ -23,10 +22,7 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
       findByNameAndOwner: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<SkillRepository>;
 
-    useCase = new CreateSkillWithUniqueNameUseCase(
-      createPinoLoggerMock(),
-      skillRepository,
-    );
+    useCase = new CreateSkillWithUniqueNameUseCase(skillRepository);
   });
 
   it('should create and activate a skill with the given name when no collision exists', async () => {

@@ -1,13 +1,11 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeQueryToolHandler } from './knowledge-query-tool.handler';
 import { QueryKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
-import type { KnowledgeQueryTool } from '../../domain/tools/knowledge-query-tool.entity';
+import type { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { randomUUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { KnowledgeBaseQueryResult } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
@@ -52,11 +50,6 @@ describe('KnowledgeQueryToolHandler', () => {
         {
           provide: ContextService,
           useValue: mockContextService,
-        },
-
-        {
-          provide: getLoggerToken(KnowledgeQueryToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

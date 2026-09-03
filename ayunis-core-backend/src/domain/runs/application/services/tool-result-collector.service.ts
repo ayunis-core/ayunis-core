@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
@@ -60,13 +59,13 @@ interface CollectedToolResults {
 
 @Injectable()
 export class ToolResultCollectorService {
+  private readonly logger = new Logger(ToolResultCollectorService.name);
+
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(ToolResultCollectorService.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async collectToolResults(params: {

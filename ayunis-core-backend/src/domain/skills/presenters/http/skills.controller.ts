@@ -11,8 +11,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   ApiTags,
@@ -27,28 +27,28 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 
 // Use Cases
-import { InstallSkillFromMarketplaceUseCase } from '../../application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
-import { InstallSkillFromMarketplaceCommand } from '../../application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.command';
-import { CreateSkillUseCase } from '../../application/use-cases/create-skill/create-skill.use-case';
-import { UpdateSkillUseCase } from '../../application/use-cases/update-skill/update-skill.use-case';
-import { DeleteSkillUseCase } from '../../application/use-cases/delete-skill/delete-skill.use-case';
-import { FindOneSkillUseCase } from '../../application/use-cases/find-one-skill/find-one-skill.use-case';
-import { FindAllSkillsUseCase } from '../../application/use-cases/find-all-skills/find-all-skills.use-case';
-import { ToggleSkillActiveUseCase } from '../../application/use-cases/toggle-skill-active/toggle-skill-active.use-case';
-import { ToggleSkillPinnedUseCase } from '../../application/use-cases/toggle-skill-pinned/toggle-skill-pinned.use-case';
+import { InstallSkillFromMarketplaceUseCase } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
+import { InstallSkillFromMarketplaceCommand } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.command';
+import { CreateSkillUseCase } from 'src/domain/skills/application/use-cases/create-skill/create-skill.use-case';
+import { UpdateSkillUseCase } from 'src/domain/skills/application/use-cases/update-skill/update-skill.use-case';
+import { DeleteSkillUseCase } from 'src/domain/skills/application/use-cases/delete-skill/delete-skill.use-case';
+import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
+import { FindAllSkillsUseCase } from 'src/domain/skills/application/use-cases/find-all-skills/find-all-skills.use-case';
+import { ToggleSkillActiveUseCase } from 'src/domain/skills/application/use-cases/toggle-skill-active/toggle-skill-active.use-case';
+import { ToggleSkillPinnedUseCase } from 'src/domain/skills/application/use-cases/toggle-skill-pinned/toggle-skill-pinned.use-case';
 
 // Commands & Queries
-import { CreateSkillCommand } from '../../application/use-cases/create-skill/create-skill.command';
-import { UpdateSkillCommand } from '../../application/use-cases/update-skill/update-skill.command';
-import { DeleteSkillCommand } from '../../application/use-cases/delete-skill/delete-skill.command';
-import { FindOneSkillQuery } from '../../application/use-cases/find-one-skill/find-one-skill.query';
-import { FindAllSkillsQuery } from '../../application/use-cases/find-all-skills/find-all-skills.query';
-import { ToggleSkillActiveCommand } from '../../application/use-cases/toggle-skill-active/toggle-skill-active.command';
-import { ToggleSkillPinnedCommand } from '../../application/use-cases/toggle-skill-pinned/toggle-skill-pinned.command';
+import { CreateSkillCommand } from 'src/domain/skills/application/use-cases/create-skill/create-skill.command';
+import { UpdateSkillCommand } from 'src/domain/skills/application/use-cases/update-skill/update-skill.command';
+import { DeleteSkillCommand } from 'src/domain/skills/application/use-cases/delete-skill/delete-skill.command';
+import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
+import { FindAllSkillsQuery } from 'src/domain/skills/application/use-cases/find-all-skills/find-all-skills.query';
+import { ToggleSkillActiveCommand } from 'src/domain/skills/application/use-cases/toggle-skill-active/toggle-skill-active.command';
+import { ToggleSkillPinnedCommand } from 'src/domain/skills/application/use-cases/toggle-skill-pinned/toggle-skill-pinned.command';
 
 // Services
-import { SkillAccessService } from '../../application/services/skill-access.service';
-import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
+import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
+import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
 
 // DTOs & Mappers
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -56,7 +56,7 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
-import { InvalidSkillNameError } from '../../domain/skill.entity';
+import { InvalidSkillNameError } from 'src/domain/skills/domain/skill.entity';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
@@ -66,9 +66,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillsController {
+  private readonly logger = new Logger(SkillsController.name);
+
   constructor(
-    @InjectPinoLogger(SkillsController.name)
-    private readonly logger: PinoLogger,
     private readonly installSkillFromMarketplaceUseCase: InstallSkillFromMarketplaceUseCase,
     private readonly createSkillUseCase: CreateSkillUseCase,
     private readonly updateSkillUseCase: UpdateSkillUseCase,
@@ -100,7 +100,7 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: InstallSkillFromMarketplaceDto,
   ): Promise<SkillResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         userId,
         identifier: dto.identifier,
@@ -139,7 +139,7 @@ export class SkillsController {
   ): Promise<SkillResponseDto> {
     const isActive = dto.isActive ?? true;
 
-    this.logger.info({ userId, name: dto.name }, 'create');
+    this.logger.log({ userId, name: dto.name }, 'create');
 
     try {
       const skill = await this.createSkillUseCase.execute(
@@ -174,7 +174,7 @@ export class SkillsController {
   async findAll(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<SkillResponseDto[]> {
-    this.logger.info({ userId }, 'findAll');
+    this.logger.log({ userId }, 'findAll');
 
     const {
       skills: results,
@@ -219,7 +219,7 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.info({ id, userId }, 'findOne');
+    this.logger.log({ id, userId }, 'findOne');
 
     const { skill, isActive, isShared, isPinned } =
       await this.findOneSkillUseCase.execute(new FindOneSkillQuery(id));
@@ -261,7 +261,7 @@ export class SkillsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateSkillDto,
   ): Promise<SkillResponseDto> {
-    this.logger.info({ id, userId, name: dto.name }, 'update');
+    this.logger.log({ id, userId, name: dto.name }, 'update');
 
     try {
       const skill = await this.updateSkillUseCase.execute(
@@ -304,7 +304,7 @@ export class SkillsController {
   @ApiResponse({ status: 404, description: 'Skill not found' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
 
     await this.deleteSkillUseCase.execute(
       new DeleteSkillCommand({ skillId: id }),
@@ -329,7 +329,7 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.info({ id, userId }, 'toggleActive');
+    this.logger.log({ id, userId }, 'toggleActive');
 
     const { skill, isActive, isShared, isPinned } =
       await this.toggleSkillActiveUseCase.execute(
@@ -366,7 +366,7 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.info({ id, userId }, 'togglePinned');
+    this.logger.log({ id, userId }, 'togglePinned');
 
     const { skill, isPinned, isShared } =
       await this.toggleSkillPinnedUseCase.execute(

@@ -1,5 +1,4 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +19,7 @@ import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.
 import { GetConfiguredModelsByTypeUseCase } from './get-configured-models-by-type.use-case';
 
 describe('GetConfiguredModelsByTypeUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: GetConfiguredModelsByTypeUseCase;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let configService: jest.Mocked<ConfigService>;
@@ -71,10 +70,6 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetConfiguredModelsByTypeUseCase.name),
-          useValue: logger,
-        },
         GetConfiguredModelsByTypeUseCase,
         ModelConfigurationService,
         { provide: ModelsRepository, useValue: mockModelsRepository },
@@ -101,7 +96,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       return null;
     });
 
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.debug.mockImplementation();
     logger.warn.mockImplementation();
   });

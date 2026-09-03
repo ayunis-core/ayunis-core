@@ -1,18 +1,16 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { GetOrgAdminsUseCase } from 'src/iam/users/application/use-cases/get-org-admins/get-org-admins.use-case';
-import { OrgBudgetAlertNotification } from '../../../domain/budget-alert-notification.entity';
-import { BudgetAlertNotificationRepository } from '../../ports/budget-alert-notification.repository';
-import { BudgetAlertScope } from '../../../domain/value-objects/budget-alert-scope.enum';
+import { OrgBudgetAlertNotification } from 'src/iam/budget-alerts/domain/budget-alert-notification.entity';
+import { BudgetAlertNotificationRepository } from 'src/iam/budget-alerts/application/ports/budget-alert-notification.repository';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 import {
   notificationKey,
   type BudgetTarget,
-} from '../../utils/budget-alert-crossing';
-import { SendBudgetWarningEmailUseCase } from '../send-budget-warning-email/send-budget-warning-email.use-case';
-import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
+} from 'src/iam/budget-alerts/application/utils/budget-alert-crossing';
+import { SendBudgetWarningEmailUseCase } from 'src/iam/budget-alerts/application/use-cases/send-budget-warning-email/send-budget-warning-email.use-case';
+import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
 import { ProcessBudgetAlertCrossingsQuery } from './process-budget-alert-crossings.query';
 import { ProcessBudgetAlertCrossingsUseCase } from './process-budget-alert-crossings.use-case';
 
@@ -50,10 +48,6 @@ describe('ProcessBudgetAlertCrossingsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProcessBudgetAlertCrossingsUseCase,
-        {
-          provide: getLoggerToken(ProcessBudgetAlertCrossingsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: GetOrgAdminsUseCase, useValue: admins },
         { provide: SendBudgetWarningEmailUseCase, useValue: sendEmail },
         { provide: BudgetAlertNotificationRepository, useValue: repository },

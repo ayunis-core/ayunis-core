@@ -3,8 +3,6 @@ import { OrgsRepository } from './application/ports/orgs.repository';
 import { LocalOrgsRepository } from './infrastructure/repositories/local/local-orgs.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgRecord } from './infrastructure/repositories/local/schema/org.record';
-import { getLoggerToken, PinoLogger } from 'nestjs-pino';
-
 // Import use cases
 import { FindOrgByIdUseCase } from './application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import { CreateOrgUseCase } from './application/use-cases/create-org/create-org.use-case';
@@ -24,13 +22,10 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
   providers: [
     {
       provide: OrgsRepository,
-      useFactory: (
-        logger: PinoLogger,
-        txHost: TransactionHost<TransactionalAdapterTypeOrm>,
-      ) => {
-        return new LocalOrgsRepository(logger, txHost);
+      useFactory: (txHost: TransactionHost<TransactionalAdapterTypeOrm>) => {
+        return new LocalOrgsRepository(txHost);
       },
-      inject: [getLoggerToken(LocalOrgsRepository.name), TransactionHost],
+      inject: [TransactionHost],
     },
     // Use cases
     FindOrgByIdUseCase,

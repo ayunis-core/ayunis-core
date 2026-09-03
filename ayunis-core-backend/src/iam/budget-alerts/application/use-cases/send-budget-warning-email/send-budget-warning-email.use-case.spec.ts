@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -12,7 +10,7 @@ import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.comma
 import {
   BudgetWarningEmailRenderingFailedError,
   BudgetWarningEmailSendingFailedError,
-} from '../../budget-alerts.errors';
+} from 'src/iam/budget-alerts/application/budget-alerts.errors';
 
 describe('SendBudgetWarningEmailUseCase', () => {
   let useCase: SendBudgetWarningEmailUseCase;
@@ -39,10 +37,6 @@ describe('SendBudgetWarningEmailUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SendBudgetWarningEmailUseCase,
-        {
-          provide: getLoggerToken(SendBudgetWarningEmailUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SendEmailUseCase, useValue: sendEmail },
         { provide: RenderTemplateUseCase, useValue: renderTemplate },
         { provide: ConfigService, useValue: config },

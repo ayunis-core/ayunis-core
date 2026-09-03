@@ -1,27 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ResendEmailConfirmationCommand } from './resend-email-confirmation.command';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   UserEmailAlreadyVerifiedError,
   UserUnexpectedError,
-} from '../../users.errors';
-import { SendConfirmationEmailUseCase } from '../send-confirmation-email/send-confirmation-email.use-case';
-import { SendConfirmationEmailCommand } from '../send-confirmation-email/send-confirmation-email.command';
+} from 'src/iam/users/application/users.errors';
+import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
+import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
 
 @Injectable()
 export class ResendEmailConfirmationUseCase {
+  private readonly logger = new Logger(ResendEmailConfirmationUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ResendEmailConfirmationUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
   ) {}
 
   async execute(command: ResendEmailConfirmationCommand): Promise<void> {
     try {
-      this.logger.info({ email: command.email }, 'execute');
+      this.logger.log({ email: command.email }, 'execute');
 
       // Find the user by email
       const user = await this.usersRepository.findOneByEmail(command.email);

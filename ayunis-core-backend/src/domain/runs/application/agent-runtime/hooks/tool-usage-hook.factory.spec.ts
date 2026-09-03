@@ -1,9 +1,8 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
-import { ToolUsedEvent } from '../../events/tool-used.event';
-import { RunToolCompletedEvent } from '../../events/run-tool-completed.event';
-import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 import { ToolUsageHookFactory } from './tool-usage-hook.factory';
 
 describe('ToolUsageHookFactory', () => {
@@ -11,10 +10,7 @@ describe('ToolUsageHookFactory', () => {
     const eventEmitter = {
       emitAsync: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<EventEmitter2>;
-    const hook = new ToolUsageHookFactory(
-      eventEmitter,
-      createPinoLoggerMock(),
-    ).create({
+    const hook = new ToolUsageHookFactory(eventEmitter).create({
       userId: randomUUID(),
       orgId: randomUUID(),
       integrations: {
@@ -38,10 +34,7 @@ describe('ToolUsageHookFactory', () => {
     const eventEmitter = {
       emitAsync: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<EventEmitter2>;
-    const hook = new ToolUsageHookFactory(
-      eventEmitter,
-      createPinoLoggerMock(),
-    ).create({
+    const hook = new ToolUsageHookFactory(eventEmitter).create({
       userId: randomUUID(),
       orgId: randomUUID(),
       integrations: {
@@ -75,10 +68,7 @@ describe('ToolUsageHookFactory', () => {
         logoUrl: null,
       }),
     } as unknown as RuntimeToolIntegrationRegistry;
-    const hook = new ToolUsageHookFactory(
-      eventEmitter,
-      createPinoLoggerMock(),
-    ).create({
+    const hook = new ToolUsageHookFactory(eventEmitter).create({
       userId,
       orgId,
       integrations,

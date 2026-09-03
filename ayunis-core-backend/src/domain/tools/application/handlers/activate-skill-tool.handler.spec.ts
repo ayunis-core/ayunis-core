@@ -1,5 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
@@ -8,11 +6,11 @@ import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { FindAlwaysOnTemplateByNameUseCase } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
-import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 describe('ActivateSkillToolHandler', () => {
   let handler: ActivateSkillToolHandler;
@@ -50,11 +48,6 @@ describe('ActivateSkillToolHandler', () => {
         {
           provide: FindAlwaysOnTemplateByNameUseCase,
           useValue: mockFindAlwaysOnTemplateByName,
-        },
-
-        {
-          provide: getLoggerToken(ActivateSkillToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

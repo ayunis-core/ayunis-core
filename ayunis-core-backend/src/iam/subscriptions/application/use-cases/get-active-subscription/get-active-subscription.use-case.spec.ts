@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { GetActiveSubscriptionUseCase } from './get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from './get-active-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -21,7 +19,7 @@ import {
   SubscriptionNotFoundError,
   MultipleActiveSubscriptionsError,
   UnauthorizedSubscriptionAccessError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
@@ -79,10 +77,6 @@ describe('GetActiveSubscriptionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetActiveSubscriptionUseCase,
-        {
-          provide: getLoggerToken(GetActiveSubscriptionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SubscriptionRepository,
           useValue: { findByOrgId: jest.fn() },

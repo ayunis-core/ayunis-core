@@ -1,9 +1,8 @@
 import { createHmac, randomBytes } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import { HttpWebhookHandler } from './http-webhook.handler';
-import { WebhookEvent } from '../../domain/webhook-event.entity';
-import { WebhookEventType } from '../../domain/value-objects/webhook-event-type.enum';
+import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
 class TestWebhookEvent extends WebhookEvent<{ hello: string }> {
   readonly eventType = WebhookEventType.USER_CREATED;
@@ -47,7 +46,6 @@ function installFetchMock(): {
 }
 
 describe('HttpWebhookHandler signing', () => {
-  const logger = createPinoLoggerMock();
   const webhookUrl = 'https://example.com/hook';
   let fetchMock: ReturnType<typeof installFetchMock>;
 
@@ -63,7 +61,6 @@ describe('HttpWebhookHandler signing', () => {
   it('signs the body with HMAC-SHA256 when a secret is configured', async () => {
     const secret = randomBytes(32).toString('hex');
     const handler = new HttpWebhookHandler(
-      logger,
       makeConfigService({
         'app.orgEventsWebhookUrl': webhookUrl,
         'app.webhookSigningSecret': secret,
@@ -94,7 +91,6 @@ describe('HttpWebhookHandler signing', () => {
 
   it('omits the signature header when no secret is configured', async () => {
     const handler = new HttpWebhookHandler(
-      logger,
       makeConfigService({
         'app.orgEventsWebhookUrl': webhookUrl,
         'app.webhookSigningSecret': undefined,
@@ -114,7 +110,6 @@ describe('HttpWebhookHandler signing', () => {
   it('signs the exact bytes that are sent in the body', async () => {
     const secret = randomBytes(32).toString('hex');
     const handler = new HttpWebhookHandler(
-      logger,
       makeConfigService({
         'app.orgEventsWebhookUrl': webhookUrl,
         'app.webhookSigningSecret': secret,
@@ -144,7 +139,6 @@ describe('HttpWebhookHandler signing', () => {
 
   it('does nothing when no webhook URL is configured', async () => {
     const handler = new HttpWebhookHandler(
-      logger,
       makeConfigService({
         'app.orgEventsWebhookUrl': undefined,
         'app.webhookSigningSecret': randomBytes(16).toString('hex'),

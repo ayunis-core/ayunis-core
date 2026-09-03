@@ -1,14 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import {
   InvalidCreditLimitError,
   UnexpectedCreditLimitError,
-} from '../../credit-limits.errors';
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 import { isNonNegativeFinite } from 'src/common/util/number.util';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
@@ -16,9 +15,9 @@ import { SetTeamCreditLimitCommand } from './set-team-credit-limit.command';
 
 @Injectable()
 export class SetTeamCreditLimitUseCase {
+  private readonly logger = new Logger(SetTeamCreditLimitUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SetTeamCreditLimitUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly getTeamUseCase: GetTeamUseCase,
@@ -36,7 +35,7 @@ export class SetTeamCreditLimitUseCase {
       );
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         teamId: command.teamId,

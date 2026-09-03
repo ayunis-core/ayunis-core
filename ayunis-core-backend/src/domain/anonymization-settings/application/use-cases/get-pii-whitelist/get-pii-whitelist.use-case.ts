@@ -1,18 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
-import { UnexpectedAnonymizationSettingsError } from '../../anonymization-settings.errors';
+import { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
+import { UnexpectedAnonymizationSettingsError } from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import type { GetPiiWhitelistQuery } from './get-pii-whitelist.query';
 import type { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 
 @Injectable()
 export class GetPiiWhitelistUseCase {
-  constructor(
-    @InjectPinoLogger(GetPiiWhitelistUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: AnonymizationWhitelistRepository,
-  ) {}
+  private readonly logger = new Logger(GetPiiWhitelistUseCase.name);
+
+  constructor(private readonly repository: AnonymizationWhitelistRepository) {}
 
   async execute(
     query: GetPiiWhitelistQuery,

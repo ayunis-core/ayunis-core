@@ -1,17 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetOrgDefaultModelQuery } from './get-org-default-model.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UnexpectedModelError } from '../../models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class GetOrgDefaultModelUseCase {
-  constructor(
-    @InjectPinoLogger(GetOrgDefaultModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(GetOrgDefaultModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
   ) {}
 
@@ -19,7 +17,7 @@ export class GetOrgDefaultModelUseCase {
   async execute(
     query: GetOrgDefaultModelQuery,
   ): Promise<PermittedLanguageModel | null> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
       },

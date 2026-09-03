@@ -1,14 +1,12 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import type { UUID } from 'crypto';
 import { DeleteSkillTemplateUseCase } from './delete-skill-template.use-case';
 import { DeleteSkillTemplateCommand } from './delete-skill-template.command';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
-import { SkillTemplateNotFoundError } from '../../skill-templates.errors';
+import { SkillTemplateNotFoundError } from 'src/domain/skill-templates/application/skill-templates.errors';
 
 describe('DeleteSkillTemplateUseCase', () => {
   let useCase: DeleteSkillTemplateUseCase;
@@ -25,10 +23,6 @@ describe('DeleteSkillTemplateUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteSkillTemplateUseCase,
-        {
-          provide: getLoggerToken(DeleteSkillTemplateUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillTemplateRepository, useValue: mockRepository },
       ],
     }).compile();

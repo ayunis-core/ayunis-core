@@ -1,28 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
 import {
   ApiKeyExpiredError,
   ApiKeyNotFoundError,
   UnexpectedApiKeyError,
-} from '../../api-keys.errors';
+} from 'src/iam/api-keys/application/api-keys.errors';
 
 @Injectable()
 export class ValidateApiKeyUseCase {
+  private readonly logger = new Logger(ValidateApiKeyUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ValidateApiKeyUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly apiKeysRepository: ApiKeysRepository,
     private readonly compareHashUseCase: CompareHashUseCase,
   ) {}
 
   async execute(command: ValidateApiKeyCommand): Promise<ApiKey> {
-    this.logger.info('execute');
+    this.logger.log('execute');
 
     try {
       const apiKey = await this.lookupAndAuthenticate(command.token);

@@ -1,22 +1,20 @@
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedModelNotFoundError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { GetPermittedModelQuery } from './get-permitted-model.query';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedModelUseCase {
-  constructor(
-    @InjectPinoLogger(GetPermittedModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(GetPermittedModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -27,7 +25,7 @@ export class GetPermittedModelUseCase {
         orgId: query.orgId,
         permittedModelId: query.permittedModelId,
       };
-      this.logger.info(metadata, 'execute');
+      this.logger.log(metadata, 'execute');
       this.logger.debug(metadata, 'GetPermittedModelByIdQuery');
       const orgId = this.contextService.get('orgId');
       const systemRole = this.contextService.get('systemRole');

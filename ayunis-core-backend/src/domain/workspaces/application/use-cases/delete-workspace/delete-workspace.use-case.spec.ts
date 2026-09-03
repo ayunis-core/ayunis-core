@@ -1,7 +1,5 @@
 import type { UUID } from 'crypto';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
@@ -34,10 +32,6 @@ describe('DeleteWorkspaceUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         DeleteWorkspaceUseCase,
-        {
-          provide: getLoggerToken(DeleteWorkspaceUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: WorkspacesRepository, useValue: repository },
         { provide: DeleteSourceUseCase, useValue: deleteSourceUseCase },
         { provide: ContextService, useValue: createMockContextService() },

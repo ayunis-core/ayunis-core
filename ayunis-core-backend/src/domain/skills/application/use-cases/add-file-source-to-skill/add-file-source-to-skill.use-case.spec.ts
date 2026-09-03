@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
@@ -11,18 +10,18 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { AddFileSourceToSkillUseCase } from './add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command';
-import type { AddSourceToSkillUseCase } from '../add-source-to-skill/add-source-to-skill.use-case';
+import type { AddSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
 import type { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import type { StartDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
 import type { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { SkillRepository } from '../../ports/skill.repository';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import {
   SkillSourceLimitExceededError,
   UnsupportedFileTypeError,
-} from '../../skills.errors';
-import { SkillsConstants } from '../../../domain/skills.constants';
-import type { Skill } from '../../../domain/skill.entity';
+} from 'src/domain/skills/application/skills.errors';
+import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
+import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
@@ -69,7 +68,6 @@ describe('AddFileSourceToSkillUseCase', () => {
     } as unknown as ContextService;
 
     useCase = new AddFileSourceToSkillUseCase(
-      createPinoLoggerMock(),
       skillRepository,
       addSourceToSkill,
       startDocumentProcessing,

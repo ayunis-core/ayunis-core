@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { UpdateArtifactUseCase } from './update-artifact.use-case';
 import { UpdateArtifactCommand } from './update-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import {
   ArtifactContentTooLargeError,
   ArtifactExpectedVersionMismatchError,
@@ -15,7 +13,7 @@ import {
   InvalidSpreadsheetContentError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import {
   DocumentArtifact,
   SpreadsheetArtifact,
@@ -63,10 +61,6 @@ describe('UpdateArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateArtifactUseCase,
-        {
-          provide: getLoggerToken(UpdateArtifactUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         {
@@ -432,10 +426,6 @@ describe('UpdateArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateArtifactUseCase,
-        {
-          provide: getLoggerToken(UpdateArtifactUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
         {

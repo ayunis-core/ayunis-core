@@ -1,27 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
+import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
 import {
   InvalidRetentionPeriodError,
   UnexpectedRetentionPolicyError,
-} from '../../retention-policies.errors';
+} from 'src/domain/retention-policies/application/retention-policies.errors';
 import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import { isValidRetentionDays } from 'src/domain/retention-policies/domain/retention-period';
 import type { UpsertOrgRetentionPolicyCommand } from './upsert-org-retention-policy.command';
 
 @Injectable()
 export class UpsertOrgRetentionPolicyUseCase {
-  constructor(
-    @InjectPinoLogger(UpsertOrgRetentionPolicyUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: RetentionPoliciesRepository,
-  ) {}
+  private readonly logger = new Logger(UpsertOrgRetentionPolicyUseCase.name);
+
+  constructor(private readonly repository: RetentionPoliciesRepository) {}
 
   async execute(
     command: UpsertOrgRetentionPolicyCommand,
   ): Promise<OrgRetentionPolicy> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         retentionDays: command.retentionDays,

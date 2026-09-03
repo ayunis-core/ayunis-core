@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { TransactionHost } from '@nestjs-cls/transactional';
@@ -74,10 +72,6 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddUrlToKnowledgeBaseUseCase,
-        {
-          provide: getLoggerToken(AddUrlToKnowledgeBaseUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: KnowledgeBaseRepository, useValue: mockRepository },
         { provide: StartUrlCrawlUseCase, useValue: mockStartUrlCrawlUseCase },
         { provide: TransactionHost, useValue: txHost },

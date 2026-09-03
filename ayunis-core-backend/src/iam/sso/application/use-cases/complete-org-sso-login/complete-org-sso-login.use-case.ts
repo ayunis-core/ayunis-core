@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
 import type { ValidatedOrgOidcIdentity } from 'src/iam/sso/application/models/validated-org-oidc-identity';
@@ -29,9 +28,9 @@ export interface CompletedOrgSsoLogin {
 
 @Injectable()
 export class CompleteOrgSsoLoginUseCase {
+  private readonly logger = new Logger(CompleteOrgSsoLoginUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CompleteOrgSsoLoginUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly transactions: SsoLoginTransactionsRepository,
     private readonly broker: OidcBrokerClient,
     private readonly encryption: SsoEncryptionPort,
@@ -42,7 +41,7 @@ export class CompleteOrgSsoLoginUseCase {
   async execute(
     command: CompleteOrgSsoLoginCommand,
   ): Promise<CompletedOrgSsoLogin> {
-    this.logger.info('Completing organization SSO login');
+    this.logger.log('Completing organization SSO login');
     const state = this.singleState(command.callbackParameters);
     const browserBindingHash = this.browserBindingHash(command.browserBinding);
     const transaction = await this.transactions.consume(

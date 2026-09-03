@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InternetSearchHandler } from '../../application/ports/internet-search.handler';
-import { InternetSearchResult } from '../../domain/internet-search-result.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
+import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { ConfigService } from '@nestjs/config';
-import { InternetSearchResultType } from '../../domain/value-objects/internet-search-result-type.enum';
+import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
 
 type BraveSearchResult = {
   news?: {
@@ -32,11 +31,9 @@ type BraveSearchErrorResult = {
 
 @Injectable()
 export class BraveInternetSearchHandler implements InternetSearchHandler {
-  constructor(
-    @InjectPinoLogger(BraveInternetSearchHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {}
+  private readonly logger = new Logger(BraveInternetSearchHandler.name);
+
+  constructor(private readonly configService: ConfigService) {}
 
   async search(query: string): Promise<InternetSearchResult[]> {
     this.logger.debug({ input: query }, 'Using Brave internet search handler');

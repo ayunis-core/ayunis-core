@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
-import { UnexpectedMfaError } from '../../mfa.errors';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { OrgMfaRequirementsRepository } from 'src/iam/mfa/application/ports/org-mfa-requirements.repository';
+import { UnexpectedMfaError } from 'src/iam/mfa/application/mfa.errors';
 import { CheckMfaLoginRequirementQuery } from './check-mfa-login-requirement.query';
 
 export type MfaLoginRequirement = 'none' | 'verify' | 'enroll';
@@ -17,9 +16,9 @@ export type MfaLoginRequirement = 'none' | 'verify' | 'enroll';
  */
 @Injectable()
 export class CheckMfaLoginRequirementUseCase {
+  private readonly logger = new Logger(CheckMfaLoginRequirementUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CheckMfaLoginRequirementUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly orgMfaRequirementsRepository: OrgMfaRequirementsRepository,
   ) {}
@@ -27,7 +26,7 @@ export class CheckMfaLoginRequirementUseCase {
   async execute(
     query: CheckMfaLoginRequirementQuery,
   ): Promise<MfaLoginRequirement> {
-    this.logger.info({ userId: query.userId }, 'checkMfaLoginRequirement');
+    this.logger.log({ userId: query.userId }, 'checkMfaLoginRequirement');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(query.userId);

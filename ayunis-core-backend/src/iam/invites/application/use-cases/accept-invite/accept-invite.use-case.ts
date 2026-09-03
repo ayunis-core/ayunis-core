@@ -1,6 +1,5 @@
 import { Transactional } from '@nestjs-cls/transactional';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   InviteAlreadyAcceptedError,
@@ -30,9 +29,9 @@ import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class AcceptInviteUseCase {
+  private readonly logger = new Logger(AcceptInviteUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AcceptInviteUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly createUserUseCase: CreateUserUseCase,
@@ -46,7 +45,7 @@ export class AcceptInviteUseCase {
   async execute(
     command: AcceptInviteCommand,
   ): Promise<{ inviteId: string; email: string; orgId: string }> {
-    this.logger.info({ hasToken: !!command.inviteToken }, 'execute');
+    this.logger.log({ hasToken: !!command.inviteToken }, 'execute');
 
     const invite = await this.resolveValidatedInvite(command);
     const preparedUser = await this.createUserUseCase.prepare(

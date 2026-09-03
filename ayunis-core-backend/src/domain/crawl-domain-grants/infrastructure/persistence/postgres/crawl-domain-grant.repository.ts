@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -10,9 +9,9 @@ import { CrawlDomainGrantMapper } from './mappers/crawl-domain-grant.mapper';
 
 @Injectable()
 export class PostgresCrawlDomainGrantRepository extends CrawlDomainGrantRepository {
+  private readonly logger = new Logger(PostgresCrawlDomainGrantRepository.name);
+
   constructor(
-    @InjectPinoLogger(PostgresCrawlDomainGrantRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(CrawlDomainGrantRecord)
     private readonly repository: Repository<CrawlDomainGrantRecord>,
   ) {

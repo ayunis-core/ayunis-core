@@ -1,7 +1,7 @@
+import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { RunEvent, ToolCallSnapshot } from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
-import type { PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -56,7 +56,7 @@ interface StreamingTurn {
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
-  logger: PinoLogger,
+  logger: Logger,
   integrations?: RuntimeToolIntegrationRegistry,
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
@@ -169,7 +169,7 @@ function toSideStreamItem(
   event: RunEvent,
   threadId: UUID,
   iteration: number,
-  logger: PinoLogger,
+  logger: Logger,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'tool_result_message') {
     return toBackendToolResultMessage(
@@ -194,7 +194,7 @@ function toSideStreamItem(
 
 function mapFinalizationError(
   event: Extract<RunEvent, { type: 'finalization_error' }>,
-  logger: PinoLogger,
+  logger: Logger,
 ): ApplicationError | null {
   const context = {
     execution_path: 'agent_runtime',
@@ -304,10 +304,7 @@ const RUN_ERROR_MAPPERS = new Map<
   ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
 ]);
 
-function mapRunError(
-  event: RunErrorEvent,
-  logger: PinoLogger,
-): ApplicationError {
+function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
     // Checked before the generic reconstruction: the run error keeps the
     // user-facing code and localized message, while the classified provider

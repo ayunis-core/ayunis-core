@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Transactional } from '@nestjs-cls/transactional';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CountPendingInvitesByOrgIdQuery } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.query';
 import { CountPendingInvitesByOrgIdUseCase } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.use-case';
@@ -20,9 +19,9 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 
 @Injectable()
 export class AssertSeatAvailableUseCase {
+  private readonly logger = new Logger(AssertSeatAvailableUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AssertSeatAvailableUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptions: SubscriptionRepository,
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
     private readonly countUsers: CountUsersByOrgIdUseCase,
@@ -32,7 +31,7 @@ export class AssertSeatAvailableUseCase {
 
   @HandleUnexpectedErrors(UnexpectedSeatAdmissionError)
   async execute(command: AssertSeatAvailableCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { orgId: command.orgId },
       'Checking organization seat admission',
     );

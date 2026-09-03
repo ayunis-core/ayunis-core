@@ -1,15 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { EvaluateAcademyAccessUseCase } from './evaluate-academy-access.use-case';
 import { EvaluateAcademyAccessQuery } from './evaluate-academy-access.query';
-import { GetOrgAcademyAccessSettingsUseCase } from '../get-org-academy-access-settings/get-org-academy-access-settings.use-case';
+import { GetOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.use-case';
 import { IsAddonActiveUseCase } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.use-case';
 import { GetAcademyCompletionUseCase } from 'src/domain/academy/application/use-cases/get-academy-completion/get-academy-completion.use-case';
-import { OrgAcademyAccessSettings } from '../../../domain/org-academy-access-settings.entity';
-import { AcademyAccessMode } from '../../../domain/value-objects/academy-access-mode.enum';
+import { OrgAcademyAccessSettings } from 'src/iam/academy-access/domain/org-academy-access-settings.entity';
+import { AcademyAccessMode } from 'src/iam/academy-access/domain/value-objects/academy-access-mode.enum';
 
 describe('EvaluateAcademyAccessUseCase', () => {
   let useCase: EvaluateAcademyAccessUseCase;
@@ -26,10 +24,6 @@ describe('EvaluateAcademyAccessUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EvaluateAcademyAccessUseCase,
-        {
-          provide: getLoggerToken(EvaluateAcademyAccessUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: GetOrgAcademyAccessSettingsUseCase,
           useValue: { execute: jest.fn() },

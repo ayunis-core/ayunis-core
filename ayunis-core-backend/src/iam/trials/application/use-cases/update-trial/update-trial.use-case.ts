@@ -1,13 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
-import { TrialRepository } from '../../ports/trial.repository';
+import { TrialRepository } from 'src/iam/trials/application/ports/trial.repository';
 import { UpdateTrialCommand } from './update-trial.command';
 import {
   TrialNotFoundError,
   TrialUpdateFailedError,
   UnexpectedTrialError,
-} from '../../trial.errors';
+} from 'src/iam/trials/application/trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -15,9 +14,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class UpdateTrialUseCase {
+  private readonly logger = new Logger(UpdateTrialUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateTrialUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly trialRepository: TrialRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -66,7 +65,7 @@ export class UpdateTrialUseCase {
     command: UpdateTrialCommand,
     existingTrial: Trial,
   ): Promise<Trial> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         maxMessages: command.maxMessages,
@@ -95,7 +94,7 @@ export class UpdateTrialUseCase {
         'Repository operation failed',
       );
     }
-    this.logger.info(
+    this.logger.log(
       {
         trialId: savedTrial.id,
         orgId: savedTrial.orgId,

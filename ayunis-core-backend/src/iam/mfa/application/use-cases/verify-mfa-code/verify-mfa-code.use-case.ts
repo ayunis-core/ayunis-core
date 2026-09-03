@@ -1,13 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
-import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
-import { TotpPort } from '../../ports/totp.port';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
+import { TotpSecretEncryptionPort } from 'src/iam/mfa/application/ports/totp-secret-encryption.port';
+import { TotpPort } from 'src/iam/mfa/application/ports/totp.port';
 import type { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
 import {
   LOCK_DURATION_MS,
@@ -19,7 +18,7 @@ import {
   MfaLockedError,
   MfaNotEnabledError,
   UnexpectedMfaError,
-} from '../../mfa.errors';
+} from 'src/iam/mfa/application/mfa.errors';
 import { VerifyMfaCodeCommand } from './verify-mfa-code.command';
 
 const TOTP_CODE_PATTERN = /^\d{6}$/;
@@ -31,9 +30,9 @@ const TOTP_CODE_PATTERN = /^\d{6}$/;
  */
 @Injectable()
 export class VerifyMfaCodeUseCase {
+  private readonly logger = new Logger(VerifyMfaCodeUseCase.name);
+
   constructor(
-    @InjectPinoLogger(VerifyMfaCodeUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
     private readonly totpSecretEncryption: TotpSecretEncryptionPort,
@@ -42,7 +41,7 @@ export class VerifyMfaCodeUseCase {
   ) {}
 
   async execute(command: VerifyMfaCodeCommand): Promise<void> {
-    this.logger.info({ userId: command.userId }, 'verifyMfaCode');
+    this.logger.log({ userId: command.userId }, 'verifyMfaCode');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(command.userId);

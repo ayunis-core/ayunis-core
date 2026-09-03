@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateUserUseCase } from './create-user.use-case';
 import { CreateUserCommand } from './create-user.command';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -54,7 +53,6 @@ describe('CreateUserUseCase', () => {
     } as unknown as jest.Mocked<UserCreatedEventPublisher>;
 
     useCase = new CreateUserUseCase(
-      createPinoLoggerMock(),
       usersRepository,
       hashTextUseCase,
       configService,

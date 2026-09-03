@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
-import { TrialRepository } from '../../ports/trial.repository';
+import { TrialRepository } from 'src/iam/trials/application/ports/trial.repository';
 import { GetTrialQuery } from './get-trial.query';
-import { TrialNotFoundError, UnexpectedTrialError } from '../../trial.errors';
+import {
+  TrialNotFoundError,
+  UnexpectedTrialError,
+} from 'src/iam/trials/application/trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetTrialUseCase {
-  constructor(
-    @InjectPinoLogger(GetTrialUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly trialRepository: TrialRepository,
-  ) {}
+  private readonly logger = new Logger(GetTrialUseCase.name);
+
+  constructor(private readonly trialRepository: TrialRepository) {}
 
   async execute(query: GetTrialQuery): Promise<Trial> {
     this.logger.debug(

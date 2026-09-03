@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { UUID, randomUUID } from 'crypto';
@@ -13,9 +12,9 @@ import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persist
 
 @Injectable()
 export class LocalThreadAssignmentsRepository {
+  private readonly logger = new Logger(LocalThreadAssignmentsRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalThreadAssignmentsRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(ThreadRecord)
     private readonly threadRepository: Repository<ThreadRecord>,
     @InjectRepository(ThreadSourceAssignmentRecord)
@@ -49,7 +48,7 @@ export class LocalThreadAssignmentsRepository {
     userId: UUID;
     sourceAssignment: SourceAssignment;
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: params.threadId,
         userId: params.userId,
@@ -78,7 +77,7 @@ export class LocalThreadAssignmentsRepository {
     userId: UUID;
     mcpIntegrationIds: UUID[];
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: params.threadId,
         mcpIntegrationIds: params.mcpIntegrationIds,
@@ -108,7 +107,7 @@ export class LocalThreadAssignmentsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: params.threadId,
         knowledgeBaseId: params.knowledgeBaseId,
@@ -140,7 +139,7 @@ export class LocalThreadAssignmentsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: params.threadId,
         knowledgeBaseId: params.knowledgeBaseId,
@@ -168,7 +167,7 @@ export class LocalThreadAssignmentsRepository {
     originSkillId: UUID;
     userIds: UUID[];
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         originSkillId: params.originSkillId,
         userCount: params.userIds.length,
@@ -207,7 +206,7 @@ export class LocalThreadAssignmentsRepository {
     userIds: UUID[];
     knowledgeBaseId?: UUID;
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         originSkillId: params.originSkillId,
         userCount: params.userIds.length,
@@ -252,10 +251,7 @@ export class LocalThreadAssignmentsRepository {
   async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
   ): Promise<{ sourceId: UUID; orgId: UUID }[]> {
-    this.logger.info(
-      { olderThan },
-      'findSourcesWithOnlyStaleDirectAssignments',
-    );
+    this.logger.log({ olderThan }, 'findSourcesWithOnlyStaleDirectAssignments');
 
     const rows = await this.threadSourceAssignmentRepository
       .createQueryBuilder('tsa')
@@ -293,7 +289,7 @@ export class LocalThreadAssignmentsRepository {
     knowledgeBaseId: UUID;
     userIds: UUID[];
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: params.knowledgeBaseId,
         userCount: params.userIds.length,

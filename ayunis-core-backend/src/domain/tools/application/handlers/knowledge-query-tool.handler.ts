@@ -1,23 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { KnowledgeQueryTool } from '../../domain/tools/knowledge-query-tool.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
 import type { UUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { QueryKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { QueryKnowledgeBaseQuery } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.query';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { handleEmbeddingError } from '../utils/embedding-error.utils';
+import { handleEmbeddingError } from 'src/domain/tools/application/utils/embedding-error.utils';
 
 @Injectable()
 export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(KnowledgeQueryToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(KnowledgeQueryToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly queryKnowledgeBaseUseCase: QueryKnowledgeBaseUseCase,
     private readonly contextService: ContextService,
   ) {
@@ -30,7 +29,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.info({ tool: tool.name, input }, 'execute');
+    this.logger.log({ tool: tool.name, input }, 'execute');
 
     try {
       const validatedInput = tool.validateParams(input);

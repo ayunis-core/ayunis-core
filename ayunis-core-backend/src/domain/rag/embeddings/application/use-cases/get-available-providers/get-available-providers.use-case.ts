@@ -1,19 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetAvailableProvidersQuery } from './get-available-providers.query';
-import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
+import { EmbeddingsHandlerRegistry } from 'src/domain/rag/embeddings/application/embeddings-handler.registry';
 import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 
 @Injectable()
 export class GetAvailableProvidersUseCase {
-  constructor(
-    @InjectPinoLogger(GetAvailableProvidersUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly providerRegistry: EmbeddingsHandlerRegistry,
-  ) {}
+  private readonly logger = new Logger(GetAvailableProvidersUseCase.name);
+
+  constructor(private readonly providerRegistry: EmbeddingsHandlerRegistry) {}
 
   execute(query: GetAvailableProvidersQuery): EmbeddingsProvider[] {
-    this.logger.info(query, 'execute');
+    this.logger.log(query, 'execute');
     return this.providerRegistry.getAvailableProviders();
   }
 }

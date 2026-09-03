@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -9,9 +8,9 @@ import { RemoveApiKeyCreditLimitCommand } from './remove-api-key-credit-limit.co
 
 @Injectable()
 export class RemoveApiKeyCreditLimitUseCase {
+  private readonly logger = new Logger(RemoveApiKeyCreditLimitUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RemoveApiKeyCreditLimitUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -23,7 +22,7 @@ export class RemoveApiKeyCreditLimitUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info(
+    this.logger.log(
       { orgId, apiKeyId: command.apiKeyId },
       'Removing API key credit limit',
     );

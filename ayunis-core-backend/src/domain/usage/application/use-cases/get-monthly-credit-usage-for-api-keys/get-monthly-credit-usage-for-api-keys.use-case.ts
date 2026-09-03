@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
@@ -9,11 +8,11 @@ import { GetMonthlyCreditUsageForApiKeysQuery } from './get-monthly-credit-usage
 
 @Injectable()
 export class GetMonthlyCreditUsageForApiKeysUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-    @InjectPinoLogger(GetMonthlyCreditUsageForApiKeysUseCase.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(
+    GetMonthlyCreditUsageForApiKeysUseCase.name,
+  );
+
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   @HandleUnexpectedErrors(UnexpectedUsageError)
   async execute(
@@ -21,7 +20,7 @@ export class GetMonthlyCreditUsageForApiKeysUseCase {
   ): Promise<Map<UUID, number>> {
     const effectiveStart = getEffectiveMonthStart(query.since);
 
-    this.logger.info(
+    this.logger.log(
       {
         apiKeyCount: query.apiKeyIds.length,
         effectiveStart: effectiveStart.toISOString(),

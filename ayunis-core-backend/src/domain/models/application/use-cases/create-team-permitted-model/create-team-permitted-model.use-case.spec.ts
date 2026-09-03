@@ -1,10 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { getLoggerToken } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   DuplicateTeamPermittedModelError,
   ModelArchivedError,
@@ -97,10 +95,6 @@ describe('CreateTeamPermittedModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(CreateTeamPermittedModelUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         CreateTeamPermittedModelUseCase,
         TeamPermittedModelValidator,
         ModelConfigurationService,

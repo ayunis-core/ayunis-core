@@ -1,16 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { CreateSkillWithUniqueNameUseCase } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
-import { FindActivePreCreatedTemplatesUseCase } from '../use-cases/find-active-pre-created-templates/find-active-pre-created-templates.use-case';
-import { FindActivePreCreatedTemplatesQuery } from '../use-cases/find-active-pre-created-templates/find-active-pre-created-templates.query';
+import { FindActivePreCreatedTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-pre-created-templates/find-active-pre-created-templates.use-case';
+import { FindActivePreCreatedTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-pre-created-templates/find-active-pre-created-templates.query';
 
 @Injectable()
 export class SkillTemplateInstallationService {
+  private readonly logger = new Logger(SkillTemplateInstallationService.name);
+
   constructor(
-    @InjectPinoLogger(SkillTemplateInstallationService.name)
-    private readonly logger: PinoLogger,
     private readonly findActivePreCreatedTemplatesUseCase: FindActivePreCreatedTemplatesUseCase,
     private readonly createSkillWithUniqueNameUseCase: CreateSkillWithUniqueNameUseCase,
   ) {}

@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { BulkAddTeamMembersUseCase } from './bulk-add-team-members.use-case';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
-import { AddTeamMemberUseCase } from '../add-team-member/add-team-member.use-case';
+import { AddTeamMemberUseCase } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.use-case';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
-import { TeamNotFoundError } from '../../teams.errors';
-import { UserAlreadyTeamMemberError } from '../../team-members.errors';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
+import { UserAlreadyTeamMemberError } from 'src/iam/teams/application/team-members.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -27,10 +25,6 @@ describe('BulkAddTeamMembersUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BulkAddTeamMembersUseCase,
-        {
-          provide: getLoggerToken(BulkAddTeamMembersUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: AddTeamMemberUseCase, useValue: mockAddTeamMemberUseCase },
       ],
     }).compile();

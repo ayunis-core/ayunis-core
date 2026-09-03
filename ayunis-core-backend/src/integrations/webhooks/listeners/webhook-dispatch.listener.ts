@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -21,32 +20,32 @@ import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user
 import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import type { User } from 'src/iam/users/domain/user.entity';
-import { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from '../application/use-cases/send-webhook/send-webhook.command';
-import { UserCreatedWebhookEvent } from '../domain/webhook-events/user-created.webhook-event';
-import { UserUpdatedWebhookEvent } from '../domain/webhook-events/user-updated.webhook-event';
-import { UserDeletedWebhookEvent } from '../domain/webhook-events/user-deleted.webhook-event';
-import { OrgCreatedWebhookEvent } from '../domain/webhook-events/org-created.webhook-event';
-import { SubscriptionCreatedWebhookEvent } from '../domain/webhook-events/subscription-created.webhook-events';
-import { SubscriptionCancelledWebhookEvent } from '../domain/webhook-events/subscription-cancelled.webhook-event';
-import { SubscriptionUncancelledWebhookEvent } from '../domain/webhook-events/subscription-uncancelled.webhook-event';
-import { SubscriptionSeatsUpdatedWebhookEvent } from '../domain/webhook-events/subscription-seats-updated.webhook-event';
-import { SubscriptionBillingInfoUpdatedWebhookEvent } from '../domain/webhook-events/subscription-billing-info-updated.webhook-event';
-import { UsageCollectedWebhookEvent } from '../domain/webhook-events/usage-collected.webhook-event';
-import { ChatSentWebhookEvent } from '../domain/webhook-events/chat-sent.webhook-event';
-import { AddonActivatedWebhookEvent } from '../domain/webhook-events/addon-activated.webhook-event';
-import { AddonDeactivatedWebhookEvent } from '../domain/webhook-events/addon-deactivated.webhook-event';
+import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { UserCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-created.webhook-event';
+import { UserUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-updated.webhook-event';
+import { UserDeletedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-deleted.webhook-event';
+import { OrgCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/org-created.webhook-event';
+import { SubscriptionCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-created.webhook-events';
+import { SubscriptionCancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-cancelled.webhook-event';
+import { SubscriptionUncancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
+import { SubscriptionSeatsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-seats-updated.webhook-event';
+import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
+import { UsageCollectedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/usage-collected.webhook-event';
+import { ChatSentWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/chat-sent.webhook-event';
+import { AddonActivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-activated.webhook-event';
+import { AddonDeactivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-deactivated.webhook-event';
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
-import type { WebhookEvent } from '../domain/webhook-event.entity';
+import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
-import { SkillUsedWebhookEvent } from '../domain/webhook-events/skill-used.webhook-event';
-import { SkillInstalledWebhookEvent } from '../domain/webhook-events/skill-installed.webhook-event';
-import { IntegrationUsedWebhookEvent } from '../domain/webhook-events/integration-used.webhook-event';
-import { IntegrationInstalledWebhookEvent } from '../domain/webhook-events/integration-installed.webhook-event';
+import { SkillUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/skill-used.webhook-event';
+import { SkillInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/skill-installed.webhook-event';
+import { IntegrationUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-used.webhook-event';
+import { IntegrationInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-installed.webhook-event';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -55,9 +54,9 @@ import { IntegrationInstalledWebhookEvent } from '../domain/webhook-events/integ
  */
 @Injectable()
 export class WebhookDispatchListener {
+  private readonly logger = new Logger(WebhookDispatchListener.name);
+
   constructor(
-    @InjectPinoLogger(WebhookDispatchListener.name)
-    private readonly logger: PinoLogger,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,

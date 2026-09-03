@@ -1,6 +1,5 @@
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -14,10 +13,7 @@ describe(UserCreatedEventPublisher.name, () => {
     const eventEmitter = {
       emitAsync: jest.fn().mockResolvedValue([]),
     } as unknown as EventEmitter2;
-    const publisher = new UserCreatedEventPublisher(
-      createPinoLoggerMock(),
-      eventEmitter,
-    );
+    const publisher = new UserCreatedEventPublisher(eventEmitter);
     const user = federatedUser();
 
     publisher.publish(user);
@@ -32,10 +28,7 @@ describe(UserCreatedEventPublisher.name, () => {
     const eventEmitter = {
       emitAsync: jest.fn().mockRejectedValue(new Error('handler failed')),
     } as unknown as EventEmitter2;
-    const publisher = new UserCreatedEventPublisher(
-      createPinoLoggerMock(),
-      eventEmitter,
-    );
+    const publisher = new UserCreatedEventPublisher(eventEmitter);
 
     expect(() => publisher.publish(federatedUser())).not.toThrow();
   });

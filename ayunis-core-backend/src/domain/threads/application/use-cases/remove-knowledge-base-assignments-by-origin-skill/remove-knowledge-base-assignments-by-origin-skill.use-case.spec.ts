@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 
 import { randomUUID } from 'crypto';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from './remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from './remove-knowledge-base-assignments-by-origin-skill.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 
 describe('RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase', () => {
   let useCase: RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase;
@@ -20,12 +18,6 @@ describe('RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
-        {
-          provide: getLoggerToken(
-            RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase.name,
-          ),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
       ],
     }).compile();

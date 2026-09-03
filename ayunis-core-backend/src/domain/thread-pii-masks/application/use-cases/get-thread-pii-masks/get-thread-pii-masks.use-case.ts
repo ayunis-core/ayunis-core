@@ -1,18 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { ThreadPiiMaskRepository } from '../../ports/thread-pii-mask.repository';
-import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
+import { ThreadPiiMaskRepository } from 'src/domain/thread-pii-masks/application/ports/thread-pii-mask.repository';
+import { UnexpectedThreadPiiMasksError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import type { GetThreadPiiMasksQuery } from './get-thread-pii-masks.query';
 
 @Injectable()
 export class GetThreadPiiMasksUseCase {
-  constructor(
-    @InjectPinoLogger(GetThreadPiiMasksUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: ThreadPiiMaskRepository,
-  ) {}
+  private readonly logger = new Logger(GetThreadPiiMasksUseCase.name);
+
+  constructor(private readonly repository: ThreadPiiMaskRepository) {}
 
   async execute(query: GetThreadPiiMasksQuery): Promise<ThreadPiiMask[]> {
     this.logger.debug(

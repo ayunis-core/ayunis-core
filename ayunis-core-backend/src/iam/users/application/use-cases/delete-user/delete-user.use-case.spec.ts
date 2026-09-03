@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -13,16 +11,16 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { DeleteUserUseCase } from './delete-user.use-case';
 import { DeleteUserCommand } from './delete-user.command';
-import { UserDeletedEvent } from '../../events/user-deleted.event';
-import { UserDeletionRequestedEvent } from '../../events/user-deletion-requested.event';
-import { UsersRepository } from '../../ports/users.repository';
+import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
+import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UserUnauthorizedError } from '../../users.errors';
+import { UserUnauthorizedError } from 'src/iam/users/application/users.errors';
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -64,10 +62,6 @@ describe('DeleteUserUseCase', () => {
           useValue: mockDeleteInviteByEmailUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
-        {
-          provide: getLoggerToken(DeleteUserUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

@@ -7,8 +7,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import {
@@ -16,16 +16,16 @@ import {
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 
-import { AssignMcpIntegrationToSkillUseCase } from '../../application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
-import { UnassignMcpIntegrationFromSkillUseCase } from '../../application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.use-case';
-import { ListSkillMcpIntegrationsUseCase } from '../../application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
+import { AssignMcpIntegrationToSkillUseCase } from 'src/domain/skills/application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
+import { UnassignMcpIntegrationFromSkillUseCase } from 'src/domain/skills/application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.use-case';
+import { ListSkillMcpIntegrationsUseCase } from 'src/domain/skills/application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
 
-import { AssignMcpIntegrationToSkillCommand } from '../../application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.command';
-import { UnassignMcpIntegrationFromSkillCommand } from '../../application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.command';
-import { ListSkillMcpIntegrationsQuery } from '../../application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.query';
+import { AssignMcpIntegrationToSkillCommand } from 'src/domain/skills/application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.command';
+import { UnassignMcpIntegrationFromSkillCommand } from 'src/domain/skills/application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.command';
+import { ListSkillMcpIntegrationsQuery } from 'src/domain/skills/application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.query';
 
-import { SkillAccessService } from '../../application/services/skill-access.service';
-import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
+import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
+import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
 
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
@@ -40,9 +40,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillMcpIntegrationsController {
+  private readonly logger = new Logger(SkillMcpIntegrationsController.name);
+
   constructor(
-    @InjectPinoLogger(SkillMcpIntegrationsController.name)
-    private readonly logger: PinoLogger,
     private readonly assignMcpIntegrationToSkillUseCase: AssignMcpIntegrationToSkillUseCase,
     private readonly unassignMcpIntegrationFromSkillUseCase: UnassignMcpIntegrationFromSkillUseCase,
     private readonly listSkillMcpIntegrationsUseCase: ListSkillMcpIntegrationsUseCase,
@@ -80,7 +80,7 @@ export class SkillMcpIntegrationsController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.info({ skillId, integrationId }, 'assignMcpIntegration');
+    this.logger.log({ skillId, integrationId }, 'assignMcpIntegration');
 
     const skill = await this.assignMcpIntegrationToSkillUseCase.execute(
       new AssignMcpIntegrationToSkillCommand(skillId, integrationId),
@@ -123,7 +123,7 @@ export class SkillMcpIntegrationsController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.info({ skillId, integrationId }, 'unassignMcpIntegration');
+    this.logger.log({ skillId, integrationId }, 'unassignMcpIntegration');
 
     const skill = await this.unassignMcpIntegrationFromSkillUseCase.execute(
       new UnassignMcpIntegrationFromSkillCommand(skillId, integrationId),
@@ -154,7 +154,7 @@ export class SkillMcpIntegrationsController {
   async listSkillMcpIntegrations(
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
   ): Promise<McpIntegrationResponseDto[]> {
-    this.logger.info({ skillId }, 'listSkillMcpIntegrations');
+    this.logger.log({ skillId }, 'listSkillMcpIntegrations');
 
     const integrations = await this.listSkillMcpIntegrationsUseCase.execute(
       new ListSkillMcpIntegrationsQuery(skillId),

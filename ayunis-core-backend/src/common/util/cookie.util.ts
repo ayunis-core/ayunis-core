@@ -2,11 +2,9 @@ import type { Response } from 'express';
 import type { ConfigService } from '@nestjs/config';
 import { getMillisecondsFromJwtExpiry } from './jwt.util';
 import type { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
-import { PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerConfig } from '../logger/pino-logger.config';
+import { Logger } from '@nestjs/common';
 
-const logger = new PinoLogger(createPinoLoggerConfig());
-logger.setContext('CookieUtil');
+const logger = new Logger('CookieUtil');
 
 interface CookieOptions {
   httpOnly: boolean;

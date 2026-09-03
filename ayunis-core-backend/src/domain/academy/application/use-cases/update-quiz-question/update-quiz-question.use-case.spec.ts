@@ -1,16 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { UpdateQuizQuestionUseCase } from './update-quiz-question.use-case';
 import { UpdateQuizQuestionCommand } from './update-quiz-question.command';
-import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
 import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   InvalidQuizQuestionError,
   QuizQuestionNotFoundError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 
 const validOptions = [
   { text: 'A large language model', isCorrect: true },
@@ -36,10 +34,6 @@ describe('UpdateQuizQuestionUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(UpdateQuizQuestionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         UpdateQuizQuestionUseCase,
         {
           provide: AcademyQuizQuestionRepository,

@@ -1,22 +1,23 @@
-import type { PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from './list-predefined-mcp-integration-configs.use-case';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { PredefinedMcpIntegrationRegistry } from 'src/domain/mcp/application/registries/predefined-mcp-integration-registry.service';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 import { PredefinedMcpIntegrationConfig } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
   let useCase: ListPredefinedMcpIntegrationConfigsUseCase;
   let registryService: PredefinedMcpIntegrationRegistry;
 
   beforeAll(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListPredefinedMcpIntegrationConfigsUseCase,
@@ -25,13 +26,6 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
           useValue: {
             getAllConfigs: jest.fn(),
           },
-        },
-
-        {
-          provide: getLoggerToken(
-            ListPredefinedMcpIntegrationConfigsUseCase.name,
-          ),
-          useValue: logger,
         },
       ],
     }).compile();
@@ -71,7 +65,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
       expect(result).toEqual(mockConfigs);
 
       expect(registryService.getAllConfigs).toHaveBeenCalledTimes(1);
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         'listPredefinedMcpIntegrationConfigs',
       );
     });
@@ -87,7 +81,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
       expect(result).toEqual([]);
 
       expect(registryService.getAllConfigs).toHaveBeenCalledTimes(1);
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         'listPredefinedMcpIntegrationConfigs',
       );
     });
@@ -115,7 +109,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
       useCase.execute();
 
       // Assert
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         'listPredefinedMcpIntegrationConfigs',
       );
     });
@@ -130,8 +124,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
           ListPredefinedMcpIntegrationConfigsUseCase,
         ) ?? [];
 
-      expect(constructorParams.length).toBe(2);
-      expect(constructorParams[1]).toBe(PredefinedMcpIntegrationRegistry);
+      expect(constructorParams).toEqual([PredefinedMcpIntegrationRegistry]);
     });
   });
 });

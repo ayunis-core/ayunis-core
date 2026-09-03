@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ListObjectsUseCase } from '../list-objects/list-objects.use-case';
-import { ListObjectsCommand } from '../list-objects/list-objects.command';
-import { DeleteObjectUseCase } from '../delete-object/delete-object.use-case';
-import { DeleteObjectCommand } from '../delete-object/delete-object.command';
-import { ObjectNotFoundError } from '../../storage.errors';
+import { Injectable, Logger } from '@nestjs/common';
+import { ListObjectsUseCase } from 'src/domain/storage/application/use-cases/list-objects/list-objects.use-case';
+import { ListObjectsCommand } from 'src/domain/storage/application/use-cases/list-objects/list-objects.command';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
+import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 import { PurgeStoragePrefixesCommand } from './purge-storage-prefixes.command';
 
 export interface PurgeStoragePrefixesResult {
@@ -26,9 +25,9 @@ export interface PurgeStoragePrefixesResult {
  */
 @Injectable()
 export class PurgeStoragePrefixesUseCase {
+  private readonly logger = new Logger(PurgeStoragePrefixesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(PurgeStoragePrefixesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly listObjectsUseCase: ListObjectsUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
@@ -36,7 +35,7 @@ export class PurgeStoragePrefixesUseCase {
   async execute(
     command: PurgeStoragePrefixesCommand,
   ): Promise<PurgeStoragePrefixesResult> {
-    this.logger.info(
+    this.logger.log(
       {
         prefixCount: command.prefixes.length,
       },
@@ -49,7 +48,7 @@ export class PurgeStoragePrefixesUseCase {
     }
 
     const result = await this.deleteObjects(objectNames);
-    this.logger.info({ ...result }, 'Finished purging storage prefixes');
+    this.logger.log({ ...result }, 'Finished purging storage prefixes');
     return result;
   }
 

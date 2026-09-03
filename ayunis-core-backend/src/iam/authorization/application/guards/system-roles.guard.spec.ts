@@ -1,8 +1,8 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SystemRolesGuard } from './system-roles.guard';
-import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
+import { SYSTEM_ROLES_KEY } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
@@ -55,7 +55,7 @@ describe('SystemRolesGuard', () => {
 
   it('should allow access when no system-roles metadata is set on the route', () => {
     const { context, reflector } = createContext({ roles: undefined });
-    const guard = new SystemRolesGuard(createPinoLoggerMock(), reflector);
+    const guard = new SystemRolesGuard(reflector);
 
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -65,7 +65,7 @@ describe('SystemRolesGuard', () => {
       roles: [SystemRole.SUPER_ADMIN],
       user: superAdmin,
     });
-    const guard = new SystemRolesGuard(createPinoLoggerMock(), reflector);
+    const guard = new SystemRolesGuard(reflector);
 
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -75,13 +75,13 @@ describe('SystemRolesGuard', () => {
       roles: [SystemRole.SUPER_ADMIN],
       user: customer,
     });
-    const guard = new SystemRolesGuard(createPinoLoggerMock(), reflector);
+    const guard = new SystemRolesGuard(reflector);
 
     expect(guard.canActivate(context)).toBe(false);
   });
 
   it('should log a warning with audit context when the system role is rejected', () => {
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
     const { context, reflector } = createContext({
       roles: [SystemRole.SUPER_ADMIN],
       user: customer,
@@ -89,7 +89,7 @@ describe('SystemRolesGuard', () => {
       url: '/api/admin/instance/config',
       ip: '203.0.113.9',
     });
-    const guard = new SystemRolesGuard(logger, reflector);
+    const guard = new SystemRolesGuard(reflector);
 
     guard.canActivate(context);
 
@@ -110,12 +110,12 @@ describe('SystemRolesGuard', () => {
   });
 
   it('should log a warning when no authenticated user is present', () => {
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
     const { context, reflector } = createContext({
       roles: [SystemRole.SUPER_ADMIN],
       user: undefined,
     });
-    const guard = new SystemRolesGuard(logger, reflector);
+    const guard = new SystemRolesGuard(reflector);
 
     const result = guard.canActivate(context);
 

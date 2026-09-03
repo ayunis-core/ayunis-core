@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -7,17 +5,17 @@ import type { UUID } from 'crypto';
 import { AdminUpdateUserUseCase } from './admin-update-user.use-case';
 import { AdminUpdateUserCommand } from './admin-update-user.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UserUpdatedEvent } from '../../events/user-updated.event';
-import { SendConfirmationEmailUseCase } from '../send-confirmation-email/send-confirmation-email.use-case';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
+import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import {
   UserAlreadyExistsError,
   UserInvalidInputError,
   UserNotFoundError,
   UserUnauthorizedError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 
 describe('AdminUpdateUserUseCase', () => {
   let useCase: AdminUpdateUserUseCase;
@@ -68,10 +66,6 @@ describe('AdminUpdateUserUseCase', () => {
         {
           provide: SendConfirmationEmailUseCase,
           useValue: mockSendConfirmationEmailUseCase,
-        },
-        {
-          provide: getLoggerToken(AdminUpdateUserUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

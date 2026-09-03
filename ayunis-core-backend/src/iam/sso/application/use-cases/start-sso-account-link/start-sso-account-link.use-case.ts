@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
@@ -12,16 +11,16 @@ import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
 @Injectable()
 export class StartSsoAccountLinkUseCase {
+  private readonly logger = new Logger(StartSsoAccountLinkUseCase.name);
+
   constructor(
-    @InjectPinoLogger(StartSsoAccountLinkUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly connections: OrgSsoConnectionsRepository,
     private readonly authorizationTransactions: SsoAuthorizationTransactionService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
   async execute(command: StartSsoAccountLinkCommand) {
-    this.logger.info(
+    this.logger.log(
       { userId: command.userId, orgId: command.orgId },
       'Starting SSO account linking',
     );

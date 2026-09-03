@@ -1,32 +1,30 @@
 import { Observable, catchError, throwError } from 'rxjs';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { StreamInferenceHandlerRegistry } from '../../registry/stream-inference-handler.registry';
+import { Injectable, Logger } from '@nestjs/common';
+import { StreamInferenceHandlerRegistry } from 'src/domain/models/application/registry/stream-inference-handler.registry';
 import {
   StreamInferenceHandler,
   StreamInferenceInput,
-} from '../../ports/stream-inference.handler';
-import { StreamInferenceResponseChunk } from '../../ports/stream-inference.handler';
+} from 'src/domain/models/application/ports/stream-inference.handler';
+import { StreamInferenceResponseChunk } from 'src/domain/models/application/ports/stream-inference.handler';
 import { Model } from 'src/domain/models/domain/model.entity';
 import {
   InferenceAbortedError,
   InferenceFailedError,
   InferenceImageTooLargeError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   extractProviderErrorDiagnostics,
   type ProviderErrorDiagnostics,
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
+import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
 
 @Injectable()
 export class StreamInferenceUseCase {
-  constructor(
-    @InjectPinoLogger(StreamInferenceUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(StreamInferenceUseCase.name);
 
+  constructor(
     private readonly streamInferenceRegistry: StreamInferenceHandlerRegistry,
   ) {}
 
@@ -52,7 +50,7 @@ export class StreamInferenceUseCase {
   ): Error {
     if (error instanceof ApplicationError) return error;
     if (isAbortError(error)) {
-      this.logger.info(
+      this.logger.log(
         {
           model: input.model.name,
           provider: input.model.provider,

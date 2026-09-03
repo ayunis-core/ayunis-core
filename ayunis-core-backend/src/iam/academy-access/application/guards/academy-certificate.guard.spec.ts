@@ -1,14 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { AcademyCertificateGuard } from './academy-certificate.guard';
-import type { EvaluateAcademyAccessUseCase } from '../use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
-import type { AcademyAccessEvaluation } from '../use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
-import { AcademyAccessMode } from '../../domain/value-objects/academy-access-mode.enum';
-import { AcademyCertificateRequiredError } from '../academy-access.errors';
-import { REQUIRE_ACADEMY_CERTIFICATE_KEY } from '../decorators/academy-certificate.decorator';
+import type { EvaluateAcademyAccessUseCase } from 'src/iam/academy-access/application/use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
+import type { AcademyAccessEvaluation } from 'src/iam/academy-access/application/use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
+import { AcademyAccessMode } from 'src/iam/academy-access/domain/value-objects/academy-access-mode.enum';
+import { AcademyCertificateRequiredError } from 'src/iam/academy-access/application/academy-access.errors';
+import { REQUIRE_ACADEMY_CERTIFICATE_KEY } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 interface ContextOverrides {
   gated?: boolean;
@@ -72,7 +71,6 @@ describe('AcademyCertificateGuard', () => {
   function guardFor(overrides: ContextOverrides) {
     const { context, reflector } = createContext(overrides);
     const guard = new AcademyCertificateGuard(
-      createPinoLoggerMock(),
       reflector,
       evaluateAcademyAccessUseCase,
     );

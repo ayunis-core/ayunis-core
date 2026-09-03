@@ -7,8 +7,7 @@ import type {
   ProviderRequest,
   ToolSchema,
 } from '@ayunis/inference';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -60,11 +59,9 @@ function backoff(ms: number): Promise<void> {
 
 @Injectable()
 export class RuntimeModelProviderDecorator {
-  constructor(
-    private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(RuntimeModelProviderDecorator.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(RuntimeModelProviderDecorator.name);
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
   decorate(
     provider: ModelProvider,

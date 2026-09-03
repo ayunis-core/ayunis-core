@@ -1,10 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { DownloadObjectCommand } from './download-object.command';
 import storageConfig from 'src/config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 
@@ -34,9 +36,9 @@ function isTransientNetworkError(error: Error): boolean {
 
 @Injectable()
 export class DownloadObjectUseCase {
+  private readonly logger = new Logger(DownloadObjectUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DownloadObjectUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,

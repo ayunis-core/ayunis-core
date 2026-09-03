@@ -1,10 +1,8 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { IngestBulkContentUseCase } from './ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from './ingest-bulk-content.command';
-import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
+import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
@@ -70,10 +68,6 @@ describe('IngestBulkContentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IngestBulkContentUseCase,
-        {
-          provide: getLoggerToken(IngestBulkContentUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ParentChildIndexerRepositoryPort, useValue: mockRepo },
         { provide: SplitTextUseCase, useValue: mockSplitter },
         { provide: EmbedTextUseCase, useValue: mockEmbedder },

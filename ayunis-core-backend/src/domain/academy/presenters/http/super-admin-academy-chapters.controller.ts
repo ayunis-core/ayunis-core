@@ -9,8 +9,8 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -25,16 +25,16 @@ import {
 import type { UUID } from 'crypto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { GetAcademyManagementContentUseCase } from '../../application/use-cases/get-academy-management-content/get-academy-management-content.use-case';
-import { GetAcademyManagementContentQuery } from '../../application/use-cases/get-academy-management-content/get-academy-management-content.query';
-import { CreateChapterUseCase } from '../../application/use-cases/create-chapter/create-chapter.use-case';
-import { CreateChapterCommand } from '../../application/use-cases/create-chapter/create-chapter.command';
-import { UpdateChapterUseCase } from '../../application/use-cases/update-chapter/update-chapter.use-case';
-import { UpdateChapterCommand } from '../../application/use-cases/update-chapter/update-chapter.command';
-import { DeleteChapterUseCase } from '../../application/use-cases/delete-chapter/delete-chapter.use-case';
-import { DeleteChapterCommand } from '../../application/use-cases/delete-chapter/delete-chapter.command';
-import { ReorderChaptersUseCase } from '../../application/use-cases/reorder-chapters/reorder-chapters.use-case';
-import { ReorderChaptersCommand } from '../../application/use-cases/reorder-chapters/reorder-chapters.command';
+import { GetAcademyManagementContentUseCase } from 'src/domain/academy/application/use-cases/get-academy-management-content/get-academy-management-content.use-case';
+import { GetAcademyManagementContentQuery } from 'src/domain/academy/application/use-cases/get-academy-management-content/get-academy-management-content.query';
+import { CreateChapterUseCase } from 'src/domain/academy/application/use-cases/create-chapter/create-chapter.use-case';
+import { CreateChapterCommand } from 'src/domain/academy/application/use-cases/create-chapter/create-chapter.command';
+import { UpdateChapterUseCase } from 'src/domain/academy/application/use-cases/update-chapter/update-chapter.use-case';
+import { UpdateChapterCommand } from 'src/domain/academy/application/use-cases/update-chapter/update-chapter.command';
+import { DeleteChapterUseCase } from 'src/domain/academy/application/use-cases/delete-chapter/delete-chapter.use-case';
+import { DeleteChapterCommand } from 'src/domain/academy/application/use-cases/delete-chapter/delete-chapter.command';
+import { ReorderChaptersUseCase } from 'src/domain/academy/application/use-cases/reorder-chapters/reorder-chapters.use-case';
+import { ReorderChaptersCommand } from 'src/domain/academy/application/use-cases/reorder-chapters/reorder-chapters.command';
 import { CreateChapterRequestDto } from './dto/create-chapter-request.dto';
 import { UpdateChapterRequestDto } from './dto/update-chapter-request.dto';
 import { ReorderChaptersRequestDto } from './dto/reorder-chapters-request.dto';
@@ -46,9 +46,11 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('super-admin/academy/chapters')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminAcademyChaptersController {
+  private readonly logger = new Logger(
+    SuperAdminAcademyChaptersController.name,
+  );
+
   constructor(
-    @InjectPinoLogger(SuperAdminAcademyChaptersController.name)
-    private readonly logger: PinoLogger,
     private readonly getAcademyManagementContentUseCase: GetAcademyManagementContentUseCase,
     private readonly createChapterUseCase: CreateChapterUseCase,
     private readonly updateChapterUseCase: UpdateChapterUseCase,
@@ -73,7 +75,7 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async getChapters(): Promise<SuperAdminAcademyChapterResponseDto[]> {
-    this.logger.info('Getting academy chapters');
+    this.logger.log('Getting academy chapters');
     const chapters = await this.getAcademyManagementContentUseCase.execute(
       new GetAcademyManagementContentQuery(),
     );
@@ -99,7 +101,7 @@ export class SuperAdminAcademyChaptersController {
   async createChapter(
     @Body() dto: CreateChapterRequestDto,
   ): Promise<AcademyChapterResponseDto> {
-    this.logger.info({ title: dto.title }, 'Creating academy chapter');
+    this.logger.log({ title: dto.title }, 'Creating academy chapter');
     const chapter = await this.createChapterUseCase.execute(
       new CreateChapterCommand({
         title: dto.title,
@@ -133,7 +135,7 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async reorderChapters(@Body() dto: ReorderChaptersRequestDto): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       { chapterCount: dto.chapterIds.length },
       'Reordering academy chapters',
     );
@@ -167,7 +169,7 @@ export class SuperAdminAcademyChaptersController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateChapterRequestDto,
   ): Promise<AcademyChapterResponseDto> {
-    this.logger.info({ chapterId: id }, 'Updating academy chapter');
+    this.logger.log({ chapterId: id }, 'Updating academy chapter');
     const chapter = await this.updateChapterUseCase.execute(
       new UpdateChapterCommand({
         chapterId: id,
@@ -201,7 +203,7 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async deleteChapter(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ chapterId: id }, 'Deleting academy chapter');
+    this.logger.log({ chapterId: id }, 'Deleting academy chapter');
     await this.deleteChapterUseCase.execute(
       new DeleteChapterCommand({ chapterId: id }),
     );

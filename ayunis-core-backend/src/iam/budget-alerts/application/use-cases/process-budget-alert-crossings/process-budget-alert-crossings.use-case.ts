@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { GetOrgAdminsUseCase } from 'src/iam/users/application/use-cases/get-org-admins/get-org-admins.use-case';
@@ -9,19 +8,19 @@ import {
   OrgBudgetAlertNotification,
   TeamBudgetAlertNotification,
   UserBudgetAlertNotification,
-} from '../../../domain/budget-alert-notification.entity';
-import { BudgetAlertScope } from '../../../domain/value-objects/budget-alert-scope.enum';
+} from 'src/iam/budget-alerts/domain/budget-alert-notification.entity';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 import {
   collectCrossings,
   notificationKey,
   type BudgetCrossing,
-} from '../../utils/budget-alert-crossing';
-import { BudgetAlertNotificationRepository } from '../../ports/budget-alert-notification.repository';
+} from 'src/iam/budget-alerts/application/utils/budget-alert-crossing';
+import { BudgetAlertNotificationRepository } from 'src/iam/budget-alerts/application/ports/budget-alert-notification.repository';
 import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
-import { SendBudgetWarningEmailUseCase } from '../send-budget-warning-email/send-budget-warning-email.use-case';
-import { SendBudgetWarningEmailCommand } from '../send-budget-warning-email/send-budget-warning-email.command';
+import { SendBudgetWarningEmailUseCase } from 'src/iam/budget-alerts/application/use-cases/send-budget-warning-email/send-budget-warning-email.use-case';
+import { SendBudgetWarningEmailCommand } from 'src/iam/budget-alerts/application/use-cases/send-budget-warning-email/send-budget-warning-email.command';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
+import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
 import { ProcessBudgetAlertCrossingsQuery } from './process-budget-alert-crossings.query';
 
 const SCOPE_TO_WARNING: Record<BudgetAlertScope, BudgetWarningScope> = {
@@ -32,9 +31,9 @@ const SCOPE_TO_WARNING: Record<BudgetAlertScope, BudgetWarningScope> = {
 
 @Injectable()
 export class ProcessBudgetAlertCrossingsUseCase {
+  private readonly logger = new Logger(ProcessBudgetAlertCrossingsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ProcessBudgetAlertCrossingsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly notificationRepository: BudgetAlertNotificationRepository,
     private readonly getOrgAdminsUseCase: GetOrgAdminsUseCase,
     private readonly sendBudgetWarningEmailUseCase: SendBudgetWarningEmailUseCase,
@@ -42,7 +41,7 @@ export class ProcessBudgetAlertCrossingsUseCase {
 
   @HandleUnexpectedErrors(UnexpectedBudgetAlertError)
   async execute(query: ProcessBudgetAlertCrossingsQuery): Promise<void> {
-    this.logger.info({ orgId: query.orgId }, 'execute');
+    this.logger.log({ orgId: query.orgId }, 'execute');
 
     const sentKeys = await this.loadSentKeys(query.orgId, query.periodStart);
     const crossings = collectCrossings(query.targets, sentKeys);

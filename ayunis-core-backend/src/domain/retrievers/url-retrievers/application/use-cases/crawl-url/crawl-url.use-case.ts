@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import pLimit from 'p-limit';
-import { RetrieveUrlUseCase } from '../retrieve-url/retrieve-url.use-case';
-import { RetrieveUrlCommand } from '../retrieve-url/retrieve-url.command';
+import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
+import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import {
   UrlCrawlPage,
@@ -20,11 +19,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
  */
 @Injectable()
 export class CrawlUrlUseCase {
-  constructor(
-    @InjectPinoLogger(CrawlUrlUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
-  ) {}
+  private readonly logger = new Logger(CrawlUrlUseCase.name);
+
+  constructor(private readonly retrieveUrlUseCase: RetrieveUrlUseCase) {}
 
   async execute(command: CrawlUrlCommand): Promise<UrlCrawlResult> {
     const maxDepth = this.clampDepth(command.maxDepth);

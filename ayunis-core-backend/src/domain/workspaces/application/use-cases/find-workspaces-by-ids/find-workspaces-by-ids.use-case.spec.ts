@@ -1,6 +1,5 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
-import type { WorkspacesRepository } from '../../ports/workspaces-repository.port';
+import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { FindWorkspacesByIdsQuery } from './find-workspaces-by-ids.query';
 import { FindWorkspacesByIdsUseCase } from './find-workspaces-by-ids.use-case';
 
@@ -13,10 +12,7 @@ describe('FindWorkspacesByIdsUseCase', () => {
     const repository = {
       findAllByIds: jest.fn().mockResolvedValue(workspaces),
     } as unknown as WorkspacesRepository;
-    const useCase = new FindWorkspacesByIdsUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    const useCase = new FindWorkspacesByIdsUseCase(repository);
 
     await expect(
       useCase.execute(new FindWorkspacesByIdsQuery(USER_ID, [WORKSPACE_ID])),

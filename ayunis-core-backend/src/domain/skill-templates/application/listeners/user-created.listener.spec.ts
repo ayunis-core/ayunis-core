@@ -1,6 +1,5 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SkillTemplateUserCreatedListener } from './user-created.listener';
-import type { SkillTemplateInstallationService } from '../services/skill-template-installation.service';
+import type { SkillTemplateInstallationService } from 'src/domain/skill-templates/application/services/skill-template-installation.service';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -29,10 +28,7 @@ describe('SkillTemplateUserCreatedListener', () => {
       installAllPreCreatedForUser: jest.fn().mockResolvedValue(2),
     } as unknown as jest.Mocked<SkillTemplateInstallationService>;
 
-    listener = new SkillTemplateUserCreatedListener(
-      createPinoLoggerMock(),
-      installationService,
-    );
+    listener = new SkillTemplateUserCreatedListener(installationService);
   });
 
   it('should call installAllPreCreatedForUser with the user ID', async () => {

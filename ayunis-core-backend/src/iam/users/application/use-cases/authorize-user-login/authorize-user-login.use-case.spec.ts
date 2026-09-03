@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { UserAuthenticationFailedError } from 'src/iam/users/application/users.errors';
 import {
@@ -14,7 +13,6 @@ describe(AuthorizeUserLoginUseCase.name, () => {
     resetFailedLoginAttempts: jest.fn(),
   };
   const useCase = new AuthorizeUserLoginUseCase(
-    createPinoLoggerMock(),
     usersRepository as unknown as UsersRepository,
   );
 

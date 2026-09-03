@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { HasUsageForModelQuery } from 'src/domain/usage/application/use-cases/has-usage-for-model/has-usage-for-model.query';
 import { HasUsageForModelUseCase } from 'src/domain/usage/application/use-cases/has-usage-for-model/has-usage-for-model.use-case';
@@ -8,17 +7,16 @@ import {
   ModelReferencedByUsageError,
   ModelStillPermittedError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { ModelsRepository } from '../../ports/models.repository';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+} from 'src/domain/models/application/models.errors';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { DeleteModelCommand } from './delete-model.command';
 
 @Injectable()
 export class DeleteModelUseCase {
-  constructor(
-    @InjectPinoLogger(DeleteModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(DeleteModelUseCase.name);
 
+  constructor(
     private readonly modelsRepository: ModelsRepository,
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly hasUsageForModelUseCase: HasUsageForModelUseCase,
@@ -26,7 +24,7 @@ export class DeleteModelUseCase {
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: DeleteModelCommand): Promise<void> {
-    this.logger.info({ modelId: command.id }, 'Deleting catalog model');
+    this.logger.log({ modelId: command.id }, 'Deleting catalog model');
 
     await this.modelsRepository.withCatalogModelLocked(
       command.id,

@@ -8,10 +8,7 @@ describe(DiscoverOrgSsoUseCase.name, () => {
   it('returns only the non-secret routing identifier for an enabled connection', async () => {
     const repository = createMockOrgSsoConnectionsRepository();
     repository.findByEmailDomain.mockResolvedValue(anEnabledSsoConnection());
-    const useCase = new DiscoverOrgSsoUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    const useCase = new DiscoverOrgSsoUseCase(repository);
 
     await expect(
       useCase.execute(new DiscoverOrgSsoQuery('Staff@Demo.com')),
@@ -28,10 +25,7 @@ describe(DiscoverOrgSsoUseCase.name, () => {
   ])('does not discover an %s connection', async (_case, connection) => {
     const repository = createMockOrgSsoConnectionsRepository();
     repository.findByEmailDomain.mockResolvedValue(connection);
-    const useCase = new DiscoverOrgSsoUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    const useCase = new DiscoverOrgSsoUseCase(repository);
 
     await expect(
       useCase.execute(new DiscoverOrgSsoQuery('staff@unknown.example')),
@@ -42,7 +36,6 @@ describe(DiscoverOrgSsoUseCase.name, () => {
     'rejects malformed email routing input %s',
     async (email) => {
       const useCase = new DiscoverOrgSsoUseCase(
-        createPinoLoggerMock(),
         createMockOrgSsoConnectionsRepository(),
       );
 
@@ -52,4 +45,3 @@ describe(DiscoverOrgSsoUseCase.name, () => {
     },
   );
 });
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';

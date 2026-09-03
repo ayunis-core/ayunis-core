@@ -1,5 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
@@ -7,16 +5,16 @@ import { randomUUID } from 'crypto';
 import { CreateMcpIntegrationUseCase } from './create-mcp-integration.use-case';
 import { CreatePredefinedMcpIntegrationCommand } from './create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from './create-custom-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { PredefinedMcpIntegrationRegistry } from 'src/domain/mcp/application/registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
-import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
-import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { McpConfigService } from '../../services/mcp-config.service';
-import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
+import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import type { ValidateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
+import { ConnectionValidationService } from 'src/domain/mcp/application/services/connection-validation.service';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
+import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
 import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -36,7 +34,7 @@ import {
   InvalidPredefinedSlugError,
   InvalidServerUrlError,
   McpMissingRequiredConfigError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 
 describe('CreateMcpIntegrationUseCase', () => {
   let useCase: CreateMcpIntegrationUseCase;
@@ -160,11 +158,6 @@ describe('CreateMcpIntegrationUseCase', () => {
         {
           provide: McpOAuthClientConfigurationService,
           useValue: oauthClientConfiguration,
-        },
-
-        {
-          provide: getLoggerToken(CreateMcpIntegrationUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

@@ -1,25 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { ListTeamMembersQuery } from './list-team-members.query';
-import { TeamMember } from '../../../domain/team-member.entity';
-import { UnexpectedTeamError } from '../../teams.errors';
+import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { GetTeamUseCase } from '../get-team/get-team.use-case';
-import { GetTeamQuery } from '../get-team/get-team.query';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
+import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class ListTeamMembersUseCase {
+  private readonly logger = new Logger(ListTeamMembersUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ListTeamMembersUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
 
   async execute(query: ListTeamMembersQuery): Promise<Paginated<TeamMember>> {
-    this.logger.info({ teamId: query.teamId }, 'execute');
+    this.logger.log({ teamId: query.teamId }, 'execute');
 
     try {
       await this.getTeamUseCase.execute(new GetTeamQuery(query.teamId));

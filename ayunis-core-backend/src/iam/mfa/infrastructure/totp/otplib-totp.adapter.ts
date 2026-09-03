@@ -1,23 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
-import type { OtpauthUriParams } from '../../application/ports/totp.port';
-import { TotpPort } from '../../application/ports/totp.port';
-import { TOTP_ISSUER, TOTP_WINDOW } from '../../domain/mfa.constants';
+import type { OtpauthUriParams } from 'src/iam/mfa/application/ports/totp.port';
+import { TotpPort } from 'src/iam/mfa/application/ports/totp.port';
+import { TOTP_ISSUER, TOTP_WINDOW } from 'src/iam/mfa/domain/mfa.constants';
 
 const TOTP_CODE_PATTERN = /^\d{6}$/;
 
 @Injectable()
 export class OtplibTotpAdapter extends TotpPort {
+  private readonly logger = new Logger(OtplibTotpAdapter.name);
+
   private readonly authenticator = authenticator.clone({
     window: TOTP_WINDOW,
   });
 
-  constructor(
-    @InjectPinoLogger(OtplibTotpAdapter.name)
-    private readonly logger: PinoLogger,
-  ) {
+  constructor() {
     super();
   }
 

@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID, type UUID } from 'crypto';
 import type { DeleteMessageUseCase } from 'src/domain/messages/application/use-cases/delete-message/delete-message.use-case';
 import type { DeleteMessageCommand } from 'src/domain/messages/application/use-cases/delete-message/delete-message.command';
@@ -19,7 +18,6 @@ describe('MessageCleanupService', () => {
     const service = new MessageCleanupService(
       {} as FindThreadUseCase,
       deleteMessageUseCase as unknown as DeleteMessageUseCase,
-      createPinoLoggerMock(),
     );
     const firstToolCallId = 'lookup-permit';
     const orphanedToolCallId = 'fetch-owner';
@@ -53,7 +51,6 @@ describe('MessageCleanupService', () => {
     const service = new MessageCleanupService(
       {} as FindThreadUseCase,
       deleteMessageUseCase as unknown as DeleteMessageUseCase,
-      createPinoLoggerMock(),
     );
     const toolCallId = 'lookup-permit';
     const userMessage = userText('Find permit B-2026-184.');

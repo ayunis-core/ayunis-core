@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class UserCreatedEventPublisher {
-  constructor(
-    @InjectPinoLogger(UserCreatedEventPublisher.name)
-    private readonly logger: PinoLogger,
-    private readonly eventEmitter: EventEmitter2,
-  ) {}
+  private readonly logger = new Logger(UserCreatedEventPublisher.name);
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
   publish(user: User): void {
     this.eventEmitter

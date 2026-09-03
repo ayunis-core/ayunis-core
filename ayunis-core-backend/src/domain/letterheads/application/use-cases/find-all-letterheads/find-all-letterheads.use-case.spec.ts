@@ -1,10 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { FindAllLetterheadsUseCase } from './find-all-letterheads.use-case';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
@@ -33,10 +31,6 @@ describe('FindAllLetterheadsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllLetterheadsUseCase,
-        {
-          provide: getLoggerToken(FindAllLetterheadsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -95,10 +89,6 @@ describe('FindAllLetterheadsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllLetterheadsUseCase,
-        {
-          provide: getLoggerToken(FindAllLetterheadsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

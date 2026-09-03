@@ -1,14 +1,12 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { GetKnowledgeBasesByIdsUseCase } from './get-knowledge-bases-by-ids.use-case';
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -26,10 +24,6 @@ describe('GetKnowledgeBasesByIdsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetKnowledgeBasesByIdsUseCase,
-        {
-          provide: getLoggerToken(GetKnowledgeBasesByIdsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: KnowledgeBaseRepository,
           useValue: {

@@ -10,8 +10,8 @@ import {
   Res,
   StreamableFile,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -58,11 +58,11 @@ import { ArtifactDtoMapper } from './mappers/artifact-dto.mapper';
 @ApiTags('artifacts')
 @Controller('artifacts')
 export class ArtifactsController {
+  private readonly logger = new Logger(ArtifactsController.name);
+
   // NestJS injects each use case explicitly to keep the HTTP adapter composition visible.
   // eslint-disable-next-line max-params
   constructor(
-    @InjectPinoLogger(ArtifactsController.name)
-    private readonly logger: PinoLogger,
     private readonly createArtifactUseCase: CreateArtifactUseCase,
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
@@ -82,7 +82,7 @@ export class ArtifactsController {
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   async create(@Body() dto: CreateArtifactDto): Promise<ArtifactResponseDto> {
-    this.logger.info({ threadId: dto.threadId }, 'create');
+    this.logger.log({ threadId: dto.threadId }, 'create');
     const artifact = await this.createArtifactUseCase.execute(
       new CreateArtifactCommand({
         threadId: dto.threadId,
@@ -118,7 +118,7 @@ export class ArtifactsController {
     @Body() dto: UpdateArtifactDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ArtifactVersionResponseDto | void> {
-    this.logger.info({ artifactId: id }, 'update');
+    this.logger.log({ artifactId: id }, 'update');
     const result = await this.updateArtifactUseCase.execute(
       new UpdateArtifactCommand({
         artifactId: id,
@@ -150,7 +150,7 @@ export class ArtifactsController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<ArtifactResponseDto> {
-    this.logger.info({ id }, 'findOne');
+    this.logger.log({ id }, 'findOne');
     const artifact = await this.findArtifactWithVersionsUseCase.execute(
       new FindArtifactWithVersionsQuery({ artifactId: id }),
     );
@@ -173,7 +173,7 @@ export class ArtifactsController {
   async findByThread(
     @Param('threadId', ParseUUIDPipe) threadId: UUID,
   ): Promise<ArtifactResponseDto[]> {
-    this.logger.info({ threadId }, 'findByThread');
+    this.logger.log({ threadId }, 'findByThread');
     const artifacts = await this.findArtifactsByThreadUseCase.execute(
       new FindArtifactsByThreadQuery({ threadId }),
     );
@@ -202,7 +202,7 @@ export class ArtifactsController {
     @Param('workspaceId', ParseUUIDPipe) workspaceId: UUID,
     @Query() queryParams: FindArtifactsByWorkspaceQueryParamsDto,
   ): Promise<ArtifactListResponseDto> {
-    this.logger.info({ workspaceId }, 'findByWorkspace');
+    this.logger.log({ workspaceId }, 'findByWorkspace');
     const pagination = queryParams.toPagination();
     const page = await this.findArtifactsByWorkspaceUseCase.execute(
       new FindArtifactsByWorkspaceQuery({
@@ -246,7 +246,7 @@ export class ArtifactsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: RevertArtifactDto,
   ): Promise<ArtifactVersionResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         artifactId: id,
         versionNumber: dto.versionNumber,
@@ -293,7 +293,7 @@ export class ArtifactsController {
     @Query() query: ExportArtifactQueryDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.info({ artifactId: id, format: query.format }, 'export');
+    this.logger.log({ artifactId: id, format: query.format }, 'export');
     const result = await this.exportArtifactUseCase.execute(
       new ExportArtifactCommand({
         artifactId: id,

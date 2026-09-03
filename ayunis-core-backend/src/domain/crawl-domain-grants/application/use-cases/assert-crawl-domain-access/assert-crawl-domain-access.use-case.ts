@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
+import { CrawlDomainGrantRepository } from 'src/domain/crawl-domain-grants/application/ports/crawl-domain-grant.repository';
 import {
   CrawlDomainAccessDeniedError,
   UnexpectedCrawlDomainGrantError,
-} from '../../crawl-domain-grants.errors';
+} from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 import { AssertCrawlDomainAccessCommand } from './assert-crawl-domain-access.command';
 import { normalizeHost } from 'src/domain/crawl-domain-grants/domain/crawl-domain.util';
 import { InvalidCrawlDomainError } from 'src/domain/crawl-domain-grants/domain/crawl-domain.errors';
@@ -19,9 +18,9 @@ import { InvalidCrawlDomainError } from 'src/domain/crawl-domain-grants/domain/c
  */
 @Injectable()
 export class AssertCrawlDomainAccessUseCase {
+  private readonly logger = new Logger(AssertCrawlDomainAccessUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AssertCrawlDomainAccessUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly crawlDomainGrantRepository: CrawlDomainGrantRepository,
   ) {}
 

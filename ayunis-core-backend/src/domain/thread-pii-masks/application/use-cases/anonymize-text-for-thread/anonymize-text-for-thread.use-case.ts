@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
@@ -29,9 +28,9 @@ export interface ThreadAnonymizationResult extends AnonymizationResult {
  */
 @Injectable()
 export class AnonymizeTextForThreadUseCase {
+  private readonly logger = new Logger(AnonymizeTextForThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AnonymizeTextForThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: ThreadPiiMaskRepository,
     private readonly getPiiWhitelistUseCase: GetPiiWhitelistUseCase,
     private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,

@@ -1,27 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
 import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   QuizQuestionNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
-import { assertValidQuizOptions } from '../../util/quiz-question-validation';
+} from 'src/domain/academy/application/academy.errors';
+import { assertValidQuizOptions } from 'src/domain/academy/application/util/quiz-question-validation';
 import { UpdateQuizQuestionCommand } from './update-quiz-question.command';
 
 @Injectable()
 export class UpdateQuizQuestionUseCase {
+  private readonly logger = new Logger(UpdateQuizQuestionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateQuizQuestionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly quizQuestionRepository: AcademyQuizQuestionRepository,
   ) {}
 
   async execute(
     command: UpdateQuizQuestionCommand,
   ): Promise<AcademyQuizQuestion> {
-    this.logger.info(
+    this.logger.log(
       {
         quizQuestionId: command.quizQuestionId,
       },

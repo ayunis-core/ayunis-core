@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,12 +10,12 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { ToggleSkillActiveUseCase } from './toggle-skill-active.use-case';
 import { ToggleSkillActiveCommand } from './toggle-skill-active.command';
-import { SkillRepository } from '../../ports/skill.repository';
-import { SkillAccessService } from '../../services/skill-access.service';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
-import { SkillNotFoundError } from '../../skills.errors';
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 
 describe('ToggleSkillActiveUseCase', () => {
   let useCase: ToggleSkillActiveUseCase;
@@ -64,10 +62,6 @@ describe('ToggleSkillActiveUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ToggleSkillActiveUseCase,
-        {
-          provide: getLoggerToken(ToggleSkillActiveUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: SkillAccessService, useValue: mockSkillAccessService },
         { provide: ContextService, useValue: mockContextService },

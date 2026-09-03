@@ -12,8 +12,8 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import * as fs from 'fs';
 import {
@@ -82,6 +82,8 @@ const DocumentUploadInterceptor = createDocumentUploadInterceptor(
 @Controller('workspaces/:id/context')
 @RequireFeature(FeatureFlag.Workspaces)
 export class WorkspaceContextController {
+  private readonly logger = new Logger(WorkspaceContextController.name);
+
   constructor(
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
     private readonly attachSkillToWorkspaceUseCase: AttachSkillToWorkspaceUseCase,
@@ -98,8 +100,6 @@ export class WorkspaceContextController {
     private readonly listWorkspaceDocumentsUseCase: ListWorkspaceDocumentsUseCase,
     private readonly contextDtoMapper: WorkspaceContextDtoMapper,
     private readonly workspaceDtoMapper: WorkspaceDtoMapper,
-    @InjectPinoLogger(WorkspaceContextController.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   @Get()

@@ -1,19 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { ToggleSkillActiveCommand } from './toggle-skill-active.command';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnexpectedSkillError } from '../../skills.errors';
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SkillAccessService } from '../../services/skill-access.service';
+import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 
 @Injectable()
 export class ToggleSkillActiveUseCase {
+  private readonly logger = new Logger(ToggleSkillActiveUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ToggleSkillActiveUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly skillAccessService: SkillAccessService,
     private readonly contextService: ContextService,
@@ -26,7 +25,7 @@ export class ToggleSkillActiveUseCase {
     isPinned: boolean;
     isShared: boolean;
   }> {
-    this.logger.info({ skillId: command.skillId }, 'Toggling skill active');
+    this.logger.log({ skillId: command.skillId }, 'Toggling skill active');
     try {
       // findAccessibleSkill validates userId and throws UnauthorizedAccessError
       const skill = await this.skillAccessService.findAccessibleSkill(

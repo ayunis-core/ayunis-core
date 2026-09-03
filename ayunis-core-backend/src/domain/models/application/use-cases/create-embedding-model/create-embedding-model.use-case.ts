@@ -1,25 +1,22 @@
 import { CreateEmbeddingModelCommand } from './create-embedding-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import {
   ModelAlreadyExistsError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+} from 'src/domain/models/application/models.errors';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class CreateEmbeddingModelUseCase {
-  constructor(
-    @InjectPinoLogger(CreateEmbeddingModelUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly modelsRepository: ModelsRepository,
-  ) {}
+  private readonly logger = new Logger(CreateEmbeddingModelUseCase.name);
+
+  constructor(private readonly modelsRepository: ModelsRepository) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: CreateEmbeddingModelCommand): Promise<EmbeddingModel> {
-    this.logger.info(
+    this.logger.log(
       {
         name: command.name,
         provider: command.provider,

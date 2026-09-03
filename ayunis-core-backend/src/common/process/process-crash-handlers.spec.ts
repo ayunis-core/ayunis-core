@@ -1,5 +1,5 @@
 import { Appsignal, sendError } from '@appsignal/nodejs';
-import { createPinoLoggerMock } from '../testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { ProcessCrashHandlers } from './process-crash-handlers';
 
 jest.mock('@appsignal/nodejs', () => ({
@@ -13,12 +13,12 @@ const stopMock = Appsignal.client.stop as jest.Mock;
 
 describe('ProcessCrashHandlers', () => {
   let handlers: ProcessCrashHandlers;
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let exitSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    handlers = new ProcessCrashHandlers(logger);
+    handlers = new ProcessCrashHandlers();
     logger.error.mockReset();
     exitSpy = jest
       .spyOn(process, 'exit')

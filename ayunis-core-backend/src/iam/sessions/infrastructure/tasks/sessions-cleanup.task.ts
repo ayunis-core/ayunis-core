@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { RefreshTokensRepository } from '../../application/ports/refresh-tokens.repository';
+import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 
 /**
  * Nightly job that deletes expired refresh tokens. Runs at 5 AM. Deletes
@@ -12,11 +11,11 @@ import { RefreshTokensRepository } from '../../application/ports/refresh-tokens.
  */
 @Injectable()
 export class SessionsCleanupTask {
+  private readonly logger = new Logger(SessionsCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
-    @InjectPinoLogger(SessionsCleanupTask.name)
-    private readonly logger: PinoLogger,
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
@@ -30,13 +29,13 @@ export class SessionsCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.info('Starting scheduled sessions cleanup');
+    this.logger.log('Starting scheduled sessions cleanup');
 
     try {
       const deleted = await this.refreshTokensRepository.deleteExpired(
         new Date(),
       );
-      this.logger.info({ deleted }, 'Scheduled sessions cleanup completed');
+      this.logger.log({ deleted }, 'Scheduled sessions cleanup completed');
     } catch (error) {
       this.logger.error(
         { err: error as Error },

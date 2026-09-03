@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { UpdatePasswordCommand } from './update-password.command';
@@ -22,10 +21,9 @@ import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class UpdatePasswordUseCase {
-  // eslint-disable-next-line max-params -- NestJS injects these explicit collaborators.
+  private readonly logger = new Logger(UpdatePasswordUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdatePasswordUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly compareHashUseCase: CompareHashUseCase,
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
@@ -35,7 +33,7 @@ export class UpdatePasswordUseCase {
 
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: UpdatePasswordCommand): Promise<void> {
-    this.logger.info({ userId: command.userId }, 'updatePassword');
+    this.logger.log({ userId: command.userId }, 'updatePassword');
 
     if (command.newPassword !== command.newPasswordConfirmation) {
       throw new UserInvalidInputError('Passwords do not match');

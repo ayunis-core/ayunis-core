@@ -1,4 +1,4 @@
-import type { PinoLogger } from 'nestjs-pino';
+import type { Logger } from '@nestjs/common';
 import type { Job, JobsOptions, Queue } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -174,7 +174,7 @@ function shouldScheduleRetry(
 export async function cancelQueueJob(
   queue: Queue,
   sourceId: UUID,
-  logger: PinoLogger,
+  logger: Logger,
 ): Promise<void> {
   try {
     const job = await queue.getJob(sourceId);
@@ -190,7 +190,7 @@ export async function cancelQueueJob(
     }
 
     await job.remove();
-    logger.info({ sourceId, state }, 'Cancelled queued job');
+    logger.log({ sourceId, state }, 'Cancelled queued job');
   } catch (err) {
     logger.warn(
       {

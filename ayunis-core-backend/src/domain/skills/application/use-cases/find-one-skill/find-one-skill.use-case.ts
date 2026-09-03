@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillRepository } from '../../ports/skill.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindOneSkillQuery } from './find-one-skill.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
@@ -20,16 +22,16 @@ export interface SkillWithUserContext {
 
 @Injectable()
 export class FindOneSkillUseCase {
+  private readonly logger = new Logger(FindOneSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindOneSkillUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: FindOneSkillQuery): Promise<SkillWithUserContext> {
-    this.logger.info({ id: query.id }, 'Finding skill');
+    this.logger.log({ id: query.id }, 'Finding skill');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {

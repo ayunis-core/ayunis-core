@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { Observable, Subject } from 'rxjs';
 import { ExecuteOpenAIChatCompletionUseCase } from './execute-openai-chat-completion.use-case';
@@ -90,7 +89,6 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
     } as unknown as jest.Mocked<OpenAIFileContentService>;
 
     useCase = new ExecuteOpenAIChatCompletionUseCase(
-      createPinoLoggerMock(),
       getPermittedLanguageModelsUseCase,
       getInferenceUseCase,
       streamInferenceUseCase,

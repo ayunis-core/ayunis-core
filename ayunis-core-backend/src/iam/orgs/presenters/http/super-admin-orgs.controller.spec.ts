@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SYSTEM_ROLES_KEY } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { CreateOrgCommand } from 'src/iam/orgs/application/use-cases/create-org/create-org.command';
@@ -17,7 +16,6 @@ function createController() {
   const updateOrg = { execute: jest.fn() };
   return {
     controller: new SuperAdminOrgsController(
-      createPinoLoggerMock(),
       getAllOrgs as never,
       new SuperAdminOrgResponseDtoMapper(),
       findOrgById as never,

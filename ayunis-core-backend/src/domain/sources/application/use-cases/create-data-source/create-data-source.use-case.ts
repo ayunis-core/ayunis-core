@@ -2,31 +2,28 @@ import {
   CSVDataSource,
   DataSource,
 } from 'src/domain/sources/domain/sources/data-source.entity';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import {
   CreateDataSourceCommand,
   CreateCSVDataSourceCommand,
 } from './create-data-source.command';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   InvalidSourceTypeError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateDataSourceUseCase {
-  constructor(
-    @InjectPinoLogger(CreateDataSourceUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(CreateDataSourceUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   async execute(command: CreateCSVDataSourceCommand): Promise<CSVDataSource>;
   async execute(command: CreateDataSourceCommand): Promise<DataSource>;
   async execute(command: CreateDataSourceCommand): Promise<DataSource> {
-    this.logger.info(
+    this.logger.log(
       {
         name:
           command instanceof CreateCSVDataSourceCommand

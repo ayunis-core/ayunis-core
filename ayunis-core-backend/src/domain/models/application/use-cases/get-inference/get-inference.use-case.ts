@@ -1,34 +1,32 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { GetInferenceCommand } from './get-inference.command';
-import { InferenceHandlerRegistry } from '../../registry/inference-handler.registry';
+import { InferenceHandlerRegistry } from 'src/domain/models/application/registry/inference-handler.registry';
 import {
   InferenceInput,
   InferenceResponse,
-} from '../../ports/inference.handler';
+} from 'src/domain/models/application/ports/inference.handler';
 import {
   InferenceFailedError,
   InferenceTokenLimitError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { extractProviderErrorDiagnostics } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
+import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 
 @Injectable()
 export class GetInferenceUseCase {
-  constructor(
-    @InjectPinoLogger(GetInferenceUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(GetInferenceUseCase.name);
 
+  constructor(
     private readonly inferenceHandlerRegistry: InferenceHandlerRegistry,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: GetInferenceCommand): Promise<InferenceResponse> {
-    this.logger.info(
+    this.logger.log(
       {
         model: command.model.name,
         messageCount: command.messages.length,

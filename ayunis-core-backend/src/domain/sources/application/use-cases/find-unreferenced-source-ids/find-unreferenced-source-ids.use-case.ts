@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { FindUnreferencedSourceIdsQuery } from './find-unreferenced-source-ids.query';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 // Centralises cross-module reachability in the sources domain: callers pass
@@ -12,14 +11,12 @@ import { ApplicationError } from 'src/common/errors/base.error';
 // agent schema knowledge out of other modules' adapters.
 @Injectable()
 export class FindUnreferencedSourceIdsUseCase {
-  constructor(
-    @InjectPinoLogger(FindUnreferencedSourceIdsUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(FindUnreferencedSourceIdsUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   async execute(query: FindUnreferencedSourceIdsQuery): Promise<UUID[]> {
-    this.logger.info(
+    this.logger.log(
       {
         candidateCount: query.candidateIds.length,
         olderThan: query.olderThan,

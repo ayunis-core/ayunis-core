@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SourceRepository } from '../../ports/source.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { QueryTextSourceCommand } from './query-text-source.command';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { SearchContentQuery } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.query';
@@ -9,9 +8,9 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 
 @Injectable()
 export class QueryTextSourceUseCase {
+  private readonly logger = new Logger(QueryTextSourceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(QueryTextSourceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly sourceRepository: SourceRepository,
     private readonly searchContentUseCase: SearchContentUseCase,
   ) {}
@@ -23,7 +22,7 @@ export class QueryTextSourceUseCase {
       sourceId: command.filter.sourceId,
       text: command.query,
     };
-    this.logger.info({ orgId: command.orgId, ...logContext }, 'execute');
+    this.logger.log({ orgId: command.orgId, ...logContext }, 'execute');
     // Validate input
     if (!command.query || command.query.trim().length === 0) {
       this.logger.warn('Empty query provided for vector search');

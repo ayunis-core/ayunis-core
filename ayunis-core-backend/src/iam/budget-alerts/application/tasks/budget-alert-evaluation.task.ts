@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { checkIn } from '@appsignal/nodejs';
 
 import { ListUsageBasedSubscriptionOrgIdsUseCase } from 'src/iam/subscriptions/application/use-cases/list-usage-based-subscription-org-ids/list-usage-based-subscription-org-ids.use-case';
 
-import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service';
+import { BudgetAlertEvaluator } from 'src/iam/budget-alerts/application/services/budget-alert-evaluator.service';
 
 /**
  * Daily safety net behind the event-driven evaluation (BudgetAlertsListener).
@@ -18,16 +17,16 @@ import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service
  */
 @Injectable()
 export class BudgetAlertEvaluationTask {
+  private readonly logger = new Logger(BudgetAlertEvaluationTask.name);
+
   constructor(
-    @InjectPinoLogger(BudgetAlertEvaluationTask.name)
-    private readonly logger: PinoLogger,
     private readonly listUsageBasedSubscriptionOrgIdsUseCase: ListUsageBasedSubscriptionOrgIdsUseCase,
     private readonly budgetAlertEvaluator: BudgetAlertEvaluator,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_7AM)
   async handleDailyEvaluation(): Promise<void> {
-    this.logger.info('Running daily budget alert evaluation sweep');
+    this.logger.log('Running daily budget alert evaluation sweep');
     try {
       await checkIn.cron('budget_alert_evaluation', async () => {
         const orgIds =

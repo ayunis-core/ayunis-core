@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
@@ -26,7 +25,7 @@ describe('UnmaskThreadPiiMaskUseCase', () => {
   beforeEach(() => {
     findByThreadId = jest.fn().mockResolvedValue([]);
     saveMany = jest.fn().mockResolvedValue(undefined);
-    useCase = new UnmaskThreadPiiMaskUseCase(createPinoLoggerMock(), {
+    useCase = new UnmaskThreadPiiMaskUseCase({
       findByThreadId,
       saveMany,
     });

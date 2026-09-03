@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -10,9 +9,11 @@ import { AnonymizationWhitelistEntryMapper } from './mappers/anonymization-white
 
 @Injectable()
 export class PostgresAnonymizationWhitelistRepository extends AnonymizationWhitelistRepository {
+  private readonly logger = new Logger(
+    PostgresAnonymizationWhitelistRepository.name,
+  );
+
   constructor(
-    @InjectPinoLogger(PostgresAnonymizationWhitelistRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(AnonymizationWhitelistEntryRecord)
     private readonly repository: Repository<AnonymizationWhitelistEntryRecord>,
   ) {

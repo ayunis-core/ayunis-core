@@ -1,23 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { CreateProcessingUrlSourceUseCase } from '../create-processing-url-source/create-processing-url-source.use-case';
-import { CreateProcessingUrlSourceCommand } from '../create-processing-url-source/create-processing-url-source.command';
-import { MarkSourceFailedUseCase } from '../mark-source-failed/mark-source-failed.use-case';
-import { MarkSourceFailedCommand } from '../mark-source-failed/mark-source-failed.command';
-import { EnqueueUrlCrawlUseCase } from '../enqueue-url-crawl/enqueue-url-crawl.use-case';
-import { EnqueueUrlCrawlCommand } from '../enqueue-url-crawl/enqueue-url-crawl.command';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { CreateProcessingUrlSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
+import { CreateProcessingUrlSourceCommand } from 'src/domain/sources/application/use-cases/create-processing-url-source/create-processing-url-source.command';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
+import { EnqueueUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
+import { EnqueueUrlCrawlCommand } from 'src/domain/sources/application/use-cases/enqueue-url-crawl/enqueue-url-crawl.command';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { StartUrlCrawlCommand } from './start-url-crawl.command';
 
 @Injectable()
 export class StartUrlCrawlUseCase {
+  private readonly logger = new Logger(StartUrlCrawlUseCase.name);
+
   constructor(
-    @InjectPinoLogger(StartUrlCrawlUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly createProcessingUrlSourceUseCase: CreateProcessingUrlSourceUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
     private readonly enqueueUrlCrawlUseCase: EnqueueUrlCrawlUseCase,
@@ -25,7 +24,7 @@ export class StartUrlCrawlUseCase {
   ) {}
 
   async execute(command: StartUrlCrawlCommand): Promise<UrlSource> {
-    this.logger.info(
+    this.logger.log(
       { maxDepth: command.maxDepth, url: command.url },
       'Starting async URL crawl',
     );

@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
@@ -11,16 +10,16 @@ import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.erro
 
 @Injectable()
 export class AddMcpIntegrationToThreadUseCase {
+  private readonly logger = new Logger(AddMcpIntegrationToThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddMcpIntegrationToThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
   ) {}
 
   async execute(command: AddMcpIntegrationToThreadCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.threadId,
         mcpIntegrationId: command.mcpIntegrationId,

@@ -1,20 +1,19 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { Request, Response } from 'express';
-import { RefreshTokenUseCase } from '../use-cases/refresh-token/refresh-token.use-case';
-import { RefreshTokenCommand } from '../use-cases/refresh-token/refresh-token.command';
+import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RefreshTokenCommand } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.command';
 import { ConfigService } from '@nestjs/config';
 import { setCookies, clearCookies } from 'src/common/util/cookie.util';
 import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
+  private readonly logger = new Logger(JwtAuthGuard.name);
+
   constructor(
-    @InjectPinoLogger(JwtAuthGuard.name)
-    private readonly logger: PinoLogger,
     private reflector: Reflector,
     private refreshTokenUseCase: RefreshTokenUseCase,
     private configService: ConfigService,

@@ -1,24 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UpdateTeamCommand } from './update-team.command';
-import { TeamsRepository } from '../../ports/teams.repository';
-import { Team } from '../../../domain/team.entity';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import { Team } from 'src/iam/teams/domain/team.entity';
 import {
   TeamInvalidInputError,
   TeamNameAlreadyExistsError,
   TeamNotFoundError,
   UnexpectedTeamError,
-} from '../../teams.errors';
+} from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class UpdateTeamUseCase {
+  private readonly logger = new Logger(UpdateTeamUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateTeamUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -32,7 +31,7 @@ export class UpdateTeamUseCase {
 
     const trimmedName = command.name.trim() || '';
 
-    this.logger.info(
+    this.logger.log(
       {
         teamId: command.teamId,
         name: trimmedName,

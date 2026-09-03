@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { ListOpenAIModelsUseCase } from './list-openai-models.use-case';
 import { ListOpenAIModelsQuery } from './list-openai-models.query';
 import type { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
@@ -7,13 +7,13 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { OpenAIUnexpectedError } from '../../openai-compat.errors';
-import { OpenAIModelMapper } from '../../mappers/openai-model.mapper';
+import { OpenAIUnexpectedError } from 'src/domain/openai-compat/application/openai-compat.errors';
+import { OpenAIModelMapper } from 'src/domain/openai-compat/application/mappers/openai-model.mapper';
 
 describe('ListOpenAIModelsUseCase', () => {
   let useCase: ListOpenAIModelsUseCase;
   let getPermittedLanguageModelsUseCase: jest.Mocked<GetPermittedLanguageModelsUseCase>;
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
 
   const orgId = randomUUID();
 
@@ -36,13 +36,12 @@ describe('ListOpenAIModelsUseCase', () => {
     new PermittedLanguageModel({ model, orgId });
 
   beforeEach(() => {
-    logger.info.mockReset();
+    logger.log.mockReset();
     getPermittedLanguageModelsUseCase = {
       execute: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<GetPermittedLanguageModelsUseCase>;
 
     useCase = new ListOpenAIModelsUseCase(
-      logger,
       getPermittedLanguageModelsUseCase,
       new OpenAIModelMapper(),
     );
@@ -62,7 +61,7 @@ describe('ListOpenAIModelsUseCase', () => {
 
     const result = await useCase.execute(new ListOpenAIModelsQuery(orgId));
 
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       { orgId },
       'Listing OpenAI-compatible models',
     );

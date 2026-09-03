@@ -1,9 +1,8 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetIpAllowlistUseCase } from './get-ip-allowlist.use-case';
 import { GetIpAllowlistQuery } from './get-ip-allowlist.query';
-import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
+import type { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { UnexpectedIpAllowlistError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 import type { UUID } from 'crypto';
 
@@ -20,7 +19,7 @@ describe('GetIpAllowlistUseCase', () => {
       deleteByOrgId: jest.fn(),
     };
 
-    useCase = new GetIpAllowlistUseCase(createPinoLoggerMock(), repository);
+    useCase = new GetIpAllowlistUseCase(repository);
   });
 
   it('should return the allow list when one exists for the org', async () => {

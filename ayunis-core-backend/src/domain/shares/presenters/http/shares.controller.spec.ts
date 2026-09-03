@@ -1,25 +1,26 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { SharesController } from './shares.controller';
-import { CreateShareUseCase } from '../../application/use-cases/create-share/create-share.use-case';
-import { DeleteShareUseCase } from '../../application/use-cases/delete-share/delete-share.use-case';
-import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
+import { CreateShareUseCase } from 'src/domain/shares/application/use-cases/create-share/create-share.use-case';
+import { DeleteShareUseCase } from 'src/domain/shares/application/use-cases/delete-share/delete-share.use-case';
+import { GetSharesUseCase } from 'src/domain/shares/application/use-cases/get-shares/get-shares.use-case';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
 import {
   CreateSkillShareDto,
   CreateKnowledgeBaseShareDto,
 } from './dto/create-share.dto';
 import type { ShareResponseDto } from './dto/share-response.dto';
-import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
-import { SkillShare, KnowledgeBaseShare } from '../../domain/share.entity';
-import { OrgShareScope } from '../../domain/share-scope.entity';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import {
+  SkillShare,
+  KnowledgeBaseShare,
+} from 'src/domain/shares/domain/share.entity';
+import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import {
   CreateOrgSkillShareCommand,
   CreateOrgKnowledgeBaseShareCommand,
-} from '../../application/use-cases/create-share/create-share.command';
+} from 'src/domain/shares/application/use-cases/create-share/create-share.command';
 import { randomUUID } from 'crypto';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 
@@ -39,10 +40,6 @@ describe('SharesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SharesController],
       providers: [
-        {
-          provide: getLoggerToken(SharesController.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: CreateShareUseCase,
           useValue: {

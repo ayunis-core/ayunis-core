@@ -1,23 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { DeleteSkillTemplateCommand } from './delete-skill-template.command';
 import {
   SkillTemplateNotFoundError,
   UnexpectedSkillTemplateError,
-} from '../../skill-templates.errors';
+} from 'src/domain/skill-templates/application/skill-templates.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteSkillTemplateUseCase {
+  private readonly logger = new Logger(DeleteSkillTemplateUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteSkillTemplateUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   async execute(command: DeleteSkillTemplateCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         skillTemplateId: command.skillTemplateId,
       },

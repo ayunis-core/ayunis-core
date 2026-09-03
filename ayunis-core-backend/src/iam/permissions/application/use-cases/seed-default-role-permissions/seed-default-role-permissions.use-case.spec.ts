@@ -1,11 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SeedDefaultRolePermissionsUseCase } from './seed-default-role-permissions.use-case';
 import { SeedDefaultRolePermissionsCommand } from './seed-default-role-permissions.command';
-import type { RolePermissionsRepository } from '../../ports/role-permissions.repository';
+import type { RolePermissionsRepository } from 'src/iam/permissions/application/ports/role-permissions.repository';
 import {
   CONFIGURABLE_ROLES,
   DEFAULT_ROLE_PERMISSIONS,
-} from '../../../domain/default-role-permissions.constants';
+} from 'src/iam/permissions/domain/default-role-permissions.constants';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 
@@ -19,7 +18,6 @@ describe('SeedDefaultRolePermissionsUseCase', () => {
   beforeEach(() => {
     repository = { setForRole: jest.fn(), setForRoles: jest.fn() };
     useCase = new SeedDefaultRolePermissionsUseCase(
-      createPinoLoggerMock(),
       repository as unknown as RolePermissionsRepository,
     );
   });

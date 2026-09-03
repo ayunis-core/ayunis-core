@@ -1,11 +1,10 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreatePermittedModelUseCase } from './create-permitted-model.use-case';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelsRepository } from '../../ports/models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
@@ -22,14 +21,14 @@ import {
   MultipleEmbeddingModelsNotAllowedError,
   MultipleImageGenerationModelsNotAllowedError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { ModelPolicyService } from '../../services/model-policy.service';
+} from 'src/domain/models/application/models.errors';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 describe('CreatePermittedModelUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: CreatePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let modelsRepository: jest.Mocked<ModelsRepository>;
@@ -66,11 +65,6 @@ describe('CreatePermittedModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(CreatePermittedModelUseCase.name),
-          useValue: logger,
-        },
-        { provide: getLoggerToken(ModelPolicyService.name), useValue: logger },
         CreatePermittedModelUseCase,
         ModelPolicyService,
         {
@@ -97,7 +91,7 @@ describe('CreatePermittedModelUseCase', () => {
     });
 
     // Mock logger
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.error.mockImplementation();
   });
 
@@ -130,7 +124,7 @@ describe('CreatePermittedModelUseCase', () => {
       modelsRepository.findOne.mockResolvedValue(mockModel);
       permittedModelsRepository.create.mockResolvedValue(mockPermittedModel);
 
-      const logSpy = logger.info;
+      const logSpy = logger.log;
 
       // Act
       const result = await useCase.execute(command);

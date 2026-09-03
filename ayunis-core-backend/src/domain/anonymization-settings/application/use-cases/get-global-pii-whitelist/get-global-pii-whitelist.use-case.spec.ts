@@ -1,9 +1,8 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
-import type { GlobalAnonymizationWhitelistRepository } from '../../ports/global-anonymization-whitelist.repository';
-import { UnexpectedGlobalAnonymizationWhitelistError } from '../../anonymization-settings.errors';
+import type { GlobalAnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/global-anonymization-whitelist.repository';
+import { UnexpectedGlobalAnonymizationWhitelistError } from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import { GetGlobalPiiWhitelistUseCase } from './get-global-pii-whitelist.use-case';
 
 describe('GetGlobalPiiWhitelistUseCase', () => {
@@ -14,10 +13,7 @@ describe('GetGlobalPiiWhitelistUseCase', () => {
     delete: jest.fn(),
   };
 
-  const useCase = new GetGlobalPiiWhitelistUseCase(
-    createPinoLoggerMock(),
-    repository,
-  );
+  const useCase = new GetGlobalPiiWhitelistUseCase(repository);
 
   beforeEach(() => {
     jest.clearAllMocks();

@@ -1,15 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ChangeSubscriptionUseCase } from './change-subscription.use-case';
 import { ChangeSubscriptionCommand } from './change-subscription.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { SubscriptionFactory } from '../../services/subscription-factory.service';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -24,11 +22,11 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   SubscriptionNotFoundError,
   TooManyUsedSeatsError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
-import { SubscriptionCancelledEvent } from '../../events/subscription-cancelled.event';
-import type { ReplaceSubscriptionParams } from '../../ports/subscription.repository';
+import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
+import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
+import type { ReplaceSubscriptionParams } from 'src/iam/subscriptions/application/ports/subscription.repository';
 
 describe('ChangeSubscriptionUseCase', () => {
   let useCase: ChangeSubscriptionUseCase;
@@ -71,15 +69,7 @@ describe('ChangeSubscriptionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChangeSubscriptionUseCase,
-        {
-          provide: getLoggerToken(ChangeSubscriptionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         SubscriptionFactory,
-        {
-          provide: getLoggerToken(SubscriptionFactory.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SubscriptionRepository,
           useValue: {

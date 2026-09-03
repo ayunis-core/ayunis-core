@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
-import { UnexpectedAcademyError } from '../../academy.errors';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
 import { DeleteCourseModuleCommand } from './delete-course-module.command';
 
 @Injectable()
 export class DeleteCourseModuleUseCase {
+  private readonly logger = new Logger(DeleteCourseModuleUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteCourseModuleUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
 
   async execute(command: DeleteCourseModuleCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         courseModuleId: command.courseModuleId,
       },

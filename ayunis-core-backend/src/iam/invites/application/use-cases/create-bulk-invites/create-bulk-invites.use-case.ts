@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Transactional } from '@nestjs-cls/transactional';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   BulkInviteDeliveryService,
@@ -34,9 +33,9 @@ interface CreateBulkInvitesResult {
 
 @Injectable()
 export class CreateBulkInvitesUseCase {
+  private readonly logger = new Logger(CreateBulkInvitesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateBulkInvitesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
@@ -49,7 +48,7 @@ export class CreateBulkInvitesUseCase {
   async execute(
     command: CreateBulkInvitesCommand,
   ): Promise<CreateBulkInvitesResult> {
-    this.logger.info(
+    this.logger.log(
       {
         inviteCount: command.invites.length,
         orgId: command.orgId,
@@ -64,7 +63,7 @@ export class CreateBulkInvitesUseCase {
       const successCount = results.filter((result) => result.success).length;
       const failureCount = results.length - successCount;
 
-      this.logger.info(
+      this.logger.log(
         { totalCount: command.invites.length, successCount, failureCount },
         'Bulk invites completed',
       );

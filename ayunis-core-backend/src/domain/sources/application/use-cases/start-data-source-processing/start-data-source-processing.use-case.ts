@@ -1,20 +1,19 @@
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { buildMinioProcessingPath } from '../../util/minio-processing-file.helpers';
+import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { SourceRepository } from '../../ports/source.repository';
-import { SpreadsheetParserPort } from '../../ports/spreadsheet-parser.port';
-import type { DataSourceProcessingTarget } from '../../ports/data-source-processing.port';
-import { MarkSourceFailedUseCase } from '../mark-source-failed/mark-source-failed.use-case';
-import { MarkSourceFailedCommand } from '../mark-source-failed/mark-source-failed.command';
-import { EnqueueDataSourceProcessingUseCase } from '../enqueue-data-source-processing/enqueue-data-source-processing.use-case';
-import { EnqueueDataSourceProcessingCommand } from '../enqueue-data-source-processing/enqueue-data-source-processing.command';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import type { DataSourceProcessingTarget } from 'src/domain/sources/application/ports/data-source-processing.port';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
+import { EnqueueDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
+import { EnqueueDataSourceProcessingCommand } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.command';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -22,7 +21,7 @@ import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/de
 import {
   EmptyFileDataError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 import { StartDataSourceProcessingCommand } from './start-data-source-processing.command';
 
 interface SourcePlan {
@@ -40,9 +39,9 @@ interface SourcePlan {
  */
 @Injectable()
 export class StartDataSourceProcessingUseCase {
+  private readonly logger = new Logger(StartDataSourceProcessingUseCase.name);
+
   constructor(
-    @InjectPinoLogger(StartDataSourceProcessingUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly sourceRepository: SourceRepository,
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
@@ -56,7 +55,7 @@ export class StartDataSourceProcessingUseCase {
   async execute(
     command: StartDataSourceProcessingCommand,
   ): Promise<CSVDataSource[]> {
-    this.logger.info(
+    this.logger.log(
       {
         fileName: command.fileName,
         kind: command.kind,

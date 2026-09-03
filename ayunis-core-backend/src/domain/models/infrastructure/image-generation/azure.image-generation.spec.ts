@@ -1,13 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import { AzureImageGenerationHandler } from './azure.image-generation';
 import {
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../application/ports/image-generation.handler';
-import { ImageGenerationFailedError } from '../../application/models.errors';
-import { ImageGenerationModel } from '../../domain/models/image-generation.model';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
+} from 'src/domain/models/application/ports/image-generation.handler';
+import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { APIError, AzureOpenAI } from 'openai';
 
 // Mock the AzureOpenAI class
@@ -26,7 +26,7 @@ jest.mock('openai', () => {
 const mockAzureOpenAICtor = jest.mocked(AzureOpenAI);
 
 describe('AzureImageGenerationHandler', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let handler: AzureImageGenerationHandler;
   let configService: jest.Mocked<ConfigService>;
 
@@ -42,9 +42,9 @@ describe('AzureImageGenerationHandler', () => {
       get: jest.fn().mockReturnValue('mock-value'),
     } as unknown as jest.Mocked<ConfigService>;
 
-    handler = new AzureImageGenerationHandler(logger, configService);
+    handler = new AzureImageGenerationHandler(configService);
 
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.error.mockImplementation();
 
     mockImagesGenerate.mockReset();

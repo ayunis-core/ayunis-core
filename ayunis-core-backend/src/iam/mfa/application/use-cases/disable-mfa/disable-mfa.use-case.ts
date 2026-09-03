@@ -1,19 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
-import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
-import { MfaRequiredByOrgError, UnexpectedMfaError } from '../../mfa.errors';
-import { VerifyMfaCodeUseCase } from '../verify-mfa-code/verify-mfa-code.use-case';
-import { VerifyMfaCodeCommand } from '../verify-mfa-code/verify-mfa-code.command';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
+import { OrgMfaRequirementsRepository } from 'src/iam/mfa/application/ports/org-mfa-requirements.repository';
+import {
+  MfaRequiredByOrgError,
+  UnexpectedMfaError,
+} from 'src/iam/mfa/application/mfa.errors';
+import { VerifyMfaCodeUseCase } from 'src/iam/mfa/application/use-cases/verify-mfa-code/verify-mfa-code.use-case';
+import { VerifyMfaCodeCommand } from 'src/iam/mfa/application/use-cases/verify-mfa-code/verify-mfa-code.command';
 import { DisableMfaCommand } from './disable-mfa.command';
 
 @Injectable()
 export class DisableMfaUseCase {
+  private readonly logger = new Logger(DisableMfaUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DisableMfaUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
     private readonly orgMfaRequirementsRepository: OrgMfaRequirementsRepository,
@@ -21,7 +23,7 @@ export class DisableMfaUseCase {
   ) {}
 
   async execute(command: DisableMfaCommand): Promise<void> {
-    this.logger.info({ userId: command.userId }, 'disableMfa');
+    this.logger.log({ userId: command.userId }, 'disableMfa');
 
     try {
       // Checked before code verification so no recovery code is consumed on

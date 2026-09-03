@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import type { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broker-logout.client';
@@ -7,12 +7,11 @@ import { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/comp
 import type { SsoBrokerSessionService } from 'src/iam/sso/application/services/sso-broker-session.service';
 
 describe(CompleteSsoLogoutUseCase.name, () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   const revokeSession = { execute: jest.fn() };
   const broker = { createEndSessionUrl: jest.fn() };
   const brokerSessions = { idTokenFor: jest.fn() };
   const useCase = new CompleteSsoLogoutUseCase(
-    logger,
     revokeSession as unknown as RevokeSessionFamilyUseCase,
     broker as unknown as OidcBrokerLogoutClient,
     brokerSessions as unknown as SsoBrokerSessionService,

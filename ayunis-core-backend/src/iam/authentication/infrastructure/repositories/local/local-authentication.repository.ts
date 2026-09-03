@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthenticationRepository } from 'src/iam/authentication/application/ports/authentication.repository';
@@ -14,18 +13,18 @@ interface JwtConfig {
 
 @Injectable()
 export class LocalAuthenticationRepository extends AuthenticationRepository {
+  private readonly logger = new Logger(LocalAuthenticationRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalAuthenticationRepository.name)
-    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {
     super();
-    this.logger.info('constructor');
+    this.logger.log('constructor');
   }
 
   generateAccessToken(user: ActiveUser): Promise<string> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: user.id,
         email: user.email,

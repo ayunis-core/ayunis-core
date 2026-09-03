@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { FindAllUserIdsByOrgIdQuery } from './find-all-user-ids-by-org-id.query';
 
 /**
@@ -10,14 +9,12 @@ import { FindAllUserIdsByOrgIdQuery } from './find-all-user-ids-by-org-id.query'
  */
 @Injectable()
 export class FindAllUserIdsByOrgIdUseCase {
-  constructor(
-    @InjectPinoLogger(FindAllUserIdsByOrgIdUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly usersRepository: UsersRepository,
-  ) {}
+  private readonly logger = new Logger(FindAllUserIdsByOrgIdUseCase.name);
+
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async execute(query: FindAllUserIdsByOrgIdQuery): Promise<UUID[]> {
-    this.logger.info({ orgId: query.orgId }, 'execute');
+    this.logger.log({ orgId: query.orgId }, 'execute');
     return this.usersRepository.findAllIdsByOrgId(query.orgId);
   }
 }

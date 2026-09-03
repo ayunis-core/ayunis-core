@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   TokenCounterHandler,
   TokenCounterType,
@@ -11,12 +10,9 @@ import {
 
 @Injectable()
 export class TokenCounterRegistry {
-  private readonly handlers = new Map<TokenCounterType, TokenCounterHandler>();
+  private readonly logger = new Logger(TokenCounterRegistry.name);
 
-  constructor(
-    @InjectPinoLogger(TokenCounterRegistry.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly handlers = new Map<TokenCounterType, TokenCounterHandler>();
 
   registerHandler(handler: TokenCounterHandler): void {
     this.handlers.set(handler.type, handler);

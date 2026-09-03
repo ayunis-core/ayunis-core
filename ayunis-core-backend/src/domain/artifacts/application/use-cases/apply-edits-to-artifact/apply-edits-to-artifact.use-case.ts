@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { ApplyEditsToArtifactCommand } from './apply-edits-to-artifact.command';
 import {
   ArtifactContentTooLargeError,
@@ -11,19 +10,19 @@ import {
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
-import { ArtifactVersion } from '../../../domain/artifact-version.entity';
+} from 'src/domain/artifacts/application/artifacts.errors';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UpdateArtifactUseCase } from '../update-artifact/update-artifact.use-case';
-import { UpdateArtifactCommand } from '../update-artifact/update-artifact.command';
+import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
+import { UpdateArtifactCommand } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.command';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class ApplyEditsToArtifactUseCase {
+  private readonly logger = new Logger(ApplyEditsToArtifactUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ApplyEditsToArtifactUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
@@ -33,7 +32,7 @@ export class ApplyEditsToArtifactUseCase {
   async execute(
     command: ApplyEditsToArtifactCommand,
   ): Promise<ArtifactVersion> {
-    this.logger.info(
+    this.logger.log(
       {
         artifactId: command.artifactId,
         editCount: command.edits.length,

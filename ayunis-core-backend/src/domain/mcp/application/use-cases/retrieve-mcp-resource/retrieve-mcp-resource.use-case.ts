@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 
 @Injectable()
 export class RetrieveMcpResourceUseCase {
+  private readonly logger = new Logger(RetrieveMcpResourceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RetrieveMcpResourceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly mcpClientService: McpClientService,
     private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
     private readonly contextService: ContextService,
@@ -20,7 +19,7 @@ export class RetrieveMcpResourceUseCase {
   async execute(
     command: RetrieveMcpResourceCommand,
   ): Promise<{ content: unknown; mimeType: string }> {
-    this.logger.info(
+    this.logger.log(
       {
         integrationId: command.integrationId,
         url: command.resourceUri,

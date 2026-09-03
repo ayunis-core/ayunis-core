@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import type { UUID } from 'crypto';
 import {
   DocumentProcessingPort,
   type DocumentProcessingJobData,
-} from '../../application/ports/document-processing.port';
+} from 'src/domain/sources/application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { STANDARD_JOB_OPTIONS, cancelQueueJob } from './bullmq-job.helpers';
 
 @Injectable()
 export class DocumentProcessingProducer extends DocumentProcessingPort {
+  private readonly logger = new Logger(DocumentProcessingProducer.name);
+
   constructor(
-    @InjectPinoLogger(DocumentProcessingProducer.name)
-    private readonly logger: PinoLogger,
     @InjectQueue(DOCUMENT_PROCESSING_QUEUE)
     private readonly queue: Queue<DocumentProcessingJobData>,
   ) {
@@ -22,7 +21,7 @@ export class DocumentProcessingProducer extends DocumentProcessingPort {
   }
 
   async enqueue(data: DocumentProcessingJobData): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         sourceId: data.sourceId,
         fileName: data.fileName,

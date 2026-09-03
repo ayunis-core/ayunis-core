@@ -1,6 +1,4 @@
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ContextService } from 'src/common/context/services/context.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -27,10 +25,6 @@ describe('UpdateWorkspaceUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         UpdateWorkspaceUseCase,
-        {
-          provide: getLoggerToken(UpdateWorkspaceUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: WorkspacesRepository, useValue: repository },
         { provide: ContextService, useValue: createMockContextService() },
       ],

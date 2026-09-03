@@ -7,8 +7,8 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import {
   ApiInternalServerErrorResponse,
@@ -24,12 +24,12 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { GetChapterQuizUseCase } from '../../application/use-cases/get-chapter-quiz/get-chapter-quiz.use-case';
-import { GetChapterQuizQuery } from '../../application/use-cases/get-chapter-quiz/get-chapter-quiz.query';
-import { SubmitChapterQuizUseCase } from '../../application/use-cases/submit-chapter-quiz/submit-chapter-quiz.use-case';
-import { SubmitChapterQuizCommand } from '../../application/use-cases/submit-chapter-quiz/submit-chapter-quiz.command';
-import { GetAcademyProgressUseCase } from '../../application/use-cases/get-academy-progress/get-academy-progress.use-case';
-import { GetAcademyProgressQuery } from '../../application/use-cases/get-academy-progress/get-academy-progress.query';
+import { GetChapterQuizUseCase } from 'src/domain/academy/application/use-cases/get-chapter-quiz/get-chapter-quiz.use-case';
+import { GetChapterQuizQuery } from 'src/domain/academy/application/use-cases/get-chapter-quiz/get-chapter-quiz.query';
+import { SubmitChapterQuizUseCase } from 'src/domain/academy/application/use-cases/submit-chapter-quiz/submit-chapter-quiz.use-case';
+import { SubmitChapterQuizCommand } from 'src/domain/academy/application/use-cases/submit-chapter-quiz/submit-chapter-quiz.command';
+import { GetAcademyProgressUseCase } from 'src/domain/academy/application/use-cases/get-academy-progress/get-academy-progress.use-case';
+import { GetAcademyProgressQuery } from 'src/domain/academy/application/use-cases/get-academy-progress/get-academy-progress.query';
 import { QuizQuestionForTakingResponseDto } from './dto/quiz-question-for-taking-response.dto';
 import { SubmitQuizRequestDto } from './dto/submit-quiz-request.dto';
 import { QuizResultResponseDto } from './dto/quiz-result-response.dto';
@@ -40,9 +40,9 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('academy')
 @RequireAddon(AddonType.AYUNIS_CORE_ACADEMY)
 export class AcademyQuizController {
+  private readonly logger = new Logger(AcademyQuizController.name);
+
   constructor(
-    @InjectPinoLogger(AcademyQuizController.name)
-    private readonly logger: PinoLogger,
     private readonly getChapterQuizUseCase: GetChapterQuizUseCase,
     private readonly submitChapterQuizUseCase: SubmitChapterQuizUseCase,
     private readonly getAcademyProgressUseCase: GetAcademyProgressUseCase,
@@ -65,7 +65,7 @@ export class AcademyQuizController {
   async getChapterQuiz(
     @Param('chapterId', ParseUUIDPipe) chapterId: UUID,
   ): Promise<QuizQuestionForTakingResponseDto[]> {
-    this.logger.info({ chapterId }, 'Getting quiz for chapter');
+    this.logger.log({ chapterId }, 'Getting quiz for chapter');
     const questions = await this.getChapterQuizUseCase.execute(
       new GetChapterQuizQuery({ chapterId }),
     );
@@ -90,7 +90,7 @@ export class AcademyQuizController {
     @Body() dto: SubmitQuizRequestDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<QuizResultResponseDto> {
-    this.logger.info({ chapterId }, 'Submitting quiz for chapter');
+    this.logger.log({ chapterId }, 'Submitting quiz for chapter');
     const result = await this.submitChapterQuizUseCase.execute(
       new SubmitChapterQuizCommand({ userId, chapterId, answers: dto.answers }),
     );
@@ -112,7 +112,7 @@ export class AcademyQuizController {
   async getProgress(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<AcademyProgressResponseDto> {
-    this.logger.info('Getting academy progress');
+    this.logger.log('Getting academy progress');
     const progress = await this.getAcademyProgressUseCase.execute(
       new GetAcademyProgressQuery({ userId }),
     );
