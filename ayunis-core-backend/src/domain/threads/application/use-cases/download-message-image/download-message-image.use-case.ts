@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,8 +14,8 @@ import {
   ThreadNotFoundError,
   UnexpecteThreadError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
-import { ThreadsRepository } from '../../ports/threads.repository';
+} from 'src/domain/threads/application/threads.errors';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { DownloadMessageImageQuery } from './download-message-image.query';
 
 export interface MessageImageDownload {
@@ -27,9 +26,9 @@ export interface MessageImageDownload {
 
 @Injectable()
 export class DownloadMessageImageUseCase {
+  private readonly logger = new Logger(DownloadMessageImageUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DownloadMessageImageUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly threadsRepository: ThreadsRepository,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
@@ -39,7 +38,7 @@ export class DownloadMessageImageUseCase {
   async execute(
     query: DownloadMessageImageQuery,
   ): Promise<MessageImageDownload> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: query.threadId,
         messageId: query.messageId,

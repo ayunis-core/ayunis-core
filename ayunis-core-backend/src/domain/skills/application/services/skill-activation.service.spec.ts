@@ -1,8 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
-import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { SkillActivationService } from './skill-activation.service';
 import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
@@ -21,7 +23,7 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SkillUsedEvent } from '../events/skill-used.event';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 
 describe('SkillActivationService', () => {
   let service: SkillActivationService;
@@ -31,7 +33,7 @@ describe('SkillActivationService', () => {
   let addKnowledgeBaseToThreadUseCase: jest.Mocked<AddKnowledgeBaseToThreadUseCase>;
   let getSourcesByIdsUseCase: jest.Mocked<GetSourcesByIdsUseCase>;
   let eventEmitter: jest.Mocked<EventEmitter2>;
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const orgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -74,14 +76,10 @@ describe('SkillActivationService', () => {
     });
 
   beforeEach(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SkillActivationService,
-        {
-          provide: getLoggerToken(SkillActivationService.name),
-          useValue: logger,
-        },
         {
           provide: SkillAccessService,
           useValue: { findAccessibleSkill: jest.fn() },

@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
   ThreadsRepository,
   type StaleThreadSourceRef,
-} from '../../ports/threads.repository';
+} from 'src/domain/threads/application/ports/threads.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { FindUnreferencedSourceIdsUseCase } from 'src/domain/sources/application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
@@ -31,9 +30,9 @@ function groupSourcesByOrg(
 
 @Injectable()
 export class CleanupStaleThreadSourcesUseCase {
+  private readonly logger = new Logger(CleanupStaleThreadSourcesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CleanupStaleThreadSourcesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly findUnreferencedSourceIdsUseCase: FindUnreferencedSourceIdsUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
@@ -41,10 +40,7 @@ export class CleanupStaleThreadSourcesUseCase {
 
   async execute(): Promise<CleanupStaleThreadSourcesResult> {
     const cutoff = new Date(Date.now() - STALE_THREAD_SOURCE_DAYS * MS_PER_DAY);
-    this.logger.info(
-      { cutoff, staleDays: STALE_THREAD_SOURCE_DAYS },
-      'execute',
-    );
+    this.logger.log({ cutoff, staleDays: STALE_THREAD_SOURCE_DAYS }, 'execute');
     const candidates =
       await this.threadsRepository.findSourcesWithOnlyStaleDirectAssignments(
         cutoff,

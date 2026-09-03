@@ -1,5 +1,6 @@
 import { Writable } from 'node:stream';
-import { Injectable, Logger } from '@nestjs/common';
+import type { AddressInfo } from 'node:net';
+import { Controller, Get, Injectable, Logger, Module } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import pino from 'pino';
@@ -8,6 +9,8 @@ import { LoggerModule } from 'nestjs-pino';
 import { installNestLogger } from 'src/common/logger/install-nest-logger';
 import { LoggingModule } from 'src/common/logger/logging.module';
 import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
+
+const entries: Record<string, unknown>[] = [];
 
 @Injectable()
 class ProbeService {
@@ -33,6 +36,17 @@ class ProbeService {
   }
 }
 
+@Controller()
+class ProbeController {
+  private readonly logger = new Logger(ProbeController.name);
+
+  @Get('probe')
+  handle(): string {
+    this.logger.log({ threadId: 'thread-1' }, 'handled');
+    return 'ok';
+  }
+}
+
 function productionPinoOptions(): PinoHttpOptions {
   const { pinoHttp } = createPinoLoggerConfig({ NODE_ENV: 'production' });
   if (!pinoHttp || Array.isArray(pinoHttp) || 'write' in pinoHttp) {
@@ -43,40 +57,51 @@ function productionPinoOptions(): PinoHttpOptions {
   return { ...pinoHttp, level: 'trace', transport: undefined };
 }
 
+const destination = new Writable({
+  write(chunk: Buffer, _encoding, callback) {
+    for (const line of chunk.toString().trim().split('\n')) {
+      entries.push(JSON.parse(line) as Record<string, unknown>);
+    }
+    callback();
+  },
+});
+
+/** Mirrors LoggingModule, but writes to a stream the test can read. */
+@Module({
+  imports: [
+    LoggerModule.forRoot({
+      ...createPinoLoggerConfig({ NODE_ENV: 'production' }),
+      pinoHttp: {
+        ...productionPinoOptions(),
+        logger: pino(productionPinoOptions(), destination),
+      },
+    }),
+  ],
+})
+class TestLoggingModule {}
+
 describe('Nest logger adapter', () => {
   let app: INestApplication;
-  let entries: Record<string, unknown>[];
 
-  beforeEach(async () => {
-    entries = [];
-    const destination = new Writable({
-      write(chunk: Buffer, _encoding, callback) {
-        for (const line of chunk.toString().trim().split('\n')) {
-          entries.push(JSON.parse(line) as Record<string, unknown>);
-        }
-        callback();
-      },
-    });
-    const config = createPinoLoggerConfig({ NODE_ENV: 'production' });
-
+  beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        LoggerModule.forRoot({
-          ...config,
-          pinoHttp: { logger: pino(productionPinoOptions(), destination) },
-        }),
-      ],
+      imports: [TestLoggingModule],
+      controllers: [ProbeController],
       providers: [ProbeService],
     }).compile();
 
     app = moduleRef.createNestApplication();
-    await app.init();
     installNestLogger(app);
+    await app.init();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     Logger.overrideLogger(false);
     await app.close();
+  });
+
+  beforeEach(() => {
+    entries.length = 0;
   });
 
   function probe(): ProbeService {
@@ -140,6 +165,24 @@ describe('Nest logger adapter', () => {
       msg: 'plain message',
       'nestjs.context': 'ProbeService',
     });
+  });
+
+  // Nesting LoggerModule inside another module must not drop its middleware,
+  // which is what binds the request-scoped child logger.
+  it('binds the request-scoped logger for logs emitted inside a request', async () => {
+    await app.listen(0);
+    const { port } = app.getHttpServer().address() as AddressInfo;
+
+    await fetch(`http://127.0.0.1:${port}/probe`);
+
+    expect(entries).toEqual([
+      expect.objectContaining({
+        msg: 'handled',
+        threadId: 'thread-1',
+        'nestjs.context': 'ProbeController',
+        reqId: expect.anything(),
+      }),
+    ]);
   });
 });
 

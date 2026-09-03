@@ -1,9 +1,8 @@
 import type { UUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { buildMinioProcessingPath } from '../../util/minio-processing-file.helpers';
+import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.command';
@@ -19,14 +18,14 @@ import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
 
 @Injectable()
 export class StartDocumentProcessingUseCase {
+  private readonly logger = new Logger(StartDocumentProcessingUseCase.name);
+
   constructor(
-    @InjectPinoLogger(StartDocumentProcessingUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly createProcessingSourceUseCase: CreateProcessingSourceUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
     private readonly uploadObjectUseCase: UploadObjectUseCase,
@@ -39,7 +38,7 @@ export class StartDocumentProcessingUseCase {
 
   async execute(command: StartDocumentProcessingCommand): Promise<FileSource> {
     const { fileName } = command;
-    this.logger.info({ fileName }, 'Starting async document processing');
+    this.logger.log({ fileName }, 'Starting async document processing');
 
     try {
       const orgId = this.contextService.get('orgId');

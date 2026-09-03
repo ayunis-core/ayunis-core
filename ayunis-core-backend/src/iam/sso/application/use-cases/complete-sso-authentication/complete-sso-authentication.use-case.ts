@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { StartAuthenticatedSessionCommand } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.command';
 import {
@@ -37,9 +36,9 @@ export type CompleteSsoAuthenticationResult =
 
 @Injectable()
 export class CompleteSsoAuthenticationUseCase {
+  private readonly logger = new Logger(CompleteSsoAuthenticationUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CompleteSsoAuthenticationUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly completeOrgSsoLogin: CompleteOrgSsoLoginUseCase,
     private readonly provisionOrgSsoUser: ProvisionOrgSsoUserUseCase,
     private readonly startAuthenticatedSession: StartAuthenticatedSessionUseCase,
@@ -51,7 +50,7 @@ export class CompleteSsoAuthenticationUseCase {
   async execute(
     command: CompleteSsoAuthenticationCommand,
   ): Promise<CompleteSsoAuthenticationResult> {
-    this.logger.info(
+    this.logger.log(
       { hasBrowserBinding: command.browserBinding !== undefined },
       'Completing SSO authentication',
     );

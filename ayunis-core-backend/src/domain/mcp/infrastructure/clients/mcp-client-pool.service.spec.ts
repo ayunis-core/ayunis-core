@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Client } from '@modelcontextprotocol/client';
 import { randomUUID } from 'crypto';
 import type { McpConnectionConfig } from 'src/domain/mcp/application/ports/mcp-client.port';
@@ -24,7 +23,7 @@ describe('McpClientPoolService', () => {
     close = jest.fn().mockResolvedValue(undefined);
     client = { close } as unknown as Client;
     createClient = jest.fn().mockResolvedValue(client);
-    pool = new McpClientPoolService(createPinoLoggerMock());
+    pool = new McpClientPoolService();
   });
 
   afterEach(async () => {

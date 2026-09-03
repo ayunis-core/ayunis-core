@@ -1,7 +1,6 @@
 import type { UUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import {
   ArtifactContentTooLargeError,
@@ -10,7 +9,7 @@ import {
   ArtifactLetterheadNotSupportedError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import {
@@ -18,18 +17,18 @@ import {
   DocumentArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { prepareContentForWrite } from '../../helpers/prepare-content-for-write';
+import { prepareContentForWrite } from 'src/domain/artifacts/application/helpers/prepare-content-for-write';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
+import { addVersionWithRetry } from 'src/domain/artifacts/application/helpers/add-version-with-retry';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 
 @Injectable()
 export class UpdateArtifactUseCase {
+  private readonly logger = new Logger(UpdateArtifactUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateArtifactUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
@@ -39,7 +38,7 @@ export class UpdateArtifactUseCase {
   async execute(
     command: UpdateArtifactCommand,
   ): Promise<ArtifactVersion | void> {
-    this.logger.info({ artifactId: command.artifactId }, 'Updating artifact');
+    this.logger.log({ artifactId: command.artifactId }, 'Updating artifact');
 
     const userId = this.resolveUserId();
 

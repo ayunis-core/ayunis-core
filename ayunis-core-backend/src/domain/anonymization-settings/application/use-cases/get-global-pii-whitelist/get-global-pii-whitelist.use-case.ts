@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { GlobalAnonymizationWhitelistRepository } from '../../ports/global-anonymization-whitelist.repository';
-import { UnexpectedGlobalAnonymizationWhitelistError } from '../../anonymization-settings.errors';
+import { GlobalAnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/global-anonymization-whitelist.repository';
+import { UnexpectedGlobalAnonymizationWhitelistError } from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import type { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
 
 @Injectable()
 export class GetGlobalPiiWhitelistUseCase {
+  private readonly logger = new Logger(GetGlobalPiiWhitelistUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetGlobalPiiWhitelistUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: GlobalAnonymizationWhitelistRepository,
   ) {}
 

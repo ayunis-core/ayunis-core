@@ -1,15 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { UpdateStartDateUseCase } from './update-start-date.use-case';
 import { UpdateStartDateCommand } from './update-start-date.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
   SubscriptionAlreadyCancelledError,
   SubscriptionNotFoundError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -74,10 +72,6 @@ describe('UpdateStartDateUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateStartDateUseCase,
-        {
-          provide: getLoggerToken(UpdateStartDateUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SubscriptionRepository,
           useValue: {

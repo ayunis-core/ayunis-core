@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { RevokeApiKeyCommand } from './revoke-api-key.command';
 import {
   ApiKeyNotFoundError,
   UnexpectedApiKeyError,
-} from '../../api-keys.errors';
+} from 'src/iam/api-keys/application/api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class RevokeApiKeyUseCase {
+  private readonly logger = new Logger(RevokeApiKeyUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RevokeApiKeyUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly apiKeysRepository: ApiKeysRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -26,7 +25,7 @@ export class RevokeApiKeyUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info({ apiKeyId: command.apiKeyId, orgId }, 'execute');
+    this.logger.log({ apiKeyId: command.apiKeyId, orgId }, 'execute');
 
     try {
       const apiKey = await this.apiKeysRepository.findById(command.apiKeyId);

@@ -1,13 +1,12 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { RecursiveSplitterHandler } from './recursive.splitter';
-import type { SplitterInput } from '../../application/ports/splitter.handler';
-import type { TextChunk } from '../../domain/split-result.entity';
+import type { SplitterInput } from 'src/domain/rag/splitters/application/ports/splitter.handler';
+import type { TextChunk } from 'src/domain/rag/splitters/domain/split-result.entity';
 
 describe('RecursiveSplitterHandler', () => {
   let handler: RecursiveSplitterHandler;
 
   beforeEach(() => {
-    handler = new RecursiveSplitterHandler(createPinoLoggerMock());
+    handler = new RecursiveSplitterHandler();
   });
 
   it('should be defined', () => {

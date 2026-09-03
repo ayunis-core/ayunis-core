@@ -1,25 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 
 @Injectable()
 export class AddKnowledgeBaseToThreadUseCase {
+  private readonly logger = new Logger(AddKnowledgeBaseToThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddKnowledgeBaseToThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: AddKnowledgeBaseToThreadCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.threadId,
         knowledgeBaseId: command.knowledgeBaseId,

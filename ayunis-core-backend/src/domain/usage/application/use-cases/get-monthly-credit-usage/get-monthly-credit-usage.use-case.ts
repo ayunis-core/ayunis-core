@@ -1,25 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditUsageQuery } from './get-monthly-credit-usage.query';
-import { UsageRepository } from '../../ports/usage.repository';
-import { UnexpectedUsageError } from '../../usage.errors';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
+import { UnexpectedUsageError } from 'src/domain/usage/application/usage.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { getEffectiveMonthStart } from '../../util/get-effective-month-start';
+import { getEffectiveMonthStart } from 'src/domain/usage/application/util/get-effective-month-start';
 
 @Injectable()
 export class GetMonthlyCreditUsageUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-    @InjectPinoLogger(GetMonthlyCreditUsageUseCase.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(GetMonthlyCreditUsageUseCase.name);
+
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   async execute(
     query: GetMonthlyCreditUsageQuery,
   ): Promise<{ creditsUsed: number }> {
     const effectiveStart = getEffectiveMonthStart(query.since);
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
         effectiveStart: effectiveStart.toISOString(),

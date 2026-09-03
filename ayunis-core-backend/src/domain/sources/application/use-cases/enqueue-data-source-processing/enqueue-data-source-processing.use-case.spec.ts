@@ -1,12 +1,11 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EnqueueDataSourceProcessingUseCase } from './enqueue-data-source-processing.use-case';
 import { EnqueueDataSourceProcessingCommand } from './enqueue-data-source-processing.command';
-import type { DataSourceProcessingPort } from '../../ports/data-source-processing.port';
+import type { DataSourceProcessingPort } from 'src/domain/sources/application/ports/data-source-processing.port';
 import {
   EmptyFileDataError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 
 describe('EnqueueDataSourceProcessingUseCase', () => {
   const orgId = randomUUID();
@@ -32,10 +31,7 @@ describe('EnqueueDataSourceProcessingUseCase', () => {
     port = {
       enqueue: jest.fn().mockResolvedValue(undefined),
     };
-    useCase = new EnqueueDataSourceProcessingUseCase(
-      createPinoLoggerMock(),
-      port,
-    );
+    useCase = new EnqueueDataSourceProcessingUseCase(port);
   });
 
   it('enqueues one job carrying the full upload batch', async () => {

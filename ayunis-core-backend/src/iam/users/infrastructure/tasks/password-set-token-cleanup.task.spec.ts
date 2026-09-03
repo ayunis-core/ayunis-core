@@ -1,6 +1,5 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { PasswordSetTokenCleanupTask } from './password-set-token-cleanup.task';
-import { createMockPasswordSetTokensRepository } from '../../application/testing/password-set-token.fixtures';
+import { createMockPasswordSetTokensRepository } from 'src/iam/users/application/testing/password-set-token.fixtures';
 
 describe('PasswordSetTokenCleanupTask', () => {
   let task: PasswordSetTokenCleanupTask;
@@ -8,7 +7,7 @@ describe('PasswordSetTokenCleanupTask', () => {
 
   beforeEach(() => {
     repository = createMockPasswordSetTokensRepository();
-    task = new PasswordSetTokenCleanupTask(createPinoLoggerMock(), repository);
+    task = new PasswordSetTokenCleanupTask(repository);
   });
 
   afterEach(() => jest.clearAllMocks());

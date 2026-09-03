@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -87,10 +85,6 @@ describe('RegisterUserUseCase', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
-        },
-        {
-          provide: getLoggerToken(RegisterUserUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

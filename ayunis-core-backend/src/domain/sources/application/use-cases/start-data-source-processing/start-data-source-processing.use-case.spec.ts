@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -10,20 +9,20 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { ApplicationError } from 'src/common/errors/base.error';
 import { StartDataSourceProcessingUseCase } from './start-data-source-processing.use-case';
 import { StartDataSourceProcessingCommand } from './start-data-source-processing.command';
-import type { SourceRepository } from '../../ports/source.repository';
-import { createMockSourceRepository } from '../../testing/source.fixtures';
-import type { SpreadsheetParserPort } from '../../ports/spreadsheet-parser.port';
-import type { MarkSourceFailedUseCase } from '../mark-source-failed/mark-source-failed.use-case';
-import type { EnqueueDataSourceProcessingUseCase } from '../enqueue-data-source-processing/enqueue-data-source-processing.use-case';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import type { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import type { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import type { EnqueueDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
 import type { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { CSVDataSource } from '../../../domain/sources/data-source.entity';
-import { SourceStatus } from '../../../domain/source-status.enum';
+import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import {
   EmptyFileDataError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 
 describe('StartDataSourceProcessingUseCase', () => {
   const orgId = randomUUID();
@@ -59,7 +58,6 @@ describe('StartDataSourceProcessingUseCase', () => {
     } as unknown as ContextService;
 
     useCase = new StartDataSourceProcessingUseCase(
-      createPinoLoggerMock(),
       sourceRepository,
       parser,
       markSourceFailed,

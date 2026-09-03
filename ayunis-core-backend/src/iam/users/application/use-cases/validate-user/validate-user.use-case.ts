@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ValidateUserQuery } from './validate-user.query';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -20,9 +19,9 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 
 @Injectable()
 export class ValidateUserUseCase {
+  private readonly logger = new Logger(ValidateUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ValidateUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly compareHashUseCase: CompareHashUseCase,
     private readonly configService: ConfigService,
@@ -30,7 +29,7 @@ export class ValidateUserUseCase {
 
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(query: ValidateUserQuery): Promise<User> {
-    this.logger.info({ email: query.email }, 'validateUser');
+    this.logger.log({ email: query.email }, 'validateUser');
 
     const user = await this.usersRepository.findOneByEmail(query.email);
     if (!user) {

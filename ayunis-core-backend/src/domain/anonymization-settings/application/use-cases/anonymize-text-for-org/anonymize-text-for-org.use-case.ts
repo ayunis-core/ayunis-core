@@ -1,14 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 import type { AnonymizationResult } from 'src/common/anonymization/application/ports/anonymization.port';
-import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
-import { UnexpectedAnonymizationSettingsError } from '../../anonymization-settings.errors';
-import { GetGlobalPiiWhitelistUseCase } from '../get-global-pii-whitelist/get-global-pii-whitelist.use-case';
-import { toWhitelistEntry } from '../../../domain/global-word-whitelist-entry';
+import { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
+import { UnexpectedAnonymizationSettingsError } from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
+import { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
+import { toWhitelistEntry } from 'src/domain/anonymization-settings/domain/global-word-whitelist-entry';
 import type { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.command';
 
 /**
@@ -18,9 +17,9 @@ import type { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.comman
  */
 @Injectable()
 export class AnonymizeTextForOrgUseCase {
+  private readonly logger = new Logger(AnonymizeTextForOrgUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AnonymizeTextForOrgUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: AnonymizationWhitelistRepository,
     private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,

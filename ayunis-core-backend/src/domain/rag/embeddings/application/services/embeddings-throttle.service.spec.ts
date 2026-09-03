@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import {
   EmbeddingsThrottleService,
   type PriorityQueue,
 } from './embeddings-throttle.service';
-import { EmbeddingPriority } from '../../domain/embedding-priority.enum';
+import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 
 /**
  * Records the priority each task was enqueued with and runs it immediately.
@@ -40,7 +39,7 @@ describe('EmbeddingsThrottleService', () => {
   } as unknown as ConfigService;
 
   beforeEach(() => {
-    service = new TestableThrottle(createPinoLoggerMock(), configService);
+    service = new TestableThrottle(configService);
   });
 
   it('runs the task and returns its result', async () => {

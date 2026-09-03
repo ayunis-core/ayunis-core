@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
 import type { StringValue } from 'ms';
-import { InvalidEmailConfirmationTokenError } from '../users.errors';
+import { InvalidEmailConfirmationTokenError } from 'src/iam/users/application/users.errors';
 
 export const EMAIL_CONFIRMATION_TOKEN_TYPE = 'email_confirmation';
 
@@ -22,9 +21,9 @@ export interface EmailConfirmationJwtPayload {
 
 @Injectable()
 export class EmailConfirmationJwtService {
+  private readonly logger = new Logger(EmailConfirmationJwtService.name);
+
   constructor(
-    @InjectPinoLogger(EmailConfirmationJwtService.name)
-    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -33,7 +32,7 @@ export class EmailConfirmationJwtService {
     userId: UUID;
     email: string;
   }): string {
-    this.logger.info(
+    this.logger.log(
       {
         userId: params.userId,
         email: params.email,
@@ -56,7 +55,7 @@ export class EmailConfirmationJwtService {
   }
 
   verifyEmailConfirmationToken(token: string): EmailConfirmationJwtPayload {
-    this.logger.info('verifyEmailConfirmationToken');
+    this.logger.log('verifyEmailConfirmationToken');
 
     try {
       const payload =

@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InternetSearchHandler } from '../../application/ports/internet-search.handler';
-import { InternetSearchResult } from '../../domain/internet-search-result.entity';
-import { InternetSearchResultType } from '../../domain/value-objects/internet-search-result-type.enum';
+import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
+import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
+import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
 
 const MAX_RESULTS = 10;
 
@@ -19,11 +18,9 @@ type StaanSearchResult = {
 
 @Injectable()
 export class StaanInternetSearchHandler implements InternetSearchHandler {
-  constructor(
-    @InjectPinoLogger(StaanInternetSearchHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {}
+  private readonly logger = new Logger(StaanInternetSearchHandler.name);
+
+  constructor(private readonly configService: ConfigService) {}
 
   async search(query: string): Promise<InternetSearchResult[]> {
     this.logger.debug({ input: query }, 'Using Staan internet search handler');

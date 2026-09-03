@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { GetAcademyCompletionUseCase } from './get-academy-completion.use-case';
 import { GetAcademyCompletionQuery } from './get-academy-completion.query';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
-import { UnexpectedAcademyError } from '../../academy.errors';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
 
 describe('GetAcademyCompletionUseCase', () => {
   let useCase: GetAcademyCompletionUseCase;
@@ -18,10 +16,6 @@ describe('GetAcademyCompletionUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetAcademyCompletionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         GetAcademyCompletionUseCase,
         {
           provide: AcademyCompletionRepository,

@@ -1,14 +1,13 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { Request } from 'express';
 import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { JWT_SECRET } from '../tokens/jwt-secret.token';
+import { JWT_SECRET } from 'src/iam/authentication/application/tokens/jwt-secret.token';
 
 interface JwtPayload {
   sub: UUID;
@@ -23,9 +22,9 @@ interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(JwtStrategy.name);
+
   constructor(
-    @InjectPinoLogger(JwtStrategy.name)
-    private readonly logger: PinoLogger,
     configService: ConfigService,
     @Inject(JWT_SECRET) secret: string,
   ) {

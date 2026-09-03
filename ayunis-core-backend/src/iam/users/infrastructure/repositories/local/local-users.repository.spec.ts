@@ -1,7 +1,6 @@
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { LocalUsersRepository } from 'src/iam/users/infrastructure/repositories/local/local-users.repository';
 import { UserMapper } from 'src/iam/users/infrastructure/repositories/local/mappers/user.mapper';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -11,7 +10,7 @@ import type { FindOperator } from 'typeorm';
 describe(LocalUsersRepository.name, () => {
   it('uses exact case-insensitive equality for emails containing SQL wildcards', async () => {
     const records = { findOne: jest.fn().mockResolvedValue(null) };
-    const repository = new LocalUsersRepository(createPinoLoggerMock(), {
+    const repository = new LocalUsersRepository({
       tx: { getRepository: jest.fn().mockReturnValue(records) },
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
 
@@ -37,7 +36,7 @@ describe(LocalUsersRepository.name, () => {
         constraint: 'UQ_97672ac88f789774dd47f7c8be3',
       }),
     };
-    const repository = new LocalUsersRepository(createPinoLoggerMock(), {
+    const repository = new LocalUsersRepository({
       tx: { getRepository: jest.fn().mockReturnValue(records) },
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
 
@@ -150,7 +149,7 @@ describe(LocalUsersRepository.name, () => {
 });
 
 function createRepository(records: object): LocalUsersRepository {
-  return new LocalUsersRepository(createPinoLoggerMock(), {
+  return new LocalUsersRepository({
     tx: { getRepository: jest.fn().mockReturnValue(records) },
   } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
 }

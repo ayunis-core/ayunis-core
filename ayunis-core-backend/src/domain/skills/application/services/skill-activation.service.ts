@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
@@ -18,7 +17,7 @@ import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SkillUsedEvent } from '../events/skill-used.event';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 
 export interface SkillActivationResult {
   instructions: string;
@@ -27,9 +26,9 @@ export interface SkillActivationResult {
 
 @Injectable()
 export class SkillActivationService {
+  private readonly logger = new Logger(SkillActivationService.name);
+
   constructor(
-    @InjectPinoLogger(SkillActivationService.name)
-    private readonly logger: PinoLogger,
     private readonly skillAccessService: SkillAccessService,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
@@ -48,7 +47,7 @@ export class SkillActivationService {
     skillId: UUID,
     thread: Thread,
   ): Promise<SkillActivationResult> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId,
         threadId: thread.id,
@@ -115,7 +114,7 @@ export class SkillActivationService {
         );
       } catch (error) {
         if (error instanceof SourceAlreadyAssignedError) {
-          this.logger.info(
+          this.logger.log(
             {
               sourceId: source.id,
               threadId: thread.id,

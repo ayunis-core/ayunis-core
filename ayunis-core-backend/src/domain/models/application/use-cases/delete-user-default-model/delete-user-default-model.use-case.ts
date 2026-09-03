@@ -1,20 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { DeleteUserDefaultModelCommand } from './delete-user-default-model.command';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
-import { ModelError } from '../../models.errors';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import { ModelError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class DeleteUserDefaultModelUseCase {
-  constructor(
-    @InjectPinoLogger(DeleteUserDefaultModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(DeleteUserDefaultModelUseCase.name);
 
+  constructor(
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
   ) {}
 
   async execute(command: DeleteUserDefaultModelCommand): Promise<void> {
-    this.logger.info({ userId: command.userId }, 'execute');
+    this.logger.log({ userId: command.userId }, 'execute');
     try {
       await this.deleteDefault(command);
     } catch (error) {

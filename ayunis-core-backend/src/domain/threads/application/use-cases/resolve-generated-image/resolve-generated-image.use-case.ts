@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { GetPresignedUrlUseCase } from 'src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.use-case';
 import { GetPresignedUrlCommand } from 'src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.command';
 import { contentTypeToExtension } from 'src/common/util/content-type.util';
-import { ThreadsRepository } from '../../ports/threads.repository';
-import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import {
   ThreadNotFoundError,
   GeneratedImageNotFoundError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { ResolveGeneratedImageQuery } from './resolve-generated-image.query';
 
 const PRESIGNED_URL_EXPIRY_SECONDS = 3600;
@@ -21,9 +20,9 @@ export interface ResolveGeneratedImageResult {
 
 @Injectable()
 export class ResolveGeneratedImageUseCase {
+  private readonly logger = new Logger(ResolveGeneratedImageUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ResolveGeneratedImageUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly generatedImagesRepository: GeneratedImagesRepository,
     private readonly getPresignedUrlUseCase: GetPresignedUrlUseCase,
@@ -36,7 +35,7 @@ export class ResolveGeneratedImageUseCase {
       threadId: query.threadId,
       imageId: query.imageId,
     };
-    this.logger.info(logContext, 'execute');
+    this.logger.log(logContext, 'execute');
 
     try {
       const thread = await this.threadsRepository.findOne(

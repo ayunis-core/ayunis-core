@@ -1,17 +1,16 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Job } from 'bullmq';
 import { DataSourceProcessingConsumer } from './data-source-processing.consumer';
-import type { DataSourceProcessingJobData } from '../../application/ports/data-source-processing.port';
-import type { SourceRepository } from '../../application/ports/source.repository';
-import { createMockSourceRepository } from '../../application/testing/source.fixtures';
-import type { SpreadsheetParserPort } from '../../application/ports/spreadsheet-parser.port';
-import type { MarkSourceFailedUseCase } from '../../application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import type { DataSourceProcessingJobData } from 'src/domain/sources/application/ports/data-source-processing.port';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import type { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import type { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { CSVDataSource } from '../../domain/sources/data-source.entity';
-import { SourceStatus } from '../../domain/source-status.enum';
+import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
 async function* fileStream(): AsyncGenerator<Buffer> {
   yield Buffer.from('file-bytes');
@@ -79,7 +78,6 @@ describe('DataSourceProcessingConsumer', () => {
     } as unknown as ContextService;
 
     consumer = new DataSourceProcessingConsumer(
-      createPinoLoggerMock(),
       contextService,
       downloadObject,
       deleteObject,

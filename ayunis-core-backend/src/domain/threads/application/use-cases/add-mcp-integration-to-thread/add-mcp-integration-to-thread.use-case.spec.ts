@@ -1,14 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 
 import { AddMcpIntegrationToThreadUseCase } from './add-mcp-integration-to-thread.use-case';
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
@@ -47,10 +45,6 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddMcpIntegrationToThreadUseCase,
-        {
-          provide: getLoggerToken(AddMcpIntegrationToThreadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
         {

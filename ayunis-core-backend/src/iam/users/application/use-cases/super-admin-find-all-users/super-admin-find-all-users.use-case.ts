@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -14,9 +13,9 @@ import { SuperAdminFindAllUsersQuery } from './super-admin-find-all-users.query'
 
 @Injectable()
 export class SuperAdminFindAllUsersUseCase {
+  private readonly logger = new Logger(SuperAdminFindAllUsersUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminFindAllUsersUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -25,7 +24,7 @@ export class SuperAdminFindAllUsersUseCase {
   async execute(
     query: SuperAdminFindAllUsersQuery,
   ): Promise<Paginated<SuperAdminUserListItem>> {
-    this.logger.info(
+    this.logger.log(
       {
         limit: query.limit,
         offset: query.offset,

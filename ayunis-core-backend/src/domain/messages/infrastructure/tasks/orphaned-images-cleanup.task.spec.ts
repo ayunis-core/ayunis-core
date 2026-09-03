@@ -1,5 +1,5 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import type { CleanupOrphanedImagesUseCase } from '../../application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
+import type { CleanupOrphanedImagesUseCase } from 'src/domain/messages/application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
 import { OrphanedImagesCleanupTask } from './orphaned-images-cleanup.task';
 
 describe('OrphanedImagesCleanupTask', () => {
@@ -19,11 +19,8 @@ describe('OrphanedImagesCleanupTask', () => {
         errors,
       }),
     } as unknown as CleanupOrphanedImagesUseCase;
-    const logger = createPinoLoggerMock();
-    const task = new OrphanedImagesCleanupTask(
-      cleanupOrphanedImagesUseCase,
-      logger,
-    );
+    const logger = createLoggerMock();
+    const task = new OrphanedImagesCleanupTask(cleanupOrphanedImagesUseCase);
 
     await task.handleCleanup();
 

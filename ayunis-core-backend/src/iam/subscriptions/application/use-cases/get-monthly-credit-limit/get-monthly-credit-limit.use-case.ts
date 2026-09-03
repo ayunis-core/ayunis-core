@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditLimitQuery } from './get-monthly-credit-limit.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { isActive } from '../../util/is-active';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 
 /**
  * Returns the monthly credit limit for an organization's active usage-based
@@ -13,9 +12,9 @@ import { UnexpectedSubscriptionError } from '../../subscription.errors';
  */
 @Injectable()
 export class GetMonthlyCreditLimitUseCase {
+  private readonly logger = new Logger(GetMonthlyCreditLimitUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetMonthlyCreditLimitUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 

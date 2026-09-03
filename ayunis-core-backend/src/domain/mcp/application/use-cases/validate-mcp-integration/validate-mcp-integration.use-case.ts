@@ -1,17 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 
 /**
  * Result of MCP integration validation
@@ -26,9 +25,9 @@ export interface ValidationResult {
 
 @Injectable()
 export class ValidateMcpIntegrationUseCase {
+  private readonly logger = new Logger(ValidateMcpIntegrationUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ValidateMcpIntegrationUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
@@ -37,7 +36,7 @@ export class ValidateMcpIntegrationUseCase {
   async execute(
     command: ValidateMcpIntegrationCommand,
   ): Promise<ValidationResult> {
-    this.logger.info(
+    this.logger.log(
       {
         id: command.integrationId,
       },
@@ -99,7 +98,7 @@ export class ValidateMcpIntegrationUseCase {
       return { isValid: false, errorMessage };
     }
 
-    this.logger.info(
+    this.logger.log(
       { id: integrationId, toolCount, resourceCount, promptCount },
       'validationSucceeded',
     );

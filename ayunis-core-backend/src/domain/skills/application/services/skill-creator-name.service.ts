@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
 
 @Injectable()
 export class SkillCreatorNameService {
-  constructor(
-    @InjectPinoLogger(SkillCreatorNameService.name)
-    private readonly logger: PinoLogger,
-    private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
-  ) {}
+  private readonly logger = new Logger(SkillCreatorNameService.name);
+
+  constructor(private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase) {}
 
   async resolveOne(userId: UUID): Promise<string | null> {
     const byId = await this.resolveMany([userId]);
@@ -25,7 +22,7 @@ export class SkillCreatorNameService {
     }
 
     const uniqueIds = Array.from(new Set(userIds));
-    this.logger.info({ idCount: uniqueIds.length }, 'resolveMany');
+    this.logger.log({ idCount: uniqueIds.length }, 'resolveMany');
 
     const users = await this.findUsersByIdsUseCase.execute(
       new FindUsersByIdsQuery(uniqueIds),

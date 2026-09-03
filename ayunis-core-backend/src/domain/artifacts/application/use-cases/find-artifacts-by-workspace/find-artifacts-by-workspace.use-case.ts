@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -13,9 +12,9 @@ import { FindArtifactsByWorkspaceQuery } from './find-artifacts-by-workspace.que
 
 @Injectable()
 export class FindArtifactsByWorkspaceUseCase {
+  private readonly logger = new Logger(FindArtifactsByWorkspaceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindArtifactsByWorkspaceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
@@ -30,7 +29,7 @@ export class FindArtifactsByWorkspaceUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info(
+    this.logger.log(
       { workspaceId: query.workspaceId },
       'Finding artifacts by workspace',
     );

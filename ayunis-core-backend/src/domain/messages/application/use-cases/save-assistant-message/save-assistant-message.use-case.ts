@@ -1,36 +1,35 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaveAssistantMessageCommand } from './save-assistant-message.command';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
-} from '../../ports/messages.repository';
+} from 'src/domain/messages/application/ports/messages.repository';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import {
   MessageCreationError,
   MessageThreadMissingError,
-} from '../../messages.errors';
+} from 'src/domain/messages/application/messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';
+import { AssistantMessageCreatedEvent } from 'src/domain/messages/application/events/assistant-message-created.event';
 import type { UUID } from 'crypto';
 
 @Injectable()
 export class SaveAssistantMessageUseCase {
+  private readonly logger = new Logger(SaveAssistantMessageUseCase.name);
+
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(SaveAssistantMessageUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async execute(
     command: SaveAssistantMessageCommand,
   ): Promise<AssistantMessage | null> {
-    this.logger.info(
+    this.logger.log(
       {
         messageId: command.message.id,
         threadId: command.message.threadId,

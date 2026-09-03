@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateRegularUserCommand } from './create-regular-user.command';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { CreateUserUseCase } from '../create-user/create-user.use-case';
-import { CreateUserCommand } from '../create-user/create-user.command';
+import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
+import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
 
 @Injectable()
 export class CreateRegularUserUseCase {
-  constructor(
-    @InjectPinoLogger(CreateRegularUserUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly createUserUseCase: CreateUserUseCase,
-  ) {}
+  private readonly logger = new Logger(CreateRegularUserUseCase.name);
+
+  constructor(private readonly createUserUseCase: CreateUserUseCase) {}
 
   async execute(command: CreateRegularUserCommand): Promise<User> {
-    this.logger.info(
+    this.logger.log(
       {
         email: command.email,
         orgId: command.orgId,

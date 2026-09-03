@@ -1,11 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetMarketplaceSkillUseCase } from './get-marketplace-skill.use-case';
 import { GetMarketplaceSkillQuery } from './get-marketplace-skill.query';
-import type { MarketplaceClient } from '../../ports/marketplace-client.port';
+import type { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
-} from '../../marketplace.errors';
+} from 'src/domain/marketplace/application/marketplace.errors';
 import type { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 
 describe('GetMarketplaceSkillUseCase', () => {
@@ -37,10 +36,7 @@ describe('GetMarketplaceSkillUseCase', () => {
       getIntegrationByIdentifier: jest.fn(),
     };
 
-    useCase = new GetMarketplaceSkillUseCase(
-      createPinoLoggerMock(),
-      marketplaceClient,
-    );
+    useCase = new GetMarketplaceSkillUseCase(marketplaceClient);
   });
 
   it('should return skill details when skill is found', async () => {

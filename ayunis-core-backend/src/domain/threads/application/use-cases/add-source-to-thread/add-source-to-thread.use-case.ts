@@ -1,14 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
-import { SourceAdditionError } from '../../threads.errors';
+import { SourceAdditionError } from 'src/domain/threads/application/threads.errors';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SourceAlreadyAssignedError } from '../../threads.errors';
-import { assertThreadHasSourceCapacity } from '../../util/thread-source-capacity';
+import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
+import { assertThreadHasSourceCapacity } from 'src/domain/threads/application/util/thread-source-capacity';
 
 const PG_UNIQUE_VIOLATION = '23505';
 
@@ -29,16 +28,16 @@ function isUniqueConstraintViolation(error: unknown): boolean {
 
 @Injectable()
 export class AddSourceToThreadUseCase {
+  private readonly logger = new Logger(AddSourceToThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddSourceToThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
   async execute(command: AddSourceCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.thread.id,
         sourceId: command.source.id,

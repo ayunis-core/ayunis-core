@@ -1,5 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuthenticationRepository } from 'src/iam/authentication/application/ports/authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from 'src/iam/authentication/application/tokens/authentication-repository.token';
 import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
@@ -13,9 +12,9 @@ import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/a
 
 @Injectable()
 export class LoginUseCase {
+  private readonly logger = new Logger(LoginUseCase.name);
+
   constructor(
-    @InjectPinoLogger(LoginUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(AUTHENTICATION_REPOSITORY)
     private readonly authRepository: AuthenticationRepository,
     private readonly createSessionUseCase: CreateSessionUseCase,
@@ -24,7 +23,7 @@ export class LoginUseCase {
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
   async execute(command: LoginCommand): Promise<AuthTokens> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.user.id,
         email: command.user.email,

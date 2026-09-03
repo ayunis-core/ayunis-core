@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
-import { GetBudgetAlertTargetsForOrgUseCase } from '../get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.use-case';
-import { GetBudgetAlertTargetsForOrgQuery } from '../get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.query';
-import { ProcessBudgetAlertCrossingsUseCase } from '../process-budget-alert-crossings/process-budget-alert-crossings.use-case';
-import { ProcessBudgetAlertCrossingsQuery } from '../process-budget-alert-crossings/process-budget-alert-crossings.query';
+import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
+import { GetBudgetAlertTargetsForOrgUseCase } from 'src/iam/budget-alerts/application/use-cases/get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.use-case';
+import { GetBudgetAlertTargetsForOrgQuery } from 'src/iam/budget-alerts/application/use-cases/get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.query';
+import { ProcessBudgetAlertCrossingsUseCase } from 'src/iam/budget-alerts/application/use-cases/process-budget-alert-crossings/process-budget-alert-crossings.use-case';
+import { ProcessBudgetAlertCrossingsQuery } from 'src/iam/budget-alerts/application/use-cases/process-budget-alert-crossings/process-budget-alert-crossings.query';
 import { EvaluateBudgetAlertsForOrgQuery } from './evaluate-budget-alerts-for-org.query';
 
 /**
@@ -16,16 +15,16 @@ import { EvaluateBudgetAlertsForOrgQuery } from './evaluate-budget-alerts-for-or
  */
 @Injectable()
 export class EvaluateBudgetAlertsForOrgUseCase {
+  private readonly logger = new Logger(EvaluateBudgetAlertsForOrgUseCase.name);
+
   constructor(
-    @InjectPinoLogger(EvaluateBudgetAlertsForOrgUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly getBudgetAlertTargetsForOrgUseCase: GetBudgetAlertTargetsForOrgUseCase,
     private readonly processBudgetAlertCrossingsUseCase: ProcessBudgetAlertCrossingsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedBudgetAlertError)
   async execute(query: EvaluateBudgetAlertsForOrgQuery): Promise<void> {
-    this.logger.info({ orgId: query.orgId }, 'execute');
+    this.logger.log({ orgId: query.orgId }, 'execute');
 
     const result = await this.getBudgetAlertTargetsForOrgUseCase.execute(
       new GetBudgetAlertTargetsForOrgQuery(query.orgId),

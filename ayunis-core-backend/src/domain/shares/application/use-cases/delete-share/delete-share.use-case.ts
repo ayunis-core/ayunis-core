@@ -1,7 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SharesRepository } from '../../ports/shares-repository.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UUID } from 'crypto';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -10,7 +9,7 @@ import { Transactional } from '@nestjs-cls/transactional';
 import {
   RemainingShareScope,
   ShareDeletedEvent,
-} from '../../events/share-deleted.event';
+} from 'src/domain/shares/application/events/share-deleted.event';
 import { Share } from 'src/domain/shares/domain/share.entity';
 import {
   OrgShareScope,
@@ -19,9 +18,9 @@ import {
 
 @Injectable()
 export class DeleteShareUseCase {
+  private readonly logger = new Logger(DeleteShareUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteShareUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: SharesRepository,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,

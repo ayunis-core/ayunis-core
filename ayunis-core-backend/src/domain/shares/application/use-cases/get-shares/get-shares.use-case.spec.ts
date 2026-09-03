@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { GetSharesUseCase } from './get-shares.use-case';
 import { GetSharesQuery } from './get-shares.query';
-import { SharesRepository } from '../../ports/shares-repository.port';
-import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
-import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { ShareAuthorizationFactory } from 'src/domain/shares/application/factories/share-authorization.factory';
+import type { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
@@ -48,10 +46,6 @@ describe('GetSharesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetSharesUseCase,
-        {
-          provide: getLoggerToken(GetSharesUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SharesRepository,
           useValue: mockSharesRepository,

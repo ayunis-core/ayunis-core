@@ -1,14 +1,12 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateProcessingSourceUseCase } from './create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from './create-processing-source.command';
-import { SourceRepository } from '../../ports/source.repository';
-import { createMockSourceRepository } from '../../testing/source.fixtures';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
-import { UnsupportedSourceFileTypeError } from '../../sources.errors';
+import { UnsupportedSourceFileTypeError } from 'src/domain/sources/application/sources.errors';
 
 describe('CreateProcessingSourceUseCase', () => {
   let useCase: CreateProcessingSourceUseCase;
@@ -20,10 +18,6 @@ describe('CreateProcessingSourceUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateProcessingSourceUseCase,
-        {
-          provide: getLoggerToken(CreateProcessingSourceUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SourceRepository, useValue: mockSourceRepository },
       ],
     }).compile();

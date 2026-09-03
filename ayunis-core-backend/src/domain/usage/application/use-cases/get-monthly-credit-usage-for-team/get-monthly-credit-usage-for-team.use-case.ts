@@ -1,21 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditUsageForTeamQuery } from './get-monthly-credit-usage-for-team.query';
-import { UsageRepository } from '../../ports/usage.repository';
-import { UnexpectedUsageError } from '../../usage.errors';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
+import { UnexpectedUsageError } from 'src/domain/usage/application/usage.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { getEffectiveMonthStart } from '../../util/get-effective-month-start';
+import { getEffectiveMonthStart } from 'src/domain/usage/application/util/get-effective-month-start';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
 import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.query';
 
 // A team's consumption is the shared pool: the sum over its current members.
 @Injectable()
 export class GetMonthlyCreditUsageForTeamUseCase {
+  private readonly logger = new Logger(
+    GetMonthlyCreditUsageForTeamUseCase.name,
+  );
+
   constructor(
     private readonly usageRepository: UsageRepository,
     private readonly findAllUserIdsByTeamIdUseCase: FindAllUserIdsByTeamIdUseCase,
-    @InjectPinoLogger(GetMonthlyCreditUsageForTeamUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async execute(
@@ -23,7 +24,7 @@ export class GetMonthlyCreditUsageForTeamUseCase {
   ): Promise<{ creditsUsed: number }> {
     const effectiveStart = getEffectiveMonthStart(query.since);
 
-    this.logger.info(
+    this.logger.log(
       {
         teamId: query.teamId,
         effectiveStart: effectiveStart.toISOString(),

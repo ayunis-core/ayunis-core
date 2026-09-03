@@ -1,5 +1,4 @@
 import { QueryFailedError, type EntityManager, type Repository } from 'typeorm';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   DuplicateTeamPermittedModelError,
   MultipleTeamImageGenerationModelsNotAllowedError,
@@ -69,12 +68,10 @@ describe('LocalPermittedModelsRepository', () => {
     } as unknown as jest.Mocked<PermittedModelMapper>;
 
     const finder = new PermittedModelFinder(
-      createPinoLoggerMock(),
       permittedModelRepository,
       permittedModelMapper,
     );
     repository = new LocalPermittedModelsRepository(
-      createPinoLoggerMock(),
       permittedModelRepository,
       permittedModelMapper,
       finder,

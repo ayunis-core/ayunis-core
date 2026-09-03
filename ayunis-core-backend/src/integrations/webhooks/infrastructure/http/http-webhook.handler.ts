@@ -1,25 +1,22 @@
 import { createHmac } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { WebhookHandler } from '../../application/ports/webhook.handler';
-import { WebhookEvent } from '../../domain/webhook-event.entity';
+import { WebhookHandler } from 'src/integrations/webhooks/application/ports/webhook.handler';
+import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import {
   WebhookDeliveryFailedError,
   WebhookTimeoutError,
-} from '../../application/errors/webhook.errors';
+} from 'src/integrations/webhooks/application/errors/webhook.errors';
 
 @Injectable()
 export class HttpWebhookHandler extends WebhookHandler {
+  private readonly logger = new Logger(HttpWebhookHandler.name);
+
   private readonly maxRetries = 3;
   private readonly timeoutMs = 10000; // 10 seconds
   private readonly baseBackoffMs = 1000; // 1 second
 
-  constructor(
-    @InjectPinoLogger(HttpWebhookHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
   }
 
@@ -36,7 +33,7 @@ export class HttpWebhookHandler extends WebhookHandler {
       return;
     }
 
-    this.logger.info(
+    this.logger.log(
       { eventType: event.eventType, eventId: event.id, url: webhookUrl },
       'Attempting webhook delivery',
     );

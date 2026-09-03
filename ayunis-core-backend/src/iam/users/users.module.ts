@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { getLoggerToken, PinoLogger } from 'nestjs-pino';
 import { UsersRepository } from './application/ports/users.repository';
 import { UsersExportRepository } from './application/ports/users-export.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
@@ -104,14 +103,11 @@ import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/ad
   providers: [
     {
       provide: UsersRepository,
-      useFactory: (
-        logger: PinoLogger,
-        txHost: TransactionHost<TransactionalAdapterTypeOrm>,
-      ) => {
+      useFactory: (txHost: TransactionHost<TransactionalAdapterTypeOrm>) => {
         // FUTURE: Implement cloud users repository when auth.provider === AuthProvider.CLOUD
-        return new LocalUsersRepository(logger, txHost);
+        return new LocalUsersRepository(txHost);
       },
-      inject: [getLoggerToken(LocalUsersRepository.name), TransactionHost],
+      inject: [TransactionHost],
     },
     {
       provide: UsersExportRepository,

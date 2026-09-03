@@ -1,22 +1,21 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { KnowledgeGetTextTool } from '../../domain/tools/knowledge-get-text-tool.entity';
+import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
 import type { UUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetKnowledgeBaseDocumentTextUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
 import { GetKnowledgeBaseDocumentTextQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.query';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import toolsConfig from 'src/config/tools.config';
 import {
   TextExtractionTruncationReason,
   validateTextExtraction,
-} from '../utils/text-extraction.utils';
+} from 'src/domain/tools/application/utils/text-extraction.utils';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
@@ -43,9 +42,9 @@ interface KnowledgeGetTextResult {
 
 @Injectable()
 export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(KnowledgeGetTextToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(KnowledgeGetTextToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly getDocumentTextUseCase: GetKnowledgeBaseDocumentTextUseCase,
     private readonly extractTextLinesUseCase: ExtractTextLinesUseCase,
     private readonly contextService: ContextService,
@@ -62,7 +61,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { orgId } = context;
-    this.logger.info({ tool: tool.name, input }, 'execute');
+    this.logger.log({ tool: tool.name, input }, 'execute');
 
     try {
       return await this.getText(tool, input, orgId);

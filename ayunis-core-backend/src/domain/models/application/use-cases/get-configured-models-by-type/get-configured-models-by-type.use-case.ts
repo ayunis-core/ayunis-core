@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -13,9 +12,9 @@ import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.
 
 @Injectable()
 export class GetConfiguredModelsByTypeUseCase {
+  private readonly logger = new Logger(GetConfiguredModelsByTypeUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetConfiguredModelsByTypeUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
     private readonly modelConfiguration: ModelConfigurationService,
@@ -29,7 +28,7 @@ export class GetConfiguredModelsByTypeUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
         type: query.type,

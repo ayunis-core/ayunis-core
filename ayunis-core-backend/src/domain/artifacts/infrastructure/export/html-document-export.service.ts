@@ -1,15 +1,14 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import {
   DocumentExportPort,
   LetterheadConfig,
-} from '../../application/ports/document-export.port';
+} from 'src/domain/artifacts/application/ports/document-export.port';
 import { convertHtmlToDocx } from './html-to-docx-converter';
 import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import { LazyChromiumBrowser } from 'src/common/puppeteer/lazy-chromium-browser';
-import { sanitizeHtmlContent } from '../../application/helpers/sanitize-html-content';
+import { sanitizeHtmlContent } from 'src/domain/artifacts/application/helpers/sanitize-html-content';
 import { TimeoutError } from 'puppeteer-core';
-import { ArtifactExportTimeoutError } from '../../application/artifacts.errors';
+import { ArtifactExportTimeoutError } from 'src/domain/artifacts/application/artifacts.errors';
 
 /** CSS for PDF export (Puppeteer supports full <style> blocks). */
 const PDF_CSS = `
@@ -52,11 +51,11 @@ const PDF_CSS = `
 export class HtmlDocumentExportService
   implements DocumentExportPort, OnModuleDestroy
 {
+  private readonly logger = new Logger(HtmlDocumentExportService.name);
+
   private readonly chromium = new LazyChromiumBrowser();
 
   constructor(
-    @InjectPinoLogger(HtmlDocumentExportService.name)
-    private readonly logger: PinoLogger,
     private readonly pdfLetterheadCompositor: PdfLetterheadCompositor,
   ) {}
 
@@ -65,7 +64,7 @@ export class HtmlDocumentExportService
   }
 
   async exportToDocx(html: string): Promise<Buffer> {
-    this.logger.info('Exporting HTML to DOCX');
+    this.logger.log('Exporting HTML to DOCX');
 
     const sanitized = sanitizeHtmlContent(html);
     return convertHtmlToDocx(sanitized);
@@ -75,7 +74,7 @@ export class HtmlDocumentExportService
     html: string,
     letterhead?: LetterheadConfig,
   ): Promise<Buffer> {
-    this.logger.info('Exporting HTML to PDF');
+    this.logger.log('Exporting HTML to PDF');
 
     const wrappedHtml = this.wrapHtmlForPdf(html, letterhead);
     const browser = await this.chromium.get();

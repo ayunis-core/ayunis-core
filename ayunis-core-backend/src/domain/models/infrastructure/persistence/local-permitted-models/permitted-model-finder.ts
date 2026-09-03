@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
 import { In, type FindManyOptions, type Repository } from 'typeorm';
@@ -20,10 +19,9 @@ import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 
 @Injectable()
 export class PermittedModelFinder {
-  constructor(
-    @InjectPinoLogger(PermittedModelFinder.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(PermittedModelFinder.name);
 
+  constructor(
     @InjectRepository(PermittedModelRecord)
     private readonly permittedModelRepository: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,

@@ -10,8 +10,8 @@ import {
   UnauthorizedException,
   Post,
   Query,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -62,10 +62,10 @@ import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 @ApiTags('Users')
 @Controller('users')
 export class UserController {
+  private readonly logger = new Logger(UserController.name);
+
   // eslint-disable-next-line max-params -- NestJS injects these explicit collaborators.
   constructor(
-    @InjectPinoLogger(UserController.name)
-    private readonly logger: PinoLogger,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly updateUserRoleUseCase: UpdateUserRoleUseCase,
@@ -133,7 +133,7 @@ export class UserController {
     orgId: UUID,
     queryParams: GetUsersQueryParamsDto,
   ): void {
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         limit: queryParams.limit,
@@ -198,7 +198,7 @@ export class UserController {
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
     const newRole = updateUserRoleDto.role;
-    this.logger.info({ userId, newRole }, 'updateUserRole');
+    this.logger.log({ userId, newRole }, 'updateUserRole');
 
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot update your own role');
@@ -243,7 +243,7 @@ export class UserController {
     @Body() updateUserNameDto: UpdateUserNameDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         name: updateUserNameDto.name,
       },
@@ -285,7 +285,7 @@ export class UserController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: currentUserId,
       },
@@ -328,7 +328,7 @@ export class UserController {
     description: 'Internal server error occurred while confirming email',
   })
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto): Promise<void> {
-    this.logger.info({ hasToken: !!confirmEmailDto.token }, 'confirmEmail');
+    this.logger.log({ hasToken: !!confirmEmailDto.token }, 'confirmEmail');
 
     await this.confirmEmailUseCase.execute(
       new ConfirmEmailCommand(confirmEmailDto.token),
@@ -366,7 +366,7 @@ export class UserController {
   async resendEmailConfirmation(
     @Body() resendEmailConfirmationDto: ResendEmailConfirmationDto,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         email: resendEmailConfirmationDto.email,
       },
@@ -410,7 +410,7 @@ export class UserController {
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
-    this.logger.info({ userId }, 'deleteUser');
+    this.logger.log({ userId }, 'deleteUser');
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot delete yourself');
     }

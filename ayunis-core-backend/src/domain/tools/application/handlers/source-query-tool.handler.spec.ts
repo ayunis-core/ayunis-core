@@ -1,14 +1,12 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SourceQueryToolHandler } from './source-query-tool.handler';
 import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { QueryTextSourceUseCase } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
-import type { SourceQueryTool } from '../../domain/tools/source-query-tool.entity';
+import type { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { randomUUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 
@@ -51,11 +49,6 @@ describe('SourceQueryToolHandler', () => {
         {
           provide: QueryTextSourceUseCase,
           useValue: mockQueryTextSourceUseCase,
-        },
-
-        {
-          provide: getLoggerToken(SourceQueryToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

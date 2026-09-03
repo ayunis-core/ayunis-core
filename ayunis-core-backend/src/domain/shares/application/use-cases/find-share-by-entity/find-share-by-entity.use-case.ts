@@ -1,6 +1,10 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SharesRepository } from '../../ports/shares-repository.port';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindShareByEntityQuery } from './find-share-by-entity.query';
 import { Share } from 'src/domain/shares/domain/share.entity';
@@ -13,9 +17,9 @@ import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-
  */
 @Injectable()
 export class FindShareByEntityUseCase {
+  private readonly logger = new Logger(FindShareByEntityUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindShareByEntityUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(SharesRepository)
     private readonly sharesRepository: SharesRepository,
     private readonly contextService: ContextService,
@@ -29,7 +33,7 @@ export class FindShareByEntityUseCase {
    * @throws UnauthorizedException if user is not authenticated or has no organization
    */
   async execute(query: FindShareByEntityQuery): Promise<Share | null> {
-    this.logger.info(
+    this.logger.log(
       {
         entityType: query.entityType,
         entityId: query.entityId,

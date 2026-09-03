@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GenerateAndSetThreadTitleCommand } from './generate-and-set-thread-title.command';
-import { UpdateThreadTitleUseCase } from '../update-thread-title/update-thread-title.use-case';
-import { UpdateThreadTitleCommand } from '../update-thread-title/update-thread-title.command';
+import { UpdateThreadTitleUseCase } from 'src/domain/threads/application/use-cases/update-thread-title/update-thread-title.use-case';
+import { UpdateThreadTitleCommand } from 'src/domain/threads/application/use-cases/update-thread-title/update-thread-title.command';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
@@ -11,14 +10,14 @@ import {
   EmptyTitleResponseError,
   InvalidTitleResponseTypeError,
   TitleGenerationError,
-} from '../../thread-title.errors';
+} from 'src/domain/threads/application/thread-title.errors';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 
 @Injectable()
 export class GenerateAndSetThreadTitleUseCase {
+  private readonly logger = new Logger(GenerateAndSetThreadTitleUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GenerateAndSetThreadTitleUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly updateThreadTitleUseCase: UpdateThreadTitleUseCase,
     private readonly triggerInferenceUseCase: GetInferenceUseCase,
   ) {}
@@ -26,7 +25,7 @@ export class GenerateAndSetThreadTitleUseCase {
   async execute(
     command: GenerateAndSetThreadTitleCommand,
   ): Promise<string | null> {
-    this.logger.info({ threadId: command.thread.id }, 'generateAndSetTitle');
+    this.logger.log({ threadId: command.thread.id }, 'generateAndSetTitle');
 
     try {
       return await this.generateTitle(command);

@@ -1,10 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   createMockContextService,
   createMockWorkspacesRepository,
   TEST_WORKSPACE_ID,
   aWorkspace,
-} from '../../testing/workspace.fixtures';
+} from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { UpdateWorkspaceInstructionCommand } from './update-workspace-instruction.command';
 import { UpdateWorkspaceInstructionUseCase } from './update-workspace-instruction.use-case';
 
@@ -13,7 +12,6 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
     const repository = createMockWorkspacesRepository();
     repository.findById.mockResolvedValue(aWorkspace());
     const useCase = new UpdateWorkspaceInstructionUseCase(
-      createPinoLoggerMock(),
       repository,
       createMockContextService(),
     );
@@ -39,7 +37,6 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
       aWorkspace({ instruction: 'Use building department wording.' }),
     );
     const useCase = new UpdateWorkspaceInstructionUseCase(
-      createPinoLoggerMock(),
       repository,
       createMockContextService(),
     );

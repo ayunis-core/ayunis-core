@@ -7,8 +7,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { AcceptInviteUseCase } from './accept-invite.use-case';
 import { AcceptInviteCommand } from './accept-invite.command';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
@@ -68,10 +66,6 @@ describe('AcceptInviteUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AcceptInviteUseCase,
-        {
-          provide: getLoggerToken(AcceptInviteUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: InviteJwtService, useValue: mockInviteJwtService },
         { provide: CreateUserUseCase, useValue: mockCreateUserUseCase },

@@ -1,15 +1,13 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetOrgAdminsUseCase } from './get-org-admins.use-case';
 import { GetOrgAdminsQuery } from './get-org-admins.query';
-import { UsersRepository } from '../../ports/users.repository';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
-import { SystemRole } from '../../../domain/value-objects/system-role.enum';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { UUID } from 'crypto';
-import { UserUnexpectedError } from '../../users.errors';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 
 describe('GetOrgAdminsUseCase', () => {
   let useCase: GetOrgAdminsUseCase;
@@ -25,10 +23,6 @@ describe('GetOrgAdminsUseCase', () => {
       providers: [
         GetOrgAdminsUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
-        {
-          provide: getLoggerToken(GetOrgAdminsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

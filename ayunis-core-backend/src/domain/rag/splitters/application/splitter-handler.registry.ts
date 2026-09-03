@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { SplitterHandler } from './ports/splitter.handler';
-import { SplitterType } from '../domain/splitter-type.enum';
+import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import {
   NoSplitterProviderAvailableError,
   SplitterProviderNotFoundError,
@@ -9,10 +8,7 @@ import {
 
 @Injectable()
 export class SplitterHandlerRegistry {
-  constructor(
-    @InjectPinoLogger(SplitterHandlerRegistry.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(SplitterHandlerRegistry.name);
 
   private readonly handlers = new Map<SplitterType, SplitterHandler>();
 

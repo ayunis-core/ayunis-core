@@ -1,19 +1,16 @@
-import { InvitesRepository } from '../../ports/invites.repository';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { DeleteInviteByEmailCommand } from './delete-invite-by-email.command';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InviteNotFoundError } from '../../invites.errors';
+import { Injectable, Logger } from '@nestjs/common';
+import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
 
 @Injectable()
 export class DeleteInviteByEmailUseCase {
-  constructor(
-    @InjectPinoLogger(DeleteInviteByEmailUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly invitesRepository: InvitesRepository,
-  ) {}
+  private readonly logger = new Logger(DeleteInviteByEmailUseCase.name);
+
+  constructor(private readonly invitesRepository: InvitesRepository) {}
 
   async execute(command: DeleteInviteByEmailCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         email: command.email,
         requestingUserId: command.requestingUserId,

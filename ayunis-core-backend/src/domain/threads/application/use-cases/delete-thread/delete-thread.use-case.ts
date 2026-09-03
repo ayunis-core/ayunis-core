@@ -1,19 +1,18 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
 import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
-import { ThreadDeletionRequestedEvent } from '../../events/thread-deletion-requested.event';
+import { ThreadDeletionRequestedEvent } from 'src/domain/threads/application/events/thread-deletion-requested.event';
 
 @Injectable()
 export class DeleteThreadUseCase {
+  private readonly logger = new Logger(DeleteThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
@@ -21,7 +20,7 @@ export class DeleteThreadUseCase {
   ) {}
 
   async execute(command: DeleteThreadCommand): Promise<void> {
-    this.logger.info({ threadId: command.id }, 'delete');
+    this.logger.log({ threadId: command.id }, 'delete');
 
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
@@ -58,7 +57,7 @@ export class DeleteThreadUseCase {
       await this.threadsRepository.delete(command.id, userId);
       await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
 
-      this.logger.info(logContext, 'Thread deleted successfully');
+      this.logger.log(logContext, 'Thread deleted successfully');
     } catch (error) {
       this.logger.error(
         { ...logContext, err: error as Error },

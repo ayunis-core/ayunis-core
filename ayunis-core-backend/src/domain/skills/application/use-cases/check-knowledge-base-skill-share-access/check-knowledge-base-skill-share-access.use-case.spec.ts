@@ -1,14 +1,12 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { CheckKnowledgeBaseSkillShareAccessUseCase } from './check-knowledge-base-skill-share-access.use-case';
 import { CheckKnowledgeBaseSkillShareAccessQuery } from './check-knowledge-base-skill-share-access.query';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { Share } from 'src/domain/shares/domain/share.entity';
-import type { Skill } from '../../../domain/skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { UUID } from 'crypto';
 
 describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
@@ -25,12 +23,6 @@ describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CheckKnowledgeBaseSkillShareAccessUseCase,
-        {
-          provide: getLoggerToken(
-            CheckKnowledgeBaseSkillShareAccessUseCase.name,
-          ),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SkillRepository,
           useValue: { findSkillsByKnowledgeBaseAndOwners: jest.fn() },

@@ -1,11 +1,9 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
 import { Team } from 'src/iam/teams/domain/team.entity';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import {
   aTeamCreditLimit,
   aUserCreditLimit,
@@ -13,7 +11,7 @@ import {
   TEST_ORG_ID,
   TEST_TEAM_ID,
   TEST_USER_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { ResolveCreditLimitsForUserUseCase } from './resolve-credit-limits-for-user.use-case';
 import { ResolveCreditLimitsForUserQuery } from './resolve-credit-limits-for-user.query';
 
@@ -37,10 +35,6 @@ describe('ResolveCreditLimitsForUserUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ResolveCreditLimitsForUserUseCase,
-        {
-          provide: getLoggerToken(ResolveCreditLimitsForUserUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: CreditLimitRepository, useValue: repository },
         { provide: FindTeamsByUserIdUseCase, useValue: findTeams },
       ],

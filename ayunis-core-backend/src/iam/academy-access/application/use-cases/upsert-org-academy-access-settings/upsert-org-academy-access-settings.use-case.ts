@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { OrgAcademyAccessSettingsRepository } from '../../ports/org-academy-access-settings.repository';
-import { OrgAcademyAccessSettings } from '../../../domain/org-academy-access-settings.entity';
-import { UnexpectedAcademyAccessError } from '../../academy-access.errors';
+import { OrgAcademyAccessSettingsRepository } from 'src/iam/academy-access/application/ports/org-academy-access-settings.repository';
+import { OrgAcademyAccessSettings } from 'src/iam/academy-access/domain/org-academy-access-settings.entity';
+import { UnexpectedAcademyAccessError } from 'src/iam/academy-access/application/academy-access.errors';
 import { UpsertOrgAcademyAccessSettingsCommand } from './upsert-org-academy-access-settings.command';
 
 @Injectable()
 export class UpsertOrgAcademyAccessSettingsUseCase {
+  private readonly logger = new Logger(
+    UpsertOrgAcademyAccessSettingsUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(UpsertOrgAcademyAccessSettingsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: OrgAcademyAccessSettingsRepository,
   ) {}
 
@@ -18,7 +19,7 @@ export class UpsertOrgAcademyAccessSettingsUseCase {
   async execute(
     command: UpsertOrgAcademyAccessSettingsCommand,
   ): Promise<OrgAcademyAccessSettings> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         mode: command.mode,

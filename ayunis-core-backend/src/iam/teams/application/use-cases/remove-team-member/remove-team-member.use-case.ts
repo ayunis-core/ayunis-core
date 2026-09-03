@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { TeamsRepository } from '../../ports/teams.repository';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { RemoveTeamMemberCommand } from './remove-team-member.command';
-import { TeamNotFoundError } from '../../teams.errors';
-import { TeamMemberNotFoundError } from '../../team-members.errors';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
+import { TeamMemberNotFoundError } from 'src/iam/teams/application/team-members.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -13,9 +12,9 @@ import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class RemoveTeamMemberUseCase {
+  private readonly logger = new Logger(RemoveTeamMemberUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RemoveTeamMemberUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly contextService: ContextService,
@@ -29,7 +28,7 @@ export class RemoveTeamMemberUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         teamId: command.teamId,
         userId: command.userId,

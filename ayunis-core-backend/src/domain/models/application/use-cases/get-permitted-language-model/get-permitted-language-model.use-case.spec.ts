@@ -1,22 +1,21 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { GetPermittedLanguageModelUseCase } from './get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from './get-permitted-language-model.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelNotFoundByIdError } from '../../models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelNotFoundByIdError } from 'src/domain/models/application/models.errors';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { GetEffectiveLanguageModelsUseCase } from '../get-effective-language-models/get-effective-language-models.use-case';
+import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 
 describe('GetPermittedLanguageModelUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: GetPermittedLanguageModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getEffectiveLanguageModelsUseCase: jest.Mocked<GetEffectiveLanguageModelsUseCase>;
@@ -51,10 +50,6 @@ describe('GetPermittedLanguageModelUseCase', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetPermittedLanguageModelUseCase.name),
-          useValue: logger,
-        },
         GetPermittedLanguageModelUseCase,
         {
           provide: PermittedModelsRepository,
@@ -88,7 +83,7 @@ describe('GetPermittedLanguageModelUseCase', () => {
       GetEffectiveLanguageModelsUseCase,
     );
 
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.error.mockImplementation();
   });
 

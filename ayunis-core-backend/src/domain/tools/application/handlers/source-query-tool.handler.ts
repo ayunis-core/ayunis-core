@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SourceQueryTool } from '../../domain/tools/source-query-tool.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
 import { UUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { QueryTextSourceUseCase } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
 import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
@@ -10,14 +9,14 @@ import { QueryTextSourceCommand } from 'src/domain/sources/application/use-cases
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { handleEmbeddingError } from '../utils/embedding-error.utils';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { handleEmbeddingError } from 'src/domain/tools/application/utils/embedding-error.utils';
 
 @Injectable()
 export class SourceQueryToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(SourceQueryToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(SourceQueryToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
     private readonly matchSourceContentChunksUseCase: QueryTextSourceUseCase,
   ) {
@@ -31,7 +30,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { orgId } = context;
-    this.logger.info({ name: tool.name, input: input }, 'execute');
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const source = await this.getSourceByIdUseCase.execute(

@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { FindAllOrgIdsUseCase } from 'src/iam/orgs/application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
-import type { StorageObjectSummary } from '../../ports/object-storage.port';
-import { PurgeOrgStorageUseCase } from '../purge-org-storage/purge-org-storage.use-case';
-import { PurgeOrgStorageCommand } from '../purge-org-storage/purge-org-storage.command';
-import { extractOrgIdFromKey } from '../../../domain/org-storage-layout';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
+import type { StorageObjectSummary } from 'src/domain/storage/application/ports/object-storage.port';
+import { PurgeOrgStorageUseCase } from 'src/domain/storage/application/use-cases/purge-org-storage/purge-org-storage.use-case';
+import { PurgeOrgStorageCommand } from 'src/domain/storage/application/use-cases/purge-org-storage/purge-org-storage.command';
+import { extractOrgIdFromKey } from 'src/domain/storage/domain/org-storage-layout';
 
 /**
  * How old the newest blob under an org's prefixes must be before the sweeper
@@ -38,16 +37,16 @@ export interface SweepOrphanStorageResult {
  */
 @Injectable()
 export class SweepOrphanStorageUseCase {
+  private readonly logger = new Logger(SweepOrphanStorageUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SweepOrphanStorageUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     private readonly findAllOrgIdsUseCase: FindAllOrgIdsUseCase,
     private readonly purgeOrgStorageUseCase: PurgeOrgStorageUseCase,
   ) {}
 
   async execute(): Promise<SweepOrphanStorageResult> {
-    this.logger.info('Starting orphan storage sweep');
+    this.logger.log('Starting orphan storage sweep');
 
     const existingOrgIds = new Set<string>(
       await this.findAllOrgIdsUseCase.execute(),
@@ -77,7 +76,7 @@ export class SweepOrphanStorageUseCase {
       await this.purgeOrphan(orgId as UUID, result);
     }
 
-    this.logger.info({ ...result }, 'Finished orphan storage sweep');
+    this.logger.log({ ...result }, 'Finished orphan storage sweep');
     return result;
   }
 

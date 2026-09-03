@@ -1,33 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UpdateSeatsCommand } from './update-seats.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
   InvalidSubscriptionDataError,
   TooManyUsedSeatsError,
   UnexpectedSubscriptionError,
   InvalidSubscriptionTypeError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
-import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
-import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
+import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
+import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SubscriptionSeatsUpdatedEvent } from '../../events/subscription-seats-updated.event';
-import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
+import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
+import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
-import type { SeatBasedSubscription } from '../../../domain/seat-based-subscription.entity';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import type { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 
 @Injectable()
 export class UpdateSeatsUseCase {
+  private readonly logger = new Logger(UpdateSeatsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateSeatsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
@@ -37,7 +36,7 @@ export class UpdateSeatsUseCase {
   ) {}
 
   async execute(command: UpdateSeatsCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,

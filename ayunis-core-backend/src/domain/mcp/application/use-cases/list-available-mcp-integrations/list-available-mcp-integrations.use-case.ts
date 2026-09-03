@@ -1,14 +1,18 @@
-import { Injectable, Optional, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  Injectable,
+  Optional,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { UUID } from 'crypto';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedMcpError } from '../../mcp.errors';
-import { McpOAuthUserTokenRepositoryPort } from '../../ports/mcp-oauth-user-token.repository.port';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
+import { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
 
 /**
  * An enabled integration paired with whether the current user has satisfied
@@ -26,9 +30,11 @@ export interface AvailableMcpIntegration {
  */
 @Injectable()
 export class ListAvailableMcpIntegrationsUseCase {
+  private readonly logger = new Logger(
+    ListAvailableMcpIntegrationsUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(ListAvailableMcpIntegrationsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
@@ -43,7 +49,7 @@ export class ListAvailableMcpIntegrationsUseCase {
    * @throws UnexpectedMcpError if an unexpected error occurs
    */
   async execute(): Promise<AvailableMcpIntegration[]> {
-    this.logger.info('listAvailableMcpIntegrations');
+    this.logger.log('listAvailableMcpIntegrations');
 
     try {
       const orgId = this.contextService.get('orgId');

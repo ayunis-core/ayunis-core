@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { SearchWebUseCase } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.use-case';
 import { SearchWebCommand } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.command';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { InternetSearchTool } from '../../domain/tools/internet-search-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 @Injectable()
 export class InternetSearchToolHandler extends ToolExecutionHandler {
-  constructor(
-    @InjectPinoLogger(InternetSearchToolHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly searchWebUseCase: SearchWebUseCase,
-  ) {
+  private readonly logger = new Logger(InternetSearchToolHandler.name);
+
+  constructor(private readonly searchWebUseCase: SearchWebUseCase) {
     super();
   }
 
@@ -25,7 +22,7 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.info({ name: tool.name, input: input }, 'execute');
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const results = await this.searchWebUseCase.execute(

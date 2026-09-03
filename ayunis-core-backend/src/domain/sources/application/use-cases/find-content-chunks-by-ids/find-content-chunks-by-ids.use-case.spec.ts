@@ -1,13 +1,11 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindContentChunksByIdsUseCase } from './find-content-chunks-by-ids.use-case';
 import { FindContentChunksByIdsQuery } from './find-content-chunks-by-ids.query';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { randomUUID } from 'crypto';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import type { UUID } from 'crypto';
 
 describe('FindContentChunksByIdsUseCase', () => {
@@ -22,10 +20,6 @@ describe('FindContentChunksByIdsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindContentChunksByIdsUseCase,
-        {
-          provide: getLoggerToken(FindContentChunksByIdsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SourceRepository,
           useValue: mockSourceRepository,

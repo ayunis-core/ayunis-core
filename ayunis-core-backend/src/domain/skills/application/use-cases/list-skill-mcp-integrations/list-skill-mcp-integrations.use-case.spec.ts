@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
@@ -77,10 +75,6 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListSkillMcpIntegrationsUseCase,
-        {
-          provide: getLoggerToken(ListSkillMcpIntegrationsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         {
           provide: GetMcpIntegrationsByIdsUseCase,

@@ -1,5 +1,7 @@
-import type { PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from '../testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { DeferredCleanupEvent } from './deferred-cleanup.event';
 import { runDeferredCleanup } from './run-deferred-cleanup';
 
@@ -26,10 +28,10 @@ describe('DeferredCleanupEvent', () => {
 });
 
 describe('runDeferredCleanup', () => {
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   beforeEach(() => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
   });
 
   it('runs all tasks in order', async () => {

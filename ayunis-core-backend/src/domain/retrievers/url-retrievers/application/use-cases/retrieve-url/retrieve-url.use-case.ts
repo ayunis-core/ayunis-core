@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { RetrieveUrlCommand } from './retrieve-url.command';
 import {
@@ -23,9 +22,9 @@ const PDF_MIME_TYPE = 'application/pdf';
 
 @Injectable()
 export class RetrieveUrlUseCase {
+  private readonly logger = new Logger(RetrieveUrlUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RetrieveUrlUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly handler: UrlRetrieverHandler,
     private readonly assertCrawlDomainAccessUseCase: AssertCrawlDomainAccessUseCase,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,

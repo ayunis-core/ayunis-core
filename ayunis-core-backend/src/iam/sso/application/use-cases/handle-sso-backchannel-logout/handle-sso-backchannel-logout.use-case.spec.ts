@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { RevokeSessionsByZitadelSessionUseCase } from 'src/iam/sessions/application/use-cases/revoke-sessions-by-zitadel-session/revoke-sessions-by-zitadel-session.use-case';
 import type { RevokeSsoSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-sso-sessions-for-user/revoke-sso-sessions-for-user.use-case';
 import type { FederatedIdentitiesRepository } from 'src/iam/sso/application/ports/federated-identities.repository';
@@ -13,7 +12,6 @@ describe(HandleSsoBackchannelLogoutUseCase.name, () => {
   const revokeSession = { execute: jest.fn() };
   const revokeUserSso = { execute: jest.fn() };
   const useCase = new HandleSsoBackchannelLogoutUseCase(
-    createPinoLoggerMock(),
     broker as unknown as OidcBrokerLogoutClient,
     identities as unknown as FederatedIdentitiesRepository,
     revokeSession as unknown as RevokeSessionsByZitadelSessionUseCase,

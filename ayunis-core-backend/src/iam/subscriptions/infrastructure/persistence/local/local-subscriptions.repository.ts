@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
@@ -22,9 +21,9 @@ import { SubscriptionBillingInfoMapper } from './mappers/subscription-billing-in
 
 @Injectable()
 export class LocalSubscriptionsRepository extends SubscriptionRepository {
+  private readonly logger = new Logger(LocalSubscriptionsRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalSubscriptionsRepository.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionMapper: SubscriptionMapper,
     private readonly subscriptionBillingInfoMapper: SubscriptionBillingInfoMapper,
     private readonly dataSource: DataSource,
@@ -145,7 +144,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         this.insertSubscriptionWithBilling(manager, record),
       );
 
-      this.logger.info(
+      this.logger.log(
         { subscriptionId: subscription.id },
         'Created subscription',
       );
@@ -182,7 +181,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         await this.insertSubscriptionWithBilling(manager, record);
       });
 
-      this.logger.info(
+      this.logger.log(
         {
           oldSubscriptionId,
           disposition,
@@ -217,7 +216,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     try {
       const record = this.subscriptionMapper.toRecord(subscription);
       await this.subscriptions.save(record);
-      this.logger.info(
+      this.logger.log(
         { subscriptionId: subscription.id },
         'Updated subscription',
       );
@@ -257,7 +256,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       }
 
       const updatedRecord = await this.subscriptions.save(record);
-      this.logger.info(
+      this.logger.log(
         { subscriptionId: params.subscriptionId },
         'Updated subscription start date',
       );
@@ -281,7 +280,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         subscriptionId,
       );
       await this.billingInfo.save(record);
-      this.logger.info({ subscriptionId }, 'Updated subscription billing info');
+      this.logger.log({ subscriptionId }, 'Updated subscription billing info');
       return this.subscriptionBillingInfoMapper.toDomain(record);
     } catch (error) {
       this.logger.error(
@@ -301,7 +300,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
           'No subscription found to delete',
         );
       } else {
-        this.logger.info({ subscriptionId: id }, 'Deleted subscription');
+        this.logger.log({ subscriptionId: id }, 'Deleted subscription');
       }
     } catch (error) {
       this.logger.error(

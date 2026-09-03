@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { PurgeOrgStorageCommand } from './purge-org-storage.command';
-import { PurgeStoragePrefixesUseCase } from '../purge-storage-prefixes/purge-storage-prefixes.use-case';
-import { PurgeStoragePrefixesCommand } from '../purge-storage-prefixes/purge-storage-prefixes.command';
-import type { PurgeStoragePrefixesResult } from '../purge-storage-prefixes/purge-storage-prefixes.use-case';
-import { orgStoragePrefixes } from '../../../domain/org-storage-layout';
+import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
+import type { PurgeStoragePrefixesResult } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { orgStoragePrefixes } from 'src/domain/storage/domain/org-storage-layout';
 
 export type PurgeOrgStorageResult = PurgeStoragePrefixesResult;
 
@@ -21,16 +20,16 @@ export type PurgeOrgStorageResult = PurgeStoragePrefixesResult;
  */
 @Injectable()
 export class PurgeOrgStorageUseCase {
+  private readonly logger = new Logger(PurgeOrgStorageUseCase.name);
+
   constructor(
-    @InjectPinoLogger(PurgeOrgStorageUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
   ) {}
 
   async execute(
     command: PurgeOrgStorageCommand,
   ): Promise<PurgeOrgStorageResult> {
-    this.logger.info({ orgId: command.orgId }, 'Purging org storage');
+    this.logger.log({ orgId: command.orgId }, 'Purging org storage');
     return this.purgeStoragePrefixesUseCase.execute(
       new PurgeStoragePrefixesCommand(orgStoragePrefixes(command.orgId)),
     );

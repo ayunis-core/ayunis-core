@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import type { UUID } from 'crypto';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
@@ -13,11 +12,11 @@ const MAX_SOURCES_PER_RUN = 100;
 
 @Injectable()
 export class StaleProcessingCleanupTask {
+  private readonly logger = new Logger(StaleProcessingCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
-    @InjectPinoLogger(StaleProcessingCleanupTask.name)
-    private readonly logger: PinoLogger,
     private readonly sourceRepository: SourceRepository,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
   ) {}

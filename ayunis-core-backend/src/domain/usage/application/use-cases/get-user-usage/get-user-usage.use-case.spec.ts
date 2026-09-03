@@ -1,17 +1,15 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserUsageUseCase } from './get-user-usage.use-case';
 import { GetUserUsageQuery } from './get-user-usage.query';
-import { UsageRepository } from '../../ports/usage.repository';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import {
   InvalidDateRangeError,
   InvalidPaginationError,
-} from '../../usage.errors';
+} from 'src/domain/usage/application/usage.errors';
 import { Paginated } from 'src/common/pagination';
 import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
-import type { UserUsageResult } from '../../ports/usage.repository';
+import type { UserUsageResult } from 'src/domain/usage/application/ports/usage.repository';
 import type { UUID } from 'crypto';
 import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
 
@@ -37,10 +35,6 @@ describe('GetUserUsageUseCase', () => {
       providers: [
         GetUserUsageUseCase,
         { provide: UsageRepository, useValue: mockUsageRepository },
-        {
-          provide: getLoggerToken(GetUserUsageUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

@@ -1,13 +1,14 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { DownloadObjectUseCase } from './download-object.use-case';
 import { DownloadObjectCommand } from './download-object.command';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import storageConfig from 'src/config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 import { Readable } from 'stream';
 
 function networkError(code: string): Error {
@@ -36,10 +37,6 @@ describe('DownloadObjectUseCase', () => {
       imports: [ConfigModule.forFeature(storageConfig)],
       providers: [
         DownloadObjectUseCase,
-        {
-          provide: getLoggerToken(DownloadObjectUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ObjectStoragePort, useValue: mockObjectStorage },
         {
           provide: storageConfig.KEY,

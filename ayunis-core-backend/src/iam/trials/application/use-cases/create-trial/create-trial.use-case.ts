@@ -1,25 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
-import { TrialRepository } from '../../ports/trial.repository';
+import { TrialRepository } from 'src/iam/trials/application/ports/trial.repository';
 import { CreateTrialCommand } from './create-trial.command';
 import {
   TrialCreationFailedError,
   TrialAlreadyExistsError,
   UnexpectedTrialError,
-} from '../../trial.errors';
+} from 'src/iam/trials/application/trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateTrialUseCase {
-  constructor(
-    @InjectPinoLogger(CreateTrialUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly trialRepository: TrialRepository,
-  ) {}
+  private readonly logger = new Logger(CreateTrialUseCase.name);
+
+  constructor(private readonly trialRepository: TrialRepository) {}
 
   async execute(command: CreateTrialCommand): Promise<Trial> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         maxMessages: command.maxMessages,
@@ -84,7 +81,7 @@ export class CreateTrialUseCase {
         'Repository operation failed',
       );
     }
-    this.logger.info(
+    this.logger.log(
       {
         trialId: createdTrial.id,
         orgId: createdTrial.orgId,

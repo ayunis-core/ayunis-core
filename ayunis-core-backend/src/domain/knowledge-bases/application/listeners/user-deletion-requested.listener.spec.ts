@@ -1,11 +1,9 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import type { UUID } from 'crypto';
 import { KnowledgeBasesUserDeletionRequestedListener } from './user-deletion-requested.listener';
-import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
@@ -33,12 +31,6 @@ describe('KnowledgeBasesUserDeletionRequestedListener', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         KnowledgeBasesUserDeletionRequestedListener,
-        {
-          provide: getLoggerToken(
-            KnowledgeBasesUserDeletionRequestedListener.name,
-          ),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: KnowledgeBaseRepository,
           useValue: knowledgeBaseRepository,

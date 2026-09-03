@@ -1,7 +1,6 @@
 import type { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import type { Request, Response } from 'express';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { MfaLoginController } from 'src/iam/authentication/presenters/http/mfa-login.controller';
 import type { MfaPendingJwtService } from 'src/iam/authentication/application/services/mfa-pending-jwt.service';
@@ -30,7 +29,6 @@ describe(MfaLoginController.name, () => {
     json: jest.fn().mockReturnThis(),
   } as unknown as Response;
   const controller = new MfaLoginController(
-    createPinoLoggerMock(),
     pendingTokens as unknown as MfaPendingJwtService,
     verifyMfa as unknown as VerifyMfaCodeUseCase,
     { execute: jest.fn() } as unknown as SetupTotpUseCase,

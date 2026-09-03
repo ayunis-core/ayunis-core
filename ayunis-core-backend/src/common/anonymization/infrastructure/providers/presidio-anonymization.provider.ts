@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { AnonymizationPort } from 'src/common/anonymization/application/ports/anonymization.port';
 import {
   AnonymizationFailedError,
@@ -35,10 +34,9 @@ function countCodePoints(text: string): number {
 
 @Injectable()
 export class PresidioAnonymizationProvider extends AnonymizationPort {
-  constructor(
-    @InjectPinoLogger(PresidioAnonymizationProvider.name)
-    private readonly logger: PinoLogger,
-  ) {
+  private readonly logger = new Logger(PresidioAnonymizationProvider.name);
+
+  constructor() {
     super();
   }
 
@@ -119,7 +117,7 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
     detectionCount: number,
     startedAt: number,
   ): void {
-    this.logger.info(
+    this.logger.log(
       {
         textLength,
         detectionCount,

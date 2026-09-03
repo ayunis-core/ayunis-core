@@ -7,8 +7,8 @@ import {
   Param,
   Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -27,10 +27,10 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateImageGenerationModelCommand } from '../../application/use-cases/create-image-generation-model/create-image-generation-model.command';
-import { CreateImageGenerationModelUseCase } from '../../application/use-cases/create-image-generation-model/create-image-generation-model.use-case';
-import { UpdateImageGenerationModelCommand } from '../../application/use-cases/update-image-generation-model/update-image-generation-model.command';
-import { UpdateImageGenerationModelUseCase } from '../../application/use-cases/update-image-generation-model/update-image-generation-model.use-case';
+import { CreateImageGenerationModelCommand } from 'src/domain/models/application/use-cases/create-image-generation-model/create-image-generation-model.command';
+import { CreateImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/create-image-generation-model/create-image-generation-model.use-case';
+import { UpdateImageGenerationModelCommand } from 'src/domain/models/application/use-cases/update-image-generation-model/update-image-generation-model.command';
+import { UpdateImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/update-image-generation-model/update-image-generation-model.use-case';
 import { CreateImageGenerationModelRequestDto } from './dto/create-image-generation-model-request.dto';
 import { ImageGenerationModelResponseDto } from './dto/image-generation-model-response.dto';
 import { UpdateImageGenerationModelRequestDto } from './dto/update-image-generation-model-request.dto';
@@ -45,10 +45,11 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   ImageGenerationModelResponseDto,
 )
 export class SuperAdminImageGenerationCatalogModelsController {
-  constructor(
-    @InjectPinoLogger(SuperAdminImageGenerationCatalogModelsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(
+    SuperAdminImageGenerationCatalogModelsController.name,
+  );
 
+  constructor(
     private readonly createImageGenerationModelUseCase: CreateImageGenerationModelUseCase,
     private readonly updateImageGenerationModelUseCase: UpdateImageGenerationModelUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -84,7 +85,7 @@ export class SuperAdminImageGenerationCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreateImageGenerationModelRequestDto,
   ): Promise<ImageGenerationModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { modelName: dto.name, userId },
       'Creating image-generation model by super admin',
     );
@@ -137,7 +138,7 @@ export class SuperAdminImageGenerationCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdateImageGenerationModelRequestDto,
   ): Promise<ImageGenerationModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { modelId: id, userId },
       'Updating image-generation model by super admin',
     );

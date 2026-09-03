@@ -1,5 +1,4 @@
 import { createHash } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { StartOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.command';
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
@@ -33,7 +32,6 @@ describe(StartOrgSsoLoginUseCase.name, () => {
       decrypt: jest.fn(),
     };
     const useCase = new StartOrgSsoLoginUseCase(
-      createPinoLoggerMock(),
       repository,
       new SsoAuthorizationTransactionService(transactions, broker, encryption),
     );
@@ -75,7 +73,6 @@ describe(StartOrgSsoLoginUseCase.name, () => {
     const repository = createMockOrgSsoConnectionsRepository();
     repository.findByOrgId.mockResolvedValue(connection);
     const useCase = new StartOrgSsoLoginUseCase(
-      createPinoLoggerMock(),
       repository,
       new SsoAuthorizationTransactionService(
         { save: jest.fn(), consume: jest.fn(), deleteExpired: jest.fn() },

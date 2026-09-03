@@ -1,18 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { UpdateMonthlyCreditsUseCase } from './update-monthly-credits.use-case';
 import { UpdateMonthlyCreditsCommand } from './update-monthly-credits.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import {
   InvalidSubscriptionDataError,
   InvalidSubscriptionTypeError,
   SubscriptionNotFoundError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -76,10 +74,6 @@ describe('UpdateMonthlyCreditsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateMonthlyCreditsUseCase,
-        {
-          provide: getLoggerToken(UpdateMonthlyCreditsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SubscriptionRepository,
           useValue: { update: jest.fn() },

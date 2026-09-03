@@ -1,16 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { UncancelSubscriptionUseCase } from './uncancel-subscription.use-case';
 import { UncancelSubscriptionCommand } from './uncancel-subscription.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
   SubscriptionNotFoundError,
   SubscriptionNotCancelledError,
   SubscriptionExpiredError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
@@ -19,7 +17,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SubscriptionUncancelledEvent } from '../../events/subscription-uncancelled.event';
+import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
 const mockOrgId = randomUUID();
@@ -77,10 +75,6 @@ describe('UncancelSubscriptionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UncancelSubscriptionUseCase,
-        {
-          provide: getLoggerToken(UncancelSubscriptionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SubscriptionRepository,
           useValue: {

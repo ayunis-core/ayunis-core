@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,11 +10,11 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { DeleteSkillUseCase } from './delete-skill.use-case';
 import { DeleteSkillCommand } from './delete-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
-import { SkillNotFoundError } from '../../skills.errors';
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 
 describe('DeleteSkillUseCase', () => {
   let useCase: DeleteSkillUseCase;
@@ -41,10 +39,6 @@ describe('DeleteSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteSkillUseCase,
-        {
-          provide: getLoggerToken(DeleteSkillUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

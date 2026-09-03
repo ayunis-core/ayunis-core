@@ -6,17 +6,17 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
-import { AddKnowledgeBaseToThreadUseCase } from '../../application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
-import { AddKnowledgeBaseToThreadCommand } from '../../application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.command';
-import { RemoveKnowledgeBaseFromThreadUseCase } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
-import { RemoveKnowledgeBaseFromThreadCommand } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.command';
+import { AddKnowledgeBaseToThreadUseCase } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
+import { AddKnowledgeBaseToThreadCommand } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.command';
+import { RemoveKnowledgeBaseFromThreadUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
+import { RemoveKnowledgeBaseFromThreadCommand } from 'src/domain/threads/application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.command';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 @ApiTags('threads')
@@ -24,9 +24,9 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 @RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadKnowledgeBasesController {
+  private readonly logger = new Logger(ThreadKnowledgeBasesController.name);
+
   constructor(
-    @InjectPinoLogger(ThreadKnowledgeBasesController.name)
-    private readonly logger: PinoLogger,
     private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
     private readonly removeKnowledgeBaseFromThreadUseCase: RemoveKnowledgeBaseFromThreadUseCase,
   ) {}
@@ -58,7 +58,7 @@ export class ThreadKnowledgeBasesController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<void> {
-    this.logger.info({ threadId, knowledgeBaseId }, 'addKnowledgeBase');
+    this.logger.log({ threadId, knowledgeBaseId }, 'addKnowledgeBase');
     await this.addKnowledgeBaseToThreadUseCase.execute(
       new AddKnowledgeBaseToThreadCommand(threadId, knowledgeBaseId),
     );
@@ -89,7 +89,7 @@ export class ThreadKnowledgeBasesController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<void> {
-    this.logger.info({ threadId, knowledgeBaseId }, 'removeKnowledgeBase');
+    this.logger.log({ threadId, knowledgeBaseId }, 'removeKnowledgeBase');
     await this.removeKnowledgeBaseFromThreadUseCase.execute(
       new RemoveKnowledgeBaseFromThreadCommand(threadId, knowledgeBaseId),
     );

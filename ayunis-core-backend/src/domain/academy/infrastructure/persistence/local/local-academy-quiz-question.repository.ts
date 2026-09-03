@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -12,23 +11,23 @@ import { QuizQuestionNotFoundError } from 'src/domain/academy/application/academ
 
 @Injectable()
 export class LocalAcademyQuizQuestionRepository implements AcademyQuizQuestionRepository {
+  private readonly logger = new Logger(LocalAcademyQuizQuestionRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalAcademyQuizQuestionRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(AcademyQuizQuestionRecord)
     private readonly repository: Repository<AcademyQuizQuestionRecord>,
     private readonly mapper: AcademyMapper,
   ) {}
 
   async findOne(id: UUID): Promise<AcademyQuizQuestion | null> {
-    this.logger.info({ id }, 'findOne');
+    this.logger.log({ id }, 'findOne');
     const record = await this.repository.findOne({ where: { id } });
     if (!record) return null;
     return this.mapper.quizQuestionToDomain(record);
   }
 
   async findAllByChapter(chapterId: UUID): Promise<AcademyQuizQuestion[]> {
-    this.logger.info({ chapterId }, 'findAllByChapter');
+    this.logger.log({ chapterId }, 'findAllByChapter');
     const records = await this.repository.find({
       where: { chapterId },
       order: { position: 'ASC', createdAt: 'ASC' },
@@ -37,14 +36,14 @@ export class LocalAcademyQuizQuestionRepository implements AcademyQuizQuestionRe
   }
 
   async findMaxPosition(chapterId: UUID): Promise<number | null> {
-    this.logger.info({ chapterId }, 'findMaxPosition');
+    this.logger.log({ chapterId }, 'findMaxPosition');
     return this.repository.maximum('position', { chapterId });
   }
 
   async create(
     quizQuestion: AcademyQuizQuestion,
   ): Promise<AcademyQuizQuestion> {
-    this.logger.info({ chapterId: quizQuestion.chapterId }, 'create');
+    this.logger.log({ chapterId: quizQuestion.chapterId }, 'create');
     const record = this.mapper.quizQuestionToRecord(quizQuestion);
     const saved = await this.repository.save(record);
     return this.mapper.quizQuestionToDomain(saved);
@@ -53,14 +52,14 @@ export class LocalAcademyQuizQuestionRepository implements AcademyQuizQuestionRe
   async update(
     quizQuestion: AcademyQuizQuestion,
   ): Promise<AcademyQuizQuestion> {
-    this.logger.info({ id: quizQuestion.id }, 'update');
+    this.logger.log({ id: quizQuestion.id }, 'update');
     const record = this.mapper.quizQuestionToRecord(quizQuestion);
     const saved = await this.repository.save(record);
     return this.mapper.quizQuestionToDomain(saved);
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
       throw new QuizQuestionNotFoundError(id);

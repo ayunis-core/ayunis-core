@@ -1,5 +1,5 @@
+import type { Logger } from '@nestjs/common';
 import * as path from 'path';
-import type { PinoLogger } from 'nestjs-pino';
 import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -39,7 +39,7 @@ export async function downloadMinioFile(
 /** Best-effort: a failed cleanup is logged, never thrown. */
 export async function cleanupMinioProcessingFile(
   deleteObjectUseCase: DeleteObjectUseCase,
-  logger: PinoLogger,
+  logger: Logger,
   minioPath: string,
 ): Promise<void> {
   try {

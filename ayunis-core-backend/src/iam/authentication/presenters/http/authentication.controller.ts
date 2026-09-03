@@ -8,8 +8,8 @@ import {
   Req,
   Res,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -58,9 +58,9 @@ import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objec
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthenticationController {
+  private readonly logger = new Logger(AuthenticationController.name);
+
   constructor(
-    @InjectPinoLogger(AuthenticationController.name)
-    private readonly logger: PinoLogger,
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
@@ -99,7 +99,7 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async login(@Req() req: Request, @Res() res: Response) {
-    this.logger.info('login');
+    this.logger.log('login');
     const user = req.user as ActiveUser;
 
     const result = await this.startAuthenticatedSession.execute(
@@ -216,7 +216,7 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async refresh(@Req() req: Request, @Res() res: Response) {
-    this.logger.info('refresh');
+    this.logger.log('refresh');
     const refreshTokenName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',
     );
@@ -285,7 +285,7 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async me(@Req() req: Request, @Res() res: Response) {
-    this.logger.info('me');
+    this.logger.log('me');
 
     const accessTokenName = this.configService.get<string>(
       'auth.cookie.accessTokenName',

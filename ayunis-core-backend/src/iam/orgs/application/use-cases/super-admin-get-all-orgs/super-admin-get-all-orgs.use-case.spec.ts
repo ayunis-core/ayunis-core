@@ -1,14 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { SuperAdminGetAllOrgsUseCase } from './super-admin-get-all-orgs.use-case';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import type { UUID } from 'crypto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { OrgUnauthorizedError } from '../../orgs.errors';
+import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -21,10 +19,6 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SuperAdminGetAllOrgsUseCase,
-        {
-          provide: getLoggerToken(SuperAdminGetAllOrgsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: OrgsRepository,
           useValue: {

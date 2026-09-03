@@ -1,10 +1,9 @@
-import type { PinoLogger } from 'nestjs-pino';
-
+import type { Logger } from '@nestjs/common';
 /**
  * Wraps a metric operation in a try/catch so that metric failures
  * never crash the main business flow. Logs a warning on failure.
  */
-export function safeMetric(logger: PinoLogger, fn: () => void): void {
+export function safeMetric(logger: Logger, fn: () => void): void {
   try {
     fn();
   } catch (error) {

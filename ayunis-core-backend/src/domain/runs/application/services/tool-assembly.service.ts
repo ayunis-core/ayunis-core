@@ -1,5 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
@@ -39,6 +38,8 @@ import type { Source } from 'src/domain/sources/domain/source.entity';
 
 @Injectable()
 export class ToolAssemblyService {
+  private readonly logger = new Logger(ToolAssemblyService.name);
+
   constructor(
     private readonly configService: ConfigService,
     private readonly assembleToolsUseCase: AssembleToolUseCase,
@@ -54,8 +55,6 @@ export class ToolAssemblyService {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
-    @InjectPinoLogger(ToolAssemblyService.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {

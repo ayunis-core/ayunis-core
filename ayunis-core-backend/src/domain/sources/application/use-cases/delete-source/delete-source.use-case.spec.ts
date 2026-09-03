@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -15,12 +13,12 @@ import { randomUUID } from 'crypto';
 import { DeleteSourceUseCase } from './delete-source.use-case';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
-import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
-import { SourceRepository } from '../../ports/source.repository';
+import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 function makeProcessingSource(id: UUID): FileSource {
   return new FileSource({
@@ -66,10 +64,6 @@ describe('DeleteSourceUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteSourceUseCase,
-        {
-          provide: getLoggerToken(DeleteSourceUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SourceRepository, useValue: mockSourceRepository },
         {
           provide: CleanupSourceProcessingUseCase,

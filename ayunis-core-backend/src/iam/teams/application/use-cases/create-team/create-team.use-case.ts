@@ -1,23 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CreateTeamCommand } from './create-team.command';
-import { TeamsRepository } from '../../ports/teams.repository';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import {
   TeamInvalidInputError,
   TeamNameAlreadyExistsError,
   UnexpectedTeamError,
-} from '../../teams.errors';
+} from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class CreateTeamUseCase {
+  private readonly logger = new Logger(CreateTeamUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateTeamUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -31,7 +30,7 @@ export class CreateTeamUseCase {
 
     const trimmedName = command.name.trim() || '';
 
-    this.logger.info({ name: trimmedName, orgId }, 'createTeam');
+    this.logger.log({ name: trimmedName, orgId }, 'createTeam');
 
     if (!trimmedName) {
       this.logger.warn('Attempted to create team with empty name');

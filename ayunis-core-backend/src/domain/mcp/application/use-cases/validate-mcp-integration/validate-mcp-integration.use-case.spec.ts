@@ -1,11 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { ValidateMcpIntegrationUseCase } from './validate-mcp-integration.use-case';
 import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.command';
-import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import type { McpClientService } from '../../services/mcp-client.service';
+import type { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import type { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { McpConnectionTimeoutError } from '../../mcp.errors';
+import { McpConnectionTimeoutError } from 'src/domain/mcp/application/mcp.errors';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
@@ -75,7 +74,6 @@ describe('ValidateMcpIntegrationUseCase', () => {
     repository.findById.mockResolvedValue(buildIntegration());
 
     useCase = new ValidateMcpIntegrationUseCase(
-      createPinoLoggerMock(),
       repository,
       mcpClientService,
       contextService,

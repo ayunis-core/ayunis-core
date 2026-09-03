@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { PredefinedMcpIntegrationRegistry } from 'src/domain/mcp/application/registries/predefined-mcp-integration-registry.service';
 import { PredefinedMcpIntegrationConfig } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
 
 /**
  * Use case for listing all available predefined MCP integration configurations.
@@ -11,14 +10,16 @@ import { UnexpectedMcpError } from '../../mcp.errors';
  */
 @Injectable()
 export class ListPredefinedMcpIntegrationConfigsUseCase {
+  private readonly logger = new Logger(
+    ListPredefinedMcpIntegrationConfigsUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(ListPredefinedMcpIntegrationConfigsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly registryService: PredefinedMcpIntegrationRegistry,
   ) {}
 
   execute(): PredefinedMcpIntegrationConfig[] {
-    this.logger.info('listPredefinedMcpIntegrationConfigs');
+    this.logger.log('listPredefinedMcpIntegrationConfigs');
 
     try {
       return this.registryService.getAllConfigs();

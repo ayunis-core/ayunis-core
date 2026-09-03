@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -13,8 +11,8 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { DeleteSourcesUseCase } from './delete-sources.use-case';
 import { DeleteSourcesCommand } from './delete-sources.command';
-import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
-import { SourceRepository } from '../../ports/source.repository';
+import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
@@ -52,10 +50,6 @@ describe('DeleteSourcesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteSourcesUseCase,
-        {
-          provide: getLoggerToken(DeleteSourcesUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SourceRepository, useValue: mockSourceRepository },
         {
           provide: CleanupSourceProcessingUseCase,

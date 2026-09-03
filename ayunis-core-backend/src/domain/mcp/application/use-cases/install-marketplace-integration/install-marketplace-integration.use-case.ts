@@ -1,23 +1,22 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
 import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
-import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
-import { McpConfigService } from '../../services/mcp-config.service';
-import { ConnectionValidationService } from '../../services/connection-validation.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
+import { ConnectionValidationService } from 'src/domain/mcp/application/services/connection-validation.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import {
   IntegrationConfigSchema,
   ConfigField,
-} from '../../../domain/value-objects/integration-config-schema';
-import { MarketplaceIntegrationInstalledEvent } from '../../events/marketplace-integration-installed.event';
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
 /**
  * Runtime shape of the configSchema returned by the marketplace API.
  * The OpenAPI spec declares this as a generic object, so we cast at the boundary.
@@ -52,16 +51,18 @@ interface MarketplaceConfigSchemaDto {
 import {
   DuplicateMarketplaceMcpIntegrationError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { UUID } from 'crypto';
-import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
+import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
 
 @Injectable()
 export class InstallMarketplaceIntegrationUseCase {
+  private readonly logger = new Logger(
+    InstallMarketplaceIntegrationUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(InstallMarketplaceIntegrationUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly configService: McpConfigService,
@@ -76,7 +77,7 @@ export class InstallMarketplaceIntegrationUseCase {
   async execute(
     command: InstallMarketplaceIntegrationCommand,
   ): Promise<MarketplaceMcpIntegration> {
-    this.logger.info({ identifier: command.identifier }, 'execute');
+    this.logger.log({ identifier: command.identifier }, 'execute');
 
     const orgId = this.contextService.get('orgId');
     const userId = this.contextService.get('userId');

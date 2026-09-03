@@ -6,7 +6,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { InviteAlreadyAcceptedError } from 'src/iam/invites/application/invites.errors';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { anOrgSsoConnection } from 'src/iam/sso/application/testing/org-sso-connection.fixtures';
@@ -266,7 +265,6 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
 
   function useCase(): ProvisionOrgSsoUserUseCase {
     return new ProvisionOrgSsoUserUseCase(
-      createPinoLoggerMock(),
       connections as never,
       identities,
       lock,

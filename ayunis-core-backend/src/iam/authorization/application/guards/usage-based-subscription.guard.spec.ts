@@ -1,12 +1,11 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
 import type { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
-import { REQUIRE_USAGE_BASED_SUBSCRIPTION_KEY } from '../decorators/usage-based-subscription.decorator';
+import { REQUIRE_USAGE_BASED_SUBSCRIPTION_KEY } from 'src/iam/authorization/application/decorators/usage-based-subscription.decorator';
 import { UsageBasedSubscriptionGuard } from './usage-based-subscription.guard';
-import { SubscriptionRequiredError } from '../authorization.errors';
+import { SubscriptionRequiredError } from 'src/iam/authorization/application/authorization.errors';
 
 describe('UsageBasedSubscriptionGuard', () => {
   const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -29,7 +28,6 @@ describe('UsageBasedSubscriptionGuard', () => {
     reflectorValues = {};
     isUsageBased = { execute: jest.fn() };
     guard = new UsageBasedSubscriptionGuard(
-      createPinoLoggerMock(),
       reflector,
       isUsageBased as unknown as IsUsageBasedSubscriptionUseCase,
     );

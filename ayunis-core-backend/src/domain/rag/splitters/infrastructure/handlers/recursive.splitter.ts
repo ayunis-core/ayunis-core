@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   SplitterHandler,
   SplitterInput,
-} from '../../application/ports/splitter.handler';
-import { SplitResult, TextChunk } from '../../domain/split-result.entity';
-import { SplitterProcessingError } from '../../application/splitter.errors';
-import { SplitterType } from '../../domain/splitter-type.enum';
+} from 'src/domain/rag/splitters/application/ports/splitter.handler';
+import {
+  SplitResult,
+  TextChunk,
+} from 'src/domain/rag/splitters/domain/split-result.entity';
+import { SplitterProcessingError } from 'src/domain/rag/splitters/application/splitter.errors';
+import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import {
   ChunkAssembler,
   PositionedChunk,
@@ -40,10 +42,9 @@ interface RecursiveSplitContext {
 
 @Injectable()
 export class RecursiveSplitterHandler extends SplitterHandler {
-  constructor(
-    @InjectPinoLogger(RecursiveSplitterHandler.name)
-    private readonly logger: PinoLogger,
-  ) {
+  private readonly logger = new Logger(RecursiveSplitterHandler.name);
+
+  constructor() {
     super();
   }
 

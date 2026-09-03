@@ -1,18 +1,17 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ClearDefaultsByCatalogModelIdUseCase } from './clear-defaults-by-catalog-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdCommand } from './clear-defaults-by-catalog-model-id.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 
 describe('ClearDefaultsByCatalogModelIdUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: ClearDefaultsByCatalogModelIdUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let userDefaultModelsRepository: jest.Mocked<UserDefaultModelsRepository>;
@@ -51,10 +50,6 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(ClearDefaultsByCatalogModelIdUseCase.name),
-          useValue: logger,
-        },
         ClearDefaultsByCatalogModelIdUseCase,
         {
           provide: PermittedModelsRepository,
@@ -74,7 +69,7 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
     userDefaultModelsRepository = module.get(UserDefaultModelsRepository);
 
     // Mock logger
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.debug.mockImplementation();
   });
 
@@ -314,7 +309,7 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
       userDefaultModelsRepository.deleteByPermittedModelIds.mockResolvedValue();
       permittedModelsRepository.unsetDefaultsByCatalogModelId.mockResolvedValue();
 
-      const logSpy = logger.info;
+      const logSpy = logger.log;
       const debugSpy = logger.debug;
 
       // Act

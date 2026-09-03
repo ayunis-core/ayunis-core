@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
 import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
@@ -15,9 +14,9 @@ export interface CompleteSsoLogoutResult {
 
 @Injectable()
 export class CompleteSsoLogoutUseCase {
+  private readonly logger = new Logger(CompleteSsoLogoutUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CompleteSsoLogoutUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly revokeSessionFamily: RevokeSessionFamilyUseCase,
     private readonly broker: OidcBrokerLogoutClient,
     private readonly brokerSessions: SsoBrokerSessionService,
@@ -27,7 +26,7 @@ export class CompleteSsoLogoutUseCase {
   async execute(
     command: CompleteSsoLogoutCommand,
   ): Promise<CompleteSsoLogoutResult> {
-    this.logger.info('Completing Core logout');
+    this.logger.log('Completing Core logout');
     if (!command.refreshToken) return { brokerLogoutUrl: null };
     const session = await this.revokeSessionFamily.execute(
       new RevokeSessionFamilyCommand(command.refreshToken),

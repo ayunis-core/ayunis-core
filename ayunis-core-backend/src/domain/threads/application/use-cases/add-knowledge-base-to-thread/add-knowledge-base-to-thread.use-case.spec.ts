@@ -1,17 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 
 import { AddKnowledgeBaseToThreadUseCase } from './add-knowledge-base-to-thread.use-case';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
@@ -50,10 +48,6 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddKnowledgeBaseToThreadUseCase,
-        {
-          provide: getLoggerToken(AddKnowledgeBaseToThreadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
           provide: KnowledgeBaseRepository,

@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -26,11 +24,6 @@ describe('McpCredentialEncryptionService', () => {
               return undefined;
             }),
           },
-        },
-
-        {
-          provide: getLoggerToken(McpCredentialEncryptionService.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();
@@ -72,10 +65,7 @@ describe('McpCredentialEncryptionService', () => {
       // Re-instantiate service to trigger constructor validation
       expect(() => {
         // eslint-disable-next-line sonarjs/constructor-for-side-effects
-        new McpCredentialEncryptionService(
-          createPinoLoggerMock(),
-          configService,
-        );
+        new McpCredentialEncryptionService(configService);
       }).toThrow('MCP_ENCRYPTION_KEY environment variable is not configured');
     });
 
@@ -84,10 +74,7 @@ describe('McpCredentialEncryptionService', () => {
 
       expect(() => {
         // eslint-disable-next-line sonarjs/constructor-for-side-effects
-        new McpCredentialEncryptionService(
-          createPinoLoggerMock(),
-          configService,
-        );
+        new McpCredentialEncryptionService(configService);
       }).toThrow('MCP_ENCRYPTION_KEY environment variable is not configured');
     });
 
@@ -96,10 +83,7 @@ describe('McpCredentialEncryptionService', () => {
 
       expect(() => {
         // eslint-disable-next-line sonarjs/constructor-for-side-effects
-        new McpCredentialEncryptionService(
-          createPinoLoggerMock(),
-          configService,
-        );
+        new McpCredentialEncryptionService(configService);
       }).toThrow(
         'MCP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)',
       );

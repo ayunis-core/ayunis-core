@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { EntityManager, Repository, IsNull } from 'typeorm';
@@ -17,9 +16,9 @@ import { exactEmail } from 'src/common/db/exact-email.operator';
 
 @Injectable()
 export class LocalInvitesRepository implements InvitesRepository {
+  private readonly logger = new Logger(LocalInvitesRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalInvitesRepository.name)
-    private readonly logger: PinoLogger,
     private readonly inviteMapper: InviteMapper,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
@@ -35,7 +34,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async create(invite: Invite): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         inviteId: invite.id,
         email: invite.email,
@@ -51,7 +50,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async createMany(invites: Invite[]): Promise<void> {
-    this.logger.info({ inviteCount: invites.length }, 'createMany');
+    this.logger.log({ inviteCount: invites.length }, 'createMany');
 
     if (invites.length === 0) {
       return;
@@ -71,7 +70,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async findOne(id: UUID): Promise<Invite | null> {
-    this.logger.info({ id }, 'findOne');
+    this.logger.log({ id }, 'findOne');
     const entity = await this.invites.findOne({ where: { id } });
 
     if (!entity) {
@@ -87,7 +86,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     pagination: InvitesPagination,
     filters?: InvitesFilters,
   ): Promise<Paginated<Invite>> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         limit: pagination.limit,
@@ -130,7 +129,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async findOneByEmail(email: string): Promise<Invite | null> {
-    this.logger.info({ email }, 'findOneByEmail');
+    this.logger.log({ email }, 'findOneByEmail');
     // Match the single invite row for this email regardless of acceptance
     // state. invites.email is globally unique, so there is at most one row.
     // Deletion paths (delete-user, delete-invite-by-email) rely on this to
@@ -150,7 +149,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     email: string,
     orgId: UUID,
   ): Promise<Invite | null> {
-    this.logger.info({ email, orgId }, 'findOneByEmailAndOrg');
+    this.logger.log({ email, orgId }, 'findOneByEmailAndOrg');
     const entity = await this.invites.findOne({
       where: { email: exactEmail(email), orgId, acceptedAt: IsNull() },
     });
@@ -162,7 +161,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async findByEmails(emails: string[]): Promise<Invite[]> {
-    this.logger.info({ emailCount: emails.length }, 'findByEmails');
+    this.logger.log({ emailCount: emails.length }, 'findByEmails');
 
     if (emails.length === 0) {
       return [];
@@ -194,7 +193,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async accept(id: UUID): Promise<boolean> {
-    this.logger.info({ id }, 'accept');
+    this.logger.log({ id }, 'accept');
 
     const result = await this.invites.update(
       { id, acceptedAt: IsNull() },
@@ -206,13 +205,13 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
     await this.invites.delete(id);
     this.logger.debug({ id }, 'Invite deleted successfully');
   }
 
   async deleteAllPendingByOrg(orgId: UUID): Promise<number> {
-    this.logger.info({ orgId }, 'deleteAllPendingByOrg');
+    this.logger.log({ orgId }, 'deleteAllPendingByOrg');
 
     const result = await this.invites.delete({
       orgId,

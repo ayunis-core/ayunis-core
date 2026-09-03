@@ -1,7 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { AuthenticationRepository } from '../../ports/authentication.repository';
-import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { AuthenticationRepository } from 'src/iam/authentication/application/ports/authentication.repository';
+import { AUTHENTICATION_REPOSITORY } from 'src/iam/authentication/application/tokens/authentication-repository.token';
 import { JwtService } from '@nestjs/jwt';
 import type { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -12,7 +11,7 @@ import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   InvalidTokenError,
   UnexpectedAuthenticationError,
-} from '../../authentication.errors';
+} from 'src/iam/authentication/application/authentication.errors';
 import { REFRESH_TOKEN_TYPE } from 'src/iam/authentication/domain/token-type.constants';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RotateSessionUseCase } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.use-case';
@@ -29,9 +28,9 @@ interface RefreshTokenPayload {
 
 @Injectable()
 export class RefreshTokenUseCase {
+  private readonly logger = new Logger(RefreshTokenUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RefreshTokenUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(AUTHENTICATION_REPOSITORY)
     private readonly authRepository: AuthenticationRepository,
     private readonly jwtService: JwtService,
@@ -42,7 +41,7 @@ export class RefreshTokenUseCase {
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
   async execute(command: RefreshTokenCommand): Promise<AuthTokens> {
-    this.logger.info('refreshToken');
+    this.logger.log('refreshToken');
     const rotated = this.isJwt(command.refreshToken)
       ? await this.migrateLegacyToken(command.refreshToken)
       : await this.rotate(command.refreshToken);

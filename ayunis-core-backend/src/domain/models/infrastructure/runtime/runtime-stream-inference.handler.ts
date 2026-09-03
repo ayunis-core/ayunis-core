@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import type { Subscriber } from 'rxjs';
 import { Observable } from 'rxjs';
 import type { ModelProvider } from '@ayunis/inference';
@@ -16,7 +17,6 @@ import {
   StreamIdleWatchdog,
   STREAM_IDLE_TIMEOUT_MS,
 } from 'src/common/streaming/stream-idle-watchdog';
-import type { PinoLogger } from 'nestjs-pino';
 import {
   isRetryableProviderServerFailure,
   isRetryableProviderTimeoutFailure,
@@ -69,9 +69,9 @@ function backoff(ms: number): Promise<void> {
  */
 export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandler {
   private readonly providerCache = new Map<string, ModelProvider>();
+  protected readonly logger = new Logger(RuntimeStreamInferenceHandler.name);
 
   protected constructor(
-    protected readonly logger: PinoLogger,
     protected readonly imageContentService: ImageContentService,
   ) {
     super();

@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -64,10 +62,6 @@ async function buildUseCase(
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       CrawlUrlUseCase,
-      {
-        provide: getLoggerToken(CrawlUrlUseCase.name),
-        useValue: createPinoLoggerMock(),
-      },
       { provide: RetrieveUrlUseCase, useValue: retriever },
     ],
   }).compile();

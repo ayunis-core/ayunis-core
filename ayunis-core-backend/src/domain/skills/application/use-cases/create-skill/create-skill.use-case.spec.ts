@@ -1,15 +1,13 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { CreateSkillUseCase } from './create-skill.use-case';
 import { CreateSkillCommand } from './create-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
-import { DuplicateSkillNameError } from '../../skills.errors';
+import { DuplicateSkillNameError } from 'src/domain/skills/application/skills.errors';
 
 describe('CreateSkillUseCase', () => {
   let useCase: CreateSkillUseCase;
@@ -34,10 +32,6 @@ describe('CreateSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateSkillUseCase,
-        {
-          provide: getLoggerToken(CreateSkillUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

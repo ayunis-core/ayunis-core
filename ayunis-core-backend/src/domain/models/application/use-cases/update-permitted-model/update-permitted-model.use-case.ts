@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UpdatePermittedModelCommand } from './update-permitted-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
@@ -13,25 +12,24 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { PermittedModelNotFoundError } from '../../models.errors';
+import { PermittedModelNotFoundError } from 'src/domain/models/application/models.errors';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
-import { ModelPolicyService } from '../../services/model-policy.service';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 
 @Injectable()
 export class UpdatePermittedModelUseCase {
-  constructor(
-    @InjectPinoLogger(UpdatePermittedModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(UpdatePermittedModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
     private readonly modelPolicy: ModelPolicyService,
   ) {}
 
   async execute(command: UpdatePermittedModelCommand): Promise<PermittedModel> {
-    this.logger.info(
+    this.logger.log(
       {
         id: command.permittedModelId,
         orgId: command.orgId,

@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { QueryFailedError } from 'typeorm';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { CreateApiKeyCommand } from './create-api-key.command';
 import { CreateApiKeyResult } from './create-api-key.result';
@@ -10,7 +9,7 @@ import {
   ApiKeyExpirationInPastError,
   ApiKeyInvalidInputError,
   UnexpectedApiKeyError,
-} from '../../api-keys.errors';
+} from 'src/iam/api-keys/application/api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -24,9 +23,9 @@ const MAX_PREFIX_COLLISION_RETRIES = 1;
 
 @Injectable()
 export class CreateApiKeyUseCase {
+  private readonly logger = new Logger(CreateApiKeyUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateApiKeyUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly apiKeysRepository: ApiKeysRepository,
     private readonly contextService: ContextService,
     private readonly hashTextUseCase: HashTextUseCase,
@@ -42,7 +41,7 @@ export class CreateApiKeyUseCase {
 
     const trimmedName = command.name.trim();
 
-    this.logger.info({ orgId }, 'execute');
+    this.logger.log({ orgId }, 'execute');
 
     if (!trimmedName) {
       throw new ApiKeyInvalidInputError('Name cannot be empty');

@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   Client,
   StreamableHTTPClientTransport,
@@ -66,8 +65,8 @@ describe('McpSdkClientAdapter', () => {
     };
     (Client as unknown as jest.Mock).mockImplementation(() => clientMock);
 
-    clientPool = new McpClientPoolService(createPinoLoggerMock());
-    adapter = new McpSdkClientAdapter(createPinoLoggerMock(), clientPool);
+    clientPool = new McpClientPoolService();
+    adapter = new McpSdkClientAdapter(clientPool);
   });
 
   afterEach(async () => {
@@ -122,7 +121,6 @@ describe('McpSdkClientAdapter', () => {
       };
       const oauthFetch = { fetch: jest.fn() };
       adapter = new McpSdkClientAdapter(
-        createPinoLoggerMock(),
         clientPool,
         providerFactory as never,
         integrations as never,

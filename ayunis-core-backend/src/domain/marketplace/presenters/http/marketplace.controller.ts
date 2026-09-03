@@ -1,22 +1,21 @@
-import { Controller, Get, Inject, Param } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Controller, Get, Inject, Param, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ConfigType } from '@nestjs/config';
 import { marketplaceConfig } from 'src/config/marketplace.config';
-import { GetMarketplaceSkillUseCase } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
-import { GetMarketplaceSkillQuery } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.query';
+import { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
+import { GetMarketplaceSkillQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.query';
 import { MarketplaceSkillResponseDto } from './dto/marketplace-skill-response.dto';
-import { GetMarketplaceIntegrationUseCase } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
-import { GetMarketplaceIntegrationQuery } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
+import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
+import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
 import { MarketplaceIntegrationResponseDto } from './dto/marketplace-integration-response.dto';
 import { MarketplaceConfigResponseDto } from './dto/marketplace-config-response.dto';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
 export class MarketplaceController {
+  private readonly logger = new Logger(MarketplaceController.name);
+
   constructor(
-    @InjectPinoLogger(MarketplaceController.name)
-    private readonly logger: PinoLogger,
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
     @Inject(marketplaceConfig.KEY)
@@ -53,7 +52,7 @@ export class MarketplaceController {
   async getSkill(
     @Param('identifier') identifier: string,
   ): Promise<MarketplaceSkillResponseDto> {
-    this.logger.info({ identifier }, 'getSkill');
+    this.logger.log({ identifier }, 'getSkill');
 
     return this.getMarketplaceSkillUseCase.execute(
       new GetMarketplaceSkillQuery(identifier),
@@ -81,7 +80,7 @@ export class MarketplaceController {
   async getIntegration(
     @Param('identifier') identifier: string,
   ): Promise<MarketplaceIntegrationResponseDto> {
-    this.logger.info({ identifier }, 'getIntegration');
+    this.logger.log({ identifier }, 'getIntegration');
 
     const integration = await this.getMarketplaceIntegrationUseCase.execute(
       new GetMarketplaceIntegrationQuery(identifier),

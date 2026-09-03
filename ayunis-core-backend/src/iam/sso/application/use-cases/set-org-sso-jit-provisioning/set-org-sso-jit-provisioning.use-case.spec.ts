@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   TEST_ORG_ID,
   anOrgSsoConnection,
@@ -17,10 +16,7 @@ describe(SetOrgSsoJitProvisioningUseCase.name, () => {
 
   beforeEach(() => {
     repository = createMockOrgSsoConnectionsRepository();
-    useCase = new SetOrgSsoJitProvisioningUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    useCase = new SetOrgSsoJitProvisioningUseCase(repository);
   });
 
   it('rejects an organization without an SSO connection', async () => {

@@ -1,24 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnexpecteThreadError } from '../../threads.errors';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { UpdateThreadTitleCommand } from './update-thread-title.command';
 
 @Injectable()
 export class UpdateThreadTitleUseCase {
+  private readonly logger = new Logger(UpdateThreadTitleUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateThreadTitleUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: UpdateThreadTitleCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.threadId,
         text: command.title,

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, LessThan, Repository } from 'typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
@@ -31,9 +30,9 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
+  private readonly logger = new Logger(LocalSourceRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalSourceRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(SourceRecord)
     private readonly defaultSourceRepository: Repository<SourceRecord>,
     private readonly mapper: SourceMapper,
@@ -66,7 +65,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findById(id: UUID): Promise<TextSource | DataSource | null> {
-    this.logger.info({ id }, 'findById');
+    this.logger.log({ id }, 'findById');
     const record = await this.sourceRepository.findOne({
       where: { id },
     });
@@ -103,7 +102,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findByIds(ids: UUID[]): Promise<Source[]> {
-    this.logger.info({ count: ids.length }, 'findByIds');
+    this.logger.log({ count: ids.length }, 'findByIds');
     if (ids.length === 0) {
       return [];
     }
@@ -123,7 +122,7 @@ export class LocalSourceRepository extends SourceRepository {
   async findPaginatedByWorkspaceId(
     options: WorkspaceSourceListOptions,
   ): Promise<Paginated<Source>> {
-    this.logger.info(
+    this.logger.log(
       {
         workspaceId: options.workspaceId,
         search: options.search,
@@ -174,7 +173,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {
-    this.logger.info({ knowledgeBaseId }, 'findByKnowledgeBaseId');
+    this.logger.log({ knowledgeBaseId }, 'findByKnowledgeBaseId');
     const records = await this.sourceRepository
       .createQueryBuilder('source')
       .leftJoinAndSelect(
@@ -192,7 +191,7 @@ export class LocalSourceRepository extends SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource> {
-    this.logger.info({ sourceId: source.id }, 'saveTextSource');
+    this.logger.log({ sourceId: source.id }, 'saveTextSource');
     const {
       source: sourceRecord,
       details,
@@ -219,7 +218,7 @@ export class LocalSourceRepository extends SourceRepository {
     staleBefore: Date,
     limit: number,
   ): Promise<UUID[]> {
-    this.logger.info({ staleBefore, limit }, 'findStaleProcessingSourceIds');
+    this.logger.log({ staleBefore, limit }, 'findStaleProcessingSourceIds');
     const records = await this.sourceRepository.find({
       select: { id: true },
       where: {
@@ -236,7 +235,7 @@ export class LocalSourceRepository extends SourceRepository {
   async save(source: DataSource): Promise<DataSource>;
   async save(source: Source): Promise<Source>;
   async save(source: Source): Promise<Source> {
-    this.logger.info({ sourceId: source.id }, 'save');
+    this.logger.log({ sourceId: source.id }, 'save');
     if (source instanceof TextSource) {
       const { source: sourceRecord } = this.mapper.toRecord(source);
       const savedSource = await this.sourceRepository.save(sourceRecord);
@@ -261,7 +260,7 @@ export class LocalSourceRepository extends SourceRepository {
     toStatus: SourceStatus,
     updates?: Partial<{ processingError: string | null }>,
   ): Promise<boolean> {
-    this.logger.info(
+    this.logger.log(
       {
         sourceId,
         fromStatus,
@@ -317,7 +316,7 @@ export class LocalSourceRepository extends SourceRepository {
     startLine: number,
     endLine: number,
   ): Promise<{ totalLines: number; text: string } | null> {
-    this.logger.info({ sourceId, startLine, endLine }, 'extractTextLines');
+    this.logger.log({ sourceId, startLine, endLine }, 'extractTextLines');
     const result: { totalLines: string; text: string }[] =
       await this.textSourceDetailsRepository.query(
         `SELECT
@@ -344,7 +343,7 @@ export class LocalSourceRepository extends SourceRepository {
   ): Promise<
     { chunk: TextSourceContentChunk; sourceId: UUID; sourceName: string }[]
   > {
-    this.logger.info({ count: chunkIds.length }, 'findContentChunksByIds');
+    this.logger.log({ count: chunkIds.length }, 'findContentChunksByIds');
     if (chunkIds.length === 0) {
       return [];
     }
@@ -364,12 +363,12 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async delete(sourceId: UUID): Promise<void> {
-    this.logger.info({ sourceId }, 'delete');
+    this.logger.log({ sourceId }, 'delete');
     await this.sourceRepository.delete({ id: sourceId });
   }
 
   async deleteMany(sourceIds: UUID[]): Promise<void> {
-    this.logger.info({ count: sourceIds.length }, 'deleteMany');
+    this.logger.log({ count: sourceIds.length }, 'deleteMany');
     if (sourceIds.length === 0) {
       return;
     }
@@ -380,7 +379,7 @@ export class LocalSourceRepository extends SourceRepository {
     candidateIds: UUID[],
     olderThan: Date,
   ): Promise<UUID[]> {
-    this.logger.info(
+    this.logger.log(
       {
         candidateCount: candidateIds.length,
         olderThan,

@@ -1,11 +1,10 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedEmbeddingModel,
   PermittedLanguageModel,
@@ -18,12 +17,12 @@ import {
   ModelErrorCode,
   PermittedEmbeddingModelNotFoundForOrgError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { GetPermittedEmbeddingModelQuery } from './get-permitted-embedding-model.query';
 import { GetPermittedEmbeddingModelUseCase } from './get-permitted-embedding-model.use-case';
 
 describe('GetPermittedEmbeddingModelUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   const orgId = randomUUID();
   const otherOrgId = randomUUID();
 
@@ -58,10 +57,6 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
 
     const module = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(GetPermittedEmbeddingModelUseCase.name),
-          useValue: logger,
-        },
         GetPermittedEmbeddingModelUseCase,
         {
           provide: PermittedModelsRepository,
@@ -73,7 +68,7 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
 
     useCase = module.get(GetPermittedEmbeddingModelUseCase);
 
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.error.mockImplementation();
   });
 

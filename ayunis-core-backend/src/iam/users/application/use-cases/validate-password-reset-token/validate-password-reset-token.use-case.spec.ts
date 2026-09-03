@@ -1,15 +1,13 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ValidatePasswordResetTokenUseCase } from './validate-password-reset-token.use-case';
 import { ValidatePasswordResetTokenQuery } from './validate-password-reset-token.query';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import {
   aPasswordSetToken,
   createMockPasswordSetTokensRepository,
-} from '../../testing/password-set-token.fixtures';
+} from 'src/iam/users/application/testing/password-set-token.fixtures';
 
 describe('ValidatePasswordResetTokenUseCase', () => {
   let useCase: ValidatePasswordResetTokenUseCase;
@@ -25,10 +23,6 @@ describe('ValidatePasswordResetTokenUseCase', () => {
       providers: [
         ValidatePasswordResetTokenUseCase,
         { provide: PasswordSetTokenService, useValue: mockTokenService },
-        {
-          provide: getLoggerToken(ValidatePasswordResetTokenUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

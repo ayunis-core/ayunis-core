@@ -6,8 +6,8 @@ import {
   ParseUUIDPipe,
   Res,
   StreamableFile,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { Response } from 'express';
@@ -16,15 +16,15 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { DownloadMessageImageUseCase } from '../../application/use-cases/download-message-image/download-message-image.use-case';
-import { DownloadMessageImageQuery } from '../../application/use-cases/download-message-image/download-message-image.query';
+import { DownloadMessageImageUseCase } from 'src/domain/threads/application/use-cases/download-message-image/download-message-image.use-case';
+import { DownloadMessageImageQuery } from 'src/domain/threads/application/use-cases/download-message-image/download-message-image.query';
 
 @ApiTags('threads')
 @Controller('threads')
 export class MessageImagesController {
+  private readonly logger = new Logger(MessageImagesController.name);
+
   constructor(
-    @InjectPinoLogger(MessageImagesController.name)
-    private readonly logger: PinoLogger,
     private readonly downloadMessageImageUseCase: DownloadMessageImageUseCase,
   ) {}
 
@@ -45,7 +45,7 @@ export class MessageImagesController {
     @Param('index', ParseIntPipe) index: number,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.info({ threadId, messageId, index }, 'download');
+    this.logger.log({ threadId, messageId, index }, 'download');
 
     const download = await this.downloadMessageImageUseCase.execute(
       new DownloadMessageImageQuery(threadId, messageId, index, userId),

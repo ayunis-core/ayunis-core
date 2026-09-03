@@ -1,20 +1,18 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
-import { InvalidCreditLimitError } from '../../credit-limits.errors';
+import { InvalidCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import {
   aTeamCreditLimit,
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_TEAM_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { SetTeamCreditLimitUseCase } from './set-team-credit-limit.use-case';
 import { SetTeamCreditLimitCommand } from './set-team-credit-limit.command';
 
@@ -36,10 +34,6 @@ describe('SetTeamCreditLimitUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SetTeamCreditLimitUseCase,
-        {
-          provide: getLoggerToken(SetTeamCreditLimitUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },
         { provide: GetTeamUseCase, useValue: getTeam },

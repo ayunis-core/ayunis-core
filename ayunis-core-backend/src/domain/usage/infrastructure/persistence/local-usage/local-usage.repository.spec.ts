@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -49,7 +48,6 @@ function createRepository(
     {} as Repository<UserRecord>,
     {} as UsageMapper,
     {} as UsageQueryMapper,
-    createPinoLoggerMock(),
   );
 }
 

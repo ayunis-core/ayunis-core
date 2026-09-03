@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
@@ -7,10 +6,10 @@ import { IsAddonActiveUseCase } from 'src/iam/addons/application/use-cases/is-ad
 import { IsAddonActiveQuery } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.query';
 import { GetAcademyCompletionUseCase } from 'src/domain/academy/application/use-cases/get-academy-completion/get-academy-completion.use-case';
 import { GetAcademyCompletionQuery } from 'src/domain/academy/application/use-cases/get-academy-completion/get-academy-completion.query';
-import { AcademyAccessMode } from '../../../domain/value-objects/academy-access-mode.enum';
-import { UnexpectedAcademyAccessError } from '../../academy-access.errors';
-import { GetOrgAcademyAccessSettingsUseCase } from '../get-org-academy-access-settings/get-org-academy-access-settings.use-case';
-import { GetOrgAcademyAccessSettingsQuery } from '../get-org-academy-access-settings/get-org-academy-access-settings.query';
+import { AcademyAccessMode } from 'src/iam/academy-access/domain/value-objects/academy-access-mode.enum';
+import { UnexpectedAcademyAccessError } from 'src/iam/academy-access/application/academy-access.errors';
+import { GetOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.use-case';
+import { GetOrgAcademyAccessSettingsQuery } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.query';
 import { EvaluateAcademyAccessQuery } from './evaluate-academy-access.query';
 
 export interface AcademyAccessEvaluation {
@@ -24,9 +23,9 @@ export interface AcademyAccessEvaluation {
 
 @Injectable()
 export class EvaluateAcademyAccessUseCase {
+  private readonly logger = new Logger(EvaluateAcademyAccessUseCase.name);
+
   constructor(
-    @InjectPinoLogger(EvaluateAcademyAccessUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly getOrgSettingsUseCase: GetOrgAcademyAccessSettingsUseCase,
     private readonly isAddonActiveUseCase: IsAddonActiveUseCase,
     private readonly getAcademyCompletionUseCase: GetAcademyCompletionUseCase,

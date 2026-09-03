@@ -1,5 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Controller, Get, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import {
   ApiInternalServerErrorResponse,
   ApiOkResponse,
@@ -9,8 +8,8 @@ import {
 } from '@nestjs/swagger';
 import { RequireAddon } from 'src/iam/authorization/application/decorators/addon.decorator';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
-import { GetAcademyContentUseCase } from '../../application/use-cases/get-academy-content/get-academy-content.use-case';
-import { GetAcademyContentQuery } from '../../application/use-cases/get-academy-content/get-academy-content.query';
+import { GetAcademyContentUseCase } from 'src/domain/academy/application/use-cases/get-academy-content/get-academy-content.use-case';
+import { GetAcademyContentQuery } from 'src/domain/academy/application/use-cases/get-academy-content/get-academy-content.query';
 import { AcademyChapterResponseDto } from './dto/academy-chapter-response.dto';
 import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper';
 
@@ -18,9 +17,9 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('academy/chapters')
 @RequireAddon(AddonType.AYUNIS_CORE_ACADEMY)
 export class AcademyChaptersController {
+  private readonly logger = new Logger(AcademyChaptersController.name);
+
   constructor(
-    @InjectPinoLogger(AcademyChaptersController.name)
-    private readonly logger: PinoLogger,
     private readonly getAcademyContentUseCase: GetAcademyContentUseCase,
     private readonly responseMapper: AcademyResponseDtoMapper,
   ) {}
@@ -41,7 +40,7 @@ export class AcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async getChapters(): Promise<AcademyChapterResponseDto[]> {
-    this.logger.info('Getting academy chapters');
+    this.logger.log('Getting academy chapters');
     const chapters = await this.getAcademyContentUseCase.execute(
       new GetAcademyContentQuery(),
     );

@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EmbeddingsHandler } from './ports/embeddings.handler';
-import { EmbeddingsProvider } from '../domain/embeddings-provider.enum';
+import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 import {
   NoEmbeddingsProviderAvailableError,
   EmbeddingsProviderNotFoundError,
@@ -9,10 +8,7 @@ import {
 
 @Injectable()
 export class EmbeddingsHandlerRegistry {
-  constructor(
-    @InjectPinoLogger(EmbeddingsHandlerRegistry.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(EmbeddingsHandlerRegistry.name);
 
   private readonly handlers = new Map<EmbeddingsProvider, EmbeddingsHandler>();
 

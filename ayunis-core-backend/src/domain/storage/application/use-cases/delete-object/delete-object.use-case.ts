@@ -1,17 +1,19 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { DeleteObjectCommand } from './delete-object.command';
 import storageConfig from 'src/config/storage.config';
-import { DeleteFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DeleteFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 
 @Injectable()
 export class DeleteObjectUseCase {
+  private readonly logger = new Logger(DeleteObjectUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteObjectUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,

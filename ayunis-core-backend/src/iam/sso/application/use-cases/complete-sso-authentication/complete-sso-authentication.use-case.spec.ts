@@ -1,5 +1,5 @@
 import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import type { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
@@ -17,14 +17,13 @@ import {
 } from 'src/iam/sso/application/testing/sso-provisioning.fixtures';
 
 describe(CompleteSsoAuthenticationUseCase.name, () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   const completeLogin = { execute: jest.fn() };
   const provisionUser = { execute: jest.fn() };
   const startSession = { execute: jest.fn() };
   const linkIdentity = { execute: jest.fn() };
   const brokerSessions = { store: jest.fn() };
   const useCase = new CompleteSsoAuthenticationUseCase(
-    logger,
     completeLogin as unknown as CompleteOrgSsoLoginUseCase,
     provisionUser as unknown as ProvisionOrgSsoUserUseCase,
     startSession as unknown as StartAuthenticatedSessionUseCase,

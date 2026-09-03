@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { HashingHandler } from '../../ports/hashing.handler';
+import { Injectable, Logger } from '@nestjs/common';
+import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handler';
 import { HashTextCommand } from './hash-text.command';
-import { HashingFailedError, HashingError } from '../../hashing.errors';
+import {
+  HashingFailedError,
+  HashingError,
+} from 'src/iam/hashing/application/hashing.errors';
 
 @Injectable()
 export class HashTextUseCase {
-  constructor(
-    @InjectPinoLogger(HashTextUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly hashingHandler: HashingHandler,
-  ) {}
+  private readonly logger = new Logger(HashTextUseCase.name);
+
+  constructor(private readonly hashingHandler: HashingHandler) {}
 
   async execute(command: HashTextCommand): Promise<string> {
-    this.logger.info('hash');
+    this.logger.log('hash');
     try {
       this.logger.debug('Hashing plaintext data');
       const hashedData = await this.hashingHandler.hash(command.plainText);

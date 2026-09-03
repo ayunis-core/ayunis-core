@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { CleanupOrphanedImagesUseCase } from '../../application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
+import { CleanupOrphanedImagesUseCase } from 'src/domain/messages/application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
 
 /**
  * Scheduled task that runs daily to clean up orphaned images from storage.
@@ -10,12 +9,12 @@ import { CleanupOrphanedImagesUseCase } from '../../application/use-cases/cleanu
  */
 @Injectable()
 export class OrphanedImagesCleanupTask {
+  private readonly logger = new Logger(OrphanedImagesCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
     private readonly cleanupOrphanedImagesUseCase: CleanupOrphanedImagesUseCase,
-    @InjectPinoLogger(OrphanedImagesCleanupTask.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   /**
@@ -30,12 +29,12 @@ export class OrphanedImagesCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.info('Starting scheduled orphaned images cleanup');
+    this.logger.log('Starting scheduled orphaned images cleanup');
 
     try {
       const result = await this.cleanupOrphanedImagesUseCase.execute();
 
-      this.logger.info(
+      this.logger.log(
         {
           scanned: result.scannedCount,
           deleted: result.deletedCount,

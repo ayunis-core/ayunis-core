@@ -1,22 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
   DocumentNotInKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { RemoveDocumentFromKnowledgeBaseCommand } from './remove-document-from-knowledge-base.command';
 
 @Injectable()
 export class RemoveDocumentFromKnowledgeBaseUseCase {
+  private readonly logger = new Logger(
+    RemoveDocumentFromKnowledgeBaseUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(RemoveDocumentFromKnowledgeBaseUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
   ) {}
@@ -25,7 +26,7 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
   async execute(
     command: RemoveDocumentFromKnowledgeBaseCommand,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,
         documentId: command.documentId,

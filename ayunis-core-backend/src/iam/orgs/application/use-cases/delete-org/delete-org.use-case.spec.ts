@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeleteOrgUseCase } from './delete-org.use-case';
 import { DeleteOrgCommand } from './delete-org.command';
-import { OrgsRepository } from '../../ports/orgs.repository';
-import { OrgDeletionFailedError } from '../../orgs.errors';
-import { OrgDeletionRequestedEvent } from '../../events/org-deletion-requested.event';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
+import { OrgDeletionFailedError } from 'src/iam/orgs/application/orgs.errors';
+import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
 import type { UUID } from 'crypto';
 
 describe('DeleteOrgUseCase', () => {
@@ -28,10 +26,6 @@ describe('DeleteOrgUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteOrgUseCase,
-        {
-          provide: getLoggerToken(DeleteOrgUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: OrgsRepository, useValue: mockOrgsRepository },
         { provide: EventEmitter2, useValue: eventEmitter },
       ],

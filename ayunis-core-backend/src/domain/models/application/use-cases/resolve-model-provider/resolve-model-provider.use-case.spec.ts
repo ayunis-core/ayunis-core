@@ -1,11 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { ModelProvider as InferenceModelProvider } from '@ayunis/inference';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { StreamInferenceHandlerRegistry } from '../../registry/stream-inference-handler.registry';
+import { StreamInferenceHandlerRegistry } from 'src/domain/models/application/registry/stream-inference-handler.registry';
 import { ResolveModelProviderQuery } from './resolve-model-provider.query';
 import { ResolveModelProviderUseCase } from './resolve-model-provider.use-case';
 
@@ -38,10 +36,6 @@ describe('ResolveModelProviderUseCase', () => {
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(ResolveModelProviderUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         ResolveModelProviderUseCase,
         { provide: StreamInferenceHandlerRegistry, useValue: registry },
       ],

@@ -1,10 +1,8 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { PreflightCheckUseCase } from './preflight-check.use-case';
 import { PreflightCheckCommand } from './preflight-check.command';
-import { TooManyPagesError } from '../../file-retriever.errors';
+import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import retrievalConfig from 'src/config/retrieval.config';
 
 // Mock pdf-parse to control page count without needing real PDFs
@@ -28,10 +26,6 @@ describe('PreflightCheckUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PreflightCheckUseCase,
-        {
-          provide: getLoggerToken(PreflightCheckUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: retrievalConfig.KEY,
           useValue: defaultConfig,

@@ -1,11 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { RevokeSessionFamilyUseCase } from './revoke-session-family.use-case';
 import { RevokeSessionFamilyCommand } from './revoke-session-family.command';
 import {
   aRefreshToken,
   createMockRefreshTokensRepository,
   TEST_FAMILY_ID,
-} from '../../testing/refresh-token.fixtures';
+} from 'src/iam/sessions/application/testing/refresh-token.fixtures';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 describe('RevokeSessionFamilyUseCase', () => {
@@ -14,10 +13,7 @@ describe('RevokeSessionFamilyUseCase', () => {
 
   beforeEach(() => {
     repository = createMockRefreshTokensRepository();
-    useCase = new RevokeSessionFamilyUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    useCase = new RevokeSessionFamilyUseCase(repository);
   });
 
   afterEach(() => jest.clearAllMocks());

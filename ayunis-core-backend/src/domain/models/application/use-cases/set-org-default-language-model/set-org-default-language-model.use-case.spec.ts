@@ -1,16 +1,14 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SetOrgDefaultLanguageModelUseCase } from './set-org-default-language-model.use-case';
 import { SetOrgDefaultLanguageModelCommand } from './set-org-default-language-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { PermittedModelNotFoundError } from '../../models.errors';
+import { PermittedModelNotFoundError } from 'src/domain/models/application/models.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -36,10 +34,6 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(SetOrgDefaultLanguageModelUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         SetOrgDefaultLanguageModelUseCase,
         {
           provide: PermittedModelsRepository,

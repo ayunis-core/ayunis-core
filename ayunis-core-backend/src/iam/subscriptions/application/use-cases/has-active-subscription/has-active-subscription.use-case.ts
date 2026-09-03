@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { HasActiveSubscriptionResult } from './has-active-subscription.result';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { ConfigService } from '@nestjs/config';
-import { isActive } from '../../util/is-active';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class HasActiveSubscriptionUseCase {
+  private readonly logger = new Logger(HasActiveSubscriptionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(HasActiveSubscriptionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly configService: ConfigService,
   ) {}
@@ -27,7 +26,7 @@ export class HasActiveSubscriptionUseCase {
       return { hasActiveSubscription: true, subscriptionType: null };
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
       },

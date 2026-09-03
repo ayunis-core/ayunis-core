@@ -1,15 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { DeleteAllPendingInvitesUseCase } from './delete-all-pending-invites.use-case';
 import { DeleteAllPendingInvitesCommand } from './delete-all-pending-invites.command';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 
 describe('DeleteAllPendingInvitesUseCase', () => {
   let useCase: DeleteAllPendingInvitesUseCase;
   let invitesRepository: jest.Mocked<InvitesRepository>;
-  let logger: ReturnType<typeof createPinoLoggerMock>;
+  let logger: ReturnType<typeof createLoggerMock>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001';
 
@@ -18,14 +17,10 @@ describe('DeleteAllPendingInvitesUseCase', () => {
       deleteAllPendingByOrg: jest.fn(),
     };
 
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteAllPendingInvitesUseCase,
-        {
-          provide: getLoggerToken(DeleteAllPendingInvitesUseCase.name),
-          useValue: logger,
-        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
       ],
     }).compile();
@@ -97,7 +92,7 @@ describe('DeleteAllPendingInvitesUseCase', () => {
 
       await useCase.execute(command);
 
-      expect(logger.info).toHaveBeenCalledWith({ orgId: mockOrgId }, 'execute');
+      expect(logger.log).toHaveBeenCalledWith({ orgId: mockOrgId }, 'execute');
       expect(logger.debug).toHaveBeenCalledWith(
         { orgId: mockOrgId, deletedCount: 3 },
         'All pending invites deleted',

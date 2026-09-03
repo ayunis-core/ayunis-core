@@ -5,8 +5,8 @@ import {
   HttpStatus,
   Res,
   StreamableFile,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import type { Response } from 'express';
 import {
@@ -31,9 +31,9 @@ import { GetAcademyCertificateQuery } from 'src/domain/academy/application/use-c
 @Controller('academy/certificate')
 @RequireAddon(AddonType.AYUNIS_CORE_ACADEMY)
 export class AcademyCertificateController {
+  private readonly logger = new Logger(AcademyCertificateController.name);
+
   constructor(
-    @InjectPinoLogger(AcademyCertificateController.name)
-    private readonly logger: PinoLogger,
     private readonly getAcademyCertificateUseCase: GetAcademyCertificateUseCase,
   ) {}
 
@@ -64,7 +64,7 @@ export class AcademyCertificateController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.info('Getting academy certificate');
+    this.logger.log('Getting academy certificate');
     const certificate = await this.getAcademyCertificateUseCase.execute(
       new GetAcademyCertificateQuery({ userId }),
     );

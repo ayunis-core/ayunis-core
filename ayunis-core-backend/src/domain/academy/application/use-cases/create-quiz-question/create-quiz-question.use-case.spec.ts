@@ -1,18 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { CreateQuizQuestionUseCase } from './create-quiz-question.use-case';
 import { CreateQuizQuestionCommand } from './create-quiz-question.command';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   ChapterNotFoundError,
   InvalidQuizQuestionError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 
 const validOptions = [
   { text: 'A large language model', isCorrect: true },
@@ -39,10 +37,6 @@ describe('CreateQuizQuestionUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(CreateQuizQuestionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         CreateQuizQuestionUseCase,
         { provide: AcademyChapterRepository, useValue: mockChapterRepository },
         {

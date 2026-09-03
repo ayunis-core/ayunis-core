@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { CleanupStaleThreadSourcesUseCase } from '../../application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
+import { CleanupStaleThreadSourcesUseCase } from 'src/domain/threads/application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
 
 @Injectable()
 export class StaleThreadSourcesCleanupTask {
+  private readonly logger = new Logger(StaleThreadSourcesCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
-    @InjectPinoLogger(StaleThreadSourcesCleanupTask.name)
-    private readonly logger: PinoLogger,
     private readonly cleanupStaleThreadSourcesUseCase: CleanupStaleThreadSourcesUseCase,
   ) {}
 
@@ -21,11 +20,11 @@ export class StaleThreadSourcesCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.info('Starting scheduled stale thread sources cleanup');
+    this.logger.log('Starting scheduled stale thread sources cleanup');
 
     try {
       const result = await this.cleanupStaleThreadSourcesUseCase.execute();
-      this.logger.info(
+      this.logger.log(
         {
           scanned: result.scannedCount,
           unreferenced: result.unreferencedCount,

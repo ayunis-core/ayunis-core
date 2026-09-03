@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SourceRepository } from '../../ports/source.repository';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { ExtractTextLinesQuery } from './extract-text-lines.query';
 
 export interface ExtractTextLinesResult {
@@ -12,16 +11,14 @@ export interface ExtractTextLinesResult {
 
 @Injectable()
 export class ExtractTextLinesUseCase {
-  constructor(
-    @InjectPinoLogger(ExtractTextLinesUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(ExtractTextLinesUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   async execute(
     query: ExtractTextLinesQuery,
   ): Promise<ExtractTextLinesResult | null> {
-    this.logger.info(
+    this.logger.log(
       {
         sourceId: query.sourceId,
         startLine: query.startLine,

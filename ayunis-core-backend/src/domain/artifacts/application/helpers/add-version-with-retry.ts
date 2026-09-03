@@ -1,8 +1,8 @@
-import type { PinoLogger } from 'nestjs-pino';
+import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { ArtifactsRepository } from '../ports/artifacts-repository.port';
-import type { ArtifactVersion } from '../../domain/artifact-version.entity';
-import { ArtifactVersionConflictError } from '../artifacts.errors';
+import type { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
+import type { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { ArtifactVersionConflictError } from 'src/domain/artifacts/application/artifacts.errors';
 
 const MAX_VERSION_RETRIES = 3;
 
@@ -14,7 +14,7 @@ const MAX_VERSION_RETRIES = 3;
  */
 export async function addVersionWithRetry(params: {
   repository: ArtifactsRepository;
-  logger: PinoLogger;
+  logger: Logger;
   artifactId: string;
   buildVersion: () => Promise<{
     version: ArtifactVersion;

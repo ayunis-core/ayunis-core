@@ -1,10 +1,9 @@
 import { createServer } from 'node:http';
 import type { Request, Response } from 'express';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SecurityHeadersMiddleware } from './security-headers.middleware';
 
 async function contentSecurityPolicy(): Promise<string | null> {
-  const middleware = new SecurityHeadersMiddleware(createPinoLoggerMock());
+  const middleware = new SecurityHeadersMiddleware();
   const server = createServer((request, response) => {
     middleware.use(
       request as unknown as Request,

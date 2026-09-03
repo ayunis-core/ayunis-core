@@ -1,6 +1,5 @@
 import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
@@ -83,6 +82,10 @@ interface PreparedToolResultInput {
 
 @Injectable()
 export class ExecuteRunUseCase {
+  private readonly runEventStreamLogger = new Logger('RunEventStreamAdapter');
+
+  private readonly logger = new Logger(ExecuteRunUseCase.name);
+
   // eslint-disable-next-line max-params
   constructor(
     private readonly contextService: ContextService,
@@ -109,17 +112,13 @@ export class ExecuteRunUseCase {
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
-    @InjectPinoLogger(ExecuteRunUseCase.name)
-    private readonly logger: PinoLogger,
-    @InjectPinoLogger('RunEventStreamAdapter')
-    private readonly runEventStreamLogger: PinoLogger,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>> {
-    this.logger.info({ threadId: command.threadId }, 'executeRun');
+    this.logger.log({ threadId: command.threadId }, 'executeRun');
     return this.runTelemetryService.track('agent_runtime', () =>
       this.createRunStream(command),
     );

@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { ListTeamsUseCase } from './list-teams.use-case';
-import { TeamsRepository } from '../../ports/teams.repository';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
-import { UnexpectedTeamError } from '../../teams.errors';
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -35,10 +33,6 @@ describe('ListTeamsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListTeamsUseCase,
-        {
-          provide: getLoggerToken(ListTeamsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: TeamsRepository, useValue: mockTeamsRepository },
         {
           provide: TeamMembersRepository,

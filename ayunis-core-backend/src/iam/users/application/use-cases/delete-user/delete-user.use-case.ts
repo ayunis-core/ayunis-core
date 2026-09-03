@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { DeleteUserCommand } from './delete-user.command';
-import { UserNotFoundError, UserUnauthorizedError } from '../../users.errors';
+import {
+  UserNotFoundError,
+  UserUnauthorizedError,
+} from 'src/iam/users/application/users.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
@@ -12,16 +14,16 @@ import { DeleteInviteByEmailCommand } from 'src/iam/invites/application/use-case
 import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
-import { UserDeletedEvent } from '../../events/user-deleted.event';
-import { UserDeletionRequestedEvent } from '../../events/user-deletion-requested.event';
+import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
+import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
 import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
 import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class DeleteUserUseCase {
+  private readonly logger = new Logger(DeleteUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
@@ -29,7 +31,7 @@ export class DeleteUserUseCase {
   ) {}
 
   async execute(command: DeleteUserCommand): Promise<void> {
-    this.logger.info({ userId: command.userId }, 'deleteUser');
+    this.logger.log({ userId: command.userId }, 'deleteUser');
     const requestingUserId = this.contextService.get('userId');
     if (!requestingUserId) {
       throw new UserUnauthorizedError('User not authenticated');

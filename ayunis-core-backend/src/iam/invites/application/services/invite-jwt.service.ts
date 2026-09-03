@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
 import type { StringValue } from 'ms';
-import { InvalidInviteTokenError } from '../invites.errors';
+import { InvalidInviteTokenError } from 'src/iam/invites/application/invites.errors';
 
 export const INVITE_TOKEN_TYPE = 'invite';
 
@@ -20,15 +19,15 @@ export interface InviteJwtPayload {
 
 @Injectable()
 export class InviteJwtService {
+  private readonly logger = new Logger(InviteJwtService.name);
+
   constructor(
-    @InjectPinoLogger(InviteJwtService.name)
-    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
   generateInviteToken(params: { inviteId: UUID }): string {
-    this.logger.info(
+    this.logger.log(
       {
         inviteId: params.inviteId,
       },
@@ -49,7 +48,7 @@ export class InviteJwtService {
   }
 
   verifyInviteToken(token: string): InviteJwtPayload {
-    this.logger.info('verifyInviteToken');
+    this.logger.log('verifyInviteToken');
 
     try {
       const payload = this.jwtService.verify<Partial<InviteJwtPayload>>(token);

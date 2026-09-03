@@ -1,12 +1,11 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { Readable } from 'stream';
 import { DownloadReferenceImagesUseCase } from './download-reference-images.use-case';
 import type { UploadedImageRef } from './download-reference-images.query';
 import { DownloadReferenceImagesQuery } from './download-reference-images.query';
-import type { ThreadsRepository } from '../../ports/threads.repository';
-import type { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import type { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,7 +14,7 @@ import {
   MessageImageNotFoundError,
   ThreadNotFoundError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
@@ -48,7 +47,6 @@ describe('DownloadReferenceImagesUseCase', () => {
     } as unknown as jest.Mocked<DownloadObjectUseCase>;
 
     useCase = new DownloadReferenceImagesUseCase(
-      createPinoLoggerMock(),
       contextService,
       threadsRepository,
       generatedImagesRepository,

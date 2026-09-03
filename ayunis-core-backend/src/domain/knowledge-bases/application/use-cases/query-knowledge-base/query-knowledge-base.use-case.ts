@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { QueryKnowledgeBaseQuery } from './query-knowledge-base.query';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { SearchMultiContentQuery } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
@@ -13,7 +12,7 @@ import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.enti
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
+import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
 
@@ -25,9 +24,9 @@ export interface KnowledgeBaseQueryResult {
 
 @Injectable()
 export class QueryKnowledgeBaseUseCase {
+  private readonly logger = new Logger(QueryKnowledgeBaseUseCase.name);
+
   constructor(
-    @InjectPinoLogger(QueryKnowledgeBaseUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly findContentChunksByIdsUseCase: FindContentChunksByIdsUseCase,
     private readonly searchContentUseCase: SearchContentUseCase,

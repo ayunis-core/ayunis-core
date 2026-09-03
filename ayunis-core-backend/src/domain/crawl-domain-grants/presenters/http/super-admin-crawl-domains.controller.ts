@@ -7,8 +7,8 @@ import {
   HttpStatus,
   Param,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -23,13 +23,13 @@ import {
 import { UUID } from 'crypto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CrawlDomainGrant } from '../../domain/crawl-domain-grant.entity';
-import { ListOrgCrawlDomainsUseCase } from '../../application/use-cases/list-org-crawl-domains/list-org-crawl-domains.use-case';
-import { ListOrgCrawlDomainsQuery } from '../../application/use-cases/list-org-crawl-domains/list-org-crawl-domains.query';
-import { GrantCrawlDomainUseCase } from '../../application/use-cases/grant-crawl-domain/grant-crawl-domain.use-case';
-import { GrantCrawlDomainCommand } from '../../application/use-cases/grant-crawl-domain/grant-crawl-domain.command';
-import { RevokeCrawlDomainUseCase } from '../../application/use-cases/revoke-crawl-domain/revoke-crawl-domain.use-case';
-import { RevokeCrawlDomainCommand } from '../../application/use-cases/revoke-crawl-domain/revoke-crawl-domain.command';
+import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
+import { ListOrgCrawlDomainsUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/list-org-crawl-domains/list-org-crawl-domains.use-case';
+import { ListOrgCrawlDomainsQuery } from 'src/domain/crawl-domain-grants/application/use-cases/list-org-crawl-domains/list-org-crawl-domains.query';
+import { GrantCrawlDomainUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/grant-crawl-domain/grant-crawl-domain.use-case';
+import { GrantCrawlDomainCommand } from 'src/domain/crawl-domain-grants/application/use-cases/grant-crawl-domain/grant-crawl-domain.command';
+import { RevokeCrawlDomainUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/revoke-crawl-domain/revoke-crawl-domain.use-case';
+import { RevokeCrawlDomainCommand } from 'src/domain/crawl-domain-grants/application/use-cases/revoke-crawl-domain/revoke-crawl-domain.command';
 import { GrantCrawlDomainRequestDto } from './dtos/grant-crawl-domain.dto';
 import { CrawlDomainGrantResponseDto } from './dtos/crawl-domain-grant-response.dto';
 
@@ -37,9 +37,9 @@ import { CrawlDomainGrantResponseDto } from './dtos/crawl-domain-grant-response.
 @Controller('super-admin/crawl-domains')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminCrawlDomainsController {
+  private readonly logger = new Logger(SuperAdminCrawlDomainsController.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminCrawlDomainsController.name)
-    private readonly logger: PinoLogger,
     private readonly listOrgCrawlDomainsUseCase: ListOrgCrawlDomainsUseCase,
     private readonly grantCrawlDomainUseCase: GrantCrawlDomainUseCase,
     private readonly revokeCrawlDomainUseCase: RevokeCrawlDomainUseCase,
@@ -55,7 +55,7 @@ export class SuperAdminCrawlDomainsController {
   async list(
     @Param('orgId') orgId: UUID,
   ): Promise<CrawlDomainGrantResponseDto[]> {
-    this.logger.info({ orgId }, 'list');
+    this.logger.log({ orgId }, 'list');
 
     const grants = await this.listOrgCrawlDomainsUseCase.execute(
       new ListOrgCrawlDomainsQuery(orgId),
@@ -81,7 +81,7 @@ export class SuperAdminCrawlDomainsController {
     @Param('orgId') orgId: UUID,
     @Body() dto: GrantCrawlDomainRequestDto,
   ): Promise<CrawlDomainGrantResponseDto> {
-    this.logger.info({ orgId, domain: dto.domain }, 'grant');
+    this.logger.log({ orgId, domain: dto.domain }, 'grant');
 
     const grant = await this.grantCrawlDomainUseCase.execute(
       new GrantCrawlDomainCommand(orgId, dto.domain),
@@ -104,7 +104,7 @@ export class SuperAdminCrawlDomainsController {
     @Param('orgId') orgId: UUID,
     @Param('grantId') grantId: UUID,
   ): Promise<void> {
-    this.logger.info({ orgId, grantId }, 'revoke');
+    this.logger.log({ orgId, grantId }, 'revoke');
 
     await this.revokeCrawlDomainUseCase.execute(
       new RevokeCrawlDomainCommand(orgId, grantId),

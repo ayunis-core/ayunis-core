@@ -1,11 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ApplyEditsToArtifactUseCase } from './apply-edits-to-artifact.use-case';
 import { ApplyEditsToArtifactCommand } from './apply-edits-to-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import {
   ArtifactContentTooLargeError,
   ArtifactEditAmbiguousError,
@@ -13,12 +11,12 @@ import {
   ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UpdateArtifactUseCase } from '../update-artifact/update-artifact.use-case';
+import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
 
 describe('ApplyEditsToArtifactUseCase', () => {
   let useCase: ApplyEditsToArtifactUseCase;
@@ -55,10 +53,6 @@ describe('ApplyEditsToArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplyEditsToArtifactUseCase,
-        {
-          provide: getLoggerToken(ApplyEditsToArtifactUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UpdateArtifactUseCase, useValue: mockUpdateUseCase },

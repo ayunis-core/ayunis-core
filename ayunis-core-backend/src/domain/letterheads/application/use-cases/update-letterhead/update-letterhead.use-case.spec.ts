@@ -1,13 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { PDFDocument } from 'pdf-lib';
 import { UpdateLetterheadUseCase } from './update-letterhead.use-case';
 import { UpdateLetterheadCommand } from './update-letterhead.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -15,7 +13,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import {
   LetterheadNotFoundError,
   LetterheadInvalidPdfError,
-} from '../../letterheads.errors';
+} from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 async function createSinglePagePdf(): Promise<Buffer> {
@@ -84,10 +82,6 @@ describe('UpdateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateLetterheadUseCase,
-        {
-          provide: getLoggerToken(UpdateLetterheadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
@@ -239,10 +233,6 @@ describe('UpdateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateLetterheadUseCase,
-        {
-          provide: getLoggerToken(UpdateLetterheadUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },

@@ -1,8 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { AssignMcpIntegrationToSkillCommand } from './assign-mcp-integration-to-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
@@ -13,16 +12,16 @@ import {
   SkillMcpIntegrationDisabledError,
   SkillMcpIntegrationWrongOrganizationError,
   UnexpectedSkillError,
-} from '../../skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
 @Injectable()
 export class AssignMcpIntegrationToSkillUseCase {
+  private readonly logger = new Logger(AssignMcpIntegrationToSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AssignMcpIntegrationToSkillUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     @Inject(McpIntegrationsRepositoryPort)
@@ -32,7 +31,7 @@ export class AssignMcpIntegrationToSkillUseCase {
 
   @Transactional()
   async execute(command: AssignMcpIntegrationToSkillCommand): Promise<Skill> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId: command.skillId,
         integrationId: command.integrationId,

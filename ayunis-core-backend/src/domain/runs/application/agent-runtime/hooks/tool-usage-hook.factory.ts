@@ -1,14 +1,13 @@
 import type { Hook } from '@ayunis/agent-runtime';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { ToolUsedEvent } from '../../events/tool-used.event';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import {
   RunToolCompletedEvent,
   type RunToolOutcome,
-} from '../../events/run-tool-completed.event';
-import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+} from 'src/domain/runs/application/events/run-tool-completed.event';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 
 interface ToolUsageHookParams {
   userId: UUID;
@@ -18,11 +17,9 @@ interface ToolUsageHookParams {
 
 @Injectable()
 export class ToolUsageHookFactory {
-  constructor(
-    private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(ToolUsageHookFactory.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(ToolUsageHookFactory.name);
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
   create(params: ToolUsageHookParams): Hook {
     return {

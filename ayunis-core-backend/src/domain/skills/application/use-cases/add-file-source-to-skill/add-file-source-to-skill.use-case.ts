@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import type { UUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -25,23 +24,23 @@ import { StartDataSourceProcessingCommand } from 'src/domain/sources/application
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { UnsupportedSourceFileTypeError } from 'src/domain/sources/application/sources.errors';
-import { Skill } from '../../../domain/skill.entity';
-import { SkillRepository } from '../../ports/skill.repository';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import {
   SkillNotFoundError,
   UnsupportedFileTypeError,
   UnexpectedSkillError,
-} from '../../skills.errors';
-import { assertSkillHasSourceCapacity } from '../../util/skill-source-capacity';
-import { AddSourceToSkillUseCase } from '../add-source-to-skill/add-source-to-skill.use-case';
-import { AddSourceToSkillCommand } from '../add-source-to-skill/add-source-to-skill.command';
+} from 'src/domain/skills/application/skills.errors';
+import { assertSkillHasSourceCapacity } from 'src/domain/skills/application/util/skill-source-capacity';
+import { AddSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
+import { AddSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.command';
 import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command';
 
 @Injectable()
 export class AddFileSourceToSkillUseCase {
+  private readonly logger = new Logger(AddFileSourceToSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddFileSourceToSkillUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly addSourceToSkillUseCase: AddSourceToSkillUseCase,
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
@@ -52,7 +51,7 @@ export class AddFileSourceToSkillUseCase {
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: AddFileSourceToSkillCommand): Promise<Skill> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId: command.skillId,
         fileName: command.file.originalname,

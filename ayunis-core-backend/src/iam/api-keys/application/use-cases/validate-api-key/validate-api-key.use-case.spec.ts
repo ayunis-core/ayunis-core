@@ -1,14 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ValidateApiKeyUseCase } from './validate-api-key.use-case';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { ApiKeyExpiredError, ApiKeyNotFoundError } from '../../api-keys.errors';
+import {
+  ApiKeyExpiredError,
+  ApiKeyNotFoundError,
+} from 'src/iam/api-keys/application/api-keys.errors';
 
 describe('ValidateApiKeyUseCase', () => {
   let useCase: ValidateApiKeyUseCase;
@@ -50,10 +51,6 @@ describe('ValidateApiKeyUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ValidateApiKeyUseCase,
-        {
-          provide: getLoggerToken(ValidateApiKeyUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ApiKeysRepository, useValue: mockApiKeysRepository },
         { provide: CompareHashUseCase, useValue: mockCompareHashUseCase },
       ],

@@ -7,17 +7,15 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { CreateBulkInvitesUseCase } from './create-bulk-invites.use-case';
 import { CreateBulkInvitesCommand } from './create-bulk-invites.command';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
-import { InviteJwtService } from '../../services/invite-jwt.service';
+import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
-import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
+import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
@@ -28,7 +26,7 @@ import {
   BulkInviteValidationFailedError,
   InvalidSeatsError,
   UnexpectedInviteError,
-} from '../../invites.errors';
+} from 'src/iam/invites/application/invites.errors';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { User } from 'src/iam/users/domain/user.entity';
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
@@ -91,15 +89,7 @@ describe('CreateBulkInvitesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBulkInvitesUseCase,
-        {
-          provide: getLoggerToken(CreateBulkInvitesUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         BulkInviteDeliveryService,
-        {
-          provide: getLoggerToken(BulkInviteDeliveryService.name),
-          useValue: createPinoLoggerMock(),
-        },
         BulkInviteValidatorService,
         FindUsersByEmailsUseCase,
         { provide: InvitesRepository, useValue: mockInvitesRepository },

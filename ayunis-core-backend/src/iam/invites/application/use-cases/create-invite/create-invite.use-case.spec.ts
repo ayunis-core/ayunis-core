@@ -1,15 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { CreateInviteUseCase } from './create-invite.use-case';
 import { CreateInviteCommand } from './create-invite.command';
-import { InvitesRepository } from '../../ports/invites.repository';
-import { InviteJwtService } from '../../services/invite-jwt.service';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
+import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
-import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
+import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
@@ -21,7 +20,7 @@ import {
   EmailNotAvailableError,
   InvalidSeatsError,
   UnexpectedInviteError,
-} from '../../invites.errors';
+} from 'src/iam/invites/application/invites.errors';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
 
 describe('CreateInviteUseCase', () => {
@@ -33,7 +32,7 @@ describe('CreateInviteUseCase', () => {
   let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let findUserByEmailUseCase: jest.Mocked<FindUserByEmailUseCase>;
-  let logger: ReturnType<typeof createPinoLoggerMock>;
+  let logger: ReturnType<typeof createLoggerMock>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
@@ -74,14 +73,10 @@ describe('CreateInviteUseCase', () => {
       execute: jest.fn(),
     };
 
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateInviteUseCase,
-        {
-          provide: getLoggerToken(CreateInviteUseCase.name),
-          useValue: logger,
-        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: InviteJwtService, useValue: mockInviteJwtService },

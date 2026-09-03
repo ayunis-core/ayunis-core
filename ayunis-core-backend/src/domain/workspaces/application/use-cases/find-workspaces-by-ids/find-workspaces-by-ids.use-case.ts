@@ -1,18 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import type { Workspace } from '../../../domain/workspace.entity';
-import { UnexpectedWorkspaceError } from '../../workspaces.errors';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
+import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import type { FindWorkspacesByIdsQuery } from './find-workspaces-by-ids.query';
 
 @Injectable()
 export class FindWorkspacesByIdsUseCase {
-  constructor(
-    @InjectPinoLogger(FindWorkspacesByIdsUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly workspacesRepository: WorkspacesRepository,
-  ) {}
+  private readonly logger = new Logger(FindWorkspacesByIdsUseCase.name);
+
+  constructor(private readonly workspacesRepository: WorkspacesRepository) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(query: FindWorkspacesByIdsQuery): Promise<Workspace[]> {

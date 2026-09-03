@@ -9,8 +9,8 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import {
@@ -20,20 +20,20 @@ import {
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetMfaStatusUseCase } from '../../application/use-cases/get-mfa-status/get-mfa-status.use-case';
-import { GetMfaStatusQuery } from '../../application/use-cases/get-mfa-status/get-mfa-status.query';
-import { SetupTotpUseCase } from '../../application/use-cases/setup-totp/setup-totp.use-case';
-import { SetupTotpCommand } from '../../application/use-cases/setup-totp/setup-totp.command';
-import { ConfirmTotpUseCase } from '../../application/use-cases/confirm-totp/confirm-totp.use-case';
-import { ConfirmTotpCommand } from '../../application/use-cases/confirm-totp/confirm-totp.command';
-import { DisableMfaUseCase } from '../../application/use-cases/disable-mfa/disable-mfa.use-case';
-import { DisableMfaCommand } from '../../application/use-cases/disable-mfa/disable-mfa.command';
-import { GetOrgMfaRequirementUseCase } from '../../application/use-cases/get-org-mfa-requirement/get-org-mfa-requirement.use-case';
-import { GetOrgMfaRequirementQuery } from '../../application/use-cases/get-org-mfa-requirement/get-org-mfa-requirement.query';
-import { UpsertOrgMfaRequirementUseCase } from '../../application/use-cases/upsert-org-mfa-requirement/upsert-org-mfa-requirement.use-case';
-import { UpsertOrgMfaRequirementCommand } from '../../application/use-cases/upsert-org-mfa-requirement/upsert-org-mfa-requirement.command';
-import { ResetUserMfaUseCase } from '../../application/use-cases/reset-user-mfa/reset-user-mfa.use-case';
-import { ResetUserMfaCommand } from '../../application/use-cases/reset-user-mfa/reset-user-mfa.command';
+import { GetMfaStatusUseCase } from 'src/iam/mfa/application/use-cases/get-mfa-status/get-mfa-status.use-case';
+import { GetMfaStatusQuery } from 'src/iam/mfa/application/use-cases/get-mfa-status/get-mfa-status.query';
+import { SetupTotpUseCase } from 'src/iam/mfa/application/use-cases/setup-totp/setup-totp.use-case';
+import { SetupTotpCommand } from 'src/iam/mfa/application/use-cases/setup-totp/setup-totp.command';
+import { ConfirmTotpUseCase } from 'src/iam/mfa/application/use-cases/confirm-totp/confirm-totp.use-case';
+import { ConfirmTotpCommand } from 'src/iam/mfa/application/use-cases/confirm-totp/confirm-totp.command';
+import { DisableMfaUseCase } from 'src/iam/mfa/application/use-cases/disable-mfa/disable-mfa.use-case';
+import { DisableMfaCommand } from 'src/iam/mfa/application/use-cases/disable-mfa/disable-mfa.command';
+import { GetOrgMfaRequirementUseCase } from 'src/iam/mfa/application/use-cases/get-org-mfa-requirement/get-org-mfa-requirement.use-case';
+import { GetOrgMfaRequirementQuery } from 'src/iam/mfa/application/use-cases/get-org-mfa-requirement/get-org-mfa-requirement.query';
+import { UpsertOrgMfaRequirementUseCase } from 'src/iam/mfa/application/use-cases/upsert-org-mfa-requirement/upsert-org-mfa-requirement.use-case';
+import { UpsertOrgMfaRequirementCommand } from 'src/iam/mfa/application/use-cases/upsert-org-mfa-requirement/upsert-org-mfa-requirement.command';
+import { ResetUserMfaUseCase } from 'src/iam/mfa/application/use-cases/reset-user-mfa/reset-user-mfa.use-case';
+import { ResetUserMfaCommand } from 'src/iam/mfa/application/use-cases/reset-user-mfa/reset-user-mfa.command';
 import { MfaCodeRequestDto } from './dtos/mfa-code-request.dto';
 import { MfaStatusResponseDto } from './dtos/mfa-status-response.dto';
 import { MfaSetupResponseDto } from './dtos/mfa-setup-response.dto';
@@ -44,9 +44,9 @@ import { UpdateOrgMfaRequirementRequestDto } from './dtos/update-org-mfa-require
 @ApiTags('mfa')
 @Controller('mfa')
 export class MfaController {
+  private readonly logger = new Logger(MfaController.name);
+
   constructor(
-    @InjectPinoLogger(MfaController.name)
-    private readonly logger: PinoLogger,
     private readonly getMfaStatusUseCase: GetMfaStatusUseCase,
     private readonly setupTotpUseCase: SetupTotpUseCase,
     private readonly confirmTotpUseCase: ConfirmTotpUseCase,
@@ -79,7 +79,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.EMAIL) email: string,
   ): Promise<MfaSetupResponseDto> {
-    this.logger.info({ userId }, 'setup');
+    this.logger.log({ userId }, 'setup');
     return this.setupTotpUseCase.execute(new SetupTotpCommand(userId, email));
   }
 
@@ -95,7 +95,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: MfaCodeRequestDto,
   ): Promise<RecoveryCodesResponseDto> {
-    this.logger.info({ userId }, 'confirm');
+    this.logger.log({ userId }, 'confirm');
     const recoveryCodes = await this.confirmTotpUseCase.execute(
       new ConfirmTotpCommand(userId, dto.code),
     );
@@ -118,7 +118,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: MfaCodeRequestDto,
   ): Promise<{ success: boolean }> {
-    this.logger.info({ userId }, 'disable');
+    this.logger.log({ userId }, 'disable');
     await this.disableMfaUseCase.execute(
       new DisableMfaCommand(userId, orgId, dto.code),
     );
@@ -146,7 +146,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpdateOrgMfaRequirementRequestDto,
   ): Promise<OrgMfaRequirementResponseDto> {
-    this.logger.info({ orgId, required: dto.required }, 'updateOrgRequirement');
+    this.logger.log({ orgId, required: dto.required }, 'updateOrgRequirement');
     const requirement = await this.upsertOrgMfaRequirementUseCase.execute(
       new UpsertOrgMfaRequirementCommand(orgId, dto.required),
     );
@@ -163,7 +163,7 @@ export class MfaController {
   async resetUser(
     @Param('userId', ParseUUIDPipe) targetUserId: UUID,
   ): Promise<{ success: boolean }> {
-    this.logger.info({ targetUserId }, 'resetUser');
+    this.logger.log({ targetUserId }, 'resetUser');
     await this.resetUserMfaUseCase.execute(
       new ResetUserMfaCommand(targetUserId),
     );

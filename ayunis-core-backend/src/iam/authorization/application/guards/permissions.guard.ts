@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
@@ -7,13 +11,13 @@ import { buildAccessDeniedAuditContext } from 'src/common/util/access-denied-aud
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
-import { REQUIRE_PERMISSION_KEY } from '../decorators/permissions.decorator';
+import { REQUIRE_PERMISSION_KEY } from 'src/iam/authorization/application/decorators/permissions.decorator';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
+  private readonly logger = new Logger(PermissionsGuard.name);
+
   constructor(
-    @InjectPinoLogger(PermissionsGuard.name)
-    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
   ) {}

@@ -133,28 +133,39 @@ export default tseslint.config(
   },
   {
     files: ['src/**/*.ts'],
-    // Bootstrap's static Nest Logger delegates to Pino after app.useLogger;
-    // application code must inject PinoLogger directly instead.
-    ignores: ['src/main.ts', 'src/common/logger/**'],
+    // Pino is an implementation detail of the logging boundary. Application
+    // code logs through `Logger` from @nestjs/common, which bootstrap points
+    // at the Pino adapter via installNestLogger.
+    ignores: ['src/common/logger/**'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           paths: [
             {
-              name: '@nestjs/common',
-              importNames: ['Logger'],
-              message: 'Inject PinoLogger from nestjs-pino instead.',
+              name: 'nestjs-pino',
+              message:
+                'Use Logger from @nestjs/common. nestjs-pino belongs to src/common/logger.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['pino', 'pino/*', 'pino-http', 'pino-pretty'],
+              message: 'Pino configuration belongs in src/common/logger.',
             },
           ],
         },
       ],
+      // Nest treats a logger call's last argument as the context, so
+      // `logger.log('msg', { id })` silently drops the metadata instead of
+      // emitting structured fields.
       'no-restricted-syntax': [
         'error',
         {
           selector:
-            "NewExpression[callee.name='Logger'], NewExpression[callee.type='MemberExpression'][callee.property.name='Logger']",
-          message: 'Inject PinoLogger instead of constructing Logger.',
+            "CallExpression:matches([callee.object.name=/[Ll]ogger$/], [callee.object.property.name=/[Ll]ogger$/])[callee.property.name=/^(log|warn|error|debug|verbose|fatal)$/][arguments.0.type='Literal'][arguments.1.type='ObjectExpression']",
+          message:
+            'Pass log metadata as the first argument: logger.log({ id }, "message").',
         },
       ],
     },

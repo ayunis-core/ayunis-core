@@ -1,11 +1,9 @@
 import { checkIn } from '@appsignal/nodejs';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ListUsageBasedSubscriptionOrgIdsUseCase } from 'src/iam/subscriptions/application/use-cases/list-usage-based-subscription-org-ids/list-usage-based-subscription-org-ids.use-case';
-import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service';
+import { BudgetAlertEvaluator } from 'src/iam/budget-alerts/application/services/budget-alert-evaluator.service';
 import { BudgetAlertEvaluationTask } from './budget-alert-evaluation.task';
 
 jest.mock('@appsignal/nodejs', () => ({
@@ -33,10 +31,6 @@ describe('BudgetAlertEvaluationTask', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BudgetAlertEvaluationTask,
-        {
-          provide: getLoggerToken(BudgetAlertEvaluationTask.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: ListUsageBasedSubscriptionOrgIdsUseCase,
           useValue: listOrgIds,

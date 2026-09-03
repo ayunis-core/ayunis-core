@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetMonthlyCreditUsageForApiKeyQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-api-key/get-monthly-credit-usage-for-api-key.query';
 import { GetMonthlyCreditUsageForApiKeyUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-api-key/get-monthly-credit-usage-for-api-key.use-case';
 import { ApiKeyCreditLimitExceededError } from 'src/iam/credit-limits/application/credit-limits.errors';
@@ -11,12 +10,12 @@ import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/applicati
 
 @Injectable()
 export class ApiKeyCreditLimitGuardService {
+  private readonly logger = new Logger(ApiKeyCreditLimitGuardService.name);
+
   constructor(
     private readonly resolveCreditLimitForApiKeyUseCase: ResolveCreditLimitForApiKeyUseCase,
     private readonly getMonthlyCreditUsageForApiKeyUseCase: GetMonthlyCreditUsageForApiKeyUseCase,
     private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
-    @InjectPinoLogger(ApiKeyCreditLimitGuardService.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async ensureWithinLimit(orgId: UUID, apiKeyId: UUID): Promise<void> {

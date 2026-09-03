@@ -1,16 +1,14 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { CheckQuotaUseCase } from './check-quota.use-case';
 import { CheckQuotaQuery } from './check-quota.query';
-import { UsageQuotaRepositoryPort } from '../../ports/usage-quota.repository.port';
-import { QuotaLimitResolverService } from '../../services/quota-limit-resolver.service';
+import { UsageQuotaRepositoryPort } from 'src/iam/quotas/application/ports/usage-quota.repository.port';
+import { QuotaLimitResolverService } from 'src/iam/quotas/application/services/quota-limit-resolver.service';
 import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { UsageQuota } from 'src/iam/quotas/domain/usage-quota.entity';
-import { QuotaExceededError } from '../../quotas.errors';
+import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 
 describe('CheckQuotaUseCase', () => {
   let useCase: CheckQuotaUseCase;
@@ -39,10 +37,6 @@ describe('CheckQuotaUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CheckQuotaUseCase,
-        {
-          provide: getLoggerToken(CheckQuotaUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: UsageQuotaRepositoryPort, useValue: usageQuotaRepository },
         { provide: QuotaLimitResolverService, useValue: limitResolver },
         {

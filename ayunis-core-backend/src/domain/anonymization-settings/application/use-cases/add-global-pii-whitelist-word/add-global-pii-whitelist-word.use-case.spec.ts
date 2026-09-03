@@ -1,12 +1,11 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
-import type { GlobalAnonymizationWhitelistRepository } from '../../ports/global-anonymization-whitelist.repository';
+import type { GlobalAnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/global-anonymization-whitelist.repository';
 import {
   DuplicateGlobalWhitelistWordError,
   EmptyGlobalWhitelistWordError,
-} from '../../anonymization-settings.errors';
+} from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import { AddGlobalPiiWhitelistWordCommand } from './add-global-pii-whitelist-word.command';
 import { AddGlobalPiiWhitelistWordUseCase } from './add-global-pii-whitelist-word.use-case';
 
@@ -18,10 +17,7 @@ describe('AddGlobalPiiWhitelistWordUseCase', () => {
     delete: jest.fn(),
   };
 
-  const useCase = new AddGlobalPiiWhitelistWordUseCase(
-    createPinoLoggerMock(),
-    repository,
-  );
+  const useCase = new AddGlobalPiiWhitelistWordUseCase(repository);
   const superAdminId = randomUUID();
 
   beforeEach(() => {

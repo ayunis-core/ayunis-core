@@ -1,8 +1,7 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionsGuard } from './permissions.guard';
-import { REQUIRE_PERMISSION_KEY } from '../decorators/permissions.decorator';
+import { REQUIRE_PERMISSION_KEY } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
@@ -45,7 +44,7 @@ function createGuard(options: {
     }),
   } as unknown as ExecutionContext;
 
-  const guard = new PermissionsGuard(createPinoLoggerMock(), reflector, {
+  const guard = new PermissionsGuard(reflector, {
     execute,
   } as unknown as HasPermissionUseCase);
 

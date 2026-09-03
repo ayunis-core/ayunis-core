@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -11,12 +15,12 @@ import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/
 import { GetTrialQuery } from 'src/iam/trials/application/use-cases/get-trial/get-trial.query';
 import { TrialNotFoundError } from 'src/iam/trials/application/trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SubscriptionRequiredError } from '../authorization.errors';
+import { SubscriptionRequiredError } from 'src/iam/authorization/application/authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import {
   REQUIRE_SUBSCRIPTION_KEY,
   RequireSubscriptionOptions,
-} from '../decorators/subscription.decorator';
+} from 'src/iam/authorization/application/decorators/subscription.decorator';
 
 export interface SubscriptionContext {
   hasActiveSubscription: boolean;
@@ -38,9 +42,9 @@ type Trial = Awaited<ReturnType<GetTrialUseCase['execute']>>;
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
+  private readonly logger = new Logger(SubscriptionGuard.name);
+
   constructor(
-    @InjectPinoLogger(SubscriptionGuard.name)
-    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getTrialUseCase: GetTrialUseCase,

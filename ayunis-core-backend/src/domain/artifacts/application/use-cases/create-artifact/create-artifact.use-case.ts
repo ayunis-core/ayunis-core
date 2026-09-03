@@ -1,20 +1,19 @@
 import type { UUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { CreateArtifactCommand } from './create-artifact.command';
 import {
   Artifact,
   DiagramArtifact,
   DocumentArtifact,
   SpreadsheetArtifact,
-} from '../../../domain/artifact.entity';
-import { ArtifactVersion } from '../../../domain/artifact-version.entity';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-import { ArtifactType } from '../../../domain/value-objects/artifact-type.enum';
+} from 'src/domain/artifacts/domain/artifact.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { prepareContentForWrite } from '../../helpers/prepare-content-for-write';
+import { prepareContentForWrite } from 'src/domain/artifacts/application/helpers/prepare-content-for-write';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
@@ -24,14 +23,14 @@ import {
   ArtifactContentTooLargeError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class CreateArtifactUseCase {
+  private readonly logger = new Logger(CreateArtifactUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateArtifactUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
@@ -41,7 +40,7 @@ export class CreateArtifactUseCase {
   @HandleUnexpectedErrors(UnexpectedArtifactError)
   @Transactional()
   async execute(command: CreateArtifactCommand): Promise<Artifact> {
-    this.logger.info({ type: command.type }, 'Creating artifact');
+    this.logger.log({ type: command.type }, 'Creating artifact');
 
     const userId = this.resolveUserId();
     const content = prepareContentForWrite(command.type, command.content);

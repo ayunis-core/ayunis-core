@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
-import { MarketplaceSkillInstallationService } from '../services/marketplace-skill-installation.service';
+import { MarketplaceSkillInstallationService } from 'src/domain/skills/application/services/marketplace-skill-installation.service';
 
 @Injectable()
 export class UserCreatedListener {
+  private readonly logger = new Logger(UserCreatedListener.name);
+
   constructor(
-    @InjectPinoLogger(UserCreatedListener.name)
-    private readonly logger: PinoLogger,
     private readonly skillInstallationService: MarketplaceSkillInstallationService,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
   async handleUserCreated(event: UserCreatedEvent): Promise<void> {
     try {
-      this.logger.info(
+      this.logger.log(
         {
           userId: event.userId,
           orgId: event.orgId,
@@ -28,7 +27,7 @@ export class UserCreatedListener {
           event.userId,
         );
 
-      this.logger.info(
+      this.logger.log(
         {
           userId: event.userId,
           count: successCount,

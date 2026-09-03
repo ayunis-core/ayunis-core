@@ -1,5 +1,3 @@
-import type { ConfigService } from '@nestjs/config';
-import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { DataSource, EntitySchema } from 'typeorm';
@@ -7,7 +5,8 @@ import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/Postgres
 import { randomUUID } from 'crypto';
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import type { ConfigService } from '@nestjs/config';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { RegisterUserUseCase } from './register-user.use-case';
 import { RegisterUserCommand } from './register-user.command';
 import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
@@ -58,7 +57,6 @@ const rolePermissionRecordSchema = new EntitySchema<RolePermissionRecord>({
 });
 
 describe('RegisterUserUseCase transaction', () => {
-  const logger = createPinoLoggerMock();
   let dataSource: DataSource;
   let schemaName: string;
   let txHost: TransactionHost<TransactionalAdapterTypeOrm>;
@@ -101,13 +99,12 @@ describe('RegisterUserUseCase transaction', () => {
       defaultTxOptions: {},
       extraProviderTokens: [],
     });
-    orgsRepository = new LocalOrgsRepository(logger, txHost);
+    orgsRepository = new LocalOrgsRepository(txHost);
     const rolePermissionsRepository: RolePermissionsRepository =
       new LocalRolePermissionsRepository(dataSource, txHost);
     const seedDefaultRolePermissionsUseCase =
-      new SeedDefaultRolePermissionsUseCase(logger, rolePermissionsRepository);
+      new SeedDefaultRolePermissionsUseCase(rolePermissionsRepository);
     const createOrgUseCase = new CreateOrgUseCase(
-      logger,
       orgsRepository,
       {
         emitAsync: jest.fn().mockResolvedValue([]),
@@ -116,7 +113,6 @@ describe('RegisterUserUseCase transaction', () => {
     );
 
     useCase = new RegisterUserUseCase(
-      logger,
       {
         execute: jest.fn().mockResolvedValue(null),
       } as unknown as FindUserByEmailUseCase,
@@ -222,7 +218,6 @@ describe('RegisterUserUseCase transaction', () => {
 
   it('rolls back a standalone organization when permission seeding fails', async () => {
     const createOrgUseCase = new CreateOrgUseCase(
-      logger,
       orgsRepository,
       {
         emitAsync: jest.fn().mockResolvedValue([]),

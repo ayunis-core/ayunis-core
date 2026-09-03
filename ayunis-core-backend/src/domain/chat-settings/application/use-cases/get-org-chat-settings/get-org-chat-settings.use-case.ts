@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
-import { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
+import { OrgChatSettingsRepository } from 'src/domain/chat-settings/application/ports/org-chat-settings.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnexpectedChatSettingsError } from '../../chat-settings.errors';
+import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetOrgChatSettingsUseCase {
+  private readonly logger = new Logger(GetOrgChatSettingsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetOrgChatSettingsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly orgChatSettingsRepository: OrgChatSettingsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -21,7 +20,7 @@ export class GetOrgChatSettingsUseCase {
     if (!orgId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.info({ orgId }, 'execute');
+    this.logger.log({ orgId }, 'execute');
 
     try {
       const orgChatSettings =

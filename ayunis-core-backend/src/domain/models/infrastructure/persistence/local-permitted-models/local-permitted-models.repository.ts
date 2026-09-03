@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   FindOneParams,
@@ -40,10 +39,9 @@ function isUniqueViolation(error: unknown): boolean {
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
-  constructor(
-    @InjectPinoLogger(LocalPermittedModelsRepository.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(LocalPermittedModelsRepository.name);
 
+  constructor(
     @InjectRepository(PermittedModelRecord)
     private readonly permittedModelRepository: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,
@@ -77,7 +75,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findOrgDefaultLanguage(
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
       },
@@ -117,7 +115,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null> {
-    this.logger.info({ teamId, orgId }, 'findTeamDefaultLanguage');
+    this.logger.log({ teamId, orgId }, 'findTeamDefaultLanguage');
     const permittedModel = await this.permittedModelRepository.findOne({
       where: {
         scopeId: teamId,
@@ -314,7 +312,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     orgId: UUID;
     teamId?: UUID;
   }): Promise<PermittedLanguageModel> {
-    this.logger.info(
+    this.logger.log(
       {
         id: params.id,
         orgId: params.orgId,
@@ -395,7 +393,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   }
 
   async update(permittedModel: PermittedModel): Promise<PermittedModel> {
-    this.logger.info(
+    this.logger.log(
       {
         id: permittedModel.id,
         orgId: permittedModel.orgId,
@@ -426,7 +424,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findAllByCatalogModelId(
     catalogModelId: UUID,
   ): Promise<PermittedModel[]> {
-    this.logger.info({ catalogModelId }, 'findAllByCatalogModelId');
+    this.logger.log({ catalogModelId }, 'findAllByCatalogModelId');
 
     const permittedModels = await this.permittedModelRepository.find({
       where: { modelId: catalogModelId },
@@ -445,7 +443,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   }
 
   async unsetDefaultsByCatalogModelId(catalogModelId: UUID): Promise<void> {
-    this.logger.info({ catalogModelId }, 'unsetDefaultsByCatalogModelId');
+    this.logger.log({ catalogModelId }, 'unsetDefaultsByCatalogModelId');
 
     const result = await this.permittedModelRepository.update(
       { modelId: catalogModelId, isDefault: true },

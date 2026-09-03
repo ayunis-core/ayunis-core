@@ -1,29 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
   SubscriptionAlreadyCancelledError,
   SubscriptionNotFoundError,
   UnexpectedSubscriptionError,
-} from '../../subscription.errors';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+} from 'src/iam/subscriptions/application/subscription.errors';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
 import { UpdateStartDateCommand } from './update-start-date.command';
 
 @Injectable()
 export class UpdateStartDateUseCase {
+  private readonly logger = new Logger(UpdateStartDateUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateStartDateUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: UpdateStartDateCommand): Promise<Subscription> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,

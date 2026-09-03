@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InviteAlreadyAcceptedError } from 'src/iam/invites/application/invites.errors';
 import { AcceptPendingInviteCommand } from 'src/iam/invites/application/use-cases/accept-pending-invite/accept-pending-invite.command';
@@ -44,9 +43,9 @@ interface ProvisioningResult {
 
 @Injectable()
 export class ProvisionOrgSsoUserUseCase {
+  private readonly logger = new Logger(ProvisionOrgSsoUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ProvisionOrgSsoUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly connections: OrgSsoConnectionsRepository,
     private readonly identities: FederatedIdentitiesRepository,
     private readonly provisioningLock: SsoProvisioningLock,
@@ -199,7 +198,7 @@ export class ProvisionOrgSsoUserUseCase {
   }
 
   private logProvisionedUser(user: User, invite: Invite | null): void {
-    this.logger.info(
+    this.logger.log(
       {
         userId: user.id,
         orgId: user.orgId,

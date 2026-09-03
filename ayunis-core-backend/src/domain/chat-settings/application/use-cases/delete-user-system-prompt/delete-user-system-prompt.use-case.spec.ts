@@ -1,6 +1,5 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { DeleteUserSystemPromptUseCase } from './delete-user-system-prompt.use-case';
-import type { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
+import type { UserSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/user-system-prompts.repository';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 
@@ -23,7 +22,6 @@ describe('DeleteUserSystemPromptUseCase', () => {
     };
 
     useCase = new DeleteUserSystemPromptUseCase(
-      createPinoLoggerMock(),
       repository,
       contextService as unknown as ContextService,
     );

@@ -1,20 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { OpenAIUnexpectedError } from '../../openai-compat.errors';
-import { OpenAIModelMapper } from '../../mappers/openai-model.mapper';
-import type { OpenAIModelListResponse } from '../../types/openai-model.types';
+import { OpenAIUnexpectedError } from 'src/domain/openai-compat/application/openai-compat.errors';
+import { OpenAIModelMapper } from 'src/domain/openai-compat/application/mappers/openai-model.mapper';
+import type { OpenAIModelListResponse } from 'src/domain/openai-compat/application/types/openai-model.types';
 import { ListOpenAIModelsQuery } from './list-openai-models.query';
 
 @Injectable()
 export class ListOpenAIModelsUseCase {
-  constructor(
-    @InjectPinoLogger(ListOpenAIModelsUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(ListOpenAIModelsUseCase.name);
 
+  constructor(
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
     private readonly modelMapper: OpenAIModelMapper,
   ) {}
@@ -22,10 +20,7 @@ export class ListOpenAIModelsUseCase {
   async execute(
     query: ListOpenAIModelsQuery,
   ): Promise<OpenAIModelListResponse> {
-    this.logger.info(
-      { orgId: query.orgId },
-      'Listing OpenAI-compatible models',
-    );
+    this.logger.log({ orgId: query.orgId }, 'Listing OpenAI-compatible models');
 
     try {
       const permitted = await this.getPermittedLanguageModelsUseCase.execute(

@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { DocumentProcessingPort } from '../../ports/document-processing.port';
-import { UrlCrawlProcessingPort } from '../../ports/url-crawl-processing.port';
+import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
+import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
 import { CleanupSourceProcessingCommand } from './cleanup-source-processing.command';
@@ -18,9 +17,9 @@ import { CleanupSourceProcessingCommand } from './cleanup-source-processing.comm
  */
 @Injectable()
 export class CleanupSourceProcessingUseCase {
+  private readonly logger = new Logger(CleanupSourceProcessingUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CleanupSourceProcessingUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly documentProcessingPort: DocumentProcessingPort,
     private readonly urlCrawlProcessingPort: UrlCrawlProcessingPort,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
@@ -30,7 +29,7 @@ export class CleanupSourceProcessingUseCase {
     if (command.sourceIds.length === 0) {
       return;
     }
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         sourceCount: command.sourceIds.length,

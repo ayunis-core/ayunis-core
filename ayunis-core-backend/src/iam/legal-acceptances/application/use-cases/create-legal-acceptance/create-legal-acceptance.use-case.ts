@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   CreateLegalAcceptanceCommand,
   CreatePrivacyPolicyAcceptanceCommand,
@@ -7,22 +6,22 @@ import {
 } from './create-legal-acceptance.command';
 import { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance.entity';
 import { ConfigService } from '@nestjs/config';
-import { LegalAcceptancesRepository } from '../../ports/legal-acceptances.repository';
+import { LegalAcceptancesRepository } from 'src/iam/legal-acceptances/application/ports/legal-acceptances.repository';
 import { TosAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/tos-acceptance.entity';
 import { PrivacyPolicyAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/privacy-policy-acceptance.entity';
 
 @Injectable()
 export class CreateLegalAcceptanceUseCase {
+  private readonly logger = new Logger(CreateLegalAcceptanceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateLegalAcceptanceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly legalAcceptanceRepository: LegalAcceptancesRepository,
     private readonly configService: ConfigService,
   ) {}
 
   async execute(command: CreateLegalAcceptanceCommand): Promise<void> {
     const { userId, orgId, type } = command;
-    this.logger.info(
+    this.logger.log(
       `Creating legal acceptance for user ${userId} in org ${orgId} with type ${type}`,
     );
     const isSelfHosted = this.configService.get<boolean>('app.isSelfHosted');

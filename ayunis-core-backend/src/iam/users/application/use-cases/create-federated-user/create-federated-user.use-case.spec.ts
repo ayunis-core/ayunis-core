@@ -30,10 +30,7 @@ describe(CreateFederatedUserUseCase.name, () => {
         delete: jest.fn(),
         isValidPassword: jest.fn(),
       };
-      const useCase = new CreateFederatedUserUseCase(
-        createPinoLoggerMock(),
-        repository,
-      );
+      const useCase = new CreateFederatedUserUseCase(repository);
 
       const user = await useCase.execute(
         new CreateFederatedUserCommand({
@@ -65,10 +62,7 @@ describe(CreateFederatedUserUseCase.name, () => {
       findOneByEmail: jest.fn().mockResolvedValue(existingUser),
       create: jest.fn(),
     } as unknown as jest.Mocked<UsersRepository>;
-    const useCase = new CreateFederatedUserUseCase(
-      createPinoLoggerMock(),
-      repository,
-    );
+    const useCase = new CreateFederatedUserUseCase(repository);
 
     await expect(
       useCase.execute(
@@ -83,4 +77,3 @@ describe(CreateFederatedUserUseCase.name, () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 });
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';

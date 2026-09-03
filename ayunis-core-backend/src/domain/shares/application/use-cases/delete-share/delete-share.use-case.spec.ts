@@ -1,6 +1,8 @@
 // Mock the Transactional decorator
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
@@ -12,8 +14,8 @@ import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeleteShareUseCase } from './delete-share.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SharesRepository } from '../../ports/shares-repository.port';
-import { ShareDeletedEvent } from '../../events/share-deleted.event';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
@@ -29,20 +31,16 @@ describe('DeleteShareUseCase', () => {
   let contextService: ContextService;
   let repository: SharesRepository;
   let eventEmitter: EventEmitter2;
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
 
   beforeAll(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteShareUseCase,
-        {
-          provide: getLoggerToken(DeleteShareUseCase.name),
-          useValue: logger,
-        },
         {
           provide: ContextService,
           useValue: {

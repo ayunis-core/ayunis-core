@@ -1,6 +1,5 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetOrgSystemPromptUseCase } from './get-org-system-prompt.use-case';
-import type { OrgSystemPromptsRepository } from '../../ports/org-system-prompts.repository';
+import type { OrgSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/org-system-prompts.repository';
 import { OrgSystemPrompt } from 'src/domain/chat-settings/domain/org-system-prompt.entity';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -25,7 +24,6 @@ describe('GetOrgSystemPromptUseCase', () => {
     };
 
     useCase = new GetOrgSystemPromptUseCase(
-      createPinoLoggerMock(),
       repository,
       contextService as unknown as ContextService,
     );

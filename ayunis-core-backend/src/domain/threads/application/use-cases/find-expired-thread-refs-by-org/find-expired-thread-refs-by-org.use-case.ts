@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ThreadsRepository } from '../../ports/threads.repository';
-import type { ExpiredThreadRef } from '../../ports/threads.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import type { ExpiredThreadRef } from 'src/domain/threads/application/ports/threads.repository';
 import type { FindExpiredThreadRefsByOrgQuery } from './find-expired-thread-refs-by-org.query';
 
 // Re-exported so other modules consume this type through the use-case surface
@@ -17,11 +16,9 @@ export type { ExpiredThreadRef };
  */
 @Injectable()
 export class FindExpiredThreadRefsByOrgUseCase {
-  constructor(
-    @InjectPinoLogger(FindExpiredThreadRefsByOrgUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly threadsRepository: ThreadsRepository,
-  ) {}
+  private readonly logger = new Logger(FindExpiredThreadRefsByOrgUseCase.name);
+
+  constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(
     query: FindExpiredThreadRefsByOrgQuery,

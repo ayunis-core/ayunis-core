@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   FederatedIdentitiesRepository,
@@ -20,9 +19,9 @@ import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-us
 
 @Injectable()
 export class LinkFederatedIdentityUseCase {
+  private readonly logger = new Logger(LinkFederatedIdentityUseCase.name);
+
   constructor(
-    @InjectPinoLogger(LinkFederatedIdentityUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly identities: FederatedIdentitiesRepository,
     private readonly provisioningLock: SsoProvisioningLock,
     private readonly findUserById: FindUserByIdUseCase,
@@ -32,7 +31,7 @@ export class LinkFederatedIdentityUseCase {
   async execute(
     command: LinkFederatedIdentityCommand,
   ): Promise<FederatedIdentity> {
-    this.logger.info({ userId: command.userId }, 'Linking federated identity');
+    this.logger.log({ userId: command.userId }, 'Linking federated identity');
     return this.link(command);
   }
 

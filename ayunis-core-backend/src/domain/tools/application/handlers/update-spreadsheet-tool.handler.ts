@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { UpdateSpreadsheetTool } from '../../domain/tools/update-spreadsheet-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
 import { UpdateArtifactCommand } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.command';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -15,11 +14,9 @@ import { UUID } from 'crypto';
 
 @Injectable()
 export class UpdateSpreadsheetToolHandler extends ToolExecutionHandler {
-  constructor(
-    @InjectPinoLogger(UpdateSpreadsheetToolHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly updateArtifactUseCase: UpdateArtifactUseCase,
-  ) {
+  private readonly logger = new Logger(UpdateSpreadsheetToolHandler.name);
+
+  constructor(private readonly updateArtifactUseCase: UpdateArtifactUseCase) {
     super();
   }
 
@@ -29,7 +26,7 @@ export class UpdateSpreadsheetToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.info('Executing update_spreadsheet tool');
+    this.logger.log('Executing update_spreadsheet tool');
 
     try {
       const validatedInput = tool.validateParams(input);

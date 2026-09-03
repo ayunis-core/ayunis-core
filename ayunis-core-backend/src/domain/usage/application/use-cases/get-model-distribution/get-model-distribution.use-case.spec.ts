@@ -1,11 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetModelDistributionUseCase } from './get-model-distribution.use-case';
 import { GetModelDistributionQuery } from './get-model-distribution.query';
-import { UsageRepository } from '../../ports/usage.repository';
-import { InvalidDateRangeError } from '../../usage.errors';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
+import { InvalidDateRangeError } from 'src/domain/usage/application/usage.errors';
 import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
@@ -25,10 +23,6 @@ describe('GetModelDistributionUseCase', () => {
       providers: [
         GetModelDistributionUseCase,
         { provide: UsageRepository, useValue: mockUsageRepository },
-        {
-          provide: getLoggerToken(GetModelDistributionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

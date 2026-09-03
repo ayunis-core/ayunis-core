@@ -1,14 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
-import type { SkillRepository } from '../../ports/skill.repository';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { SkillNotFoundError } from '../../skills.errors';
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('FindSkillByNameUseCase', () => {
@@ -53,7 +52,6 @@ describe('FindSkillByNameUseCase', () => {
     } as unknown as jest.Mocked<ContextService>;
 
     useCase = new FindSkillByNameUseCase(
-      createPinoLoggerMock(),
       skillRepository,
       findSharesByScopeUseCase,
       contextService,

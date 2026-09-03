@@ -1,15 +1,14 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UpdateIpAllowlistUseCase } from './update-ip-allowlist.use-case';
 import { UpdateIpAllowlistCommand } from './update-ip-allowlist.command';
-import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
+import type { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
 import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 import {
   AdminLockoutError,
   InvalidCidrApplicationError,
   UnexpectedIpAllowlistError,
-} from '../../ip-allowlist.errors';
-import type { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
+} from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
+import type { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
 import type { UUID } from 'crypto';
 
 describe('UpdateIpAllowlistUseCase', () => {
@@ -34,11 +33,7 @@ describe('UpdateIpAllowlistUseCase', () => {
     repository.upsert.mockImplementation(async (entity) => entity);
     repository.findByOrgId.mockResolvedValue(null);
 
-    useCase = new UpdateIpAllowlistUseCase(
-      createPinoLoggerMock(),
-      repository,
-      guard,
-    );
+    useCase = new UpdateIpAllowlistUseCase(repository, guard);
   });
 
   it('should save valid CIDRs when admin IP is within the new allow list', async () => {

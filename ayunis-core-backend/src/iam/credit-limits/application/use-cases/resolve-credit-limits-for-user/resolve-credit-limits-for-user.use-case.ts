@@ -1,19 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
 import { FindTeamsByUserIdQuery } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.query';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { selectTeamCreditLimits } from '../../utils/select-team-credit-limits';
-import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
+import { selectTeamCreditLimits } from 'src/iam/credit-limits/application/utils/select-team-credit-limits';
+import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { ResolveCreditLimitsForUserQuery } from './resolve-credit-limits-for-user.query';
 import type { CreditLimitsForUser } from './resolve-credit-limits-for-user.result';
 
 @Injectable()
 export class ResolveCreditLimitsForUserUseCase {
+  private readonly logger = new Logger(ResolveCreditLimitsForUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ResolveCreditLimitsForUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly findTeamsByUserIdUseCase: FindTeamsByUserIdUseCase,
   ) {}
@@ -21,7 +20,7 @@ export class ResolveCreditLimitsForUserUseCase {
   async execute(
     query: ResolveCreditLimitsForUserQuery,
   ): Promise<CreditLimitsForUser> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
         userId: query.userId,

@@ -1,27 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetProviderUsageQuery } from './get-provider-usage.query';
-import { UsageRepository } from '../../ports/usage.repository';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
 import {
   validateOptionalDateRange,
   calculateProviderPercentages,
-} from '../../usage.utils';
-import { UnexpectedUsageError } from '../../usage.errors';
+} from 'src/domain/usage/application/usage.utils';
+import { UnexpectedUsageError } from 'src/domain/usage/application/usage.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetProviderUsageUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-    @InjectPinoLogger(GetProviderUsageUseCase.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(GetProviderUsageUseCase.name);
+
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   async execute(query: GetProviderUsageQuery): Promise<ProviderUsage[]> {
     validateOptionalDateRange(query.startDate, query.endDate);
 
-    this.logger.info(
+    this.logger.log(
       {
         organizationId: query.organizationId,
         startDate: query.startDate?.toISOString(),

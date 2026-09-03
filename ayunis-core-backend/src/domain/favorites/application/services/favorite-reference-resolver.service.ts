@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { FindThreadsByIdsQuery } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.query';
@@ -9,15 +8,15 @@ import { FindWorkspacesByIdsUseCase } from 'src/domain/workspaces/application/us
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import { FavoriteReferenceType } from '../../domain/value-objects/favorite-reference-type.enum';
-import type { Favorite } from '../../domain/favorite.entity';
-import type { FavoriteResult } from '../use-cases/find-favorites/favorite.result';
+import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
+import type { Favorite } from 'src/domain/favorites/domain/favorite.entity';
+import type { FavoriteResult } from 'src/domain/favorites/application/use-cases/find-favorites/favorite.result';
 
 @Injectable()
 export class FavoriteReferenceResolver {
+  private readonly logger = new Logger(FavoriteReferenceResolver.name);
+
   constructor(
-    @InjectPinoLogger(FavoriteReferenceResolver.name)
-    private readonly logger: PinoLogger,
     private readonly findWorkspacesByIdsUseCase: FindWorkspacesByIdsUseCase,
     private readonly findThreadsByIdsUseCase: FindThreadsByIdsUseCase,
   ) {}

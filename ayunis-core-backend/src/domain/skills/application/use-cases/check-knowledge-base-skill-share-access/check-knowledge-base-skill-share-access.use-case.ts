@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { SkillRepository } from '../../ports/skill.repository';
-import { UnexpectedSkillError } from '../../skills.errors';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { CheckKnowledgeBaseSkillShareAccessQuery } from './check-knowledge-base-skill-share-access.query';
 
 /**
@@ -16,9 +15,11 @@ import { CheckKnowledgeBaseSkillShareAccessQuery } from './check-knowledge-base-
  */
 @Injectable()
 export class CheckKnowledgeBaseSkillShareAccessUseCase {
+  private readonly logger = new Logger(
+    CheckKnowledgeBaseSkillShareAccessUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(CheckKnowledgeBaseSkillShareAccessUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
   ) {}
@@ -27,7 +28,7 @@ export class CheckKnowledgeBaseSkillShareAccessUseCase {
   async execute(
     query: CheckKnowledgeBaseSkillShareAccessQuery,
   ): Promise<boolean> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: query.knowledgeBaseId,
       },

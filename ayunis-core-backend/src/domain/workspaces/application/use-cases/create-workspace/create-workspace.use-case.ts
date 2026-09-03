@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -10,14 +9,14 @@ import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
-import { assertValidWorkspaceFields } from '../../util/workspace-fields';
+import { assertValidWorkspaceFields } from 'src/domain/workspaces/application/util/workspace-fields';
 import { CreateWorkspaceCommand } from './create-workspace.command';
 
 @Injectable()
 export class CreateWorkspaceUseCase {
+  private readonly logger = new Logger(CreateWorkspaceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateWorkspaceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly contextService: ContextService,
     private readonly addFavoriteUseCase: AddFavoriteUseCase,
@@ -25,7 +24,7 @@ export class CreateWorkspaceUseCase {
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(command: CreateWorkspaceCommand): Promise<Workspace> {
-    this.logger.info('Creating workspace');
+    this.logger.log('Creating workspace');
 
     assertValidWorkspaceFields({
       name: command.name,

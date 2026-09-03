@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { Readable } from 'stream';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -8,13 +7,13 @@ import { ObjectNotFoundError } from 'src/domain/storage/application/storage.erro
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { ThreadsRepository } from '../../ports/threads.repository';
+import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import {
   MessageImageNotFoundError,
   ThreadNotFoundError,
   UnexpecteThreadError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { DownloadMessageImageUseCase } from './download-message-image.use-case';
 import { DownloadMessageImageQuery } from './download-message-image.query';
 
@@ -50,7 +49,6 @@ describe('DownloadMessageImageUseCase', () => {
     } as unknown as jest.Mocked<ContextService>;
 
     useCase = new DownloadMessageImageUseCase(
-      createPinoLoggerMock(),
       contextService,
       threadsRepository,
       downloadObjectUseCase,

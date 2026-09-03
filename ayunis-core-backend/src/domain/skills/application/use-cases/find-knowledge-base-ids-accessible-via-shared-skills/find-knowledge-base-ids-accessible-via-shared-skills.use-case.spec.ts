@@ -1,5 +1,4 @@
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from './find-knowledge-base-ids-accessible-via-shared-skills.use-case';
@@ -23,7 +22,6 @@ describe('FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase', () => {
       knowledgeBaseId,
     ]);
     const useCase = new FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase(
-      createPinoLoggerMock(),
       repository,
       findSharesByScopeUseCase,
     );

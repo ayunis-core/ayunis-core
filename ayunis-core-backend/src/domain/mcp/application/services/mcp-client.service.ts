@@ -1,5 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Optional, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import {
   McpClientPort,
@@ -32,9 +31,9 @@ import { handleMcpOperationError } from './mcp-operation-error';
 
 @Injectable()
 export class McpClientService {
+  private readonly logger = new Logger(McpClientService.name);
+
   constructor(
-    @InjectPinoLogger(McpClientService.name)
-    private readonly logger: PinoLogger,
     private readonly mcpClient: McpClientPort,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
@@ -265,7 +264,7 @@ export class McpClientService {
           ? `Bearer ${decryptedToken}`
           : decryptedToken;
 
-      this.logger.info(
+      this.logger.log(
         {
           integrationId: integration.id,
         },

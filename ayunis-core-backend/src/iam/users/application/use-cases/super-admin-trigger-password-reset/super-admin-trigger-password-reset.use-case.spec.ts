@@ -1,17 +1,18 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { SuperAdminTriggerPasswordResetUseCase } from './super-admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
-import { UsersRepository } from '../../ports/users.repository';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
-import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
+import { SendPasswordResetEmailUseCase } from 'src/iam/users/application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UserInvalidInputError, UserNotFoundError } from '../../users.errors';
+import {
+  UserInvalidInputError,
+  UserNotFoundError,
+} from 'src/iam/users/application/users.errors';
 import type { UUID } from 'crypto';
 
 describe('SuperAdminTriggerPasswordResetUseCase', () => {
@@ -71,10 +72,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
           useValue: mockSendPasswordResetEmailUseCase,
         },
         { provide: ConfigService, useValue: mockConfigService },
-        {
-          provide: getLoggerToken(SuperAdminTriggerPasswordResetUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

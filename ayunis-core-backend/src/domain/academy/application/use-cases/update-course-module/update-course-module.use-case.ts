@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
 import {
   CourseModuleNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 import { UpdateCourseModuleCommand } from './update-course-module.command';
 
 @Injectable()
 export class UpdateCourseModuleUseCase {
+  private readonly logger = new Logger(UpdateCourseModuleUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateCourseModuleUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
 
   async execute(
     command: UpdateCourseModuleCommand,
   ): Promise<AcademyCourseModule> {
-    this.logger.info(
+    this.logger.log(
       {
         courseModuleId: command.courseModuleId,
       },

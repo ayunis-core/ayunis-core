@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -11,19 +10,19 @@ import {
   contentTypeToExtension,
   isAllowedImageContentType,
 } from 'src/common/util/content-type.util';
-import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
-import { GeneratedImage } from '../../../domain/generated-image.entity';
+import { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
+import { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
 import {
   GeneratedImageSaveFailedError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { SaveGeneratedImageCommand } from './save-generated-image.command';
 
 @Injectable()
 export class SaveGeneratedImageUseCase {
+  private readonly logger = new Logger(SaveGeneratedImageUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SaveGeneratedImageUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly generatedImagesRepository: GeneratedImagesRepository,
     private readonly uploadObjectUseCase: UploadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
@@ -34,7 +33,7 @@ export class SaveGeneratedImageUseCase {
       orgId: command.orgId,
       threadId: command.threadId,
     };
-    this.logger.info(logContext, 'execute');
+    this.logger.log(logContext, 'execute');
     if (!isAllowedImageContentType(command.contentType)) {
       throw new UnsupportedImageContentTypeError(command.contentType);
     }
@@ -68,7 +67,7 @@ export class SaveGeneratedImageUseCase {
       }
 
       const savedLogContext = { imageId, fileName: storageKey };
-      this.logger.info(savedLogContext, 'Generated image saved');
+      this.logger.log(savedLogContext, 'Generated image saved');
 
       return { id: imageId };
     } catch (error) {
@@ -90,7 +89,7 @@ export class SaveGeneratedImageUseCase {
       await this.deleteObjectUseCase.execute(
         new DeleteObjectCommand(storageKey),
       );
-      this.logger.info(
+      this.logger.log(
         {
           fileName: storageKey,
         },

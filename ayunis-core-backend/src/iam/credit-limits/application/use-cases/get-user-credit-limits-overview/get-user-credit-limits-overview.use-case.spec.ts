@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -7,13 +5,13 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import {
   aUserCreditLimit,
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_USER_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { GetUserCreditLimitsOverviewUseCase } from './get-user-credit-limits-overview.use-case';
 import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overview.query';
 
@@ -50,10 +48,6 @@ describe('GetUserCreditLimitsOverviewUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetUserCreditLimitsOverviewUseCase,
-        {
-          provide: getLoggerToken(GetUserCreditLimitsOverviewUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },
         { provide: FindUsersByIdsUseCase, useValue: findUsersByIds },

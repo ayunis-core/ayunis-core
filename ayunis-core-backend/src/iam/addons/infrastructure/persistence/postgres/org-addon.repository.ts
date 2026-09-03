@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -11,9 +10,9 @@ import { OrgAddonMapper } from './mappers/org-addon.mapper';
 
 @Injectable()
 export class PostgresOrgAddonRepository extends OrgAddonRepository {
+  private readonly logger = new Logger(PostgresOrgAddonRepository.name);
+
   constructor(
-    @InjectPinoLogger(PostgresOrgAddonRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(OrgAddonRecord)
     private readonly repository: Repository<OrgAddonRecord>,
   ) {

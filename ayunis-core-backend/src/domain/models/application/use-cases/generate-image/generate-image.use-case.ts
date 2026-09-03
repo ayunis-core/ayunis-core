@@ -1,26 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { ImageGenerationHandlerRegistry } from '../../registry/image-generation-handler.registry';
+import { ImageGenerationHandlerRegistry } from 'src/domain/models/application/registry/image-generation-handler.registry';
 import {
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../ports/image-generation.handler';
-import { ImageGenerationFailedError } from '../../models.errors';
+} from 'src/domain/models/application/ports/image-generation.handler';
+import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
 import { GenerateImageCommand } from './generate-image.command';
 
 @Injectable()
 export class GenerateImageUseCase {
-  constructor(
-    @InjectPinoLogger(GenerateImageUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(GenerateImageUseCase.name);
 
+  constructor(
     private readonly imageGenerationHandlerRegistry: ImageGenerationHandlerRegistry,
   ) {}
 
   async execute(command: GenerateImageCommand): Promise<ImageGenerationResult> {
-    this.logger.info(
+    this.logger.log(
       {
         model: command.model.name,
         provider: command.model.provider,

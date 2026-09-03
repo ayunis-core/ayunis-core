@@ -1,23 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { mistral } from '@ayunis/provider-mistral';
 import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { RuntimeStreamInferenceHandler } from '../runtime/runtime-stream-inference.handler';
-import type { Model } from '../../domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
+import { RuntimeStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/runtime-stream-inference.handler';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class MistralStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
-    @InjectPinoLogger('RuntimeStreamInferenceHandler')
-    logger: PinoLogger,
-
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
-    super(logger, imageContentService);
+    super(imageContentService);
   }
 
   protected createProvider(model: Model): ModelProvider {

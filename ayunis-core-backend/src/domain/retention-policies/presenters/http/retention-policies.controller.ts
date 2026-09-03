@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Body, Controller, Get, Put, Logger } from '@nestjs/common';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -14,11 +13,11 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetOrgRetentionPolicyUseCase } from '../../application/use-cases/get-org-retention-policy/get-org-retention-policy.use-case';
-import { GetOrgRetentionPolicyQuery } from '../../application/use-cases/get-org-retention-policy/get-org-retention-policy.query';
-import { UpsertOrgRetentionPolicyUseCase } from '../../application/use-cases/upsert-org-retention-policy/upsert-org-retention-policy.use-case';
-import { UpsertOrgRetentionPolicyCommand } from '../../application/use-cases/upsert-org-retention-policy/upsert-org-retention-policy.command';
-import { ALLOWED_RETENTION_DAYS } from '../../domain/retention-period';
+import { GetOrgRetentionPolicyUseCase } from 'src/domain/retention-policies/application/use-cases/get-org-retention-policy/get-org-retention-policy.use-case';
+import { GetOrgRetentionPolicyQuery } from 'src/domain/retention-policies/application/use-cases/get-org-retention-policy/get-org-retention-policy.query';
+import { UpsertOrgRetentionPolicyUseCase } from 'src/domain/retention-policies/application/use-cases/upsert-org-retention-policy/upsert-org-retention-policy.use-case';
+import { UpsertOrgRetentionPolicyCommand } from 'src/domain/retention-policies/application/use-cases/upsert-org-retention-policy/upsert-org-retention-policy.command';
+import { ALLOWED_RETENTION_DAYS } from 'src/domain/retention-policies/domain/retention-period';
 import { UpdateRetentionPolicyRequestDto } from './dtos/update-retention-policy-request.dto';
 import { RetentionPolicyResponseDto } from './dtos/retention-policy-response.dto';
 
@@ -26,9 +25,9 @@ import { RetentionPolicyResponseDto } from './dtos/retention-policy-response.dto
 @Controller('retention-policies')
 @ApiExtraModels(RetentionPolicyResponseDto)
 export class RetentionPoliciesController {
+  private readonly logger = new Logger(RetentionPoliciesController.name);
+
   constructor(
-    @InjectPinoLogger(RetentionPoliciesController.name)
-    private readonly logger: PinoLogger,
     private readonly getOrgRetentionPolicy: GetOrgRetentionPolicyUseCase,
     private readonly upsertOrgRetentionPolicy: UpsertOrgRetentionPolicyUseCase,
   ) {}
@@ -46,7 +45,7 @@ export class RetentionPoliciesController {
   async get(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<RetentionPolicyResponseDto> {
-    this.logger.info({ orgId }, 'Getting retention policy for org');
+    this.logger.log({ orgId }, 'Getting retention policy for org');
 
     const policy = await this.getOrgRetentionPolicy.execute(
       new GetOrgRetentionPolicyQuery(orgId),
@@ -72,7 +71,7 @@ export class RetentionPoliciesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpdateRetentionPolicyRequestDto,
   ): Promise<RetentionPolicyResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { orgId, retentionDays: dto.retentionDays },
       'Updating retention policy for org',
     );

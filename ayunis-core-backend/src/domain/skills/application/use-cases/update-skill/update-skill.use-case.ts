@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { UpdateSkillCommand } from './update-skill.command';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -10,22 +9,22 @@ import {
   DuplicateSkillNameError,
   SkillNotFoundError,
   UnexpectedSkillError,
-} from '../../skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { InvalidSkillNameError } from 'src/domain/skills/domain/skill.entity';
 
 @Injectable()
 export class UpdateSkillUseCase {
+  private readonly logger = new Logger(UpdateSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateSkillUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
   async execute(command: UpdateSkillCommand): Promise<Skill> {
-    this.logger.info({ skillId: command.skillId }, 'Updating skill');
+    this.logger.log({ skillId: command.skillId }, 'Updating skill');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {

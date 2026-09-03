@@ -1,12 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { UpsertOrgRetentionPolicyUseCase } from './upsert-org-retention-policy.use-case';
 import { UpsertOrgRetentionPolicyCommand } from './upsert-org-retention-policy.command';
-import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
-import { InvalidRetentionPeriodError } from '../../retention-policies.errors';
+import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
+import { InvalidRetentionPeriodError } from 'src/domain/retention-policies/application/retention-policies.errors';
 import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 
 describe('UpsertOrgRetentionPolicyUseCase', () => {
@@ -31,10 +29,6 @@ describe('UpsertOrgRetentionPolicyUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpsertOrgRetentionPolicyUseCase,
-        {
-          provide: getLoggerToken(UpsertOrgRetentionPolicyUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: RetentionPoliciesRepository, useValue: repository },
       ],
     }).compile();

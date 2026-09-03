@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { OnboardingRepository } from '../../ports/onboarding.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { OnboardingRepository } from 'src/iam/onboarding/application/ports/onboarding.repository';
 import { GetOnboardingQuery } from './get-onboarding.query';
 import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
-import { OnboardingUnexpectedError } from '../../onboarding.errors';
+import { OnboardingUnexpectedError } from 'src/iam/onboarding/application/onboarding.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetOnboardingUseCase {
-  constructor(
-    @InjectPinoLogger(GetOnboardingUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly onboardingRepository: OnboardingRepository,
-  ) {}
+  private readonly logger = new Logger(GetOnboardingUseCase.name);
+
+  constructor(private readonly onboardingRepository: OnboardingRepository) {}
 
   async execute(query: GetOnboardingQuery): Promise<Onboarding> {
-    this.logger.info({ userId: query.userId }, 'getOnboarding');
+    this.logger.log({ userId: query.userId }, 'getOnboarding');
 
     try {
       const onboarding = await this.onboardingRepository.findByUserId(

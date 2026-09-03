@@ -8,8 +8,8 @@ import {
   HttpStatus,
   Put,
   Req,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -25,12 +25,12 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetIpAllowlistUseCase } from '../../application/use-cases/get-ip-allowlist/get-ip-allowlist.use-case';
-import { GetIpAllowlistQuery } from '../../application/use-cases/get-ip-allowlist/get-ip-allowlist.query';
-import { UpdateIpAllowlistUseCase } from '../../application/use-cases/update-ip-allowlist/update-ip-allowlist.use-case';
-import { UpdateIpAllowlistCommand } from '../../application/use-cases/update-ip-allowlist/update-ip-allowlist.command';
-import { DeleteIpAllowlistUseCase } from '../../application/use-cases/delete-ip-allowlist/delete-ip-allowlist.use-case';
-import { DeleteIpAllowlistCommand } from '../../application/use-cases/delete-ip-allowlist/delete-ip-allowlist.command';
+import { GetIpAllowlistUseCase } from 'src/iam/ip-allowlist/application/use-cases/get-ip-allowlist/get-ip-allowlist.use-case';
+import { GetIpAllowlistQuery } from 'src/iam/ip-allowlist/application/use-cases/get-ip-allowlist/get-ip-allowlist.query';
+import { UpdateIpAllowlistUseCase } from 'src/iam/ip-allowlist/application/use-cases/update-ip-allowlist/update-ip-allowlist.use-case';
+import { UpdateIpAllowlistCommand } from 'src/iam/ip-allowlist/application/use-cases/update-ip-allowlist/update-ip-allowlist.command';
+import { DeleteIpAllowlistUseCase } from 'src/iam/ip-allowlist/application/use-cases/delete-ip-allowlist/delete-ip-allowlist.use-case';
+import { DeleteIpAllowlistCommand } from 'src/iam/ip-allowlist/application/use-cases/delete-ip-allowlist/delete-ip-allowlist.command';
 import { UpdateIpAllowlistRequestDto } from './dtos/update-ip-allowlist-request.dto';
 import { IpAllowlistResponseDto } from './dtos/ip-allowlist-response.dto';
 import { getClientIp } from 'src/common/util/ip.util';
@@ -39,9 +39,9 @@ import { getClientIp } from 'src/common/util/ip.util';
 @Controller('ip-allowlist')
 @ApiExtraModels(IpAllowlistResponseDto)
 export class IpAllowlistController {
+  private readonly logger = new Logger(IpAllowlistController.name);
+
   constructor(
-    @InjectPinoLogger(IpAllowlistController.name)
-    private readonly logger: PinoLogger,
     private readonly getIpAllowlistUseCase: GetIpAllowlistUseCase,
     private readonly updateIpAllowlistUseCase: UpdateIpAllowlistUseCase,
     private readonly deleteIpAllowlistUseCase: DeleteIpAllowlistUseCase,
@@ -58,7 +58,7 @@ export class IpAllowlistController {
   async get(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<IpAllowlistResponseDto> {
-    this.logger.info({ orgId }, 'Getting IP allow list for org');
+    this.logger.log({ orgId }, 'Getting IP allow list for org');
 
     const query = new GetIpAllowlistQuery(orgId);
     const allowlist = await this.getIpAllowlistUseCase.execute(query);
@@ -84,7 +84,7 @@ export class IpAllowlistController {
     @Body() dto: UpdateIpAllowlistRequestDto,
     @Req() req: Request,
   ): Promise<IpAllowlistResponseDto> {
-    this.logger.info({ orgId }, 'Updating IP allow list for org');
+    this.logger.log({ orgId }, 'Updating IP allow list for org');
 
     const clientIp = getClientIp(req);
     if (!clientIp) {
@@ -104,7 +104,7 @@ export class IpAllowlistController {
   })
   @ApiResponse({ status: 204, description: 'IP allow list removed' })
   async remove(@CurrentUser(UserProperty.ORG_ID) orgId: UUID): Promise<void> {
-    this.logger.info({ orgId }, 'Deleting IP allow list for org');
+    this.logger.log({ orgId }, 'Deleting IP allow list for org');
 
     const command = new DeleteIpAllowlistCommand(orgId);
     await this.deleteIpAllowlistUseCase.execute(command);

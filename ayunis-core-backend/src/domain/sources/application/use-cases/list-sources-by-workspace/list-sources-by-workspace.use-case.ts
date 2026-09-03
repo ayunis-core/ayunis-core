@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
@@ -9,17 +8,15 @@ import { ListSourcesByWorkspaceQuery } from './list-sources-by-workspace.query';
 
 @Injectable()
 export class ListSourcesByWorkspaceUseCase {
-  constructor(
-    @InjectPinoLogger(ListSourcesByWorkspaceUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(ListSourcesByWorkspaceUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(
     query: ListSourcesByWorkspaceQuery,
   ): Promise<Paginated<Source>> {
-    this.logger.info(
+    this.logger.log(
       {
         workspaceId: query.workspaceId,
         search: query.search,

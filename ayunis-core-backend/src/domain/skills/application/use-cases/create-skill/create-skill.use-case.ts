@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillRepository } from '../../ports/skill.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { CreateSkillCommand } from './create-skill.command';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -8,21 +7,21 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import {
   DuplicateSkillNameError,
   UnexpectedSkillError,
-} from '../../skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { InvalidSkillNameError } from 'src/domain/skills/domain/skill.entity';
 
 @Injectable()
 export class CreateSkillUseCase {
+  private readonly logger = new Logger(CreateSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateSkillUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CreateSkillCommand): Promise<Skill> {
-    this.logger.info({ name: command.name }, 'Creating skill');
+    this.logger.log({ name: command.name }, 'Creating skill');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {

@@ -1,9 +1,8 @@
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { GetPermittedLanguageModelsQuery } from './get-permitted-language-models.query';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { UnexpectedModelError } from '../../models.errors';
+import { Injectable, Logger } from '@nestjs/common';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -11,10 +10,9 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 
 @Injectable()
 export class GetPermittedLanguageModelsUseCase {
-  constructor(
-    @InjectPinoLogger(GetPermittedLanguageModelsUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(GetPermittedLanguageModelsUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -22,7 +20,7 @@ export class GetPermittedLanguageModelsUseCase {
   async execute(
     query: GetPermittedLanguageModelsQuery,
   ): Promise<PermittedLanguageModel[]> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: query.orgId,
       },

@@ -1,20 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { BcryptHandler } from './bcrypt.handler';
 
 describe('BcryptHandler', () => {
   const build = async (configuredRounds: number | undefined) => {
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BcryptHandler,
-        {
-          provide: getLoggerToken(BcryptHandler.name),
-          useValue: logger,
-        },
         {
           provide: ConfigService,
           useValue: {
@@ -34,7 +29,7 @@ describe('BcryptHandler', () => {
   it('should log configured salt rounds as structured metadata', async () => {
     const { logger } = await build(12);
 
-    expect(logger.info).toHaveBeenCalledWith({ saltRounds: 12 }, 'constructor');
+    expect(logger.log).toHaveBeenCalledWith({ saltRounds: 12 }, 'constructor');
   });
 
   it('should hash using the configured salt rounds', async () => {

@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { DataSource, EntityManager } from 'typeorm';
 import { LocalSubscriptionsRepository } from './local-subscriptions.repository';
 import { SubscriptionMapper } from './mappers/subscription.mapper';
@@ -49,7 +48,6 @@ describe('LocalSubscriptionsRepository ambient transaction', () => {
       );
 
     const repository = new LocalSubscriptionsRepository(
-      createPinoLoggerMock(),
       new SubscriptionMapper(new SubscriptionBillingInfoMapper()),
       new SubscriptionBillingInfoMapper(),
       { transaction: dataSourceTransaction } as unknown as DataSource,

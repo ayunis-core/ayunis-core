@@ -1,12 +1,10 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
 import { RequestTimeoutError } from '@mistralai/mistralai/models/errors';
 import { MistralEmbeddingsHandler } from './mistral-embeddings.handler';
-import { EmbeddingModel } from '../../domain/embedding-model.entity';
+import { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
@@ -49,10 +47,6 @@ describe('MistralEmbeddingsHandler', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MistralEmbeddingsHandler,
-        {
-          provide: getLoggerToken(MistralEmbeddingsHandler.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('mistral-api-key') },

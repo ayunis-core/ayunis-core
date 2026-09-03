@@ -1,18 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ToolExecutionFailedError } from '../tools.errors';
-import { HttpTool, HttpToolMethod } from '../../domain/tools/http-tool.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
+import {
+  HttpTool,
+  HttpToolMethod,
+} from 'src/domain/tools/domain/tools/http-tool.entity';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 
 @Injectable()
 export class HttpToolHandler extends ToolExecutionHandler {
-  constructor(
-    @InjectPinoLogger(HttpToolHandler.name)
-    private readonly logger: PinoLogger,
-  ) {
+  private readonly logger = new Logger(HttpToolHandler.name);
+
+  constructor() {
     super();
   }
 
@@ -22,7 +23,7 @@ export class HttpToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.info({ name: tool.name, input: input }, 'execute');
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const requestInput = JSON.parse(

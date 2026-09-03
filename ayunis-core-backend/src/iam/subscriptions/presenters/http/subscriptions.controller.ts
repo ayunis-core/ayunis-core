@@ -1,5 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Controller, Get, Logger } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -12,9 +11,9 @@ import {
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
-import { HasActiveSubscriptionUseCase } from '../../application/use-cases/has-active-subscription/has-active-subscription.use-case';
-import { HasActiveSubscriptionQuery } from '../../application/use-cases/has-active-subscription/has-active-subscription.query';
-import { GetCurrentPriceUseCase } from '../../application/use-cases/get-current-price/get-current-price.use-case';
+import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
+import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.query';
+import { GetCurrentPriceUseCase } from 'src/iam/subscriptions/application/use-cases/get-current-price/get-current-price.use-case';
 import { PriceResponseDto } from './dto/price-response.dto';
 import { UUID } from 'crypto';
 
@@ -22,9 +21,9 @@ import { UUID } from 'crypto';
 @Controller('subscriptions')
 @ApiExtraModels(ActiveSubscriptionResponseDto, PriceResponseDto)
 export class SubscriptionsController {
+  private readonly logger = new Logger(SubscriptionsController.name);
+
   constructor(
-    @InjectPinoLogger(SubscriptionsController.name)
-    private readonly logger: PinoLogger,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getCurrentPriceUseCase: GetCurrentPriceUseCase,
   ) {}
@@ -47,12 +46,12 @@ export class SubscriptionsController {
   async hasActiveSubscription(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ActiveSubscriptionResponseDto> {
-    this.logger.info({ orgId }, 'Checking active subscription');
+    this.logger.log({ orgId }, 'Checking active subscription');
 
     const query = new HasActiveSubscriptionQuery(orgId);
     const result = await this.hasActiveSubscriptionUseCase.execute(query);
 
-    this.logger.info(
+    this.logger.log(
       { orgId, hasActiveSubscription: result.hasActiveSubscription },
       'Active subscription check completed',
     );
@@ -83,11 +82,11 @@ export class SubscriptionsController {
     description: 'Internal server error',
   })
   getCurrentPrice(): PriceResponseDto {
-    this.logger.info('Getting current price per seat monthly');
+    this.logger.log('Getting current price per seat monthly');
 
     const pricePerSeatMonthly = this.getCurrentPriceUseCase.execute();
 
-    this.logger.info(
+    this.logger.log(
       { pricePerSeatMonthly },
       'Successfully retrieved current price',
     );

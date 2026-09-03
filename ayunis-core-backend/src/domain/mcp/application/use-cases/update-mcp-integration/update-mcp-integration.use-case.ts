@@ -1,34 +1,33 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationNotConfigurableError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { McpValidationFailedError } from '../../mcp.errors';
-import { SchemaConfiguredMcpIntegration } from '../../../domain/integrations/schema-configured-mcp-integration.entity';
-import { McpConfigService } from '../../services/mcp-config.service';
-import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
-import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { McpValidationFailedError } from 'src/domain/mcp/application/mcp.errors';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
+import { ConnectionValidationService } from 'src/domain/mcp/application/services/connection-validation.service';
+import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
+import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
+  private readonly logger = new Logger(UpdateMcpIntegrationUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateMcpIntegrationUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
@@ -41,7 +40,7 @@ export class UpdateMcpIntegrationUseCase {
 
   @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(command: UpdateMcpIntegrationCommand): Promise<McpIntegration> {
-    this.logger.info({ id: command.integrationId }, 'updateMcpIntegration');
+    this.logger.log({ id: command.integrationId }, 'updateMcpIntegration');
 
     const integration = await this.getAuthorizedIntegration(
       command.integrationId as UUID,

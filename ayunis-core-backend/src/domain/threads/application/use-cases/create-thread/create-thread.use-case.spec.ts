@@ -1,10 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { CreateThreadUseCase } from './create-thread.use-case';
 import { CreateThreadCommand } from './create-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
@@ -15,7 +17,7 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   NoModelProvidedError,
   ThreadCreationError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -24,14 +26,14 @@ describe('CreateThreadUseCase', () => {
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
   let contextService: jest.Mocked<ContextService>;
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeEach(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     const mockThreadsRepository = {
       create: jest.fn(),
       findById: jest.fn(),
@@ -58,10 +60,6 @@ describe('CreateThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateThreadUseCase,
-        {
-          provide: getLoggerToken(CreateThreadUseCase.name),
-          useValue: logger,
-        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
           provide: GetPermittedLanguageModelUseCase,
@@ -228,7 +226,7 @@ describe('CreateThreadUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(logger.info).toHaveBeenCalledWith('execute');
+      expect(logger.log).toHaveBeenCalledWith('execute');
       expect(getModelExecuteSpy).toHaveBeenCalled();
     });
 

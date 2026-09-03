@@ -1,5 +1,4 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -36,7 +35,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
 describe('DeletePermittedModelUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: DeletePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getPermittedModelsUseCase: jest.Mocked<GetPermittedModelsUseCase>;
@@ -76,10 +75,6 @@ describe('DeletePermittedModelUseCase', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(DeletePermittedModelUseCase.name),
-          useValue: logger,
-        },
         DeletePermittedModelUseCase,
         {
           provide: PermittedModelsRepository,
@@ -132,7 +127,7 @@ describe('DeletePermittedModelUseCase', () => {
     deleteSourcesUseCase = module.get(DeleteSourcesUseCase);
     contextService = module.get(ContextService);
 
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.debug.mockImplementation();
     logger.error.mockImplementation();
   });

@@ -1,15 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PriceNotFoundError } from '../../subscription.errors';
+import { PriceNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 
 @Injectable()
 export class GetCurrentPriceUseCase {
-  constructor(
-    @InjectPinoLogger(GetCurrentPriceUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {}
+  private readonly logger = new Logger(GetCurrentPriceUseCase.name);
+
+  constructor(private readonly configService: ConfigService) {}
 
   execute(): number {
     const pricePerSeatMonthly = this.configService.get<number>(

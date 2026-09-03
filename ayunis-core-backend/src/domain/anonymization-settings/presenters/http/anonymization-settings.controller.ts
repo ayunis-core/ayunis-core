@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Body, Controller, Get, Put, Logger } from '@nestjs/common';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -14,21 +13,21 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetPiiWhitelistUseCase } from '../../application/use-cases/get-pii-whitelist/get-pii-whitelist.use-case';
-import { GetPiiWhitelistQuery } from '../../application/use-cases/get-pii-whitelist/get-pii-whitelist.query';
-import { UpdatePiiWhitelistUseCase } from '../../application/use-cases/update-pii-whitelist/update-pii-whitelist.use-case';
-import { UpdatePiiWhitelistCommand } from '../../application/use-cases/update-pii-whitelist/update-pii-whitelist.command';
+import { GetPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.use-case';
+import { GetPiiWhitelistQuery } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.query';
+import { UpdatePiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/update-pii-whitelist/update-pii-whitelist.use-case';
+import { UpdatePiiWhitelistCommand } from 'src/domain/anonymization-settings/application/use-cases/update-pii-whitelist/update-pii-whitelist.command';
 import { UpdatePiiWhitelistRequestDto } from './dtos/update-pii-whitelist-request.dto';
 import { PiiWhitelistResponseDto } from './dtos/pii-whitelist-response.dto';
-import type { AnonymizationWhitelistEntry } from '../../domain/anonymization-whitelist-entry.entity';
+import type { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 
 @ApiTags('anonymization-settings')
 @Controller('anonymization-settings')
 @ApiExtraModels(PiiWhitelistResponseDto)
 export class AnonymizationSettingsController {
+  private readonly logger = new Logger(AnonymizationSettingsController.name);
+
   constructor(
-    @InjectPinoLogger(AnonymizationSettingsController.name)
-    private readonly logger: PinoLogger,
     private readonly getPiiWhitelistUseCase: GetPiiWhitelistUseCase,
     private readonly updatePiiWhitelistUseCase: UpdatePiiWhitelistUseCase,
   ) {}
@@ -44,7 +43,7 @@ export class AnonymizationSettingsController {
   async get(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PiiWhitelistResponseDto> {
-    this.logger.info({ orgId }, 'Getting PII whitelist for org');
+    this.logger.log({ orgId }, 'Getting PII whitelist for org');
 
     const entries = await this.getPiiWhitelistUseCase.execute(
       new GetPiiWhitelistQuery(orgId),
@@ -68,7 +67,7 @@ export class AnonymizationSettingsController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpdatePiiWhitelistRequestDto,
   ): Promise<PiiWhitelistResponseDto> {
-    this.logger.info({ orgId }, 'Updating PII whitelist for org');
+    this.logger.log({ orgId }, 'Updating PII whitelist for org');
 
     const entries = await this.updatePiiWhitelistUseCase.execute(
       new UpdatePiiWhitelistCommand(

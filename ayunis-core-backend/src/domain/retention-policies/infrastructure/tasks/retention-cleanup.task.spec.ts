@@ -1,6 +1,5 @@
 import { checkIn } from '@appsignal/nodejs';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import type { EnforceRetentionUseCase } from '../../application/use-cases/enforce-retention/enforce-retention.use-case';
+import type { EnforceRetentionUseCase } from 'src/domain/retention-policies/application/use-cases/enforce-retention/enforce-retention.use-case';
 import { RetentionCleanupTask } from './retention-cleanup.task';
 
 jest.mock('@appsignal/nodejs', () => ({
@@ -25,7 +24,7 @@ describe('RetentionCleanupTask', () => {
       dryRun: false,
       perOrg: [],
     });
-    task = new RetentionCleanupTask(createPinoLoggerMock(), {
+    task = new RetentionCleanupTask({
       execute,
     } as unknown as EnforceRetentionUseCase);
   });

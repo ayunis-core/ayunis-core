@@ -1,11 +1,11 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IpAllowlistGuard } from './ip-allowlist.guard';
-import type { IpAllowlistRepository } from '../ports/ip-allowlist.repository';
-import { IpAllowlist } from '../../domain/ip-allowlist.entity';
-import { IpNotAllowedError } from '../ip-allowlist.errors';
+import type { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
+import { IpNotAllowedError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import type { UUID } from 'crypto';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
@@ -62,11 +62,7 @@ describe('IpAllowlistGuard', () => {
     const { context, reflector: mockReflector } = createMockContext({
       isPublic: true,
     });
-    const publicGuard = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const publicGuard = new IpAllowlistGuard(mockReflector, repository);
 
     const result = await publicGuard.canActivate(context);
 
@@ -79,11 +75,7 @@ describe('IpAllowlistGuard', () => {
       user: undefined,
       ip: '192.168.1.50',
     });
-    const noUserGuard = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const noUserGuard = new IpAllowlistGuard(mockReflector, repository);
 
     const result = await noUserGuard.canActivate(context);
 
@@ -97,11 +89,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     const result = await g.canActivate(context);
 
@@ -116,11 +104,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     const result = await g.canActivate(context);
 
@@ -135,17 +119,13 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     await expect(g.canActivate(context)).rejects.toThrow(IpNotAllowedError);
   });
 
   it('should log a warning with audit context when the client IP is not in the allowlist', async () => {
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
     repository.findByOrgId.mockResolvedValue(
       new IpAllowlist({ orgId, cidrs: ['10.0.0.0/8'] }),
     );
@@ -153,7 +133,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(logger, mockReflector, repository);
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     await expect(g.canActivate(context)).rejects.toThrow(IpNotAllowedError);
 
@@ -177,11 +157,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: null,
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     await expect(g.canActivate(context)).rejects.toThrow(IpNotAllowedError);
   });
@@ -194,11 +170,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     await g.canActivate(context);
     await g.canActivate(context);
@@ -214,11 +186,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     await g.canActivate(context);
     expect(repository.findByOrgId).toHaveBeenCalledTimes(1);
@@ -239,11 +207,7 @@ describe('IpAllowlistGuard', () => {
         user: activeUser,
         ip: '192.168.1.50',
       });
-      const g = new IpAllowlistGuard(
-        createPinoLoggerMock(),
-        mockReflector,
-        repository,
-      );
+      const g = new IpAllowlistGuard(mockReflector, repository);
 
       await g.canActivate(context);
       expect(repository.findByOrgId).toHaveBeenCalledTimes(1);
@@ -264,11 +228,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     const result = await g.canActivate(context);
 
@@ -283,11 +243,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     // First call fails open
     await g.canActivate(context);
@@ -303,11 +259,7 @@ describe('IpAllowlistGuard', () => {
       user: activeUser,
       ip: '192.168.1.50',
     });
-    const g = new IpAllowlistGuard(
-      createPinoLoggerMock(),
-      mockReflector,
-      repository,
-    );
+    const g = new IpAllowlistGuard(mockReflector, repository);
 
     await g.canActivate(context);
     await g.canActivate(context);

@@ -1,17 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { ReorderCourseModulesUseCase } from './reorder-course-modules.use-case';
 import { ReorderCourseModulesCommand } from './reorder-course-modules.command';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import {
   ChapterNotFoundError,
   InvalidReorderError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 
 describe('ReorderCourseModulesUseCase', () => {
   let useCase: ReorderCourseModulesUseCase;
@@ -35,10 +33,6 @@ describe('ReorderCourseModulesUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(ReorderCourseModulesUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         ReorderCourseModulesUseCase,
         { provide: AcademyChapterRepository, useValue: mockChapterRepository },
         {

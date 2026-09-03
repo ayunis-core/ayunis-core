@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -31,10 +29,6 @@ describe('MistralTranscriptionService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MistralTranscriptionService,
-        {
-          provide: getLoggerToken(MistralTranscriptionService.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: ConfigService,
           useValue: {

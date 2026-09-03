@@ -1,10 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -37,10 +35,6 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindArtifactsByWorkspaceUseCase,
-        {
-          provide: getLoggerToken(FindArtifactsByWorkspaceUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: ArtifactsRepository, useValue: repository },
         { provide: ContextService, useValue: context },
         { provide: FindWorkspaceUseCase, useValue: findWorkspace },

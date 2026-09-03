@@ -1,4 +1,4 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { ModelMapper } from './model.mapper';
 import {
   ImageGenerationModelRecord,
@@ -11,16 +11,14 @@ import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enu
 import type { UUID } from 'crypto';
 
 describe('ModelMapper', () => {
-  const logger = createPinoLoggerMock();
   let mapper: ModelMapper;
   let warnSpy: jest.SpyInstance;
 
   const mockId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(() => {
-    logger.warn.mockReset();
-    mapper = new ModelMapper(logger);
-    warnSpy = logger.warn;
+    mapper = new ModelMapper();
+    warnSpy = createLoggerMock().warn;
   });
 
   afterEach(() => {

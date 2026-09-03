@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RecordThreadActivityCommand } from './record-thread-activity.command';
 
 /**
@@ -12,11 +11,9 @@ import { RecordThreadActivityCommand } from './record-thread-activity.command';
  */
 @Injectable()
 export class RecordThreadActivityUseCase {
-  constructor(
-    @InjectPinoLogger(RecordThreadActivityUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly threadsRepository: ThreadsRepository,
-  ) {}
+  private readonly logger = new Logger(RecordThreadActivityUseCase.name);
+
+  constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(command: RecordThreadActivityCommand): Promise<void> {
     try {

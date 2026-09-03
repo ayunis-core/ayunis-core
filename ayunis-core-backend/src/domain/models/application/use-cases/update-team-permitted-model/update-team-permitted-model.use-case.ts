@@ -1,22 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { UpdateTeamPermittedModelCommand } from './update-team-permitted-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   NotALanguageModelError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+} from 'src/domain/models/application/models.errors';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 @Injectable()
 export class UpdateTeamPermittedModelUseCase {
-  constructor(
-    @InjectPinoLogger(UpdateTeamPermittedModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(UpdateTeamPermittedModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
   ) {}
@@ -24,7 +22,7 @@ export class UpdateTeamPermittedModelUseCase {
   async execute(
     command: UpdateTeamPermittedModelCommand,
   ): Promise<PermittedLanguageModel> {
-    this.logger.info(
+    this.logger.log(
       {
         permittedModelId: command.permittedModelId,
         orgId: command.orgId,

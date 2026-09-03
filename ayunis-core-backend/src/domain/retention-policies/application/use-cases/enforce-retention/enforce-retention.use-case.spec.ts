@@ -1,6 +1,4 @@
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
@@ -9,7 +7,7 @@ import {
   BATCH_SIZE,
   MAX_BATCHES_PER_ORG,
 } from './enforce-retention.use-case';
-import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
+import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
 import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { DeleteThreadUseCase } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case';
@@ -44,10 +42,6 @@ describe('EnforceRetentionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EnforceRetentionUseCase,
-        {
-          provide: getLoggerToken(EnforceRetentionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: RetentionPoliciesRepository, useValue: retentionRepo },
         { provide: FindExpiredThreadRefsByOrgUseCase, useValue: findExpired },
         { provide: DeleteThreadUseCase, useValue: deleteThread },

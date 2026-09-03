@@ -1,5 +1,4 @@
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Job } from 'bullmq';
 
 // p-limit is ESM-only — mock the dynamic import so Jest (CJS) doesn't choke.
@@ -23,7 +22,7 @@ import {
   UrlRetrieverTimeoutError,
   UrlRetrieverUnsupportedContentTypeError,
 } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
-import type { UrlCrawlJobData } from '../../application/ports/url-crawl-processing.port';
+import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { UrlCrawlConsumer } from './url-crawl.consumer';
 
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
@@ -105,7 +104,6 @@ describe('UrlCrawlConsumer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     consumer = new UrlCrawlConsumer(
-      createPinoLoggerMock(),
       contextService as never,
       crawlUrlUseCase as never,
       splitTextUseCase as never,

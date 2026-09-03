@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import {
   SpreadsheetExportPort,
   type SpreadsheetExportInput,
-} from '../../application/ports/spreadsheet-export.port';
-import type { SpreadsheetCell } from '../../application/helpers/spreadsheet-content-format';
-import { isFormulaCell } from '../../application/helpers/spreadsheet-content-format';
+} from 'src/domain/artifacts/application/ports/spreadsheet-export.port';
+import type { SpreadsheetCell } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
+import { isFormulaCell } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import type {
   EvaluatedCell,
   SpreadsheetEvaluation,
-} from '../../application/helpers/evaluate-spreadsheet';
+} from 'src/domain/artifacts/application/helpers/evaluate-spreadsheet';
 import {
   isSpreadsheetErrorValue,
   SpreadsheetEvaluator,
-} from '../../application/helpers/evaluate-spreadsheet';
+} from 'src/domain/artifacts/application/helpers/evaluate-spreadsheet';
 
 /**
  * Functions introduced after Excel 2007 are stored in the file format with an
@@ -124,10 +123,9 @@ function toCsvField(cell: EvaluatedCell): string {
 
 @Injectable()
 export class XlsxSpreadsheetExportService extends SpreadsheetExportPort {
-  constructor(
-    @InjectPinoLogger(XlsxSpreadsheetExportService.name)
-    private readonly logger: PinoLogger,
-  ) {
+  private readonly logger = new Logger(XlsxSpreadsheetExportService.name);
+
+  constructor() {
     super();
   }
 

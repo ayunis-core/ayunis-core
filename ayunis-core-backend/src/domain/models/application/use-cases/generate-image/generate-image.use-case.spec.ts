@@ -1,21 +1,21 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { GenerateImageUseCase } from './generate-image.use-case';
 import { GenerateImageCommand } from './generate-image.command';
-import type { ImageGenerationHandlerRegistry } from '../../registry/image-generation-handler.registry';
+import type { ImageGenerationHandlerRegistry } from 'src/domain/models/application/registry/image-generation-handler.registry';
 import {
   ImageGenerationFailedError,
   ModelProviderNotSupportedError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import {
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../ports/image-generation.handler';
-import type { ImageGenerationHandler } from '../../ports/image-generation.handler';
+} from 'src/domain/models/application/ports/image-generation.handler';
+import type { ImageGenerationHandler } from 'src/domain/models/application/ports/image-generation.handler';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 describe('GenerateImageUseCase', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
   let useCase: GenerateImageUseCase;
   let registry: jest.Mocked<ImageGenerationHandlerRegistry>;
   let handler: jest.Mocked<ImageGenerationHandler>;
@@ -38,9 +38,9 @@ describe('GenerateImageUseCase', () => {
       registerMockHandler: jest.fn(),
     } as unknown as jest.Mocked<ImageGenerationHandlerRegistry>;
 
-    useCase = new GenerateImageUseCase(logger, registry);
+    useCase = new GenerateImageUseCase(registry);
 
-    logger.info.mockImplementation();
+    logger.log.mockImplementation();
     logger.error.mockImplementation();
   });
 

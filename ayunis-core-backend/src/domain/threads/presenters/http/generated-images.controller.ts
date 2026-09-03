@@ -1,21 +1,20 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Controller, Get, Param, ParseUUIDPipe, Logger } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { ResolveGeneratedImageUseCase } from '../../application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
-import { ResolveGeneratedImageQuery } from '../../application/use-cases/resolve-generated-image/resolve-generated-image.query';
+import { ResolveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
+import { ResolveGeneratedImageQuery } from 'src/domain/threads/application/use-cases/resolve-generated-image/resolve-generated-image.query';
 import { GeneratedImageUrlResponseDto } from './dto/generated-image-url-response.dto';
 
 @ApiTags('threads')
 @Controller('threads')
 export class GeneratedImagesController {
+  private readonly logger = new Logger(GeneratedImagesController.name);
+
   constructor(
-    @InjectPinoLogger(GeneratedImagesController.name)
-    private readonly logger: PinoLogger,
     private readonly resolveGeneratedImageUseCase: ResolveGeneratedImageUseCase,
   ) {}
 
@@ -34,7 +33,7 @@ export class GeneratedImagesController {
     @Param('threadId', ParseUUIDPipe) threadId: UUID,
     @Param('imageId', ParseUUIDPipe) imageId: UUID,
   ): Promise<GeneratedImageUrlResponseDto> {
-    this.logger.info({ threadId, imageId }, 'resolve');
+    this.logger.log({ threadId, imageId }, 'resolve');
 
     return this.resolveGeneratedImageUseCase.execute(
       new ResolveGeneratedImageQuery(threadId, imageId, userId),

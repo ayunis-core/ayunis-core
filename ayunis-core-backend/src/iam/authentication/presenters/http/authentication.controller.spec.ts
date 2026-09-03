@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AuthenticationController } from './authentication.controller';
@@ -72,10 +70,6 @@ describe('AuthenticationController', () => {
         {
           provide: MeResponseDtoMapper,
           useValue: { toDto: (u: any) => ({ email: u.email, role: u.role }) },
-        },
-        {
-          provide: getLoggerToken(AuthenticationController.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

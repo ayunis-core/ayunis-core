@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
-import { TotpPort } from '../../ports/totp.port';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { TotpSecretEncryptionPort } from 'src/iam/mfa/application/ports/totp-secret-encryption.port';
+import { TotpPort } from 'src/iam/mfa/application/ports/totp.port';
 import { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
-import { MfaAlreadyEnabledError, UnexpectedMfaError } from '../../mfa.errors';
+import {
+  MfaAlreadyEnabledError,
+  UnexpectedMfaError,
+} from 'src/iam/mfa/application/mfa.errors';
 import { SetupTotpCommand } from './setup-totp.command';
 
 export interface SetupTotpResult {
@@ -16,16 +18,16 @@ export interface SetupTotpResult {
 
 @Injectable()
 export class SetupTotpUseCase {
+  private readonly logger = new Logger(SetupTotpUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SetupTotpUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly totpSecretEncryption: TotpSecretEncryptionPort,
     private readonly totp: TotpPort,
   ) {}
 
   async execute(command: SetupTotpCommand): Promise<SetupTotpResult> {
-    this.logger.info({ userId: command.userId }, 'setupTotp');
+    this.logger.log({ userId: command.userId }, 'setupTotp');
 
     try {
       const existing = await this.userTotpsRepository.findByUserId(

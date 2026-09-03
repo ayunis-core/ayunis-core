@@ -1,15 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { CreateCourseModuleUseCase } from './create-course-module.use-case';
 import { CreateCourseModuleCommand } from './create-course-module.command';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
-import { ChapterNotFoundError } from '../../academy.errors';
+import { ChapterNotFoundError } from 'src/domain/academy/application/academy.errors';
 
 describe('CreateCourseModuleUseCase', () => {
   let useCase: CreateCourseModuleUseCase;
@@ -33,10 +31,6 @@ describe('CreateCourseModuleUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(CreateCourseModuleUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         CreateCourseModuleUseCase,
         { provide: AcademyChapterRepository, useValue: mockChapterRepository },
         {

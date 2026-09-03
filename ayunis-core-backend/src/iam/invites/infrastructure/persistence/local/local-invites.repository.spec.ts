@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { IsNull, type FindOperator, type Repository } from 'typeorm';
 
 import { LocalInvitesRepository } from './local-invites.repository';
@@ -43,7 +42,6 @@ describe('LocalInvitesRepository', () => {
       isTransactionActive: () => false,
     };
     repository = new LocalInvitesRepository(
-      createPinoLoggerMock(),
       new InviteMapper(),
       txHost as never,
     );

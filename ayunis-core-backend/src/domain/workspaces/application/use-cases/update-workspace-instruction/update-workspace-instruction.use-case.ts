@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {
   UnexpectedWorkspaceError,
   WorkspaceNotFoundError,
-} from '../../workspaces.errors';
+} from 'src/domain/workspaces/application/workspaces.errors';
 import { UpdateWorkspaceInstructionCommand } from './update-workspace-instruction.command';
 
 @Injectable()
 export class UpdateWorkspaceInstructionUseCase {
+  private readonly logger = new Logger(UpdateWorkspaceInstructionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateWorkspaceInstructionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -24,7 +23,7 @@ export class UpdateWorkspaceInstructionUseCase {
   async execute(
     command: UpdateWorkspaceInstructionCommand,
   ): Promise<Workspace> {
-    this.logger.info(
+    this.logger.log(
       {
         workspaceId: command.workspaceId,
       },

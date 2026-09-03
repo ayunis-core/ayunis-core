@@ -1,6 +1,5 @@
 import type { UUID } from 'crypto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
@@ -34,7 +33,6 @@ describe('ListAccessibleSkillsUseCase', () => {
       { entityId: sharedSkillId } as never,
     ]);
     const useCase = new ListAccessibleSkillsUseCase(
-      createPinoLoggerMock(),
       repository,
       findSharesByScopeUseCase,
       contextService,

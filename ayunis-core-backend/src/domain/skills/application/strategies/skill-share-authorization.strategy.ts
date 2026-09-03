@@ -1,8 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
-import { SkillRepository } from '../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 
 /**
  * Skill-specific implementation of share authorization.
@@ -10,9 +9,9 @@ import { SkillRepository } from '../ports/skill.repository';
  */
 @Injectable()
 export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrategy {
+  private readonly logger = new Logger(SkillShareAuthorizationStrategy.name);
+
   constructor(
-    @InjectPinoLogger(SkillShareAuthorizationStrategy.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
   ) {}
@@ -22,7 +21,7 @@ export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrate
    * User must own the skill to view its shares.
    */
   async canViewShares(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.info({ skillId, userId }, 'canViewShares');
+    this.logger.log({ skillId, userId }, 'canViewShares');
 
     const skill = await this.skillRepository.findOne(skillId, userId);
     return skill !== null;
@@ -33,7 +32,7 @@ export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrate
    * User must own the skill to create shares for it.
    */
   async canCreateShare(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.info({ skillId, userId }, 'canCreateShare');
+    this.logger.log({ skillId, userId }, 'canCreateShare');
 
     const skill = await this.skillRepository.findOne(skillId, userId);
     return skill !== null;
@@ -44,7 +43,7 @@ export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrate
    * For skill shares, this is handled at the share level by checking ownerId.
    */
   canDeleteShare(shareId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.info({ shareId, userId }, 'canDeleteShare');
+    this.logger.log({ shareId, userId }, 'canDeleteShare');
 
     return Promise.resolve(true);
   }

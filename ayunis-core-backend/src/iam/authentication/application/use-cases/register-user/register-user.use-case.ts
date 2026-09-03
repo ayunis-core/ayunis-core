@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { CreateAdminUserCommand } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.command';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
@@ -33,9 +32,9 @@ import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class RegisterUserUseCase {
+  private readonly logger = new Logger(RegisterUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RegisterUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     private readonly createAdminUserUseCase: CreateAdminUserUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
@@ -47,7 +46,7 @@ export class RegisterUserUseCase {
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
-    this.logger.info(
+    this.logger.log(
       { email: command.email, org: { name: command.orgName } },
       'register',
     );

@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { AnonymizeTextForThreadUseCase } from './anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from './anonymize-text-for-thread.command';
@@ -38,7 +37,6 @@ describe('AnonymizeTextForThreadUseCase', () => {
       ],
     });
     useCase = new AnonymizeTextForThreadUseCase(
-      createPinoLoggerMock(),
       { findByThreadId, saveMany },
       { execute: whitelistExecute } as unknown as GetPiiWhitelistUseCase,
       {

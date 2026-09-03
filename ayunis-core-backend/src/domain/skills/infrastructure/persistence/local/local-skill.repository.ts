@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
 import { randomUUID, UUID } from 'crypto';
@@ -30,9 +29,9 @@ const SKILL_RELATIONS = [
 
 @Injectable()
 export class LocalSkillRepository implements SkillRepository {
+  private readonly logger = new Logger(LocalSkillRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalSkillRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(SkillRecord)
     private readonly defaultSkillRepository: Repository<SkillRecord>,
     private readonly skillMapper: SkillMapper,
@@ -83,7 +82,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async create(skill: Skill): Promise<Skill> {
-    this.logger.info({ name: skill.name, userId: skill.userId }, 'create');
+    this.logger.log({ name: skill.name, userId: skill.userId }, 'create');
 
     const repository = this.skillRepository;
     const record = this.skillMapper.toRecord(skill);
@@ -126,7 +125,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async update(skill: Skill): Promise<Skill> {
-    this.logger.info({ id: skill.id, name: skill.name }, 'update');
+    this.logger.log({ id: skill.id, name: skill.name }, 'update');
 
     const manager = this.getManager();
 
@@ -177,7 +176,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async delete(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.info({ skillId, userId }, 'delete');
+    this.logger.log({ skillId, userId }, 'delete');
 
     const result = await this.skillRepository.delete({
       id: skillId,
@@ -189,7 +188,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findOne(id: UUID, userId: UUID): Promise<Skill | null> {
-    this.logger.info({ id, userId }, 'findOne');
+    this.logger.log({ id, userId }, 'findOne');
 
     const record = await this.skillRepository.findOne({
       where: { id, userId },
@@ -201,7 +200,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findAllByOwner(userId: UUID): Promise<Skill[]> {
-    this.logger.info({ userId }, 'findAllByOwner');
+    this.logger.log({ userId }, 'findAllByOwner');
 
     const records = await this.skillRepository.find({
       where: { userId },
@@ -217,7 +216,7 @@ export class LocalSkillRepository implements SkillRepository {
     sharedSkillIds: UUID[],
     options: SkillListOptions,
   ): Promise<Paginated<Skill>> {
-    this.logger.info(
+    this.logger.log(
       {
         userId,
         workspaceId,
@@ -245,7 +244,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findActiveByOwner(userId: UUID): Promise<Skill[]> {
-    this.logger.info({ userId }, 'findActiveByOwner');
+    this.logger.log({ userId }, 'findActiveByOwner');
 
     const activations = await this.skillActivationRepository.find({
       where: { userId },
@@ -264,7 +263,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findByNameAndOwner(name: string, userId: UUID): Promise<Skill | null> {
-    this.logger.info({ name, userId }, 'findByNameAndOwner');
+    this.logger.log({ name, userId }, 'findByNameAndOwner');
 
     const record = await this.skillRepository.findOne({
       where: { name, userId },
@@ -276,7 +275,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async activateSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.info({ skillId, userId }, 'activateSkill');
+    this.logger.log({ skillId, userId }, 'activateSkill');
 
     // Use upsert to atomically insert or ignore if already exists.
     // This avoids race conditions where concurrent requests both pass
@@ -295,13 +294,13 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async deactivateSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.info({ skillId, userId }, 'deactivateSkill');
+    this.logger.log({ skillId, userId }, 'deactivateSkill');
 
     await this.skillActivationRepository.delete({ skillId, userId });
   }
 
   async deactivateAllExceptOwner(skillId: UUID, ownerId: UUID): Promise<void> {
-    this.logger.info({ skillId, ownerId }, 'deactivateAllExceptOwner');
+    this.logger.log({ skillId, ownerId }, 'deactivateAllExceptOwner');
 
     await this.skillActivationRepository
       .createQueryBuilder()
@@ -317,7 +316,7 @@ export class LocalSkillRepository implements SkillRepository {
     ownerId: UUID,
     retainUserIds: Set<UUID>,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId,
         ownerId,
@@ -338,7 +337,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async isSkillActive(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.info({ skillId, userId }, 'isSkillActive');
+    this.logger.log({ skillId, userId }, 'isSkillActive');
 
     const count = await this.skillActivationRepository.count({
       where: { skillId, userId },
@@ -348,7 +347,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findByIds(ids: UUID[]): Promise<Skill[]> {
-    this.logger.info({ count: ids.length }, 'findByIds');
+    this.logger.log({ count: ids.length }, 'findByIds');
 
     if (ids.length === 0) return [];
 
@@ -361,7 +360,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async getActiveSkillIds(userId: UUID): Promise<Set<UUID>> {
-    this.logger.info({ userId }, 'getActiveSkillIds');
+    this.logger.log({ userId }, 'getActiveSkillIds');
 
     const activations = await this.skillActivationRepository.find({
       where: { userId },
@@ -372,7 +371,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async pinSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.info({ skillId, userId }, 'pinSkill');
+    this.logger.log({ skillId, userId }, 'pinSkill');
 
     const result = await this.skillActivationRepository
       .createQueryBuilder()
@@ -390,7 +389,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.info({ skillId, userId }, 'toggleSkillPinned');
+    this.logger.log({ skillId, userId }, 'toggleSkillPinned');
 
     const rows: Array<{ isPinned: boolean }> =
       await this.skillActivationRepository.query(
@@ -408,7 +407,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.info({ skillId, userId }, 'isSkillPinned');
+    this.logger.log({ skillId, userId }, 'isSkillPinned');
 
     const count = await this.skillActivationRepository.count({
       where: { skillId, userId, isPinned: true },
@@ -418,7 +417,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async getPinnedSkillIds(userId: UUID): Promise<Set<UUID>> {
-    this.logger.info({ userId }, 'getPinnedSkillIds');
+    this.logger.log({ userId }, 'getPinnedSkillIds');
 
     const activations = await this.skillActivationRepository.find({
       where: { userId, isPinned: true },
@@ -432,7 +431,7 @@ export class LocalSkillRepository implements SkillRepository {
     knowledgeBaseId: UUID,
     ownerIds: UUID[],
   ): Promise<Skill[]> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId,
         ownerCount: ownerIds.length,
@@ -460,7 +459,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]> {
-    this.logger.info(
+    this.logger.log(
       { skillCount: skillIds.length },
       'findKnowledgeBaseIdsBySkillIds',
     );
@@ -474,7 +473,7 @@ export class LocalSkillRepository implements SkillRepository {
     knowledgeBaseId: UUID,
     skillIds: UUID[],
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId,
         skillCount: skillIds.length,

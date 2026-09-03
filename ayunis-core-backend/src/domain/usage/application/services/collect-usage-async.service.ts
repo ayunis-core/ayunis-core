@@ -1,18 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { CollectUsageCommand } from '../use-cases/collect-usage/collect-usage.command';
-import { CollectUsageUseCase } from '../use-cases/collect-usage/collect-usage.use-case';
-import { TokensConsumedEvent } from '../events/tokens-consumed.event';
+import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
+import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
+import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 import {
   RunUsageCollectionEvent,
   type RunUsageCollectionOutcome,
   type RunUsageExecutionPath,
-} from '../events/run-usage-collection.event';
+} from 'src/domain/usage/application/events/run-usage-collection.event';
 
 /**
  * Collects usage data asynchronously (fire-and-forget).
@@ -20,12 +19,12 @@ import {
  */
 @Injectable()
 export class CollectUsageAsyncService {
+  private readonly logger = new Logger(CollectUsageAsyncService.name);
+
   constructor(
     private readonly collectUsageUseCase: CollectUsageUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(CollectUsageAsyncService.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   collect(

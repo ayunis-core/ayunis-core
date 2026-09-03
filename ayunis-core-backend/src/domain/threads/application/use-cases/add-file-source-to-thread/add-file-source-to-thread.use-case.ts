@@ -1,6 +1,5 @@
 import * as fs from 'fs';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -27,20 +26,20 @@ import {
   UnsupportedFileTypeError,
   UnsupportedSourceFileTypeError,
 } from 'src/domain/sources/application/sources.errors';
-import { Thread } from '../../../domain/thread.entity';
-import { UnexpecteThreadError } from '../../threads.errors';
-import { assertThreadHasSourceCapacity } from '../../util/thread-source-capacity';
-import { FindThreadUseCase } from '../find-thread/find-thread.use-case';
-import { FindThreadQuery } from '../find-thread/find-thread.query';
-import { AddSourceToThreadUseCase } from '../add-source-to-thread/add-source-to-thread.use-case';
-import { AddSourceCommand } from '../add-source-to-thread/add-source.command';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
+import { assertThreadHasSourceCapacity } from 'src/domain/threads/application/util/thread-source-capacity';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
+import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddFileSourceToThreadCommand } from './add-file-source-to-thread.command';
 
 @Injectable()
 export class AddFileSourceToThreadUseCase {
+  private readonly logger = new Logger(AddFileSourceToThreadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddFileSourceToThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
@@ -51,7 +50,7 @@ export class AddFileSourceToThreadUseCase {
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: AddFileSourceToThreadCommand): Promise<Source[]> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.threadId,
         fileName: command.file.originalname,

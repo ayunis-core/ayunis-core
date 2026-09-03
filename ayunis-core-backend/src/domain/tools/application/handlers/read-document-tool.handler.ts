@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { ReadDocumentTool } from '../../domain/tools/read-document-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { ReadDocumentTool } from 'src/domain/tools/domain/tools/read-document-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { UUID } from 'crypto';
 
 @Injectable()
 export class ReadDocumentToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(ReadDocumentToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(ReadDocumentToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
   ) {
     super();
@@ -26,7 +25,7 @@ export class ReadDocumentToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.info('Executing read_document tool');
+    this.logger.log('Executing read_document tool');
 
     try {
       const validatedInput = tool.validateParams(input);

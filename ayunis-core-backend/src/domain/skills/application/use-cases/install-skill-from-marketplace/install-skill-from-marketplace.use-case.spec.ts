@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { InstallSkillFromMarketplaceUseCase } from './install-skill-from-marketplace.use-case';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -7,11 +6,11 @@ import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
 } from 'src/domain/marketplace/application/marketplace.errors';
-import { MarketplaceInstallFailedError } from '../../skills.errors';
+import { MarketplaceInstallFailedError } from 'src/domain/skills/application/skills.errors';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { UUID } from 'crypto';
-import type { MarketplaceSkillInstallationService } from '../../services/marketplace-skill-installation.service';
-import { MarketplaceSkillInstalledEvent } from '../../events/marketplace-skill-installed.event';
+import type { MarketplaceSkillInstallationService } from 'src/domain/skills/application/services/marketplace-skill-installation.service';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 
 describe('InstallSkillFromMarketplaceUseCase', () => {
   let useCase: InstallSkillFromMarketplaceUseCase;
@@ -53,7 +52,6 @@ describe('InstallSkillFromMarketplaceUseCase', () => {
     } as unknown as jest.Mocked<EventEmitter2>;
 
     useCase = new InstallSkillFromMarketplaceUseCase(
-      createPinoLoggerMock(),
       skillInstallationService,
       contextService,
       eventEmitter,

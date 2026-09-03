@@ -1,15 +1,14 @@
 import type { UUID } from 'crypto';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import {
   DocumentExportPort,
   LetterheadConfig,
-} from '../../ports/document-export.port';
+} from 'src/domain/artifacts/application/ports/document-export.port';
 import {
   SpreadsheetExportPort,
   type SpreadsheetExportInput,
-} from '../../ports/spreadsheet-export.port';
+} from 'src/domain/artifacts/application/ports/spreadsheet-export.port';
 import {
   ExportArtifactCommand,
   type ExportFormat,
@@ -20,7 +19,7 @@ import {
   ArtifactNotExportableError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import {
   Artifact,
   DocumentArtifact,
@@ -52,9 +51,9 @@ export interface ExportResult {
 
 @Injectable()
 export class ExportArtifactUseCase {
+  private readonly logger = new Logger(ExportArtifactUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ExportArtifactUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly documentExportPort: DocumentExportPort,
     private readonly spreadsheetExportPort: SpreadsheetExportPort,
@@ -66,7 +65,7 @@ export class ExportArtifactUseCase {
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
-    this.logger.info(
+    this.logger.log(
       {
         artifactId: command.artifactId,
         format: command.format,

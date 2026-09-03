@@ -1,6 +1,5 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CreateToolResultMessageCommand } from './create-tool-result-message.command';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import {
@@ -14,18 +13,18 @@ import {
 
 @Injectable()
 export class CreateToolResultMessageUseCase {
+  private readonly logger = new Logger(CreateToolResultMessageUseCase.name);
+
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
-    @InjectPinoLogger(CreateToolResultMessageUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedToolResultMessageError)
   async execute(
     command: CreateToolResultMessageCommand,
   ): Promise<ToolResultMessage | null> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.threadId,
       },

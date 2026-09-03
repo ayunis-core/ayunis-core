@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import {
@@ -11,15 +10,13 @@ import { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class CreateFederatedUserUseCase {
-  constructor(
-    @InjectPinoLogger(CreateFederatedUserUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly users: UsersRepository,
-  ) {}
+  private readonly logger = new Logger(CreateFederatedUserUseCase.name);
+
+  constructor(private readonly users: UsersRepository) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: CreateFederatedUserCommand): Promise<User> {
-    this.logger.info(
+    this.logger.log(
       { orgId: command.orgId, role: command.role },
       'Creating federated user',
     );

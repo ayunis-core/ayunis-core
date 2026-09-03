@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { HashingHandler } from '../../ports/hashing.handler';
+import { Injectable, Logger } from '@nestjs/common';
+import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handler';
 import { CompareHashCommand } from './compare-hash.command';
-import { ComparisonFailedError, HashingError } from '../../hashing.errors';
+import {
+  ComparisonFailedError,
+  HashingError,
+} from 'src/iam/hashing/application/hashing.errors';
 
 @Injectable()
 export class CompareHashUseCase {
-  constructor(
-    @InjectPinoLogger(CompareHashUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly hashingHandler: HashingHandler,
-  ) {}
+  private readonly logger = new Logger(CompareHashUseCase.name);
+
+  constructor(private readonly hashingHandler: HashingHandler) {}
 
   async execute(command: CompareHashCommand): Promise<boolean> {
-    this.logger.info('compare');
+    this.logger.log('compare');
     try {
       this.logger.debug('Comparing plaintext with hash');
       const isMatch = await this.hashingHandler.compare(

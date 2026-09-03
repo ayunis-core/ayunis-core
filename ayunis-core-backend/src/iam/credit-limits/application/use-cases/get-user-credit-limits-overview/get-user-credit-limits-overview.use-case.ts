@@ -1,8 +1,7 @@
 import type { UUID } from 'crypto';
 import type { User } from 'src/iam/users/domain/user.entity';
 import type { UserCreditLimitOverviewItem } from './user-credit-limit.view';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -10,17 +9,17 @@ import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
 import { GetMonthlyCreditUsageForUsersQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.query';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
-import { selectUserCreditLimits } from '../../utils/select-user-credit-limits';
-import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
+import { selectUserCreditLimits } from 'src/iam/credit-limits/application/utils/select-user-credit-limits';
+import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overview.query';
 
 @Injectable()
 export class GetUserCreditLimitsOverviewUseCase {
+  private readonly logger = new Logger(GetUserCreditLimitsOverviewUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetUserCreditLimitsOverviewUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
@@ -36,7 +35,7 @@ export class GetUserCreditLimitsOverviewUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.info({ orgId }, 'Listing user credit limits');
+    this.logger.log({ orgId }, 'Listing user credit limits');
 
     const limits = await this.creditLimitRepository.findUserLimits(orgId);
     return this.enrich(orgId, limits, query.since);

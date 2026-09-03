@@ -1,22 +1,20 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfirmEmailUseCase } from './confirm-email.use-case';
 import { ConfirmEmailCommand } from './confirm-email.command';
-import { UserUpdatedEvent } from '../../events/user-updated.event';
-import { UsersRepository } from '../../ports/users.repository';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import {
   EmailConfirmationJwtService,
   EMAIL_CONFIRMATION_TOKEN_TYPE,
-} from '../../services/email-confirmation-jwt.service';
+} from 'src/iam/users/application/services/email-confirmation-jwt.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   InvalidEmailConfirmationTokenError,
   UserNotFoundError,
   UserEmailMismatchError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -64,10 +62,6 @@ describe('ConfirmEmailUseCase', () => {
           useValue: mockJwtService,
         },
         { provide: EventEmitter2, useValue: mockEventEmitter },
-        {
-          provide: getLoggerToken(ConfirmEmailUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

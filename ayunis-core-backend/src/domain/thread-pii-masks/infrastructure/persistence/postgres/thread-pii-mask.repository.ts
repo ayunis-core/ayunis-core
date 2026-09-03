@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -10,9 +9,9 @@ import { ThreadPiiMaskMapper } from './mappers/thread-pii-mask.mapper';
 
 @Injectable()
 export class PostgresThreadPiiMaskRepository extends ThreadPiiMaskRepository {
+  private readonly logger = new Logger(PostgresThreadPiiMaskRepository.name);
+
   constructor(
-    @InjectPinoLogger(PostgresThreadPiiMaskRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(ThreadPiiMaskRecord)
     private readonly repository: Repository<ThreadPiiMaskRecord>,
   ) {

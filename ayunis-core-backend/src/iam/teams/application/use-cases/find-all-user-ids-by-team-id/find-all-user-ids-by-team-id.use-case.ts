@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { FindAllUserIdsByTeamIdQuery } from './find-all-user-ids-by-team-id.query';
 
 /**
@@ -10,14 +9,12 @@ import { FindAllUserIdsByTeamIdQuery } from './find-all-user-ids-by-team-id.quer
  */
 @Injectable()
 export class FindAllUserIdsByTeamIdUseCase {
-  constructor(
-    @InjectPinoLogger(FindAllUserIdsByTeamIdUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly teamMembersRepository: TeamMembersRepository,
-  ) {}
+  private readonly logger = new Logger(FindAllUserIdsByTeamIdUseCase.name);
+
+  constructor(private readonly teamMembersRepository: TeamMembersRepository) {}
 
   async execute(query: FindAllUserIdsByTeamIdQuery): Promise<UUID[]> {
-    this.logger.info({ teamId: query.teamId }, 'execute');
+    this.logger.log({ teamId: query.teamId }, 'execute');
 
     return this.teamMembersRepository.findAllUserIdsByTeamId(query.teamId);
   }

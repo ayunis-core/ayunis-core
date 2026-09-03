@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SourceRepository } from '../../ports/source.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
-import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
-import { CleanupSourceProcessingCommand } from '../cleanup-source-processing/cleanup-source-processing.command';
+import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { CleanupSourceProcessingCommand } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.command';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class DeleteSourceUseCase {
+  private readonly logger = new Logger(DeleteSourceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteSourceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,

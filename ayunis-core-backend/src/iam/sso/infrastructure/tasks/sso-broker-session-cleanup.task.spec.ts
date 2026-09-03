@@ -1,5 +1,4 @@
 import { CronExpression } from '@nestjs/schedule';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-broker-session-cleanup.task';
 
 describe(SsoBrokerSessionCleanupTask.name, () => {
@@ -8,10 +7,7 @@ describe(SsoBrokerSessionCleanupTask.name, () => {
     findActiveByZitadelSessionId: jest.fn(),
     deleteExpired: jest.fn(),
   };
-  const task = new SsoBrokerSessionCleanupTask(
-    createPinoLoggerMock(),
-    repository,
-  );
+  const task = new SsoBrokerSessionCleanupTask(repository);
 
   beforeEach(() => jest.clearAllMocks());
 

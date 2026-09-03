@@ -1,18 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
+import { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { UnexpectedIpAllowlistError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import type { GetIpAllowlistQuery } from './get-ip-allowlist.query';
 import type { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 
 @Injectable()
 export class GetIpAllowlistUseCase {
-  constructor(
-    @InjectPinoLogger(GetIpAllowlistUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: IpAllowlistRepository,
-  ) {}
+  private readonly logger = new Logger(GetIpAllowlistUseCase.name);
+
+  constructor(private readonly repository: IpAllowlistRepository) {}
 
   async execute(query: GetIpAllowlistQuery): Promise<IpAllowlist | null> {
     this.logger.debug({ orgId: query.orgId }, 'Getting IP allowlist');

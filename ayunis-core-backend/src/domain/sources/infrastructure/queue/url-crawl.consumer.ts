@@ -1,5 +1,4 @@
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-
+import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -15,15 +14,15 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { UrlCrawlJobData } from '../../application/ports/url-crawl-processing.port';
+import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
 @Processor(URL_CRAWL_QUEUE, { concurrency: 2 })
 export class UrlCrawlConsumer extends WorkerHost {
+  private readonly logger = new Logger(UrlCrawlConsumer.name);
+
   constructor(
-    @InjectPinoLogger(UrlCrawlConsumer.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly crawlUrlUseCase: CrawlUrlUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
@@ -34,7 +33,7 @@ export class UrlCrawlConsumer extends WorkerHost {
   }
 
   async process(job: Job<UrlCrawlJobData>): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         jobId: job.id,
         sourceId: job.data.sourceId,
@@ -65,7 +64,7 @@ export class UrlCrawlConsumer extends WorkerHost {
       await this.sourceRepository.saveTextSource(source, { text, chunks });
       await this.helper.index(sourceId, orgId, chunks);
       await this.markSourceReady(sourceId);
-      this.logger.info(
+      this.logger.log(
         { chunks: chunks.length, pages: pageCount, sourceId },
         'URL crawl complete',
       );

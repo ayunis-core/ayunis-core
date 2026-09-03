@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
@@ -16,9 +15,9 @@ import { GetAcademyCompletionsQuery } from './get-academy-completions.query';
  */
 @Injectable()
 export class GetAcademyCompletionsUseCase {
+  private readonly logger = new Logger(GetAcademyCompletionsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetAcademyCompletionsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly completionRepository: AcademyCompletionRepository,
   ) {}
 

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -10,9 +9,9 @@ import { OrgChatSettingsMapper } from './mappers/org-chat-settings.mapper';
 
 @Injectable()
 export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
+  private readonly logger = new Logger(LocalOrgChatSettingsRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalOrgChatSettingsRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(OrgChatSettingsRecord)
     private readonly repository: Repository<OrgChatSettingsRecord>,
     private readonly mapper: OrgChatSettingsMapper,
@@ -21,7 +20,7 @@ export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
   }
 
   async findByOrgId(orgId: UUID): Promise<OrgChatSettings | null> {
-    this.logger.info({ orgId }, 'findByOrgId');
+    this.logger.log({ orgId }, 'findByOrgId');
 
     const record = await this.repository.findOne({ where: { orgId } });
 
@@ -34,7 +33,7 @@ export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
   }
 
   async upsert(orgChatSettings: OrgChatSettings): Promise<OrgChatSettings> {
-    this.logger.info({ orgId: orgChatSettings.orgId }, 'upsert');
+    this.logger.log({ orgId: orgChatSettings.orgId }, 'upsert');
 
     const record = this.mapper.toRecord(orgChatSettings);
 

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { SetInitialPasswordTemplate } from 'src/common/email-templates/domain/email-template.entity';
@@ -10,13 +9,13 @@ import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-e
 import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import { SendSetInitialPasswordEmailCommand } from './send-set-initial-password-email.command';
-import { PasswordResetEmailSendingFailedError } from '../../users.errors';
+import { PasswordResetEmailSendingFailedError } from 'src/iam/users/application/users.errors';
 
 @Injectable()
 export class SendSetInitialPasswordEmailUseCase {
+  private readonly logger = new Logger(SendSetInitialPasswordEmailUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SendSetInitialPasswordEmailUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly sendEmailUseCase: SendEmailUseCase,
     private readonly configService: ConfigService,
     private readonly renderTemplateUseCase: RenderTemplateUseCase,
@@ -24,7 +23,7 @@ export class SendSetInitialPasswordEmailUseCase {
   ) {}
 
   async execute(command: SendSetInitialPasswordEmailCommand): Promise<void> {
-    this.logger.info({ email: command.userEmail }, 'execute');
+    this.logger.log({ email: command.userEmail }, 'execute');
     try {
       await this.sendInitialPasswordEmail(command);
     } catch (error) {

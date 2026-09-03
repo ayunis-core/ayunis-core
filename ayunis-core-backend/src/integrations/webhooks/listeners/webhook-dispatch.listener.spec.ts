@@ -1,5 +1,4 @@
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { WebhookDispatchListener } from './webhook-dispatch.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
@@ -17,14 +16,14 @@ import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { Usage } from 'src/domain/usage/domain/usage.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { WebhookEventType } from '../domain/value-objects/webhook-event-type.enum';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 import { User } from 'src/iam/users/domain/user.entity';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import type { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
-import type { UsageCollectedWebhookPayload } from '../domain/webhook-events/usage-collected.webhook-event';
+import type { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import type { UsageCollectedWebhookPayload } from 'src/integrations/webhooks/domain/webhook-events/usage-collected.webhook-event';
 import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import type { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import type { ConfigService } from '@nestjs/config';
@@ -80,7 +79,6 @@ function makeSeatBasedPayload(): SeatBasedSubscriptionEventData {
 }
 
 describe('WebhookDispatchListener', () => {
-  const logger = createPinoLoggerMock();
   let listener: WebhookDispatchListener;
   let sendWebhookUseCase: jest.Mocked<SendWebhookUseCase>;
   let findUserByIdUseCase: jest.Mocked<FindUserByIdUseCase>;
@@ -102,7 +100,6 @@ describe('WebhookDispatchListener', () => {
     } as unknown as jest.Mocked<ConfigService>;
 
     listener = new WebhookDispatchListener(
-      logger,
       sendWebhookUseCase,
       findUserByIdUseCase,
       findOrgByIdUseCase,

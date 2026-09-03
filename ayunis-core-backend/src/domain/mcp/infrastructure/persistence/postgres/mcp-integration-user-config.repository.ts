@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -13,9 +12,9 @@ import { McpIntegrationUserConfigRecord } from './schema/mcp-integration-user-co
  */
 @Injectable()
 export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfigRepositoryPort {
+  private readonly logger = new Logger(McpIntegrationUserConfigRepository.name);
+
   constructor(
-    @InjectPinoLogger(McpIntegrationUserConfigRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(McpIntegrationUserConfigRecord)
     private readonly repository: Repository<McpIntegrationUserConfigRecord>,
   ) {
@@ -25,7 +24,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   async save(
     config: McpIntegrationUserConfig,
   ): Promise<McpIntegrationUserConfig> {
-    this.logger.info(
+    this.logger.log(
       {
         configId: config.id,
         integrationId: config.integrationId,
@@ -43,7 +42,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     integrationId: UUID,
     userId: UUID,
   ): Promise<McpIntegrationUserConfig | null> {
-    this.logger.info({ integrationId, userId }, 'findByIntegrationAndUser');
+    this.logger.log({ integrationId, userId }, 'findByIntegrationAndUser');
 
     const record = await this.repository.findOne({
       where: { integrationId, userId },
@@ -60,7 +59,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     integrationIds: UUID[],
     userId: UUID,
   ): Promise<McpIntegrationUserConfig[]> {
-    this.logger.info(
+    this.logger.log(
       {
         count: integrationIds.length,
         userId,
@@ -80,7 +79,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   }
 
   async deleteByIntegrationId(integrationId: UUID): Promise<void> {
-    this.logger.info({ integrationId }, 'deleteByIntegrationId');
+    this.logger.log({ integrationId }, 'deleteByIntegrationId');
 
     await this.repository.delete({ integrationId });
   }

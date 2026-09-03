@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
 
 /**
@@ -11,10 +10,7 @@ import { PDFDocument } from 'pdf-lib';
  */
 @Injectable()
 export class PdfLetterheadCompositor {
-  constructor(
-    @InjectPinoLogger(PdfLetterheadCompositor.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(PdfLetterheadCompositor.name);
 
   /**
    * Composite content pages onto letterhead backgrounds.
@@ -29,7 +25,7 @@ export class PdfLetterheadCompositor {
     firstPagePdf: Buffer,
     continuationPagePdf?: Buffer,
   ): Promise<Buffer> {
-    this.logger.info('Compositing PDF with letterhead background');
+    this.logger.log('Compositing PDF with letterhead background');
 
     const contentDoc = await PDFDocument.load(contentPdf);
     const firstBgDoc = await PDFDocument.load(firstPagePdf);
@@ -62,7 +58,7 @@ export class PdfLetterheadCompositor {
     }
 
     const outputBytes = await outputDoc.save();
-    this.logger.info(
+    this.logger.log(
       { pageCount: contentPageCount },
       'Composited PDF with letterhead background',
     );

@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
 import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
@@ -30,9 +29,9 @@ const EMBEDDING_BATCH_SIZE = 64;
 
 @Injectable()
 export class IngestBulkContentUseCase {
+  private readonly logger = new Logger(IngestBulkContentUseCase.name);
+
   constructor(
-    @InjectPinoLogger(IngestBulkContentUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly parentChildIndexerRepository: ParentChildIndexerRepositoryPort,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly embedTextUseCase: EmbedTextUseCase,

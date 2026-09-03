@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import {
@@ -15,15 +14,13 @@ import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-o
 
 @Injectable()
 export class SetOrgSsoEnabledUseCase {
-  constructor(
-    @InjectPinoLogger(SetOrgSsoEnabledUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: OrgSsoConnectionsRepository,
-  ) {}
+  private readonly logger = new Logger(SetOrgSsoEnabledUseCase.name);
+
+  constructor(private readonly repository: OrgSsoConnectionsRepository) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
   async execute(command: SetOrgSsoEnabledCommand): Promise<OrgSsoConnection> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         enabled: command.enabled,

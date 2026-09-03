@@ -1,6 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
+import { Injectable, Logger } from '@nestjs/common';
 import { Model } from 'src/domain/models/domain/model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
@@ -15,10 +13,7 @@ import {
 
 @Injectable()
 export class ModelMapper {
-  constructor(
-    @InjectPinoLogger(ModelMapper.name)
-    private readonly logger: PinoLogger = createModelMapperLogger(),
-  ) {}
+  private readonly logger = new Logger(ModelMapper.name);
 
   private parseTier(
     value: string | null | undefined,
@@ -151,10 +146,4 @@ export class ModelMapper {
 
     throw new Error(`Unknown model domain type: ${domain.constructor.name}`);
   }
-}
-
-function createModelMapperLogger(): PinoLogger {
-  const logger = new PinoLogger(createPinoLoggerConfig());
-  logger.setContext(ModelMapper.name);
-  return logger;
 }

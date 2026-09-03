@@ -1,23 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { RunMaxIterationsReachedError } from '../runs.errors';
-import { RunExecutedEvent } from '../events/run-executed.event';
+import { RunMaxIterationsReachedError } from 'src/domain/runs/application/runs.errors';
+import { RunExecutedEvent } from 'src/domain/runs/application/events/run-executed.event';
 import {
   RunTerminalEvent,
   type RunTerminalOutcome,
-} from '../events/run-terminal.event';
-import type { RunExecutionPath } from '../run-execution-path';
-import type { RunExecutionOutcome } from '../run-execution-outcome';
+} from 'src/domain/runs/application/events/run-terminal.event';
+import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 
 @Injectable()
 export class RunTelemetryService {
-  constructor(
-    private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(RunTelemetryService.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(RunTelemetryService.name);
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
   recordAttempt(userId: UUID, orgId: UUID): void {
     this.eventEmitter
@@ -127,7 +124,7 @@ export class RunTelemetryService {
     errorCode?: string,
   ): void {
     const durationMs = Date.now() - startedAt;
-    this.logger.info(
+    this.logger.log(
       {
         execution_path: executionPath,
         outcome,

@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
-import { SourceRepository } from '../../ports/source.repository';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { FindContentChunksByIdsQuery } from './find-content-chunks-by-ids.query';
 
 export interface ContentChunkWithSource {
@@ -15,16 +14,14 @@ export interface ContentChunkWithSource {
 
 @Injectable()
 export class FindContentChunksByIdsUseCase {
-  constructor(
-    @InjectPinoLogger(FindContentChunksByIdsUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(FindContentChunksByIdsUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   async execute(
     query: FindContentChunksByIdsQuery,
   ): Promise<ContentChunkWithSource[]> {
-    this.logger.info(
+    this.logger.log(
       {
         count: query.chunkIds.length,
       },

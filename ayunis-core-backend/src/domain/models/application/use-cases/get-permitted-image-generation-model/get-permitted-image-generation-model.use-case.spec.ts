@@ -1,7 +1,5 @@
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
@@ -53,14 +51,6 @@ describe(GetPermittedImageGenerationModelUseCase.name, () => {
       providers: [
         GetPermittedImageGenerationModelUseCase,
         ModelPolicyService,
-        {
-          provide: getLoggerToken(GetPermittedImageGenerationModelUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
-        {
-          provide: getLoggerToken(ModelPolicyService.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: PermittedModelsRepository,
           useValue: {

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -64,10 +63,9 @@ function isUsageModelForeignKeyViolation(error: unknown): boolean {
 
 @Injectable()
 export class LocalModelsRepository extends ModelsRepository {
-  constructor(
-    @InjectPinoLogger(LocalModelsRepository.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(LocalModelsRepository.name);
 
+  constructor(
     @InjectRepository(ModelRecord)
     private readonly localModelRepository: Repository<ModelRecord>,
     private readonly localModelMapper: ModelMapper,
@@ -77,7 +75,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async findAll(): Promise<Model[]> {
-    this.logger.info('findAll');
+    this.logger.log('findAll');
 
     const modelRecords = await this.localModelRepository.find();
 
@@ -87,7 +85,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async findOne(params: FindOneModelParams): Promise<Model | undefined> {
-    this.logger.info(params, 'findOne');
+    this.logger.log(params, 'findOne');
 
     const where =
       'id' in params
@@ -103,7 +101,7 @@ export class LocalModelsRepository extends ModelsRepository {
     id: UUID,
     operation: (model: Model | undefined) => Promise<Result>,
   ): Promise<Result> {
-    this.logger.info({ id }, 'withCatalogModelLocked');
+    this.logger.log({ id }, 'withCatalogModelLocked');
 
     return await this.txHost.withTransaction(async () => {
       const record = await this.txHost.tx.findOne(ModelRecord, {
@@ -148,7 +146,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async save(model: Model): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         modelName: model.name,
         modelProvider: model.provider,
@@ -169,7 +167,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async update<T extends Model>(id: UUID, model: T): Promise<T> {
-    this.logger.info(
+    this.logger.log(
       {
         id,
         modelName: model.name,
@@ -189,7 +187,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
 
     try {
       const result = await this.txHost.tx.delete(ModelRecord, { id });

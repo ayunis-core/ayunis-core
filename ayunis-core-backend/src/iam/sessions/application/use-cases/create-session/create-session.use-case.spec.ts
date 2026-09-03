@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
 import { CreateSessionCommand } from 'src/iam/sessions/application/use-cases/create-session/create-session.command';
 import {
@@ -23,11 +22,7 @@ describe('CreateSessionUseCase', () => {
       }),
       newFamilyId: jest.fn().mockReturnValue(TEST_FAMILY_ID),
     };
-    useCase = new CreateSessionUseCase(
-      createPinoLoggerMock(),
-      repository,
-      factory as never,
-    );
+    useCase = new CreateSessionUseCase(repository, factory as never);
   });
 
   afterEach(() => jest.clearAllMocks());

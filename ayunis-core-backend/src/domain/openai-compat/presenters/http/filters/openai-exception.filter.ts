@@ -1,5 +1,4 @@
-import { ArgumentsHost, Catch } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { ArgumentsHost, Catch, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { OpenAIErrorMapper } from 'src/domain/openai-compat/application/mappers/openai-error.mapper';
@@ -30,10 +29,9 @@ import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error
  */
 @Catch()
 export class OpenAIExceptionFilter extends BaseExceptionFilter {
-  constructor(
-    @InjectPinoLogger(OpenAIExceptionFilter.name)
-    private readonly openaiCompatLogger: PinoLogger,
+  private readonly openaiCompatLogger = new Logger(OpenAIExceptionFilter.name);
 
+  constructor(
     private readonly errorMapper: OpenAIErrorMapper,
     private readonly applicationErrorFilter: ApplicationErrorFilter,
   ) {

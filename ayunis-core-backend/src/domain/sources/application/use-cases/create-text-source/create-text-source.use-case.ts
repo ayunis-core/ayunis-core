@@ -1,5 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import {
   FileSource,
@@ -16,7 +15,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import {
   InvalidSourceTypeError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
@@ -30,7 +29,7 @@ import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-ca
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { MIME_TYPES } from 'src/common/util/file-type';
@@ -43,9 +42,9 @@ interface TextSourceWithContent {
 
 @Injectable()
 export class CreateTextSourceUseCase {
+  private readonly logger = new Logger(CreateTextSourceUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateTextSourceUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,

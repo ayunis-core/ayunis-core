@@ -2,20 +2,18 @@ import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { getLoggerToken, PinoLogger } from 'nestjs-pino';
-
 import { JwtConfigModule } from './jwt.module';
 import { JwtStrategy } from './application/strategies/jwt.strategy';
 import { LocalStrategy } from './application/strategies/local.strategy';
 import { ApiKeyStrategy } from './application/strategies/api-key.strategy';
 import { AuthenticationController } from './presenters/http/authentication.controller';
-import { AuthProvider } from '../../config/authentication.config';
+import { AuthProvider } from 'src/config/authentication.config';
 import { LocalAuthenticationRepository } from './infrastructure/repositories/local/local-authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from './application/tokens/authentication-repository.token';
 import { JwtAuthGuard } from './application/guards/jwt-auth.guard';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { UsersModule } from '../users/users.module';
-import { OrgsModule } from '../orgs/orgs.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
 
 // Import use cases
 import { LoginUseCase } from './application/use-cases/login/login.use-case';
@@ -23,15 +21,15 @@ import { RefreshTokenUseCase } from './application/use-cases/refresh-token/refre
 import { RegisterUserUseCase } from './application/use-cases/register-user/register-user.use-case';
 import { GetCurrentUserUseCase } from './application/use-cases/get-current-user/get-current-user.use-case';
 import { MeResponseDtoMapper } from './presenters/http/mappers/me-response-dto.mapper';
-import { LegalAcceptancesModule } from '../legal-acceptances/legal-acceptances.module';
+import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
-import { HashingModule } from '../hashing/hashing.module';
-import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-import { TrialsModule } from '../trials/trials.module';
-import { ApiKeysModule } from '../api-keys/api-keys.module';
-import { MfaModule } from '../mfa/mfa.module';
-import { SessionsModule } from '../sessions/sessions.module';
+import { HashingModule } from 'src/iam/hashing/hashing.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { TrialsModule } from 'src/iam/trials/trials.module';
+import { ApiKeysModule } from 'src/iam/api-keys/api-keys.module';
+import { MfaModule } from 'src/iam/mfa/mfa.module';
+import { SessionsModule } from 'src/iam/sessions/sessions.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
 import { MfaLoginController } from './presenters/http/mfa-login.controller';
@@ -66,11 +64,7 @@ function createAuthenticationRepositoryProvider(
 ): Provider {
   return {
     provide: AUTHENTICATION_REPOSITORY,
-    useFactory: (
-      logger: PinoLogger,
-      configService: ConfigService,
-      jwtService: JwtService,
-    ) => {
+    useFactory: (configService: ConfigService, jwtService: JwtService) => {
       const provider =
         options?.provider ??
         configService.get<AuthProvider>('auth.provider', AuthProvider.LOCAL);
@@ -80,17 +74,9 @@ function createAuthenticationRepositoryProvider(
         throw new Error('Cloud authentication repository not implemented');
       }
 
-      return new LocalAuthenticationRepository(
-        logger,
-        jwtService,
-        configService,
-      );
+      return new LocalAuthenticationRepository(jwtService, configService);
     },
-    inject: [
-      getLoggerToken(LocalAuthenticationRepository.name),
-      ConfigService,
-      JwtService,
-    ],
+    inject: [ConfigService, JwtService],
   };
 }
 

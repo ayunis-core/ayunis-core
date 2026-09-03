@@ -1,8 +1,8 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { safeMetric } from './metrics.utils';
 
 describe('safeMetric', () => {
-  const logger = createPinoLoggerMock();
+  const logger = createLoggerMock();
 
   beforeEach(() => {
     logger.warn.mockReset();

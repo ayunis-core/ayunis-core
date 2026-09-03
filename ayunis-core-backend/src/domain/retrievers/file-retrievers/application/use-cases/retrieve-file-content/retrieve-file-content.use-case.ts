@@ -1,5 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
   FileRetrieverPage,
@@ -31,9 +30,9 @@ import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cas
 
 @Injectable()
 export class RetrieveFileContentUseCase {
+  private readonly logger = new Logger(RetrieveFileContentUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RetrieveFileContentUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly contextService: ContextService,
     private readonly documentConverter: DocumentConverterPort,

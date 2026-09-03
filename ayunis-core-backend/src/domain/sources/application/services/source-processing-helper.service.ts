@@ -1,14 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
-import { MarkSourceFailedUseCase } from '../use-cases/mark-source-failed/mark-source-failed.use-case';
-import { MarkSourceFailedCommand } from '../use-cases/mark-source-failed/mark-source-failed.command';
-import type { TextSourceContentChunk } from '../../domain/source-content-chunk.entity';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 
 /**
  * Indexing and failure-cleanup helpers shared by the source processing
@@ -17,9 +16,9 @@ import type { TextSourceContentChunk } from '../../domain/source-content-chunk.e
  */
 @Injectable()
 export class SourceProcessingHelper {
+  private readonly logger = new Logger(SourceProcessingHelper.name);
+
   constructor(
-    @InjectPinoLogger(SourceProcessingHelper.name)
-    private readonly logger: PinoLogger,
     private readonly ingestBulkContentUseCase: IngestBulkContentUseCase,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,

@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
+import { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
 import {
   DuplicateCategoryError,
   InvalidPatternError,
   UnexpectedAnonymizationSettingsError,
-} from '../../anonymization-settings.errors';
+} from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import type {
   UpdatePiiWhitelistCommand,
   UpdatePiiWhitelistEntryInput,
@@ -17,11 +16,9 @@ import type { UUID } from 'crypto';
 
 @Injectable()
 export class UpdatePiiWhitelistUseCase {
-  constructor(
-    @InjectPinoLogger(UpdatePiiWhitelistUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly repository: AnonymizationWhitelistRepository,
-  ) {}
+  private readonly logger = new Logger(UpdatePiiWhitelistUseCase.name);
+
+  constructor(private readonly repository: AnonymizationWhitelistRepository) {}
 
   async execute(
     command: UpdatePiiWhitelistCommand,

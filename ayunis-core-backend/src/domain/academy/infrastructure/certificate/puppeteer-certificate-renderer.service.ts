@@ -1,20 +1,18 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { LazyChromiumBrowser } from 'src/common/puppeteer/lazy-chromium-browser';
 import {
   CertificateRendererPort,
   CertificateRenderInput,
-} from '../../application/ports/certificate-renderer.port';
+} from 'src/domain/academy/application/ports/certificate-renderer.port';
 import { buildCertificateHtml } from './certificate-template';
 
 @Injectable()
 export class PuppeteerCertificateRendererService
   implements CertificateRendererPort, OnModuleDestroy
 {
-  constructor(
-    @InjectPinoLogger(PuppeteerCertificateRendererService.name)
-    private readonly logger: PinoLogger,
-  ) {}
+  private readonly logger = new Logger(
+    PuppeteerCertificateRendererService.name,
+  );
 
   private readonly chromium = new LazyChromiumBrowser();
 
@@ -23,7 +21,7 @@ export class PuppeteerCertificateRendererService
   }
 
   async render(input: CertificateRenderInput): Promise<Buffer> {
-    this.logger.info('Rendering academy certificate PDF');
+    this.logger.log('Rendering academy certificate PDF');
 
     const html = buildCertificateHtml(input);
     const browser = await this.chromium.get();

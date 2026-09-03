@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -18,9 +17,11 @@ import { GetPermittedImageGenerationModelQuery } from './get-permitted-image-gen
 
 @Injectable()
 export class GetPermittedImageGenerationModelUseCase {
+  private readonly logger = new Logger(
+    GetPermittedImageGenerationModelUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(GetPermittedImageGenerationModelUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
     private readonly modelPolicy: ModelPolicyService,
@@ -31,7 +32,7 @@ export class GetPermittedImageGenerationModelUseCase {
   async execute(
     query: GetPermittedImageGenerationModelQuery,
   ): Promise<PermittedImageGenerationModel> {
-    this.logger.info({ orgId: query.orgId }, 'execute');
+    this.logger.log({ orgId: query.orgId }, 'execute');
     this.validateOrgAccess(query.orgId);
 
     const userId = this.contextService.get('userId');

@@ -1,12 +1,10 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetCurrentUserUseCase } from './get-current-user.use-case';
 import { GetCurrentUserCommand } from './get-current-user.command';
 import { JwtService } from '@nestjs/jwt';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
-import { InvalidTokenError } from '../../authentication.errors';
+import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -25,10 +23,6 @@ describe('GetCurrentUserUseCase', () => {
         GetCurrentUserUseCase,
         { provide: JwtService, useValue: mockJwtService },
         { provide: FindUserByIdUseCase, useValue: mockFindUserByIdUseCase },
-        {
-          provide: getLoggerToken(GetCurrentUserUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

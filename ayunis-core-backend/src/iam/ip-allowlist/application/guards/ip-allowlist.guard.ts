@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -7,10 +11,10 @@ import type { UUID } from 'crypto';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { getClientIp } from 'src/common/util/ip.util';
 import { buildAccessDeniedAuditContext } from 'src/common/util/access-denied-audit.util';
-import { isIpInCidrs } from '../../domain/cidr.util';
-import { IpAllowlistRepository } from '../ports/ip-allowlist.repository';
-import { IpNotAllowedError } from '../ip-allowlist.errors';
-import { IpAllowlistCachePort } from '../ports/ip-allowlist-cache.port';
+import { isIpInCidrs } from 'src/iam/ip-allowlist/domain/cidr.util';
+import { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpNotAllowedError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
+import { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
 interface CacheEntry {
@@ -25,11 +29,11 @@ export class IpAllowlistGuard
   extends IpAllowlistCachePort
   implements CanActivate
 {
+  private readonly logger = new Logger(IpAllowlistGuard.name);
+
   private readonly cache = new Map<UUID, CacheEntry>();
 
   constructor(
-    @InjectPinoLogger(IpAllowlistGuard.name)
-    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly repository: IpAllowlistRepository,
   ) {

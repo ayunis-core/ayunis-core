@@ -11,8 +11,8 @@ import {
   HttpStatus,
   NotFoundException,
   Query,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   CurrentUser,
@@ -66,9 +66,9 @@ import { ConfigService } from '@nestjs/config';
 @RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadsController {
+  private readonly logger = new Logger(ThreadsController.name);
+
   constructor(
-    @InjectPinoLogger(ThreadsController.name)
-    private readonly logger: PinoLogger,
     private readonly createThreadUseCase: CreateThreadUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
@@ -112,7 +112,7 @@ export class ThreadsController {
   async create(
     @Body() createThreadDto: CreateThreadDto,
   ): Promise<GetThreadResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         modelId: createThreadDto.modelId,
       },
@@ -162,7 +162,7 @@ export class ThreadsController {
     @Query() queryParams: FindAllThreadsQueryParamsDto,
   ): Promise<GetThreadsResponseDto> {
     const { search: text, ...safeQueryParams } = queryParams;
-    this.logger.info({ ...safeQueryParams, text }, 'findAll');
+    this.logger.log({ ...safeQueryParams, text }, 'findAll');
     this.assertWorkspaceParamAllowed(queryParams.workspaceId);
     const threads = await this.findAllThreadsUseCase.execute(
       new FindAllThreadsQuery(
@@ -199,7 +199,7 @@ export class ThreadsController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<GetThreadResponseDto> {
-    this.logger.info({ id }, 'findOne');
+    this.logger.log({ id }, 'findOne');
     const result = await this.findThreadUseCase.execute(
       new FindThreadQuery(id),
     );
@@ -230,7 +230,7 @@ export class ThreadsController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.info({ id }, 'delete');
+    this.logger.log({ id }, 'delete');
     await this.deleteThreadUseCase.execute(new DeleteThreadCommand(id));
   }
 
@@ -255,7 +255,7 @@ export class ThreadsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateThreadTitleDto: UpdateThreadTitleDto,
   ): Promise<void> {
-    this.logger.info({ id, text: updateThreadTitleDto.title }, 'updateTitle');
+    this.logger.log({ id, text: updateThreadTitleDto.title }, 'updateTitle');
     await this.updateThreadTitleUseCase.execute(
       new UpdateThreadTitleCommand({
         threadId: id,
@@ -292,7 +292,7 @@ export class ThreadsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Param('maskId', ParseUUIDPipe) maskId: UUID,
   ): Promise<PiiMaskResponseDto[]> {
-    this.logger.info({ id, maskId }, 'unmaskPiiMask');
+    this.logger.log({ id, maskId }, 'unmaskPiiMask');
     // Asserts the thread exists and belongs to the current user.
     await this.findThreadUseCase.execute(new FindThreadQuery(id));
     const masks = await this.unmaskThreadPiiMaskUseCase.execute(
@@ -318,7 +318,7 @@ export class ThreadsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: AssignThreadWorkspaceDto,
   ): Promise<void> {
-    this.logger.info({ id, workspaceId: dto.workspaceId }, 'assignWorkspace');
+    this.logger.log({ id, workspaceId: dto.workspaceId }, 'assignWorkspace');
     await this.assignThreadToWorkspaceUseCase.execute(
       new AssignThreadToWorkspaceCommand({
         threadId: id,

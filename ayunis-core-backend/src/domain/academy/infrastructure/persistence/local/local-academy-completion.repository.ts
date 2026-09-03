@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -18,9 +17,9 @@ const MAX_BATCH_SIZE = 500;
 
 @Injectable()
 export class LocalAcademyCompletionRepository implements AcademyCompletionRepository {
+  private readonly logger = new Logger(LocalAcademyCompletionRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalAcademyCompletionRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(AcademyCompletionRecord)
     private readonly repository: Repository<AcademyCompletionRecord>,
     private readonly mapper: AcademyMapper,
@@ -56,7 +55,7 @@ export class LocalAcademyCompletionRepository implements AcademyCompletionReposi
   }
 
   async upsert(completion: AcademyCompletion): Promise<AcademyCompletion> {
-    this.logger.info({ userId: completion.userId }, 'upsert');
+    this.logger.log({ userId: completion.userId }, 'upsert');
     const record = this.mapper.completionToRecord(completion);
     const saved = await this.repository.save(record);
     return this.mapper.completionToDomain(saved);

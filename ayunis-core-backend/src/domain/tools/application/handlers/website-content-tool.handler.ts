@@ -1,22 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { WebsiteContentTool } from '../../domain/tools/website-content-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 
 @Injectable()
 export class WebsiteContentToolHandler extends ToolExecutionHandler {
-  constructor(
-    @InjectPinoLogger(WebsiteContentToolHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
-  ) {
+  private readonly logger = new Logger(WebsiteContentToolHandler.name);
+
+  constructor(private readonly retrieveUrlUseCase: RetrieveUrlUseCase) {
     super();
   }
 
@@ -26,7 +23,7 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.info({ name: tool.name, input: input }, 'execute');
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const content = await this.retrieveUrlUseCase.execute(

@@ -1,16 +1,15 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
-import type { ModelsRepository } from '../../ports/models.repository';
-import type { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import type { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import type { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   ModelErrorCode,
   ModelNotFoundByIdError,
   ModelReferencedByUsageError,
   ModelStillPermittedError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import type { HasUsageForModelUseCase } from 'src/domain/usage/application/use-cases/has-usage-for-model/has-usage-for-model.use-case';
-import { LanguageModel } from '../../../domain/models/language.model';
-import { ModelProvider } from '../../../domain/value-objects/model-provider.enum';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { DeleteModelCommand } from './delete-model.command';
 import { DeleteModelUseCase } from './delete-model.use-case';
 
@@ -52,7 +51,6 @@ describe('DeleteModelUseCase', () => {
     };
     hasUsageForModelUseCase = { execute: jest.fn().mockResolvedValue(false) };
     useCase = new DeleteModelUseCase(
-      createPinoLoggerMock(),
       modelsRepository as unknown as ModelsRepository,
       permittedModelsRepository as unknown as PermittedModelsRepository,
       hasUsageForModelUseCase as unknown as HasUsageForModelUseCase,

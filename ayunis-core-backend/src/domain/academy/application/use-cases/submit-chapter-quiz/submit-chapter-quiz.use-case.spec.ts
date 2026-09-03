@@ -1,16 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { SubmitChapterQuizUseCase } from './submit-chapter-quiz.use-case';
 import type { QuizAnswerSubmission } from './submit-chapter-quiz.command';
 import { SubmitChapterQuizCommand } from './submit-chapter-quiz.command';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyChapterProgressRepository } from 'src/domain/academy/application/ports/academy-chapter-progress.repository';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
@@ -18,7 +16,7 @@ import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-ques
 import {
   InvalidQuizSubmissionError,
   QuizNotAvailableError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 
 function makePool(chapterId: UUID, count: number): AcademyQuizQuestion[] {
   return Array.from(
@@ -66,10 +64,6 @@ describe('SubmitChapterQuizUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(SubmitChapterQuizUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         SubmitChapterQuizUseCase,
         {
           provide: AcademyChapterRepository,

@@ -1,15 +1,16 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { ListSkillKnowledgeBasesUseCase } from './list-skill-knowledge-bases.use-case';
 import { ListSkillKnowledgeBasesQuery } from './list-skill-knowledge-bases.query';
 import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
-import { SkillAccessService } from '../../services/skill-access.service';
+import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import type { UUID } from 'crypto';
 
 describe('ListSkillKnowledgeBasesUseCase', () => {
@@ -27,10 +28,6 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListSkillKnowledgeBasesUseCase,
-        {
-          provide: getLoggerToken(ListSkillKnowledgeBasesUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: GetKnowledgeBasesByIdsUseCase,
           useValue: { execute: jest.fn() },

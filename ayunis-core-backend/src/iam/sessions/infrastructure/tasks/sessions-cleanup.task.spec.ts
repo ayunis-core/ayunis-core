@@ -1,16 +1,16 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { SessionsCleanupTask } from './sessions-cleanup.task';
-import { createMockRefreshTokensRepository } from '../../application/testing/refresh-token.fixtures';
+import { createMockRefreshTokensRepository } from 'src/iam/sessions/application/testing/refresh-token.fixtures';
 
 describe('SessionsCleanupTask', () => {
   let task: SessionsCleanupTask;
   let repository: ReturnType<typeof createMockRefreshTokensRepository>;
-  let logger: ReturnType<typeof createPinoLoggerMock>;
+  let logger: ReturnType<typeof createLoggerMock>;
 
   beforeEach(() => {
     repository = createMockRefreshTokensRepository();
-    logger = createPinoLoggerMock();
-    task = new SessionsCleanupTask(logger, repository);
+    logger = createLoggerMock();
+    task = new SessionsCleanupTask(repository);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -28,7 +28,7 @@ describe('SessionsCleanupTask', () => {
 
     await task.handleCleanup();
 
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       { deleted: 5 },
       'Scheduled sessions cleanup completed',
     );

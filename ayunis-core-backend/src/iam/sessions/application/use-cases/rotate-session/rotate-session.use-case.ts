@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -23,9 +22,9 @@ export interface RotateSessionResult {
 
 @Injectable()
 export class RotateSessionUseCase {
+  private readonly logger = new Logger(RotateSessionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(RotateSessionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly refreshTokensRepository: RefreshTokensRepository,
     private readonly refreshTokenFactory: RefreshTokenFactory,
     private readonly configService: ConfigService,

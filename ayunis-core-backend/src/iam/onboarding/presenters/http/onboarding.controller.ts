@@ -6,8 +6,8 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -22,22 +22,22 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { GetOnboardingUseCase } from '../../application/use-cases/get-onboarding/get-onboarding.use-case';
-import { GetOnboardingQuery } from '../../application/use-cases/get-onboarding/get-onboarding.query';
-import { UpdateOnboardingUseCase } from '../../application/use-cases/update-onboarding/update-onboarding.use-case';
-import { UpdateOnboardingCommand } from '../../application/use-cases/update-onboarding/update-onboarding.command';
+import { GetOnboardingUseCase } from 'src/iam/onboarding/application/use-cases/get-onboarding/get-onboarding.use-case';
+import { GetOnboardingQuery } from 'src/iam/onboarding/application/use-cases/get-onboarding/get-onboarding.query';
+import { UpdateOnboardingUseCase } from 'src/iam/onboarding/application/use-cases/update-onboarding/update-onboarding.use-case';
+import { UpdateOnboardingCommand } from 'src/iam/onboarding/application/use-cases/update-onboarding/update-onboarding.command';
 import { UpdateOnboardingDto } from './dtos/update-onboarding.dto';
 import { OnboardingResponseDto } from './dtos/onboarding-response.dto';
 import { OnboardingResponseDtoMapper } from './mappers/onboarding-response-dto.mapper';
-import { MarkWelcomeVideoSeenUseCase } from '../../application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.use-case';
-import { MarkWelcomeVideoSeenCommand } from '../../application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.command';
+import { MarkWelcomeVideoSeenUseCase } from 'src/iam/onboarding/application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.use-case';
+import { MarkWelcomeVideoSeenCommand } from 'src/iam/onboarding/application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.command';
 
 @ApiTags('Onboarding')
 @Controller('onboarding')
 export class OnboardingController {
+  private readonly logger = new Logger(OnboardingController.name);
+
   constructor(
-    @InjectPinoLogger(OnboardingController.name)
-    private readonly logger: PinoLogger,
     private readonly getOnboardingUseCase: GetOnboardingUseCase,
     private readonly updateOnboardingUseCase: UpdateOnboardingUseCase,
     private readonly markWelcomeVideoSeenUseCase: MarkWelcomeVideoSeenUseCase,
@@ -63,7 +63,7 @@ export class OnboardingController {
   async getOnboarding(
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<OnboardingResponseDto> {
-    this.logger.info('getOnboarding');
+    this.logger.log('getOnboarding');
 
     const onboarding = await this.getOnboardingUseCase.execute(
       new GetOnboardingQuery(currentUserId),
@@ -91,7 +91,7 @@ export class OnboardingController {
   async markWelcomeVideoSeen(
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<OnboardingResponseDto> {
-    this.logger.info('markWelcomeVideoSeen');
+    this.logger.log('markWelcomeVideoSeen');
 
     const onboarding = await this.markWelcomeVideoSeenUseCase.execute(
       new MarkWelcomeVideoSeenCommand(currentUserId),
@@ -125,7 +125,7 @@ export class OnboardingController {
     @Body() updateOnboardingDto: UpdateOnboardingDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<OnboardingResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         completedStepIdsCount: updateOnboardingDto.completedStepIds.length,
         hidden: updateOnboardingDto.hidden,

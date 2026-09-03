@@ -1,23 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgAddonRepository } from '../../ports/org-addon.repository';
-import { AddonDeactivatedEvent } from '../../events/addon-deactivated.event';
-import { UnexpectedAddonError } from '../../addons.errors';
+import { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
+import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
+import { UnexpectedAddonError } from 'src/iam/addons/application/addons.errors';
 import { DeactivateAddonCommand } from './deactivate-addon.command';
 
 @Injectable()
 export class DeactivateAddonUseCase {
+  private readonly logger = new Logger(DeactivateAddonUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeactivateAddonUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly orgAddonRepository: OrgAddonRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: DeactivateAddonCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         type: command.type,

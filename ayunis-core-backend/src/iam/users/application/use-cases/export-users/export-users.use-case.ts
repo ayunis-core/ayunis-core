@@ -1,22 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { convertCSVToString } from 'src/common/util/csv';
 import {
   UserExportRow,
   UsersExportRepository,
-} from '../../ports/users-export.repository';
-import { UserError, UserUnexpectedError } from '../../users.errors';
+} from 'src/iam/users/application/ports/users-export.repository';
+import {
+  UserError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
 
 @Injectable()
 export class ExportUsersUseCase {
-  constructor(
-    @InjectPinoLogger(ExportUsersUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly usersExportRepository: UsersExportRepository,
-  ) {}
+  private readonly logger = new Logger(ExportUsersUseCase.name);
+
+  constructor(private readonly usersExportRepository: UsersExportRepository) {}
 
   async execute(): Promise<string> {
-    this.logger.info('Exporting users for subscribed organizations');
+    this.logger.log('Exporting users for subscribed organizations');
 
     try {
       const rows = await this.usersExportRepository.findSubscribedOrgUsers();

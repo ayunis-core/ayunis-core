@@ -1,21 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ClearDefaultsByCatalogModelIdCommand } from './clear-defaults-by-catalog-model-id.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
 
 @Injectable()
 export class ClearDefaultsByCatalogModelIdUseCase {
-  constructor(
-    @InjectPinoLogger(ClearDefaultsByCatalogModelIdUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(
+    ClearDefaultsByCatalogModelIdUseCase.name,
+  );
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
   ) {}
 
   async execute(command: ClearDefaultsByCatalogModelIdCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         catalogModelId: command.catalogModelId,
       },
@@ -58,7 +58,7 @@ export class ClearDefaultsByCatalogModelIdUseCase {
       command.catalogModelId,
     );
 
-    this.logger.info(
+    this.logger.log(
       {
         catalogModelId: command.catalogModelId,
         affectedPermittedModels: permittedModelIds.length,

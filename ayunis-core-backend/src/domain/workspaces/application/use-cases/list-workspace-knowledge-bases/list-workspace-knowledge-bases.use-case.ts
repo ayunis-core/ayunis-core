@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,9 +14,9 @@ import { ListWorkspaceKnowledgeBasesQuery } from './list-workspace-knowledge-bas
 
 @Injectable()
 export class ListWorkspaceKnowledgeBasesUseCase {
+  private readonly logger = new Logger(ListWorkspaceKnowledgeBasesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ListWorkspaceKnowledgeBasesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
     private readonly contextService: ContextService,
@@ -30,7 +29,7 @@ export class ListWorkspaceKnowledgeBasesUseCase {
     const userId = this.contextService.get('userId');
     if (!userId) throw new UnauthorizedAccessError();
 
-    this.logger.info(
+    this.logger.log(
       { workspaceId: query.workspaceId },
       'listWorkspaceKnowledgeBases',
     );

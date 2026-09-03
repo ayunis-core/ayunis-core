@@ -1,5 +1,3 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
@@ -30,10 +28,6 @@ describe('LocalAuthenticationRepository', () => {
         LocalAuthenticationRepository,
         { provide: JwtService, useValue: { sign: jest.fn() } },
         { provide: ConfigService, useValue: { get: jest.fn() } },
-        {
-          provide: getLoggerToken(LocalAuthenticationRepository.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

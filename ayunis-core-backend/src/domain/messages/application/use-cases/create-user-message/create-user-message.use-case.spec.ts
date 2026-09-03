@@ -1,21 +1,19 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateUserMessageUseCase } from './create-user-message.use-case';
-import type { MessagesRepository } from '../../ports/messages.repository';
-import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
+import type { MessagesRepository } from 'src/domain/messages/application/ports/messages.repository';
+import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import type { ImageUploadData } from './create-user-message.command';
 import { CreateUserMessageCommand } from './create-user-message.command';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
-import { MessageCreationError } from '../../messages.errors';
+import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
 import { randomUUID } from 'crypto';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UserMessageCreatedEvent } from '../../events/user-message-created.event';
+import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 
 describe('CreateUserMessageUseCase', () => {
   let useCase: CreateUserMessageUseCase;
@@ -56,10 +54,6 @@ describe('CreateUserMessageUseCase', () => {
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
-        {
-          provide: getLoggerToken(CreateUserMessageUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 
@@ -313,7 +307,7 @@ describe('CreateUserMessageUseCase', () => {
         .spyOn(mockMessagesRepository, 'create')
         .mockResolvedValue(expectedMessage);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'info');
+      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
 
       // Act
       await useCase.execute(command);
@@ -349,7 +343,7 @@ describe('CreateUserMessageUseCase', () => {
         .spyOn(mockMessagesRepository, 'create')
         .mockResolvedValue(expectedMessage);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'info');
+      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
 
       // Act
       await useCase.execute(command);

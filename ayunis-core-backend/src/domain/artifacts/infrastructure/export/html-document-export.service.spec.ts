@@ -1,8 +1,7 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { HtmlDocumentExportService } from './html-document-export.service';
 import type { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
-import type { LetterheadConfig } from '../../application/ports/document-export.port';
-import { ArtifactExportTimeoutError } from '../../application/artifacts.errors';
+import type { LetterheadConfig } from 'src/domain/artifacts/application/ports/document-export.port';
+import { ArtifactExportTimeoutError } from 'src/domain/artifacts/application/artifacts.errors';
 import { TimeoutError } from 'puppeteer-core';
 import * as JSZip from 'jszip';
 
@@ -68,7 +67,7 @@ describe('HtmlDocumentExportService', () => {
     compositor = {
       composite: jest.fn().mockResolvedValue(Buffer.from('%PDF-composited')),
     } as unknown as jest.Mocked<PdfLetterheadCompositor>;
-    service = new HtmlDocumentExportService(createPinoLoggerMock(), compositor);
+    service = new HtmlDocumentExportService(compositor);
   });
 
   afterAll(async () => {

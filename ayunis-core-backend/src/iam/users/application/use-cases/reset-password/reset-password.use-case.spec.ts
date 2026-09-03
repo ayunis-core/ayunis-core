@@ -1,15 +1,13 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ResetPasswordUseCase } from './reset-password.use-case';
 import { ResetPasswordCommand } from './reset-password.command';
-import { UsersRepository } from '../../ports/users.repository';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
-import { PasswordSetTokensRepository } from '../../ports/password-set-tokens.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
-import { IsValidPasswordUseCase } from '../is-valid-password/is-valid-password.use-case';
+import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
 import {
   InvalidPasswordError,
@@ -21,7 +19,7 @@ import {
   aPasswordSetToken,
   createMockPasswordSetTokensRepository,
   TEST_USER_ID,
-} from '../../testing/password-set-token.fixtures';
+} from 'src/iam/users/application/testing/password-set-token.fixtures';
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 
 describe('ResetPasswordUseCase', () => {
@@ -77,10 +75,6 @@ describe('ResetPasswordUseCase', () => {
         {
           provide: RevokeAllSessionsForUserUseCase,
           useValue: mockRevokeAllSessionsForUserUseCase,
-        },
-        {
-          provide: getLoggerToken(ResetPasswordUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

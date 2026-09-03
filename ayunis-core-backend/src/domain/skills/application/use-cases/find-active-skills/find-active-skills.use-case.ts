@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillRepository } from '../../ports/skill.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindActiveSkillsQuery } from './find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnexpectedSkillError } from '../../skills.errors';
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
@@ -15,16 +14,16 @@ import { UUID } from 'crypto';
 
 @Injectable()
 export class FindActiveSkillsUseCase {
+  private readonly logger = new Logger(FindActiveSkillsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindActiveSkillsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: FindActiveSkillsQuery): Promise<Skill[]> {
-    this.logger.info(query, 'Finding active skills');
+    this.logger.log(query, 'Finding active skills');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {

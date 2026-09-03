@@ -1,26 +1,25 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import type { AxiosError } from 'axios';
 import FormData from 'form-data';
 import { GotenbergConfig, gotenbergConfig } from 'src/config/gotenberg.config';
-import { DocumentConverterPort } from '../../application/ports/document-converter.port';
+import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import {
   DocumentConversionUnavailableError,
   FileRetrievalFailedError,
   FileRetrieverError,
   FileTooLargeError,
   UnprocessableDocumentError,
-} from '../../application/file-retriever.errors';
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 @Injectable()
 export class GotenbergConverterService extends DocumentConverterPort {
+  private readonly logger = new Logger(GotenbergConverterService.name);
+
   /** 10 minutes — large documents can take a while to convert */
   private readonly TIMEOUT_MS = 10 * 60 * 1000;
 
   constructor(
-    @InjectPinoLogger(GotenbergConverterService.name)
-    private readonly logger: PinoLogger,
     @Inject(gotenbergConfig.KEY)
     private readonly config: GotenbergConfig,
   ) {

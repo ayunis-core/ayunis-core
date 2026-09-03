@@ -1,14 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateEmbeddingModelUseCase } from './create-embedding-model.use-case';
 import { CreateEmbeddingModelCommand } from './create-embedding-model.command';
-import type { ModelsRepository } from '../../ports/models.repository';
+import type { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   ModelAlreadyExistsError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 
 describe('CreateEmbeddingModelUseCase', () => {
   let useCase: CreateEmbeddingModelUseCase;
@@ -25,10 +24,7 @@ describe('CreateEmbeddingModelUseCase', () => {
       save: jest.fn(),
       delete: jest.fn(),
     };
-    useCase = new CreateEmbeddingModelUseCase(
-      createPinoLoggerMock(),
-      modelsRepository,
-    );
+    useCase = new CreateEmbeddingModelUseCase(modelsRepository);
   });
 
   const createCommand = (): CreateEmbeddingModelCommand =>

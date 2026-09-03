@@ -1,28 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UpdateMonthlyCreditsCommand } from './update-monthly-credits.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
   InvalidSubscriptionDataError,
   UnexpectedSubscriptionError,
   InvalidSubscriptionTypeError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
-import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
-import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
+import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
+import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SubscriptionMonthlyCreditsUpdatedEvent } from '../../events/subscription-monthly-credits-updated.event';
-import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
+import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-monthly-credits-updated.event';
+import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
-import type { UsageBasedSubscription } from '../../../domain/usage-based-subscription.entity';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import type { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 
 @Injectable()
 export class UpdateMonthlyCreditsUseCase {
+  private readonly logger = new Logger(UpdateMonthlyCreditsUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateMonthlyCreditsUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly eventEmitter: EventEmitter2,
@@ -30,7 +29,7 @@ export class UpdateMonthlyCreditsUseCase {
   ) {}
 
   async execute(command: UpdateMonthlyCreditsCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,

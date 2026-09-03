@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RemoveDirectKnowledgeBaseFromThreadsCommand } from './remove-direct-knowledge-base-from-threads.command';
 
 @Injectable()
 export class RemoveDirectKnowledgeBaseFromThreadsUseCase {
-  constructor(
-    @InjectPinoLogger(RemoveDirectKnowledgeBaseFromThreadsUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly threadsRepository: ThreadsRepository,
-  ) {}
+  private readonly logger = new Logger(
+    RemoveDirectKnowledgeBaseFromThreadsUseCase.name,
+  );
+
+  constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(
     command: RemoveDirectKnowledgeBaseFromThreadsCommand,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,
         userCount: command.userIds.length,

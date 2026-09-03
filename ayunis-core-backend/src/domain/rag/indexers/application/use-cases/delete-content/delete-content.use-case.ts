@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { IndexRegistry } from '../../indexer.registry';
+import { Injectable, Logger } from '@nestjs/common';
+import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 import { DeleteContentCommand } from './delete-content.command';
-import { UnexpectedIndexError } from '../../indexer.errors';
+import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 
 @Injectable()
 export class DeleteContentUseCase {
-  constructor(
-    @InjectPinoLogger(DeleteContentUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly indexRegistry: IndexRegistry,
-  ) {}
+  private readonly logger = new Logger(DeleteContentUseCase.name);
+
+  constructor(private readonly indexRegistry: IndexRegistry) {}
 
   async execute(command: DeleteContentCommand): Promise<void> {
     try {

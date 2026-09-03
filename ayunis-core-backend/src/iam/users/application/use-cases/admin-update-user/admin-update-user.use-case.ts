@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { AdminUpdateUserCommand } from './admin-update-user.command';
 import { User } from 'src/iam/users/domain/user.entity';
 import {
@@ -12,16 +11,16 @@ import {
   UserNotFoundError,
   UserUnauthorizedError,
   UserUnexpectedError,
-} from '../../users.errors';
-import { UserUpdatedEvent } from '../../events/user-updated.event';
-import { SendConfirmationEmailUseCase } from '../send-confirmation-email/send-confirmation-email.use-case';
-import { SendConfirmationEmailCommand } from '../send-confirmation-email/send-confirmation-email.command';
+} from 'src/iam/users/application/users.errors';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
+import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
+import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
 
 @Injectable()
 export class AdminUpdateUserUseCase {
+  private readonly logger = new Logger(AdminUpdateUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AdminUpdateUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
@@ -29,7 +28,7 @@ export class AdminUpdateUserUseCase {
   ) {}
 
   async execute(command: AdminUpdateUserCommand): Promise<User> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.userId,
         hasName: command.name !== undefined,

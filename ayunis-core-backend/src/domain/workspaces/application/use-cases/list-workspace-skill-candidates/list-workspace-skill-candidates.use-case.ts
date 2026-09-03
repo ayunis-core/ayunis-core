@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -21,9 +20,11 @@ export interface WorkspaceSkillCandidate {
 
 @Injectable()
 export class ListWorkspaceSkillCandidatesUseCase {
+  private readonly logger = new Logger(
+    ListWorkspaceSkillCandidatesUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(ListWorkspaceSkillCandidatesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly listAccessibleSkillsUseCase: ListAccessibleSkillsUseCase,
     private readonly contextService: ContextService,
@@ -33,7 +34,7 @@ export class ListWorkspaceSkillCandidatesUseCase {
   async execute(
     query: ListWorkspaceSkillCandidatesQuery,
   ): Promise<Paginated<WorkspaceSkillCandidate>> {
-    this.logger.info(
+    this.logger.log(
       {
         workspaceId: query.workspaceId,
       },

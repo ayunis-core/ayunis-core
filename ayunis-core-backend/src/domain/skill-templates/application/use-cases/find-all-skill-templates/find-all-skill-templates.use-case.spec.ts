@@ -1,11 +1,9 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { FindAllSkillTemplatesUseCase } from './find-all-skill-templates.use-case';
 import { FindAllSkillTemplatesQuery } from './find-all-skill-templates.query';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 
@@ -21,10 +19,6 @@ describe('FindAllSkillTemplatesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllSkillTemplatesUseCase,
-        {
-          provide: getLoggerToken(FindAllSkillTemplatesUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         { provide: SkillTemplateRepository, useValue: mockRepository },
       ],
     }).compile();

@@ -1,5 +1,4 @@
 import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { StartAuthenticatedSessionCommand } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.command';
 import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
@@ -27,7 +26,6 @@ describe(StartAuthenticatedSessionUseCase.name, () => {
   const pendingTokens = { generate: jest.fn() };
   const authorizeUserLogin = { execute: jest.fn() };
   const useCase = new StartAuthenticatedSessionUseCase(
-    createPinoLoggerMock(),
     checkMfa as unknown as CheckMfaLoginRequirementUseCase,
     pendingTokens as unknown as MfaPendingJwtService,
     login as unknown as LoginUseCase,

@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { GenerateImageTool } from '../../domain/tools/generate-image-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GetPermittedImageGenerationModelQuery } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.query';
 import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/generate-image/generate-image.use-case';
@@ -43,9 +42,9 @@ type ValidatedGenerateImageInput = ReturnType<
 
 @Injectable()
 export class GenerateImageToolHandler extends ToolExecutionHandler {
+  private readonly logger = new Logger(GenerateImageToolHandler.name);
+
   constructor(
-    @InjectPinoLogger(GenerateImageToolHandler.name)
-    private readonly logger: PinoLogger,
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly generateImageUseCase: GenerateImageUseCase,
     private readonly saveGeneratedImageUseCase: SaveGeneratedImageUseCase,
@@ -62,7 +61,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    this.logger.info('Executing generate_image tool');
+    this.logger.log('Executing generate_image tool');
     try {
       return await this.runGeneration(params);
     } catch (error) {

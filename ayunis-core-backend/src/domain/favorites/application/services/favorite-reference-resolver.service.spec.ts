@@ -1,11 +1,10 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { FindThreadsByIdsUseCase } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import type { FindWorkspacesByIdsUseCase } from 'src/domain/workspaces/application/use-cases/find-workspaces-by-ids/find-workspaces-by-ids.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
-import { FavoriteReferenceType } from '../../domain/value-objects/favorite-reference-type.enum';
-import { Favorite } from '../../domain/favorite.entity';
+import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
+import { Favorite } from 'src/domain/favorites/domain/favorite.entity';
 import { FavoriteReferenceResolver } from './favorite-reference-resolver.service';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
@@ -81,7 +80,6 @@ function createResolver(params: {
   threads?: unknown[];
 }): FavoriteReferenceResolver {
   return new FavoriteReferenceResolver(
-    createPinoLoggerMock(),
     {
       execute: jest.fn().mockResolvedValue(params.workspaces ?? []),
     } as unknown as FindWorkspacesByIdsUseCase,

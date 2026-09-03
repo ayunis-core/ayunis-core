@@ -1,17 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { ExecuteToolUseCase } from './execute-tool.use-case';
 import { ExecuteToolCommand } from './execute-tool.command';
-import { ToolHandlerRegistry } from '../../tool-handler.registry';
+import { ToolHandlerRegistry } from 'src/domain/tools/application/tool-handler.registry';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { JSONSchema } from 'json-schema-to-ts';
 import {
   ToolInvalidInputError,
   ToolExecutionFailedError,
-} from '../../tools.errors';
+} from 'src/domain/tools/application/tools.errors';
 
 // Mock tool implementation for testing
 class MockTool extends Tool {
@@ -40,12 +42,12 @@ describe('ExecuteToolUseCase', () => {
   let useCase: ExecuteToolUseCase;
   let mockToolHandlerRegistry: Partial<ToolHandlerRegistry>;
   let mockHandler: { execute: jest.Mock };
-  let logger: jest.Mocked<PinoLogger>;
+  let logger: LoggerMock;
 
   const mockContext = '123e4567-e89b-12d3-a456-426614174000' as any;
 
   beforeAll(async () => {
-    logger = createPinoLoggerMock();
+    logger = createLoggerMock();
     mockHandler = {
       execute: jest.fn(),
     };
@@ -58,10 +60,6 @@ describe('ExecuteToolUseCase', () => {
       providers: [
         ExecuteToolUseCase,
         { provide: ToolHandlerRegistry, useValue: mockToolHandlerRegistry },
-        {
-          provide: getLoggerToken(ExecuteToolUseCase.name),
-          useValue: logger,
-        },
       ],
     }).compile();
 
@@ -220,7 +218,7 @@ describe('ExecuteToolUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         {
           tool: { name: 'Test Tool' },
           input,

@@ -1,4 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
@@ -13,7 +12,7 @@ import {
   TEST_USER_ID,
   TEST_WORKSPACE_ID,
   aWorkspace,
-} from '../../testing/workspace.fixtures';
+} from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { BuildWorkspaceRunContextQuery } from './build-workspace-run-context.query';
 import { BuildWorkspaceRunContextUseCase } from './build-workspace-run-context.use-case';
 
@@ -67,7 +66,6 @@ describe('BuildWorkspaceRunContextUseCase', () => {
       countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
     const useCase = new BuildWorkspaceRunContextUseCase(
-      createPinoLoggerMock(),
       repository,
       findOneSkillUseCase,
       getSourcesByIdsUseCase,
@@ -126,7 +124,6 @@ describe('BuildWorkspaceRunContextUseCase', () => {
       countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
     const useCase = new BuildWorkspaceRunContextUseCase(
-      createPinoLoggerMock(),
       repository,
       findOneSkillUseCase,
       getSourcesByIdsUseCase,
@@ -184,7 +181,6 @@ describe('BuildWorkspaceRunContextUseCase', () => {
       countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
     const useCase = new BuildWorkspaceRunContextUseCase(
-      createPinoLoggerMock(),
       repository,
       findOneSkillUseCase,
       getSourcesByIdsUseCase,

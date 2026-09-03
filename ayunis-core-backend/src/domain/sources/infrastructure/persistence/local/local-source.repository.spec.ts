@@ -2,7 +2,6 @@ import { randomUUID, type UUID } from 'crypto';
 import type { EntityManager, Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -30,7 +29,6 @@ describe('LocalSourceRepository', () => {
     } as unknown as EntityManager;
     Object.assign(sourceRepository, { manager });
     const repository = new LocalSourceRepository(
-      createPinoLoggerMock(),
       sourceRepository,
       {} as SourceMapper,
       {} as SourceContentChunkMapper,
@@ -87,7 +85,6 @@ describe('LocalSourceRepository', () => {
       tx: manager,
     } as TransactionHost<TransactionalAdapterTypeOrm>;
     const repository = new LocalSourceRepository(
-      createPinoLoggerMock(),
       {} as Repository<SourceRecord>,
       mapper,
       {} as SourceContentChunkMapper,
@@ -136,7 +133,6 @@ describe('LocalSourceRepository', () => {
       toDomain: jest.fn().mockReturnValue(source),
     } as unknown as SourceMapper;
     const repository = new LocalSourceRepository(
-      createPinoLoggerMock(),
       {} as Repository<SourceRecord>,
       mapper,
       {} as SourceContentChunkMapper,
@@ -174,7 +170,6 @@ describe('LocalSourceRepository', () => {
       toDomain: jest.fn((record: SourceRecord) => record as unknown as Source),
     } as unknown as SourceMapper;
     const repository = new LocalSourceRepository(
-      createPinoLoggerMock(),
       {} as Repository<SourceRecord>,
       mapper,
       {} as SourceContentChunkMapper,

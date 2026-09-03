@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -8,18 +7,17 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import {
   ModelNotFoundByIdError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { GetEffectiveLanguageModelsQuery } from '../get-effective-language-models/get-effective-language-models.query';
-import { GetEffectiveLanguageModelsUseCase } from '../get-effective-language-models/get-effective-language-models.use-case';
+} from 'src/domain/models/application/models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { GetEffectiveLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.query';
+import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 import { GetPermittedLanguageModelQuery } from './get-permitted-language-model.query';
 
 @Injectable()
 export class GetPermittedLanguageModelUseCase {
-  constructor(
-    @InjectPinoLogger(GetPermittedLanguageModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(GetPermittedLanguageModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly getEffectiveLanguageModelsUseCase: GetEffectiveLanguageModelsUseCase,
     private readonly contextService: ContextService,
@@ -29,7 +27,7 @@ export class GetPermittedLanguageModelUseCase {
   async execute(
     query: GetPermittedLanguageModelQuery,
   ): Promise<PermittedLanguageModel> {
-    this.logger.info(
+    this.logger.log(
       { permittedModelId: query.id },
       'getPermittedLanguageModel',
     );

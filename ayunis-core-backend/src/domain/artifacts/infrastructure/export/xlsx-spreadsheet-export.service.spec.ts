@@ -1,18 +1,17 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
-import type { SpreadsheetExportInput } from '../../application/ports/spreadsheet-export.port';
+import type { SpreadsheetExportInput } from 'src/domain/artifacts/application/ports/spreadsheet-export.port';
 import {
   isFormulaCell,
   type SpreadsheetGrid,
-} from '../../application/helpers/spreadsheet-content-format';
+} from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import { XlsxSpreadsheetExportService } from './xlsx-spreadsheet-export.service';
 
 describe('XlsxSpreadsheetExportService', () => {
   let service: XlsxSpreadsheetExportService;
 
   beforeEach(() => {
-    service = new XlsxSpreadsheetExportService(createPinoLoggerMock());
+    service = new XlsxSpreadsheetExportService();
   });
 
   function createExportInput(

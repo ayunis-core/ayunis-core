@@ -1,17 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { CreateSubscriptionUseCase } from './create-subscription.use-case';
 import { CreateSubscriptionCommand } from './create-subscription.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SubscriptionFactory } from '../../services/subscription-factory.service';
+import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
@@ -22,9 +20,9 @@ import {
   SubscriptionAlreadyExistsError,
   InvalidSubscriptionDataError,
   TooManyUsedSeatsError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
+import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
@@ -51,15 +49,7 @@ describe('CreateSubscriptionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateSubscriptionUseCase,
-        {
-          provide: getLoggerToken(CreateSubscriptionUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         SubscriptionFactory,
-        {
-          provide: getLoggerToken(SubscriptionFactory.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: SubscriptionRepository,
           useValue: {

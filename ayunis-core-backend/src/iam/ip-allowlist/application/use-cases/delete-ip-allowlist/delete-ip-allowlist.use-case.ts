@@ -1,16 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
-import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
+import { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
+import { UnexpectedIpAllowlistError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import type { DeleteIpAllowlistCommand } from './delete-ip-allowlist.command';
 
 @Injectable()
 export class DeleteIpAllowlistUseCase {
+  private readonly logger = new Logger(DeleteIpAllowlistUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteIpAllowlistUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: IpAllowlistRepository,
     private readonly ipAllowlistCache: IpAllowlistCachePort,
   ) {}

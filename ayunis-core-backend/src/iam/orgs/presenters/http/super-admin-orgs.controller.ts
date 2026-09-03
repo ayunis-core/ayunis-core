@@ -9,8 +9,8 @@ import {
   Patch,
   Post,
   Query,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -47,9 +47,9 @@ import { SuperAdminGetAllOrgsQuery } from 'src/iam/orgs/application/use-cases/su
 @Controller('super-admin/orgs')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminOrgsController {
+  private readonly logger = new Logger(SuperAdminOrgsController.name);
+
   constructor(
-    @InjectPinoLogger(SuperAdminOrgsController.name)
-    private readonly logger: PinoLogger,
     private readonly superAdminGetAllOrgsUseCase: SuperAdminGetAllOrgsUseCase,
     private readonly superAdminOrgResponseDtoMapper: SuperAdminOrgResponseDtoMapper,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
@@ -81,7 +81,7 @@ export class SuperAdminOrgsController {
   async createOrg(
     @Body() createOrgDto: CreateOrgRequestDto,
   ): Promise<SuperAdminOrgResponseDto> {
-    this.logger.info({ name: createOrgDto.name }, 'Creating organization');
+    this.logger.log({ name: createOrgDto.name }, 'Creating organization');
 
     const command = new CreateOrgCommand(createOrgDto.name);
     const org = await this.createOrgUseCase.execute(command);
@@ -198,7 +198,7 @@ export class SuperAdminOrgsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateOrgDto: UpdateOrgRequestDto,
   ): Promise<SuperAdminOrgResponseDto> {
-    this.logger.info({ id, name: updateOrgDto.name }, 'Updating organization');
+    this.logger.log({ id, name: updateOrgDto.name }, 'Updating organization');
 
     const org = await this.updateOrgUseCase.execute(
       new UpdateOrgCommand(id, updateOrgDto.name),

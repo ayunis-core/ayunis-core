@@ -1,20 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { TriggerSetInitialPasswordCommand } from './trigger-set-initial-password.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
-import { SendSetInitialPasswordEmailUseCase } from '../send-set-initial-password-email/send-set-initial-password-email.use-case';
-import { SendSetInitialPasswordEmailCommand } from '../send-set-initial-password-email/send-set-initial-password-email.command';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { SendSetInitialPasswordEmailUseCase } from 'src/iam/users/application/use-cases/send-set-initial-password-email/send-set-initial-password-email.use-case';
+import { SendSetInitialPasswordEmailCommand } from 'src/iam/users/application/use-cases/send-set-initial-password-email/send-set-initial-password-email.command';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
-import { UserNotFoundError } from '../../users.errors';
-import { UsersRepository } from '../../ports/users.repository';
+import { UserNotFoundError } from 'src/iam/users/application/users.errors';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 
 @Injectable()
 export class TriggerSetInitialPasswordUseCase {
+  private readonly logger = new Logger(TriggerSetInitialPasswordUseCase.name);
+
   constructor(
-    @InjectPinoLogger(TriggerSetInitialPasswordUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly sendSetInitialPasswordEmailUseCase: SendSetInitialPasswordEmailUseCase,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly usersRepository: UsersRepository,
@@ -22,7 +21,7 @@ export class TriggerSetInitialPasswordUseCase {
 
   async execute(command: TriggerSetInitialPasswordCommand): Promise<void> {
     try {
-      this.logger.info({ email: command.email }, 'execute');
+      this.logger.log({ email: command.email }, 'execute');
 
       const user = await this.usersRepository.findOneByEmail(command.email);
       if (!user) {

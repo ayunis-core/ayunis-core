@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
@@ -25,9 +24,9 @@ export interface MfaPendingJwtPayload {
 
 @Injectable()
 export class MfaPendingJwtService {
+  private readonly logger = new Logger(MfaPendingJwtService.name);
+
   constructor(
-    @InjectPinoLogger(MfaPendingJwtService.name)
-    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -38,7 +37,7 @@ export class MfaPendingJwtService {
     authenticationMethod?: SessionAuthenticationMethod;
     zitadelSessionId?: string | null;
   }): string {
-    this.logger.info({ userId: params.userId }, 'generateMfaPendingToken');
+    this.logger.log({ userId: params.userId }, 'generateMfaPendingToken');
 
     const expiresIn = this.configService.get<StringValue>(
       'auth.jwt.mfaPendingExpiresIn',

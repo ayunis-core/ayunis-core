@@ -1,23 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { DeleteTeamPermittedModelCommand } from './delete-team-permitted-model.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedModelError } from '../../models.errors';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 
 @Injectable()
 export class DeleteTeamPermittedModelUseCase {
-  constructor(
-    @InjectPinoLogger(DeleteTeamPermittedModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(DeleteTeamPermittedModelUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
   ) {}
 
   async execute(command: DeleteTeamPermittedModelCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         permittedModelId: command.permittedModelId,
         orgId: command.orgId,

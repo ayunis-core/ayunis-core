@@ -1,22 +1,21 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { DeleteMessageCommand } from './delete-message.command';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
-} from '../../ports/messages.repository';
+} from 'src/domain/messages/application/ports/messages.repository';
 
 @Injectable()
 export class DeleteMessageUseCase {
+  private readonly logger = new Logger(DeleteMessageUseCase.name);
+
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
-    @InjectPinoLogger(DeleteMessageUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async execute(command: DeleteMessageCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         messageId: command.messageId,
       },
@@ -25,7 +24,7 @@ export class DeleteMessageUseCase {
 
     try {
       await this.messagesRepository.delete(command.messageId);
-      this.logger.info(
+      this.logger.log(
         {
           messageId: command.messageId,
         },

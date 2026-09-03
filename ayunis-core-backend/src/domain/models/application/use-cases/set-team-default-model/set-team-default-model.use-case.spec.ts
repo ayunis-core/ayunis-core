@@ -1,10 +1,8 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SetTeamDefaultModelUseCase } from './set-team-default-model.use-case';
 import { SetTeamDefaultModelCommand } from './set-team-default-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
@@ -16,14 +14,14 @@ import {
   PermittedModelNotFoundError,
   PermittedModelNotInTeamError,
   TeamNotFoundInOrgError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import type { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { randomUUID } from 'crypto';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 
 describe('SetTeamDefaultModelUseCase', () => {
   let useCase: SetTeamDefaultModelUseCase;
@@ -77,10 +75,6 @@ describe('SetTeamDefaultModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: getLoggerToken(SetTeamDefaultModelUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
         SetTeamDefaultModelUseCase,
         TeamPermittedModelValidator,
         {

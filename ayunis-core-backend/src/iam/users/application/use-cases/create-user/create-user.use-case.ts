@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { HashingError } from 'src/iam/hashing/application/hashing.errors';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
@@ -17,9 +16,9 @@ import { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class CreateUserUseCase {
+  private readonly logger = new Logger(CreateUserUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateUserUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
     private readonly configService: ConfigService,
@@ -38,7 +37,7 @@ export class CreateUserUseCase {
   }
 
   async prepare(command: CreateUserCommand): Promise<User> {
-    this.logger.info(
+    this.logger.log(
       {
         email: command.email,
         orgId: command.orgId,

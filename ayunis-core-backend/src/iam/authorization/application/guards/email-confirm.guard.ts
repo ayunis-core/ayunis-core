@@ -1,17 +1,19 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
-import { EmailNotVerifiedError } from '../authorization.errors';
+import { EmailNotVerifiedError } from 'src/iam/authorization/application/authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class EmailConfirmGuard implements CanActivate {
-  constructor(
-    @InjectPinoLogger(EmailConfirmGuard.name)
-    private readonly logger: PinoLogger,
-    private reflector: Reflector,
-  ) {}
+  private readonly logger = new Logger(EmailConfirmGuard.name);
+
+  constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     // Check if route is public

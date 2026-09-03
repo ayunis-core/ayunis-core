@@ -1,10 +1,8 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeBaseShareAuthorizationStrategy } from './knowledge-base-share-authorization.strategy';
-import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
-import type { KnowledgeBase } from '../../domain/knowledge-base.entity';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { randomUUID } from 'crypto';
 
 describe('KnowledgeBaseShareAuthorizationStrategy', () => {
@@ -26,10 +24,6 @@ describe('KnowledgeBaseShareAuthorizationStrategy', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         KnowledgeBaseShareAuthorizationStrategy,
-        {
-          provide: getLoggerToken(KnowledgeBaseShareAuthorizationStrategy.name),
-          useValue: createPinoLoggerMock(),
-        },
         {
           provide: KnowledgeBaseRepository,
           useValue: mockKnowledgeBaseRepository,

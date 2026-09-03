@@ -1,10 +1,8 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindUsersByOrgIdUseCase } from './find-users-by-org-id.use-case';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
@@ -35,10 +33,6 @@ describe('FindUsersByOrgIdUseCase', () => {
         {
           provide: HasPermissionUseCase,
           useValue: { execute: jest.fn().mockResolvedValue(false) },
-        },
-        {
-          provide: getLoggerToken(FindUsersByOrgIdUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

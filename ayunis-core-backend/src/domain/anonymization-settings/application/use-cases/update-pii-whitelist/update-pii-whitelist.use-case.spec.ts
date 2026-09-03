@@ -1,12 +1,11 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { UpdatePiiWhitelistUseCase } from './update-pii-whitelist.use-case';
 import { UpdatePiiWhitelistCommand } from './update-pii-whitelist.command';
-import type { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
+import type { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
 import {
   DuplicateCategoryError,
   InvalidPatternError,
-} from '../../anonymization-settings.errors';
+} from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import type { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 
@@ -26,7 +25,7 @@ describe('UpdatePiiWhitelistUseCase', () => {
       findByOrgId: jest.fn(),
       replaceForOrg,
     } as unknown as AnonymizationWhitelistRepository;
-    useCase = new UpdatePiiWhitelistUseCase(createPinoLoggerMock(), repository);
+    useCase = new UpdatePiiWhitelistUseCase(repository);
   });
 
   it('replaces the whitelist with validated entries', async () => {

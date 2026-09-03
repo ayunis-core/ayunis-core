@@ -1,18 +1,15 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 
 @Injectable()
 export class CookieParserMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(CookieParserMiddleware.name);
+
   private cookieParserMiddleware: RequestHandler;
 
-  constructor(
-    @InjectPinoLogger(CookieParserMiddleware.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     const cookieSecret = this.configService.get<string>('auth.cookie.secret');
 
     if (!cookieSecret) {
@@ -21,7 +18,7 @@ export class CookieParserMiddleware implements NestMiddleware {
       );
       this.cookieParserMiddleware = cookieParser();
     } else {
-      this.logger.info('Initializing cookie parser with signing');
+      this.logger.log('Initializing cookie parser with signing');
       this.cookieParserMiddleware = cookieParser(cookieSecret);
     }
   }

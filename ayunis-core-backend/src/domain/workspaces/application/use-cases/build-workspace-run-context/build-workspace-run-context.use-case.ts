@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -12,7 +11,7 @@ import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/applicati
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
@@ -23,14 +22,14 @@ import type {
 import {
   UnexpectedWorkspaceError,
   WorkspaceNotFoundError,
-} from '../../workspaces.errors';
+} from 'src/domain/workspaces/application/workspaces.errors';
 import { BuildWorkspaceRunContextQuery } from './build-workspace-run-context.query';
 
 @Injectable()
 export class BuildWorkspaceRunContextUseCase {
+  private readonly logger = new Logger(BuildWorkspaceRunContextUseCase.name);
+
   constructor(
-    @InjectPinoLogger(BuildWorkspaceRunContextUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly findOneSkillUseCase: FindOneSkillUseCase,
     private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
@@ -43,7 +42,7 @@ export class BuildWorkspaceRunContextUseCase {
   async execute(
     query: BuildWorkspaceRunContextQuery,
   ): Promise<WorkspaceRunContext> {
-    this.logger.info(
+    this.logger.log(
       { workspaceId: query.workspaceId },
       'buildWorkspaceRunContext',
     );
@@ -117,9 +116,10 @@ export class BuildWorkspaceRunContextUseCase {
       return result.skill;
     } catch (error) {
       if (!(error instanceof SkillNotFoundError)) throw error;
-      this.logger.warn('Skipping inaccessible workspace skill assignment', {
-        skillId,
-      });
+      this.logger.warn(
+        { skillId },
+        'Skipping inaccessible workspace skill assignment',
+      );
       return null;
     }
   }
@@ -149,9 +149,10 @@ export class BuildWorkspaceRunContextUseCase {
       return knowledgeBase;
     } catch (error) {
       if (!(error instanceof KnowledgeBaseNotFoundError)) throw error;
-      this.logger.warn('Skipping inaccessible workspace knowledge base', {
-        knowledgeBaseId: knowledgeBase.id,
-      });
+      this.logger.warn(
+        { knowledgeBaseId: knowledgeBase.id },
+        'Skipping inaccessible workspace knowledge base',
+      );
       return null;
     }
   }

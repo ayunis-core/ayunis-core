@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
-import { ThreadsRepository } from '../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
 
@@ -21,9 +20,11 @@ import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-
  */
 @Injectable()
 export class ThreadsUserDeletionRequestedListener {
+  private readonly logger = new Logger(
+    ThreadsUserDeletionRequestedListener.name,
+  );
+
   constructor(
-    @InjectPinoLogger(ThreadsUserDeletionRequestedListener.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
   ) {}
@@ -41,7 +42,7 @@ export class ThreadsUserDeletionRequestedListener {
         return;
       }
 
-      this.logger.info(
+      this.logger.log(
         {
           userId: event.userId,
           threadCount: threadIds.length,

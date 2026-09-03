@@ -1,25 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { DeleteSkillCommand } from './delete-skill.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteSkillUseCase {
+  private readonly logger = new Logger(DeleteSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteSkillUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
   async execute(command: DeleteSkillCommand): Promise<void> {
-    this.logger.info({ skillId: command.skillId }, 'Deleting skill');
+    this.logger.log({ skillId: command.skillId }, 'Deleting skill');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {

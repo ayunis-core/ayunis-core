@@ -7,8 +7,8 @@ import {
   Param,
   Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -27,10 +27,10 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateEmbeddingModelCommand } from '../../application/use-cases/create-embedding-model/create-embedding-model.command';
-import { CreateEmbeddingModelUseCase } from '../../application/use-cases/create-embedding-model/create-embedding-model.use-case';
-import { UpdateEmbeddingModelCommand } from '../../application/use-cases/update-embedding-model/update-embedding-model.command';
-import { UpdateEmbeddingModelUseCase } from '../../application/use-cases/update-embedding-model/update-embedding-model.use-case';
+import { CreateEmbeddingModelCommand } from 'src/domain/models/application/use-cases/create-embedding-model/create-embedding-model.command';
+import { CreateEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/create-embedding-model/create-embedding-model.use-case';
+import { UpdateEmbeddingModelCommand } from 'src/domain/models/application/use-cases/update-embedding-model/update-embedding-model.command';
+import { UpdateEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/update-embedding-model/update-embedding-model.use-case';
 import { CreateEmbeddingModelRequestDto } from './dto/create-embedding-model-request.dto';
 import { EmbeddingModelResponseDto } from './dto/embedding-model-response.dto';
 import { UpdateEmbeddingModelRequestDto } from './dto/update-embedding-model-request.dto';
@@ -45,10 +45,11 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   EmbeddingModelResponseDto,
 )
 export class SuperAdminEmbeddingCatalogModelsController {
-  constructor(
-    @InjectPinoLogger(SuperAdminEmbeddingCatalogModelsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(
+    SuperAdminEmbeddingCatalogModelsController.name,
+  );
 
+  constructor(
     private readonly createEmbeddingModelUseCase: CreateEmbeddingModelUseCase,
     private readonly updateEmbeddingModelUseCase: UpdateEmbeddingModelUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -84,7 +85,7 @@ export class SuperAdminEmbeddingCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreateEmbeddingModelRequestDto,
   ): Promise<EmbeddingModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { modelName: dto.name, userId },
       'Creating embedding model by super admin',
     );
@@ -93,7 +94,7 @@ export class SuperAdminEmbeddingCatalogModelsController {
     );
     const responseDto =
       this.catalogModelResponseDtoMapper.toEmbeddingModelDto(model);
-    this.logger.info(
+    this.logger.log(
       { modelId: model.id },
       'Successfully created embedding model',
     );
@@ -137,7 +138,7 @@ export class SuperAdminEmbeddingCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdateEmbeddingModelRequestDto,
   ): Promise<EmbeddingModelResponseDto> {
-    this.logger.info(
+    this.logger.log(
       { modelId: id, userId },
       'Updating embedding model by super admin',
     );
@@ -146,7 +147,7 @@ export class SuperAdminEmbeddingCatalogModelsController {
     );
     const responseDto =
       this.catalogModelResponseDtoMapper.toEmbeddingModelDto(model);
-    this.logger.info({ modelId: id }, 'Successfully updated embedding model');
+    this.logger.log({ modelId: id }, 'Successfully updated embedding model');
     return responseDto;
   }
 

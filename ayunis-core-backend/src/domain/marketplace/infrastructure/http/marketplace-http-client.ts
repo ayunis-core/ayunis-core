@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { MarketplaceClient } from '../../application/ports/marketplace-client.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import { getAyunisMarketplaceAPI } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI';
 import {
   IntegrationResponseDto,
@@ -8,14 +7,13 @@ import {
   SkillResponseDto,
 } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import { MarketplaceHttpError } from 'src/common/clients/marketplace/client';
-import { MarketplaceUnavailableError } from '../../application/marketplace.errors';
+import { MarketplaceUnavailableError } from 'src/domain/marketplace/application/marketplace.errors';
 
 @Injectable()
 export class MarketplaceHttpClient extends MarketplaceClient {
-  constructor(
-    @InjectPinoLogger(MarketplaceHttpClient.name)
-    private readonly logger: PinoLogger,
-  ) {
+  private readonly logger = new Logger(MarketplaceHttpClient.name);
+
+  constructor() {
     super();
   }
 

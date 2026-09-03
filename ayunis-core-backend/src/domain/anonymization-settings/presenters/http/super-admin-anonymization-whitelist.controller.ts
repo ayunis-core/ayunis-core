@@ -7,8 +7,8 @@ import {
   HttpStatus,
   Param,
   Post,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   ApiBadRequestResponse,
@@ -27,12 +27,12 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { GlobalAnonymizationWhitelistWord } from '../../domain/global-anonymization-whitelist-word.entity';
-import { GetGlobalPiiWhitelistUseCase } from '../../application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
-import { AddGlobalPiiWhitelistWordUseCase } from '../../application/use-cases/add-global-pii-whitelist-word/add-global-pii-whitelist-word.use-case';
-import { AddGlobalPiiWhitelistWordCommand } from '../../application/use-cases/add-global-pii-whitelist-word/add-global-pii-whitelist-word.command';
-import { DeleteGlobalPiiWhitelistWordUseCase } from '../../application/use-cases/delete-global-pii-whitelist-word/delete-global-pii-whitelist-word.use-case';
-import { DeleteGlobalPiiWhitelistWordCommand } from '../../application/use-cases/delete-global-pii-whitelist-word/delete-global-pii-whitelist-word.command';
+import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
+import { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
+import { AddGlobalPiiWhitelistWordUseCase } from 'src/domain/anonymization-settings/application/use-cases/add-global-pii-whitelist-word/add-global-pii-whitelist-word.use-case';
+import { AddGlobalPiiWhitelistWordCommand } from 'src/domain/anonymization-settings/application/use-cases/add-global-pii-whitelist-word/add-global-pii-whitelist-word.command';
+import { DeleteGlobalPiiWhitelistWordUseCase } from 'src/domain/anonymization-settings/application/use-cases/delete-global-pii-whitelist-word/delete-global-pii-whitelist-word.use-case';
+import { DeleteGlobalPiiWhitelistWordCommand } from 'src/domain/anonymization-settings/application/use-cases/delete-global-pii-whitelist-word/delete-global-pii-whitelist-word.command';
 import { AddGlobalPiiWhitelistWordRequestDto } from './dtos/add-global-pii-whitelist-word-request.dto';
 import { GlobalPiiWhitelistWordDto } from './dtos/global-pii-whitelist-word.dto';
 
@@ -40,9 +40,11 @@ import { GlobalPiiWhitelistWordDto } from './dtos/global-pii-whitelist-word.dto'
 @Controller('super-admin/anonymization-whitelist')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminAnonymizationWhitelistController {
+  private readonly logger = new Logger(
+    SuperAdminAnonymizationWhitelistController.name,
+  );
+
   constructor(
-    @InjectPinoLogger(SuperAdminAnonymizationWhitelistController.name)
-    private readonly logger: PinoLogger,
     private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
     private readonly addGlobalPiiWhitelistWordUseCase: AddGlobalPiiWhitelistWordUseCase,
     private readonly deleteGlobalPiiWhitelistWordUseCase: DeleteGlobalPiiWhitelistWordUseCase,
@@ -53,7 +55,7 @@ export class SuperAdminAnonymizationWhitelistController {
   @ApiResponse({ status: HttpStatus.OK, type: [GlobalPiiWhitelistWordDto] })
   @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
   async list(): Promise<GlobalPiiWhitelistWordDto[]> {
-    this.logger.info('list');
+    this.logger.log('list');
 
     const words = await this.getGlobalPiiWhitelistUseCase.execute();
     return words.map((word) => this.toDto(word));
@@ -73,7 +75,7 @@ export class SuperAdminAnonymizationWhitelistController {
     @Body() dto: AddGlobalPiiWhitelistWordRequestDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<GlobalPiiWhitelistWordDto> {
-    this.logger.info({ category: dto.category }, 'add');
+    this.logger.log({ category: dto.category }, 'add');
 
     const word = await this.addGlobalPiiWhitelistWordUseCase.execute(
       new AddGlobalPiiWhitelistWordCommand(dto.category, dto.word, userId),
@@ -91,7 +93,7 @@ export class SuperAdminAnonymizationWhitelistController {
   @ApiNotFoundResponse({ description: 'Word not found' })
   @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
   async remove(@Param('wordId') wordId: UUID): Promise<void> {
-    this.logger.info({ wordId }, 'remove');
+    this.logger.log({ wordId }, 'remove');
 
     await this.deleteGlobalPiiWhitelistWordUseCase.execute(
       new DeleteGlobalPiiWhitelistWordCommand(wordId),

@@ -1,8 +1,8 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RolesGuard } from './roles.guard';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
@@ -55,7 +55,7 @@ describe('RolesGuard', () => {
 
   it('should allow access when no roles metadata is set on the route', () => {
     const { context, reflector } = createContext({ roles: undefined });
-    const guard = new RolesGuard(createPinoLoggerMock(), reflector);
+    const guard = new RolesGuard(reflector);
 
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -65,7 +65,7 @@ describe('RolesGuard', () => {
       roles: [UserRole.ADMIN],
       user: admin,
     });
-    const guard = new RolesGuard(createPinoLoggerMock(), reflector);
+    const guard = new RolesGuard(reflector);
 
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -75,13 +75,13 @@ describe('RolesGuard', () => {
       roles: [UserRole.ADMIN],
       user: regularUser,
     });
-    const guard = new RolesGuard(createPinoLoggerMock(), reflector);
+    const guard = new RolesGuard(reflector);
 
     expect(guard.canActivate(context)).toBe(false);
   });
 
   it('should log a warning with audit context when the user role is rejected', () => {
-    const logger = createPinoLoggerMock();
+    const logger = createLoggerMock();
     const { context, reflector } = createContext({
       roles: [UserRole.ADMIN],
       user: regularUser,
@@ -89,7 +89,7 @@ describe('RolesGuard', () => {
       url: '/api/admin/users/42',
       ip: '203.0.113.7',
     });
-    const guard = new RolesGuard(logger, reflector);
+    const guard = new RolesGuard(reflector);
 
     guard.canActivate(context);
 

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -19,11 +18,11 @@ import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-t
  */
 @Injectable()
 export class MessageCleanupService {
+  private readonly logger = new Logger(MessageCleanupService.name);
+
   constructor(
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly deleteMessageUseCase: DeleteMessageUseCase,
-    @InjectPinoLogger(MessageCleanupService.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async cleanupTrailingNonAssistantMessages(threadId: UUID): Promise<void> {
@@ -67,7 +66,7 @@ export class MessageCleanupService {
   ): Promise<void> {
     if (messages.length === 0) return;
 
-    this.logger.info(
+    this.logger.log(
       {
         threadId,
         count: messages.length,
@@ -101,7 +100,7 @@ export class MessageCleanupService {
       }
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         threadId,
         deletedCount: messages.length,

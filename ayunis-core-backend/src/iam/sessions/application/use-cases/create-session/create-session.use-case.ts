@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CreateSessionCommand } from 'src/iam/sessions/application/use-cases/create-session/create-session.command';
 import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
@@ -13,16 +12,16 @@ export interface CreateSessionResult {
 
 @Injectable()
 export class CreateSessionUseCase {
+  private readonly logger = new Logger(CreateSessionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateSessionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly refreshTokensRepository: RefreshTokensRepository,
     private readonly refreshTokenFactory: RefreshTokenFactory,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSessionsError)
   async execute(command: CreateSessionCommand): Promise<CreateSessionResult> {
-    this.logger.info({ userId: command.userId }, 'createSession');
+    this.logger.log({ userId: command.userId }, 'createSession');
 
     const { token, plaintext } = this.refreshTokenFactory.create({
       userId: command.userId,

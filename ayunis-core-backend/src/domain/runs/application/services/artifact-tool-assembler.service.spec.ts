@@ -1,5 +1,3 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
@@ -94,10 +92,6 @@ describe('ArtifactToolAssemblerService', () => {
         {
           provide: FindAllLetterheadsUseCase,
           useValue: mockFindAllLetterheadsUseCase,
-        },
-        {
-          provide: getLoggerToken(ArtifactToolAssemblerService.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { IsUsageBasedSubscriptionQuery } from './is-usage-based-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { isActive } from '../../util/is-active';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 
 /**
  * Returns true iff the organization has an active usage-based subscription.
@@ -14,9 +13,9 @@ import { UnexpectedSubscriptionError } from '../../subscription.errors';
  */
 @Injectable()
 export class IsUsageBasedSubscriptionUseCase {
+  private readonly logger = new Logger(IsUsageBasedSubscriptionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(IsUsageBasedSubscriptionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 

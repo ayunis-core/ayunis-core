@@ -1,22 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { FindAllSkillTemplatesQuery } from './find-all-skill-templates.query';
-import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
+import { UnexpectedSkillTemplateError } from 'src/domain/skill-templates/application/skill-templates.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class FindAllSkillTemplatesUseCase {
+  private readonly logger = new Logger(FindAllSkillTemplatesUseCase.name);
+
   constructor(
-    @InjectPinoLogger(FindAllSkillTemplatesUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async execute(_query: FindAllSkillTemplatesQuery): Promise<SkillTemplate[]> {
-    this.logger.info('Finding all skill templates');
+    this.logger.log('Finding all skill templates');
     try {
       return await this.skillTemplateRepository.findAll();
     } catch (error) {

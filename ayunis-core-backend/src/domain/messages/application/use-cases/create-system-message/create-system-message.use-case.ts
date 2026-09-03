@@ -1,25 +1,24 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { CreateSystemMessageCommand } from './create-system-message.command';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
-} from '../../ports/messages.repository';
+} from 'src/domain/messages/application/ports/messages.repository';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
 
 @Injectable()
 export class CreateSystemMessageUseCase {
+  private readonly logger = new Logger(CreateSystemMessageUseCase.name);
+
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
-    @InjectPinoLogger(CreateSystemMessageUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async execute(command: CreateSystemMessageCommand): Promise<SystemMessage> {
-    this.logger.info({ threadId: command.threadId }, 'Creating system message');
+    this.logger.log({ threadId: command.threadId }, 'Creating system message');
 
     const systemMessage = new SystemMessage({
       threadId: command.threadId,

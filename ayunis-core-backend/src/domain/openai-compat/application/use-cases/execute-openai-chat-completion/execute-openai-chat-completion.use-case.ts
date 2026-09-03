@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Observable, finalize, map } from 'rxjs';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
@@ -40,10 +39,9 @@ import type { ChatCompletionChunk } from 'src/domain/openai-compat/application/t
  */
 @Injectable()
 export class ExecuteOpenAIChatCompletionUseCase {
-  constructor(
-    @InjectPinoLogger(ExecuteOpenAIChatCompletionUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(ExecuteOpenAIChatCompletionUseCase.name);
 
+  constructor(
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly streamInferenceUseCase: StreamInferenceUseCase,

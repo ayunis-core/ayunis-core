@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import { TotpSecretEncryptionPort } from '../../application/ports/totp-secret-encryption.port';
+import { TotpSecretEncryptionPort } from 'src/iam/mfa/application/ports/totp-secret-encryption.port';
 
 /**
  * Encrypts TOTP secrets at rest using AES-256-GCM.
@@ -13,16 +12,14 @@ import { TotpSecretEncryptionPort } from '../../application/ports/totp-secret-en
  */
 @Injectable()
 export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
+  private readonly logger = new Logger(TotpSecretEncryptionService.name);
+
   private readonly algorithm = 'aes-256-gcm';
   private readonly ivLength = 16;
   private readonly authTagLength = 16;
   private readonly encryptionKey: Buffer;
 
-  constructor(
-    @InjectPinoLogger(TotpSecretEncryptionService.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super();
 
     const keyHex = this.configService.get<string>('MFA_ENCRYPTION_KEY');

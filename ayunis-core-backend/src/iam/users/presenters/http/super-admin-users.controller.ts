@@ -10,8 +10,8 @@ import {
   ParseUUIDPipe,
   Patch,
   Query,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -57,10 +57,10 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 @Controller('super-admin/users')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminUsersController {
+  private readonly logger = new Logger(SuperAdminUsersController.name);
+
   // eslint-disable-next-line max-params -- NestJS injects these explicit collaborators.
   constructor(
-    @InjectPinoLogger(SuperAdminUsersController.name)
-    private readonly logger: PinoLogger,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
@@ -95,7 +95,7 @@ export class SuperAdminUsersController {
     @Param('orgId') orgId: UUID,
     @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId,
         limit: queryParams.limit,
@@ -145,7 +145,7 @@ export class SuperAdminUsersController {
     description: 'Internal server error occurred while deleting user',
   })
   async deleteUser(@Param('userId') userId: UUID): Promise<void> {
-    this.logger.info({ userId }, 'deleteUser');
+    this.logger.log({ userId }, 'deleteUser');
 
     // Get the user to retrieve their orgId for the delete command
     const user = await this.findUserByIdUseCase.execute(
@@ -207,7 +207,7 @@ export class SuperAdminUsersController {
   async triggerPasswordReset(
     @Param('userId') userId: UUID,
   ): Promise<TriggerPasswordResetResponseDto> {
-    this.logger.info({ userId }, 'triggerPasswordReset');
+    this.logger.log({ userId }, 'triggerPasswordReset');
 
     const result = await this.superAdminTriggerPasswordResetUseCase.execute(
       new SuperAdminTriggerPasswordResetCommand(userId),
@@ -261,7 +261,7 @@ export class SuperAdminUsersController {
     orgId: UUID,
     createUserDto: CreateUserDto,
   ): Promise<UserResponseDto> {
-    this.logger.info({ orgId, email: createUserDto.email }, 'createUser');
+    this.logger.log({ orgId, email: createUserDto.email }, 'createUser');
     const randomPassword = randomBytes(32).toString('base64');
     const user = await this.createUserUseCase.execute(
       new CreateUserCommand({

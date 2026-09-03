@@ -1,25 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetCreditUsageQuery } from './get-credit-usage.query';
-import { GetMonthlyCreditUsageUseCase } from '../get-monthly-credit-usage/get-monthly-credit-usage.use-case';
-import { GetMonthlyCreditUsageQuery } from '../get-monthly-credit-usage/get-monthly-credit-usage.query';
+import { GetMonthlyCreditUsageUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
+import { GetMonthlyCreditUsageQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.query';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { GetMonthlyCreditLimitQuery } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.query';
 import type { CreditUsage } from 'src/domain/usage/domain/credit-usage';
-import { UnexpectedUsageError } from '../../usage.errors';
+import { UnexpectedUsageError } from 'src/domain/usage/application/usage.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetCreditUsageUseCase {
+  private readonly logger = new Logger(GetCreditUsageUseCase.name);
+
   constructor(
     private readonly getMonthlyCreditLimitUseCase: GetMonthlyCreditLimitUseCase,
     private readonly getMonthlyCreditUsageUseCase: GetMonthlyCreditUsageUseCase,
-    @InjectPinoLogger(GetCreditUsageUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   async execute(query: GetCreditUsageQuery): Promise<CreditUsage> {
-    this.logger.info({ orgId: query.orgId }, 'Getting credit usage');
+    this.logger.log({ orgId: query.orgId }, 'Getting credit usage');
 
     try {
       const { monthlyCredits, startsAt } =

@@ -1,32 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { HashingHandler } from '../../application/ports/hashing.handler';
+import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handler';
 import {
   HashingFailedError,
   ComparisonFailedError,
   InvalidHashFormatError,
-} from '../../application/hashing.errors';
+} from 'src/iam/hashing/application/hashing.errors';
 
 @Injectable()
 export class BcryptHandler implements HashingHandler {
+  private readonly logger = new Logger(BcryptHandler.name);
+
   private readonly saltRounds: number;
 
-  constructor(
-    @InjectPinoLogger(BcryptHandler.name)
-    private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     this.saltRounds = this.configService.get<number>(
       'auth.local.passwordHashRounds',
       10,
     );
-    this.logger.info({ saltRounds: this.saltRounds }, 'constructor');
+    this.logger.log({ saltRounds: this.saltRounds }, 'constructor');
   }
 
   async hash(plainText: string): Promise<string> {
-    this.logger.info('hash');
+    this.logger.log('hash');
 
     if (!plainText) {
       this.logger.warn('Attempted to hash empty string');
@@ -55,7 +52,7 @@ export class BcryptHandler implements HashingHandler {
   }
 
   async compare(plainText: string, hash: string): Promise<boolean> {
-    this.logger.info('compare');
+    this.logger.log('compare');
 
     if (!hash) {
       this.logger.warn('Attempted to compare with empty hash');

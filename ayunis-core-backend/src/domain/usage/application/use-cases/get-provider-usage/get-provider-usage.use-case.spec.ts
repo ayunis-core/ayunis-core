@@ -1,11 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetProviderUsageUseCase } from './get-provider-usage.use-case';
 import { GetProviderUsageQuery } from './get-provider-usage.query';
-import { UsageRepository } from '../../ports/usage.repository';
-import { InvalidDateRangeError } from '../../usage.errors';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
+import { InvalidDateRangeError } from 'src/domain/usage/application/usage.errors';
 import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
 import { TimeSeriesPoint } from 'src/domain/usage/domain/time-series-point.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -26,10 +24,6 @@ describe('GetProviderUsageUseCase', () => {
       providers: [
         GetProviderUsageUseCase,
         { provide: UsageRepository, useValue: mockUsageRepository },
-        {
-          provide: getLoggerToken(GetProviderUsageUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

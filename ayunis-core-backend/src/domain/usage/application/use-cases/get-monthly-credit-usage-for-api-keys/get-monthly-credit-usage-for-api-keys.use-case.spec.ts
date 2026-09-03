@@ -1,8 +1,6 @@
 import type { UUID } from 'crypto';
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import {
   createMockUsageRepository,
@@ -29,10 +27,6 @@ describe('GetMonthlyCreditUsageForApiKeysUseCase', () => {
       providers: [
         GetMonthlyCreditUsageForApiKeysUseCase,
         { provide: UsageRepository, useValue: repository },
-        {
-          provide: getLoggerToken(GetMonthlyCreditUsageForApiKeysUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

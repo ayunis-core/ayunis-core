@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -11,9 +10,11 @@ import { AcademyMapper } from './mappers/academy.mapper';
 
 @Injectable()
 export class LocalAcademyChapterProgressRepository implements AcademyChapterProgressRepository {
+  private readonly logger = new Logger(
+    LocalAcademyChapterProgressRepository.name,
+  );
+
   constructor(
-    @InjectPinoLogger(LocalAcademyChapterProgressRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(AcademyChapterProgressRecord)
     private readonly repository: Repository<AcademyChapterProgressRecord>,
     private readonly mapper: AcademyMapper,
@@ -23,7 +24,7 @@ export class LocalAcademyChapterProgressRepository implements AcademyChapterProg
     userId: UUID,
     chapterId: UUID,
   ): Promise<AcademyChapterProgress | null> {
-    this.logger.info({ userId, chapterId }, 'findByUserAndChapter');
+    this.logger.log({ userId, chapterId }, 'findByUserAndChapter');
     const record = await this.repository.findOne({
       where: { userId, chapterId },
     });
@@ -32,7 +33,7 @@ export class LocalAcademyChapterProgressRepository implements AcademyChapterProg
   }
 
   async findAllByUser(userId: UUID): Promise<AcademyChapterProgress[]> {
-    this.logger.info({ userId }, 'findAllByUser');
+    this.logger.log({ userId }, 'findAllByUser');
     const records = await this.repository.find({ where: { userId } });
     return records.map((record) => this.mapper.chapterProgressToDomain(record));
   }
@@ -40,7 +41,7 @@ export class LocalAcademyChapterProgressRepository implements AcademyChapterProg
   async upsert(
     progress: AcademyChapterProgress,
   ): Promise<AcademyChapterProgress> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: progress.userId,
         chapterId: progress.chapterId,

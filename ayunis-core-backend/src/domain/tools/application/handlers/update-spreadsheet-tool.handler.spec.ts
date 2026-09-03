@@ -1,15 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { UpdateSpreadsheetToolHandler } from './update-spreadsheet-tool.handler';
 import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
-import { UpdateSpreadsheetTool } from '../../domain/tools/update-spreadsheet-tool.entity';
+import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ArtifactExpectedVersionMismatchError } from 'src/domain/artifacts/application/artifacts.errors';
 
 describe('UpdateSpreadsheetToolHandler', () => {
@@ -38,11 +36,6 @@ describe('UpdateSpreadsheetToolHandler', () => {
         {
           provide: UpdateArtifactUseCase,
           useValue: mockUpdateArtifactUseCase,
-        },
-
-        {
-          provide: getLoggerToken(UpdateSpreadsheetToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

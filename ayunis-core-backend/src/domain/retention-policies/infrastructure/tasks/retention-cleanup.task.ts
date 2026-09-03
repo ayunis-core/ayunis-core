@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { checkIn } from '@appsignal/nodejs';
-import { EnforceRetentionUseCase } from '../../application/use-cases/enforce-retention/enforce-retention.use-case';
+import { EnforceRetentionUseCase } from 'src/domain/retention-policies/application/use-cases/enforce-retention/enforce-retention.use-case';
 
 /**
  * Nightly job that deletes conversation data past each org's retention window.
@@ -11,11 +10,11 @@ import { EnforceRetentionUseCase } from '../../application/use-cases/enforce-ret
  */
 @Injectable()
 export class RetentionCleanupTask {
+  private readonly logger = new Logger(RetentionCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
-    @InjectPinoLogger(RetentionCleanupTask.name)
-    private readonly logger: PinoLogger,
     private readonly enforceRetentionUseCase: EnforceRetentionUseCase,
   ) {}
 
@@ -29,12 +28,12 @@ export class RetentionCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.info('Starting scheduled retention cleanup');
+    this.logger.log('Starting scheduled retention cleanup');
 
     try {
       await checkIn.cron('retention_cleanup', async () => {
         const result = await this.enforceRetentionUseCase.execute();
-        this.logger.info(
+        this.logger.log(
           {
             orgsProcessed: result.orgsProcessed,
             totalDeleted: result.totalDeleted,

@@ -8,8 +8,8 @@ import {
   HttpCode,
   HttpStatus,
   UploadedFile,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import {
@@ -17,14 +17,14 @@ import {
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 
-import { RemoveSourceFromSkillUseCase } from '../../application/use-cases/remove-source-from-skill/remove-source-from-skill.use-case';
-import { ListSkillSourcesUseCase } from '../../application/use-cases/list-skill-sources/list-skill-sources.use-case';
+import { RemoveSourceFromSkillUseCase } from 'src/domain/skills/application/use-cases/remove-source-from-skill/remove-source-from-skill.use-case';
+import { ListSkillSourcesUseCase } from 'src/domain/skills/application/use-cases/list-skill-sources/list-skill-sources.use-case';
 
-import { RemoveSourceFromSkillCommand } from '../../application/use-cases/remove-source-from-skill/remove-source-from-skill.command';
-import { ListSkillSourcesQuery } from '../../application/use-cases/list-skill-sources/list-skill-sources.query';
+import { RemoveSourceFromSkillCommand } from 'src/domain/skills/application/use-cases/remove-source-from-skill/remove-source-from-skill.command';
+import { ListSkillSourcesQuery } from 'src/domain/skills/application/use-cases/list-skill-sources/list-skill-sources.query';
 
-import { SkillAccessService } from '../../application/services/skill-access.service';
-import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
+import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
+import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
 
 import {
   SkillResponseDto,
@@ -37,10 +37,10 @@ import {
   UploadedSourceFile,
 } from 'src/common/util/source-file-upload';
 import { ApiSkillFileSourceUpload } from './decorators/skill-sources.decorators';
-import { Skill } from '../../domain/skill.entity';
-import { MissingFileError } from '../../application/skills.errors';
-import { AddFileSourceToSkillUseCase } from '../../application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
-import { AddFileSourceToSkillCommand } from '../../application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { MissingFileError } from 'src/domain/skills/application/skills.errors';
+import { AddFileSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
+import { AddFileSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
@@ -50,9 +50,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillSourcesController {
+  private readonly logger = new Logger(SkillSourcesController.name);
+
   constructor(
-    @InjectPinoLogger(SkillSourcesController.name)
-    private readonly logger: PinoLogger,
     private readonly removeSourceFromSkillUseCase: RemoveSourceFromSkillUseCase,
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
@@ -79,7 +79,7 @@ export class SkillSourcesController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
   ): Promise<SkillSourceResponseDto[]> {
-    this.logger.info({ skillId, userId }, 'getSkillSources');
+    this.logger.log({ skillId, userId }, 'getSkillSources');
 
     const sources = await this.listSkillSourcesUseCase.execute(
       new ListSkillSourcesQuery(skillId),
@@ -100,7 +100,7 @@ export class SkillSourcesController {
       throw new MissingFileError();
     }
 
-    this.logger.info(
+    this.logger.log(
       {
         skillId,
         userId,
@@ -162,7 +162,7 @@ export class SkillSourcesController {
     @Param('id', ParseUUIDPipe) skillId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
   ): Promise<void> {
-    this.logger.info({ skillId, sourceId, userId }, 'removeSource');
+    this.logger.log({ skillId, sourceId, userId }, 'removeSource');
 
     await this.removeSourceFromSkillUseCase.execute(
       new RemoveSourceFromSkillCommand({ skillId, sourceId }),

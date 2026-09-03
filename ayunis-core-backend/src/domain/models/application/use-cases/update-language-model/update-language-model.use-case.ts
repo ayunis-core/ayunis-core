@@ -7,24 +7,22 @@ import {
   UnexpectedModelError,
 } from 'src/domain/models/application/models.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ClearDefaultsByCatalogModelIdUseCase } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdCommand } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.command';
 
 @Injectable()
 export class UpdateLanguageModelUseCase {
-  constructor(
-    @InjectPinoLogger(UpdateLanguageModelUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(UpdateLanguageModelUseCase.name);
 
+  constructor(
     private readonly modelsRepository: ModelsRepository,
     private readonly clearDefaultsUseCase: ClearDefaultsByCatalogModelIdUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: UpdateLanguageModelCommand): Promise<LanguageModel> {
-    this.logger.info({ modelId: command.id }, 'Updating language model');
+    this.logger.log({ modelId: command.id }, 'Updating language model');
 
     const existingModel = await this.modelsRepository.findOne({
       id: command.id,
@@ -51,7 +49,7 @@ export class UpdateLanguageModelUseCase {
     await this.modelsRepository.save(model);
 
     if (isBeingArchived) {
-      this.logger.info(
+      this.logger.log(
         {
           modelId: command.id,
         },

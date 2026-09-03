@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
-import { SkillTemplateInstallationService } from '../services/skill-template-installation.service';
+import { SkillTemplateInstallationService } from 'src/domain/skill-templates/application/services/skill-template-installation.service';
 
 @Injectable()
 export class SkillTemplateUserCreatedListener {
+  private readonly logger = new Logger(SkillTemplateUserCreatedListener.name);
+
   constructor(
-    @InjectPinoLogger(SkillTemplateUserCreatedListener.name)
-    private readonly logger: PinoLogger,
     private readonly skillTemplateInstallationService: SkillTemplateInstallationService,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
   async handleUserCreated(event: UserCreatedEvent): Promise<void> {
     try {
-      this.logger.info(
+      this.logger.log(
         {
           userId: event.userId,
           orgId: event.orgId,
@@ -28,7 +27,7 @@ export class SkillTemplateUserCreatedListener {
           event.userId,
         );
 
-      this.logger.info(
+      this.logger.log(
         {
           userId: event.userId,
           count: successCount,

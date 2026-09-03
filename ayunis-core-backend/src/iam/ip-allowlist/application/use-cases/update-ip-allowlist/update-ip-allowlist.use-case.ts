@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
+import { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
 import {
   AdminLockoutError,
   InvalidCidrApplicationError,
   UnexpectedIpAllowlistError,
-} from '../../ip-allowlist.errors';
+} from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import {
   EmptyCidrsError,
   InvalidCidrError,
-} from '../../../domain/ip-allowlist.errors';
+} from 'src/iam/ip-allowlist/domain/ip-allowlist.errors';
 import type { UpdateIpAllowlistCommand } from './update-ip-allowlist.command';
-import { IpAllowlist } from '../../../domain/ip-allowlist.entity';
-import { isIpInCidrs } from '../../../domain/cidr.util';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
+import { isIpInCidrs } from 'src/iam/ip-allowlist/domain/cidr.util';
 
 @Injectable()
 export class UpdateIpAllowlistUseCase {
+  private readonly logger = new Logger(UpdateIpAllowlistUseCase.name);
+
   constructor(
-    @InjectPinoLogger(UpdateIpAllowlistUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly repository: IpAllowlistRepository,
     private readonly ipAllowlistCache: IpAllowlistCachePort,
   ) {}

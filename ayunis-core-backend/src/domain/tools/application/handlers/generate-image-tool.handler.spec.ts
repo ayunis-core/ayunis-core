@@ -1,11 +1,9 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { GenerateImageToolHandler } from './generate-image-tool.handler';
-import { GenerateImageTool } from '../../domain/tools/generate-image-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/generate-image/generate-image.use-case';
 import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.use-case';
@@ -83,11 +81,6 @@ describe('GenerateImageToolHandler', () => {
         {
           provide: CheckQuotaUseCase,
           useValue: mockCheckQuota,
-        },
-
-        {
-          provide: getLoggerToken(GenerateImageToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

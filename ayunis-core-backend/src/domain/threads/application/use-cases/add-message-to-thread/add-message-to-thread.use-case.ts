@@ -1,24 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AddMessageCommand } from './add-message.command';
-import { MessageAdditionError } from '../../threads.errors';
+import { MessageAdditionError } from 'src/domain/threads/application/threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadMessageAddedEvent } from '../../events/thread-message-added.event';
+import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 
 @Injectable()
 export class AddMessageToThreadUseCase {
+  private readonly logger = new Logger(AddMessageToThreadUseCase.name);
+
   constructor(
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
-    @InjectPinoLogger(AddMessageToThreadUseCase.name)
-    private readonly logger: PinoLogger,
   ) {}
 
   execute(command: AddMessageCommand): Thread {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.thread.id,
         messageRole: command.message.role,

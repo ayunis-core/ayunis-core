@@ -1,22 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RemoveMcpIntegrationFromThreadCommand } from './remove-mcp-integration-from-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class RemoveMcpIntegrationFromThreadUseCase {
+  private readonly logger = new Logger(
+    RemoveMcpIntegrationFromThreadUseCase.name,
+  );
+
   constructor(
-    @InjectPinoLogger(RemoveMcpIntegrationFromThreadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: RemoveMcpIntegrationFromThreadCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: command.threadId,
         mcpIntegrationId: command.mcpIntegrationId,

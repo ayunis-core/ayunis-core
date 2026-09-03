@@ -1,10 +1,8 @@
-import { PinoLogger } from 'nestjs-pino';
+import { Logger } from '@nestjs/common';
 import axios, { isAxiosError } from 'axios';
 import type { AxiosRequestConfig } from 'axios';
-import { createPinoLoggerConfig } from '../../logger/pino-logger.config';
 
-const logger = new PinoLogger(createPinoLoggerConfig());
-logger.setContext('AnonymizeClient');
+const logger = new Logger('AnonymizeClient');
 
 interface AnonymizeTimingMetadata {
   requestDurationMs: number;
@@ -105,7 +103,7 @@ anonymizeAxios.interceptors.response.use(
   (response) => {
     const startedAt = requestStartedAt.get(response.config);
     if (startedAt !== undefined) {
-      logger.info(
+      logger.log(
         parseAnonymizeTimingMetadata(
           response.headers,
           Math.round((performance.now() - startedAt) * 100) / 100,

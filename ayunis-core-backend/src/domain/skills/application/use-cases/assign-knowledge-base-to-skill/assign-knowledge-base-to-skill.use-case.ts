@@ -1,8 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { GetKnowledgeBasesByIdsQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.query';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -12,15 +11,15 @@ import {
   SkillKnowledgeBaseNotFoundError,
   SkillKnowledgeBaseAlreadyAssignedError,
   UnexpectedSkillError,
-} from '../../skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class AssignKnowledgeBaseToSkillUseCase {
+  private readonly logger = new Logger(AssignKnowledgeBaseToSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AssignKnowledgeBaseToSkillUseCase.name)
-    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly getKnowledgeBasesByIdsUseCase: GetKnowledgeBasesByIdsUseCase,
@@ -29,7 +28,7 @@ export class AssignKnowledgeBaseToSkillUseCase {
 
   @Transactional()
   async execute(command: AssignKnowledgeBaseToSkillCommand): Promise<Skill> {
-    this.logger.info(
+    this.logger.log(
       {
         skillId: command.skillId,
         knowledgeBaseId: command.knowledgeBaseId,

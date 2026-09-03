@@ -1,7 +1,6 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UserCreatedListener } from './user-created.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
-import type { MarketplaceSkillInstallationService } from '../services/marketplace-skill-installation.service';
+import type { MarketplaceSkillInstallationService } from 'src/domain/skills/application/services/marketplace-skill-installation.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
@@ -32,10 +31,7 @@ describe('UserCreatedListener', () => {
       installFromMarketplace: jest.fn(),
     } as unknown as jest.Mocked<MarketplaceSkillInstallationService>;
 
-    listener = new UserCreatedListener(
-      createPinoLoggerMock(),
-      skillInstallationService,
-    );
+    listener = new UserCreatedListener(skillInstallationService);
   });
 
   it('should delegate to installAllPreInstalled with the user ID from the event', async () => {

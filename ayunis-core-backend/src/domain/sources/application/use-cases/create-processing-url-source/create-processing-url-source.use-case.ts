@@ -1,21 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { SourceRepository } from '../../ports/source.repository';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UrlCrawlConstants } from 'src/domain/retrievers/url-retrievers/domain/url-crawl.constants';
 import { CreateProcessingUrlSourceCommand } from './create-processing-url-source.command';
 
 @Injectable()
 export class CreateProcessingUrlSourceUseCase {
-  constructor(
-    @InjectPinoLogger(CreateProcessingUrlSourceUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(CreateProcessingUrlSourceUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   async execute(command: CreateProcessingUrlSourceCommand): Promise<UrlSource> {
     this.logger.debug({ url: command.url }, 'Creating processing URL source');

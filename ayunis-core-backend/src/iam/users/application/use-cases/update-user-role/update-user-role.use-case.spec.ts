@@ -1,16 +1,17 @@
-import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateUserRoleUseCase } from './update-user-role.use-case';
 import { UpdateUserRoleCommand } from './update-user-role.command';
-import { UserUpdatedEvent } from '../../events/user-updated.event';
-import { UsersRepository } from '../../ports/users.repository';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UserUnauthorizedError, UserUnexpectedError } from '../../users.errors';
+import {
+  UserUnauthorizedError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('UpdateUserRoleUseCase', () => {
@@ -39,10 +40,6 @@ describe('UpdateUserRoleUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: EventEmitter2, useValue: mockEventEmitter },
-        {
-          provide: getLoggerToken(UpdateUserRoleUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { GetInviteByTokenQuery } from './get-invite-by-token.query';
 import {
   InvalidInviteTokenError,
   InviteNotFoundError,
-} from '../../invites.errors';
+} from 'src/iam/invites/application/invites.errors';
 import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import { UUID } from 'crypto';
@@ -14,7 +13,7 @@ import { InviteStatus } from 'src/iam/invites/domain/invite-status.enum';
 import {
   InviteJwtPayload,
   InviteJwtService,
-} from '../../services/invite-jwt.service';
+} from 'src/iam/invites/application/services/invite-jwt.service';
 
 export interface InviteWithOrgDetails {
   id: UUID;
@@ -29,16 +28,16 @@ export interface InviteWithOrgDetails {
 
 @Injectable()
 export class GetInviteByTokenUseCase {
+  private readonly logger = new Logger(GetInviteByTokenUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetInviteByTokenUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly inviteJwtService: InviteJwtService,
   ) {}
 
   async execute(query: GetInviteByTokenQuery): Promise<InviteWithOrgDetails> {
-    this.logger.info({ hasToken: !!query.token }, 'execute');
+    this.logger.log({ hasToken: !!query.token }, 'execute');
 
     // Verify and decode the JWT token
     let payload: InviteJwtPayload;

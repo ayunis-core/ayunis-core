@@ -6,8 +6,8 @@ import {
   Res,
   UseFilters,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
 import type { Subscription } from 'rxjs';
@@ -23,8 +23,8 @@ import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/sub
 import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
 import { Public } from 'src/common/guards/public.guard';
-import { ExecuteOpenAIChatCompletionUseCase } from '../../application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case';
-import { ExecuteOpenAIChatCompletionCommand } from '../../application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.command';
+import { ExecuteOpenAIChatCompletionUseCase } from 'src/domain/openai-compat/application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case';
+import { ExecuteOpenAIChatCompletionCommand } from 'src/domain/openai-compat/application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.command';
 import { ChatCompletionRequestDto } from './dto/chat-completion-request.dto';
 import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
 
@@ -56,10 +56,9 @@ import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
 @UseFilters(OpenAIExceptionFilter)
 @RateLimit({ limit: 60, windowMs: 60_000 })
 export class ChatCompletionsController {
-  constructor(
-    @InjectPinoLogger(ChatCompletionsController.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(ChatCompletionsController.name);
 
+  constructor(
     private readonly useCase: ExecuteOpenAIChatCompletionUseCase,
     private readonly contextService: ContextService,
     private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,

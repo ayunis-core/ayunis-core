@@ -1,15 +1,13 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ReadDocumentToolHandler } from './read-document-tool.handler';
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
-import { ReadDocumentTool } from '../../domain/tools/read-document-tool.entity';
+import { ReadDocumentTool } from 'src/domain/tools/domain/tools/read-document-tool.entity';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 describe('ReadDocumentToolHandler', () => {
   let handler: ReadDocumentToolHandler;
@@ -31,11 +29,6 @@ describe('ReadDocumentToolHandler', () => {
         {
           provide: FindArtifactWithVersionsUseCase,
           useValue: mockFindArtifactUseCase,
-        },
-
-        {
-          provide: getLoggerToken(ReadDocumentToolHandler.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

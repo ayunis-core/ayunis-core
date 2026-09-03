@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   CreateBookingParams,
@@ -8,27 +7,27 @@ import {
   GetInvoiceRowsParams,
   LocabooDataRepository,
 } from 'src/common/clients/locaboo/application/ports/locaboo-data.repository';
-import { Booking } from '../../domain/booking.entity';
+import { Booking } from 'src/common/clients/locaboo/domain/booking.entity';
 import { GetBookingsResponse } from './schema/getBookingsResponse';
 import { GetBookingsResponseMapper } from './mappers/getBookingsResponse.mapper';
-import { Resource } from '../../domain/resource.entity';
+import { Resource } from 'src/common/clients/locaboo/domain/resource.entity';
 import { GetResourcesResponse } from './schema/getResourcesReponse';
 import { GetResourcesResponseMapper } from './mappers/getResourcesResponse.mapper';
-import { Availability } from '../../domain/availability.entity';
+import { Availability } from 'src/common/clients/locaboo/domain/availability.entity';
 import { AvailabilityResponse } from './schema/getAvailabilityResponse';
 import { GetAvailabilityResponseMapper } from './mappers/getAvailabilityResponse.mapper';
-import { InvoiceRow } from '../../domain/invoice-row.entity';
+import { InvoiceRow } from 'src/common/clients/locaboo/domain/invoice-row.entity';
 import { GetInvoiceResponse } from './schema/getInvoiceRowsResponse';
 import { GetInvoiceRowsResponseMapper } from './mappers/getInvoiceRowsResponse.mapper';
-import { CustomerGroup } from '../../domain/customer-group.entity';
+import { CustomerGroup } from 'src/common/clients/locaboo/domain/customer-group.entity';
 import { GetCustomerResponse } from './schema/getCustomerResponse';
 import { GetCustomerGroupsResponseMapper } from './mappers/getCustomerGroupsResponse.mapper';
 
 @Injectable()
 export class Locaboo3Repository extends LocabooDataRepository {
+  private readonly logger = new Logger(Locaboo3Repository.name);
+
   constructor(
-    @InjectPinoLogger(Locaboo3Repository.name)
-    private readonly logger: PinoLogger,
     private readonly configService: ConfigService,
     private readonly getBookingsResponseMapper: GetBookingsResponseMapper,
     private readonly getResourcesResponseMapper: GetResourcesResponseMapper,
@@ -43,7 +42,7 @@ export class Locaboo3Repository extends LocabooDataRepository {
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
-    this.logger.info({ endpointPath: endpoint.split('?')[0] }, 'fetch');
+    this.logger.log({ endpointPath: endpoint.split('?')[0] }, 'fetch');
     const url = `${this.configService.get<string>('locaboo3.baseUrl')}${endpoint}`;
     const response = await fetch(url, options);
     if (!response.ok) {

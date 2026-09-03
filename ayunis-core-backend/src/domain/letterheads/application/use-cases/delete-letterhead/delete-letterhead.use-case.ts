@@ -1,29 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import {
   LetterheadNotFoundError,
   UnexpectedLetterheadError,
-} from '../../letterheads.errors';
+} from 'src/domain/letterheads/application/letterheads.errors';
 import { DeleteLetterheadCommand } from './delete-letterhead.command';
 
 @Injectable()
 export class DeleteLetterheadUseCase {
+  private readonly logger = new Logger(DeleteLetterheadUseCase.name);
+
   constructor(
-    @InjectPinoLogger(DeleteLetterheadUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
 
   async execute(command: DeleteLetterheadCommand): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         letterheadId: command.letterheadId,
       },

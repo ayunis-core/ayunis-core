@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { EmbedTextCommand } from './embed-text.command';
-import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
-import { EmbeddingsThrottleService } from '../../services/embeddings-throttle.service';
+import { EmbeddingsHandlerRegistry } from 'src/domain/rag/embeddings/application/embeddings-handler.registry';
+import { EmbeddingsThrottleService } from 'src/domain/rag/embeddings/application/services/embeddings-throttle.service';
 import { Embedding } from 'src/domain/rag/embeddings/domain/embedding.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
@@ -10,15 +9,15 @@ import { toWellFormedText } from 'src/common/util/unicode-sanitizer';
 
 @Injectable()
 export class EmbedTextUseCase {
+  private readonly logger = new Logger(EmbedTextUseCase.name);
+
   constructor(
-    @InjectPinoLogger(EmbedTextUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly providerRegistry: EmbeddingsHandlerRegistry,
     private readonly throttle: EmbeddingsThrottleService,
   ) {}
 
   async execute(command: EmbedTextCommand): Promise<Embedding[]> {
-    this.logger.info({ model: command.model }, 'execute');
+    this.logger.log({ model: command.model }, 'execute');
     try {
       const handler = this.providerRegistry.getHandler(command.model.provider);
 

@@ -1,5 +1,4 @@
 import { createHash } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CompleteOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.command';
 import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
 import { SsoLoginTransaction } from 'src/iam/sso/domain/sso-login-transaction.entity';
@@ -41,7 +40,6 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
       }),
     };
     const useCase = new CompleteOrgSsoLoginUseCase(
-      createPinoLoggerMock(),
       transactions,
       broker,
       {
@@ -102,7 +100,6 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
 
   it('rejects a callback without a single state value', async () => {
     const useCase = new CompleteOrgSsoLoginUseCase(
-      createPinoLoggerMock(),
       {
         save: jest.fn(),
         consume: jest.fn(),
@@ -125,7 +122,6 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
 
   it('rejects a replayed or expired transaction', async () => {
     const useCase = new CompleteOrgSsoLoginUseCase(
-      createPinoLoggerMock(),
       {
         save: jest.fn(),
         consume: jest.fn().mockResolvedValue(null),
@@ -161,7 +157,6 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
       }),
     };
     const useCase = new CompleteOrgSsoLoginUseCase(
-      createPinoLoggerMock(),
       {
         save: jest.fn(),
         consume: jest.fn().mockResolvedValue(pendingTransaction()),
@@ -272,7 +267,6 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
       validateCallback: jest.fn(),
     };
     const useCase = new CompleteOrgSsoLoginUseCase(
-      createPinoLoggerMock(),
       {
         save: jest.fn(),
         consume: jest.fn().mockResolvedValue(null),
@@ -330,7 +324,6 @@ function useCaseWithIdentity(
   transaction = pendingTransaction(),
 ): CompleteOrgSsoLoginUseCase {
   return new CompleteOrgSsoLoginUseCase(
-    createPinoLoggerMock(),
     {
       save: jest.fn(),
       consume: jest.fn().mockResolvedValue(transaction),

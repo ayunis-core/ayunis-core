@@ -7,8 +7,7 @@ import {
   ThreadsPagination,
   ThreadsRepository,
 } from 'src/domain/threads/application/ports/threads.repository';
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
@@ -22,9 +21,9 @@ import { LocalThreadAssignmentsRepository } from './local-thread-assignments.rep
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
+  private readonly logger = new Logger(LocalThreadsRepository.name);
+
   constructor(
-    @InjectPinoLogger(LocalThreadsRepository.name)
-    private readonly logger: PinoLogger,
     @InjectRepository(ThreadRecord)
     private readonly threadRepository: Repository<ThreadRecord>,
     private readonly threadMapper: ThreadMapper,
@@ -34,7 +33,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async create(thread: Thread): Promise<Thread> {
-    this.logger.info({ threadId: thread.id, userId: thread.userId }, 'create');
+    this.logger.log({ threadId: thread.id, userId: thread.userId }, 'create');
     const threadEntity = this.threadMapper.toRecord(thread);
     const savedThreadEntity = await this.threadRepository.save(threadEntity);
     const reloadedThreadEntity = await this.threadRepository.findOne({
@@ -65,7 +64,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async findOne(id: UUID, userId: UUID): Promise<Thread | null> {
-    this.logger.info({ id, userId }, 'findOne');
+    this.logger.log({ id, userId }, 'findOne');
     const threadEntity = await this.threadRepository.findOne({
       where: { id, userId },
       relationLoadStrategy: 'query',
@@ -104,7 +103,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     pagination?: ThreadsPagination,
   ): Promise<Paginated<Thread>> {
     const { search: text, ...safeFilters } = filters ?? {};
-    this.logger.info({ userId, ...safeFilters, text, pagination }, 'findAll');
+    this.logger.log({ userId, ...safeFilters, text, pagination }, 'findAll');
 
     const queryBuilder = this.threadRepository
       .createQueryBuilder('thread')
@@ -193,7 +192,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     modelId: UUID,
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]> {
-    this.logger.info({ modelId }, 'findAllByModel');
+    this.logger.log({ modelId }, 'findAllByModel');
     const threadEntities = await this.threadRepository.find({
       where: { modelId },
       relations: this.getRelations(options),
@@ -225,7 +224,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async update(thread: Thread): Promise<Thread> {
-    this.logger.info({ threadId: thread.id }, 'update');
+    this.logger.log({ threadId: thread.id }, 'update');
     const threadRecord = this.threadMapper.toRecord(thread);
     const savedThreadRecord = await this.threadRepository.save(threadRecord);
     return this.threadMapper.toDomain(savedThreadRecord);
@@ -236,7 +235,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID;
     title: string;
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: params.threadId,
         userId: params.userId,
@@ -277,7 +276,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID;
     permittedModelId: UUID;
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: params.threadId,
         userId: params.userId,
@@ -328,12 +327,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async delete(id: UUID, userId: UUID): Promise<void> {
-    this.logger.info({ id, userId }, 'delete');
+    this.logger.log({ id, userId }, 'delete');
     await this.threadRepository.delete({ id, userId });
   }
 
   async findAllIdsByUserId(userId: UUID): Promise<UUID[]> {
-    this.logger.info({ userId }, 'findAllIdsByUserId');
+    this.logger.log({ userId }, 'findAllIdsByUserId');
     const rows = await this.threadRepository.find({
       where: { userId },
       select: { id: true },
@@ -342,7 +341,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]> {
-    this.logger.info({ workspaceId }, 'findAllIdsByWorkspaceId');
+    this.logger.log({ workspaceId }, 'findAllIdsByWorkspaceId');
     const rows = await this.threadRepository.find({
       where: { workspaceId },
       select: { id: true },
@@ -364,7 +363,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID;
     workspaceId: UUID | null;
   }): Promise<void> {
-    this.logger.info(
+    this.logger.log(
       {
         threadId: params.threadId,
         userId: params.userId,
@@ -414,7 +413,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]> {
-    this.logger.info({ orgId }, 'findAllByOrgIdWithSources');
+    this.logger.log({ orgId }, 'findAllByOrgIdWithSources');
     const threadEntities = await this.threadRepository
       .createQueryBuilder('thread')
       .innerJoin('users', 'user', 'user.id = thread.userId')
@@ -429,7 +428,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async findExpiredThreadRefsByOrg(
     params: FindExpiredThreadRefsParams,
   ): Promise<ExpiredThreadRef[]> {
-    this.logger.info(
+    this.logger.log(
       {
         orgId: params.orgId,
         activeBefore: params.activeBefore,

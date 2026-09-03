@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -10,7 +9,7 @@ import {
   type ExpiredThreadRef,
 } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { FindExpiredThreadRefsByOrgQuery } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.query';
-import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
+import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
 import type { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import type {
   EnforceRetentionResult,
@@ -31,9 +30,9 @@ export const MAX_BATCHES_PER_ORG = 10_000;
  */
 @Injectable()
 export class EnforceRetentionUseCase {
+  private readonly logger = new Logger(EnforceRetentionUseCase.name);
+
   constructor(
-    @InjectPinoLogger(EnforceRetentionUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly retentionPoliciesRepository: RetentionPoliciesRepository,
     private readonly findExpiredThreadRefsByOrg: FindExpiredThreadRefsByOrgUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
@@ -46,7 +45,7 @@ export class EnforceRetentionUseCase {
     const policies = await this.retentionPoliciesRepository.findAllEnabled();
     const now = new Date();
 
-    this.logger.info(
+    this.logger.log(
       {
         enabledOrgs: policies.length,
         dryRun,
@@ -66,7 +65,7 @@ export class EnforceRetentionUseCase {
       dryRun,
       perOrg,
     };
-    this.logger.info(
+    this.logger.log(
       {
         orgsProcessed: result.orgsProcessed,
         totalDeleted: result.totalDeleted,
@@ -107,7 +106,7 @@ export class EnforceRetentionUseCase {
       );
     }
 
-    this.logger.info({ cutoff, ...result }, 'Retention enforced for org');
+    this.logger.log({ cutoff, ...result }, 'Retention enforced for org');
     return result;
   }
 

@@ -1,17 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
-import { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
+import { UserSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/user-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnexpectedChatSettingsError } from '../../chat-settings.errors';
+import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetUserSystemPromptUseCase {
+  private readonly logger = new Logger(GetUserSystemPromptUseCase.name);
+
   constructor(
-    @InjectPinoLogger(GetUserSystemPromptUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly userSystemPromptsRepository: UserSystemPromptsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -21,7 +20,7 @@ export class GetUserSystemPromptUseCase {
     if (!userId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.info({ userId }, 'execute');
+    this.logger.log({ userId }, 'execute');
 
     try {
       const userSystemPrompt =

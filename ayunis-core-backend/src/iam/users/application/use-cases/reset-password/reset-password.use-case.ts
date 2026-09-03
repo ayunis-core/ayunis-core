@@ -1,13 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ResetPasswordCommand } from './reset-password.command';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
-import { PasswordSetTokensRepository } from '../../ports/password-set-tokens.repository';
-import { UserUnexpectedError } from '../../users.errors';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
@@ -19,9 +18,9 @@ import { RevokeAllSessionsForUserCommand } from 'src/iam/sessions/application/us
 
 @Injectable()
 export class ResetPasswordUseCase {
+  private readonly logger = new Logger(ResetPasswordUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ResetPasswordUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly passwordSetTokensRepository: PasswordSetTokensRepository,
     private readonly hashTextUseCase: HashTextUseCase,
@@ -32,7 +31,7 @@ export class ResetPasswordUseCase {
 
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: ResetPasswordCommand): Promise<void> {
-    this.logger.info({ hasToken: !!command.resetToken }, 'resetPassword');
+    this.logger.log({ hasToken: !!command.resetToken }, 'resetPassword');
 
     // Look up (read-only) before consuming, so a weak-password attempt does
     // not burn the link.

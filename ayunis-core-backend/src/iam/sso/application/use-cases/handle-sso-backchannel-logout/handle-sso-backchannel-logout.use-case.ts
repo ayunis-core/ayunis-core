@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RevokeSessionsByZitadelSessionCommand } from 'src/iam/sessions/application/use-cases/revoke-sessions-by-zitadel-session/revoke-sessions-by-zitadel-session.command';
 import { RevokeSessionsByZitadelSessionUseCase } from 'src/iam/sessions/application/use-cases/revoke-sessions-by-zitadel-session/revoke-sessions-by-zitadel-session.use-case';
@@ -15,9 +14,9 @@ import { HandleSsoBackchannelLogoutCommand } from 'src/iam/sso/application/use-c
 
 @Injectable()
 export class HandleSsoBackchannelLogoutUseCase {
+  private readonly logger = new Logger(HandleSsoBackchannelLogoutUseCase.name);
+
   constructor(
-    @InjectPinoLogger(HandleSsoBackchannelLogoutUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly broker: OidcBrokerLogoutClient,
     private readonly identities: FederatedIdentitiesRepository,
     private readonly revokeBySession: RevokeSessionsByZitadelSessionUseCase,
@@ -26,7 +25,7 @@ export class HandleSsoBackchannelLogoutUseCase {
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
   async execute(command: HandleSsoBackchannelLogoutCommand): Promise<void> {
-    this.logger.info('Handling SSO back-channel logout');
+    this.logger.log('Handling SSO back-channel logout');
     const logout = await this.broker.validateBackchannelLogoutToken(
       command.logoutToken,
     );

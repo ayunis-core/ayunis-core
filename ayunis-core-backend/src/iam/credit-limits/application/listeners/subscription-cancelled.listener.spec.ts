@@ -1,8 +1,7 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import type { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
-import type { RemoveOrgCreditLimitsUseCase } from '../use-cases/remove-org-credit-limits/remove-org-credit-limits.use-case';
-import { TEST_ORG_ID } from '../testing/credit-limit.fixtures';
+import type { RemoveOrgCreditLimitsUseCase } from 'src/iam/credit-limits/application/use-cases/remove-org-credit-limits/remove-org-credit-limits.use-case';
+import { TEST_ORG_ID } from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { SubscriptionCancelledListener } from './subscription-cancelled.listener';
 
 describe('SubscriptionCancelledListener', () => {
@@ -16,7 +15,6 @@ describe('SubscriptionCancelledListener', () => {
   beforeEach(() => {
     removeOrgCreditLimits = { execute: jest.fn() };
     listener = new SubscriptionCancelledListener(
-      createPinoLoggerMock(),
       removeOrgCreditLimits as unknown as RemoveOrgCreditLimitsUseCase,
     );
   });

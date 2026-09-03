@@ -1,7 +1,6 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EmbedTextUseCase } from './embed-text.use-case';
 import { EmbedTextCommand } from './embed-text.command';
-import { NoEmbeddingsReturnedError } from '../../embeddings.errors';
+import { NoEmbeddingsReturnedError } from 'src/domain/rag/embeddings/application/embeddings.errors';
 import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 import {
   ProviderConnectionError,
@@ -31,11 +30,7 @@ function useCaseWithFailingHandler(error: Error): EmbedTextUseCase {
   const throttle = {
     run: (_priority: unknown, fn: () => Promise<unknown>) => fn(),
   };
-  return new EmbedTextUseCase(
-    createPinoLoggerMock(),
-    registry as never,
-    throttle as never,
-  );
+  return new EmbedTextUseCase(registry as never, throttle as never);
 }
 
 describe('EmbedTextUseCase error mapping', () => {
@@ -104,11 +99,7 @@ describe('EmbedTextUseCase payload sanitization', () => {
     const throttle = {
       run: (_priority: unknown, fn: () => Promise<unknown>) => fn(),
     };
-    const useCase = new EmbedTextUseCase(
-      createPinoLoggerMock(),
-      registry as never,
-      throttle as never,
-    );
+    const useCase = new EmbedTextUseCase(registry as never, throttle as never);
 
     await useCase.execute(
       new EmbedTextCommand({

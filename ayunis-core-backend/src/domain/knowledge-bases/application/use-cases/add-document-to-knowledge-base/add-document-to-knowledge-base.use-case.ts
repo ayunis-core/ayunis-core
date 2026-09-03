@@ -1,25 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
   KnowledgeBaseSourceLimitExceededError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
 
 @Injectable()
 export class AddDocumentToKnowledgeBaseUseCase {
+  private readonly logger = new Logger(AddDocumentToKnowledgeBaseUseCase.name);
+
   constructor(
-    @InjectPinoLogger(AddDocumentToKnowledgeBaseUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
@@ -28,7 +27,7 @@ export class AddDocumentToKnowledgeBaseUseCase {
   async execute(
     command: AddDocumentToKnowledgeBaseCommand,
   ): Promise<FileSource> {
-    this.logger.info(
+    this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,
         fileName: command.fileName,

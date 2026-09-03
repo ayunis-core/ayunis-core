@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
@@ -21,9 +20,9 @@ export interface BulkInviteResult {
 
 @Injectable()
 export class BulkInviteDeliveryService {
+  private readonly logger = new Logger(BulkInviteDeliveryService.name);
+
   constructor(
-    @InjectPinoLogger(BulkInviteDeliveryService.name)
-    private readonly logger: PinoLogger,
     private readonly invites: InvitesRepository,
     private readonly jwt: InviteJwtService,
     private readonly sendEmail: SendInvitationEmailUseCase,

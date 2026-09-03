@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyChapterProgressRepository } from 'src/domain/academy/application/ports/academy-chapter-progress.repository';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
@@ -15,9 +14,12 @@ import {
   InvalidQuizSubmissionError,
   QuizNotAvailableError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
-import { isPassWithinValidity } from '../../util/certificate-validity';
-import { DRAWN_QUESTION_COUNT, requiredCorrect } from '../../quiz.constants';
+} from 'src/domain/academy/application/academy.errors';
+import { isPassWithinValidity } from 'src/domain/academy/application/util/certificate-validity';
+import {
+  DRAWN_QUESTION_COUNT,
+  requiredCorrect,
+} from 'src/domain/academy/application/quiz.constants';
 import {
   QuizAnswerSubmission,
   SubmitChapterQuizCommand,
@@ -34,9 +36,9 @@ export interface QuizAttemptResult {
 
 @Injectable()
 export class SubmitChapterQuizUseCase {
+  private readonly logger = new Logger(SubmitChapterQuizUseCase.name);
+
   constructor(
-    @InjectPinoLogger(SubmitChapterQuizUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly chapterRepository: AcademyChapterRepository,
     private readonly quizQuestionRepository: AcademyQuizQuestionRepository,
     private readonly progressRepository: AcademyChapterProgressRepository,
@@ -44,7 +46,7 @@ export class SubmitChapterQuizUseCase {
   ) {}
 
   async execute(command: SubmitChapterQuizCommand): Promise<QuizAttemptResult> {
-    this.logger.info(
+    this.logger.log(
       {
         userId: command.userId,
         chapterId: command.chapterId,

@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetPermittedModelsQuery } from './get-permitted-models.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -9,10 +8,9 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 
 @Injectable()
 export class GetPermittedModelsUseCase {
-  constructor(
-    @InjectPinoLogger(GetPermittedModelsUseCase.name)
-    private readonly logger: PinoLogger,
+  private readonly logger = new Logger(GetPermittedModelsUseCase.name);
 
+  constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
   ) {}

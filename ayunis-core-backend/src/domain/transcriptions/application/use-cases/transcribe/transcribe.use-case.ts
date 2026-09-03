@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { TranscriptionPort } from '../../ports/transcription.port';
+import { Injectable, Logger } from '@nestjs/common';
+import { TranscriptionPort } from 'src/domain/transcriptions/application/ports/transcription.port';
 import { TranscribeCommand } from './transcribe.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   TranscriptionFailedError,
   InvalidAudioFileError,
-} from '../../transcription.errors';
+} from 'src/domain/transcriptions/application/transcription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
@@ -22,15 +21,15 @@ const SUPPORTED_MIME_TYPES = [
 
 @Injectable()
 export class TranscribeUseCase {
+  private readonly logger = new Logger(TranscribeUseCase.name);
+
   constructor(
-    @InjectPinoLogger(TranscribeUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly transcriptionPort: TranscriptionPort,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: TranscribeCommand): Promise<string> {
-    this.logger.info(
+    this.logger.log(
       {
         fileName: command.fileName,
         mimeType: command.mimeType,
@@ -54,7 +53,7 @@ export class TranscribeUseCase {
         command.language,
       );
 
-      this.logger.info(
+      this.logger.log(
         {
           fileName: command.fileName,
           textLength: transcriptedText.length,

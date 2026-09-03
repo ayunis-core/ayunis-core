@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
@@ -8,17 +7,15 @@ import type { CreditLimitForApiKey } from './resolve-credit-limit-for-api-key.re
 
 @Injectable()
 export class ResolveCreditLimitForApiKeyUseCase {
-  constructor(
-    @InjectPinoLogger(ResolveCreditLimitForApiKeyUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly creditLimitRepository: CreditLimitRepository,
-  ) {}
+  private readonly logger = new Logger(ResolveCreditLimitForApiKeyUseCase.name);
+
+  constructor(private readonly creditLimitRepository: CreditLimitRepository) {}
 
   @HandleUnexpectedErrors(UnexpectedCreditLimitError)
   async execute(
     query: ResolveCreditLimitForApiKeyQuery,
   ): Promise<CreditLimitForApiKey> {
-    this.logger.info(
+    this.logger.log(
       { orgId: query.orgId, apiKeyId: query.apiKeyId },
       'Resolving credit limit for API key',
     );

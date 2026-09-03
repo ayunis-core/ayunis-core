@@ -1,9 +1,8 @@
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { RunMaxIterationsReachedError } from '../runs.errors';
-import { RunTerminalEvent } from '../events/run-terminal.event';
-import { RunExecutedEvent } from '../events/run-executed.event';
+import { RunMaxIterationsReachedError } from 'src/domain/runs/application/runs.errors';
+import { RunTerminalEvent } from 'src/domain/runs/application/events/run-terminal.event';
+import { RunExecutedEvent } from 'src/domain/runs/application/events/run-executed.event';
 import { RunTelemetryService } from './run-telemetry.service';
 
 async function drain<T>(generator: AsyncGenerator<T, unknown, void>) {
@@ -17,7 +16,7 @@ describe('RunTelemetryService', () => {
   const eventEmitter = {
     emitAsync: jest.fn().mockResolvedValue([]),
   } as unknown as jest.Mocked<EventEmitter2>;
-  const service = new RunTelemetryService(eventEmitter, createPinoLoggerMock());
+  const service = new RunTelemetryService(eventEmitter);
 
   beforeEach(() => {
     jest.clearAllMocks();

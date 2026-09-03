@@ -1,8 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { UserUnauthorizedError } from 'src/iam/users/application/users.errors';
 import type { SuperAdminUserListItem } from 'src/iam/users/domain/super-admin-user-list-item';
@@ -28,10 +26,6 @@ describe('SuperAdminFindAllUsersUseCase', () => {
         {
           provide: ContextService,
           useValue: { get: jest.fn() },
-        },
-        {
-          provide: getLoggerToken(SuperAdminFindAllUsersUseCase.name),
-          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

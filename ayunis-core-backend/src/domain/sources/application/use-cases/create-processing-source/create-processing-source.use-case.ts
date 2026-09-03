@@ -1,24 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { MIME_TYPES } from 'src/common/util/file-type';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import {
   UnsupportedSourceFileTypeError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CreateProcessingSourceCommand } from './create-processing-source.command';
 
 @Injectable()
 export class CreateProcessingSourceUseCase {
-  constructor(
-    @InjectPinoLogger(CreateProcessingSourceUseCase.name)
-    private readonly logger: PinoLogger,
-    private readonly sourceRepository: SourceRepository,
-  ) {}
+  private readonly logger = new Logger(CreateProcessingSourceUseCase.name);
+
+  constructor(private readonly sourceRepository: SourceRepository) {}
 
   async execute(command: CreateProcessingSourceCommand): Promise<FileSource> {
     this.logger.debug(

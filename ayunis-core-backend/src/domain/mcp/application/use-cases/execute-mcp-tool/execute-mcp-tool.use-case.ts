@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
-import { McpToolCall } from '../../ports/mcp-client.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpToolCall } from 'src/domain/mcp/application/ports/mcp-client.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { isMcpConnectivityOutage, UnexpectedMcpError } from '../../mcp.errors';
+import {
+  isMcpConnectivityOutage,
+  UnexpectedMcpError,
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 
 /**
  * Result of tool execution
@@ -20,9 +22,9 @@ export interface ToolExecutionResult {
 
 @Injectable()
 export class ExecuteMcpToolUseCase {
+  private readonly logger = new Logger(ExecuteMcpToolUseCase.name);
+
   constructor(
-    @InjectPinoLogger(ExecuteMcpToolUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly mcpClientService: McpClientService,
     private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
     private readonly contextService: ContextService,
@@ -77,7 +79,7 @@ export class ExecuteMcpToolUseCase {
   }
 
   private logStarted(command: ExecuteMcpToolCommand): void {
-    this.logger.info(
+    this.logger.log(
       {
         operation: 'execute_tool',
         integration: { id: command.integrationId },
@@ -94,7 +96,7 @@ export class ExecuteMcpToolUseCase {
     isError: boolean,
     durationMs: number,
   ): void {
-    this.logger.info(
+    this.logger.log(
       {
         operation: 'execute_tool',
         integration: { id: command.integrationId, name: integrationName },
