@@ -119,7 +119,7 @@ function renderBannerSection(
   return bannerUrl
     ? `<mj-section background-color="${COLOR.card}" padding="16px 32px 0 32px">
          <mj-column>
-           <mj-image src="${bannerUrl}" alt="${escapeAttr(bannerAlt ?? '')}" width="496px" border-radius="10px" padding="0" />
+           <mj-image src="${bannerUrl}" alt="${escapeAttribute(bannerAlt ?? '')}" width="496px" border-radius="10px" padding="0" />
          </mj-column>
        </mj-section>`
     : '';
@@ -220,6 +220,6 @@ export function escapeText(input: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function escapeAttr(input: string): string {
+export function escapeAttribute(input: string): string {
   return escapeText(input).replace(/"/g, '&quot;');
 }

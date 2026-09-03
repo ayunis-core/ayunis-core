@@ -1,4 +1,3 @@
-import mjml2html from 'mjml';
 import type { MJMLParseResults } from 'mjml-core';
 import type { PasswordResetTemplateContent } from 'src/common/email-templates/domain/email-template.entity';
 import {
@@ -11,6 +10,7 @@ import {
   renderLayout,
   teamSignoff,
 } from './_layout';
+import { renderMjml } from './render-mjml';
 
 export function passwordResetText(
   template: PasswordResetTemplateContent,
@@ -60,7 +60,7 @@ export function passwordResetHtml(
     teamSignoff(template.teamUrl),
   ].join('\n');
 
-  return mjml2html(
+  return renderMjml(
     renderLayout({
       title: `Passwort zurücksetzen · ${template.productName}`,
       preheader:

@@ -1,4 +1,3 @@
-import mjml2html from 'mjml';
 import type { MJMLParseResults } from 'mjml-core';
 import type { InvitationTemplateContent } from 'src/common/email-templates/domain/email-template.entity';
 import {
@@ -11,6 +10,7 @@ import {
   renderLayout,
   teamSignoff,
 } from './_layout';
+import { renderMjml } from './render-mjml';
 
 function preheader(template: InvitationTemplateContent): string {
   return template.adminName
@@ -67,7 +67,7 @@ export function invitationHtml(
     teamSignoff(template.teamUrl),
   ].join('\n');
 
-  return mjml2html(
+  return renderMjml(
     renderLayout({
       title: `Einladung zu ${template.invitingCompanyName} · ${template.productName}`,
       preheader: preheader(template),
