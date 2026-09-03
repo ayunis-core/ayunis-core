@@ -242,6 +242,17 @@ export default function NewChatPage({
             {greeting}
           </h1>
 
+          <p
+            className={cn(
+              'new-chat-subline flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground',
+              isCreating && 'new-chat-subline--exit',
+            )}
+            aria-hidden={isCreating}
+          >
+            <Lock className="h-3 w-3 shrink-0" />
+            {t('newChat.privacyHint')}
+          </p>
+
           <div className="new-chat-input-stack relative w-full">
             <p
               className={cn(
@@ -289,19 +300,15 @@ export default function NewChatPage({
               onSkillRemove={handleSkillRemove}
             />
 
-            <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                {isWorkspacesEnabled && (
-                  <WorkspacePicker
-                    workspaceId={workspaceId}
-                    onWorkspaceChange={setWorkspaceId}
-                  />
-                )}
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Lock className="h-3 w-3 shrink-0" />
-                  {t('newChat.privacyHint')}
-                </span>
-              </div>
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              {isWorkspacesEnabled ? (
+                <WorkspacePicker
+                  workspaceId={workspaceId}
+                  onWorkspaceChange={setWorkspaceId}
+                />
+              ) : (
+                <span />
+              )}
               <AvailabilityHint workspaceId={workspaceId} />
             </div>
           </div>
