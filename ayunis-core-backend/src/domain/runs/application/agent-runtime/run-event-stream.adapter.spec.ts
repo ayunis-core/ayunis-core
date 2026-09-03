@@ -7,6 +7,7 @@ import type { TextMessageContent } from 'src/domain/messages/domain/message-cont
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import {
   ProviderConnectionError,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
@@ -468,6 +469,25 @@ describe('adaptRunEventsToStream', () => {
         provider: 'anthropic',
         modelId: 'claude-3-7-sonnet',
         upstreamStatus: 503,
+      },
+    ],
+    [
+      'provider request rejection',
+      'PROVIDER_UNAVAILABLE_REJECTED_ANTHROPIC',
+      {
+        type: 'provider_rejected',
+        context: {
+          provider: 'anthropic',
+          modelId: 'claude-3-7-sonnet',
+          upstreamStatus: 429,
+        },
+      },
+      ProviderRequestRejectedError,
+      502,
+      {
+        provider: 'anthropic',
+        modelId: 'claude-3-7-sonnet',
+        upstreamStatus: 429,
       },
     ],
     [

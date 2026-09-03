@@ -1,6 +1,7 @@
 import { ApplicationError } from './base.error';
 import {
   ProviderConnectionError,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from './provider.errors';
@@ -69,7 +70,21 @@ describe('wrapProviderFailure', () => {
     );
   });
 
-  it('leaves upstream 4xx alone — our-bug responses must stay distinct', () => {
+  it('wraps upstream 429 responses as provider request rejections', () => {
+    const error = Object.assign(new Error('rate limit exceeded'), {
+      status: 429,
+      requestID: 'req_azure_429',
+    });
+    const wrapped = wrapProviderFailure(error, source);
+
+    expect(wrapped).toBeInstanceOf(ProviderRequestRejectedError);
+    expect(wrapped?.context).toMatchObject({
+      upstreamStatus: 429,
+      upstreamRequestId: 'req_azure_429',
+    });
+  });
+
+  it('leaves other upstream 4xx alone — our-bug responses must stay distinct', () => {
     const error = Object.assign(new Error('bad request'), { status: 400 });
     expect(wrapProviderFailure(error, source)).toBeUndefined();
   });

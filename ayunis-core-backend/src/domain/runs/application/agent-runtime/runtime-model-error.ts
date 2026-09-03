@@ -2,6 +2,7 @@ import type { ErrorMetadata } from 'src/common/errors/base.error';
 import type { ProviderErrorContext } from 'src/common/errors/provider.errors';
 import {
   ProviderConnectionError,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
   ProviderUnavailableError,
@@ -17,6 +18,7 @@ export type RuntimeModelErrorType =
   | 'provider_connection'
   | 'provider_timeout'
   | 'provider_server'
+  | 'provider_rejected'
   | 'inference_aborted'
   | 'inference_image_too_large'
   | 'inference_stream_stalled'
@@ -90,6 +92,7 @@ function providerErrorType(
 ): RuntimeModelErrorType {
   if (error instanceof ProviderConnectionError) return 'provider_connection';
   if (error instanceof ProviderTimeoutError) return 'provider_timeout';
+  if (error instanceof ProviderRequestRejectedError) return 'provider_rejected';
   return 'provider_server';
 }
 
@@ -138,6 +141,9 @@ function reconstructProviderError(
   if (serialized.type === 'provider_timeout') {
     return new ProviderTimeoutError(context, cause);
   }
+  if (serialized.type === 'provider_rejected') {
+    return new ProviderRequestRejectedError(context, cause);
+  }
   return new ProviderServerError(context, cause);
 }
 
@@ -181,6 +187,7 @@ function isRuntimeModelErrorType(
     'provider_connection',
     'provider_timeout',
     'provider_server',
+    'provider_rejected',
     'inference_aborted',
     'inference_image_too_large',
     'inference_stream_stalled',
