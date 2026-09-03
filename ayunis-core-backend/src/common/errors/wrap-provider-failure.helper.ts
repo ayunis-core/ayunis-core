@@ -5,6 +5,7 @@ import type { ProviderUnavailableError } from './provider.errors';
 import {
   ProviderConnectionError,
   ProviderFailureClass,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from './provider.errors';
@@ -15,13 +16,15 @@ export interface ProviderFailureSource {
 }
 
 /**
- * Single integration point for outbound adapters: wraps transport failures
- * and upstream 5xx responses in the ProviderUnavailableError family.
+ * Single integration point for outbound adapters: wraps transport failures,
+ * upstream 5xx responses, and upstream 429 rate limits in the
+ * ProviderUnavailableError family.
  *
  * Returns undefined for everything the caller should keep handling itself:
- * ApplicationError (already classified), upstream 4xx (potentially our bug —
- * must stay a distinct, first-occurrence-alerting incident), and errors that
- * are neither transport failures nor provider responses.
+ * ApplicationError (already classified), upstream 4xx other than rate limits
+ * (potentially our bug — must stay a distinct, first-occurrence-alerting
+ * incident), and errors that are neither transport failures nor provider
+ * responses.
  */
 export function wrapProviderFailure(
   error: unknown,
@@ -58,6 +61,9 @@ function wrapByUpstreamStatus(
       upstreamRequestId: diagnostics.upstreamRequestId,
     }),
   };
+  if (status === 429) {
+    return new ProviderRequestRejectedError(context, error);
+  }
   if (status === 504 || status === 408) {
     return new ProviderTimeoutError(context, error);
   }

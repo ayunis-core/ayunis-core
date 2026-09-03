@@ -215,6 +215,13 @@ describe('RuntimeModelProviderDecorator', () => {
       3,
     ],
     [
+      'provider rate limit',
+      Object.assign(new Error('rate limit exceeded'), { status: 429 }),
+      'PROVIDER_UNAVAILABLE_REJECTED_ANTHROPIC',
+      'provider_rejected',
+      1,
+    ],
+    [
       'oversized image',
       Object.assign(new Error('image exceeds 5 MB maximum'), { status: 400 }),
       'INFERENCE_IMAGE_TOO_LARGE',
@@ -338,6 +345,31 @@ describe('RuntimeModelProviderDecorator', () => {
             mcpIntegrationName: 'Municipal Records MCP',
           },
         ],
+      }),
+      'Provider unavailable during runtime inference',
+    );
+  });
+
+  it('logs Azure rate limits as provider-unavailable failures', async () => {
+    const upstream = Object.assign(new Error('rate limit exceeded'), {
+      status: 429,
+      requestID: 'req_azure_429',
+    });
+    const azureModel = {
+      name: 'gpt-5.6-terra',
+      provider: 'azure',
+    } as LanguageModel;
+    const { decorate, logger } = buildHarness(azureModel);
+
+    await expect(collect(decorate(throwingProvider(upstream)))).rejects.toThrow(
+      'Provider azure rejected the request',
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'azure',
+        modelId: 'gpt-5.6-terra',
+        upstreamStatus: 429,
+        upstreamRequestId: 'req_azure_429',
       }),
       'Provider unavailable during runtime inference',
     );
