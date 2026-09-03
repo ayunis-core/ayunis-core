@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2, Maximize2 } from 'lucide-react';
+import { AlertCircle, ChevronLeft, Loader2, Maximize2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Empty,
@@ -9,6 +9,7 @@ import {
   EmptyTitle,
 } from '@ayunis/ui/components/empty';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   Tooltip,
   TooltipContent,
@@ -27,12 +28,14 @@ interface DocumentPreviewPaneProps {
   documentId: string;
   isCited: boolean;
   onExpand: () => void;
+  onBack?: () => void;
 }
 
 export function DocumentPreviewPane({
   documentId,
   isCited,
   onExpand,
+  onBack,
 }: Readonly<DocumentPreviewPaneProps>) {
   const hit = ALL_SOURCE_HITS[documentId];
   const canExpand =
@@ -40,8 +43,23 @@ export function DocumentPreviewPane({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-start justify-between gap-2 px-5 py-3">
-        <div className="flex min-w-0 flex-col">
+      <div
+        className={cn(
+          'flex shrink-0 items-start justify-between gap-2 py-3 pr-5',
+          onBack ? 'pl-2' : 'pl-5',
+        )}
+      >
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Zurück"
+            onClick={onBack}
+          >
+            <ChevronLeft />
+          </Button>
+        )}
+        <div className="mr-auto flex min-w-0 flex-col">
           <h3 className="truncate text-sm font-medium">{hit.title}</h3>
           <span className="truncate text-xs text-muted-foreground">
             {subline(hit, isCited)}

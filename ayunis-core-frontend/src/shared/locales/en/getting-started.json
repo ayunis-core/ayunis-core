@@ -36,7 +36,7 @@
     },
     "knowledgeManagement": {
       "title": "Knowledge management",
-      "description": "Create knowledge collections with your own documents and URLs — Ayunis Core uses this knowledge automatically for more precise answers."
+      "description": "Create knowledge bases with your own documents and URLs — Ayunis Core uses this knowledge automatically for more precise answers."
     },
     "advanced": {
       "title": "Advanced features",
@@ -120,26 +120,26 @@
       "spotlightDescription": "Click here to create a new skill. Skills are reusable templates for common tasks."
     },
     "createKnowledgeBase": {
-      "title": "Create a knowledge collection",
-      "description": "Create a knowledge collection to provide your own documents and web pages as a knowledge source for Ayunis Core.",
-      "action": "Create knowledge collection",
+      "title": "Create a knowledge base",
+      "description": "Create a knowledge base to provide your own documents and web pages as a knowledge source for Ayunis Core.",
+      "action": "Create knowledge base",
       "secondaryAction": "Open help center",
-      "spotlightTitle": "Create knowledge collection",
-      "spotlightDescription": "Click here to create a new knowledge collection. You can then add documents and URLs."
+      "spotlightTitle": "Create knowledge base",
+      "spotlightDescription": "Click here to create a new knowledge base. You can then add documents and URLs."
     },
     "addDocuments": {
       "title": "Add documents",
       "description": "Upload PDFs, Word documents or add web URLs. Ayunis Core processes the content automatically and can answer questions based on it.",
-      "action": "Go to knowledge collection",
+      "action": "Go to knowledge base",
       "spotlightTitle": "Upload documents",
       "spotlightDescription": "Upload PDFs or Word documents here, or add web URLs. Ayunis Core processes the content automatically and uses it to give you more accurate answers."
     },
     "useKnowledgeBaseInChat": {
-      "title": "Use knowledge collection in chat",
-      "description": "Add a knowledge collection to your chat via the plus icon. Ayunis Core will then include your own knowledge in its answers.",
-      "action": "Add knowledge collection",
-      "spotlightTitle": "Add knowledge collection",
-      "spotlightDescription": "Use the plus icon to add knowledge collections to your chat. Ayunis Core then uses your own knowledge for more precise answers."
+      "title": "Use knowledge base in chat",
+      "description": "Add a knowledge base to your chat via the plus icon. Ayunis Core will then include your own knowledge in its answers.",
+      "action": "Add knowledge base",
+      "spotlightTitle": "Add knowledge base",
+      "spotlightDescription": "Use the plus icon to add knowledge bases to your chat. Ayunis Core then uses your own knowledge for more precise answers."
     },
     "customInstructions": {
       "title": "Set custom instructions",

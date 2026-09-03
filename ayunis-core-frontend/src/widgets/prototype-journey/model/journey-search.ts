@@ -3,6 +3,7 @@ import {
   JOURNEY,
   type AvailabilityVariant,
   type ContextLayout,
+  type DetailMode,
   type PanelFrame,
 } from '@/widgets/prototype-journey/model/journey';
 
@@ -13,6 +14,7 @@ export interface JourneySearch {
   avail: AvailabilityVariant;
   layout: ContextLayout;
   frame: PanelFrame;
+  nav: DetailMode;
 }
 
 const AVAILABILITY_VARIANTS: AvailabilityVariant[] = [
@@ -23,6 +25,7 @@ const AVAILABILITY_VARIANTS: AvailabilityVariant[] = [
 ];
 const CONTEXT_LAYOUTS: ContextLayout[] = ['tree', 'flat', 'split'];
 const PANEL_FRAMES: PanelFrame[] = ['fill', 'stroke', 'divider'];
+const DETAIL_MODES: DetailMode[] = ['surface', 'back'];
 
 export function parseJourneySearch(
   search: Record<string, unknown>,
@@ -31,12 +34,14 @@ export function parseJourneySearch(
   const avail = String(search.avail) as AvailabilityVariant;
   const layout = String(search.layout) as ContextLayout;
   const frame = String(search.frame) as PanelFrame;
+  const nav = String(search.nav) as DetailMode;
   return {
     step:
       Number.isInteger(step) && step >= 0 && step < JOURNEY.length ? step : 0,
     avail: AVAILABILITY_VARIANTS.includes(avail) ? avail : 'row',
     layout: CONTEXT_LAYOUTS.includes(layout) ? layout : 'tree',
     frame: PANEL_FRAMES.includes(frame) ? frame : 'fill',
+    nav: DETAIL_MODES.includes(nav) ? nav : 'surface',
   };
 }
 

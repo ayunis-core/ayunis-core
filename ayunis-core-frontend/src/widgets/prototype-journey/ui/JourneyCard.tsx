@@ -13,6 +13,7 @@ import {
   JOURNEY,
   type AvailabilityVariant,
   type ContextLayout,
+  type DetailMode,
   type PanelFrame,
 } from '@/widgets/prototype-journey/model/journey';
 import {
@@ -36,6 +37,11 @@ const CONTEXT_LAYOUTS: { value: ContextLayout; label: string }[] = [
   { value: 'split', label: 'Vorschau fest' },
 ];
 
+const DETAIL_MODES: { value: DetailMode; label: string }[] = [
+  { value: 'surface', label: 'Fläche' },
+  { value: 'back', label: 'Zurück' },
+];
+
 const PANEL_FRAMES: { value: PanelFrame; label: string }[] = [
   { value: 'fill', label: 'Fläche' },
   { value: 'stroke', label: 'Rahmen' },
@@ -49,6 +55,7 @@ export function JourneyCard() {
     avail: availabilityVariant,
     layout,
     frame,
+    nav,
   } = useJourneySearch();
   const go = useJourneyNavigate();
   const step = JOURNEY[stepIndex];
@@ -116,18 +123,27 @@ export function JourneyCard() {
             <>
               <VariantRow>
                 <VariantButtons
+                  options={DETAIL_MODES}
+                  active={nav}
+                  onSelect={(value) => go({ nav: value })}
+                />
+              </VariantRow>
+              <VariantRow>
+                <VariantButtons
                   options={CONTEXT_LAYOUTS}
                   active={layout}
                   onSelect={(value) => go({ layout: value })}
                 />
               </VariantRow>
-              <VariantRow>
-                <VariantButtons
-                  options={PANEL_FRAMES}
-                  active={frame}
-                  onSelect={(value) => go({ frame: value })}
-                />
-              </VariantRow>
+              {nav === 'surface' && (
+                <VariantRow>
+                  <VariantButtons
+                    options={PANEL_FRAMES}
+                    active={frame}
+                    onSelect={(value) => go({ frame: value })}
+                  />
+                </VariantRow>
+              )}
             </>
           )}
         </>

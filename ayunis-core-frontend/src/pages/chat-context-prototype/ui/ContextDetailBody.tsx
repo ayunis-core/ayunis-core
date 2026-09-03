@@ -1,4 +1,4 @@
-import { ChevronRight, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
@@ -10,6 +10,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   Tooltip,
   TooltipContent,
@@ -30,11 +31,13 @@ import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon
 interface ContextDetailBodyProps {
   contextId: string;
   onOpenDocument: (documentId: string) => void;
+  onBack?: () => void;
 }
 
 export function ContextDetailBody({
   contextId,
   onOpenDocument,
+  onBack,
 }: Readonly<ContextDetailBodyProps>) {
   const item = CONTEXT_ITEMS[contextId];
   const documents = groupSourceHits(
@@ -44,8 +47,25 @@ export function ContextDetailBody({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-2 px-5 py-3">
-        <h3 className="min-w-0 truncate text-sm font-medium">{item.name}</h3>
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-between gap-2 py-3 pr-5',
+          onBack ? 'pl-2' : 'pl-5',
+        )}
+      >
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Zurück"
+            onClick={onBack}
+          >
+            <ChevronLeft />
+          </Button>
+        )}
+        <h3 className="mr-auto min-w-0 truncate text-sm font-medium">
+          {item.name}
+        </h3>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

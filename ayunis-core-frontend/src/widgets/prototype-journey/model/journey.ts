@@ -4,6 +4,8 @@ export type ContextLayout = 'tree' | 'flat' | 'split';
 
 export type PanelFrame = 'fill' | 'stroke' | 'divider';
 
+export type DetailMode = 'surface' | 'back';
+
 export type AvailabilityVariant = 'row' | 'split' | 'dropdowns' | 'underInput';
 
 export interface PrototypeState {

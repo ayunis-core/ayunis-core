@@ -50,7 +50,7 @@
     "knowledge": {
       "title": "Wissen",
       "toggle": "Wissen anzeigen",
-      "knowledgeBases": "Wissensdatenbanken",
+      "knowledgeBases": "Wissenssammlungen",
       "documents": "Dateien",
       "empty": "Kein Wissen eingebunden"
     },
@@ -86,18 +86,18 @@
       "detachError": "Fähigkeit konnte nicht entfernt werden."
     },
     "knowledge": {
-      "title": "Wissensdatenbanken",
-      "description": "Geteilte Wissensdatenbanken, die in allen Chats dieses Projekts verfügbar sind.",
-      "add": "Wissensdatenbanken hinzufügen",
-      "addDescription": "Wählen Sie Wissensdatenbanken aus, die in diesem Projekt verfügbar sein sollen.",
-      "emptyTitle": "Keine Wissensdatenbanken eingebunden",
-      "empty": "Noch keine Wissensdatenbanken eingebunden.",
-      "detach": "Wissensdatenbank entfernen",
+      "title": "Wissenssammlungen",
+      "description": "Geteilte Wissenssammlungen, die in allen Chats dieses Projekts verfügbar sind.",
+      "add": "Wissenssammlungen hinzufügen",
+      "addDescription": "Wählen Sie Wissenssammlungen aus, die in diesem Projekt verfügbar sein sollen.",
+      "emptyTitle": "Keine Wissenssammlungen eingebunden",
+      "empty": "Noch keine Wissenssammlungen eingebunden.",
+      "detach": "Wissenssammlung entfernen",
       "documentCount": "{{count}} Dokumente",
-      "attachSuccess": "Wissensdatenbank wurde zum Projekt hinzugefügt.",
-      "attachError": "Wissensdatenbank konnte nicht hinzugefügt werden.",
-      "detachSuccess": "Wissensdatenbank wurde aus dem Projekt entfernt.",
-      "detachError": "Wissensdatenbank konnte nicht entfernt werden."
+      "attachSuccess": "Wissenssammlung wurde zum Projekt hinzugefügt.",
+      "attachError": "Wissenssammlung konnte nicht hinzugefügt werden.",
+      "detachSuccess": "Wissenssammlung wurde aus dem Projekt entfernt.",
+      "detachError": "Wissenssammlung konnte nicht entfernt werden."
     },
     "documents": {
       "title": "Dateien",

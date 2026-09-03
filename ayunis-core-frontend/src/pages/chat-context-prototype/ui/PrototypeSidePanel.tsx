@@ -15,9 +15,9 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ayunis/ui/components/tabs';
-import { cn } from '@ayunis/ui/lib/cn';
 import type {
   ContextLayout,
+  DetailMode,
   PanelFrame,
   PanelKey,
 } from '@/widgets/prototype-journey/model/journey';
@@ -25,6 +25,8 @@ import { ArtifactPreviewBody } from './ArtifactPreviewBody';
 import { ContextDetailBody } from './ContextDetailBody';
 import { ContextPanelBody } from './ContextPanelBody';
 import { DocumentPreviewPane } from './DocumentPreviewPane';
+import { PanelRail, PanelSurface } from './PanelSurface';
+import { ResultsBrowser } from './ResultsBrowser';
 import { ResultsPanelBody } from './ResultsPanelBody';
 import { SourceListBody } from './SourceListBody';
 import { SourcePanelBody } from './SourcePanelBody';
@@ -42,6 +44,7 @@ interface PrototypeSidePanelProps {
   isDocumentCited: boolean;
   contextLayout: ContextLayout;
   panelFrame: PanelFrame;
+  detailMode: DetailMode;
   onPanelChange: (panel: PanelKey) => void;
   onOpenArtifact: (artifactId: string) => void;
   onBackToResults: () => void;
@@ -183,10 +186,12 @@ function TabsView({
   onPanelChange,
   onOpenArtifact,
   onBackToResults,
+  onBackToContext,
   onOpenContextDetail,
   onOpenDocument,
   onExpandSource,
   onClose,
+  detailMode,
 }: Readonly<PrototypeSidePanelProps>) {
   return (
     <Tabs
@@ -210,18 +215,27 @@ function TabsView({
         </TabsList>
       </PanelHeader>
       <TabsContent value="results" className="min-h-0 flex-1 outline-none">
-        <ScrollArea className="h-full">
-          <div className="px-3 pb-10 pt-1">
-            {openArtifactId ? (
-              <ArtifactPreviewBody onBack={onBackToResults} />
-            ) : (
-              <ResultsPanelBody
-                artifactIds={artifactIds}
-                onOpen={onOpenArtifact}
-              />
-            )}
-          </div>
-        </ScrollArea>
+        {detailMode === 'surface' ? (
+          <ResultsBrowser
+            artifactIds={artifactIds}
+            openArtifactId={openArtifactId}
+            panelFrame={panelFrame}
+            onOpenArtifact={onOpenArtifact}
+          />
+        ) : (
+          <ScrollArea className="h-full">
+            <div className="px-3 pb-10 pt-1">
+              {openArtifactId ? (
+                <ArtifactPreviewBody onBack={onBackToResults} />
+              ) : (
+                <ResultsPanelBody
+                  artifactIds={artifactIds}
+                  onOpen={onOpenArtifact}
+                />
+              )}
+            </div>
+          </ScrollArea>
+        )}
       </TabsContent>
       <TabsContent value="context" className="min-h-0 flex-1 outline-none">
         <ContextBrowser
@@ -232,9 +246,11 @@ function TabsView({
           openContextId={openContextId}
           contextLayout={contextLayout}
           panelFrame={panelFrame}
+          detailMode={detailMode}
           onOpenContextDetail={onOpenContextDetail}
           onOpenDocument={onOpenDocument}
           onExpandSource={onExpandSource}
+          onBack={onBackToContext}
         />
       </TabsContent>
     </Tabs>
@@ -249,9 +265,11 @@ function ContextBrowser({
   openContextId,
   contextLayout,
   panelFrame,
+  detailMode,
   onOpenContextDetail,
   onOpenDocument,
   onExpandSource,
+  onBack,
 }: Readonly<
   Pick<
     PrototypeSidePanelProps,
@@ -262,11 +280,12 @@ function ContextBrowser({
     | 'openContextId'
     | 'contextLayout'
     | 'panelFrame'
+    | 'detailMode'
     | 'onOpenContextDetail'
     | 'onOpenDocument'
     | 'onExpandSource'
   >
->) {
+> & { onBack: () => void }) {
   const list = (
     <ContextPanelBody
       contextIds={contextIds}
@@ -280,6 +299,37 @@ function ContextBrowser({
   );
 
   const selection = openDocumentId ?? openContextId;
+
+  if (detailMode === 'back') {
+    if (!selection) {
+      return (
+        <ScrollArea className="h-full">
+          <div className="px-3 pb-10 pt-1">{list}</div>
+        </ScrollArea>
+      );
+    }
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        {openDocumentId ? (
+          <DocumentPreviewPane
+            documentId={openDocumentId}
+            isCited={isDocumentCited}
+            onExpand={onExpandSource}
+            onBack={onBack}
+          />
+        ) : (
+          openContextId && (
+            <ContextDetailBody
+              contextId={openContextId}
+              onOpenDocument={onOpenDocument}
+              onBack={onBack}
+            />
+          )
+        )}
+      </div>
+    );
+  }
+
   if (!selection && contextLayout !== 'split') {
     return (
       <ScrollArea className="h-full">
@@ -291,16 +341,9 @@ function ContextBrowser({
   return (
     <div className="flex h-full min-h-0 gap-3 px-3 pb-3">
       <ScrollArea className="h-full w-72 shrink-0 [&>[data-slot=scroll-area-viewport]>div]:!block">
-        <div className="w-full min-w-0 pb-6 pr-3 pt-2">{list}</div>
+        <PanelRail>{list}</PanelRail>
       </ScrollArea>
-      <div
-        className={cn(
-          'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
-          panelFrame === 'fill' && 'rounded-xl bg-muted/40',
-          panelFrame === 'stroke' && 'rounded-xl border',
-          panelFrame === 'divider' && 'border-l',
-        )}
-      >
+      <PanelSurface frame={panelFrame}>
         {openDocumentId && (
           <DocumentPreviewPane
             documentId={openDocumentId}
@@ -330,7 +373,7 @@ function ContextBrowser({
             </Empty>
           </div>
         )}
-      </div>
+      </PanelSurface>
     </div>
   );
 }

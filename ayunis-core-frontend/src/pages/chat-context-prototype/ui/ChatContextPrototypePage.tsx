@@ -30,6 +30,7 @@ export function ChatContextPrototypePage() {
     step: stepIndex,
     layout: contextLayout,
     frame: panelFrame,
+    nav: detailMode,
   } = useJourneySearch();
   const [appliedStep, setAppliedStep] = useState(stepIndex);
   const [expandedSourceId, setExpandedSourceId] = useState<string | null>(null);
@@ -100,6 +101,8 @@ export function ChatContextPrototypePage() {
         openSourceId: null,
         openContextId: null,
         sourceListIds: null,
+        openDocumentId: null,
+        citedDocumentId: null,
       };
     });
   }
@@ -243,6 +246,7 @@ export function ChatContextPrototypePage() {
                   }
                   contextLayout={contextLayout}
                   panelFrame={panelFrame}
+                  detailMode={detailMode}
                   onPanelChange={(panel) =>
                     setState((current) => ({
                       ...current,

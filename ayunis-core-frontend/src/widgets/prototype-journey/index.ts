@@ -9,6 +9,7 @@ export {
   JOURNEY,
   type AvailabilityVariant,
   type ContextLayout,
+  type DetailMode,
   type PanelFrame,
   type PanelKey,
   type PrototypeState,
