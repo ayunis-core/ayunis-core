@@ -301,13 +301,20 @@ export default function NewChatPage({
               <AvailabilityHint workspaceId={workspaceId} />
             </div>
           </div>
+
+          <div
+            className={cn(
+              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
+              isCreating && 'new-chat-dock-extras--collapsed',
+            )}
+            aria-hidden={isCreating}
+          >
+            <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="h-3 w-3 shrink-0" />
+              <span>{t('newChat.privacyHint')}</span>
+            </div>
+          </div>
         </>
-      }
-      footer={
-        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="h-3 w-3 shrink-0" />
-          {t('newChat.privacyHint')}
-        </span>
       }
     />
   );

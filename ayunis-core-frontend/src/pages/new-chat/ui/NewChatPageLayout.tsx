@@ -11,8 +11,6 @@ interface NewChatPageLayoutProps {
   children?: React.ReactNode;
   /** Greeting + input stack; lifted when idle, slides to chat dock when settling */
   compose?: React.ReactNode;
-  /** Pinned to the bottom edge, below the centred compose block */
-  footer?: React.ReactNode;
   isSettling?: boolean;
   mistPhase?: NewChatMistPhase;
   onMistExitComplete?: () => void;
@@ -22,7 +20,6 @@ export default function NewChatPageLayout({
   header,
   children,
   compose,
-  footer,
   isSettling = false,
   mistPhase = 'idle',
   onMistExitComplete,
@@ -77,18 +74,6 @@ export default function NewChatPageLayout({
           ) : (
             <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-4">
               <div className="w-full max-w-[800px]">{children}</div>
-            </div>
-          )}
-
-          {footer !== undefined && (
-            <div
-              className={cn(
-                'new-chat-dock-extras shrink-0 overflow-hidden',
-                isSettling && 'new-chat-dock-extras--collapsed',
-              )}
-              aria-hidden={isSettling}
-            >
-              <div className="px-4 pb-4 text-center">{footer}</div>
             </div>
           )}
         </div>
