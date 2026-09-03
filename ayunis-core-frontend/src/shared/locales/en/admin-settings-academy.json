@@ -2,8 +2,8 @@
   "requirement": {
     "title": "EU AI Act training requirement",
     "description": "Decide whether members of your organization need to complete the EU AI Act training in the Academy before they can use Ayunis Core chat. Reading existing chats is never blocked.",
-    "saved": "Certificate requirement updated",
-    "error": "Could not update the certificate requirement",
+    "saved": "Training requirement updated",
+    "error": "Could not update the training requirement",
     "errorUnexpected": "Something went wrong while saving. Please try again.",
     "modes": {
       "unrestricted": {
@@ -12,17 +12,17 @@
       },
       "requiredOnce": {
         "label": "Required once",
-        "description": "Members must pass the certificate before using chat. Once passed, it never expires."
+        "description": "Members must complete the EU AI Act training before using chat. Once completed, it never expires."
       },
       "requiredAnnually": {
         "label": "Required every year",
-        "description": "Members must pass the certificate before using chat and renew it every 12 months. Renewing means completing the whole Academy again."
+        "description": "Members must complete the EU AI Act training before using chat and renew it every 12 months. Renewing means completing the whole Academy again."
       }
     }
   },
   "overview": {
-    "title": "Certificate status by member",
-    "description": "Who has passed the AI certificate, when they passed, and whose certificate needs attention. Members whose certificate is due within 30 days count as expiring soon.",
+    "title": "Training status by member",
+    "description": "Who has completed the EU AI Act training, when they completed it, and who needs attention. Members whose renewal is due within 30 days count as expiring soon.",
     "searchPlaceholder": "Search by name or email",
     "empty": "No members match these filters",
     "emptyDescription": "Clear the search or status filter to see everyone.",
