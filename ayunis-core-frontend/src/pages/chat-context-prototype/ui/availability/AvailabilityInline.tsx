@@ -27,8 +27,8 @@ export function AvailabilityInline({
             <Database />
             {plural(
               knowledgeCount,
-              'Wissensdatenbank',
-              'Wissensdatenbanken',
+              'Wissenssammlung',
+              'Wissenssammlungen',
             )}{' '}
             durchsuchbar
           </span>
@@ -36,7 +36,7 @@ export function AvailabilityInline({
       </TooltipTrigger>
       <TooltipContent className="max-w-72">
         Fähigkeiten wählt Ayunis Core passend zu Ihrer Nachricht aus,
-        Wissensdatenbanken durchsucht es bei Bedarf. Sie müssen nichts anhängen.
+        Wissenssammlungen durchsucht es bei Bedarf. Sie müssen nichts anhängen.
       </TooltipContent>
     </Tooltip>
   );

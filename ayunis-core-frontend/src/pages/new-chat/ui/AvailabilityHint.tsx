@@ -22,7 +22,10 @@ import {
   useSkillsControllerFindAll,
   useWorkspaceContextControllerFindContext,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { AvailabilityEntryList } from '@/pages/chat-context-prototype/ui/availability/AvailabilityDropdowns';
+import {
+  AvailabilityEntryList,
+  type AvailabilityEntry,
+} from '@/shared/ui/availability-entry-list';
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
@@ -44,14 +47,35 @@ export function AvailabilityHint({
     { query: { enabled: Boolean(workspaceId) } },
   );
 
-  const projectSkills = workspaceContext?.skills.length ?? 0;
-  const projectKnowledge =
-    (workspaceContext?.knowledgeBases.length ?? 0) +
-    (workspaceContext?.documents.length ?? 0);
-  const skillCount = (skills?.length ?? 0) + projectSkills;
-  const knowledgeCount = (knowledgeBases?.data.length ?? 0) + projectKnowledge;
+  const skillEntries = mergeById(
+    (skills ?? [])
+      .filter((skill) => skill.isActive)
+      .map((skill) => ({
+        id: skill.id,
+        name: skill.name,
+        description: skill.shortDescription,
+      })),
+    (workspaceContext?.skills ?? []).map((skill) => ({
+      id: skill.id,
+      name: skill.name,
+      description: skill.shortDescription,
+    })),
+  );
+  const knowledgeEntries = mergeById(
+    (knowledgeBases?.data ?? []).map((base) => ({
+      id: base.id,
+      name: base.name,
+      description: base.description,
+    })),
+    (workspaceContext?.knowledgeBases ?? []).map((base) => ({
+      id: base.id,
+      name: base.name,
+      description: base.description ?? '',
+    })),
+  );
+  const projectDocuments = workspaceContext?.documents.length ?? 0;
 
-  if (skillCount === 0 && knowledgeCount === 0) return null;
+  if (skillEntries.length === 0 && knowledgeEntries.length === 0) return null;
 
   return (
     <Popover>
@@ -62,10 +86,14 @@ export function AvailabilityHint({
           className="text-xs text-muted-foreground"
         >
           <Sparkles />
-          {plural(skillCount, 'Fähigkeit', 'Fähigkeiten')}
+          {plural(skillEntries.length, 'Fähigkeit', 'Fähigkeiten')}
           <span aria-hidden>·</span>
           <Database />
-          {plural(knowledgeCount, 'Wissensdatenbank', 'Wissensdatenbanken')}
+          {plural(
+            knowledgeEntries.length,
+            'Wissenssammlung',
+            'Wissenssammlungen',
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -82,40 +110,35 @@ export function AvailabilityHint({
           <Section
             title="Fähigkeiten"
             qualifier="automatisch aktiviert"
-            entries={(skills ?? []).map((skill) => ({
-              id: skill.id,
-              name: skill.name,
-              description: skill.shortDescription,
-            }))}
+            entries={skillEntries}
+            linkTo="/skills/$id"
           />
           <Section
-            title="Wissensdatenbanken"
+            title="Wissenssammlungen"
             qualifier="bei Bedarf durchsucht"
-            entries={(knowledgeBases?.data ?? []).map((base) => ({
-              id: base.id,
-              name: base.name,
-              description: base.description,
-            }))}
+            entries={knowledgeEntries}
+            linkTo="/knowledge-bases/$id"
           />
           {workspaceId && (
             <>
               <Separator />
               <ProjectBreakdown
-                projectSkills={projectSkills}
-                projectKnowledge={projectKnowledge}
+                projectSkills={workspaceContext?.skills.length ?? 0}
+                projectKnowledge={workspaceContext?.knowledgeBases.length ?? 0}
+                projectDocuments={projectDocuments}
               />
             </>
           )}
           <Separator />
           <div className="flex gap-3 text-xs">
-            <Link to="/skills" className="underline underline-offset-4">
+            <Link to="/skills" className="text-primary hover:underline">
               Fähigkeiten verwalten
             </Link>
             <Link
               to="/knowledge-bases"
-              className="underline underline-offset-4"
+              className="text-primary hover:underline"
             >
-              Wissen verwalten
+              Wissenssammlungen verwalten
             </Link>
           </div>
         </div>
@@ -140,10 +163,12 @@ function Section({
   title,
   qualifier,
   entries,
+  linkTo,
 }: Readonly<{
   title: string;
   qualifier: string;
-  entries: { id: string; name: string; description: string }[];
+  entries: AvailabilityEntry[];
+  linkTo: '/skills/$id' | '/knowledge-bases/$id';
 }>) {
   if (entries.length === 0) return null;
   return (
@@ -151,16 +176,32 @@ function Section({
       <h4 className="text-xs text-muted-foreground">
         <span className="font-medium">{title}</span> · {qualifier}
       </h4>
-      <AvailabilityEntryList entries={entries} />
+      <AvailabilityEntryList entries={entries} linkTo={linkTo} />
     </section>
   );
+}
+
+function mergeById(
+  own: AvailabilityEntry[],
+  fromProject: AvailabilityEntry[],
+): AvailabilityEntry[] {
+  const byId = new Map(own.map((entry) => [entry.id, entry]));
+  for (const entry of fromProject) {
+    byId.set(entry.id, entry);
+  }
+  return [...byId.values()];
 }
 
 function ProjectBreakdown({
   projectSkills,
   projectKnowledge,
-}: Readonly<{ projectSkills: number; projectKnowledge: number }>) {
-  if (projectSkills === 0 && projectKnowledge === 0) {
+  projectDocuments,
+}: Readonly<{
+  projectSkills: number;
+  projectKnowledge: number;
+  projectDocuments: number;
+}>) {
+  if (projectSkills === 0 && projectKnowledge === 0 && projectDocuments === 0) {
     return (
       <p className="text-muted-foreground">
         Dieses Projekt bringt noch nichts Eigenes mit. Was Sie dort hinterlegen,
@@ -170,9 +211,10 @@ function ProjectBreakdown({
   }
   return (
     <p className="text-muted-foreground">
-      Davon aus dem Projekt: {plural(projectSkills, 'Fähigkeit', 'Fähigkeiten')}{' '}
-      und {plural(projectKnowledge, 'Wissensquelle', 'Wissensquellen')} — die
-      gelten in jedem Chat dieses Projekts, ohne Auswahl.
+      Aus dem Projekt: {plural(projectSkills, 'Fähigkeit', 'Fähigkeiten')},{' '}
+      {plural(projectKnowledge, 'Wissenssammlung', 'Wissenssammlungen')} und{' '}
+      {plural(projectDocuments, 'Dokument', 'Dokumente')} — die gelten in jedem
+      Chat dieses Projekts, ohne Auswahl.
     </p>
   );
 }

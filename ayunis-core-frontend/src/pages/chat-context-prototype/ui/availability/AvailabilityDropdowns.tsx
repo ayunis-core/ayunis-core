@@ -13,19 +13,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@ayunis/ui/components/popover';
-import {
-  Item,
-  ItemContent,
-  ItemGroup,
-  ItemTitle,
-} from '@ayunis/ui/components/item';
 import { Separator } from '@ayunis/ui/components/separator';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { showInfo } from '@/shared/lib/toast';
+import {
+  AvailabilityEntryList,
+  type AvailabilityEntryTarget,
+} from '@/shared/ui/availability-entry-list';
 import {
   plural,
   type AvailabilityEntry,
@@ -39,6 +36,7 @@ interface EntryPopoverProps {
   eyebrow: string;
   hint: string;
   entries: AvailabilityEntry[];
+  linkTo: AvailabilityEntryTarget;
   manageTo: '/skills' | '/knowledge-bases';
   manageLabel: string;
   icon: 'skill' | 'knowledge';
@@ -52,6 +50,7 @@ function EntryPopover({
   eyebrow,
   hint,
   entries,
+  linkTo,
   manageTo,
   manageLabel,
   icon,
@@ -91,12 +90,9 @@ function EntryPopover({
         <div className="flex flex-col gap-3">
           <AvailabilityNote title={eyebrow}>{hint}</AvailabilityNote>
           <Separator />
-          <AvailabilityEntryList entries={entries} />
+          <AvailabilityEntryList entries={entries} linkTo={linkTo} />
           <Separator />
-          <Link
-            to={manageTo}
-            className="text-xs text-muted-foreground underline underline-offset-4"
-          >
+          <Link to={manageTo} className="text-xs text-primary hover:underline">
             {manageLabel}
           </Link>
         </div>
@@ -114,37 +110,6 @@ function AvailabilityNote({
       <AlertTitle>{title}</AlertTitle>
       <AlertDescription>{children}</AlertDescription>
     </Alert>
-  );
-}
-
-export function AvailabilityEntryList({
-  entries,
-}: Readonly<{ entries: AvailabilityEntry[] }>) {
-  return (
-    <ItemGroup>
-      {entries.slice(0, 5).map((entry) => (
-        <Item
-          key={entry.id}
-          asChild
-          size="sm"
-          className="-mx-2 cursor-pointer px-2 py-1.5 text-left hover:bg-accent"
-        >
-          <button
-            type="button"
-            onClick={() => showInfo(`Detailseite von „${entry.name}“`)}
-          >
-            <ItemContent>
-              <ItemTitle>{entry.name}</ItemTitle>
-            </ItemContent>
-          </button>
-        </Item>
-      ))}
-      {entries.length > 5 && (
-        <span className="pt-1.5 text-xs text-muted-foreground">
-          und {entries.length - 5} weitere
-        </span>
-      )}
-    </ItemGroup>
   );
 }
 
@@ -169,6 +134,7 @@ export function AvailabilityDropdowns({
         eyebrow="Wird automatisch aktiviert"
         hint="Sobald Ihre Nachricht dazu passt — ohne Auswahl."
         entries={skills}
+        linkTo="/skills/$id"
         manageTo="/skills"
         manageLabel="Fähigkeiten verwalten"
       />
@@ -179,14 +145,15 @@ export function AvailabilityDropdowns({
         tooltip="Werden bei Bedarf im Hintergrund durchsucht."
         label={plural(
           knowledgeBases.length,
-          'Wissensdatenbank',
-          'Wissensdatenbanken',
+          'Wissenssammlung',
+          'Wissenssammlungen',
         )}
         eyebrow="Wird bei Bedarf durchsucht"
         hint="Ayunis Core sucht selbst, wenn die Frage dazu passt."
         entries={knowledgeBases}
+        linkTo="/knowledge-bases/$id"
         manageTo="/knowledge-bases"
-        manageLabel="Wissen verwalten"
+        manageLabel="Wissenssammlungen verwalten"
       />
     </div>
   );

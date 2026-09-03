@@ -3,7 +3,7 @@ import {
   FileStack,
   FileText,
   GitBranch,
-  Table,
+  Table2,
 } from 'lucide-react';
 import {
   Empty,
@@ -77,7 +77,7 @@ export function ResultsPanelBody({
 }
 
 function ArtifactTypeIcon({ type }: Readonly<{ type: ArtifactType }>) {
-  if (type === 'spreadsheet') return <Table />;
+  if (type === 'spreadsheet') return <Table2 />;
   if (type === 'diagram') return <GitBranch />;
   return <FileText />;
 }

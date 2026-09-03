@@ -1,4 +1,4 @@
-import { ExternalLink, FileText } from 'lucide-react';
+import { ChevronRight, ExternalLink } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
@@ -20,8 +20,12 @@ import {
   ALL_SOURCE_HITS,
   CONTEXT_ITEMS,
   DOCUMENTS_BY_KNOWLEDGE_BASE,
+  isPaginated,
   type ContextItem,
+  type SourceHit,
 } from '@/pages/chat-context-prototype/model/mock';
+import { groupSourceHits } from '@/pages/chat-context-prototype/model/source-groups';
+import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
 interface ContextDetailBodyProps {
   contextId: string;
@@ -33,12 +37,14 @@ export function ContextDetailBody({
   onOpenDocument,
 }: Readonly<ContextDetailBodyProps>) {
   const item = CONTEXT_ITEMS[contextId];
-  const documents = DOCUMENTS_BY_KNOWLEDGE_BASE[contextId] ?? [];
+  const documents = groupSourceHits(
+    DOCUMENTS_BY_KNOWLEDGE_BASE[contextId] ?? [],
+  ).map((group) => group.firstHitId);
   const label = item.kind === 'skill' ? 'Zur Fähigkeit' : 'Zur Detailseite';
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-5 py-3">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-5 py-3">
         <h3 className="min-w-0 truncate text-sm font-medium">{item.name}</h3>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -63,7 +69,11 @@ export function ContextDetailBody({
             </p>
           )}
           {documents.length > 0 && (
-            <Section title={`Inhalt · ${documents.length} Dokumente`}>
+            <Section
+              title={`Inhalt · ${documents.length} ${
+                documents.length === 1 ? 'Eintrag' : 'Einträge'
+              }`}
+            >
               <ItemGroup>
                 {documents.map((documentId) => (
                   <DocumentRow
@@ -94,7 +104,7 @@ function SkillSections({ item }: Readonly<{ item: ContextItem }>) {
           </p>
         </Section>
       )}
-      <NameList title="Wissensdatenbanken" names={item.attachedKnowledge} />
+      <NameList title="Wissenssammlungen" names={item.attachedKnowledge} />
       <NameList title="Dateien" names={item.attachedFiles} />
       <NameList title="Integrationen" names={item.attachedIntegrations} />
     </>
@@ -136,7 +146,6 @@ function DocumentRow({
   onOpen,
 }: Readonly<{ documentId: string; onOpen: (documentId: string) => void }>) {
   const hit = ALL_SOURCE_HITS[documentId];
-  if (hit.kind !== 'document') return null;
   return (
     <Item
       asChild
@@ -145,16 +154,24 @@ function DocumentRow({
     >
       <button type="button" onClick={() => onOpen(documentId)}>
         <ItemMedia className="text-muted-foreground [&_svg]:size-4">
-          <FileText />
+          <SourceKindIcon hit={hit} />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>{hit.title}</ItemTitle>
-          <ItemDescription>{hit.pageCount} Seiten</ItemDescription>
+          <ItemDescription>{sourceMeta(hit)}</ItemDescription>
         </ItemContent>
         <ItemActions>
-          <ExternalLink className="size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+          <ChevronRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
         </ItemActions>
       </button>
     </Item>
   );
+}
+
+function sourceMeta(hit: SourceHit): string {
+  if (hit.status === 'processing') return 'Wird verarbeitet';
+  if (hit.status === 'failed') return 'Verarbeitung fehlgeschlagen';
+  if (hit.kind === 'web') return hit.siteName;
+  if (isPaginated(hit)) return `${hit.pageCount} Seiten`;
+  return hit.location;
 }

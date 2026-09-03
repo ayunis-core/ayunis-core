@@ -29,7 +29,7 @@ export function EntryControls({
           size="icon"
           aria-label="Ergebnisse und Kontext"
           className={cn('relative transition-all', highlight && 'text-brand')}
-          onClick={() => onOpen('results')}
+          onClick={() => onOpen(resultCount > 0 ? 'results' : 'context')}
         >
           <PanelRight />
           {resultCount > 0 && (

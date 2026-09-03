@@ -222,7 +222,7 @@ function KnowledgeBaseNode({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent">
+      <CollapsibleTrigger className="flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50">
         {isOpen ? (
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
         ) : (
@@ -267,7 +267,7 @@ function DocumentNode({
       type="button"
       onClick={() => onOpen(documentId)}
       className={cn(
-        'flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+        'flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
         isActive && 'bg-accent',
       )}
     >
@@ -315,7 +315,7 @@ function ContextRow({
       type="button"
       onClick={() => onOpen(contextId)}
       className={cn(
-        'flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+        'flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
         isActive && 'bg-accent',
       )}
     >

@@ -14,10 +14,10 @@ export function KnowledgeBaseLink({ hit }: Readonly<{ hit: SourceHit }>) {
     <Button variant="outline" size="sm" asChild>
       {realId ? (
         <Link to="/knowledge-bases/$id" params={{ id: realId }}>
-          In der Wissensdatenbank öffnen
+          In der Wissenssammlung öffnen
         </Link>
       ) : (
-        <Link to="/knowledge-bases">In der Wissensdatenbank öffnen</Link>
+        <Link to="/knowledge-bases">In der Wissenssammlung öffnen</Link>
       )}
     </Button>
   );
