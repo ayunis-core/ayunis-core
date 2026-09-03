@@ -11,7 +11,7 @@ export interface CertificateTemplateInput {
 }
 
 /**
- * Layout metrics are taken from the official certificate template PDF
+ * Layout metrics are taken from the official Teilnahmebestätigung template PDF
  * (A4 portrait, all measurements converted from PDF points to mm).
  * This HTML is rendered without sanitization because the template is
  * fully owned by us — the user name is the only untrusted value and is
@@ -55,7 +55,7 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
   }
   .title {
     position: absolute;
-    top: 44mm;
+    top: 48mm;
     left: 0;
     right: 0;
     font-size: 48pt;
@@ -63,7 +63,7 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
   }
   .intro {
     position: absolute;
-    top: 81mm;
+    top: 82.9mm;
     left: 0;
     right: 0;
     font-size: 15.3pt;
@@ -71,7 +71,7 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
   }
   .name {
     position: absolute;
-    top: 97.5mm;
+    top: 100.4mm;
     left: 0;
     right: 0;
     font-size: 22pt;
@@ -79,7 +79,7 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
   }
   .body-text {
     position: absolute;
-    top: 119.5mm;
+    top: 125.6mm;
     left: 25mm;
     right: 25mm;
     font-size: 15.3pt;
@@ -88,19 +88,19 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
   }
   .mark {
     position: absolute;
-    top: 157.6mm;
+    top: 152.4mm;
     left: 78.2mm;
     width: 53.6mm;
   }
   .signature {
     position: absolute;
-    top: 225.1mm;
+    top: 219.9mm;
     left: 83mm;
     width: 36.9mm;
   }
   .signatory {
     position: absolute;
-    top: 250.5mm;
+    top: 246.3mm;
     left: 0;
     right: 0;
     font-size: 13.3pt;
@@ -108,7 +108,7 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
   }
   .date-line {
     position: absolute;
-    top: 258.1mm;
+    top: 253.8mm;
     left: 0;
     right: 0;
     font-size: 13.3pt;
@@ -119,12 +119,12 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
 <body>
 <div class="page">
   <img class="wordmark" src="${AYUNIS_CORE_WORDMARK_DATA_URI}" alt="">
-  <div class="title">ZERTIFIKAT</div>
+  <div class="title">Teilnahmebest&auml;tigung</div>
   <div class="intro">Hiermit wird best&auml;tigt, dass</div>
   <div class="name">{{userName}}</div>
   <div class="body-text">
-    die <strong>Ayunis Core KI-Schulung nach EU AI Act</strong> erfolgreich
-    abgeschlossen und die abschlie&szlig;ende Pr&uuml;fung bestanden hat.
+    an der <strong>Ayunis Core KI-Schulung nach EU AI Act</strong>
+    teilgenommen hat.
   </div>
   <img class="mark" src="${AYC_MARK_DATA_URI}" alt="">
   <img class="signature" src="${SIGNATURE_DATA_URI}" alt="">

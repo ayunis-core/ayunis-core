@@ -4,7 +4,7 @@ import { academyCertificateControllerGetCertificate } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 
 const CERTIFICATE_FILE_NAME =
-  'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Zertifikat.pdf';
+  'Teilnahmebestaetigung_Ayunis_Core_KI-Schulung.pdf';
 
 export function useDownloadCertificate() {
   const { t } = useTranslation('academy');

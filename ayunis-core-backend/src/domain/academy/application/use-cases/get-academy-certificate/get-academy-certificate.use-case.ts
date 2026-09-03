@@ -17,12 +17,12 @@ export interface AcademyCertificateFile {
 }
 
 export const CERTIFICATE_FILE_NAME =
-  'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Zertifikat.pdf';
+  'Teilnahmebestaetigung_Ayunis_Core_KI-Schulung.pdf';
 
 const CERTIFICATE_DATE_FORMAT = new Intl.DateTimeFormat('de-DE', {
   timeZone: 'Europe/Berlin',
-  day: 'numeric',
-  month: 'long',
+  day: '2-digit',
+  month: '2-digit',
   year: 'numeric',
 });
 

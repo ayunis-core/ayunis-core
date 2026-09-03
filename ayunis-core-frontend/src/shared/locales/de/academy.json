@@ -62,8 +62,8 @@
     "renewalDue": "Erneuerung fällig"
   },
   "certificate": {
-    "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
-    "download": "Zertifikat herunterladen"
+    "downloadError": "Die Teilnahmebestätigung konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
+    "download": "Teilnahmebestätigung herunterladen"
   },
   "expiry": {
     "title_one": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tag erneuert werden",
@@ -90,10 +90,10 @@
     }
   },
   "gate": {
-    "title": "Zertifikat erforderlich",
+    "title": "KI-Schulung erforderlich",
     "description": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie den Ayunis Core Chat nutzen können. Schließen Sie die Academy ab, um den Chat freizuschalten — Ihre bisherigen Chats bleiben in der Zwischenzeit lesbar.",
     "action": "Zur Academy",
     "emptyTitle": "Noch keine Academy-Inhalte",
-    "emptyDescription": "Der Chat ist gesperrt, bis Sie das Zertifikat bestanden haben, aber es wurden noch keine Kapitel veröffentlicht. Bitte wenden Sie sich an Ihre Administration."
+    "emptyDescription": "Der Chat ist gesperrt, bis Sie die KI-Schulung abgeschlossen haben, aber es wurden noch keine Kapitel veröffentlicht. Bitte wenden Sie sich an Ihre Administration."
   }
 }

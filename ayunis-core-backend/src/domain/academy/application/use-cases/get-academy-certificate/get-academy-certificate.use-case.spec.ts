@@ -73,7 +73,7 @@ describe('GetAcademyCertificateUseCase', () => {
     expect(certificateRenderer.render).not.toHaveBeenCalled();
   });
 
-  it('renders the certificate with the user name and German date line', async () => {
+  it('renders the Teilnahmebestätigung with the user name and German date line', async () => {
     completionRepository.findByUser.mockResolvedValue(
       new AcademyCompletion({
         userId,
@@ -89,11 +89,11 @@ describe('GetAcademyCertificateUseCase', () => {
 
     expect(certificateRenderer.render).toHaveBeenCalledWith({
       userName: 'Käthe Müller',
-      dateLine: '15. Juli 2026, München',
+      dateLine: '15.07.2026, München',
     });
     expect(result.buffer.toString()).toBe('%PDF-fake');
     expect(result.fileName).toBe(
-      'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Zertifikat.pdf',
+      'Teilnahmebestaetigung_Ayunis_Core_KI-Schulung.pdf',
     );
     expect(result.mimeType).toBe('application/pdf');
   });

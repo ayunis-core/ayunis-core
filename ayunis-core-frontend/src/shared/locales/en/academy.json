@@ -62,16 +62,16 @@
     "renewalDue": "Renewal due"
   },
   "certificate": {
-    "downloadError": "The certificate could not be downloaded. Please try again.",
-    "download": "Download certificate"
+    "downloadError": "The confirmation of participation could not be downloaded. Please try again.",
+    "download": "Download confirmation of participation"
   },
   "expiry": {
-    "title_one": "Your AI certificate expires in {{count}} day",
-    "title_other": "Your AI certificate expires in {{count}} days",
+    "title_one": "Your EU AI Act training must be renewed in {{count}} day",
+    "title_other": "Your EU AI Act training must be renewed in {{count}} days",
     "description": "Renew it in the Academy to keep using Ayunis Core chat without interruption.",
-    "urgentDescription": "Renew it now — once it expires, Ayunis Core chat is locked until you pass the certificate again.",
-    "banner_one": "Your AI certificate expires in {{count}} day. Chat will be locked afterwards.",
-    "banner_other": "Your AI certificate expires in {{count}} days. Chat will be locked afterwards.",
+    "urgentDescription": "Renew it now — once it lapses, Ayunis Core chat is locked until you complete the EU AI Act training again.",
+    "banner_one": "Your EU AI Act training must be renewed in {{count}} day. Chat will be locked afterwards.",
+    "banner_other": "Your EU AI Act training must be renewed in {{count}} days. Chat will be locked afterwards.",
     "later": "Later",
     "action": "Go to the academy"
   },
@@ -80,7 +80,7 @@
     "lastPassed": "Last passed:",
     "nextRenewal": "Next renewal due:",
     "expiredOn": "Expired on:",
-    "notPassedDescription": "You haven't earned the certificate yet.",
+    "notPassedDescription": "You haven't completed the EU AI Act training yet.",
     "action": "Go to the academy",
     "status": {
       "valid": "Valid",
@@ -90,10 +90,10 @@
     }
   },
   "gate": {
-    "title": "Certificate required",
+    "title": "Training required",
     "description": "Your organization requires you to complete the EU AI Act training before you can use Ayunis Core chat. Complete the Academy to unlock chat — your existing chats stay readable in the meantime.",
     "action": "Go to the academy",
     "emptyTitle": "No academy content yet",
-    "emptyDescription": "Chat is locked until you pass the certificate, but no chapters have been published yet. Please contact your administrator."
+    "emptyDescription": "Chat is locked until you complete the EU AI Act training, but no chapters have been published yet. Please contact your administrator."
   }
 }
