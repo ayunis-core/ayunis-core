@@ -60,4 +60,28 @@ describe('MockStreamInferenceHandler runtime provider', () => {
       'recovered::bedrock::claude-sonnet-4-6',
     );
   });
+
+  it('echoes a requested chat name in the runtime response', async () => {
+    const provider = new MockStreamInferenceHandler().resolveProvider(model);
+    const namingRequest: ProviderRequest = {
+      ...request,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Name this chat {{legal:DE/BGB/sec_433/par_2}}',
+            },
+          ],
+        },
+      ],
+    };
+
+    const response = await collect(provider.stream(namingRequest));
+
+    expect(response.map((chunk) => chunk.textDelta).join('')).toBe(
+      "I'll name this chat {{legal:DE/BGB/sec_433/par_2}}. You're talking to bedrock::claude-sonnet-4-6",
+    );
+  });
 });

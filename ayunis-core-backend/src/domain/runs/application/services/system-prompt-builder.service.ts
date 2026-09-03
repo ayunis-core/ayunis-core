@@ -15,6 +15,7 @@ import {
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { SkillEntry } from 'src/common/util/skill-slug';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import { LEGAL_REFERENCE_INSTRUCTIONS } from './legal-reference-instructions';
 import { escapeXml } from './xml-escape';
 export interface SystemPromptBuildParams {
   tools: Tool[];
@@ -59,6 +60,7 @@ export class SystemPromptBuilderService {
       this.buildDataHandlingSection(),
       isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
+      LEGAL_REFERENCE_INSTRUCTIONS,
       this.buildPlatformSection(),
       orgSystemPrompt ? this.buildOrgInstructionsSection(orgSystemPrompt) : '',
       userSystemPrompt

@@ -4,15 +4,18 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import CodeBlock from './Codeblock';
 import PiiMaskInline from './PiiMaskInline';
-import { rehypePiiMasks } from '../lib/rehype-pii-masks';
+import { rehypePiiMasks } from '@/widgets/markdown/lib/rehype-pii-masks';
+import { rehypeLegalMarkers } from '@/widgets/markdown/lib/rehype-legal-markers';
 
 // Module constants so react-markdown doesn't re-parse on every render.
 const REMARK_PLUGINS = [remarkGfm];
 const REHYPE_PLUGINS = [rehypePiiMasks];
+const LEGAL_REHYPE_PLUGINS = [rehypePiiMasks, rehypeLegalMarkers];
 
 interface MarkdownProps {
   children: string;
   className?: string;
+  renderLegalReferences?: boolean;
 }
 
 interface SpanComponentProps {
@@ -34,16 +37,23 @@ interface TableComponentProps {
 interface AnchorComponentProps {
   href?: string;
   children?: ReactNode;
+  'data-legal-reference'?: string;
 }
 
-function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
+function Markdown({
+  children,
+  className = '',
+  renderLegalReferences = false,
+}: Readonly<MarkdownProps>) {
   return (
     <div
       className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
     >
       <ReactMarkdown
         remarkPlugins={REMARK_PLUGINS}
-        rehypePlugins={REHYPE_PLUGINS}
+        rehypePlugins={
+          renderLegalReferences ? LEGAL_REHYPE_PLUGINS : REHYPE_PLUGINS
+        }
         components={{
           span: (props: SpanComponentProps) => {
             const token = props['data-pii-token'];
@@ -111,11 +121,28 @@ function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
           td: ({ children }: TableComponentProps) => (
             <td className="px-2 py-2 text-foreground">{children}</td>
           ),
-          a: ({ href, children }: AnchorComponentProps) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
+          a: ({
+            href,
+            children,
+            'data-legal-reference': legalReference,
+          }: AnchorComponentProps) => {
+            const isLegalReference = legalReference === 'true';
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={
+                  isLegalReference
+                    ? 'bg-brand/15 text-brand px-1 py-0.5 rounded font-medium'
+                    : undefined
+                }
+                data-testid={isLegalReference ? 'legal-reference' : undefined}
+              >
+                {children}
+              </a>
+            );
+          },
         }}
       >
         {children}

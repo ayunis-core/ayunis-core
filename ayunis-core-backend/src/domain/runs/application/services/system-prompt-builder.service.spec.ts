@@ -83,6 +83,51 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 
+  describe('legal reference markers', () => {
+    it('requires structured markers instead of plain German legal citations', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain('<legal_references>');
+      expect(result).toContain(
+        'Use structured legal-reference markers instead of plain citations when citing German law.',
+      );
+      expect(result).toContain('{{legal:SCOPE/CODE/LOCATOR[/PARAGRAPH]}}');
+      expect(result).toContain('{{legal:DE/BGB/sec_433/par_2}}');
+      expect(result).toContain('{{legal:DE-BY/POG/art_1}}');
+    });
+
+    it('defines the valid German scopes and supported locator hierarchy', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain(
+        'Valid scopes: DE, DE-BW, DE-BY, DE-BE, DE-BB, DE-HB, DE-HH, DE-HE, DE-MV, DE-NI, DE-NW, DE-RP, DE-SL, DE-SN, DE-ST, DE-SH, and DE-TH.',
+      );
+      expect(result).toContain(
+        'Use sec for sections, art for articles, and optionally append par for a paragraph (Absatz).',
+      );
+    });
+
+    it('limits legal markers to assistant chat text', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain(
+        'Use these markers only in assistant text shown directly in the chat.',
+      );
+      expect(result).toContain(
+        'Never put them in tool-call arguments or generated content such as documents, emails, spreadsheets, or diagrams.',
+      );
+    });
+  });
+
   describe('skills section', () => {
     it('should include available_skills section when active skills are provided', () => {
       const skills: SkillEntry[] = [

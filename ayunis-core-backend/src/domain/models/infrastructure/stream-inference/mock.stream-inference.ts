@@ -58,15 +58,7 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
       return this.malformedRetryResponse(lastUserMessage.id, input.model);
     }
 
-    let responseText = `${input.model.provider}::${input.model.name}`;
-
-    const namingMatch = /Name this chat (\S+)/i.exec(textContent);
-    if (namingMatch) {
-      const requestedName = namingMatch[1];
-      responseText = `I'll name this chat ${requestedName}. You're talking to ${input.model.provider}::${input.model.name}`;
-    }
-
-    return textResponse(responseText);
+    return textResponse(buildResponseText(textContent, input.model));
   }
 
   private malformedRetryResponse(
@@ -92,14 +84,14 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
       name: defaultResponseText,
       stream: (request) => {
         const lastUserText = lastProviderUserText(request);
-        if (lastUserText !== MALFORMED_TOOL_CALL_RETRY_PROMPT) {
-          return providerTextResponse(defaultResponseText);
+        if (lastUserText === MALFORMED_TOOL_CALL_RETRY_PROMPT) {
+          if (!malformedAttemptEmitted) {
+            malformedAttemptEmitted = true;
+            return malformedProviderToolCallResponse();
+          }
+          return providerTextResponse(`recovered::${defaultResponseText}`);
         }
-        if (!malformedAttemptEmitted) {
-          malformedAttemptEmitted = true;
-          return malformedProviderToolCallResponse();
-        }
-        return providerTextResponse(`recovered::${defaultResponseText}`);
+        return providerTextResponse(buildResponseText(lastUserText, model));
       },
     };
   }
@@ -126,6 +118,14 @@ function lastProviderUserText(request: ProviderRequest): string {
     (content) => content.type === 'text',
   );
   return text?.type === 'text' ? text.text : '';
+}
+
+function buildResponseText(userText: string, model: Model): string {
+  const modelName = `${model.provider}::${model.name}`;
+  const requestedName = /Name this chat (\S+)/i.exec(userText)?.[1];
+  return requestedName
+    ? `I'll name this chat ${requestedName}. You're talking to ${modelName}`
+    : modelName;
 }
 
 async function* providerTextResponse(
