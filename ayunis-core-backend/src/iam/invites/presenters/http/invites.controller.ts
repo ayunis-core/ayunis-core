@@ -90,6 +90,7 @@ export class InvitesController {
   ) {}
 
   @Post()
+  @Roles(UserRole.ADMIN)
   // Admins onboarding a whole organization can legitimately create many
   // invitations back-to-back. The previous limit of 10 per 15 minutes blocked
   // that flow (AYC-409). Keep an upper bound to deter abuse while allowing
