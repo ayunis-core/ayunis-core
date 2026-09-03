@@ -1,6 +1,9 @@
 version: 2
 updates:
-  # Root package.json (husky, etc.)
+  # pnpm workspace: a single root entry covers every workspace package
+  # (backend, frontend, packages/*, e2e). Dependabot can only update the
+  # shared root pnpm-lock.yaml from the directory that contains it, so
+  # per-package entries produce PRs that fail `pnpm install --frozen-lockfile`.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -10,31 +13,13 @@ updates:
       prefix: "chore(deps)"
     labels:
       - "dependencies"
-    open-pull-requests-limit: 5
-    groups:
-      root-dependencies:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  # Backend (NestJS)
-  - package-ecosystem: "npm"
-    directory: "/ayunis-core-backend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-backend)"
-    labels:
-      - "dependencies"
-      - "backend"
-    open-pull-requests-limit: 8
+    open-pull-requests-limit: 10
     groups:
       nest:
         patterns:
           - "@nestjs/*"
+          - "nestjs-*"
+          - "@nestjs-cls/*"
         update-types:
           - "minor"
           - "patch"
@@ -51,29 +36,11 @@ updates:
           - "jest"
           - "@jest/*"
           - "supertest"
+          - "vitest"
+          - "@playwright/*"
         update-types:
           - "minor"
           - "patch"
-      other:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  # Frontend (React/Vite)
-  - package-ecosystem: "npm"
-    directory: "/ayunis-core-frontend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-frontend)"
-    labels:
-      - "dependencies"
-      - "frontend"
-    open-pull-requests-limit: 8
-    groups:
       react:
         patterns:
           - "react"
@@ -102,26 +69,6 @@ updates:
           - "minor"
           - "patch"
       other:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  # UI design-system package
-  - package-ecosystem: "npm"
-    directory: "/packages/ui"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-ui)"
-    labels:
-      - "dependencies"
-      - "frontend"
-    open-pull-requests-limit: 8
-    groups:
-      ui-dependencies:
         patterns:
           - "*"
         update-types:
