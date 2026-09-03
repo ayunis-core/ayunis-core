@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.36.0](https://github.com/ayunis-core/ayunis-core/compare/v2.35.0...v2.36.0) (2026-09-03)
+
+
+### Features
+
+* **academy:** replace certificate with teilnahmebestätigung (AYC-000) ([#1600](https://github.com/ayunis-core/ayunis-core/issues/1600)) ([a750b7f](https://github.com/ayunis-core/ayunis-core/commit/a750b7f9d9e79d29101dbdf7a8a5b3e9e5236d1e))
+* **chat:** highlight legal references (AYC-863) ([#1566](https://github.com/ayunis-core/ayunis-core/issues/1566)) ([37e16f4](https://github.com/ayunis-core/ayunis-core/commit/37e16f4a801623d3cae21ea94fd9838041b84ccd))
+
+
+### Bug Fixes
+
+* **auth:** make registration atomic (AYC-627) ([#1587](https://github.com/ayunis-core/ayunis-core/issues/1587)) ([d96cd8c](https://github.com/ayunis-core/ayunis-core/commit/d96cd8c249c70fb0b830ddb96a846be95c1d368e))
+* **invites:** require tenant admin for invitations (AYC-889) ([#1597](https://github.com/ayunis-core/ayunis-core/issues/1597)) ([b1327e6](https://github.com/ayunis-core/ayunis-core/commit/b1327e67cec4d166affc7d5573fc52e583be62eb))
+* **models:** classify provider rate limits (AYC-893) ([#1599](https://github.com/ayunis-core/ayunis-core/issues/1599)) ([a679df0](https://github.com/ayunis-core/ayunis-core/commit/a679df001bcf9238abfd5b33e6e6183e02c172d2))
+* **tooling:** make bundle-frontend.sh work in the pnpm workspace (AYC-000) ([#1592](https://github.com/ayunis-core/ayunis-core/issues/1592)) ([8659890](https://github.com/ayunis-core/ayunis-core/commit/8659890928d1f778aeae8aa915797f1e1a5f9780))
+
+
+### Code Refactoring
+
+* **logging:** decouple application logging from Pino (AYC-817) ([#1591](https://github.com/ayunis-core/ayunis-core/issues/1591)) ([b53b4f5](https://github.com/ayunis-core/ayunis-core/commit/b53b4f529dc519dd0caa1397da859f4dfcf6a139))
+
+
+### Documentation
+
+* **tooling:** replace stale npm commands with pnpm (AYC-000) ([#1593](https://github.com/ayunis-core/ayunis-core/issues/1593)) ([be2b752](https://github.com/ayunis-core/ayunis-core/commit/be2b7522967a86377d0f3313deb0094fc9de82a6))
+* **tooling:** require feature flag on and off contracts (AYC-000) ([#1520](https://github.com/ayunis-core/ayunis-core/issues/1520)) ([8737b4b](https://github.com/ayunis-core/ayunis-core/commit/8737b4b7d614f72417716ea6fc4d53e2b4f5bb76))
+
+
+### Miscellaneous
+
+* **deps-backend:** bump the other group across 1 directory with 21 updates ([#1562](https://github.com/ayunis-core/ayunis-core/issues/1562)) ([cb362fc](https://github.com/ayunis-core/ayunis-core/commit/cb362fcfe2692f58f01d1067ee285d4ab4ae6fdd))
+* **tooling:** ignore local .pnpm-store directory (AYC-000) ([#1596](https://github.com/ayunis-core/ayunis-core/issues/1596)) ([688e981](https://github.com/ayunis-core/ayunis-core/commit/688e981adb0be6042d38092e07127e3e60aa9959))
+
+
+### CI/CD
+
+* **deps:** move dependabot npm updates to the workspace root (AYC-000) ([#1590](https://github.com/ayunis-core/ayunis-core/issues/1590)) ([76e4dca](https://github.com/ayunis-core/ayunis-core/commit/76e4dca8ae2c07cce7198e24c7324966536126eb))
+
 ## [2.35.0](https://github.com/ayunis-core/ayunis-core/compare/v2.34.1...v2.35.0) (2026-09-02)
 
 
