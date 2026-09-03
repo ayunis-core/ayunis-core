@@ -85,24 +85,6 @@
   transition-delay: var(--new-chat-settle-duration);
 }
 
-.new-chat-dock-extras {
-  transition:
-    max-height var(--new-chat-greeting-exit-duration)
-      var(--new-chat-greeting-exit-ease),
-    opacity var(--new-chat-greeting-exit-duration)
-      var(--new-chat-greeting-exit-ease),
-    margin-top var(--new-chat-greeting-exit-duration)
-      var(--new-chat-greeting-exit-ease);
-  max-height: 24rem;
-}
-
-.new-chat-dock-extras--collapsed {
-  max-height: 0;
-  margin-top: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .chat-input-shell__textarea--animate,
   .chat-input-shell__card .chat-input-body,
@@ -110,8 +92,7 @@
   .new-chat-compose--settling,
   .new-chat-compose--settling .new-chat-compose__content,
   .new-chat-greeting,
-  .new-chat-disclaimer,
-  .new-chat-dock-extras {
+  .new-chat-disclaimer {
     transition: none;
   }
 
