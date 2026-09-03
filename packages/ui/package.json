@@ -46,7 +46,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.476.0",
+    "lucide-react": "^1.28.0",
     "radix-ui": "^1.6.1",
     "react-day-picker": "^9.13.2",
     "tailwind-merge": "^3.0.2",
