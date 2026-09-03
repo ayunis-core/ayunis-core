@@ -69,13 +69,19 @@
       "description": "Wissenssammlungen, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt werden, erscheinen hier."
     }
   },
+  "list": {
+    "activeHint": "Ayunis Core durchsucht in Ihren Chats nur die aktiven Wissenssammlungen. Inaktive bleiben erhalten, werden aber nicht verwendet."
+  },
   "card": {
     "confirmDelete": {
       "title": "Wissenssammlung löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Alle zugehörigen Dokumente werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen"
-    }
+    },
+    "activeAriaLabel": "„{{name}}“ in Chats aktivieren",
+    "activeLabel": "Aktiv",
+    "inactiveLabel": "Inaktiv"
   },
   "createDialog": {
     "buttonText": "Wissenssammlung hinzufügen",

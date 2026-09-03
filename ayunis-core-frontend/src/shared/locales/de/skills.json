@@ -35,8 +35,6 @@
   "card": {
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
-    "pinLabel": "An neuen Chat anheften",
-    "unpinLabel": "Von neuem Chat lösen",
     "deleteLabel": "Löschen",
     "confirmDelete": {
       "title": "Fähigkeit löschen",

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -6,7 +7,7 @@ import CreateKnowledgeBaseDialog from './CreateKnowledgeBaseDialog';
 import KnowledgeBaseCard from './KnowledgeBaseCard';
 import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import type { KnowledgeBase } from '../model/openapi';
+import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '@/features/permissions';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
@@ -28,6 +29,30 @@ export default function KnowledgeBasesPage({
   const { t } = useTranslation('knowledge-bases');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const canCreate = isLoadingPermissions || can('manage_knowledge_bases');
+  const [inactiveIds, setInactiveIds] = useState<string[]>([]);
+
+  function setActive(knowledgeBaseId: string, isActive: boolean) {
+    setInactiveIds((current) =>
+      isActive
+        ? current.filter((id) => id !== knowledgeBaseId)
+        : [...current, knowledgeBaseId],
+    );
+  }
+
+  function renderCards(items: KnowledgeBase[]) {
+    return (
+      <div className="space-y-3">
+        {items.map((kb) => (
+          <KnowledgeBaseCard
+            key={kb.id}
+            knowledgeBase={kb}
+            isActive={!inactiveIds.includes(kb.id)}
+            onActiveChange={(isActive) => setActive(kb.id, isActive)}
+          />
+        ))}
+      </div>
+    );
+  }
 
   const personalKnowledgeBases = knowledgeBases
     .filter((kb) => !kb.isShared)
@@ -78,6 +103,9 @@ export default function KnowledgeBasesPage({
               <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
               <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
             </TabsList>
+            <p className="mt-4 max-w-prose text-sm text-muted-foreground">
+              {t('list.activeHint')}
+            </p>
             <TabsContent value="personal" className="mt-4">
               {personalKnowledgeBases.length === 0 ? (
                 <EmptyState
@@ -97,11 +125,7 @@ export default function KnowledgeBasesPage({
                   }
                 />
               ) : (
-                <div className="space-y-3">
-                  {personalKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
+                renderCards(personalKnowledgeBases)
               )}
             </TabsContent>
             <TabsContent value="shared" className="mt-4">
@@ -111,11 +135,7 @@ export default function KnowledgeBasesPage({
                   description={t('emptyState.shared.description')}
                 />
               ) : (
-                <div className="space-y-3">
-                  {sharedKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
+                renderCards(sharedKnowledgeBases)
               )}
             </TabsContent>
           </Tabs>

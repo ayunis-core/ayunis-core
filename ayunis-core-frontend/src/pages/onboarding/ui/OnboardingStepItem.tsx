@@ -20,10 +20,7 @@ import {
   SECONDARY_ACTION_TYPE,
   type OnboardingStep,
 } from '@/widgets/onboarding';
-import {
-  useKnowledgeBasesControllerFindAll,
-  useSkillsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 
 interface OnboardingStepItemProps {
   step: OnboardingStep;
@@ -50,12 +47,6 @@ export default function OnboardingStepItem({
     query: { enabled: isAddDocumentsStep && !locked },
   });
   const firstKnowledgeBase = kbResponse?.data[0];
-
-  const isPinSkillStep = step.id === 'useSkillInChat';
-  const { data: skills } = useSkillsControllerFindAll({
-    query: { enabled: isPinSkillStep && !locked },
-  });
-  const hasPersonalSkill = skills?.some((skill) => !skill.isShared) ?? false;
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt
@@ -86,14 +77,10 @@ export default function OnboardingStepItem({
     });
   };
 
-  // A couple of steps resolve their spotlight at runtime, since the configured
-  // target only exists once the user has the relevant data:
-  // - addDocuments: when there's no knowledge base yet, open the list and
-  //   spotlight "create knowledge base" (the existing-KB deep-link is handled
-  //   directly in handleAction, since it needs a typed param route).
-  // - useSkillInChat (pin): if there's no personal skill to pin yet, spotlight
-  //   "create skill" instead of the (absent) pin button.
-  // Every other link uses its configured target.
+  // addDocuments resolves its spotlight at runtime: when there's no knowledge
+  // base yet, open the list and spotlight "create knowledge base" (the
+  // existing-KB deep-link is handled directly in handleAction, since it needs a
+  // typed param route). Every other link uses its configured target.
   const resolveLinkTarget = (
     to: string,
     spotlight?: TourTargetName,
@@ -103,13 +90,6 @@ export default function OnboardingStepItem({
         to,
         spotlight: TOUR_TARGET.createKnowledgeBase,
         translationKey: 'createKnowledgeBase',
-      };
-    }
-    if (isPinSkillStep && !hasPersonalSkill) {
-      return {
-        to,
-        spotlight: TOUR_TARGET.createSkill,
-        translationKey: 'createSkill',
       };
     }
     return { to, spotlight, translationKey: step.translationKey };

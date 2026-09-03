@@ -1,11 +1,12 @@
 import { Button } from '@ayunis/ui/components/button';
 import { Badge } from '@ayunis/ui/components/badge';
+import { Switch } from '@ayunis/ui/components/switch';
 import { Trash2 } from 'lucide-react';
-import { useDeleteKnowledgeBase } from '../api/useDeleteKnowledgeBase';
+import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
 import { PermissionGate } from '@/features/permissions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
-import type { KnowledgeBase } from '../model/openapi';
+import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import {
   Item,
@@ -17,10 +18,14 @@ import {
 
 interface KnowledgeBaseCardProps {
   knowledgeBase: KnowledgeBase;
+  isActive: boolean;
+  onActiveChange: (isActive: boolean) => void;
 }
 
 export default function KnowledgeBaseCard({
   knowledgeBase,
+  isActive,
+  onActiveChange,
 }: Readonly<KnowledgeBaseCardProps>) {
   const { t } = useTranslation('knowledge-bases');
   const deleteKnowledgeBase = useDeleteKnowledgeBase();
@@ -68,12 +73,22 @@ export default function KnowledgeBaseCard({
           <ItemDescription>{knowledgeBase.description}</ItemDescription>
         )}
       </ItemContent>
-      {/* The gate wraps ItemActions rather than the button: delete is the only
-          action here, so gating inside would leave an empty flex sibling and a
-          trailing gap that shared cards don't have. */}
-      {!isShared && (
-        <PermissionGate permission="manage_knowledge_bases">
-          <ItemActions>
+      <ItemActions>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            {isActive ? t('card.activeLabel') : t('card.inactiveLabel')}
+          </span>
+          <Switch
+            checked={isActive}
+            onCheckedChange={onActiveChange}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={t('card.activeAriaLabel', {
+              name: knowledgeBase.name,
+            })}
+          />
+        </div>
+        {!isShared && (
+          <PermissionGate permission="manage_knowledge_bases">
             <Button
               variant="ghost"
               size="icon"
@@ -86,9 +101,9 @@ export default function KnowledgeBaseCard({
             >
               <Trash2 />
             </Button>
-          </ItemActions>
-        </PermissionGate>
-      )}
+          </PermissionGate>
+        )}
+      </ItemActions>
     </Item>
   );
 }

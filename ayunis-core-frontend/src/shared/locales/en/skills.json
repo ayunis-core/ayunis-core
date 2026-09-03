@@ -35,8 +35,6 @@
   "card": {
     "activeLabel": "Active",
     "inactiveLabel": "Inactive",
-    "pinLabel": "Pin to new chat",
-    "unpinLabel": "Unpin from new chat",
     "deleteLabel": "Delete",
     "confirmDelete": {
       "title": "Delete Skill",

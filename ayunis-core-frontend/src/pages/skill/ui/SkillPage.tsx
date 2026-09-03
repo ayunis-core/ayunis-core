@@ -26,17 +26,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { Trash2, Pin } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDeleteSkill, useSkillSources } from '../api';
-import {
-  useToggleSkillActive,
-  useToggleSkillPinned,
-} from '@/features/skill-actions';
+import { useDeleteSkill, useSkillSources } from '@/pages/skill/api';
+import { useToggleSkillActive } from '@/features/skill-actions';
 
 export function SkillPage({
   skill,
@@ -59,7 +56,6 @@ export function SkillPage({
   const { t: tSkills } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();
-  const togglePinned = useToggleSkillPinned();
   const { confirm } = useConfirmation();
 
   const sourcesHook = useSkillSources({
@@ -132,32 +128,6 @@ export function SkillPage({
                     disabled={toggleActive.isPending}
                   />
                 </div>
-                {skill.isActive && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => togglePinned.mutate({ id: skill.id })}
-                        disabled={togglePinned.isPending}
-                        aria-label={
-                          skill.isPinned
-                            ? tSkills('card.unpinLabel')
-                            : tSkills('card.pinLabel')
-                        }
-                      >
-                        <Pin
-                          className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {skill.isPinned
-                        ? tSkills('card.unpinLabel')
-                        : tSkills('card.pinLabel')}
-                    </TooltipContent>
-                  </Tooltip>
-                )}
                 {!isReadOnly && canManageSkills && (
                   <Tooltip>
                     <TooltipTrigger asChild>

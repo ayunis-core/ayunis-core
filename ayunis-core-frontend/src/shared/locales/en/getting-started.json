@@ -119,20 +119,6 @@
       "spotlightTitle": "Create skill",
       "spotlightDescription": "Click here to create a new skill. Skills are reusable templates for common tasks."
     },
-    "useSkillInChat": {
-      "title": "Pin a skill",
-      "description": "Skills activate automatically when they match your question. You can also pin them here to use them in a new chat.",
-      "action": "Pin skill",
-      "spotlightTitle": "Pin skill",
-      "spotlightDescription": "Click the pin icon to attach a skill to new chats."
-    },
-    "activateSkillInChat": {
-      "title": "Use a pinned skill in chat",
-      "description": "Your pinned skills appear as buttons below the chat input. Click one to use it explicitly in this chat — that way it's guaranteed to be applied.",
-      "action": "Go to chat",
-      "spotlightTitle": "Pinned skills",
-      "spotlightDescription": "Here are your pinned skills. Click one to use it explicitly in this chat — that way it's guaranteed to be applied."
-    },
     "createKnowledgeBase": {
       "title": "Create a knowledge collection",
       "description": "Create a knowledge collection to provide your own documents and web pages as a knowledge source for Ayunis Core.",

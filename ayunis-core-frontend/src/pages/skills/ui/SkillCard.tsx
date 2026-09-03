@@ -6,16 +6,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { Trash2, Pin } from 'lucide-react';
-import { useDeleteSkill } from '../api/useDeleteSkill';
+import { Trash2 } from 'lucide-react';
+import { useDeleteSkill } from '@/pages/skills/api/useDeleteSkill';
 import { PermissionGate } from '@/features/permissions';
-import {
-  useToggleSkillActive,
-  useToggleSkillPinned,
-} from '@/features/skill-actions';
+import { useToggleSkillActive } from '@/features/skill-actions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
-import type { Skill } from '../model/openapi';
+import type { Skill } from '@/pages/skills/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import {
   Item,
@@ -24,22 +21,15 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 interface SkillCardProps {
   skill: Skill;
-  /** Anchor the "pin a skill" onboarding tour spotlight on this card's pin button. */
-  pinTourTarget?: boolean;
 }
 
-export default function SkillCard({
-  skill,
-  pinTourTarget = false,
-}: Readonly<SkillCardProps>) {
+export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();
-  const togglePinned = useToggleSkillPinned();
   const { confirm } = useConfirmation();
   const router = useRouter();
 
@@ -60,37 +50,9 @@ export default function SkillCard({
     toggleActive.mutate({ id: skill.id });
   }
 
-  function handleTogglePinned() {
-    togglePinned.mutate({ id: skill.id });
-  }
-
   function handleNavigateToDetail() {
     void router.navigate({ to: '/skills/$id', params: { id: skill.id } });
   }
-
-  const pinButton = skill.isActive ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleTogglePinned();
-          }}
-          disabled={togglePinned.isPending}
-          aria-label={
-            skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')
-          }
-        >
-          <Pin className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`} />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
-      </TooltipContent>
-    </Tooltip>
-  ) : null;
 
   return (
     <Item
@@ -126,14 +88,6 @@ export default function SkillCard({
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        {pinButton &&
-          (pinTourTarget ? (
-            <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-              {pinButton}
-            </OnboardingTourTarget>
-          ) : (
-            pinButton
-          ))}
         {!skill.isShared && (
           <PermissionGate permission="manage_skills">
             <Tooltip>

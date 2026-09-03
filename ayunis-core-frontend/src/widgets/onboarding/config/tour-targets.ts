@@ -7,8 +7,6 @@ export const TOUR_TARGET = {
   anonymousMode: 'anonymous-mode',
   voiceInput: 'voice-input',
   modelSelector: 'model-selector',
-  pinnedSkills: 'pinned-skills',
-  pinSkill: 'pin-skill',
   createSkill: 'create-skill',
   createKnowledgeBase: 'create-knowledge-base',
   addDocuments: 'add-documents',

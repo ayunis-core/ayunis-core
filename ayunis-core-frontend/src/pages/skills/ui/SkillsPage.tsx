@@ -5,7 +5,7 @@ import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import CreateSkillDialog from './CreateSkillDialog';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
-import type { Skill } from '../model/openapi';
+import type { Skill } from '@/pages/skills/model/openapi';
 import SkillsEmptyState from './SkillsEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
@@ -36,28 +36,12 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     .filter((skill) => skill.isShared)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // The "pin a skill" tour step anchors on the first active personal skill.
-  // With nothing pinnable (no skills yet, or none active) it falls back to the
-  // create-skill action so the step always has a visible target.
-  const pinTargetSkillId = personalSkills.find((skill) => skill.isActive)?.id;
-  const hasPinnableSkill = pinTargetSkillId !== undefined;
-
-  const createSkillAction = (
-    <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
-      <CreateSkillDialog />
-    </OnboardingTourTarget>
-  );
-
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="skills/" />
-      {hasPinnableSkill ? (
-        createSkillAction
-      ) : (
-        <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-          {createSkillAction}
-        </OnboardingTourTarget>
-      )}
+      <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
+        <CreateSkillDialog />
+      </OnboardingTourTarget>
     </div>
   );
 
@@ -116,11 +100,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
               ) : (
                 <div className="space-y-3">
                   {personalSkills.map((skill) => (
-                    <SkillCard
-                      key={skill.id}
-                      skill={skill}
-                      pinTourTarget={skill.id === pinTargetSkillId}
-                    />
+                    <SkillCard key={skill.id} skill={skill} />
                   ))}
                 </div>
               )}

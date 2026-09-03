@@ -119,20 +119,6 @@
       "spotlightTitle": "Fähigkeit erstellen",
       "spotlightDescription": "Klicken Sie hier, um eine neue Fähigkeit zu erstellen. Fähigkeiten sind wiederverwendbare Vorlagen für häufige Aufgaben."
     },
-    "useSkillInChat": {
-      "title": "Fähigkeit anheften",
-      "description": "Fähigkeiten aktivieren sich automatisch, wenn sie zu Ihrer Frage passen. Sie können sie auch hier anheften, um sie gezielt in einem neuen Chat zu verwenden.",
-      "action": "Fähigkeit anheften",
-      "spotlightTitle": "Fähigkeit anheften",
-      "spotlightDescription": "Klicken Sie auf das Pin-Symbol, um eine Fähigkeit an neue Chats anzuheften."
-    },
-    "activateSkillInChat": {
-      "title": "Angeheftete Fähigkeit im Chat nutzen",
-      "description": "Ihre angehefteten Fähigkeiten erscheinen als Buttons unter dem Chat-Eingabefeld. Klicken Sie auf eine, um sie in diesem Chat gezielt einzusetzen — so wird sie garantiert verwendet.",
-      "action": "Zum Chat",
-      "spotlightTitle": "Angeheftete Fähigkeiten",
-      "spotlightDescription": "Hier sehen Sie Ihre angehefteten Fähigkeiten. Klicken Sie auf eine, um sie gezielt für diesen Chat einzusetzen — so wird sie garantiert verwendet."
-    },
     "createKnowledgeBase": {
       "title": "Wissenssammlung erstellen",
       "description": "Erstellen Sie eine Wissenssammlung, um eigene Dokumente und Webseiten als Wissensquelle für Ayunis Core bereitzustellen.",
