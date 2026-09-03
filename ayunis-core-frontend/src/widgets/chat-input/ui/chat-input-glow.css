@@ -66,25 +66,6 @@
   pointer-events: none;
 }
 
-.new-chat-subline {
-  max-height: 2rem;
-  overflow: hidden;
-  transition:
-    opacity var(--new-chat-greeting-exit-duration)
-      var(--new-chat-greeting-exit-ease),
-    transform var(--new-chat-greeting-exit-duration)
-      var(--new-chat-greeting-exit-ease),
-    max-height var(--new-chat-greeting-exit-duration)
-      var(--new-chat-greeting-exit-ease);
-}
-
-.new-chat-subline--exit {
-  max-height: 0;
-  opacity: 0;
-  transform: translate3d(0, -0.5rem, 0);
-  pointer-events: none;
-}
-
 /* Absolutely positioned — opacity/transform only, no layout shift on the input */
 .new-chat-disclaimer {
   opacity: 0;
@@ -104,6 +85,24 @@
   transition-delay: var(--new-chat-settle-duration);
 }
 
+.new-chat-dock-extras {
+  transition:
+    max-height var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease),
+    opacity var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease),
+    margin-top var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease);
+  max-height: 24rem;
+}
+
+.new-chat-dock-extras--collapsed {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chat-input-shell__textarea--animate,
   .chat-input-shell__card .chat-input-body,
@@ -111,8 +110,8 @@
   .new-chat-compose--settling,
   .new-chat-compose--settling .new-chat-compose__content,
   .new-chat-greeting,
-  .new-chat-subline,
-  .new-chat-disclaimer {
+  .new-chat-disclaimer,
+  .new-chat-dock-extras {
     transition: none;
   }
 

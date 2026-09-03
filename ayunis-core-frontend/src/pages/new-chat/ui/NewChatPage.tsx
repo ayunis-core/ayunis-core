@@ -242,17 +242,6 @@ export default function NewChatPage({
             {greeting}
           </h1>
 
-          <p
-            className={cn(
-              'new-chat-subline flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground',
-              isCreating && 'new-chat-subline--exit',
-            )}
-            aria-hidden={isCreating}
-          >
-            <Lock className="h-3 w-3 shrink-0" />
-            {t('newChat.privacyHint')}
-          </p>
-
           <div className="new-chat-input-stack relative w-full">
             <p
               className={cn(
@@ -313,6 +302,12 @@ export default function NewChatPage({
             </div>
           </div>
         </>
+      }
+      footer={
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="h-3 w-3 shrink-0" />
+          {t('newChat.privacyHint')}
+        </span>
       }
     />
   );
