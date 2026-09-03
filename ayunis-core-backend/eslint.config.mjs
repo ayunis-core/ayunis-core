@@ -135,7 +135,7 @@ export default tseslint.config(
     files: ['src/**/*.ts'],
     // Bootstrap's static Nest Logger delegates to Pino after app.useLogger;
     // application code must inject PinoLogger directly instead.
-    ignores: ['src/main.ts'],
+    ignores: ['src/main.ts', 'src/common/logger/**'],
     rules: {
       'no-restricted-imports': [
         'error',

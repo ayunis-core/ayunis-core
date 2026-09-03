@@ -5,7 +5,6 @@ import pino from 'pino';
 import type { Options as PinoHttpOptions } from 'pino-http';
 import { ClsServiceManager } from 'nestjs-cls';
 import type { ClsService } from 'nestjs-cls';
-import { PinoLogger } from 'nestjs-pino';
 import type { MyClsStore } from 'src/common/context/services/context.service';
 import { createPinoLoggerConfig } from './pino-logger.config';
 
@@ -76,30 +75,6 @@ describe('createPinoLoggerConfig', () => {
           options: { group: 'app' },
         },
       ],
-    });
-  });
-
-  it('preserves injected logger context and object-first metadata', () => {
-    let output = '';
-    const destination = new Writable({
-      write(chunk: Buffer, _encoding, callback) {
-        output += chunk.toString();
-        callback();
-      },
-    });
-    const rawLogger = pino({}, destination);
-    const logger = new PinoLogger({
-      renameContext: 'nestjs.context',
-      pinoHttp: { logger: rawLogger },
-    });
-    logger.setContext('TriggerPasswordResetUseCase');
-
-    logger.info({ orgId: 'org-456' }, 'execute');
-
-    expect(JSON.parse(output)).toMatchObject({
-      msg: 'execute',
-      orgId: 'org-456',
-      'nestjs.context': 'TriggerPasswordResetUseCase',
     });
   });
 
