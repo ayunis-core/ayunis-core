@@ -32,7 +32,7 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 ### Prerequisites
 
 - Node.js (v24 or higher)
-- npm
+- pnpm (run `corepack enable` to get the version pinned in package.json)
 - Docker and Docker Compose
 
 ### Installation
@@ -177,9 +177,9 @@ All super admin endpoints require JWT authentication with a user that has the `S
 ```bash
 cd ayunis-core-backend
 # Look up the user's ID by email
-npm run cli:ts -- users:get --email <email>
+pnpm run cli:ts -- users:get --email <email>
 # Promote that user to super admin
-npm run cli:ts -- users:make-super-admin --userId <userId>
+pnpm run cli:ts -- users:make-super-admin --userId <userId>
 ```
 
 Then use the authenticated API to manage the model catalog. See the full endpoint documentation at `/api/docs` under the **Super Admin Models** tag.
@@ -278,7 +278,7 @@ This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks
 When you clone the repository, Git hooks are automatically set up when you run:
 
 ```bash
-npm install
+pnpm install
 ```
 
 This installs Husky and configures Git to use the hooks in the `.husky/` directory.
@@ -316,8 +316,8 @@ Valid types: `feat`, `feature`, `fix`, `chore`, `refactor`, `docs`, `style`, `pe
 If hooks aren't working, you can manually set them up:
 
 ```bash
-npm install
-npx husky install
+pnpm install
+pnpm exec husky install
 ```
 
 **Note**: On some systems (especially Windows), Git may not preserve executable permissions for hook files. If hooks aren't running, ensure the hook files are executable:

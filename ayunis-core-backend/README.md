@@ -24,7 +24,7 @@ This is the core backend for the Ayunis platform, built with NestJS and followin
 ## Prerequisites
 
 - Node.js (v24+)
-- npm or yarn
+- pnpm
 - Docker and Docker Compose
 - PostgreSQL with pgvector extension
 
@@ -94,13 +94,13 @@ Manual setup:
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Build the application
-npm run build
+pnpm run build
 
 # Start the production server
-npm run start:prod
+pnpm run start:prod
 ```
 
 ## Environment Variables
@@ -201,8 +201,8 @@ The API documentation is available at `/api` using Swagger UI when the applicati
 
 ```bash
 # Run unit tests
-npm run test
+pnpm run test
 
 # Generate test coverage report
-npm run test:cov
+pnpm run test:cov
 ```
