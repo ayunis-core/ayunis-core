@@ -12760,10 +12760,20 @@
             "description": "Date when the invite was accepted (if applicable)",
             "example": "2023-12-02T15:30:00Z"
           },
+          "orgId": {
+            "type": "string",
+            "description": "Organization the invitation belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
           "organizationName": {
             "type": "string",
             "description": "Name of the organization",
             "example": "Acme Corporation"
+          },
+          "localPasswordLoginEnabled": {
+            "type": "boolean",
+            "description": "Whether this organization accepts local password login"
           }
         },
         "required": [
@@ -12773,7 +12783,9 @@
           "status",
           "sentDate",
           "expiresAt",
-          "organizationName"
+          "orgId",
+          "organizationName",
+          "localPasswordLoginEnabled"
         ]
       },
       "AcceptInviteDto": {

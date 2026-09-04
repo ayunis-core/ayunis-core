@@ -315,6 +315,19 @@
       "description": "Create an Ayunis user on the first valid municipal SSO login.",
       "success": "JIT provisioning updated."
     },
+    "passwordLogin": {
+      "requireSsoLabel": "Require SSO for this organization",
+      "requireSsoDescription": "When enabled, users can sign in only through the configured organization SSO.",
+      "confirmTitle": "Require SSO for every user?",
+      "confirmDescription": "Confirm the customer has successfully tested SSO and the active mapping is complete.",
+      "passwordImpact": "Password login and password reset will no longer be available for this organization.",
+      "sessionImpact": "Existing password sessions can no longer renew; issued access remains valid until it expires.",
+      "domainImpact": "Users outside the configured domains will not be able to sign in with a password.",
+      "confirm": "I verified the domains and identity provider, and the customer successfully tested SSO.",
+      "confirmButton": "Require SSO",
+      "requireSsoSuccess": "SSO is now required for this organization.",
+      "restoreSuccess": "Local password login restored."
+    },
     "enable": {
       "button": "Enable SSO",
       "title": "Enable this SSO connection?",
@@ -325,7 +338,8 @@
     },
     "disable": {
       "button": "Disable SSO",
-      "success": "SSO disabled. Local login remains available."
+      "success": "SSO disabled. Local login remains available.",
+      "requiresPasswordLogin": "Restore local password login before disabling SSO."
     },
     "validation": {
       "emailDomains": {
@@ -361,6 +375,8 @@
       "changed": "The connection changed while you were reviewing it. Reload and try again.",
       "notFound": "No SSO connection exists for this organization.",
       "invalid": "The SSO connection is incomplete or invalid.",
+      "mustRestorePasswordLogin": "Restore local password login before disabling SSO.",
+      "passwordlessUsersExist": "SSO cannot be disabled because one or more users do not have a password. Set passwords for them or keep SSO enabled.",
       "unexpected": "The SSO connection could not be updated."
     }
   },

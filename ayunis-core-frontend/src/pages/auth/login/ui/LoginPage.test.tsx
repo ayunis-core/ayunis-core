@@ -154,6 +154,28 @@ describe(LoginPage.name, () => {
     );
   });
 
+  it('shows only SSO when the organization disables local password login', async () => {
+    discover.mockResolvedValue({
+      available: true,
+      orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+      localPasswordLoginEnabled: false,
+    });
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByTestId('email'), {
+      target: { value: 'siro@qa-stadt.local' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'login.continue' }));
+
+    expect(
+      await screen.findByRole('button', { name: 'login.signInWithSso' }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId('password')).toBeNull();
+    expect(screen.queryByTestId('submit')).toBeNull();
+    expect(screen.queryByText('login.orUsePassword')).toBeNull();
+    expect(screen.queryByText('login.forgotPassword')).toBeNull();
+  });
+
   it('clears the password when the email is changed', async () => {
     discover.mockResolvedValue({ available: false });
     render(<LoginPage />);
