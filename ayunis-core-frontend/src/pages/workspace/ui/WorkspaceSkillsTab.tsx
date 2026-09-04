@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Sparkles } from 'lucide-react';
-import { Button } from '@ayunis/ui/components/button';
+import { Sparkles } from 'lucide-react';
 import { ItemGroup } from '@ayunis/ui/components/item';
-import {
-  useSkillsControllerFindAll,
-  useWorkspaceContextControllerListSkills,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { AddWorkspaceItemsDialog } from './AddWorkspaceItemsDialog';
+import { useWorkspaceContextControllerListSkills } from '@/shared/api/generated/ayunisCoreAPI';
 import {
   RemoveButton,
   WorkspaceContextEmpty,
@@ -23,7 +18,6 @@ export function WorkspaceSkillsTab({
   workspaceId,
 }: Readonly<{ workspaceId: string }>) {
   const { t } = useTranslation('workspace');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
   const listParams = {
     limit: CONTEXT_PAGE_SIZE,
@@ -31,38 +25,26 @@ export function WorkspaceSkillsTab({
   };
   const { data: skillPage, isLoading } =
     useWorkspaceContextControllerListSkills(workspaceId, listParams);
-  const { data: personalSkills, isLoading: areCandidatesLoading } =
-    useSkillsControllerFindAll({ query: { enabled: isDialogOpen } });
-  const { createSkill, copySkills, deleteSkill } =
-    useWorkspaceContextActions(workspaceId);
+  const { createSkill, deleteSkill } = useWorkspaceContextActions(workspaceId);
 
   const addButton = (
-    <div className="flex gap-2">
-      <CreateWorkspaceResourceDialog
-        buttonText={t('context.skills.create')}
-        title={t('context.skills.create')}
-        description={t('context.skills.createDescription')}
-        nameLabel={t('context.skills.name')}
-        descriptionLabel={t('context.skills.shortDescription')}
-        instructionsLabel={t('context.skills.instructions')}
-        confirmText={t('context.skills.create')}
-        onCreate={(data) =>
-          createSkill({
-            name: data.name,
-            shortDescription: data.description,
-            instructions: data.instructions,
-          })
-        }
-      />
-      <Button
-        variant="outline"
-        size="sm"
-        data-testid="workspace-skills-add"
-        onClick={() => setIsDialogOpen(true)}
-      >
-        <Plus /> {t('context.skills.add')}
-      </Button>
-    </div>
+    <CreateWorkspaceResourceDialog
+      buttonText={t('context.skills.create')}
+      buttonTestId="workspace-skill-create"
+      title={t('context.skills.create')}
+      description={t('context.skills.createDescription')}
+      nameLabel={t('context.skills.name')}
+      descriptionLabel={t('context.skills.shortDescription')}
+      instructionsLabel={t('context.skills.instructions')}
+      confirmText={t('context.skills.create')}
+      onCreate={(data) =>
+        createSkill({
+          name: data.name,
+          shortDescription: data.description,
+          instructions: data.instructions,
+        })
+      }
+    />
   );
   const skills = skillPage?.data ?? [];
 
@@ -105,24 +87,6 @@ export function WorkspaceSkillsTab({
         total={pageTotal(skillPage?.pagination)}
         testId="workspace-skills-pagination"
         onPageChange={setPage}
-      />
-      <AddWorkspaceItemsDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        title={t('context.skills.add')}
-        description={t('context.skills.addDescription')}
-        isLoading={areCandidatesLoading}
-        items={(personalSkills ?? [])
-          .filter((skill) => !skill.isShared)
-          .map((skill) => ({
-            id: skill.id,
-            name: skill.name,
-            description: skill.shortDescription,
-            isAttached: false,
-          }))}
-        currentPage={1}
-        onPageChange={() => undefined}
-        onConfirm={copySkills}
       />
     </WorkspaceContextSection>
   );

@@ -11,10 +11,9 @@ filed under the workspace. User-specific favorites and their order are owned by 
 
 User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
-Workspace skills and knowledge bases are isolated from personal resources.
-Skills can enter a workspace through an explicit independent copy. Personal
-knowledge bases cannot be copied or attached; workspace knowledge bases must be
-created directly in the workspace.
+Workspace skills and knowledge bases are isolated from personal resources and
+must be created directly in the workspace; personal resources cannot be copied
+or attached.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -101,7 +100,6 @@ workspaces/
 | GET    | `/workspaces/:id/context`                                  | Read the full runtime context                          |
 | POST   | `/workspaces/:id/context/skills`                           | Create a workspace-owned skill                         |
 | GET    | `/workspaces/:id/context/skills`                           | List workspace-owned skills                            |
-| POST   | `/workspaces/:id/context/skills/copies`                    | Independently copy a personal skill into the workspace |
 | DELETE | `/workspaces/:id/context/skills/:skillId`                  | Delete a workspace-owned skill                         |
 | POST   | `/workspaces/:id/context/knowledge-bases`                  | Create a workspace-owned knowledge base                |
 | GET    | `/workspaces/:id/context/knowledge-bases`                  | List workspace-owned knowledge bases                   |

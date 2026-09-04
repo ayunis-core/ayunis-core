@@ -65,11 +65,8 @@
       "description": "Reload the page before editing project knowledge, skills, or instructions."
     },
     "addDialog": {
-      "emptyTitle": "Nothing left to add",
-      "empty": "There are no more items to add.",
       "loading": "Loading items…",
-      "cancel": "Cancel",
-      "confirm": "Add"
+      "cancel": "Cancel"
     },
     "skills": {
       "title": "Project skills",
@@ -79,13 +76,9 @@
       "name": "Name",
       "shortDescription": "Short description",
       "instructions": "Instructions",
-      "add": "Copy personal skills",
-      "addDescription": "Select personal skills to copy. The project copies are independent and never synchronize automatically.",
       "emptyTitle": "No project skills",
-      "empty": "No skills have been created or copied into this project yet.",
-      "delete": "Delete project skill",
-      "copySuccess": "Skill was copied into the project.",
-      "copyError": "Skill could not be copied."
+      "empty": "No skills have been created in this project yet.",
+      "delete": "Delete project skill"
     },
     "knowledge": {
       "title": "Knowledge bases",

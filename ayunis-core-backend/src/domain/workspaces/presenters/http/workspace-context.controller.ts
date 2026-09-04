@@ -43,8 +43,6 @@ import { UpdateWorkspaceInstructionUseCase } from 'src/domain/workspaces/applica
 import { UpdateWorkspaceInstructionCommand } from 'src/domain/workspaces/application/use-cases/update-workspace-instruction/update-workspace-instruction.command';
 import { CreateWorkspaceSkillUseCase } from 'src/domain/workspaces/application/use-cases/create-workspace-skill/create-workspace-skill.use-case';
 import { CreateWorkspaceSkillCommand } from 'src/domain/workspaces/application/use-cases/create-workspace-skill/create-workspace-skill.command';
-import { CopyPersonalSkillToWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/copy-personal-skill-to-workspace/copy-personal-skill-to-workspace.use-case';
-import { CopyPersonalSkillToWorkspaceCommand } from 'src/domain/workspaces/application/use-cases/copy-personal-skill-to-workspace/copy-personal-skill-to-workspace.command';
 import { DeleteWorkspaceSkillUseCase } from 'src/domain/workspaces/application/use-cases/delete-workspace-skill/delete-workspace-skill.use-case';
 import { DeleteWorkspaceSkillCommand } from 'src/domain/workspaces/application/use-cases/delete-workspace-skill/delete-workspace-skill.command';
 import { ListWorkspaceSkillsUseCase } from 'src/domain/workspaces/application/use-cases/list-workspace-skills/list-workspace-skills.use-case';
@@ -61,7 +59,6 @@ import { WorkspaceDtoMapper } from 'src/domain/workspaces/presenters/http/mapper
 import { UpdateWorkspaceInstructionDto } from 'src/domain/workspaces/presenters/http/dtos/update-workspace-instruction.dto';
 import { WorkspaceContextListQueryDto } from 'src/domain/workspaces/presenters/http/dtos/workspace-context-list-query.dto';
 import { CreateWorkspaceSkillDto } from 'src/domain/workspaces/presenters/http/dtos/create-workspace-skill.dto';
-import { CopyPersonalSkillDto } from 'src/domain/workspaces/presenters/http/dtos/copy-personal-skill.dto';
 import { CreateWorkspaceKnowledgeBaseDto } from 'src/domain/workspaces/presenters/http/dtos/create-workspace-knowledge-base.dto';
 import {
   WorkspaceContextResponseDto,
@@ -90,7 +87,6 @@ export class WorkspaceContextController {
     private readonly removeDocumentFromWorkspaceUseCase: RemoveDocumentFromWorkspaceUseCase,
     private readonly updateWorkspaceInstructionUseCase: UpdateWorkspaceInstructionUseCase,
     private readonly createWorkspaceSkillUseCase: CreateWorkspaceSkillUseCase,
-    private readonly copyPersonalSkillToWorkspaceUseCase: CopyPersonalSkillToWorkspaceUseCase,
     private readonly deleteWorkspaceSkillUseCase: DeleteWorkspaceSkillUseCase,
     private readonly createWorkspaceKnowledgeBaseUseCase: CreateWorkspaceKnowledgeBaseUseCase,
     private readonly deleteWorkspaceKnowledgeBaseUseCase: DeleteWorkspaceKnowledgeBaseUseCase,
@@ -126,18 +122,6 @@ export class WorkspaceContextController {
         dto.shortDescription,
         dto.instructions,
       ),
-    );
-    return this.contextDtoMapper.toSkillDto(skill);
-  }
-
-  @Post('skills/copies')
-  @ApiResponse({ status: 201, type: WorkspaceSkillResponseDto })
-  async copyPersonalSkill(
-    @Param('id', ParseUUIDPipe) id: UUID,
-    @Body() dto: CopyPersonalSkillDto,
-  ): Promise<WorkspaceSkillResponseDto> {
-    const skill = await this.copyPersonalSkillToWorkspaceUseCase.execute(
-      new CopyPersonalSkillToWorkspaceCommand(id, dto.skillId),
     );
     return this.contextDtoMapper.toSkillDto(skill);
   }

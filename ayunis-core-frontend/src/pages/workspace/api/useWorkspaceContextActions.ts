@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-import { useTranslation } from 'react-i18next';
 import type {
   CreateWorkspaceKnowledgeBaseDto,
   CreateWorkspaceSkillDto,
@@ -12,7 +11,6 @@ import {
   getWorkspaceContextControllerListSkillsQueryKey,
   getWorkspacesControllerFindOneQueryKey,
   workspaceContextControllerAddDocument,
-  workspaceContextControllerCopyPersonalSkill,
   workspaceContextControllerCreateKnowledgeBase,
   workspaceContextControllerCreateSkill,
   workspaceContextControllerDeleteKnowledgeBase,
@@ -20,10 +18,7 @@ import {
   workspaceContextControllerRemoveDocument,
   workspaceContextControllerUpdateInstruction,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { showError, showSuccess } from '@/shared/lib/toast';
-
 export function useWorkspaceContextActions(workspaceId: string) {
-  const { t } = useTranslation('workspace');
   const queryClient = useQueryClient();
   const router = useRouter();
   const invalidateContext = () => {
@@ -42,10 +37,6 @@ export function useWorkspaceContextActions(workspaceId: string) {
     mutationFn: (data: CreateWorkspaceSkillDto) =>
       workspaceContextControllerCreateSkill(workspaceId, data),
     onSuccess: invalidateContext,
-  });
-  const copySkill = useMutation({
-    mutationFn: (skillId: string) =>
-      workspaceContextControllerCopyPersonalSkill(workspaceId, { skillId }),
   });
   const deleteSkill = useMutation({
     mutationFn: (skillId: string) =>
@@ -86,21 +77,8 @@ export function useWorkspaceContextActions(workspaceId: string) {
     },
   });
 
-  async function copySkills(skillIds: string[]) {
-    const results = await Promise.allSettled(
-      skillIds.map((id) => copySkill.mutateAsync(id)),
-    );
-    invalidateContext();
-    if (results.some(({ status }) => status === 'rejected')) {
-      showError(t('context.skills.copyError'));
-      throw new Error('Failed to copy one or more skills');
-    }
-    showSuccess(t('context.skills.copySuccess'));
-  }
-
   return {
     createSkill: createSkill.mutateAsync,
-    copySkills,
     deleteSkill: deleteSkill.mutate,
     createKnowledgeBase: createKnowledgeBase.mutateAsync,
     deleteKnowledgeBase: deleteKnowledgeBase.mutate,

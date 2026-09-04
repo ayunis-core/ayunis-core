@@ -21,7 +21,6 @@ import { RemoveDocumentFromWorkspaceUseCase } from './application/use-cases/remo
 import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/update-workspace-instruction/update-workspace-instruction.use-case';
 import { BuildWorkspaceRunContextUseCase } from './application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { CreateWorkspaceSkillUseCase } from './application/use-cases/create-workspace-skill/create-workspace-skill.use-case';
-import { CopyPersonalSkillToWorkspaceUseCase } from './application/use-cases/copy-personal-skill-to-workspace/copy-personal-skill-to-workspace.use-case';
 import { DeleteWorkspaceSkillUseCase } from './application/use-cases/delete-workspace-skill/delete-workspace-skill.use-case';
 import { ListWorkspaceSkillsUseCase } from './application/use-cases/list-workspace-skills/list-workspace-skills.use-case';
 import { CreateWorkspaceKnowledgeBaseUseCase } from './application/use-cases/create-workspace-knowledge-base/create-workspace-knowledge-base.use-case';
@@ -54,7 +53,6 @@ import { ListWorkspaceDocumentsUseCase } from './application/use-cases/list-work
     UpdateWorkspaceInstructionUseCase,
     BuildWorkspaceRunContextUseCase,
     CreateWorkspaceSkillUseCase,
-    CopyPersonalSkillToWorkspaceUseCase,
     DeleteWorkspaceSkillUseCase,
     CreateWorkspaceKnowledgeBaseUseCase,
     DeleteWorkspaceKnowledgeBaseUseCase,

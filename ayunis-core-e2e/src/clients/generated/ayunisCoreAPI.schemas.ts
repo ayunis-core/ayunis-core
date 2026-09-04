@@ -3522,10 +3522,6 @@ export interface CreateWorkspaceSkillDto {
   instructions: string;
 }
 
-export interface CopyPersonalSkillDto {
-  skillId: string;
-}
-
 export interface WorkspaceSkillListResponseDto {
   data: WorkspaceSkillResponseDto[];
   pagination: PaginationDto;

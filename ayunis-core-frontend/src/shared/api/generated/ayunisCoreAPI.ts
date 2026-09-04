@@ -54,7 +54,6 @@ import type {
   CompleteMcpOAuthDto,
   ConfigureOrgSsoConnectionRequestDto,
   ConfirmEmailDto,
-  CopyPersonalSkillDto,
   CourseModuleResponseDto,
   CrawlDomainGrantResponseDto,
   CreateApiKeyDto,
@@ -14593,69 +14592,6 @@ export function useWorkspaceContextControllerListSkills<TData = Awaited<ReturnTy
 
 
 
-
-export const workspaceContextControllerCopyPersonalSkill = (
-    id: string,
-    copyPersonalSkillDto: CopyPersonalSkillDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<WorkspaceSkillResponseDto>(
-      {url: `/workspaces/${id}/context/skills/copies`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: copyPersonalSkillDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerCopyPersonalSkillMutationKey = () => ['workspaceContextControllerCopyPersonalSkill'] as const;
-
-export const getWorkspaceContextControllerCopyPersonalSkillMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerCopyPersonalSkill>>, TError,WorkspaceContextControllerCopyPersonalSkillMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerCopyPersonalSkill>>, TError,WorkspaceContextControllerCopyPersonalSkillMutationVariables, TContext> => {
-
-const mutationKey = getWorkspaceContextControllerCopyPersonalSkillMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerCopyPersonalSkill>>, WorkspaceContextControllerCopyPersonalSkillMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  workspaceContextControllerCopyPersonalSkill(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceContextControllerCopyPersonalSkillMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerCopyPersonalSkill>>>
-    export type WorkspaceContextControllerCopyPersonalSkillMutationBody = CopyPersonalSkillDto
-    export type WorkspaceContextControllerCopyPersonalSkillMutationError = unknown
-    export type WorkspaceContextControllerCopyPersonalSkillMutationVariables = {id: string;data: CopyPersonalSkillDto}
-
-    export const useWorkspaceContextControllerCopyPersonalSkill = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerCopyPersonalSkill>>, TError,WorkspaceContextControllerCopyPersonalSkillMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceContextControllerCopyPersonalSkill>>,
-        TError,
-        WorkspaceContextControllerCopyPersonalSkillMutationVariables,
-        TContext
-      > => {
-      return useMutation(getWorkspaceContextControllerCopyPersonalSkillMutationOptions(options), queryClient);
-    }
 
 export const workspaceContextControllerDeleteSkill = (
     id: string,

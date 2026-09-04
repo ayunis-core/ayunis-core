@@ -43,14 +43,22 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
 
   await page.getByTestId("workspace-tab-skills").click();
   await expect(page.getByTestId("workspace-skills-search")).toHaveCount(0);
-  await page.getByTestId("workspace-skills-add").first().click();
-  await expect(page.getByTestId("workspace-add-dialog")).toBeVisible();
-  await expect(page.getByTestId("workspace-add-dialog-search")).toHaveCount(0);
-  await page
-    .getByTestId(`workspace-add-dialog-item-${fixture.skill.id}`)
+  await page.getByTestId("workspace-skill-create").first().click();
+  const createSkillDialog = page.getByRole("dialog");
+  await expect(createSkillDialog).toBeVisible();
+  await createSkillDialog.getByRole("textbox").nth(0).fill(fixture.skill.name);
+  await createSkillDialog
+    .getByRole("textbox")
+    .nth(1)
+    .fill("Prüft Bauanträge gegen lokale Vorgaben");
+  await createSkillDialog
+    .getByRole("textbox")
+    .nth(2)
+    .fill("Prüfe Bauanträge anhand der Projektvorgaben.");
+  await createSkillDialog
+    .getByRole("button", { name: "Fähigkeit erstellen" })
     .click();
-  await page.getByTestId("workspace-add-dialog-confirm").click();
-  let copiedSkillId: string | undefined;
+  let createdSkillId: string | undefined;
   await expect
     .poll(async () => {
       const workspaceSkills =
@@ -59,13 +67,13 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
           undefined,
           { api },
         );
-      copiedSkillId = workspaceSkills.data.find(
+      createdSkillId = workspaceSkills.data.find(
         ({ name }) => name === fixture.skill.name,
       )?.id;
-      return copiedSkillId;
+      return createdSkillId;
     })
     .toBeTruthy();
-  await expect(page.getByTestId(`workspace-skill-${copiedSkillId}`)).toBeVisible();
+  await expect(page.getByTestId(`workspace-skill-${createdSkillId}`)).toBeVisible();
 
   await page.getByTestId("workspace-tab-knowledge").click();
   await expect(page.getByTestId("workspace-knowledge-search")).toHaveCount(0);

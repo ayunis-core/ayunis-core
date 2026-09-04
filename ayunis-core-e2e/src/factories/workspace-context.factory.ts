@@ -80,9 +80,14 @@ export async function createProjectContextFixture(
         workspaceDocumentName,
       });
     }
-    skill = await generatedApi.workspaceContextControllerCopyPersonalSkill(
+    skill = await generatedApi.workspaceContextControllerCreateSkill(
       workspace.id,
-      { skillId: skill.id },
+      {
+        name: personalSkill.name,
+        shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
+        instructions:
+          "Prüfe Bauanträge anhand der Projektvorgaben und nenne offene Punkte.",
+      },
       { api },
     );
     knowledgeBase =

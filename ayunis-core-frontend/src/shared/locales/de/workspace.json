@@ -65,11 +65,8 @@
       "description": "Bitte laden Sie die Seite neu, bevor Sie Projektwissen, Fähigkeiten oder Anweisungen bearbeiten."
     },
     "addDialog": {
-      "emptyTitle": "Nichts mehr hinzuzufügen",
-      "empty": "Es gibt keine weiteren Einträge zum Hinzufügen.",
       "loading": "Einträge werden geladen …",
-      "cancel": "Abbrechen",
-      "confirm": "Hinzufügen"
+      "cancel": "Abbrechen"
     },
     "skills": {
       "title": "Projektfähigkeiten",
@@ -79,13 +76,9 @@
       "name": "Name",
       "shortDescription": "Kurzbeschreibung",
       "instructions": "Anweisungen",
-      "add": "Persönliche Fähigkeiten kopieren",
-      "addDescription": "Wählen Sie persönliche Fähigkeiten aus. Die Projektkopien sind unabhängig und werden nie automatisch synchronisiert.",
       "emptyTitle": "Keine Projektfähigkeiten",
-      "empty": "Für dieses Projekt wurden noch keine Fähigkeiten erstellt oder kopiert.",
-      "delete": "Projektfähigkeit löschen",
-      "copySuccess": "Fähigkeit wurde in das Projekt kopiert.",
-      "copyError": "Fähigkeit konnte nicht kopiert werden."
+      "empty": "Für dieses Projekt wurden noch keine Fähigkeiten erstellt.",
+      "delete": "Projektfähigkeit löschen"
     },
     "knowledge": {
       "title": "Wissensdatenbanken",
