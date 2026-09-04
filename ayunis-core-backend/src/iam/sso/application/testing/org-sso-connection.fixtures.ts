@@ -68,6 +68,7 @@ export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConne
     OrgSsoConnectionsRepository['findByOrgId']
   > = jest.fn().mockResolvedValue(null);
   return {
+    acquireMutationLock: jest.fn().mockResolvedValue(true),
     findByOrgId,
     findLocalPasswordLoginEnabledByOrgId: jest.fn().mockResolvedValue(null),
     findLocalPasswordLoginEnabledByOrgIdForSessionIssuance: jest

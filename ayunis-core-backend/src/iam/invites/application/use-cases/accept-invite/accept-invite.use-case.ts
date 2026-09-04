@@ -1,5 +1,6 @@
 import { Transactional } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   InviteAlreadyAcceptedError,
@@ -10,6 +11,7 @@ import {
   UnexpectedInviteError,
   UserAlreadyExistsError,
 } from 'src/iam/invites/application/invites.errors';
+import { LocalPasswordLoginDisabledError } from 'src/iam/authentication/application/authentication.errors';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import {
   InviteJwtService,
@@ -26,6 +28,8 @@ import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find
 import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import type { User } from 'src/iam/users/domain/user.entity';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
 
 @Injectable()
 export class AcceptInviteUseCase {
@@ -39,6 +43,7 @@ export class AcceptInviteUseCase {
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     private readonly publishUserCreated: UserCreatedEventPublisher,
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
+    private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
@@ -80,6 +85,7 @@ export class AcceptInviteUseCase {
     invite: Invite,
     preparedUser: User,
   ): Promise<User> {
+    await this.assertLocalPasswordAdmissionAllowed(invite.orgId, true);
     await this.acquireAllocationLock.execute(invite.orgId);
     this.rejectExpiredInvite(invite);
     await this.rejectExistingUser(invite.email);
@@ -112,6 +118,7 @@ export class AcceptInviteUseCase {
       throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
     }
     this.rejectExpiredInvite(invite);
+    await this.assertLocalPasswordAdmissionAllowed(invite.orgId);
 
     if (
       !(await this.isValidPasswordUseCase.execute(
@@ -121,6 +128,18 @@ export class AcceptInviteUseCase {
       throw new InvalidPasswordError();
     }
     return invite;
+  }
+
+  private async assertLocalPasswordAdmissionAllowed(
+    orgId: UUID,
+    lockPolicy = false,
+  ): Promise<void> {
+    const policy = await this.getOrgAuthenticationPolicy.execute(
+      new GetOrgAuthenticationPolicyQuery(orgId, lockPolicy),
+    );
+    if (!policy.localPasswordLoginEnabled) {
+      throw new LocalPasswordLoginDisabledError();
+    }
   }
 
   private async rejectExistingUser(email: string): Promise<void> {

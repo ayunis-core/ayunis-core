@@ -77,6 +77,10 @@ import { UserCreatedEventPublisher } from 'src/iam/users/application/services/us
 import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
 import { UnlockUserAccountUseCase } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.use-case';
 import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/admin-user-account-lock.controller';
+import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
+import { VerifyUserEmailUseCase } from 'src/iam/users/application/use-cases/verify-user-email/verify-user-email.use-case';
+import { HasPasswordlessUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/has-passwordless-users-by-org-id/has-passwordless-users-by-org-id.use-case';
+import { UserUpdatedEventPublisher } from 'src/iam/users/application/services/user-updated-event-publisher.service';
 
 @Module({
   imports: [
@@ -89,6 +93,7 @@ import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/ad
     EmailsModule,
     EmailTemplatesModule,
     JwtConfigModule,
+    SsoConnectionPolicyModule,
   ],
   controllers: [
     UserController,
@@ -130,6 +135,7 @@ import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/ad
     CountUsersByOrgIdUseCase,
     FindUsersByEmailsUseCase,
     UserCreatedEventPublisher,
+    UserUpdatedEventPublisher,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
@@ -163,6 +169,8 @@ import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/ad
     SuperAdminFindAllUsersUseCase,
     AuthorizeUserLoginUseCase,
     UnlockUserAccountUseCase,
+    VerifyUserEmailUseCase,
+    HasPasswordlessUsersByOrgIdUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers
@@ -178,6 +186,7 @@ import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/ad
     CountUsersByOrgIdUseCase,
     FindUsersByEmailsUseCase,
     UserCreatedEventPublisher,
+    UserUpdatedEventPublisher,
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,
@@ -190,6 +199,8 @@ import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/ad
     FindAllUserSummariesByOrgIdUseCase,
     GetOrgAdminsUseCase,
     AuthorizeUserLoginUseCase,
+    VerifyUserEmailUseCase,
+    HasPasswordlessUsersByOrgIdUseCase,
     UsersRepository, // Export repository for seeding
   ],
 })

@@ -109,6 +109,12 @@ describe(SetOrgLocalPasswordLoginEnabledUseCase.name, () => {
     expect(refreshTokens.revokePasswordSessionsForOrg).toHaveBeenCalledWith(
       TEST_ORG_ID,
     );
+    expect(
+      repository.setLocalPasswordLoginEnabledIfMappingMatches.mock
+        .invocationCallOrder[0],
+    ).toBeLessThan(
+      refreshTokens.revokePasswordSessionsForOrg.mock.invocationCallOrder[0],
+    );
   });
 
   it('requires confirmation of the active SSO mapping', async () => {
@@ -232,5 +238,6 @@ describe(SetOrgLocalPasswordLoginEnabledUseCase.name, () => {
         ),
       ),
     ).rejects.toBeInstanceOf(SsoConnectionChangedError);
+    expect(refreshTokens.revokePasswordSessionsForOrg).not.toHaveBeenCalled();
   });
 });

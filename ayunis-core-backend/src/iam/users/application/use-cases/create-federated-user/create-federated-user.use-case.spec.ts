@@ -15,6 +15,8 @@ describe(CreateFederatedUserUseCase.name, () => {
         findOneById: jest.fn(),
         findManyByIdsAndOrgId: jest.fn(),
         findOneByEmail: jest.fn().mockResolvedValue(null),
+        verifyEmailIfMatches: jest.fn(),
+        hasPasswordlessUsers: jest.fn(),
         findManyByEmails: jest.fn(),
         findManyBySystemRole: jest.fn(),
         findAdminsByOrgId: jest.fn(),

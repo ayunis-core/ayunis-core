@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtConfigModule } from '../authentication/jwt.module';
+import { JwtConfigModule } from 'src/iam/authentication/jwt.module';
 
 // Entities and Infrastructure
 import { InviteRecord } from './infrastructure/persistence/local/schema/invite.record';
@@ -39,11 +39,12 @@ import { InvitesController } from './presenters/http/invites.controller';
 import { InviteResponseMapper } from './presenters/http/mappers/invite-response.mapper';
 
 // External modules
-import { OrgsModule } from '../orgs/orgs.module';
-import { UsersModule } from '../users/users.module';
-import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-import { EmailsModule } from '../../common/emails/emails.module';
-import { EmailTemplatesModule } from '../../common/email-templates/email-templates.module';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { EmailsModule } from 'src/common/emails/emails.module';
+import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
+import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     forwardRef(() => UsersModule),
     EmailsModule,
     EmailTemplatesModule,
+    SsoConnectionPolicyModule,
   ],
   providers: [
     // Mappers
