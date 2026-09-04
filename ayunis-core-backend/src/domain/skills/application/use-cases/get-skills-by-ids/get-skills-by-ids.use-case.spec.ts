@@ -1,7 +1,5 @@
-import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetSkillsByIdsQuery } from './get-skills-by-ids.query';
@@ -23,10 +21,6 @@ describe(GetSkillsByIdsUseCase.name, () => {
       providers: [
         GetSkillsByIdsUseCase,
         { provide: SkillRepository, useValue: repository },
-        {
-          provide: getLoggerToken(GetSkillsByIdsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 
@@ -44,10 +38,6 @@ describe(GetSkillsByIdsUseCase.name, () => {
       providers: [
         GetSkillsByIdsUseCase,
         { provide: SkillRepository, useValue: repository },
-        {
-          provide: getLoggerToken(GetSkillsByIdsUseCase.name),
-          useValue: createPinoLoggerMock(),
-        },
       ],
     }).compile();
 

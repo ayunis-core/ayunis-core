@@ -2,7 +2,7 @@ import {
   getFavoritesControllerFindAllQueryKey,
   useFavoritesControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { FavoritesControllerFindAll200Item } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { FavoritesControllerFindAll200Item } from '@/shared/api';
 import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 
 export type Favorite = FavoritesControllerFindAll200Item;

@@ -16,7 +16,6 @@ describe('LocalKnowledgeBaseRepository', () => {
     const userId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
     const find = jest.fn().mockResolvedValue([]);
     const repository = new LocalKnowledgeBaseRepository(
-      createPinoLoggerMock(),
       { find } as unknown as Repository<KnowledgeBaseRecord>,
       {} as Repository<SourceRecord>,
       {} as Repository<KnowledgeBaseActivationRecord>,
@@ -104,7 +103,6 @@ describe('LocalKnowledgeBaseRepository', () => {
       getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
     };
     const repository = new LocalKnowledgeBaseRepository(
-      createPinoLoggerMock(),
       {
         createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
       } as unknown as Repository<KnowledgeBaseRecord>,

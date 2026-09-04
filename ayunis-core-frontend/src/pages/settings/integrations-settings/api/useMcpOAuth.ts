@@ -34,7 +34,7 @@ export function useDisconnectMcpOAuth() {
   const { t } = useTranslation('settings');
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: mcpIntegrationsControllerDisconnectOAuth,
+    mutationFn: (id: string) => mcpIntegrationsControllerDisconnectOAuth(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),

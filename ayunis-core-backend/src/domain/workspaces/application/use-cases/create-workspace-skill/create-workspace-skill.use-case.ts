@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,9 +14,9 @@ import { CreateWorkspaceSkillCommand } from './create-workspace-skill.command';
 
 @Injectable()
 export class CreateWorkspaceSkillUseCase {
+  private readonly logger = new Logger(CreateWorkspaceSkillUseCase.name);
+
   constructor(
-    @InjectPinoLogger(CreateWorkspaceSkillUseCase.name)
-    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly createSkillUseCase: CreateSkillUseCase,
     private readonly contextService: ContextService,
@@ -33,7 +32,7 @@ export class CreateWorkspaceSkillUseCase {
     );
     if (!workspace) throw new WorkspaceNotFoundError(command.workspaceId);
 
-    this.logger.info(
+    this.logger.log(
       { workspaceId: command.workspaceId },
       'createWorkspaceSkill',
     );

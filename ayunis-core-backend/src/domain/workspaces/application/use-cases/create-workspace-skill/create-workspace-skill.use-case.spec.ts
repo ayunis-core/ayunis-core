@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { CreateSkillUseCase } from 'src/domain/skills/application/use-cases/create-skill/create-skill.use-case';
 import {
   aWorkspace,
@@ -19,7 +18,6 @@ describe(CreateWorkspaceSkillUseCase.name, () => {
       execute: jest.fn().mockResolvedValue({ id: randomUUID(), workspaceId }),
     } as unknown as jest.Mocked<CreateSkillUseCase>;
     const useCase = new CreateWorkspaceSkillUseCase(
-      createPinoLoggerMock(),
       repository,
       createSkillUseCase,
       createMockContextService(),
