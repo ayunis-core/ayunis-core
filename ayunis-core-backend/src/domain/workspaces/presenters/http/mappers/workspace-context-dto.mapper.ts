@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginationDto } from 'src/common/pagination/pagination.dto';
-import type { WorkspaceSkillCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-skill-candidates/list-workspace-skill-candidates.use-case';
-import type { WorkspaceKnowledgeBaseCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-knowledge-base-candidates/list-workspace-knowledge-base-candidates.use-case';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
@@ -17,12 +15,8 @@ import {
   WorkspaceContextResponseDto,
   WorkspaceDocumentListResponseDto,
   WorkspaceDocumentResponseDto,
-  WorkspaceKnowledgeBaseCandidateListResponseDto,
-  WorkspaceKnowledgeBaseCandidateResponseDto,
   WorkspaceKnowledgeBaseListResponseDto,
   WorkspaceKnowledgeBaseResponseDto,
-  WorkspaceSkillCandidateListResponseDto,
-  WorkspaceSkillCandidateResponseDto,
   WorkspaceSkillListResponseDto,
   WorkspaceSkillResponseDto,
 } from 'src/domain/workspaces/presenters/http/dtos/workspace-context-response.dto';
@@ -48,15 +42,6 @@ export class WorkspaceContextDtoMapper {
     return dto;
   }
 
-  toSkillCandidateDto(
-    candidate: WorkspaceSkillCandidate,
-  ): WorkspaceSkillCandidateResponseDto {
-    return {
-      ...this.toSkillDto(candidate.skill),
-      isAttached: candidate.isAttached,
-    };
-  }
-
   toKnowledgeBaseDto(
     knowledgeBase: WorkspaceKnowledgeBaseContext,
   ): WorkspaceKnowledgeBaseResponseDto {
@@ -64,18 +49,6 @@ export class WorkspaceContextDtoMapper {
       knowledgeBase,
       knowledgeBase.documentCount,
     );
-  }
-
-  toKnowledgeBaseCandidateDto(
-    candidate: WorkspaceKnowledgeBaseCandidate,
-  ): WorkspaceKnowledgeBaseCandidateResponseDto {
-    return {
-      ...this.toKnowledgeBaseResponseDto(
-        candidate.knowledgeBase,
-        candidate.documentCount,
-      ),
-      isAttached: candidate.isAttached,
-    };
   }
 
   toDocumentDto(source: Source): WorkspaceDocumentResponseDto {
@@ -102,32 +75,12 @@ export class WorkspaceContextDtoMapper {
     };
   }
 
-  toSkillCandidateListDto(
-    page: Paginated<WorkspaceSkillCandidate>,
-  ): WorkspaceSkillCandidateListResponseDto {
-    return {
-      data: page.data.map((candidate) => this.toSkillCandidateDto(candidate)),
-      pagination: this.toPaginationDto(page),
-    };
-  }
-
   toKnowledgeBaseListDto(
     page: Paginated<WorkspaceKnowledgeBaseContext>,
   ): WorkspaceKnowledgeBaseListResponseDto {
     return {
       data: page.data.map((knowledgeBase) =>
         this.toKnowledgeBaseDto(knowledgeBase),
-      ),
-      pagination: this.toPaginationDto(page),
-    };
-  }
-
-  toKnowledgeBaseCandidateListDto(
-    page: Paginated<WorkspaceKnowledgeBaseCandidate>,
-  ): WorkspaceKnowledgeBaseCandidateListResponseDto {
-    return {
-      data: page.data.map((candidate) =>
-        this.toKnowledgeBaseCandidateDto(candidate),
       ),
       pagination: this.toPaginationDto(page),
     };

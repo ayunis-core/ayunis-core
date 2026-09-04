@@ -103,6 +103,21 @@ describe('LocalSkillRepository', () => {
     });
   });
 
+  it('excludes workspace-owned skills from owner lists', async () => {
+    mockManager.find.mockResolvedValue([]);
+
+    await repository.findAllByOwner(userId);
+
+    expect(mockManager.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId,
+          workspaceId: expect.anything(),
+        }),
+      }),
+    );
+  });
+
   describe('pinSkill', () => {
     it('should set isPinned to true on the activation record', async () => {
       const mockExecute = jest.fn().mockResolvedValue({ affected: 1 });
@@ -181,9 +196,30 @@ describe('LocalSkillRepository', () => {
     expect(result.total).toBe(7);
     expect(result.limit).toBe(2);
     expect(result.offset).toBe(4);
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'skill.workspaceId = :workspaceId',
+      { workspaceId },
+    );
     expect(queryBuilder.skip).toHaveBeenCalledWith(4);
     expect(queryBuilder.take).toHaveBeenCalledWith(2);
     expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
+  });
+
+  it('excludes workspace-owned skills from personal accessible lists', async () => {
+    const queryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+    };
+    const skillRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as Repository<SkillRecord>;
+    const finder = new LocalSkillAccessiblePageFinder(skillRepository);
+
+    finder.buildQuery(userId, undefined, [], { limit: 20, offset: 0 });
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'skill.workspaceId IS NULL',
+    );
   });
 
   it('returns knowledge-base IDs linked to the supplied skills', async () => {

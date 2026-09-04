@@ -28,6 +28,7 @@ export interface KnowledgeBaseWithUserContext {
 export class KnowledgeBaseAccessService {
   private readonly logger = new Logger(KnowledgeBaseAccessService.name);
 
+  // eslint-disable-next-line max-params -- NestJS injects access collaborators.
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
@@ -213,6 +214,9 @@ export class KnowledgeBaseAccessService {
     if (knowledgeBase.userId === userId) {
       return knowledgeBase;
     }
+    if (knowledgeBase.workspaceId !== null) {
+      throw new KnowledgeBaseNotFoundError(id);
+    }
 
     const directShare = await this.findShareByEntityUseCase.execute(
       new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
@@ -223,7 +227,10 @@ export class KnowledgeBaseAccessService {
 
     const isAccessibleViaSkill =
       await this.checkKnowledgeBaseSkillShareAccessUseCase.execute(
-        new CheckKnowledgeBaseSkillShareAccessQuery(id, knowledgeBase.userId),
+        new CheckKnowledgeBaseSkillShareAccessQuery(
+          id,
+          knowledgeBase.personalOwnerId,
+        ),
       );
     if (isAccessibleViaSkill) {
       return knowledgeBase;

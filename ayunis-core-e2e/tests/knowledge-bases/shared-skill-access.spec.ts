@@ -71,7 +71,7 @@ test('shows a knowledge base linked to a skill shared with another user', async 
       memberPage.getByTestId(
         `workspace-add-dialog-item-${fixture.knowledgeBase.id}`,
       ),
-    ).toBeVisible();
+    ).toHaveCount(0);
     expect(pageErrors).toEqual([]);
   } finally {
     await memberPage?.close();

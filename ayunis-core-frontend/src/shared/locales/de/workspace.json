@@ -65,38 +65,32 @@
       "description": "Bitte laden Sie die Seite neu, bevor Sie Projektwissen, Fähigkeiten oder Anweisungen bearbeiten."
     },
     "addDialog": {
-      "emptyTitle": "Nichts mehr hinzuzufügen",
-      "empty": "Es gibt keine weiteren Einträge zum Hinzufügen.",
       "loading": "Einträge werden geladen …",
-      "cancel": "Abbrechen",
-      "confirm": "Hinzufügen"
+      "cancel": "Abbrechen"
     },
     "skills": {
-      "title": "Hinzugefügte Fähigkeiten",
+      "title": "Projektfähigkeiten",
       "description": "In diesem Projekt immer aktiv — Sie müssen im Chat nichts auswählen.",
-      "add": "Fähigkeiten hinzufügen",
-      "addDescription": "Wählen Sie Fähigkeiten aus, die in diesem Projekt immer aktiv sein sollen.",
-      "emptyTitle": "Keine Fähigkeiten eingebunden",
-      "empty": "Noch keine Fähigkeiten in diesem Projekt.",
-      "detach": "Fähigkeit entfernen",
-      "attachSuccess": "Fähigkeit wurde zum Projekt hinzugefügt.",
-      "attachError": "Fähigkeit konnte nicht hinzugefügt werden.",
-      "detachSuccess": "Fähigkeit wurde aus dem Projekt entfernt.",
-      "detachError": "Fähigkeit konnte nicht entfernt werden."
+      "create": "Fähigkeit erstellen",
+      "createDescription": "Erstellen Sie eine Fähigkeit, die diesem Projekt gehört.",
+      "name": "Name",
+      "shortDescription": "Kurzbeschreibung",
+      "instructions": "Anweisungen",
+      "emptyTitle": "Keine Projektfähigkeiten",
+      "empty": "Für dieses Projekt wurden noch keine Fähigkeiten erstellt.",
+      "delete": "Projektfähigkeit löschen"
     },
     "knowledge": {
       "title": "Wissensdatenbanken",
-      "description": "Geteilte Wissensdatenbanken, die in allen Chats dieses Projekts verfügbar sind.",
-      "add": "Wissensdatenbanken hinzufügen",
-      "addDescription": "Wählen Sie Wissensdatenbanken aus, die in diesem Projekt verfügbar sein sollen.",
-      "emptyTitle": "Keine Wissensdatenbanken eingebunden",
-      "empty": "Noch keine Wissensdatenbanken eingebunden.",
-      "detach": "Wissensdatenbank entfernen",
-      "documentCount": "{{count}} Dokumente",
-      "attachSuccess": "Wissensdatenbank wurde zum Projekt hinzugefügt.",
-      "attachError": "Wissensdatenbank konnte nicht hinzugefügt werden.",
-      "detachSuccess": "Wissensdatenbank wurde aus dem Projekt entfernt.",
-      "detachError": "Wissensdatenbank konnte nicht entfernt werden."
+      "description": "Projekteigene Wissensdatenbanken für alle Chats dieses Projekts.",
+      "create": "Wissensdatenbank erstellen",
+      "createDescription": "Erstellen Sie eine Wissensdatenbank, die diesem Projekt gehört.",
+      "name": "Name",
+      "descriptionLabel": "Beschreibung",
+      "emptyTitle": "Keine Projekt-Wissensdatenbanken",
+      "empty": "Für dieses Projekt wurden noch keine Wissensdatenbanken erstellt.",
+      "detach": "Projekt-Wissensdatenbank löschen",
+      "documentCount": "{{count}} Dokumente"
     },
     "documents": {
       "title": "Dateien",

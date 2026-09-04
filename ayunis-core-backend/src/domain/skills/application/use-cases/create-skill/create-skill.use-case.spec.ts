@@ -19,6 +19,7 @@ describe('CreateSkillUseCase', () => {
     const mockSkillRepository = {
       create: jest.fn(),
       findByNameAndOwner: jest.fn(),
+      findByNameAndWorkspace: jest.fn(),
       activateSkill: jest.fn(),
     };
 
@@ -96,6 +97,31 @@ describe('CreateSkillUseCase', () => {
       DuplicateSkillNameError,
     );
     expect(skillRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('creates an independently owned workspace skill', async () => {
+    const workspaceId = '223e4567-e89b-12d3-a456-426614174001' as UUID;
+    const mcpIntegrationId = '423e4567-e89b-12d3-a456-426614174003' as UUID;
+    const command = new CreateSkillCommand({
+      name: 'Workspace legal research',
+      shortDescription: 'Researches workspace legal topics.',
+      instructions: 'Use the workspace legal sources.',
+      workspaceId,
+      mcpIntegrationIds: [mcpIntegrationId],
+    });
+    skillRepository.findByNameAndWorkspace.mockResolvedValue(null);
+    skillRepository.create.mockImplementation(async (skill) => skill);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toMatchObject({
+      userId: null,
+      workspaceId,
+      mcpIntegrationIds: [mcpIntegrationId],
+      sourceIds: [],
+      knowledgeBaseIds: [],
+    });
+    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
   });
 
   it('should activate the skill when isActive is true in command', async () => {

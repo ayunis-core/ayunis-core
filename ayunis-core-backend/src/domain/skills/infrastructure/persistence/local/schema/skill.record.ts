@@ -1,10 +1,12 @@
 import {
+  Check,
   Column,
   Entity,
   ManyToOne,
   ManyToMany,
   JoinTable,
-  Unique,
+  JoinColumn,
+  Index,
 } from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { UUID } from 'crypto';
@@ -12,9 +14,18 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 
 @Entity({ name: 'skills' })
-@Unique('UQ_skill_name_userId', ['name', 'userId'])
+@Check(
+  'CHK_skills_exactly_one_owner',
+  '("userId" IS NOT NULL AND "workspaceId" IS NULL) OR ("userId" IS NULL AND "workspaceId" IS NOT NULL)',
+)
+@Index(['name', 'userId'], { unique: true, where: '"workspaceId" IS NULL' })
+@Index(['name', 'workspaceId'], {
+  unique: true,
+  where: '"workspaceId" IS NOT NULL',
+})
 export class SkillRecord extends BaseRecord {
   @Column({ nullable: false })
   name: string;
@@ -28,11 +39,19 @@ export class SkillRecord extends BaseRecord {
   @Column({ nullable: true, type: 'varchar', length: 255 })
   marketplaceIdentifier: string | null;
 
-  @Column({ nullable: false })
-  userId: UUID;
+  @Column({ type: 'uuid', nullable: true })
+  userId: UUID | null;
 
-  @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
-  user: UserRecord;
+  @ManyToOne(() => UserRecord, { nullable: true, onDelete: 'CASCADE' })
+  user: UserRecord | null;
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  workspaceId: UUID | null;
+
+  @ManyToOne(() => WorkspaceRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'workspaceId' })
+  workspace: WorkspaceRecord | null;
 
   @ManyToMany(() => SourceRecord)
   @JoinTable({ name: 'skill_sources' })

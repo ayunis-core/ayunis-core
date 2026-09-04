@@ -1,8 +1,13 @@
-import { Skill, InvalidSkillNameError } from './skill.entity';
+import {
+  Skill,
+  InvalidSkillNameError,
+  InvalidSkillOwnershipError,
+} from './skill.entity';
 import type { UUID } from 'crypto';
 
 describe('Skill Entity', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const workspaceId = '223e4567-e89b-12d3-a456-426614174001' as UUID;
 
   it('should create a skill with required fields and generate id', () => {
     const skill = new Skill({
@@ -24,6 +29,34 @@ describe('Skill Entity', () => {
     expect(skill.knowledgeBaseIds).toEqual([]);
     expect(skill.createdAt).toBeInstanceOf(Date);
     expect(skill.updatedAt).toBeInstanceOf(Date);
+    expect(skill.workspaceId).toBeNull();
+  });
+
+  it('preserves exclusive workspace ownership', () => {
+    const skill = new Skill({
+      name: 'Workspace procurement review',
+      shortDescription: 'Reviews procurement documents.',
+      instructions: 'Check the procurement requirements.',
+      workspaceId,
+    });
+
+    expect(skill.userId).toBeNull();
+    expect(skill.workspaceId).toBe(workspaceId);
+  });
+
+  it.each([
+    { userId: mockUserId, workspaceId },
+    { userId: null, workspaceId: null },
+  ])('rejects invalid ownership %o', (ownership) => {
+    expect(
+      () =>
+        new Skill({
+          name: 'Invalid ownership',
+          shortDescription: 'Invalid ownership.',
+          instructions: 'Nothing.',
+          ...ownership,
+        }),
+    ).toThrow(InvalidSkillOwnershipError);
   });
 
   it('should create a skill with explicit id when provided', () => {

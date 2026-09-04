@@ -78,7 +78,7 @@ describe('SkillDtoMapper', () => {
         new Set(),
         new Map<UUID, string>([
           [OWNER_ID, 'Alice'],
-          [sharedSkill.userId, 'Bob'],
+          [sharedSkill.personalOwnerId, 'Bob'],
         ]),
       );
 

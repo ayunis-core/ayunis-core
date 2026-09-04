@@ -1,11 +1,10 @@
-// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const styles = readFileSync(
   'src/widgets/chat-input/ui/chat-input-glow.css',
   'utf8',
-) as string;
+);
 
 describe('reduced motion chat input styles', () => {
   it('preserves the new-chat compose position and visibility states', () => {

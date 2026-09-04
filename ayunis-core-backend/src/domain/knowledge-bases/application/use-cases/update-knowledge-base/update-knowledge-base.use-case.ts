@@ -39,6 +39,7 @@ export class UpdateKnowledgeBaseUseCase {
       description: command.description ?? existing.description,
       orgId: existing.orgId,
       userId: existing.userId,
+      workspaceId: existing.workspaceId,
       createdAt: existing.createdAt,
       updatedAt: new Date(),
     });

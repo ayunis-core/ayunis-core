@@ -5,16 +5,19 @@ export class CreateKnowledgeBaseCommand {
   public readonly description: string;
   public readonly userId: UUID;
   public readonly orgId: UUID;
+  public readonly workspaceId?: UUID;
 
   constructor(params: {
     name: string;
     description?: string;
     userId: UUID;
     orgId: UUID;
+    workspaceId?: UUID;
   }) {
     this.name = params.name;
     this.description = params.description ?? '';
     this.userId = params.userId;
     this.orgId = params.orgId;
+    this.workspaceId = params.workspaceId;
   }
 }

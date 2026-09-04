@@ -1,112 +1,71 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-import { useTranslation } from 'react-i18next';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import type {
+  CreateWorkspaceKnowledgeBaseDto,
+  CreateWorkspaceSkillDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
   getWorkspaceContextControllerFindContextQueryKey,
   getWorkspaceContextControllerListDocumentsQueryKey,
-  getWorkspaceContextControllerListKnowledgeBaseCandidatesQueryKey,
   getWorkspaceContextControllerListKnowledgeBasesQueryKey,
-  getWorkspaceContextControllerListSkillCandidatesQueryKey,
   getWorkspaceContextControllerListSkillsQueryKey,
   getWorkspacesControllerFindOneQueryKey,
   workspaceContextControllerAddDocument,
-  workspaceContextControllerAttachKnowledgeBase,
-  workspaceContextControllerAttachSkill,
-  workspaceContextControllerDetachKnowledgeBase,
-  workspaceContextControllerDetachSkill,
+  workspaceContextControllerCreateKnowledgeBase,
+  workspaceContextControllerCreateSkill,
+  workspaceContextControllerDeleteKnowledgeBase,
+  workspaceContextControllerDeleteSkill,
   workspaceContextControllerRemoveDocument,
   workspaceContextControllerUpdateInstruction,
 } from '@/shared/api/generated/ayunisCoreAPI';
-
 export function useWorkspaceContextActions(workspaceId: string) {
-  const { t } = useTranslation('workspace');
   const queryClient = useQueryClient();
   const router = useRouter();
-
   const invalidateContext = () => {
-    void queryClient.invalidateQueries({
-      queryKey: getWorkspaceContextControllerFindContextQueryKey(workspaceId),
-    });
-    void queryClient.invalidateQueries({
-      queryKey:
-        getWorkspaceContextControllerListSkillCandidatesQueryKey(workspaceId),
-    });
-    void queryClient.invalidateQueries({
-      queryKey:
-        getWorkspaceContextControllerListKnowledgeBaseCandidatesQueryKey(
-          workspaceId,
-        ),
-    });
-    void queryClient.invalidateQueries({
-      queryKey: getWorkspaceContextControllerListSkillsQueryKey(workspaceId),
-    });
-    void queryClient.invalidateQueries({
-      queryKey:
-        getWorkspaceContextControllerListKnowledgeBasesQueryKey(workspaceId),
-    });
-    void queryClient.invalidateQueries({
-      queryKey: getWorkspaceContextControllerListDocumentsQueryKey(workspaceId),
-    });
+    for (const queryKey of [
+      getWorkspaceContextControllerFindContextQueryKey(workspaceId),
+      getWorkspaceContextControllerListSkillsQueryKey(workspaceId),
+      getWorkspaceContextControllerListKnowledgeBasesQueryKey(workspaceId),
+      getWorkspaceContextControllerListDocumentsQueryKey(workspaceId),
+    ]) {
+      void queryClient.invalidateQueries({ queryKey });
+    }
     void router.invalidate();
   };
 
-  const attachSkill = useMutation({
-    mutationFn: (skillId: string) =>
-      workspaceContextControllerAttachSkill(workspaceId, skillId),
+  const createSkill = useMutation({
+    mutationFn: (data: CreateWorkspaceSkillDto) =>
+      workspaceContextControllerCreateSkill(workspaceId, data),
+    onSuccess: invalidateContext,
   });
-
-  const detachSkill = useMutation({
+  const deleteSkill = useMutation({
     mutationFn: (skillId: string) =>
-      workspaceContextControllerDetachSkill(workspaceId, skillId),
-    onSuccess: () => {
-      invalidateContext();
-      showSuccess(t('context.skills.detachSuccess'));
-    },
-    onError: () => showError(t('context.skills.detachError')),
+      workspaceContextControllerDeleteSkill(workspaceId, skillId),
+    onSuccess: invalidateContext,
   });
-
-  const attachKnowledgeBase = useMutation({
+  const createKnowledgeBase = useMutation({
+    mutationFn: (data: CreateWorkspaceKnowledgeBaseDto) =>
+      workspaceContextControllerCreateKnowledgeBase(workspaceId, data),
+    onSuccess: invalidateContext,
+  });
+  const deleteKnowledgeBase = useMutation({
     mutationFn: (knowledgeBaseId: string) =>
-      workspaceContextControllerAttachKnowledgeBase(
+      workspaceContextControllerDeleteKnowledgeBase(
         workspaceId,
         knowledgeBaseId,
       ),
+    onSuccess: invalidateContext,
   });
-
-  const detachKnowledgeBase = useMutation({
-    mutationFn: (knowledgeBaseId: string) =>
-      workspaceContextControllerDetachKnowledgeBase(
-        workspaceId,
-        knowledgeBaseId,
-      ),
-    onSuccess: () => {
-      invalidateContext();
-      showSuccess(t('context.knowledge.detachSuccess'));
-    },
-    onError: () => showError(t('context.knowledge.detachError')),
-  });
-
   const removeDocument = useMutation({
     mutationFn: (documentId: string) =>
       workspaceContextControllerRemoveDocument(workspaceId, documentId),
-    onSuccess: () => {
-      invalidateContext();
-      showSuccess(t('context.documents.removeSuccess'));
-    },
-    onError: () => showError(t('context.documents.removeError')),
+    onSuccess: invalidateContext,
   });
-
   const uploadDocument = useMutation({
     mutationFn: (file: File) =>
       workspaceContextControllerAddDocument(workspaceId, { file }),
-    onSuccess: () => {
-      invalidateContext();
-      showSuccess(t('context.documents.uploadSuccess'));
-    },
-    onError: () => showError(t('context.documents.uploadError')),
+    onSuccess: invalidateContext,
   });
-
   const updateInstruction = useMutation({
     mutationFn: (instruction: string | null) =>
       workspaceContextControllerUpdateInstruction(workspaceId, { instruction }),
@@ -115,42 +74,14 @@ export function useWorkspaceContextActions(workspaceId: string) {
         queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
       });
       invalidateContext();
-      showSuccess(t('context.instructions.saveSuccess'));
     },
-    onError: () => showError(t('context.instructions.saveError')),
   });
 
-  async function attachSkills(skillIds: string[]) {
-    const results = await Promise.allSettled(
-      skillIds.map((id) => attachSkill.mutateAsync(id)),
-    );
-    invalidateContext();
-    if (results.some((result) => result.status === 'rejected')) {
-      showError(t('context.skills.attachError'));
-      throw new Error('Failed to attach one or more skills');
-    }
-    showSuccess(t('context.skills.attachSuccess'));
-  }
-
-  async function attachKnowledgeBases(knowledgeBaseIds: string[]) {
-    const results = await Promise.allSettled(
-      knowledgeBaseIds.map((id) => attachKnowledgeBase.mutateAsync(id)),
-    );
-    invalidateContext();
-    if (results.some((result) => result.status === 'rejected')) {
-      showError(t('context.knowledge.attachError'));
-      throw new Error('Failed to attach one or more knowledge bases');
-    }
-    showSuccess(t('context.knowledge.attachSuccess'));
-  }
-
   return {
-    attachSkill: attachSkill.mutate,
-    attachSkills,
-    detachSkill: detachSkill.mutate,
-    attachKnowledgeBase: attachKnowledgeBase.mutate,
-    attachKnowledgeBases,
-    detachKnowledgeBase: detachKnowledgeBase.mutate,
+    createSkill: createSkill.mutateAsync,
+    deleteSkill: deleteSkill.mutate,
+    createKnowledgeBase: createKnowledgeBase.mutateAsync,
+    deleteKnowledgeBase: deleteKnowledgeBase.mutate,
     removeDocument: removeDocument.mutate,
     uploadDocument: uploadDocument.mutate,
     updateInstruction: updateInstruction.mutateAsync,

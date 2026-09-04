@@ -11,8 +11,8 @@ import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/worksp
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
 import { WorkspaceRecord } from './schema/workspace.record';
-import { WorkspaceSkillAssignmentRecord } from './schema/workspace-skill-assignment.record';
-import { WorkspaceKnowledgeBaseAssignmentRecord } from './schema/workspace-knowledge-base-assignment.record';
+import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { WorkspaceSourceAssignmentRecord } from './schema/workspace-source-assignment.record';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type {
@@ -25,10 +25,10 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
   constructor(
     @InjectRepository(WorkspaceRecord)
     private readonly repo: Repository<WorkspaceRecord>,
-    @InjectRepository(WorkspaceSkillAssignmentRecord)
-    private readonly skillAssignmentsRepo: Repository<WorkspaceSkillAssignmentRecord>,
-    @InjectRepository(WorkspaceKnowledgeBaseAssignmentRecord)
-    private readonly knowledgeBaseAssignmentsRepo: Repository<WorkspaceKnowledgeBaseAssignmentRecord>,
+    @InjectRepository(SkillRecord)
+    private readonly skillsRepo: Repository<SkillRecord>,
+    @InjectRepository(KnowledgeBaseRecord)
+    private readonly knowledgeBasesRepo: Repository<KnowledgeBaseRecord>,
     @InjectRepository(WorkspaceSourceAssignmentRecord)
     private readonly sourceAssignmentsRepo: Repository<WorkspaceSourceAssignmentRecord>,
     private readonly mapper: WorkspaceMapper,
@@ -169,41 +169,6 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     return this.mapper.toDomain(saved);
   }
 
-  async attachSkill(workspaceId: UUID, skillId: UUID): Promise<void> {
-    await this.skillAssignmentsRepo
-      .createQueryBuilder()
-      .insert()
-      .values({ id: randomUUID(), workspaceId, skillId })
-      .orIgnore()
-      .execute();
-  }
-
-  async detachSkill(workspaceId: UUID, skillId: UUID): Promise<void> {
-    await this.skillAssignmentsRepo.delete({ workspaceId, skillId });
-  }
-
-  async attachKnowledgeBase(
-    workspaceId: UUID,
-    knowledgeBaseId: UUID,
-  ): Promise<void> {
-    await this.knowledgeBaseAssignmentsRepo
-      .createQueryBuilder()
-      .insert()
-      .values({ id: randomUUID(), workspaceId, knowledgeBaseId })
-      .orIgnore()
-      .execute();
-  }
-
-  async detachKnowledgeBase(
-    workspaceId: UUID,
-    knowledgeBaseId: UUID,
-  ): Promise<void> {
-    await this.knowledgeBaseAssignmentsRepo.delete({
-      workspaceId,
-      knowledgeBaseId,
-    });
-  }
-
   async attachSource(workspaceId: UUID, sourceId: UUID): Promise<void> {
     await this.sourceAssignmentsRepo
       .createQueryBuilder()
@@ -214,22 +179,18 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
   }
 
   async getContextRefs(workspaceId: UUID): Promise<WorkspaceContextRefs> {
-    const [skillAssignments, knowledgeBaseAssignments, sourceAssignments] =
-      await Promise.all([
-        this.skillAssignmentsRepo.find({ where: { workspaceId } }),
-        this.knowledgeBaseAssignmentsRepo.find({
-          where: { workspaceId },
-          relations: { knowledgeBase: true },
-        }),
-        this.sourceAssignmentsRepo.find({ where: { workspaceId } }),
-      ]);
+    const [skills, knowledgeBases, sourceAssignments] = await Promise.all([
+      this.skillsRepo.find({ where: { workspaceId }, select: { id: true } }),
+      this.knowledgeBasesRepo.find({ where: { workspaceId } }),
+      this.sourceAssignmentsRepo.find({ where: { workspaceId } }),
+    ]);
 
     return {
-      skillIds: skillAssignments.map((assignment) => assignment.skillId),
-      knowledgeBases: knowledgeBaseAssignments.map((assignment) => ({
-        id: assignment.knowledgeBaseId,
-        name: assignment.knowledgeBase.name,
-        description: assignment.knowledgeBase.description,
+      skillIds: skills.map((skill) => skill.id),
+      knowledgeBases: knowledgeBases.map((knowledgeBase) => ({
+        id: knowledgeBase.id,
+        name: knowledgeBase.name,
+        description: knowledgeBase.description,
         documentCount: 0,
       })),
       sourceIds: sourceAssignments.map((assignment) => assignment.sourceId),

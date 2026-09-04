@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
-import { KnowledgeBase } from './knowledge-base.entity';
+import {
+  InvalidKnowledgeBaseOwnershipError,
+  KnowledgeBase,
+} from './knowledge-base.entity';
 
 describe('KnowledgeBase Entity', () => {
   const orgId = randomUUID();
   const userId = randomUUID();
+  const workspaceId = randomUUID();
 
   it('should generate a UUID when id is not provided', () => {
     const kb = new KnowledgeBase({
@@ -38,6 +42,32 @@ describe('KnowledgeBase Entity', () => {
     });
 
     expect(kb.description).toBe('');
+    expect(kb.workspaceId).toBeNull();
+  });
+
+  it('preserves exclusive workspace ownership', () => {
+    const kb = new KnowledgeBase({
+      name: 'Workspace procurement rules',
+      orgId,
+      workspaceId,
+    });
+
+    expect(kb.userId).toBeNull();
+    expect(kb.workspaceId).toBe(workspaceId);
+  });
+
+  it.each([
+    { userId, workspaceId },
+    { userId: null, workspaceId: null },
+  ])('rejects invalid ownership %o', (ownership) => {
+    expect(
+      () =>
+        new KnowledgeBase({
+          name: 'Invalid ownership',
+          orgId,
+          ...ownership,
+        }),
+    ).toThrow(InvalidKnowledgeBaseOwnershipError);
   });
 
   it('should use the provided description when given', () => {

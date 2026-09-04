@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillRecord } from '../schema/skill.record';
+import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
 
 @Injectable()
 export class SkillMapper {
@@ -16,6 +16,7 @@ export class SkillMapper {
       knowledgeBaseIds: record.knowledgeBases?.map((kb) => kb.id) ?? [],
       marketplaceIdentifier: record.marketplaceIdentifier ?? null,
       userId: record.userId,
+      workspaceId: record.workspaceId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -29,6 +30,7 @@ export class SkillMapper {
     record.instructions = domain.instructions;
     record.marketplaceIdentifier = domain.marketplaceIdentifier;
     record.userId = domain.userId;
+    record.workspaceId = domain.workspaceId;
     return record;
   }
 }
