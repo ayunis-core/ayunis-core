@@ -1,6 +1,9 @@
 User Authentication
 Handles login, registration, JWT tokens, and session management.
 
+See the repository-level [authentication architecture](../../../../docs/architecture/authentication.md)
+for the complete password, SSO, MFA, refresh, and logout paths.
+
 Manages user authentication flows including login with email/password, new user registration, JWT access/refresh token issuance, and current user retrieval. Registers Passport strategies for local credentials, JWT cookies, and API key bearer tokens; only JWT is bound to the global guard, while the API key strategy is reserved for per-endpoint guards on programmatic-access routes.
 
 `jwt.module.ts` (`JwtConfigModule`) is the single source of truth for the JWT signing/verification secret across the whole IAM area: `auth.jwt.secret` is read in exactly one place and exposed both to `@nestjs/jwt`'s `JwtModule` (consumed by every token-issuing service — `LocalAuthenticationRepository`, `EmailConfirmationJwtService`, `PasswordResetJwtService`, `InviteJwtService`, `MfaPendingJwtService`) and via the `JWT_SECRET` token injected by `JwtStrategy`. No module-level `signOptions.expiresIn` default is set — each service passes its own `expiresIn` per `sign()` call, so token expiries stay explicit. `UsersModule` and `InvitesModule` import `JwtConfigModule` rather than registering their own `JwtModule`.
