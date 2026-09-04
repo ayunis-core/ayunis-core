@@ -5,11 +5,7 @@ import { RotateSessionUseCase } from './rotate-session.use-case';
 import { RotateSessionCommand } from './rotate-session.command';
 import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 import { RefreshTokenFactory } from 'src/iam/sessions/application/services/refresh-token.factory';
-import {
-  RefreshTokenExpiredError,
-  RefreshTokenNotFoundError,
-  RefreshTokenReuseError,
-} from 'src/iam/sessions/application/sessions.errors';
+import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
 import {
   aRefreshToken,
   createMockRefreshTokensRepository,
@@ -48,10 +44,10 @@ describe('RotateSessionUseCase', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  const rotate = () => useCase.execute(new RotateSessionCommand('token'));
+  const rotate = (current = aRefreshToken()) =>
+    useCase.execute(new RotateSessionCommand(current));
 
   it('should rotate: atomically mark used and insert successor in the same family', async () => {
-    repository.findByTokenHash.mockResolvedValue(aRefreshToken());
     repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
 
     const result = await rotate();
@@ -72,10 +68,9 @@ describe('RotateSessionUseCase', () => {
       zitadelSessionId: 'zitadel-session-id',
       familyExpiresAt,
     });
-    repository.findByTokenHash.mockResolvedValue(current);
     repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
 
-    await rotate();
+    await rotate(current);
 
     expect(factory.create).toHaveBeenCalledWith({
       userId: current.userId,
@@ -90,10 +85,9 @@ describe('RotateSessionUseCase', () => {
     const current = aRefreshToken({
       authenticationMethod: SessionAuthenticationMethod.PASSWORD,
     });
-    repository.findByTokenHash.mockResolvedValue(current);
     repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
 
-    await rotate();
+    await rotate(current);
 
     expect(factory.create).toHaveBeenCalledWith({
       userId: current.userId,
@@ -104,34 +98,7 @@ describe('RotateSessionUseCase', () => {
     });
   });
 
-  it('should throw NotFound for an unknown token and write nothing', async () => {
-    repository.findByTokenHash.mockResolvedValue(null);
-
-    await expect(rotate()).rejects.toThrow(RefreshTokenNotFoundError);
-    expect(repository.markUsedAndInsertSuccessor).not.toHaveBeenCalled();
-    expect(repository.insert).not.toHaveBeenCalled();
-  });
-
-  it('should revoke the family and throw Reuse for a revoked token', async () => {
-    repository.findByTokenHash.mockResolvedValue(
-      aRefreshToken({ revokedAt: new Date() }),
-    );
-
-    await expect(rotate()).rejects.toThrow(RefreshTokenReuseError);
-    expect(repository.revokeFamily).toHaveBeenCalledWith(TEST_FAMILY_ID);
-  });
-
-  it('should throw Expired for an expired token without rotating', async () => {
-    repository.findByTokenHash.mockResolvedValue(
-      aRefreshToken({ expiresAt: new Date(Date.now() - 1000) }),
-    );
-
-    await expect(rotate()).rejects.toThrow(RefreshTokenExpiredError);
-    expect(repository.markUsedAndInsertSuccessor).not.toHaveBeenCalled();
-  });
-
   it('should issue a sibling on a benign race (lost rotation, within grace)', async () => {
-    repository.findByTokenHash.mockResolvedValue(aRefreshToken());
     repository.markUsedAndInsertSuccessor.mockResolvedValue(false);
     repository.wasUsedWithinGrace.mockResolvedValue(true);
 
@@ -143,7 +110,6 @@ describe('RotateSessionUseCase', () => {
   });
 
   it('should revoke the family on a post-grace replay (lost rotation, past grace)', async () => {
-    repository.findByTokenHash.mockResolvedValue(aRefreshToken());
     repository.markUsedAndInsertSuccessor.mockResolvedValue(false);
     repository.wasUsedWithinGrace.mockResolvedValue(false);
 

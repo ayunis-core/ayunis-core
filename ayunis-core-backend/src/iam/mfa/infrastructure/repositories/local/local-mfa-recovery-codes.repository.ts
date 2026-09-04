@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { IsNull, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
@@ -10,35 +11,38 @@ import { MfaRecoveryCodeMapper } from './mappers/mfa-recovery-code.mapper';
 @Injectable()
 export class LocalMfaRecoveryCodesRepository extends MfaRecoveryCodesRepository {
   constructor(
-    @InjectRepository(MfaRecoveryCodeRecord)
-    private readonly repository: Repository<MfaRecoveryCodeRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
+  private get records(): Repository<MfaRecoveryCodeRecord> {
+    return this.txHost.tx.getRepository(MfaRecoveryCodeRecord);
+  }
+
   async replaceForUser(userId: UUID, codes: MfaRecoveryCode[]): Promise<void> {
-    await this.repository.manager.transaction(async (manager) => {
-      await manager.delete(MfaRecoveryCodeRecord, { userId });
-      await manager.save(
+    await this.txHost.withTransaction(async () => {
+      await this.records.delete({ userId });
+      await this.records.save(
         codes.map((code) => MfaRecoveryCodeMapper.toRecord(code)),
       );
     });
   }
 
   async findUnusedByUserId(userId: UUID): Promise<MfaRecoveryCode[]> {
-    const records = await this.repository.find({
+    const records = await this.records.find({
       where: { userId, usedAt: IsNull() },
     });
     return records.map((record) => MfaRecoveryCodeMapper.toDomain(record));
   }
 
   async countUnusedByUserId(userId: UUID): Promise<number> {
-    return this.repository.count({ where: { userId, usedAt: IsNull() } });
+    return this.records.count({ where: { userId, usedAt: IsNull() } });
   }
 
   async consume(id: UUID, usedAt: Date): Promise<boolean> {
     // Conditional update keeps consumption single-use under concurrency.
-    const result = await this.repository.update(
+    const result = await this.records.update(
       { id, usedAt: IsNull() },
       { usedAt },
     );
@@ -46,6 +50,6 @@ export class LocalMfaRecoveryCodesRepository extends MfaRecoveryCodesRepository 
   }
 
   async deleteByUserId(userId: UUID): Promise<void> {
-    await this.repository.delete({ userId });
+    await this.records.delete({ userId });
   }
 }
