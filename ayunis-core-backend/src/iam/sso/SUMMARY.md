@@ -1,6 +1,9 @@
 SSO
 Persists organization SSO configuration and links validated broker identities to Ayunis users.
 
+See the repository-level [authentication architecture](../../../../docs/architecture/authentication.md)
+for the end-to-end broker, admission, MFA, session, and logout paths.
+
 Each organization can have one SSO connection with one or more globally unique verified email domains, their verification timestamps, an optional unique Zitadel organization ID, and an optional Zitadel identity provider ID. The domain collection is authoritative for exact routing; the legacy primary-domain columns remain a rollback-compatible mirror. Exact domain matching routes every configured domain to the same connection. The enabled flag is the runtime login switch and requires a broker organization mapping. JIT provisioning is an independent opt-in through `jitProvisioningEnabled`; invitations remain available regardless of that setting. Local password login remains enabled by default and can be disabled independently only while the SSO mapping is active and valid. A configured identity provider ID sends users directly to the customer IdP; connections without one retain the broker UI fallback.
 
 Federated identities use the exact validated OIDC issuer and subject as their durable unique key and reference the internal Ayunis user. Organization and user deletion cascade to their corresponding SSO records. This module does not persist customer IdP credentials or the future self-service onboarding lifecycle.

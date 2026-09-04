@@ -59,11 +59,15 @@ in sync for rollback compatibility.
    off.
 6. Review the saved mapping, choose **Enable SSO**, and confirm the exact domains
    and Zitadel organization ID shown in the dialog.
+7. Complete the acceptance test with local password login still available.
+8. If the organization requires SSO-only login, explicitly enable **Require
+   SSO** and confirm the exact current domains and broker identifiers. This
+   revokes password-origin sessions but preserves password hashes.
 
 New connections are disabled. Controlled Core login while disabled is not part
 of V1; test the customer IdP at Zitadel first, then enable Core only for the
 agreed acceptance window. Local email and password authentication remains
-available throughout.
+available unless the separately reviewed SSO-only policy is enabled.
 
 ## Acceptance test
 
@@ -72,12 +76,12 @@ tokens, cookie values, or IdP secrets.
 
 | Scenario                       | Expected result                                                                    |
 | ------------------------------ | ---------------------------------------------------------------------------------- |
-| Email-first login              | Every verified domain offers SSO and still offers Ayunis password login.           |
-| Direct link                    | `/sso/{orgId}` starts the same organization-pinned broker flow.                    |
+| Email-first login              | Every verified domain offers SSO; password appears only when allowed.              |
+| Direct link                    | `/sso/{verifiedDomain}` starts the same organization-pinned broker flow.           |
 | Disabled or unknown connection | SSO is unavailable and the user can return to local login.                         |
-| Invited `USER`                 | SSO signs in the existing user and preserves `USER`.                               |
-| Invited `MANAGER`              | SSO signs in the existing user and preserves `MANAGER`.                            |
-| Invited `ADMIN`                | SSO signs in the existing user and preserves `ADMIN`.                              |
+| Invited `USER`                 | SSO creates or signs in the user and preserves `USER`.                             |
+| Invited `MANAGER`              | SSO creates or signs in the user and preserves `MANAGER`.                          |
+| Invited `ADMIN`                | SSO creates or signs in the user and preserves `ADMIN`.                            |
 | Uninvited user, JIT off        | Login is rejected; no Core user or federated identity is created.                  |
 | Uninvited user, JIT on         | One verified, passwordless Core `USER` and one federated identity are created.     |
 | No seat available              | Login is rejected; no Core user or federated identity is created.                  |
@@ -93,7 +97,8 @@ non-secret screenshots or logs to the reviewed change record.
 
 ## Rotation and mapping changes
 
-1. Disable the Core connection before changing the domains, Zitadel organization
+1. If the organization requires SSO, first restore local password login. Then
+   disable the Core connection before changing the domains, Zitadel organization
    mapping, OIDC client secret, SAML metadata, or signing certificate.
 2. Rotate credentials through the approved secret channel and update Zitadel.
 3. Verify the external IdP at Zitadel, review the Core mapping, and repeat the
@@ -106,9 +111,9 @@ rotation.
 
 ## Incident response and rollback
 
-1. Select **Disable SSO** in the organization's SSO tab. This preserves the
-   mapping and immediately prevents new SSO starts; local login remains
-   available.
+1. If the organization requires SSO, first restore local password login. Then
+   select **Disable SSO** in the organization's SSO tab. This preserves the
+   mapping and immediately prevents new SSO starts.
 2. If the incident is provider-specific, deactivate only that organization's
    provider in Zitadel. Do not weaken instance-wide policy.
 3. Preserve the Zitadel organization, identity links, Core federated identity
