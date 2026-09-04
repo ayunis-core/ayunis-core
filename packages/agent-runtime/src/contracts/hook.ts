@@ -20,9 +20,15 @@ export interface HookApi {
   removeTools(...names: string[]): void;
   /** Full-replace escape hatch (e.g. re-assembling the whole tool set). */
   setTools(tools: Tool[]): void;
+  /** Transforms the prospective tool set after earlier same-phase mutations. */
+  transformTools(fn: (tools: readonly Tool[]) => Tool[]): void;
+  /** Reads the prospective tool set including all earlier buffered mutations. */
+  getProspectiveTools(): readonly Tool[];
   addInstructions(text: string): void;
   /** Full-replace escape hatch for a rebuilt system prompt. */
   setInstructions(text: string): void;
+  /** Transforms prospective instructions after earlier same-phase mutations. */
+  transformInstructions(fn: (instructions: string) => string): void;
   /** Ends the run with status 'aborted' before the next loop step. */
   abort(reason?: string): void;
   /** Emits a `custom` RunEvent into the run's event stream. */

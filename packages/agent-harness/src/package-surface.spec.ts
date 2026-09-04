@@ -8,19 +8,19 @@ import * as sourceSurface from './index';
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url));
 const expectedExports = [
-  'defineExtension',
-  'DuplicateExtensionError',
-  'ExtensionError',
-  'InvalidExtensionNameError',
-  'MissingExtensionError',
+  'AgentConfigurationError',
+  'AgentHarnessError',
+  'AgentVariantError',
+  'ModelResolutionError',
 ];
 
 describe('package surface', () => {
-  it('exports only application-facing extension definitions and errors', () => {
+  it('exports only agent contracts and errors at this checkpoint', () => {
     expect(sortedKeys(sourceSurface)).toEqual(expectedExports);
-    expect(sourceSurface).not.toHaveProperty('configureRuntimeExtension');
-    expect(sourceSurface).not.toHaveProperty('initializeExtensionSet');
-    expect(sourceSurface).not.toHaveProperty('createExtensionSession');
+    expect(sourceSurface).not.toHaveProperty('defineAgentProfile');
+    expect(sourceSurface).not.toHaveProperty('createAgentHarness');
+    expect(sourceSurface).not.toHaveProperty('AgentStateStore');
+    expect(sourceSurface).not.toHaveProperty('agents');
   });
 
   it('loads the built output as ESM and CJS', async () => {

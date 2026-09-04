@@ -1,4 +1,6 @@
 {
+  "extensions": ["ts"],
+  "excludeRegExp": ["\\.spec\\.ts$"],
   "detectiveOptions": {
     "ts": {
       "skipTypeImports": true

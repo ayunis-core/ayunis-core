@@ -1,0 +1,4 @@
+{
+  "extensions": ["ts"],
+  "excludeRegExp": ["\\.spec\\.ts$"]
+}

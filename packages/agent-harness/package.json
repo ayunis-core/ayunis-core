@@ -1,7 +1,7 @@
 {
-  "name": "@ayunis/agent-extensions",
+  "name": "@ayunis/agent-harness",
   "version": "0.1.0",
-  "description": "Run-scoped extension definitions and built-in agent capabilities",
+  "description": "Runnable agents and private run-scoped extension execution",
   "private": true,
   "type": "module",
   "engines": {
@@ -31,6 +31,7 @@
     "deps:check": "madge --circular --extensions ts src"
   },
   "dependencies": {
+    "@ayunis/agent-extensions": "workspace:*",
     "@ayunis/agent-runtime": "workspace:*"
   },
   "devDependencies": {

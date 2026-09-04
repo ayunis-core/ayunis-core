@@ -165,14 +165,21 @@ const createRunState = (input: RunInput, context: RunContext): RunState => {
   const emits = new EmitBuffer();
   const abortState = new AbortState();
   const hooks = input.hooks ?? [];
+  const stateRef: { current: RunState | undefined } = { current: undefined };
   const hookRunner = new HookRunner({
     hooks,
     context,
     mutations,
     emits,
     abortState,
+    getTools: () => {
+      if (!stateRef.current) {
+        throw new Error('Run state is not initialized.');
+      }
+      return stateRef.current.tools;
+    },
   });
-  return {
+  const state: RunState = {
     context,
     model: input.model,
     messages: [...input.messages],
@@ -186,13 +193,42 @@ const createRunState = (input: RunInput, context: RunContext): RunState => {
     emits,
     abortState,
     hookRunner,
+    childRunHandler: input.childRunHandler,
     runChild: (child) =>
-      run({
-        ...child,
-        hooks: child.hooks ?? hooks,
-        context: context.deriveChild(),
+      executeChildRun({
+        child,
+        context,
+        parentHooks: hooks,
+        handler: input.childRunHandler,
       }),
   };
+  stateRef.current = state;
+  return state;
+};
+
+interface ChildExecution {
+  child: Parameters<RunState['runChild']>[0];
+  context: RunContext;
+  parentHooks: NonNullable<RunInput['hooks']>;
+  handler?: NonNullable<RunInput['childRunHandler']>;
+}
+
+const executeChildRun = (
+  execution: ChildExecution,
+): AsyncIterable<RunEvent> => {
+  const childContext = execution.context.deriveChild();
+  if (execution.handler) {
+    return execution.handler({
+      ...execution.child,
+      context: childContext,
+      childRunHandler: execution.handler,
+    });
+  }
+  return run({
+    ...execution.child,
+    hooks: execution.child.hooks ?? execution.parentHooks,
+    context: childContext,
+  });
 };
 
 const createStamper = (context: RunContext): Stamper => {
