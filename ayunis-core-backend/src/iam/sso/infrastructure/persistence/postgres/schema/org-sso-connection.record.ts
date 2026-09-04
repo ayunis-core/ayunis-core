@@ -22,6 +22,7 @@ import { OrgSsoEmailDomainRecord } from 'src/iam/sso/infrastructure/persistence/
   '"zitadelOrgId" IS NULL OR ("zitadelOrgId" <> \'\' AND "zitadelOrgId" = btrim("zitadelOrgId"))',
 )
 @Check('NOT "enabled" OR "zitadelOrgId" IS NOT NULL')
+@Check('"localPasswordLoginEnabled" OR "enabled"')
 export class OrgSsoConnectionRecord extends BaseRecord {
   @Column()
   orgId: UUID;
@@ -54,4 +55,7 @@ export class OrgSsoConnectionRecord extends BaseRecord {
 
   @Column({ default: false })
   jitProvisioningEnabled: boolean;
+
+  @Column({ default: true })
+  localPasswordLoginEnabled: boolean;
 }

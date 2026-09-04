@@ -18,6 +18,12 @@ export class SsoConnectionUniqueConstraintError extends Error {
 
 export abstract class OrgSsoConnectionsRepository {
   abstract findByOrgId(orgId: UUID): Promise<OrgSsoConnection | null>;
+  abstract findLocalPasswordLoginEnabledByOrgId(
+    orgId: UUID,
+  ): Promise<boolean | null>;
+  abstract findLocalPasswordLoginEnabledByOrgIdForSessionIssuance(
+    orgId: UUID,
+  ): Promise<boolean | null>;
   abstract findByOrgIdWithDomainState(
     orgId: UUID,
   ): Promise<OrgSsoConnectionDomainState | null>;
@@ -37,6 +43,10 @@ export abstract class OrgSsoConnectionsRepository {
     enabled: boolean,
   ): Promise<OrgSsoConnection | null>;
   abstract setJitProvisioningEnabledIfMappingMatches(
+    expected: OrgSsoConnection,
+    enabled: boolean,
+  ): Promise<OrgSsoConnection | null>;
+  abstract setLocalPasswordLoginEnabledIfMappingMatches(
     expected: OrgSsoConnection,
     enabled: boolean,
   ): Promise<OrgSsoConnection | null>;
