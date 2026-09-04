@@ -3,6 +3,7 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Index,
   TableInheritance,
   ChildEntity,
 } from 'typeorm';
@@ -31,6 +32,7 @@ export class ShareRecord extends BaseRecord {
 @ChildEntity(SharedEntityType.SKILL)
 export class SkillShareRecord extends ShareRecord {
   @Column({ name: 'skill_id' })
+  @Index()
   skillId: UUID;
 
   @ManyToOne(() => SkillRecord, { onDelete: 'CASCADE', nullable: false })
@@ -41,6 +43,7 @@ export class SkillShareRecord extends ShareRecord {
 @ChildEntity(SharedEntityType.KNOWLEDGE_BASE)
 export class KnowledgeBaseShareRecord extends ShareRecord {
   @Column({ name: 'knowledge_base_id' })
+  @Index()
   knowledgeBaseId: UUID;
 
   @ManyToOne(() => KnowledgeBaseRecord, {

@@ -107,6 +107,13 @@
     "error": "Failed to delete knowledge base. Please try again.",
     "notFound": "Knowledge base not found. It may have been deleted."
   },
+  "activation": {
+    "activeLabel": "Active",
+    "inactiveLabel": "Inactive",
+    "success": "Knowledge base status updated.",
+    "error": "Failed to update the knowledge base status.",
+    "notFound": "Knowledge base not found. It may have been deleted."
+  },
   "detail": {
     "properties": {
       "title": "Properties",

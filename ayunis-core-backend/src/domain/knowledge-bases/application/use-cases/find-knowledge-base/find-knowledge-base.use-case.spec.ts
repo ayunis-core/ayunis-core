@@ -30,6 +30,11 @@ describe('FindKnowledgeBaseUseCase', () => {
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
+      activate: jest.fn(),
+      deactivate: jest.fn(),
+      isActive: jest.fn(),
+      getActiveIds: jest.fn(),
+      findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
 

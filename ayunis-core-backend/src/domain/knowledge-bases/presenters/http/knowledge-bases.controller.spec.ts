@@ -28,6 +28,7 @@ describe('KnowledgeBasesController', () => {
       null as never,
       null as never,
       null as never,
+      null as never,
     );
 
     await expect(
