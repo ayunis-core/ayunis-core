@@ -4,6 +4,7 @@ import {
   DEFAULT_WORKSPACE_COLOR,
   DEFAULT_WORKSPACE_ICON,
 } from './workspaces.constants';
+import { WorkspaceVisibility } from './value-objects/workspace-visibility.enum';
 
 export class Workspace {
   public readonly id: UUID;
@@ -15,6 +16,7 @@ export class Workspace {
   public instruction: string | null;
   public icon: string;
   public color: string;
+  public visibility: WorkspaceVisibility;
   public updatedAt: Date;
 
   constructor(params: {
@@ -26,6 +28,7 @@ export class Workspace {
     instruction?: string | null;
     icon?: string;
     color?: string;
+    visibility?: WorkspaceVisibility;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -37,6 +40,7 @@ export class Workspace {
     this.instruction = params.instruction ?? null;
     this.icon = params.icon ?? DEFAULT_WORKSPACE_ICON;
     this.color = params.color ?? DEFAULT_WORKSPACE_COLOR;
+    this.visibility = params.visibility ?? WorkspaceVisibility.PRIVATE;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
@@ -59,6 +63,11 @@ export class Workspace {
   restyle(params: { icon?: string; color?: string }): void {
     this.icon = params.icon ?? this.icon;
     this.color = params.color ?? this.color;
+    this.touch();
+  }
+
+  changeVisibility(visibility: WorkspaceVisibility): void {
+    this.visibility = visibility;
     this.touch();
   }
 
