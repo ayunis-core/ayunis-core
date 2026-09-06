@@ -7,11 +7,14 @@ import {
   SsoConnectionChangedError,
   SsoConnectionNotFoundError,
   UnexpectedSsoError,
+  SsoDomainAccountConflictError,
 } from 'src/iam/sso/application/sso.errors';
 import { SetOrgLocalPasswordLoginEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-local-password-login-enabled/set-org-local-password-login-enabled.command';
 import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
 import { RevokePasswordSessionsForOrgCommand } from 'src/iam/sessions/application/use-cases/revoke-password-sessions-for-org/revoke-password-sessions-for-org.command';
 import { RevokePasswordSessionsForOrgUseCase } from 'src/iam/sessions/application/use-cases/revoke-password-sessions-for-org/revoke-password-sessions-for-org.use-case';
+import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/application/use-cases/has-users-outside-org-with-email-domains/has-users-outside-org-with-email-domains.use-case';
+import { HasUsersOutsideOrgWithEmailDomainsQuery } from 'src/iam/users/application/use-cases/has-users-outside-org-with-email-domains/has-users-outside-org-with-email-domains.query';
 
 export interface SetOrgLocalPasswordLoginEnabledResult {
   connection: OrgSsoConnection;
@@ -27,6 +30,7 @@ export class SetOrgLocalPasswordLoginEnabledUseCase {
   constructor(
     private readonly repository: OrgSsoConnectionsRepository,
     private readonly revokePasswordSessions: RevokePasswordSessionsForOrgUseCase,
+    private readonly domainAccounts: HasUsersOutsideOrgWithEmailDomainsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
@@ -43,7 +47,11 @@ export class SetOrgLocalPasswordLoginEnabledUseCase {
     );
     if (!state) throw new SsoConnectionNotFoundError(command.orgId);
     const existing = state.connection;
-    this.assertCanDisable(command, existing, state.hasCanonicalEmailDomains);
+    await this.assertCanDisable(
+      command,
+      existing,
+      state.hasCanonicalEmailDomains,
+    );
     if (existing.localPasswordLoginEnabled === command.enabled) {
       return {
         connection: existing,
@@ -69,11 +77,11 @@ export class SetOrgLocalPasswordLoginEnabledUseCase {
     return this.concurrentChange(command.orgId);
   }
 
-  private assertCanDisable(
+  private async assertCanDisable(
     command: SetOrgLocalPasswordLoginEnabledCommand,
     connection: OrgSsoConnection,
     hasCanonicalEmailDomains: boolean,
-  ): void {
+  ): Promise<void> {
     if (command.enabled) return;
     if (!connection.enabled || !connection.zitadelOrgId) {
       throw new InvalidSsoConfigurationError('enabled');
@@ -87,6 +95,16 @@ export class SetOrgLocalPasswordLoginEnabledUseCase {
     if (!command.reviewedMapping.matches(connection)) {
       throw new SsoConnectionChangedError(command.orgId);
     }
+    if (
+      connection.localPasswordLoginEnabled &&
+      (await this.domainAccounts.execute(
+        new HasUsersOutsideOrgWithEmailDomainsQuery(
+          command.orgId,
+          connection.emailDomains.map(({ emailDomain }) => emailDomain),
+        ),
+      ))
+    )
+      throw new SsoDomainAccountConflictError(command.orgId);
   }
 
   private async concurrentChange(

@@ -25,6 +25,22 @@ describe(SetOrgSsoEnabledRequestDto.name, () => {
     await expect(validate(dto)).resolves.toEqual([]);
   });
 
+  it.each([undefined, false])(
+    'requires confirmation to be true when enabling SSO',
+    async (confirmed) => {
+      const dto = Object.assign(new SetOrgSsoEnabledRequestDto(), {
+        enabled: true,
+        confirmed,
+        reviewedEmailDomains: ['stadt.example'],
+        reviewedZitadelOrgId: '385820595704561666',
+      });
+
+      const errors = await validate(dto);
+
+      expect(errors.map(({ property }) => property)).toEqual(['confirmed']);
+    },
+  );
+
   it('rejects non-string reviewed domains without throwing', async () => {
     const dto = Object.assign(new SetOrgSsoEnabledRequestDto(), {
       enabled: true,

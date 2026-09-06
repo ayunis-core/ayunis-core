@@ -32,6 +32,9 @@ export class SetOrgSsoIdpUseCase {
     if (existing.zitadelIdpId === zitadelIdpId) {
       return existing;
     }
+    if (!existing.localPasswordLoginEnabled) {
+      throw new InvalidSsoConfigurationError('localPasswordLoginEnabled');
+    }
 
     // Conditional on the mapping that was just read, so a concurrent remap
     // cannot leave the hint pointing at a provider in another broker org.

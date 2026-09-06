@@ -15,6 +15,7 @@ describe(DiscoverOrgSsoUseCase.name, () => {
     ).resolves.toEqual({
       available: true,
       orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+      localPasswordLoginEnabled: true,
     });
     expect(repository.findByEmailDomain).toHaveBeenCalledWith('demo.com');
   });

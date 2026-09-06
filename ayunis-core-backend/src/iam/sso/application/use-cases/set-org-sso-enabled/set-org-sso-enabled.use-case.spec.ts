@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import {
   TEST_ORG_ID,
   anOrgSsoConnection,
@@ -8,6 +15,8 @@ import {
   InvalidSsoConfigurationError,
   SsoConnectionChangedError,
   SsoConnectionNotFoundError,
+  SsoMustRemainEnabledError,
+  SsoPasswordlessUsersExistError,
 } from 'src/iam/sso/application/sso.errors';
 import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
 import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
@@ -16,10 +25,15 @@ import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-
 describe(SetOrgSsoEnabledUseCase.name, () => {
   let repository: ReturnType<typeof createMockOrgSsoConnectionsRepository>;
   let useCase: SetOrgSsoEnabledUseCase;
+  const hasPasswordlessUsers = { execute: jest.fn() };
 
   beforeEach(() => {
     repository = createMockOrgSsoConnectionsRepository();
-    useCase = new SetOrgSsoEnabledUseCase(repository);
+    hasPasswordlessUsers.execute.mockReset().mockResolvedValue(false);
+    useCase = new SetOrgSsoEnabledUseCase(
+      repository,
+      hasPasswordlessUsers as never,
+    );
   });
 
   it('rejects an organization without an SSO connection', async () => {
@@ -39,6 +53,56 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
     expect(result.enabled).toBe(enabled);
     expect(repository.setEnabled).toHaveBeenCalledWith(existing, enabled);
     expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('does not disable SSO while local password login is disabled', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({
+        enabled: true,
+        localPasswordLoginEnabled: false,
+      }),
+    );
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, false)),
+    ).rejects.toBeInstanceOf(SsoMustRemainEnabledError);
+    expect(repository.setEnabled).not.toHaveBeenCalled();
+  });
+
+  it('does not disable SSO while an organization has passwordless users', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ enabled: true, localPasswordLoginEnabled: true }),
+    );
+    hasPasswordlessUsers.execute.mockResolvedValue(true);
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, false)),
+    ).rejects.toBeInstanceOf(SsoPasswordlessUsersExistError);
+
+    expect(repository.setEnabled).not.toHaveBeenCalled();
+  });
+
+  it('locks SSO state before checking whether disablement strands users', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ enabled: true, localPasswordLoginEnabled: true }),
+    );
+
+    await useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, false));
+
+    expect(repository.acquireMutationLock).toHaveBeenCalledWith(TEST_ORG_ID);
+    expect(
+      repository.acquireMutationLock.mock.invocationCallOrder[0],
+    ).toBeLessThan(hasPasswordlessUsers.execute.mock.invocationCallOrder[0]);
+  });
+
+  it('does not query password capability when enabling SSO', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ enabled: false }),
+    );
+
+    await useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true));
+
+    expect(hasPasswordlessUsers.execute).not.toHaveBeenCalled();
   });
 
   it('rejects enablement without a Zitadel organization mapping', async () => {

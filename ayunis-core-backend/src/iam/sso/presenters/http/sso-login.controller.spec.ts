@@ -48,11 +48,16 @@ describe(SsoLoginController.name, () => {
     discovery.execute.mockResolvedValue({
       available: true,
       orgId: SSO_TEST_ORG_ID,
+      localPasswordLoginEnabled: false,
     });
 
     await expect(
       controller.discover({ email: 'staff@demo.com' }),
-    ).resolves.toEqual({ available: true, orgId: SSO_TEST_ORG_ID });
+    ).resolves.toEqual({
+      available: true,
+      orgId: SSO_TEST_ORG_ID,
+      localPasswordLoginEnabled: false,
+    });
   });
 
   it('redirects the browser to the broker authorization URL', async () => {

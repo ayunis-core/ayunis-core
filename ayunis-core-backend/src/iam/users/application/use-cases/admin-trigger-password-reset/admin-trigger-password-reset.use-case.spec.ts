@@ -2,11 +2,11 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { User } from 'src/iam/users/domain/user.entity';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { TriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { UserInvalidInputError } from 'src/iam/users/application/users.errors';
-import { TriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { AdminTriggerPasswordResetCommand } from './admin-trigger-password-reset.command';
 import { AdminTriggerPasswordResetUseCase } from './admin-trigger-password-reset.use-case';
 
@@ -54,14 +54,13 @@ describe('AdminTriggerPasswordResetUseCase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(contextService, 'get').mockReturnValue(orgId);
+    jest.spyOn(triggerPasswordResetUseCase, 'execute').mockResolvedValue(true);
   });
 
   it('delegates reset for a user with a local password', async () => {
     const user = buildUser('hashed-password');
     jest.spyOn(usersRepository, 'findOneById').mockResolvedValue(user);
-    jest
-      .spyOn(triggerPasswordResetUseCase, 'execute')
-      .mockResolvedValue(undefined);
+    jest.spyOn(triggerPasswordResetUseCase, 'execute').mockResolvedValue(true);
 
     await useCase.execute(new AdminTriggerPasswordResetCommand(userId));
 
@@ -80,5 +79,18 @@ describe('AdminTriggerPasswordResetUseCase', () => {
     ).rejects.toThrow(UserInvalidInputError);
 
     expect(triggerPasswordResetUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects reset when no reset email is sent', async () => {
+    jest
+      .spyOn(usersRepository, 'findOneById')
+      .mockResolvedValue(buildUser('hashed-password'));
+    jest.spyOn(triggerPasswordResetUseCase, 'execute').mockResolvedValue(false);
+
+    await expect(
+      useCase.execute(new AdminTriggerPasswordResetCommand(userId)),
+    ).rejects.toThrow(UserInvalidInputError);
+
+    expect(triggerPasswordResetUseCase.execute).toHaveBeenCalledTimes(1);
   });
 });

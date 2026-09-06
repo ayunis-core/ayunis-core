@@ -3,6 +3,7 @@ import {
   UsersRepository,
   UsersPagination,
   UsersFilters,
+  EmailVerificationResult,
 } from 'src/iam/users/application/ports/users.repository';
 import type { UserSummary } from 'src/iam/users/domain/user-summary';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -77,6 +78,47 @@ export class LocalUsersRepository extends UsersRepository {
       return null;
     }
     return UserMapper.toDomain(userRecord);
+  }
+
+  async verifyEmailIfMatches(
+    id: UUID,
+    email: string,
+  ): Promise<EmailVerificationResult | null> {
+    const record = await this.users.findOne({
+      where: { id, email: exactEmail(email) },
+      lock: { mode: 'pessimistic_write' },
+    });
+    if (!record) return null;
+    if (record.emailVerified) {
+      return { user: UserMapper.toDomain(record), changed: false };
+    }
+    record.emailVerified = true;
+    record.updatedAt = new Date();
+    const verifiedRecord = await this.users.save(record);
+    return { user: UserMapper.toDomain(verifiedRecord), changed: true };
+  }
+
+  hasPasswordlessUsers(orgId: UUID): Promise<boolean> {
+    return this.users.exists({ where: { orgId, passwordHash: IsNull() } });
+  }
+
+  hasUsersOutsideOrgWithEmailDomains(
+    orgId: UUID,
+    emailDomains: string[],
+  ): Promise<boolean> {
+    if (emailDomains.length === 0) return Promise.resolve(false);
+    return this.users
+      .createQueryBuilder('user')
+      .where('user.orgId <> :orgId', { orgId })
+      .andWhere(
+        "LOWER(BTRIM(SPLIT_PART(user.email, '@', 2))) IN (:...emailDomains)",
+        {
+          emailDomains: emailDomains.map((domain) =>
+            domain.trim().toLowerCase(),
+          ),
+        },
+      )
+      .getExists();
   }
 
   async findManyByEmails(emails: string[]): Promise<User[]> {
