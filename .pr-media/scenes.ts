@@ -1,48 +1,63 @@
+import { randomUUID } from 'node:crypto';
+import { config } from '../src/config';
 import type { PrMediaScene } from './types';
-
-type Organization = {
-  id: string;
-  createdAt: string;
-};
 
 export default [
   {
-    name: 'require-sso-control',
+    name: 'active-sso-domain-maintenance',
     path: '/login',
+    viewports: ['desktop', 'mobile'],
     waitFor: async ({ page, expect }) => {
-      const loginResponse = await page.request.post('/api/auth/login', {
+      const key = randomUUID();
+      const orgName = `PR 1577 media ${key}`;
+      const domain = `stadt-${key}.example`;
+      const registration = await page.request.post(`${config.apiURL}/api/auth/register`, {
+        data: { email: `admin@${domain}`, password: `Review-${key}-Aa1`, orgName, userName: 'Review admin' },
+      });
+      expect(registration.ok()).toBeTruthy();
+      const login = await page.request.post(`${config.apiURL}/api/auth/login`, {
         data: { email: 'admin@demo.local', password: 'admin' },
       });
-      expect(loginResponse.ok()).toBeTruthy();
-
-      const organizationsResponse = await page.request.get(
-        '/api/super-admin/orgs',
-        { params: { search: 'SSO E2E', limit: '50' } },
-      );
-      expect(organizationsResponse.ok()).toBeTruthy();
-      const body = (await organizationsResponse.json()) as {
-        data: Organization[];
-      };
-      const organization = body.data.toSorted((left, right) =>
-        right.createdAt.localeCompare(left.createdAt),
-      )[0];
-      if (!organization) {
-        throw new Error('No SSO E2E organization found');
-      }
-
-      await page.goto(
-        `/super-admin-settings/orgs/${organization.id}?tab=sso`,
-      );
-      return page.getByTestId('sso-required');
+      expect(login.ok()).toBeTruthy();
+      const organizations = await page.request.get(`${config.apiURL}/api/super-admin/orgs`, {
+        params: { search: orgName, limit: '5' },
+      });
+      expect(organizations.ok()).toBeTruthy();
+      const { data } = await organizations.json() as { data: Array<{ id: string; name: string }> };
+      const org = data.find((entry) => entry.name === orgName);
+      if (!org) throw new Error('Media organization not found');
+      await page.goto(`/super-admin-settings/orgs/${org.id}?tab=sso`);
+      await page.getByTestId('sso-email-domain-0').fill(domain);
+      await page.getByTestId('sso-zitadel-org-id').fill(`broker-${key}`);
+      await page.getByTestId('sso-zitadel-idp-id').fill(`idp-${key}`);
+      await page.getByTestId('sso-domain-verified').click();
+      await page.getByTestId('sso-connection-save').click();
+      await page.getByTestId('sso-enable').click();
+      await page.getByTestId('sso-enable-reviewed').click();
+      await page.getByTestId('sso-enable-confirm').click();
+      await expect(page.getByTestId('sso-email-domain-0')).toBeDisabled();
+      await page.getByTestId('sso-required').click();
+      await page.getByTestId('sso-required-reviewed').click();
+      await page.getByTestId('sso-required-confirm').click();
+      await expect(page.getByTestId('sso-required')).toBeChecked();
+      await expect(page.getByTestId('sso-zitadel-idp-id')).toBeDisabled();
+      await expect.poll(() => page.evaluate(() =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      )).toBeLessThanOrEqual(1);
+      return page.getByTestId('sso-add-email-domain');
     },
     demos: [
       {
-        name: 'confirmation',
+        name: 'add-verified-domain',
         action: async ({ page, expect }) => {
-          await page.getByTestId('sso-required').click();
-          await expect(page.getByTestId('sso-required-reviewed')).toBeVisible();
-          await page.getByTestId('sso-required-reviewed').click();
-          await expect(page.getByTestId('sso-required-confirm')).toBeEnabled();
+          await page.getByTestId('sso-add-email-domain').click();
+          await page.getByTestId('sso-email-domain-1').fill(`new-${randomUUID()}.example`);
+          await expect(page.getByTestId('sso-email-domain-0')).toBeDisabled();
+          await expect(page.getByTestId('sso-connection-save')).toBeDisabled();
+          await page.getByTestId('sso-domain-verified').click();
+          await page.getByTestId('sso-connection-save').click();
+          await expect(page.getByTestId('sso-email-domain-1')).toBeDisabled();
+          await expect(page.getByTestId('sso-required')).toBeChecked();
         },
       },
     ],
