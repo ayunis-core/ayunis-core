@@ -485,8 +485,12 @@ export interface InviteDetailResponseDto {
   expiresAt: string;
   /** Date when the invite was accepted (if applicable) */
   acceptedAt?: string;
+  /** Organization the invitation belongs to */
+  orgId: string;
   /** Name of the organization */
   organizationName: string;
+  /** Whether this organization accepts local password login */
+  localPasswordLoginEnabled: boolean;
 }
 
 export interface AcceptInviteDto {
