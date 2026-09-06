@@ -42,6 +42,8 @@ export default [
       await expect(page.getByTestId('sso-required')).toBeChecked();
       await expect(page.getByTestId('sso-zitadel-idp-id')).toBeDisabled();
       await expect(page.getByRole('dialog')).toHaveCount(0);
+      await page.reload();
+      await expect(page.getByTestId('sso-required')).toBeChecked();
       await page.getByTestId('sso-email-domain-0').scrollIntoViewIfNeeded();
       await expect.poll(() => page.evaluate(() =>
         document.documentElement.scrollWidth - document.documentElement.clientWidth,
