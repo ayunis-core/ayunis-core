@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { LessThan, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
@@ -7,6 +9,7 @@ import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { RefreshTokenRecord } from './schema/refresh-token.record';
 import { RefreshTokenMapper } from './mappers/refresh-token.mapper';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 /** Internal control flow: aborts the rotation transaction to roll it back. */
 class RotationLostError extends Error {}
@@ -16,12 +19,15 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   constructor(
     @InjectRepository(RefreshTokenRecord)
     private readonly repository: Repository<RefreshTokenRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
   async insert(token: RefreshToken): Promise<void> {
-    await this.repository.save(RefreshTokenMapper.toRecord(token));
+    await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
+      .save(RefreshTokenMapper.toRecord(token));
   }
 
   async findByTokenHash(tokenHash: string): Promise<RefreshToken | null> {
@@ -34,7 +40,7 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
     successor: RefreshToken,
   ): Promise<boolean> {
     try {
-      await this.repository.manager.transaction(async (manager) => {
+      await this.txHost.tx.transaction(async (manager) => {
         // Successor goes in first so the FK behind replacedByTokenId holds;
         // losing the conditional update rolls the insert back. The conditional
         // update on DB time keeps rotation single-winner under concurrency and
@@ -115,6 +121,25 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
       .where('userId = :userId', { userId })
       .andWhere('authenticationMethod = :authenticationMethod', {
         authenticationMethod: SessionAuthenticationMethod.SSO,
+      })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
+  async revokePasswordSessionsForOrg(orgId: UUID): Promise<void> {
+    const records = this.txHost.tx.getRepository(RefreshTokenRecord);
+    const userIds = records.manager
+      .createQueryBuilder(UserRecord, 'user')
+      .select('user.id')
+      .where('user.orgId = :orgId')
+      .getQuery();
+    await records
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where(`"userId" IN (${userIds})`, { orgId })
+      .andWhere('authenticationMethod = :authenticationMethod', {
+        authenticationMethod: SessionAuthenticationMethod.PASSWORD,
       })
       .andWhere('revokedAt IS NULL')
       .execute();

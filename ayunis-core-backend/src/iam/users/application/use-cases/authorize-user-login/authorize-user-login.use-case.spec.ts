@@ -25,7 +25,7 @@ describe(AuthorizeUserLoginUseCase.name, () => {
 
     await expect(
       useCase.execute(new AuthorizeUserLoginCommand(user.id)),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(user);
     expect(usersRepository.resetFailedLoginAttempts).toHaveBeenCalledWith(
       user.id,
     );
