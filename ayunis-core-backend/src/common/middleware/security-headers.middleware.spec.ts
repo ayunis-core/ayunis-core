@@ -28,19 +28,39 @@ async function contentSecurityPolicy(): Promise<string | null> {
 
 describe('SecurityHeadersMiddleware', () => {
   const originalTileUrl = process.env.VITE_MAP_BASEMAP_TILE_URL;
+  const originalOpenPanelApiUrl = process.env.VITE_OPENPANEL_API_URL;
+  const originalAppEnvironment = process.env.APP_ENVIRONMENT;
+
+  beforeEach(() => {
+    delete process.env.VITE_OPENPANEL_API_URL;
+  });
 
   afterEach(() => {
-    if (originalTileUrl === undefined) {
-      delete process.env.VITE_MAP_BASEMAP_TILE_URL;
-    } else {
-      process.env.VITE_MAP_BASEMAP_TILE_URL = originalTileUrl;
-    }
+    restoreValue('VITE_MAP_BASEMAP_TILE_URL', originalTileUrl);
+    restoreValue('VITE_OPENPANEL_API_URL', originalOpenPanelApiUrl);
+    restoreValue('APP_ENVIRONMENT', originalAppEnvironment);
   });
 
   it('allows browser telemetry to reach the AppSignal collector', async () => {
     const policy = await contentSecurityPolicy();
 
     expect(policy).toContain('https://appsignal-endpoint.net');
+  });
+
+  it('allows browser analytics to reach the configured OpenPanel endpoint', async () => {
+    process.env.VITE_OPENPANEL_API_URL = 'https://analytics.ayunis.de/api';
+
+    const policy = await contentSecurityPolicy();
+
+    expect(policy).toContain('https://analytics.ayunis.de');
+  });
+
+  it('does not allow OpenPanel when analytics is unset', async () => {
+    process.env.APP_ENVIRONMENT = 'cloud';
+
+    const policy = await contentSecurityPolicy();
+
+    expect(policy).not.toContain('https://analytics.ayunis.de');
   });
 
   it('allows the default basemap origin for map tile requests', async () => {
@@ -66,3 +86,11 @@ describe('SecurityHeadersMiddleware', () => {
     expect(policy).not.toContain('https://tile.openstreetmap.org');
   });
 });
+
+function restoreValue(key: string, value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env[key];
+    return;
+  }
+  process.env[key] = value;
+}
