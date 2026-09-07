@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.37.0](https://github.com/ayunis-core/ayunis-core/compare/v2.36.0...v2.37.0) (2026-09-07)
+
+
+### Features
+
+* **chat:** preserve unsent prompts per chat (AYC-912) ([#1623](https://github.com/ayunis-core/ayunis-core/issues/1623)) ([1dfd9b0](https://github.com/ayunis-core/ayunis-core/commit/1dfd9b06b9986f768a9e0037b4d0c8b9395c5b4a))
+* **settings:** centralize models and credit limits (AYC-903) ([#1612](https://github.com/ayunis-core/ayunis-core/issues/1612)) ([78b8921](https://github.com/ayunis-core/ayunis-core/commit/78b89215cd1030c0950ce16736043c5dd80ea9ae))
+
+
+### Bug Fixes
+
+* **anonymization:** translate presidio spans to utf-16 offsets (AYC-905) ([#1620](https://github.com/ayunis-core/ayunis-core/issues/1620)) ([d2245f6](https://github.com/ayunis-core/ayunis-core/commit/d2245f6f2f4214b3b149fd985d3332595cfc13b6))
+* **email:** block MJML template injection (AYC-890) ([#1614](https://github.com/ayunis-core/ayunis-core/issues/1614)) ([ceb8724](https://github.com/ayunis-core/ayunis-core/commit/ceb87242a7861d1741106be3570890d7ba06ca29))
+* **integrations:** show backend reason in validation toast (AYC-865) ([#1622](https://github.com/ayunis-core/ayunis-core/issues/1622)) ([81deb5a](https://github.com/ayunis-core/ayunis-core/commit/81deb5ac73ee284dec05ebcef7c2f3e9059ea259))
+* **messages:** drop lone surrogates before jsonb writes (AYC-902) ([#1613](https://github.com/ayunis-core/ayunis-core/issues/1613)) ([7dfe199](https://github.com/ayunis-core/ayunis-core/commit/7dfe1996fb2e191b085b3756422226cf98dd58a7))
+* **models:** preserve the missing-default error page (AYC-881) ([#1626](https://github.com/ayunis-core/ayunis-core/issues/1626)) ([fbcf1f8](https://github.com/ayunis-core/ayunis-core/commit/fbcf1f89f1c6b323f72c293fdb9e8a43856b6452))
+* **models:** refresh default model for new chats (AYC-881) ([#1621](https://github.com/ayunis-core/ayunis-core/issues/1621)) ([082865c](https://github.com/ayunis-core/ayunis-core/commit/082865c97b6c9fc9f012c3e89fb685852194ecd0))
+* **models:** retry azure rate limits before output (AYC-900) ([#1610](https://github.com/ayunis-core/ayunis-core/issues/1610)) ([d701707](https://github.com/ayunis-core/ayunis-core/commit/d701707cf137293a153b67b96a676e9349e935cb))
+* **runs:** report a failed tool-result flush once (AYC-904) ([#1615](https://github.com/ayunis-core/ayunis-core/issues/1615)) ([7ac9946](https://github.com/ayunis-core/ayunis-core/commit/7ac9946ccbe4dee498d6a9db4833b0745829adac))
+
 ## [2.36.0](https://github.com/ayunis-core/ayunis-core/compare/v2.35.0...v2.36.0) (2026-09-03)
 
 
