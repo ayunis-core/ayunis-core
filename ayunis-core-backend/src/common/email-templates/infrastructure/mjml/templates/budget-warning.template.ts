@@ -1,7 +1,6 @@
-import mjml2html from 'mjml';
 import type { MJMLParseResults } from 'mjml-core';
 
-import type { BudgetWarningTemplateContent } from '../../../domain/email-template.entity';
+import type { BudgetWarningTemplateContent } from 'src/common/email-templates/domain/email-template.entity';
 import {
   buildBudgetWarningMessage,
   type BudgetWarningMessage,
@@ -15,6 +14,7 @@ import {
   renderLayout,
   teamSignoff,
 } from './_layout';
+import { renderMjml } from './render-mjml';
 
 function normalizeInlineText(value: string): string {
   return value.trim().replace(/\s+/g, ' ');
@@ -89,7 +89,7 @@ export function budgetWarningHtml(
     teamSignoff(template.teamUrl),
   ].join('\n');
 
-  return mjml2html(
+  return renderMjml(
     renderLayout({
       title: `${message.headline} · ${normalizeInlineText(template.productName)}`,
       preheader: message.preheader,

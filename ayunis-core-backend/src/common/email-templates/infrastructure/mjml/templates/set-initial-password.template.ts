@@ -1,4 +1,3 @@
-import mjml2html from 'mjml';
 import type { MJMLParseResults } from 'mjml-core';
 import type { SetInitialPasswordTemplateContent } from 'src/common/email-templates/domain/email-template.entity';
 import {
@@ -11,6 +10,7 @@ import {
   renderLayout,
   teamSignoff,
 } from './_layout';
+import { renderMjml } from './render-mjml';
 
 export function setInitialPasswordText(
   template: SetInitialPasswordTemplateContent,
@@ -50,7 +50,7 @@ export function setInitialPasswordHtml(
     teamSignoff(template.teamUrl),
   ].join('\n');
 
-  return mjml2html(
+  return renderMjml(
     renderLayout({
       title: `Ihr Konto bei ${template.invitingCompanyName} · ${template.productName}`,
       preheader: `Wir haben ein Konto für Sie angelegt. Legen Sie jetzt Ihr Passwort fest.`,
