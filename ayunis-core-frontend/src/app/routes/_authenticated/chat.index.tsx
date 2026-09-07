@@ -1,10 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { NewChatPage, NewChatPageNoModelError } from '@/pages/new-chat';
 import {
-  modelsDefaultsControllerGetEffectiveDefaultModel,
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
-  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   chatSettingsControllerGetSystemPrompt,
@@ -12,11 +10,7 @@ import {
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
-
-const queryDefaultModelOptions = () => ({
-  queryKey: getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
-  queryFn: () => modelsDefaultsControllerGetEffectiveDefaultModel(),
-});
+import { effectiveDefaultModelQueryOptions } from './-effective-default-model-query';
 
 const queryHasActiveSubscriptionOptions = () => ({
   queryKey: getSubscriptionsControllerHasActiveSubscriptionQueryKey(),
@@ -43,11 +37,10 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     if (modelId) {
       selectedModelId = modelId;
     } else {
-      const defaultModelResponse = await queryClient.fetchQuery(
-        queryDefaultModelOptions(),
-      );
-      const defaultModel = defaultModelResponse.permittedLanguageModel;
-      selectedModelId = defaultModel?.id;
+      const defaultModelResponse = await queryClient
+        .fetchQuery(effectiveDefaultModelQueryOptions())
+        .catch(() => null);
+      selectedModelId = defaultModelResponse?.permittedLanguageModel?.id;
     }
     const { isEmbeddingModelEnabled } = await queryClient.fetchQuery(
       queryIsEmbeddingModelEnabledOptions(),
