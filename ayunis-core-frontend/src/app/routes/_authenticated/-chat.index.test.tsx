@@ -2,6 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  extractErrorData: vi.fn(),
   getEffectiveDefaultModel: vi.fn(),
   getSystemPrompt: vi.fn(),
   hasActiveSubscription: vi.fn(),
@@ -29,7 +30,9 @@ vi.mock('@/shared/api', () => ({
     mocks.getEffectiveDefaultModel,
   subscriptionsControllerHasActiveSubscription: mocks.hasActiveSubscription,
 }));
-vi.mock('@/shared/api/extract-error-data', () => ({ default: vi.fn() }));
+vi.mock('@/shared/api/extract-error-data', () => ({
+  default: mocks.extractErrorData,
+}));
 
 const { Route } = await import('./chat.index');
 
@@ -55,6 +58,9 @@ async function runLoader(queryClient: QueryClient): Promise<LoaderResult> {
 describe('new chat route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.extractErrorData.mockImplementation((error: unknown) => {
+      throw error;
+    });
     mocks.getEffectiveDefaultModel.mockResolvedValue({
       permittedLanguageModel: { id: 'sol' },
     });
@@ -85,5 +91,13 @@ describe('new chat route', () => {
     const result = await runLoader(appQueryClient());
 
     expect(result.selectedModelId).toBeUndefined();
+  });
+
+  it('preserves the no-default-model error for the route error page', async () => {
+    const error = new Error('no default model');
+    mocks.getEffectiveDefaultModel.mockRejectedValue(error);
+    mocks.extractErrorData.mockReturnValue({ code: 'NO_DEFAULT_MODEL_FOUND' });
+
+    await expect(runLoader(appQueryClient())).rejects.toBe(error);
   });
 });
