@@ -8,22 +8,16 @@ import {
   getThreadsControllerFindAllQueryKey,
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
-  modelsDefaultsControllerGetEffectiveDefaultModel,
-  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { effectiveDefaultModelQueryOptions } from './-effective-default-model-query';
 
 const WORKSPACE_CHATS_LIMIT = 20;
 
 const searchSchema = z.object({
   search: z.string().optional(),
   page: z.number().min(1).optional().catch(1),
-});
-
-const queryDefaultModelOptions = () => ({
-  queryKey: getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
-  queryFn: () => modelsDefaultsControllerGetEffectiveDefaultModel(),
 });
 
 const queryIsEmbeddingModelEnabledOptions = () => ({
@@ -71,7 +65,9 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
       });
 
       const [defaultModelResponse, embeddingModelResponse] = await Promise.all([
-        queryClient.fetchQuery(queryDefaultModelOptions()).catch(() => null),
+        queryClient
+          .fetchQuery(effectiveDefaultModelQueryOptions())
+          .catch(() => null),
         queryClient
           .fetchQuery(queryIsEmbeddingModelEnabledOptions())
           .catch(() => null),
