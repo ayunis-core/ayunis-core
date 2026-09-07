@@ -5,7 +5,8 @@ import {
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-import { abortActiveThreadRun } from '../model/active-thread-run';
+import { abortActiveThreadRun } from '@/features/thread-run/model/active-thread-run';
+import { clearChatDraft } from '@/shared/lib/chat-draft-storage';
 
 interface UseDeleteChatParams {
   onBeforeDelete?: () => void;
@@ -29,6 +30,7 @@ export function useDeleteThread(params: UseDeleteChatParams) {
       { id: threadId },
       {
         onSuccess: () => {
+          clearChatDraft(threadId);
           void queryClient.invalidateQueries({
             queryKey: getThreadsControllerFindAllQueryKey(),
           });
