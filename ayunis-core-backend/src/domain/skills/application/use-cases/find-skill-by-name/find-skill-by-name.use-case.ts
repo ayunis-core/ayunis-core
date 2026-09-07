@@ -1,14 +1,15 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
@@ -24,50 +25,43 @@ export class FindSkillByNameUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(query: FindSkillByNameQuery): Promise<Skill> {
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async execute(query: FindSkillByNameQuery): Promise<PersonalSkill> {
     this.logger.log({ name: query.name }, 'Finding skill by name');
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
 
-      // Owned skills take priority
-      const ownedSkill = await this.skillRepository.findByNameAndOwner(
-        query.name,
-        userId,
-      );
-
-      if (ownedSkill) {
-        return ownedSkill;
-      }
-
-      // Check shared skills
-      const shares = await this.findSharesByScopeUseCase.execute(
-        new FindSharesByScopeQuery(SharedEntityType.SKILL),
-      );
-
-      if (shares.length > 0) {
-        const sharedSkillIds = shares.map((s) => (s as SkillShare).skillId);
-        const sharedSkills =
-          await this.skillRepository.findByIds(sharedSkillIds);
-        const matchingSkill = sharedSkills.find((s) => s.name === query.name);
-
-        if (matchingSkill) {
-          return matchingSkill;
-        }
-      }
-
-      throw new SkillNotFoundError(query.name);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error finding skill by name',
-      );
-      throw new UnexpectedSkillError(error);
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
     }
+
+    // Owned skills take priority
+    const ownedSkill = await this.skillRepository.findByNameAndOwner(
+      query.name,
+      userId,
+    );
+
+    if (ownedSkill) {
+      return ownedSkill;
+    }
+
+    // Check shared skills
+    const shares = await this.findSharesByScopeUseCase.execute(
+      new FindSharesByScopeQuery(SharedEntityType.SKILL),
+    );
+
+    if (shares.length > 0) {
+      const sharedSkillIds = shares.map((s) => (s as SkillShare).skillId);
+      const sharedSkills = await this.skillRepository.findByIds(
+        sharedSkillIds,
+        null,
+      );
+      const matchingSkill = sharedSkills.find((s) => s.name === query.name);
+
+      if (matchingSkill) {
+        return matchingSkill;
+      }
+    }
+
+    throw new SkillNotFoundError(query.name);
   }
 }

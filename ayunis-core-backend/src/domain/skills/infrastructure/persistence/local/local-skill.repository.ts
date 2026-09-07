@@ -1,31 +1,48 @@
+import { SKILL_RELATIONS } from './local-skill-relations.repository-helper';
+import { updateSkill } from './local-skill-update.repository-helper';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, In, Repository } from 'typeorm';
-import { randomUUID, UUID } from 'crypto';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
+import { UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 import {
   SkillRepository,
   type SkillListOptions,
+  type WorkspaceSkillState,
 } from 'src/domain/skills/application/ports/skill.repository';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import { SkillMapper } from './mappers/skill.mapper';
 import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
 import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
-import { Paginated } from 'src/common/pagination/paginated.entity';
 import {
-  SkillNotActiveError,
-  SkillNotFoundError,
-} from 'src/domain/skills/application/skills.errors';
-
-const SKILL_RELATIONS = [
-  'sources',
-  'mcpIntegrations',
-  'knowledgeBases',
-] as const;
+  activateSkill as activateSkillRecord,
+  deactivateAllExceptOwner as deactivateAllSkillUsersExceptOwner,
+  deactivateSkill as deactivateSkillRecord,
+  deactivateUsersNotInSet as deactivateSkillUsersNotInSet,
+  getActiveSkillIds as loadActiveSkillIds,
+  isSkillActive as loadIsSkillActive,
+} from './local-skill-activation.repository-helper';
+import {
+  getPinnedSkillIds,
+  isSkillPinned,
+  pinSkill,
+  togglePinnedSkill,
+} from './local-skill-pinning.repository-helper';
+import {
+  activateWorkspaceSkill as activateWorkspaceSkillRecord,
+  deactivateWorkspaceSkill as deactivateWorkspaceSkillRecord,
+  getWorkspaceSkillStates as loadWorkspaceSkillStates,
+  setWorkspaceSkillPinned as updateWorkspaceSkillPinned,
+} from './local-workspace-skill-activation.repository-helper';
+import { Paginated } from 'src/common/pagination/paginated.entity';
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 
 @Injectable()
 export class LocalSkillRepository implements SkillRepository {
@@ -54,62 +71,28 @@ export class LocalSkillRepository implements SkillRepository {
     return this.getManager().getRepository(SkillActivationRecord);
   }
 
-  private async syncRelation(
-    manager: EntityManager,
-    skillId: UUID,
-    relation: 'sources' | 'mcpIntegrations' | 'knowledgeBases',
-    existingIds: UUID[],
-    desiredIds: UUID[],
-  ): Promise<void> {
-    const toAdd = desiredIds.filter((id) => !existingIds.includes(id));
-    const toRemove = existingIds.filter((id) => !desiredIds.includes(id));
-
-    if (toAdd.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, relation)
-        .of(skillId)
-        .add(toAdd);
-    }
-
-    if (toRemove.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, relation)
-        .of(skillId)
-        .remove(toRemove);
-    }
-  }
-
+  create(skill: PersonalSkill): Promise<PersonalSkill>;
+  create(skill: WorkspaceSkill): Promise<WorkspaceSkill>;
+  create(skill: Skill): Promise<Skill>;
   async create(skill: Skill): Promise<Skill> {
-    this.logger.log({ name: skill.name, userId: skill.userId }, 'create');
+    this.logger.log({ name: skill.name, id: skill.id }, 'create');
 
     const repository = this.skillRepository;
     const record = this.skillMapper.toRecord(skill);
     const saved = await repository.save(record);
 
-    if (skill.sourceIds.length > 0) {
-      await repository
-        .createQueryBuilder()
-        .relation(SkillRecord, 'sources')
-        .of(saved.id)
-        .add(skill.sourceIds);
-    }
-
-    if (skill.mcpIntegrationIds.length > 0) {
-      await repository
-        .createQueryBuilder()
-        .relation(SkillRecord, 'mcpIntegrations')
-        .of(saved.id)
-        .add(skill.mcpIntegrationIds);
-    }
-
-    if (skill.knowledgeBaseIds.length > 0) {
-      await repository
-        .createQueryBuilder()
-        .relation(SkillRecord, 'knowledgeBases')
-        .of(saved.id)
-        .add(skill.knowledgeBaseIds);
+    for (const [relation, ids] of [
+      ['sources', skill.sourceIds],
+      ['mcpIntegrations', skill.mcpIntegrationIds],
+      ['knowledgeBases', skill.knowledgeBaseIds],
+    ] as const) {
+      if (ids.length > 0) {
+        await repository
+          .createQueryBuilder()
+          .relation(SkillRecord, relation)
+          .of(saved.id)
+          .add(ids);
+      }
     }
 
     const withRelations = await repository.findOne({
@@ -121,58 +104,19 @@ export class LocalSkillRepository implements SkillRepository {
       throw new Error('Failed to load created skill');
     }
 
-    return this.skillMapper.toDomain(withRelations);
+    return skill instanceof PersonalSkill
+      ? this.skillMapper.toPersonal(withRelations)
+      : this.skillMapper.toWorkspace(withRelations);
   }
 
-  async update(skill: Skill): Promise<Skill> {
-    this.logger.log({ id: skill.id, name: skill.name }, 'update');
-
-    const manager = this.getManager();
-
-    const existing = await this.skillRepository.findOne({
-      where: { id: skill.id, userId: skill.userId },
-      relations: [...SKILL_RELATIONS],
-    });
-
-    if (!existing) {
-      throw new SkillNotFoundError(skill.id);
-    }
-
-    const record = this.skillMapper.toRecord(skill);
-    await this.skillRepository.save(record);
-
-    await this.syncRelation(
-      manager,
-      skill.id,
-      'sources',
-      existing.sources?.map((s) => s.id) ?? [],
-      skill.sourceIds,
-    );
-    await this.syncRelation(
-      manager,
-      skill.id,
-      'mcpIntegrations',
-      existing.mcpIntegrations?.map((i) => i.id) ?? [],
-      skill.mcpIntegrationIds,
-    );
-    await this.syncRelation(
-      manager,
-      skill.id,
-      'knowledgeBases',
-      existing.knowledgeBases?.map((kb) => kb.id) ?? [],
-      skill.knowledgeBaseIds,
-    );
-
-    const reloaded = await this.skillRepository.findOne({
-      where: { id: skill.id },
-      relations: [...SKILL_RELATIONS],
-    });
-
-    if (!reloaded) {
-      throw new SkillNotFoundError(skill.id);
-    }
-
-    return this.skillMapper.toDomain(reloaded);
+  update(skill: PersonalSkill, previous: PersonalSkill): Promise<PersonalSkill>;
+  update(
+    skill: WorkspaceSkill,
+    previous: WorkspaceSkill,
+  ): Promise<WorkspaceSkill>;
+  update(skill: Skill, previous: Skill): Promise<Skill>;
+  async update(skill: Skill, previous: Skill): Promise<Skill> {
+    return updateSkill(this.getManager(), this.skillMapper, skill, previous);
   }
 
   async delete(skillId: UUID, userId: UUID): Promise<void> {
@@ -187,7 +131,15 @@ export class LocalSkillRepository implements SkillRepository {
     }
   }
 
-  async findOne(id: UUID, userId: UUID): Promise<Skill | null> {
+  async deleteByWorkspace(skillId: UUID, workspaceId: UUID): Promise<void> {
+    const result = await this.skillRepository.delete({
+      id: skillId,
+      workspaceId,
+    });
+    if (result.affected === 0) throw new SkillNotFoundError(skillId);
+  }
+
+  async findOne(id: UUID, userId: UUID): Promise<PersonalSkill | null> {
     this.logger.log({ id, userId }, 'findOne');
 
     const record = await this.skillRepository.findOne({
@@ -196,20 +148,38 @@ export class LocalSkillRepository implements SkillRepository {
     });
 
     if (!record) return null;
-    return this.skillMapper.toDomain(record);
+    return this.skillMapper.toPersonal(record);
   }
 
-  async findAllByOwner(userId: UUID): Promise<Skill[]> {
+  async findAllByOwner(userId: UUID): Promise<PersonalSkill[]> {
     this.logger.log({ userId }, 'findAllByOwner');
 
     const records = await this.skillRepository.find({
-      where: { userId },
+      where: { userId, workspaceId: IsNull() },
       relations: [...SKILL_RELATIONS],
     });
 
-    return records.map((r) => this.skillMapper.toDomain(r));
+    return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
+  findPaginatedAccessible(
+    userId: UUID,
+    workspaceId: undefined,
+    sharedSkillIds: UUID[],
+    options: SkillListOptions,
+  ): Promise<Paginated<PersonalSkill>>;
+  findPaginatedAccessible(
+    userId: UUID,
+    workspaceId: UUID,
+    sharedSkillIds: UUID[],
+    options: SkillListOptions,
+  ): Promise<Paginated<WorkspaceSkill>>;
+  findPaginatedAccessible(
+    userId: UUID,
+    workspaceId: UUID | undefined,
+    sharedSkillIds: UUID[],
+    options: SkillListOptions,
+  ): Promise<Paginated<Skill>>;
   async findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
@@ -217,33 +187,31 @@ export class LocalSkillRepository implements SkillRepository {
     options: SkillListOptions,
   ): Promise<Paginated<Skill>> {
     this.logger.log(
-      {
-        userId,
-        workspaceId,
-        search: options.search,
-        limit: options.limit,
-        offset: options.offset,
-      },
+      { userId, workspaceId, ...options },
       'findPaginatedAccessible',
     );
 
     const [records, total] = await this.accessiblePageFinder
       .buildQuery(userId, workspaceId, sharedSkillIds, options)
-      .orderBy('LOWER(skill.name)', 'ASC')
+      .addOrderBy('skill_name_sort', 'ASC')
       .addOrderBy('skill.id', 'ASC')
       .skip(options.offset)
       .take(options.limit)
       .getManyAndCount();
 
     return new Paginated({
-      data: records.map((record) => this.skillMapper.toDomain(record)),
+      data: records.map((record) =>
+        workspaceId === undefined
+          ? this.skillMapper.toPersonal(record)
+          : this.skillMapper.toWorkspace(record),
+      ),
       limit: options.limit,
       offset: options.offset,
       total,
     });
   }
 
-  async findActiveByOwner(userId: UUID): Promise<Skill[]> {
+  async findActiveByOwner(userId: UUID): Promise<PersonalSkill[]> {
     this.logger.log({ userId }, 'findActiveByOwner');
 
     const activations = await this.skillActivationRepository.find({
@@ -255,60 +223,58 @@ export class LocalSkillRepository implements SkillRepository {
 
     const activeSkillIds = activations.map((a) => a.skillId);
     const records = await this.skillRepository.find({
-      where: { id: In(activeSkillIds), userId },
+      where: { id: In(activeSkillIds), userId, workspaceId: IsNull() },
       relations: [...SKILL_RELATIONS],
     });
 
-    return records.map((r) => this.skillMapper.toDomain(r));
+    return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
-  async findByNameAndOwner(name: string, userId: UUID): Promise<Skill | null> {
+  async findByNameAndOwner(
+    name: string,
+    userId: UUID,
+  ): Promise<PersonalSkill | null> {
     this.logger.log({ name, userId }, 'findByNameAndOwner');
 
     const record = await this.skillRepository.findOne({
-      where: { name, userId },
+      where: { name, userId, workspaceId: IsNull() },
       relations: [...SKILL_RELATIONS],
     });
 
     if (!record) return null;
-    return this.skillMapper.toDomain(record);
+    return this.skillMapper.toPersonal(record);
+  }
+
+  async findByNameAndWorkspace(
+    name: string,
+    workspaceId: UUID,
+  ): Promise<WorkspaceSkill | null> {
+    const record = await this.skillRepository.findOne({
+      where: { name, workspaceId },
+      relations: [...SKILL_RELATIONS],
+    });
+    return record ? this.skillMapper.toWorkspace(record) : null;
   }
 
   async activateSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log({ skillId, userId }, 'activateSkill');
-
-    // Use upsert to atomically insert or ignore if already exists.
-    // This avoids race conditions where concurrent requests both pass
-    // an existence check and then one fails on the unique constraint.
-    await this.skillActivationRepository
-      .createQueryBuilder()
-      .insert()
-      .into(SkillActivationRecord)
-      .values({
-        id: randomUUID(),
-        skillId,
-        userId,
-      })
-      .orIgnore()
-      .execute();
+    return activateSkillRecord(this.skillActivationRepository, skillId, userId);
   }
 
   async deactivateSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log({ skillId, userId }, 'deactivateSkill');
-
-    await this.skillActivationRepository.delete({ skillId, userId });
+    return deactivateSkillRecord(
+      this.skillActivationRepository,
+      skillId,
+      userId,
+    );
   }
 
   async deactivateAllExceptOwner(skillId: UUID, ownerId: UUID): Promise<void> {
     this.logger.log({ skillId, ownerId }, 'deactivateAllExceptOwner');
-
-    await this.skillActivationRepository
-      .createQueryBuilder()
-      .delete()
-      .from(SkillActivationRecord)
-      .where('skillId = :skillId', { skillId })
-      .andWhere('userId != :ownerId', { ownerId })
-      .execute();
+    return deactivateAllSkillUsersExceptOwner(
+      this.skillActivationRepository,
+      skillId,
+      ownerId,
+    );
   }
 
   async deactivateUsersNotInSet(
@@ -317,120 +283,116 @@ export class LocalSkillRepository implements SkillRepository {
     retainUserIds: Set<UUID>,
   ): Promise<void> {
     this.logger.log(
-      {
-        skillId,
-        ownerId,
-        retainCount: retainUserIds.size,
-      },
+      { skillId, ownerId, retainCount: retainUserIds.size },
       'deactivateUsersNotInSet',
     );
-
-    const keepIds = [ownerId, ...retainUserIds];
-
-    await this.skillActivationRepository
-      .createQueryBuilder()
-      .delete()
-      .from(SkillActivationRecord)
-      .where('skillId = :skillId', { skillId })
-      .andWhere('userId NOT IN (:...keepIds)', { keepIds })
-      .execute();
+    return deactivateSkillUsersNotInSet(
+      this.skillActivationRepository,
+      skillId,
+      ownerId,
+      retainUserIds,
+    );
   }
 
   async isSkillActive(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log({ skillId, userId }, 'isSkillActive');
-
-    const count = await this.skillActivationRepository.count({
-      where: { skillId, userId },
-    });
-
-    return count > 0;
+    return loadIsSkillActive(this.skillActivationRepository, skillId, userId);
   }
 
-  async findByIds(ids: UUID[]): Promise<Skill[]> {
+  findByIds(ids: UUID[], workspaceId: null): Promise<PersonalSkill[]>;
+  findByIds(ids: UUID[], workspaceId: UUID): Promise<WorkspaceSkill[]>;
+  findByIds(ids: UUID[], workspaceId?: UUID | null): Promise<Skill[]>;
+  async findByIds(ids: UUID[], workspaceId?: UUID | null): Promise<Skill[]> {
     this.logger.log({ count: ids.length }, 'findByIds');
 
     if (ids.length === 0) return [];
 
     const records = await this.skillRepository.find({
-      where: { id: In(ids) },
+      where: {
+        id: In([...new Set(ids)]),
+        ...(workspaceId !== undefined
+          ? { workspaceId: workspaceId ?? IsNull() }
+          : {}),
+      },
       relations: [...SKILL_RELATIONS],
     });
 
+    if (workspaceId === null)
+      return records.map((r) => this.skillMapper.toPersonal(r));
+    if (workspaceId !== undefined)
+      return records.map((r) => this.skillMapper.toWorkspace(r));
     return records.map((r) => this.skillMapper.toDomain(r));
   }
 
   async getActiveSkillIds(userId: UUID): Promise<Set<UUID>> {
-    this.logger.log({ userId }, 'getActiveSkillIds');
+    return loadActiveSkillIds(this.skillActivationRepository, userId);
+  }
 
-    const activations = await this.skillActivationRepository.find({
-      where: { userId },
-      select: ['skillId'],
-    });
+  async activateWorkspaceSkill(
+    skillId: UUID,
+    workspaceId: UUID,
+  ): Promise<void> {
+    return activateWorkspaceSkillRecord(
+      this.skillActivationRepository,
+      skillId,
+      workspaceId,
+    );
+  }
 
-    return new Set(activations.map((a) => a.skillId));
+  async deactivateWorkspaceSkill(
+    skillId: UUID,
+    workspaceId: UUID,
+  ): Promise<void> {
+    return deactivateWorkspaceSkillRecord(
+      this.skillActivationRepository,
+      skillId,
+      workspaceId,
+    );
+  }
+
+  async setWorkspaceSkillPinned(
+    skillId: UUID,
+    workspaceId: UUID,
+    isPinned: boolean,
+  ): Promise<void> {
+    return updateWorkspaceSkillPinned(
+      this.skillActivationRepository,
+      skillId,
+      workspaceId,
+      isPinned,
+    );
+  }
+
+  async getWorkspaceSkillStates(
+    skillIds: UUID[],
+    workspaceId: UUID,
+  ): Promise<Map<UUID, WorkspaceSkillState>> {
+    return loadWorkspaceSkillStates(
+      this.skillActivationRepository,
+      skillIds,
+      workspaceId,
+    );
   }
 
   async pinSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log({ skillId, userId }, 'pinSkill');
-
-    const result = await this.skillActivationRepository
-      .createQueryBuilder()
-      .update(SkillActivationRecord)
-      .set({ isPinned: true })
-      .where('"skillId" = :skillId AND "userId" = :userId', {
-        skillId,
-        userId,
-      })
-      .execute();
-
-    if (result.affected === 0) {
-      throw new SkillNotActiveError(skillId);
-    }
+    return pinSkill(this.skillActivationRepository, skillId, userId);
   }
 
   async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log({ skillId, userId }, 'toggleSkillPinned');
-
-    const rows: Array<{ isPinned: boolean }> =
-      await this.skillActivationRepository.query(
-        `UPDATE skill_activations SET "isPinned" = NOT "isPinned"
-       WHERE "skillId" = $1 AND "userId" = $2
-       RETURNING "isPinned"`,
-        [skillId, userId],
-      );
-
-    if (rows.length === 0) {
-      throw new SkillNotActiveError(skillId);
-    }
-
-    return rows[0].isPinned;
+    return togglePinnedSkill(this.skillActivationRepository, skillId, userId);
   }
 
   async isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log({ skillId, userId }, 'isSkillPinned');
-
-    const count = await this.skillActivationRepository.count({
-      where: { skillId, userId, isPinned: true },
-    });
-
-    return count > 0;
+    return isSkillPinned(this.skillActivationRepository, skillId, userId);
   }
 
   async getPinnedSkillIds(userId: UUID): Promise<Set<UUID>> {
-    this.logger.log({ userId }, 'getPinnedSkillIds');
-
-    const activations = await this.skillActivationRepository.find({
-      where: { userId, isPinned: true },
-      select: ['skillId'],
-    });
-
-    return new Set(activations.map((a) => a.skillId));
+    return getPinnedSkillIds(this.skillActivationRepository, userId);
   }
 
   async findSkillsByKnowledgeBaseAndOwners(
     knowledgeBaseId: UUID,
     ownerIds: UUID[],
-  ): Promise<Skill[]> {
+  ): Promise<PersonalSkill[]> {
     this.logger.log(
       {
         knowledgeBaseId,
@@ -455,7 +417,7 @@ export class LocalSkillRepository implements SkillRepository {
       .where('skill.userId IN (:...ownerIds)', { ownerIds })
       .getMany();
 
-    return records.map((r) => this.skillMapper.toDomain(r));
+    return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
   async findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]> {

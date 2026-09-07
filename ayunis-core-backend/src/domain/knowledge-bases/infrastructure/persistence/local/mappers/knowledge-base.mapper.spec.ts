@@ -1,86 +1,82 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { randomUUID } from 'crypto';
 import { KnowledgeBaseMapper } from './knowledge-base.mapper';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { KnowledgeBaseRecord } from '../schema/knowledge-base.record';
 
-describe('KnowledgeBaseMapper', () => {
-  let mapper: KnowledgeBaseMapper;
+describe(KnowledgeBaseMapper.name, () => {
+  const mapper = new KnowledgeBaseMapper();
 
-  beforeEach(() => {
-    mapper = new KnowledgeBaseMapper();
-  });
-
-  describe('toDomain', () => {
-    it('should map all fields from record to domain entity', () => {
-      const record = new KnowledgeBaseRecord();
-      record.id = randomUUID();
-      record.name = 'Stadtrecht Gemeinde Musterstadt';
-      record.description = 'Satzungen und Verordnungen';
-      record.orgId = randomUUID();
-      record.userId = randomUUID();
-      record.createdAt = new Date('2025-03-15');
-      record.updatedAt = new Date('2025-04-01');
-
-      const entity = mapper.toDomain(record);
-
-      expect(entity).toBeInstanceOf(KnowledgeBase);
-      expect(entity.id).toBe(record.id);
-      expect(entity.name).toBe('Stadtrecht Gemeinde Musterstadt');
-      expect(entity.description).toBe('Satzungen und Verordnungen');
-      expect(entity.orgId).toBe(record.orgId);
-      expect(entity.userId).toBe(record.userId);
-      expect(entity.createdAt).toEqual(record.createdAt);
-      expect(entity.updatedAt).toEqual(record.updatedAt);
+  it('preserves exclusive workspace ownership', () => {
+    const workspaceId = randomUUID();
+    const knowledgeBase = new WorkspaceKnowledgeBase({
+      name: 'Workspace procurement rules',
+      description: 'Rules used by the procurement project.',
+      orgId: randomUUID(),
+      workspaceId,
     });
+
+    const record = mapper.toRecord(knowledgeBase);
+
+    expect(record.userId).toBeNull();
+    expect(mapper.toDomain(record)).toEqual(
+      expect.objectContaining({ workspaceId }),
+    );
+    expect(mapper.toDomain(record)).toBeInstanceOf(WorkspaceKnowledgeBase);
   });
 
-  describe('toRecord', () => {
-    it('should map all fields from domain entity to record', () => {
-      const entity = new KnowledgeBase({
-        id: randomUUID(),
-        name: 'Bauordnung Musterstadt',
-        description: 'Bauvorschriften und Genehmigungen',
+  it('rejects a workspace record when a personal result is required', () => {
+    const record = mapper.toRecord(
+      new WorkspaceKnowledgeBase({
+        name: 'Workspace KB',
+        orgId: randomUUID(),
+        workspaceId: randomUUID(),
+      }),
+    );
+    expect(() => mapper.toPersonal(record)).toThrow(
+      'Expected personal knowledge base',
+    );
+  });
+
+  it('rejects a personal record when a workspace result is required', () => {
+    const record = mapper.toRecord(
+      new PersonalKnowledgeBase({
+        name: 'Personal KB',
         orgId: randomUUID(),
         userId: randomUUID(),
-        createdAt: new Date('2025-05-10'),
-        updatedAt: new Date('2025-05-20'),
-      });
-
-      const record = mapper.toRecord(entity);
-
-      expect(record).toBeInstanceOf(KnowledgeBaseRecord);
-      expect(record.id).toBe(entity.id);
-      expect(record.name).toBe('Bauordnung Musterstadt');
-      expect(record.description).toBe('Bauvorschriften und Genehmigungen');
-      expect(record.orgId).toBe(entity.orgId);
-      expect(record.userId).toBe(entity.userId);
-      expect(record.createdAt).toEqual(entity.createdAt);
-      expect(record.updatedAt).toEqual(entity.updatedAt);
-    });
+      }),
+    );
+    expect(() => mapper.toWorkspace(record)).toThrow(
+      'Expected workspace knowledge base',
+    );
   });
 
-  describe('round-trip', () => {
-    it('should preserve all fields through domain → record → domain', () => {
-      const original = new KnowledgeBase({
-        id: randomUUID(),
-        name: 'Haushaltspläne',
-        description: 'Kommunale Haushaltsdokumente 2020-2025',
+  it.each(['missing', 'both'] as const)('rejects %s ownership', (ownership) => {
+    const record = mapper.toRecord(
+      new PersonalKnowledgeBase({
+        name: 'KB',
         orgId: randomUUID(),
         userId: randomUUID(),
-        createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-06-15'),
-      });
+      }),
+    );
+    if (ownership === 'missing') record.userId = null;
+    else record.workspaceId = randomUUID();
+    expect(() => mapper.toDomain(record)).toThrow('invalid ownership');
+  });
 
-      const record = mapper.toRecord(original);
-      const restored = mapper.toDomain(record);
-
-      expect(restored.id).toBe(original.id);
-      expect(restored.name).toBe(original.name);
-      expect(restored.description).toBe(original.description);
-      expect(restored.orgId).toBe(original.orgId);
-      expect(restored.userId).toBe(original.userId);
-      expect(restored.createdAt).toEqual(original.createdAt);
-      expect(restored.updatedAt).toEqual(original.updatedAt);
+  it('preserves exclusive personal ownership', () => {
+    const userId = randomUUID();
+    const knowledgeBase = new PersonalKnowledgeBase({
+      name: 'Personal regulations',
+      orgId: randomUUID(),
+      userId,
     });
+
+    const record = mapper.toRecord(knowledgeBase);
+
+    expect(record.workspaceId).toBeNull();
+    expect(mapper.toDomain(record)).toEqual(
+      expect.objectContaining({ userId }),
+    );
+    expect(mapper.toDomain(record)).toBeInstanceOf(PersonalKnowledgeBase);
   });
 });

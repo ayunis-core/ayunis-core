@@ -1,10 +1,10 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ListKnowledgeBaseDocumentsUseCase } from './list-knowledge-base-documents.use-case';
 import { ListKnowledgeBaseDocumentsQuery } from './list-knowledge-base-documents.query';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -21,11 +21,14 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -33,6 +36,9 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -48,7 +54,7 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
   });
 
   it('should return all documents for a knowledge base', async () => {
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       orgId,
@@ -75,7 +81,7 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
   });
 
   it('should return an empty array when knowledge base has no documents', async () => {
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Leere Wissenssammlung',
       orgId,

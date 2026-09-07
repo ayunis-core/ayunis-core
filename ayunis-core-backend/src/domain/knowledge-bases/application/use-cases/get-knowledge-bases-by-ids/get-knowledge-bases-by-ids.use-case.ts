@@ -3,7 +3,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
@@ -23,12 +23,14 @@ export class GetKnowledgeBasesByIdsUseCase {
 
   /**
    * Fetches multiple knowledge bases by their IDs.
-   * Only returns knowledge bases belonging to the user's organization.
+   * Only returns personal knowledge bases belonging to the user's organization.
    * @param query Query containing the knowledge base IDs
    * @returns Array of KnowledgeBase entities (missing/unauthorized IDs omitted)
    */
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
-  async execute(query: GetKnowledgeBasesByIdsQuery): Promise<KnowledgeBase[]> {
+  async execute(
+    query: GetKnowledgeBasesByIdsQuery,
+  ): Promise<PersonalKnowledgeBase[]> {
     this.logger.log(
       {
         count: query.knowledgeBaseIds.length,
@@ -45,10 +47,9 @@ export class GetKnowledgeBasesByIdsUseCase {
       return [];
     }
 
-    const knowledgeBases = await this.knowledgeBaseRepository.findByIds(
-      query.knowledgeBaseIds,
-    );
-
-    return knowledgeBases.filter((kb) => kb.orgId === orgId);
+    return this.knowledgeBaseRepository.findByIds(query.knowledgeBaseIds, {
+      orgId,
+      workspaceId: null,
+    });
   }
 }

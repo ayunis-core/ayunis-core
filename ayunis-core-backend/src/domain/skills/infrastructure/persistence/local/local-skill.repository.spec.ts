@@ -1,4 +1,4 @@
-import type { EntityManager, Repository } from 'typeorm';
+import { In, IsNull, type EntityManager, type Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID } from 'crypto';
@@ -13,12 +13,13 @@ import { SkillNotActiveError } from 'src/domain/skills/application/skills.errors
 
 describe('LocalSkillRepository', () => {
   let repository: LocalSkillRepository;
-  let skillMapper: jest.Mocked<Pick<SkillMapper, 'toDomain'>>;
+  let skillMapper: jest.Mocked<Pick<SkillMapper, 'toPersonal'>>;
   let mockManager: {
     findOne: jest.Mock;
     find: jest.Mock;
     count: jest.Mock;
     delete: jest.Mock;
+    update: jest.Mock;
     query: jest.Mock;
     createQueryBuilder: jest.Mock;
     getRepository: jest.Mock;
@@ -44,6 +45,7 @@ describe('LocalSkillRepository', () => {
       find: jest.fn(),
       count: jest.fn(),
       delete: jest.fn(),
+      update: jest.fn(),
       query: jest.fn(),
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
       getRepository: jest.fn(),
@@ -55,7 +57,7 @@ describe('LocalSkillRepository', () => {
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
 
     skillMapper = {
-      toDomain: jest.fn(),
+      toPersonal: jest.fn(),
     };
 
     repository = new LocalSkillRepository(
@@ -66,6 +68,23 @@ describe('LocalSkillRepository', () => {
       txHost,
     );
   });
+
+  it('skips empty scoped lookups', async () => {
+    await expect(repository.findByIds([], null)).resolves.toEqual([]);
+    expect(mockManager.find).not.toHaveBeenCalled();
+  });
+
+  it.each([null, randomUUID()])(
+    'filters scope in SQL and deduplicates IDs: %s',
+    async (workspaceId) => {
+      mockManager.find.mockResolvedValue([]);
+      await repository.findByIds([skillId, skillId], workspaceId);
+      expect(mockManager.find).toHaveBeenCalledWith({
+        where: { id: In([skillId]), workspaceId: workspaceId ?? IsNull() },
+        relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+      });
+    },
+  );
 
   describe('ambient transaction', () => {
     it('finds a skill with relations written earlier in the transaction', async () => {
@@ -79,7 +98,7 @@ describe('LocalSkillRepository', () => {
       } as unknown as SkillRecord;
       const expected = { id: skillId, sourceIds: [sourceId] };
       mockManager.findOne.mockResolvedValue(record);
-      skillMapper.toDomain.mockReturnValue(expected as never);
+      skillMapper.toPersonal.mockReturnValue(expected as never);
 
       await expect(repository.findOne(skillId, userId)).resolves.toBe(expected);
       expect(mockManager.getRepository).toHaveBeenCalledWith(SkillRecord);
@@ -100,6 +119,47 @@ describe('LocalSkillRepository', () => {
       expect(mockManager.getRepository).toHaveBeenCalledWith(
         SkillActivationRecord,
       );
+    });
+  });
+
+  it('excludes workspace-owned skills from owner lists', async () => {
+    mockManager.find.mockResolvedValue([]);
+
+    await repository.findAllByOwner(userId);
+
+    expect(mockManager.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId,
+          workspaceId: expect.anything(),
+        }),
+      }),
+    );
+  });
+
+  describe('workspace activation state', () => {
+    it('returns active and pinned state from workspace activation rows', async () => {
+      const workspaceId = randomUUID();
+      mockManager.find.mockResolvedValue([{ skillId, isPinned: true }]);
+
+      await expect(
+        repository.getWorkspaceSkillStates([skillId], workspaceId),
+      ).resolves.toEqual(
+        new Map([[skillId, { isActive: true, isPinned: true }]]),
+      );
+      expect(mockManager.find).toHaveBeenCalledWith({
+        where: { skillId: expect.anything(), workspaceId },
+        select: ['skillId', 'isPinned'],
+      });
+    });
+
+    it('rejects pinning when no active workspace row exists', async () => {
+      const workspaceId = randomUUID();
+      mockManager.update.mockResolvedValue({ affected: 0 });
+
+      await expect(
+        repository.setWorkspaceSkillPinned(skillId, workspaceId, true),
+      ).rejects.toThrow(SkillNotActiveError);
     });
   });
 
@@ -143,8 +203,10 @@ describe('LocalSkillRepository', () => {
     const queryBuilder = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       addOrderBy: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
       getManyAndCount: jest.fn().mockResolvedValue([records, 7]),
@@ -154,7 +216,7 @@ describe('LocalSkillRepository', () => {
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     } as unknown as jest.Mocked<Repository<SkillRecord>>;
     const mapper = {
-      toDomain: jest.fn((record: SkillRecord) => record),
+      toWorkspace: jest.fn((record: SkillRecord) => record),
     } as unknown as SkillMapper;
     const repository = new LocalSkillRepository(
       skillRepository,
@@ -178,12 +240,46 @@ describe('LocalSkillRepository', () => {
     );
 
     expect(result.data).toEqual(records);
+    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+      'workspaceActivation.id IS NOT NULL',
+      'workspace_active',
+    );
+    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+      'LOWER(skill.name)',
+      'skill_name_sort',
+    );
+    expect(queryBuilder.addOrderBy).toHaveBeenCalledWith(
+      'skill_name_sort',
+      'ASC',
+    );
     expect(result.total).toBe(7);
     expect(result.limit).toBe(2);
     expect(result.offset).toBe(4);
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'skill.workspaceId = :workspaceId',
+      { workspaceId },
+    );
     expect(queryBuilder.skip).toHaveBeenCalledWith(4);
     expect(queryBuilder.take).toHaveBeenCalledWith(2);
     expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
+  });
+
+  it('excludes workspace-owned skills from personal accessible lists', async () => {
+    const queryBuilder = {
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+    };
+    const skillRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as Repository<SkillRecord>;
+    const finder = new LocalSkillAccessiblePageFinder(skillRepository);
+
+    finder.buildQuery(userId, undefined, [], { limit: 20, offset: 0 });
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'skill.workspaceId IS NULL',
+    );
   });
 
   it('returns knowledge-base IDs linked to the supplied skills', async () => {

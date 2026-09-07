@@ -1,5 +1,6 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import * as fs from 'fs';
-import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -24,7 +25,7 @@ import { StartDataSourceProcessingCommand } from 'src/domain/sources/application
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { UnsupportedSourceFileTypeError } from 'src/domain/sources/application/sources.errors';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import {
   SkillNotFoundError,
@@ -50,18 +51,13 @@ export class AddFileSourceToSkillUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
-  async execute(command: AddFileSourceToSkillCommand): Promise<Skill> {
+  async execute(command: AddFileSourceToSkillCommand): Promise<PersonalSkill> {
     this.logger.log(
       {
         skillId: command.skillId,
         fileName: command.file.originalname,
       },
       'addFileSourceToSkill',
-    );
-
-    const detectedType = detectFileType(
-      command.file.mimetype,
-      command.file.originalname,
     );
 
     const userId = this.contextService.get('userId');
@@ -77,32 +73,50 @@ export class AddFileSourceToSkillUseCase {
     if (!skill) {
       throw new SkillNotFoundError(command.skillId);
     }
+    const updated = await this.processFile(skill, command.file, false);
+    if (!(updated instanceof PersonalSkill))
+      throw new SkillNotFoundError(skill.id);
+    return updated;
+  }
+
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async executeForAuthorizedSkill(
+    skill: Skill,
+    file: UploadedFileRef,
+  ): Promise<Skill> {
+    return this.processFile(skill, file, true);
+  }
+
+  private async processFile(
+    skill: Skill,
+    file: UploadedFileRef,
+    authorized: boolean,
+  ): Promise<Skill> {
+    const detectedType = detectFileType(file.mimetype, file.originalname);
     assertSkillHasSourceCapacity(skill.sourceIds);
 
     if (isDocumentSourceFile(detectedType)) {
-      return this.addDocumentSource(
-        command.skillId,
-        command.file,
-        detectedType,
-      );
+      return this.addDocumentSource(skill, file, detectedType, authorized);
     }
     if (isCSVFile(detectedType) || isSpreadsheetFile(detectedType)) {
       return this.addDataSources(
         skill,
-        command.file,
+        file,
         isCSVFile(detectedType) ? 'csv' : 'spreadsheet',
+        authorized,
       );
     }
     throw new UnsupportedFileTypeError(
-      detectedType === 'unknown' ? command.file.originalname : detectedType,
+      detectedType === 'unknown' ? file.originalname : detectedType,
       SUPPORTED_FILE_TYPES,
     );
   }
 
   private async addDocumentSource(
-    skillId: UUID,
+    skill: Skill,
     file: UploadedFileRef,
     detectedType: DetectedFileType,
+    authorized: boolean,
   ): Promise<Skill> {
     const canonicalMimeType = getCanonicalMimeType(detectedType);
     if (!canonicalMimeType) {
@@ -115,13 +129,14 @@ export class AddFileSourceToSkillUseCase {
         fileType: canonicalMimeType,
       }),
     );
-    return this.attachOrCompensate(skillId, [source]);
+    return this.attachOrCompensate(skill, [source], authorized);
   }
 
   private async addDataSources(
     skill: Skill,
     file: UploadedFileRef,
     kind: DataSourceFileKind,
+    authorized: boolean,
   ): Promise<Skill> {
     const sources = await this.startDataSourceProcessingUseCase.execute(
       new StartDataSourceProcessingCommand({
@@ -135,17 +150,18 @@ export class AddFileSourceToSkillUseCase {
           assertSkillHasSourceCapacity(skill.sourceIds, sourceCount),
       }),
     );
-    return this.attachOrCompensate(skill.id, sources);
+    return this.attachOrCompensate(skill, sources, authorized);
   }
 
   // Processing has already started when attaching fails, so the pre-created
   // sources must be deleted or they survive as untracked orphans.
   private async attachOrCompensate(
-    skillId: UUID,
+    skill: Skill,
     sources: Source[],
+    authorized: boolean,
   ): Promise<Skill> {
     try {
-      return await this.attachSources(skillId, sources);
+      return await this.attachSources(skill, sources, authorized);
     } catch (error) {
       try {
         await this.deleteCreatedSources(sources);
@@ -175,16 +191,25 @@ export class AddFileSourceToSkillUseCase {
 
   @Transactional()
   private async attachSources(
-    skillId: UUID,
+    skill: Skill,
     sources: Source[],
+    authorized: boolean,
   ): Promise<Skill> {
-    let updatedSkill: Skill | undefined;
+    let updatedSkill = skill;
     for (const source of sources) {
-      updatedSkill = await this.addSourceToSkillUseCase.execute(
-        new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
-      );
+      updatedSkill = authorized
+        ? await this.addSourceToSkillUseCase.executeForAuthorizedSkill(
+            updatedSkill,
+            source.id,
+          )
+        : await this.addSourceToSkillUseCase.execute(
+            new AddSourceToSkillCommand({
+              skillId: skill.id,
+              sourceId: source.id,
+            }),
+          );
     }
     // The start use case guarantees at least one source.
-    return updatedSkill as Skill;
+    return updatedSkill;
   }
 }

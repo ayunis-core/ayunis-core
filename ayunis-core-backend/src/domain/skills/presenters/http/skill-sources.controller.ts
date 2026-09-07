@@ -1,3 +1,4 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import {
   Controller,
   Post,
@@ -37,7 +38,7 @@ import {
   UploadedSourceFile,
 } from 'src/common/util/source-file-upload';
 import { ApiSkillFileSourceUpload } from './decorators/skill-sources.decorators';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { MissingFileError } from 'src/domain/skills/application/skills.errors';
 import { AddFileSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
@@ -123,7 +124,7 @@ export class SkillSourcesController {
   }
 
   private async toSkillDtoWithCreator(
-    skill: Skill,
+    skill: PersonalSkill,
     skillId: UUID,
   ): Promise<SkillResponseDto> {
     const context = await this.skillAccessService.resolveUserContext(skillId);

@@ -1,3 +1,5 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -8,11 +10,11 @@ import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-case
 import { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
 import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from 'src/domain/skills/application/use-cases/find-knowledge-base-ids-accessible-via-shared-skills/find-knowledge-base-ids-accessible-via-shared-skills.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { Share } from 'src/domain/shares/domain/share.entity';
-import type { UUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 describe('KnowledgeBaseAccessService', () => {
@@ -30,7 +32,7 @@ describe('KnowledgeBaseAccessService', () => {
   const kbId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
   const makeKb = (id: UUID = kbId, owner: UUID = userId) =>
-    new KnowledgeBase({
+    new PersonalKnowledgeBase({
       id,
       name: 'Test KB',
       description: 'Test description',
@@ -48,16 +50,20 @@ describe('KnowledgeBaseAccessService', () => {
             findById: jest.fn(),
             findByIds: jest.fn(),
             findAllByUserId: jest.fn(),
+            findAllOwnedByUserId: jest.fn(),
+            findAllByWorkspaceId: jest.fn(),
             activate: jest.fn(),
             deactivate: jest.fn(),
             isActive: jest.fn().mockResolvedValue(false),
             getActiveIds: jest.fn().mockResolvedValue(new Set()),
+            getWorkspaceStates: jest.fn(),
             findActiveAccessible: jest.fn(),
             findPaginatedAccessible: jest.fn(),
             save: jest.fn(),
             delete: jest.fn(),
             assignSourceToKnowledgeBase: jest.fn(),
             findSourcesByKnowledgeBaseId: jest.fn(),
+            findSourcesByKnowledgeBaseIds: jest.fn(),
             countSourcesByKnowledgeBaseIds: jest.fn(),
             findSourceByIdAndKnowledgeBaseId: jest.fn(),
           },
@@ -130,6 +136,49 @@ describe('KnowledgeBaseAccessService', () => {
   });
 
   describe('findAllAccessiblePaginated', () => {
+    it('uses workspace activation and keeps inactive resources visible', async () => {
+      const workspaceId = randomUUID();
+      const active = new WorkspaceKnowledgeBase({
+        name: 'Active',
+        orgId,
+        workspaceId,
+      });
+      const inactive = new WorkspaceKnowledgeBase({
+        name: 'Inactive',
+        orgId,
+        workspaceId,
+      });
+      knowledgeBaseRepository.findPaginatedAccessible.mockResolvedValue(
+        new Paginated({
+          data: [active, inactive],
+          limit: 2,
+          offset: 4,
+          total: 6,
+        }),
+      );
+      knowledgeBaseRepository.getWorkspaceStates.mockResolvedValue(
+        new Map([[active.id, { isActive: true }]]),
+      );
+      const result = await service.findAllAccessiblePaginated(workspaceId, {
+        limit: 2,
+        offset: 4,
+      });
+      expect(result.data).toEqual([
+        { knowledgeBase: active, isShared: false, isActive: true },
+        { knowledgeBase: inactive, isShared: false, isActive: false },
+      ]);
+      expect(result.total).toBe(6);
+      expect(knowledgeBaseRepository.getWorkspaceStates).toHaveBeenCalledWith(
+        [active.id, inactive.id],
+        workspaceId,
+      );
+      expect(
+        knowledgeBaseRepository.findPaginatedAccessible,
+      ).toHaveBeenCalledWith(userId, workspaceId, [], { limit: 2, offset: 4 });
+      expect(knowledgeBaseRepository.getActiveIds).not.toHaveBeenCalled();
+      expect(findSharesByScopeUseCase.execute).not.toHaveBeenCalled();
+    });
+
     it('returns only the requested page with shared status', async () => {
       const sharedKbId = '650e8400-e29b-41d4-a716-446655440001' as UUID;
       const sharedKb = makeKb(sharedKbId, otherUserId);
@@ -144,7 +193,7 @@ describe('KnowledgeBaseAccessService', () => {
         { entityId: sharedKbId } as never,
       ]);
 
-      const result = await service.findAllAccessiblePaginated(kbId, {
+      const result = await service.findAllAccessiblePaginated(undefined, {
         search: 'citizen',
         limit: 2,
         offset: 4,
@@ -156,7 +205,7 @@ describe('KnowledgeBaseAccessService', () => {
       expect(result.total).toBe(5);
       expect(
         knowledgeBaseRepository.findPaginatedAccessible,
-      ).toHaveBeenCalledWith(userId, kbId, [sharedKbId], {
+      ).toHaveBeenCalledWith(userId, undefined, [sharedKbId], {
         search: 'citizen',
         limit: 2,
         offset: 4,
@@ -225,6 +274,27 @@ describe('KnowledgeBaseAccessService', () => {
       await expect(service.findAccessibleKnowledgeBase(kbId)).rejects.toThrow(
         KnowledgeBaseNotFoundError,
       );
+    });
+
+    it('rejects workspace-owned knowledge bases from personal access', async () => {
+      const workspaceId = '650e8400-e29b-41d4-a716-446655440001' as UUID;
+      const workspaceKnowledgeBase = new WorkspaceKnowledgeBase({
+        id: kbId,
+        name: 'Workspace KB',
+        orgId,
+        workspaceId,
+      });
+      knowledgeBaseRepository.findById.mockResolvedValue(
+        workspaceKnowledgeBase,
+      );
+
+      await expect(service.findAccessibleKnowledgeBase(kbId)).rejects.toThrow(
+        KnowledgeBaseNotFoundError,
+      );
+      expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        checkKnowledgeBaseSkillShareAccessUseCase.execute,
+      ).not.toHaveBeenCalled();
     });
 
     it('should return KB linked to a skill shared with the user', async () => {
@@ -479,9 +549,10 @@ describe('KnowledgeBaseAccessService', () => {
       expect(result).toEqual([
         { knowledgeBase: sharedKb, isShared: true, isActive: false },
       ]);
-      expect(knowledgeBaseRepository.findByIds).toHaveBeenCalledWith([
-        sharedKbId,
-      ]);
+      expect(knowledgeBaseRepository.findByIds).toHaveBeenCalledWith(
+        [sharedKbId],
+        { orgId, workspaceId: null },
+      );
     });
 
     it('should throw UnauthorizedAccessError when no user in context', async () => {

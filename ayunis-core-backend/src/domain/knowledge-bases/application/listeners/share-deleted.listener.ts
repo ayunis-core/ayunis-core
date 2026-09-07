@@ -1,3 +1,4 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
@@ -8,7 +9,7 @@ import { SkillRepository } from 'src/domain/skills/application/ports/skill.repos
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
 import type { UUID } from 'crypto';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import type { Share } from 'src/domain/shares/domain/share.entity';
 import type { RemainingShareScope } from 'src/domain/shares/application/events/share-deleted.event';
 import {
@@ -84,7 +85,7 @@ export class KnowledgeBaseShareDeletedListener {
   }
 
   private async cascadeToSharedSkillThreads(
-    affectedSkills: Skill[],
+    affectedSkills: PersonalSkill[],
     knowledgeBaseId: UUID,
   ): Promise<void> {
     for (const skill of affectedSkills) {

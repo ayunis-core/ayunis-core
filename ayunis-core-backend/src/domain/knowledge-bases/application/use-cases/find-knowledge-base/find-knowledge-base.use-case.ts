@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import {
   KnowledgeBaseNotFoundError,
@@ -17,7 +17,7 @@ export class FindKnowledgeBaseUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
-  async execute(query: FindKnowledgeBaseQuery): Promise<KnowledgeBase> {
+  async execute(query: FindKnowledgeBaseQuery): Promise<PersonalKnowledgeBase> {
     this.logger.log(
       {
         id: query.id,
@@ -27,7 +27,10 @@ export class FindKnowledgeBaseUseCase {
     );
 
     const knowledgeBase = await this.knowledgeBaseRepository.findById(query.id);
-    if (knowledgeBase?.userId !== query.userId) {
+    if (
+      !(knowledgeBase instanceof PersonalKnowledgeBase) ||
+      knowledgeBase.userId !== query.userId
+    ) {
       throw new KnowledgeBaseNotFoundError(query.id);
     }
 

@@ -2,21 +2,21 @@ import type { UUID } from 'crypto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { WorkspaceKnowledgeBaseCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-knowledge-base-candidates/list-workspace-knowledge-base-candidates.use-case';
 import type { WorkspaceSkillCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-skill-candidates/list-workspace-skill-candidates.use-case';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceContextDtoMapper } from './workspace-context-dto.mapper';
 
 describe('WorkspaceContextDtoMapper', () => {
   const mapper = new WorkspaceContextDtoMapper();
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-  const skill = new Skill({
+  const skill = new PersonalSkill({
     id: '223e4567-e89b-12d3-a456-426614174000',
     name: 'Legal Research',
     shortDescription: 'Research legal topics',
     instructions: 'Research legal topics carefully.',
     userId,
   });
-  const knowledgeBase = new KnowledgeBase({
+  const knowledgeBase = new PersonalKnowledgeBase({
     id: '323e4567-e89b-12d3-a456-426614174000',
     name: 'Council Documents',
     description: 'Municipal council documents',

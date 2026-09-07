@@ -26,7 +26,6 @@ import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
 import { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-response.dto';
 import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
@@ -45,7 +44,6 @@ export class SkillKnowledgeBasesController {
     private readonly listSkillKnowledgeBasesUseCase: ListSkillKnowledgeBasesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
     private readonly skillAccessService: SkillAccessService,
     private readonly skillCreatorNameService: SkillCreatorNameService,
   ) {}
@@ -155,15 +153,10 @@ export class SkillKnowledgeBasesController {
   ): Promise<KnowledgeBaseResponseDto[]> {
     this.logger.log({ skillId }, 'listSkillKnowledgeBases');
 
-    const knowledgeBases = await this.listSkillKnowledgeBasesUseCase.execute(
+    const contexts = await this.listSkillKnowledgeBasesUseCase.execute(
       new ListSkillKnowledgeBasesQuery(skillId),
     );
 
-    const contexts = await Promise.all(
-      knowledgeBases.map((knowledgeBase) =>
-        this.knowledgeBaseAccessService.findOneAccessible(knowledgeBase.id),
-      ),
-    );
     return contexts.map(({ knowledgeBase, isActive, isShared }) =>
       this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
         isActive,

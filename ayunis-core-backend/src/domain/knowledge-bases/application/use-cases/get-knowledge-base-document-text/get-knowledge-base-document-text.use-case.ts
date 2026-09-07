@@ -8,7 +8,7 @@ import {
   DocumentNotInKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { Source } from 'src/domain/sources/domain/source.entity';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { KnowledgeBaseToolAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-tool-access.service';
 
 @Injectable()
 export class GetKnowledgeBaseDocumentTextUseCase {
@@ -18,7 +18,7 @@ export class GetKnowledgeBaseDocumentTextUseCase {
 
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
+    private readonly knowledgeBaseAccessService: KnowledgeBaseToolAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
@@ -34,6 +34,7 @@ export class GetKnowledgeBaseDocumentTextUseCase {
     const knowledgeBase =
       await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
         query.knowledgeBaseId,
+        query.threadId,
       );
 
     if (knowledgeBase.orgId !== query.orgId) {

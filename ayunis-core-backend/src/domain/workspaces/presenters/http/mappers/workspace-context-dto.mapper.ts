@@ -3,7 +3,7 @@ import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginationDto } from 'src/common/pagination/pagination.dto';
 import type { WorkspaceSkillCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-skill-candidates/list-workspace-skill-candidates.use-case';
 import type { WorkspaceKnowledgeBaseCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-knowledge-base-candidates/list-workspace-knowledge-base-candidates.use-case';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   TextSource,

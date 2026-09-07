@@ -2,22 +2,33 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeBaseShareAuthorizationStrategy } from './knowledge-base-share-authorization.strategy';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { randomUUID } from 'crypto';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { randomUUID, type UUID } from 'crypto';
 
 describe('KnowledgeBaseShareAuthorizationStrategy', () => {
   let strategy: KnowledgeBaseShareAuthorizationStrategy;
   let knowledgeBaseRepository: jest.Mocked<KnowledgeBaseRepository>;
+
+  const personalKnowledgeBase = (id: UUID, userId: UUID) =>
+    new PersonalKnowledgeBase({
+      id,
+      name: 'Knowledge base',
+      orgId: randomUUID(),
+      userId,
+    });
 
   beforeAll(async () => {
     const mockKnowledgeBaseRepository = {
       findById: jest.fn(),
       findByIds: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
     };
 
@@ -45,7 +56,7 @@ describe('KnowledgeBaseShareAuthorizationStrategy', () => {
     it('should return true when user owns the knowledge base', async () => {
       const kbId = randomUUID();
       const userId = randomUUID();
-      const mockKb = { id: kbId, userId } as KnowledgeBase;
+      const mockKb = personalKnowledgeBase(kbId, userId);
 
       knowledgeBaseRepository.findById.mockResolvedValue(mockKb);
 
@@ -71,7 +82,7 @@ describe('KnowledgeBaseShareAuthorizationStrategy', () => {
       const kbId = randomUUID();
       const userId = randomUUID();
       const otherUserId = randomUUID();
-      const mockKb = { id: kbId, userId: otherUserId } as KnowledgeBase;
+      const mockKb = personalKnowledgeBase(kbId, otherUserId);
 
       knowledgeBaseRepository.findById.mockResolvedValue(mockKb);
 
@@ -86,7 +97,7 @@ describe('KnowledgeBaseShareAuthorizationStrategy', () => {
     it('should return true when user owns the knowledge base', async () => {
       const kbId = randomUUID();
       const userId = randomUUID();
-      const mockKb = { id: kbId, userId } as KnowledgeBase;
+      const mockKb = personalKnowledgeBase(kbId, userId);
 
       knowledgeBaseRepository.findById.mockResolvedValue(mockKb);
 
@@ -112,7 +123,7 @@ describe('KnowledgeBaseShareAuthorizationStrategy', () => {
       const kbId = randomUUID();
       const userId = randomUUID();
       const otherUserId = randomUUID();
-      const mockKb = { id: kbId, userId: otherUserId } as KnowledgeBase;
+      const mockKb = personalKnowledgeBase(kbId, otherUserId);
 
       knowledgeBaseRepository.findById.mockResolvedValue(mockKb);
 

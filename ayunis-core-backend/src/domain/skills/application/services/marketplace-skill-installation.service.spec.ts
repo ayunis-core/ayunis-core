@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { MarketplaceSkillInstallationService } from './marketplace-skill-installation.service';
 import type { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import type { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
@@ -6,7 +7,7 @@ import type {
   SkillListResponseDto,
   SkillResponseDto,
 } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import type { UUID } from 'crypto';
 import { MarketplaceSkillNotFoundError } from 'src/domain/marketplace/application/marketplace.errors';
 import { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
@@ -54,7 +55,7 @@ describe('MarketplaceSkillInstallationService', () => {
   });
 
   it('should fetch marketplace skill and delegate creation to CreateSkillWithUniqueNameUseCase', async () => {
-    const createdSkill = new Skill({
+    const createdSkill = new PersonalSkill({
       name: 'Meeting Summarizer',
       shortDescription: 'AI description for meeting summarizer',
       instructions:
@@ -138,7 +139,7 @@ describe('MarketplaceSkillInstallationService', () => {
       }));
       createSkillWithUniqueNameUseCase.execute.mockImplementation(
         async (command) =>
-          new Skill({
+          new PersonalSkill({
             name: command.name,
             shortDescription: command.shortDescription,
             instructions: command.instructions,
@@ -187,7 +188,7 @@ describe('MarketplaceSkillInstallationService', () => {
         });
       createSkillWithUniqueNameUseCase.execute.mockImplementation(
         async (command) =>
-          new Skill({
+          new PersonalSkill({
             name: command.name,
             shortDescription: command.shortDescription,
             instructions: command.instructions,

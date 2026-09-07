@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 

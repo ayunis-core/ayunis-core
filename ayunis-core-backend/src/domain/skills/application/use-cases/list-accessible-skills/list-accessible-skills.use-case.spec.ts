@@ -1,9 +1,10 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import type { UUID } from 'crypto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ListAccessibleSkillsUseCase } from './list-accessible-skills.use-case';
 import { ListAccessibleSkillsQuery } from './list-accessible-skills.query';
 

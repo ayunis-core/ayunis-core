@@ -1,9 +1,9 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { UUID } from 'crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
@@ -21,7 +21,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
 describe('SetKnowledgeBaseActivationUseCase', () => {
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
   const ownerId = '22222222-2222-2222-2222-222222222222' as UUID;
-  const knowledgeBase = new KnowledgeBase({
+  const knowledgeBase = new PersonalKnowledgeBase({
     id: '33333333-3333-3333-3333-333333333333',
     name: 'Municipal regulations',
     orgId: '44444444-4444-4444-4444-444444444444',
@@ -36,6 +36,9 @@ describe('SetKnowledgeBaseActivationUseCase', () => {
       activate: jest.fn(),
       deactivate: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
     } as unknown as jest.Mocked<KnowledgeBaseRepository>;
     accessService = {

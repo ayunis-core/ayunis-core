@@ -1,8 +1,9 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import type { UUID } from 'crypto';
@@ -20,7 +21,7 @@ describe('FindSkillByNameUseCase', () => {
   const orgId = 'org-00000-0000-0000-000000000001' as UUID;
 
   const makeSkill = (name: string, owner: UUID = userId) =>
-    new Skill({
+    new PersonalSkill({
       name,
       shortDescription: 'desc',
       instructions: 'instructions',

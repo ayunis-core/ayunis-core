@@ -1,3 +1,4 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
@@ -14,7 +15,7 @@ import {
 } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { SkillEntry } from 'src/common/util/skill-slug';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { LEGAL_REFERENCE_INSTRUCTIONS } from './legal-reference-instructions';
 import { escapeXml } from './xml-escape';
 export interface SystemPromptBuildParams {

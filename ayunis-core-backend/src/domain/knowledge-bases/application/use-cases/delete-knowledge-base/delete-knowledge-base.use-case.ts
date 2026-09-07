@@ -1,3 +1,5 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Transactional } from '@nestjs-cls/transactional';
@@ -36,7 +38,12 @@ export class DeleteKnowledgeBaseUseCase {
     const existing = await this.knowledgeBaseRepository.findById(
       command.knowledgeBaseId,
     );
-    if (existing?.userId !== command.userId) {
+    const hasExpectedOwner = command.workspaceId
+      ? existing instanceof WorkspaceKnowledgeBase &&
+        existing.workspaceId === command.workspaceId
+      : existing instanceof PersonalKnowledgeBase &&
+        existing.userId === command.userId;
+    if (!existing || !hasExpectedOwner) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 

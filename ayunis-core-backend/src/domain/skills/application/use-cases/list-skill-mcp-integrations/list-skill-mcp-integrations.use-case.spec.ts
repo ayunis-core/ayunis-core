@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
@@ -8,7 +9,7 @@ import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-c
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
@@ -36,14 +37,20 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      deleteByWorkspace: jest.fn(),
       findOne: jest.fn(),
       findAllByOwner: jest.fn(),
       findActiveByOwner: jest.fn(),
       findByNameAndOwner: jest.fn(),
+      findByNameAndWorkspace: jest.fn(),
       activateSkill: jest.fn(),
       deactivateSkill: jest.fn(),
       isSkillActive: jest.fn(),
       getActiveSkillIds: jest.fn(),
+      activateWorkspaceSkill: jest.fn(),
+      deactivateWorkspaceSkill: jest.fn(),
+      setWorkspaceSkillPinned: jest.fn(),
+      getWorkspaceSkillStates: jest.fn(),
       deactivateAllExceptOwner: jest.fn(),
       deactivateUsersNotInSet: jest.fn(),
       findByIds: jest.fn(),
@@ -99,8 +106,8 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
     jest.clearAllMocks();
   });
 
-  const createMockSkill = (mcpIntegrationIds: UUID[] = []): Skill => {
-    return new Skill({
+  const createMockSkill = (mcpIntegrationIds: UUID[] = []): PersonalSkill => {
+    return new PersonalSkill({
       id: mockSkillId,
       name: 'Test Skill',
       shortDescription: 'A test skill',

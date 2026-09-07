@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
 import {
   KnowledgeBaseNotFoundError,
@@ -17,7 +17,9 @@ export class UpdateKnowledgeBaseUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
-  async execute(command: UpdateKnowledgeBaseCommand): Promise<KnowledgeBase> {
+  async execute(
+    command: UpdateKnowledgeBaseCommand,
+  ): Promise<PersonalKnowledgeBase> {
     this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,
@@ -29,11 +31,14 @@ export class UpdateKnowledgeBaseUseCase {
     const existing = await this.knowledgeBaseRepository.findById(
       command.knowledgeBaseId,
     );
-    if (existing?.userId !== command.userId) {
+    if (
+      !(existing instanceof PersonalKnowledgeBase) ||
+      existing.userId !== command.userId
+    ) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 
-    const updated = new KnowledgeBase({
+    const updated = new PersonalKnowledgeBase({
       id: existing.id,
       name: command.name ?? existing.name,
       description: command.description ?? existing.description,

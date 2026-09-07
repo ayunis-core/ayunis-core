@@ -1,7 +1,8 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { CreateSkillWithUniqueNameUseCase } from './create-skill-with-unique-name.use-case';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { SkillNameResolutionError } from 'src/domain/skills/application/skills.errors';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
@@ -16,7 +17,7 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
     skillRepository = {
       create: jest
         .fn()
-        .mockImplementation((skill: Skill) => Promise.resolve(skill)),
+        .mockImplementation((skill: PersonalSkill) => Promise.resolve(skill)),
       activateSkill: jest.fn().mockResolvedValue(undefined),
       pinSkill: jest.fn().mockResolvedValue(undefined),
       findByNameAndOwner: jest.fn().mockResolvedValue(null),
@@ -51,7 +52,7 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
       (name: string, ownerId: UUID) =>
         Promise.resolve(
           name === 'Summarizer'
-            ? new Skill({
+            ? new PersonalSkill({
                 name: 'Summarizer',
                 shortDescription: 'existing',
                 instructions: 'existing',
@@ -82,7 +83,7 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
     skillRepository.findByNameAndOwner.mockImplementation((name: string) =>
       Promise.resolve(
         existingNames.has(name)
-          ? new Skill({
+          ? new PersonalSkill({
               name,
               shortDescription: 'existing',
               instructions: 'existing',
@@ -172,7 +173,7 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
 
   it('should throw when unique name cannot be resolved after max attempts', async () => {
     skillRepository.findByNameAndOwner.mockResolvedValue(
-      new Skill({
+      new PersonalSkill({
         name: 'Collider',
         shortDescription: 'existing',
         instructions: 'existing',

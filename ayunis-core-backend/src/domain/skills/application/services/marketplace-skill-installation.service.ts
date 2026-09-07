@@ -1,3 +1,4 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
@@ -5,7 +6,6 @@ import { GetMarketplaceSkillQuery } from 'src/domain/marketplace/application/use
 import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import { CreateSkillWithUniqueNameUseCase } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 @Injectable()
 export class MarketplaceSkillInstallationService {
@@ -71,7 +71,7 @@ export class MarketplaceSkillInstallationService {
   async installFromMarketplace(
     identifier: string,
     userId: UUID,
-  ): Promise<Skill> {
+  ): Promise<PersonalSkill> {
     this.logger.log({ identifier, userId }, 'installFromMarketplace');
 
     const marketplaceSkill = await this.getMarketplaceSkillUseCase.execute(

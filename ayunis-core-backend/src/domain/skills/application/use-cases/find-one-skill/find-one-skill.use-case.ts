@@ -1,20 +1,21 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindOneSkillQuery } from './find-one-skill.query';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 
 export interface SkillWithUserContext {
-  skill: Skill;
+  skill: PersonalSkill;
   isActive: boolean;
   isShared: boolean;
   isPinned: boolean;
@@ -30,50 +31,49 @@ export class FindOneSkillUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(query: FindOneSkillQuery): Promise<SkillWithUserContext> {
     this.logger.log({ id: query.id }, 'Finding skill');
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
 
-      // Try owned skill first
-      const ownedSkill = await this.skillRepository.findOne(query.id, userId);
-      if (ownedSkill) {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
+    }
+
+    // Try owned skill first
+    const ownedSkill = await this.skillRepository.findOne(query.id, userId);
+    if (ownedSkill) {
+      const [isActive, isPinned] = await Promise.all([
+        this.skillRepository.isSkillActive(query.id, userId),
+        this.skillRepository.isSkillPinned(query.id, userId),
+      ]);
+      return { skill: ownedSkill, isActive, isShared: false, isPinned };
+    }
+
+    // Check if skill is shared with user
+    const share = await this.findShareByEntityUseCase.execute(
+      new FindShareByEntityQuery(SharedEntityType.SKILL, query.id),
+    );
+
+    if (share) {
+      const sharedSkills = await this.skillRepository.findByIds(
+        [query.id],
+        null,
+      );
+      if (sharedSkills.length > 0) {
         const [isActive, isPinned] = await Promise.all([
           this.skillRepository.isSkillActive(query.id, userId),
           this.skillRepository.isSkillPinned(query.id, userId),
         ]);
-        return { skill: ownedSkill, isActive, isShared: false, isPinned };
+        return {
+          skill: sharedSkills[0],
+          isActive,
+          isShared: true,
+          isPinned,
+        };
       }
-
-      // Check if skill is shared with user
-      const share = await this.findShareByEntityUseCase.execute(
-        new FindShareByEntityQuery(SharedEntityType.SKILL, query.id),
-      );
-
-      if (share) {
-        const sharedSkills = await this.skillRepository.findByIds([query.id]);
-        if (sharedSkills.length > 0) {
-          const [isActive, isPinned] = await Promise.all([
-            this.skillRepository.isSkillActive(query.id, userId),
-            this.skillRepository.isSkillPinned(query.id, userId),
-          ]);
-          return {
-            skill: sharedSkills[0],
-            isActive,
-            isShared: true,
-            isPinned,
-          };
-        }
-      }
-
-      throw new SkillNotFoundError(query.id);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error({ err: error as Error }, 'Error finding skill');
-      throw new UnexpectedSkillError(error);
     }
+
+    throw new SkillNotFoundError(query.id);
   }
 }

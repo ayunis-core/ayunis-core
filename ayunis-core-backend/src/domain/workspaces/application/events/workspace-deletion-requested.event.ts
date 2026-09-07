@@ -18,6 +18,7 @@ export class WorkspaceDeletionRequestedEvent extends DeferredCleanupEvent {
     public readonly workspaceId: UUID,
     public readonly userId: UUID,
     public readonly orgId: UUID,
+    public readonly skillIds: UUID[] = [],
   ) {
     super();
   }

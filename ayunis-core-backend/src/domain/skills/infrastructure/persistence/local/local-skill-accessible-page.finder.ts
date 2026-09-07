@@ -4,6 +4,7 @@ import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { SkillListOptions } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillRecord } from './schema/skill.record';
+import { SkillActivationRecord } from './schema/skill-activation.record';
 
 @Injectable()
 export class LocalSkillAccessiblePageFinder {
@@ -18,27 +19,37 @@ export class LocalSkillAccessiblePageFinder {
     sharedSkillIds: UUID[],
     options: SkillListOptions,
   ): SelectQueryBuilder<SkillRecord> {
-    const queryBuilder = this.skillRepository.createQueryBuilder('skill').where(
-      new Brackets((accessQuery) => {
-        accessQuery.where('skill.userId = :userId', { userId });
-        if (sharedSkillIds.length > 0) {
-          accessQuery.orWhere('skill.id IN (:...sharedSkillIds)', {
-            sharedSkillIds,
-          });
-        }
-      }),
-    );
+    const queryBuilder = this.skillRepository.createQueryBuilder('skill');
 
     if (workspaceId) {
-      queryBuilder.andWhere(
-        `EXISTS (
-          SELECT 1
-          FROM workspace_skill_assignments assignment
-          WHERE assignment."workspaceId" = :workspaceId
-            AND assignment."skillId" = skill.id
-        )`,
-        { workspaceId },
-      );
+      queryBuilder.where('skill.workspaceId = :workspaceId', { workspaceId });
+    } else {
+      queryBuilder
+        .where(
+          new Brackets((accessQuery) => {
+            accessQuery.where('skill.userId = :userId', { userId });
+            if (sharedSkillIds.length > 0) {
+              accessQuery.orWhere('skill.id IN (:...sharedSkillIds)', {
+                sharedSkillIds,
+              });
+            }
+          }),
+        )
+        .andWhere('skill.workspaceId IS NULL');
+    }
+
+    if (workspaceId) {
+      queryBuilder
+        .leftJoin(
+          SkillActivationRecord,
+          'workspaceActivation',
+          'workspaceActivation.skillId = skill.id AND workspaceActivation.workspaceId = :workspaceId',
+          { workspaceId },
+        )
+        .addSelect('workspaceActivation.isPinned', 'workspace_pinned')
+        .addSelect('workspaceActivation.id IS NOT NULL', 'workspace_active')
+        .orderBy('workspace_pinned', 'DESC', 'NULLS LAST')
+        .addOrderBy('workspace_active', 'DESC');
     }
 
     if (options.search) {
@@ -47,6 +58,8 @@ export class LocalSkillAccessiblePageFinder {
       });
     }
 
-    return queryBuilder;
+    // Selected aliases keep TypeORM's joined pagination from interpreting SQL
+    // expressions as entity property paths.
+    return queryBuilder.addSelect('LOWER(skill.name)', 'skill_name_sort');
   }
 }

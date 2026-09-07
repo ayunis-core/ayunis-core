@@ -2,9 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import {
+  ThreadNotFoundError,
+  UnexpecteThreadError,
+} from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { FindAccessibleKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 
 @Injectable()
@@ -13,10 +17,11 @@ export class AddKnowledgeBaseToThreadUseCase {
 
   constructor(
     private readonly threadsRepository: ThreadsRepository,
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
+    private readonly findAccessibleKnowledgeBase: FindAccessibleKnowledgeBaseUseCase,
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: AddKnowledgeBaseToThreadCommand): Promise<void> {
     this.logger.log(
       {
@@ -46,13 +51,9 @@ export class AddKnowledgeBaseToThreadUseCase {
       throw new ThreadNotFoundError(command.threadId, userId);
     }
 
-    const knowledgeBase = await this.knowledgeBaseRepository.findById(
-      command.knowledgeBaseId,
-    );
-
-    if (!knowledgeBase) {
-      throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
-    }
+    const knowledgeBase = await this.findAccessibleKnowledgeBase.execute({
+      knowledgeBaseId: command.knowledgeBaseId,
+    });
 
     if (knowledgeBase.orgId !== orgId) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);

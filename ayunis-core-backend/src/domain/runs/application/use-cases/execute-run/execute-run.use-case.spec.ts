@@ -1,3 +1,4 @@
+import type { PersonalSkill as BackendSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { MockProvider, textTurn, toolCallTurn } from '@ayunis/agent-runtime';
 import type {
   ProviderRequest,
@@ -19,7 +20,7 @@ import type { TextMessageContent } from 'src/domain/messages/domain/message-cont
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
-import type { Skill as BackendSkill } from 'src/domain/skills/domain/skill.entity';
+
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';

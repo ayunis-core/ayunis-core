@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetKnowledgeBaseDocumentTextUseCase } from './get-knowledge-base-document-text.use-case';
@@ -7,16 +8,15 @@ import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { randomUUID } from 'crypto';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { KnowledgeBaseToolAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-tool-access.service';
 
 describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   let useCase: GetKnowledgeBaseDocumentTextUseCase;
   let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
-  let mockAccessService: jest.Mocked<KnowledgeBaseAccessService>;
+  let mockAccessService: jest.Mocked<KnowledgeBaseToolAccessService>;
 
   const orgId = randomUUID();
   const userId = randomUUID();
@@ -36,7 +36,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
       findOneAccessible: jest.fn(),
       resolveIsShared: jest.fn(),
       findAllAccessible: jest.fn(),
-    } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
+    } as unknown as jest.Mocked<KnowledgeBaseToolAccessService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,7 +46,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
           useValue: mockRepository,
         },
         {
-          provide: KnowledgeBaseAccessService,
+          provide: KnowledgeBaseToolAccessService,
           useValue: mockAccessService,
         },
       ],
@@ -60,7 +60,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   });
 
   it('should return the source when knowledge base and document exist with correct access', async () => {
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Municipal Policies',
       orgId,
@@ -91,6 +91,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
     expect(result).toBe(source);
     expect(mockAccessService.findAccessibleKnowledgeBase).toHaveBeenCalledWith(
       knowledgeBaseId,
+      undefined,
     );
     expect(
       mockRepository.findSourceByIdAndKnowledgeBaseId,
@@ -133,7 +134,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
 
   it('should allow access to a shared knowledge base document', async () => {
     const otherUserId = randomUUID();
-    const sharedKb = new KnowledgeBase({
+    const sharedKb = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Shared Municipal Policies',
       orgId,
@@ -164,7 +165,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
 
   it('should throw KnowledgeBaseNotFoundError when orgId does not match', async () => {
     const otherOrgId = randomUUID();
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Other Org KB',
       orgId: otherOrgId,
@@ -188,7 +189,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   });
 
   it('should throw DocumentNotInKnowledgeBaseError when document is not found in knowledge base', async () => {
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Municipal Policies',
       orgId,

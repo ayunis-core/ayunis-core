@@ -1,3 +1,5 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
@@ -21,7 +23,7 @@ import {
   UnsupportedFileTypeError,
 } from 'src/domain/skills/application/skills.errors';
 import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import type { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
@@ -29,7 +31,13 @@ describe('AddFileSourceToSkillUseCase', () => {
   const skillId = randomUUID();
   const userId = randomUUID();
   const orgId = randomUUID();
-  const updatedSkill = { id: skillId } as Skill;
+  const updatedSkill = new PersonalSkill({
+    id: skillId,
+    userId,
+    name: 'Skill',
+    shortDescription: '',
+    instructions: '',
+  });
 
   let skillRepository: jest.Mocked<SkillRepository>;
   let addSourceToSkill: jest.Mocked<AddSourceToSkillUseCase>;
@@ -49,6 +57,7 @@ describe('AddFileSourceToSkillUseCase', () => {
     } as unknown as jest.Mocked<SkillRepository>;
     addSourceToSkill = {
       execute: jest.fn().mockResolvedValue(updatedSkill),
+      executeForAuthorizedSkill: jest.fn().mockResolvedValue(updatedSkill),
     } as unknown as jest.Mocked<AddSourceToSkillUseCase>;
     startDocumentProcessing = {
       execute: jest.fn(),
@@ -87,7 +96,7 @@ describe('AddFileSourceToSkillUseCase', () => {
       sourceIds: Array.from({ length: SkillsConstants.MAX_SOURCES }, () =>
         randomUUID(),
       ),
-    } as unknown as Skill);
+    } as unknown as PersonalSkill);
     const file = {
       originalname: 'bericht.pdf',
       mimetype: 'application/pdf',
@@ -107,7 +116,7 @@ describe('AddFileSourceToSkillUseCase', () => {
       sourceIds: Array.from({ length: SkillsConstants.MAX_SOURCES - 1 }, () =>
         randomUUID(),
       ),
-    } as unknown as Skill);
+    } as unknown as PersonalSkill);
     // One slot left, workbook has two sheets — the callback must throw.
     startDataSourceProcessing.execute.mockImplementation(
       (command: { ensureCapacityFor?: (count: number) => void }) => {
@@ -125,6 +134,30 @@ describe('AddFileSourceToSkillUseCase', () => {
     await expect(
       useCase.execute(new AddFileSourceToSkillCommand({ skillId, file })),
     ).rejects.toBeInstanceOf(SkillSourceLimitExceededError);
+    expect(addSourceToSkill.execute).not.toHaveBeenCalled();
+  });
+
+  it('uses an already-authorized workspace skill without personal ownership lookup', async () => {
+    const workspaceSkill = {
+      id: skillId,
+      workspaceId: randomUUID(),
+      sourceIds: [],
+    } as unknown as Skill;
+    const created = dataSource();
+    startDataSourceProcessing.execute.mockResolvedValue([created]);
+    const file = {
+      originalname: 'vereine.csv',
+      mimetype: 'text/csv',
+      path: '/uploads/workspace-upload',
+    };
+
+    await useCase.executeForAuthorizedSkill(workspaceSkill, file);
+
+    expect(skillRepository.findOne).not.toHaveBeenCalled();
+    expect(addSourceToSkill.executeForAuthorizedSkill).toHaveBeenCalledWith(
+      workspaceSkill,
+      created.id,
+    );
     expect(addSourceToSkill.execute).not.toHaveBeenCalled();
   });
 

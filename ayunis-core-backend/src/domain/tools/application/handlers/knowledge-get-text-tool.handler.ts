@@ -64,7 +64,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
     this.logger.log({ tool: tool.name, input }, 'execute');
 
     try {
-      return await this.getText(tool, input, orgId);
+      return await this.getText(tool, input, orgId, context.threadId);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -77,6 +77,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
     tool: KnowledgeGetTextTool,
     input: Record<string, unknown>,
     orgId: UUID,
+    threadId: UUID,
   ): Promise<string> {
     const validated = tool.validateParams(input);
     const {
@@ -91,6 +92,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
       knowledgeBaseId as UUID,
       documentId as UUID,
       orgId,
+      threadId,
     );
     const extraction = await this.extractText(
       tool.name,
@@ -149,6 +151,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
     knowledgeBaseId: UUID,
     documentId: UUID,
     orgId: UUID,
+    threadId: UUID,
   ): Promise<TextSource> {
     const userId = this.contextService.get('userId');
     if (!userId) {
@@ -164,6 +167,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
         documentId,
         orgId,
         userId,
+        threadId,
       }),
     );
     if (!(source instanceof TextSource)) {

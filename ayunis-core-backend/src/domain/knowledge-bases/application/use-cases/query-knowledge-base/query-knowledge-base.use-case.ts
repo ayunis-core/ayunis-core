@@ -12,7 +12,7 @@ import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-ty
 import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { KnowledgeBaseToolAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-tool-access.service';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
 
@@ -31,7 +31,7 @@ export class QueryKnowledgeBaseUseCase {
     private readonly findContentChunksByIdsUseCase: FindContentChunksByIdsUseCase,
     private readonly searchContentUseCase: SearchContentUseCase,
     private readonly contextService: ContextService,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
+    private readonly knowledgeBaseAccessService: KnowledgeBaseToolAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
@@ -56,6 +56,7 @@ export class QueryKnowledgeBaseUseCase {
     const knowledgeBase =
       await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
         query.knowledgeBaseId,
+        query.threadId,
       );
 
     if (knowledgeBase.orgId !== orgId) {

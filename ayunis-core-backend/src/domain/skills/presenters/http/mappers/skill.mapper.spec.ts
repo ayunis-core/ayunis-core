@@ -1,12 +1,12 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { UUID } from 'crypto';
 import { SkillDtoMapper } from './skill.mapper';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 describe('SkillDtoMapper', () => {
   let mapper: SkillDtoMapper;
 
   const OWNER_ID = 'creator-1' as UUID;
-  const skill = new Skill({
+  const skill = new PersonalSkill({
     id: '00000000-0000-0000-0000-000000000001',
     name: 'Legal Research',
     shortDescription: 'Research legal topics',
@@ -62,7 +62,7 @@ describe('SkillDtoMapper', () => {
   });
 
   describe('toDtoArray', () => {
-    const sharedSkill = new Skill({
+    const sharedSkill = new PersonalSkill({
       id: '00000000-0000-0000-0000-000000000002',
       name: 'Shared Skill',
       shortDescription: 'Shared',

@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -15,7 +16,6 @@ import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { GetSourcesByKnowledgeBaseIdUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
@@ -40,11 +40,14 @@ describe('DeleteKnowledgeBaseUseCase', () => {
     mockKbRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -52,6 +55,9 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -80,7 +86,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
   });
 
   it('should delete associated sources and then the knowledge base', async () => {
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       orgId,
@@ -124,7 +130,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
   });
 
   it('should delete knowledge base when no sources exist', async () => {
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Leere Wissensdatenbank',
       orgId,
@@ -162,7 +168,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
 
   it('should throw KnowledgeBaseNotFoundError when knowledge base belongs to another user', async () => {
     const otherUserId = '66666666-6666-6666-6666-666666666666' as UUID;
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Fremde Wissenssammlung',
       orgId,
@@ -183,7 +189,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
   });
 
   it('should delete sources before deleting the knowledge base', async () => {
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Verordnungen',
       orgId,

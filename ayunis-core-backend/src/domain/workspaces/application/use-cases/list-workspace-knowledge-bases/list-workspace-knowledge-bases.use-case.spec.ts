@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { ListWorkspaceKnowledgeBasesUseCase } from './list-workspace-knowledge-bases.use-case';
 import { ListWorkspaceKnowledgeBasesQuery } from './list-workspace-knowledge-bases.query';
@@ -10,7 +10,7 @@ import { ListWorkspaceKnowledgeBasesQuery } from './list-workspace-knowledge-bas
 describe('ListWorkspaceKnowledgeBasesUseCase', () => {
   it('returns the paginated knowledge bases attached to a workspace', async () => {
     const workspaceId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: '223e4567-e89b-12d3-a456-426614174001',
       name: 'Citizen requests',
       description: 'Citizen request documents',

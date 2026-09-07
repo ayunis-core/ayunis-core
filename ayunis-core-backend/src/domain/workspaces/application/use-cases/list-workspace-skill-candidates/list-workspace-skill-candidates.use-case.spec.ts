@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { ListAccessibleSkillsUseCase } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { ListWorkspaceSkillCandidatesUseCase } from './list-workspace-skill-candidates.use-case';
 import { ListWorkspaceSkillCandidatesQuery } from './list-workspace-skill-candidates.query';
@@ -11,7 +11,7 @@ describe('ListWorkspaceSkillCandidatesUseCase', () => {
   it('returns a paginated candidate page with attachment state', async () => {
     const workspaceId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
     const skillId = '223e4567-e89b-12d3-a456-426614174001' as UUID;
-    const skill = new Skill({
+    const skill = new PersonalSkill({
       id: skillId,
       name: 'Citizen requests',
       shortDescription: 'Handles citizen requests',

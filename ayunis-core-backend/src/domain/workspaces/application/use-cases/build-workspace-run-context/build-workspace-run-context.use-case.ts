@@ -12,7 +12,7 @@ import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/applicati
 import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import type {

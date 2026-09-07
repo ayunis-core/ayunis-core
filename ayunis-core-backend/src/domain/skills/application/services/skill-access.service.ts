@@ -1,13 +1,13 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { SkillRepository } from '../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SkillNotFoundError } from '../skills.errors';
-import { Skill } from '../../domain/skill.entity';
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 
 export interface SkillUserContext {
   isActive: boolean;
@@ -32,7 +32,7 @@ export class SkillAccessService {
    * Finds a skill accessible to the current user (owned or shared).
    * Throws SkillNotFoundError if the skill doesn't exist or isn't accessible.
    */
-  async findAccessibleSkill(skillId: UUID): Promise<Skill> {
+  async findAccessibleSkill(skillId: UUID): Promise<PersonalSkill> {
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedAccessError();
@@ -48,8 +48,11 @@ export class SkillAccessService {
       );
 
       if (share) {
-        const sharedSkills = await this.skillRepository.findByIds([skillId]);
-        skill = sharedSkills.length > 0 ? sharedSkills[0] : null;
+        const sharedSkills = await this.skillRepository.findByIds(
+          [skillId],
+          null,
+        );
+        skill = sharedSkills.at(0) ?? null;
       }
     }
 

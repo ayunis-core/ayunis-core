@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,7 +13,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { UpdateKnowledgeBaseUseCase } from './update-knowledge-base.use-case';
 import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
@@ -31,11 +31,14 @@ describe('UpdateKnowledgeBaseUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -43,6 +46,9 @@ describe('UpdateKnowledgeBaseUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -58,7 +64,7 @@ describe('UpdateKnowledgeBaseUseCase', () => {
   });
 
   it('should update name and description of an existing knowledge base', async () => {
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Alte Bezeichnung',
       description: 'Alte Beschreibung',
@@ -84,7 +90,7 @@ describe('UpdateKnowledgeBaseUseCase', () => {
     expect(result.id).toBe(knowledgeBaseId);
     expect(result.createdAt).toEqual(new Date('2025-01-01T00:00:00Z'));
     expect(result.orgId).toBe(orgId);
-    expect(result.userId).toBe(userId);
+    expect(result).toMatchObject({ userId });
   });
 
   it('should throw KnowledgeBaseNotFoundError when knowledge base does not exist', async () => {
@@ -105,7 +111,7 @@ describe('UpdateKnowledgeBaseUseCase', () => {
 
   it('should throw KnowledgeBaseNotFoundError when knowledge base belongs to another user', async () => {
     const otherUserId = '44444444-4444-4444-4444-444444444444' as UUID;
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Fremde Wissenssammlung',
       orgId,
@@ -128,7 +134,7 @@ describe('UpdateKnowledgeBaseUseCase', () => {
   });
 
   it('should only update name when description is not provided', async () => {
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Alte Bezeichnung',
       description: 'Bestehende Beschreibung',
@@ -153,7 +159,7 @@ describe('UpdateKnowledgeBaseUseCase', () => {
   });
 
   it('should only update description when name is not provided', async () => {
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Bestehender Name',
       description: 'Alte Beschreibung',

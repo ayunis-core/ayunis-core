@@ -1,12 +1,12 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { FindActiveKnowledgeBasesUseCase } from './find-active-knowledge-bases.use-case';
 
 describe('FindActiveKnowledgeBasesUseCase', () => {
   it('returns only active accessible knowledge bases', async () => {
-    const active = new KnowledgeBase({
+    const active = new PersonalKnowledgeBase({
       id: '11111111-1111-1111-1111-111111111111',
       name: 'Active regulations',
       orgId: '22222222-2222-2222-2222-222222222222',

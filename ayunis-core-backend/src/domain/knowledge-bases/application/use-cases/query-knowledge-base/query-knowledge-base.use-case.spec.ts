@@ -1,9 +1,9 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { QueryKnowledgeBaseUseCase } from './query-knowledge-base.use-case';
 import { QueryKnowledgeBaseQuery } from './query-knowledge-base.query';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
@@ -14,7 +14,7 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { KnowledgeBaseToolAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-tool-access.service';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import type { UUID } from 'crypto';
 
@@ -24,7 +24,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   let mockFindChunks: jest.Mocked<FindContentChunksByIdsUseCase>;
   let mockSearchContent: jest.Mocked<SearchContentUseCase>;
   let mockContextService: Partial<ContextService>;
-  let mockAccessService: jest.Mocked<KnowledgeBaseAccessService>;
+  let mockAccessService: jest.Mocked<KnowledgeBaseToolAccessService>;
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
   const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
@@ -36,11 +36,14 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockKbRepo = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -48,6 +51,9 @@ describe('QueryKnowledgeBaseUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -66,7 +72,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
       findOneAccessible: jest.fn(),
       resolveIsShared: jest.fn(),
       findAllAccessible: jest.fn(),
-    } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
+    } as unknown as jest.Mocked<KnowledgeBaseToolAccessService>;
 
     mockContextService = {
       get: jest.fn().mockReturnValue(orgId),
@@ -80,7 +86,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
         { provide: SearchContentUseCase, useValue: mockSearchContent },
         { provide: ContextService, useValue: mockContextService },
         {
-          provide: KnowledgeBaseAccessService,
+          provide: KnowledgeBaseToolAccessService,
           useValue: mockAccessService,
         },
       ],
@@ -90,7 +96,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should return matching chunks with source provenance', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
       orgId,
@@ -147,7 +153,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should fetch chunks by ID instead of loading full sources', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
       orgId,
@@ -192,7 +198,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should return empty results when knowledge base has no documents', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Leere Wissenssammlung',
       orgId,
@@ -248,7 +254,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
 
   it('should allow querying a shared knowledge base', async () => {
     const otherUserId = '66666666-6666-6666-6666-666666666666' as UUID;
-    const sharedKb = new KnowledgeBase({
+    const sharedKb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Geteilte Wissenssammlung',
       orgId,
@@ -269,12 +275,13 @@ describe('QueryKnowledgeBaseUseCase', () => {
     expect(results).toEqual([]);
     expect(mockAccessService.findAccessibleKnowledgeBase).toHaveBeenCalledWith(
       kbId,
+      undefined,
     );
   });
 
   it('should throw KnowledgeBaseNotFoundError when KB belongs to another org', async () => {
     const otherOrgId = '77777777-7777-7777-7777-777777777777' as UUID;
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Fremde Organisation Wissenssammlung',
       orgId: otherOrgId,
@@ -295,7 +302,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should skip index entries where chunk is not found in DB', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
       orgId,

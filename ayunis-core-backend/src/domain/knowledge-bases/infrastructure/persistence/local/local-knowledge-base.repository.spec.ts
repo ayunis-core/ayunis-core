@@ -12,6 +12,162 @@ describe('LocalKnowledgeBaseRepository', () => {
   const firstKnowledgeBaseId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
   const secondKnowledgeBaseId = '650e8400-e29b-41d4-a716-446655440001' as UUID;
 
+  it('loads workspace activation state in one query', async () => {
+    const workspaceId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
+    const activationRepository = {
+      find: jest
+        .fn()
+        .mockResolvedValue([{ knowledgeBaseId: firstKnowledgeBaseId }]),
+    } as unknown as Repository<KnowledgeBaseActivationRecord>;
+    const repository = new LocalKnowledgeBaseRepository(
+      {} as Repository<KnowledgeBaseRecord>,
+      {} as Repository<SourceRecord>,
+      activationRepository,
+      {} as KnowledgeBaseMapper,
+      {} as SourceMapper,
+      { tx: undefined } as never,
+    );
+
+    await expect(
+      repository.getWorkspaceStates([firstKnowledgeBaseId], workspaceId),
+    ).resolves.toEqual(new Map([[firstKnowledgeBaseId, { isActive: true }]]));
+    expect(activationRepository.find).toHaveBeenCalledWith({
+      select: { knowledgeBaseId: true },
+      where: {
+        knowledgeBaseId: expect.anything(),
+        workspaceId,
+      },
+    });
+  });
+
+  it('filters knowledge bases by IDs and personal organization scope in one query', async () => {
+    const orgId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
+    const records = [{ id: firstKnowledgeBaseId }] as KnowledgeBaseRecord[];
+    const find = jest.fn().mockResolvedValue(records);
+    const mapper = {
+      toDomain: jest.fn((record: KnowledgeBaseRecord) => record),
+      toPersonal: jest.fn((record: KnowledgeBaseRecord) => record),
+      toWorkspace: jest.fn((record: KnowledgeBaseRecord) => record),
+    } as unknown as KnowledgeBaseMapper;
+    const repository = new LocalKnowledgeBaseRepository(
+      { find } as unknown as Repository<KnowledgeBaseRecord>,
+      {} as Repository<SourceRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      mapper,
+      {} as SourceMapper,
+      { tx: undefined } as never,
+    );
+
+    const result = await repository.findByIds(
+      [firstKnowledgeBaseId, secondKnowledgeBaseId],
+      { orgId, workspaceId: null },
+    );
+
+    expect(result).toEqual(records);
+    expect(find).toHaveBeenCalledTimes(1);
+    const where = find.mock.calls[0][0].where as {
+      id: { _value: UUID[] };
+      orgId: UUID;
+      workspaceId: { _type: string };
+    };
+    expect(where.id._value).toEqual([
+      firstKnowledgeBaseId,
+      secondKnowledgeBaseId,
+    ]);
+    expect(where.orgId).toBe(orgId);
+    expect(where.workspaceId._type).toBe('isNull');
+    expect(mapper.toPersonal).toHaveBeenCalledWith(records[0]);
+  });
+
+  it('excludes workspace-owned knowledge bases from owner lists', async () => {
+    const userId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
+    const find = jest.fn().mockResolvedValue([]);
+    const repository = new LocalKnowledgeBaseRepository(
+      { find } as unknown as Repository<KnowledgeBaseRecord>,
+      {} as Repository<SourceRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      { toDomain: jest.fn() } as unknown as KnowledgeBaseMapper,
+      {} as SourceMapper,
+      { tx: undefined } as never,
+    );
+
+    await repository.findAllByUserId(userId);
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId,
+          workspaceId: expect.anything(),
+        }),
+      }),
+    );
+  });
+
+  it('loads sources for multiple knowledge bases in one query', async () => {
+    const sourceRecords = [
+      { id: 'source-1', knowledgeBaseId: firstKnowledgeBaseId },
+      { id: 'source-2', knowledgeBaseId: secondKnowledgeBaseId },
+    ] as unknown as SourceRecord[];
+    const sourceRepository = {
+      find: jest.fn().mockResolvedValue(sourceRecords),
+    } as unknown as jest.Mocked<Repository<SourceRecord>>;
+    const sourceMapper = {
+      toDomain: jest.fn((record: SourceRecord) => record),
+    } as unknown as SourceMapper;
+    const repository = new LocalKnowledgeBaseRepository(
+      {} as Repository<KnowledgeBaseRecord>,
+      sourceRepository,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      {} as KnowledgeBaseMapper,
+      sourceMapper,
+      { tx: undefined } as never,
+    );
+
+    const result = await repository.findSourcesByKnowledgeBaseIds([
+      firstKnowledgeBaseId,
+      secondKnowledgeBaseId,
+      firstKnowledgeBaseId,
+    ]);
+
+    expect(result).toEqual(sourceRecords);
+    expect(sourceRepository.find).toHaveBeenCalledTimes(1);
+    expect(sourceRepository.find).toHaveBeenCalledWith({
+      where: { knowledgeBaseId: expect.anything() },
+      order: { createdAt: 'DESC' },
+    });
+    const findOptions = sourceRepository.find.mock.calls[0][0];
+    expect(findOptions).toBeDefined();
+    const knowledgeBaseIds = (
+      findOptions?.where as unknown as {
+        knowledgeBaseId: { _value: UUID[] };
+      }
+    ).knowledgeBaseId._value;
+    expect(knowledgeBaseIds).toEqual([
+      firstKnowledgeBaseId,
+      secondKnowledgeBaseId,
+    ]);
+    expect(sourceMapper.toDomain).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not query sources when the knowledge-base id list is empty', async () => {
+    const sourceRepository = {
+      find: jest.fn(),
+    } as unknown as jest.Mocked<Repository<SourceRecord>>;
+    const repository = new LocalKnowledgeBaseRepository(
+      {} as Repository<KnowledgeBaseRecord>,
+      sourceRepository,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      {} as KnowledgeBaseMapper,
+      {} as SourceMapper,
+      { tx: undefined } as never,
+    );
+
+    await expect(repository.findSourcesByKnowledgeBaseIds([])).resolves.toEqual(
+      [],
+    );
+    expect(sourceRepository.find).not.toHaveBeenCalled();
+  });
+
   it('returns a database-paginated page of accessible knowledge bases', async () => {
     const userId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
     const workspaceId = '850e8400-e29b-41d4-a716-446655440003' as UUID;
@@ -33,6 +189,8 @@ describe('LocalKnowledgeBaseRepository', () => {
     } as unknown as jest.Mocked<Repository<KnowledgeBaseRecord>>;
     const mapper = {
       toDomain: jest.fn((record: KnowledgeBaseRecord) => record),
+      toPersonal: jest.fn((record: KnowledgeBaseRecord) => record),
+      toWorkspace: jest.fn((record: KnowledgeBaseRecord) => record),
     } as unknown as KnowledgeBaseMapper;
     const repository = new LocalKnowledgeBaseRepository(
       knowledgeBaseRepository,
@@ -60,13 +218,43 @@ describe('LocalKnowledgeBaseRepository', () => {
     expect(result.offset).toBe(4);
     expect(queryBuilder.skip).toHaveBeenCalledWith(4);
     expect(queryBuilder.take).toHaveBeenCalledWith(2);
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'assignment."knowledgeBaseId" = "knowledgeBase"."id"',
-      ),
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'knowledgeBase.workspaceId = :workspaceId',
       { workspaceId },
     );
     expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
+  });
+
+  it('excludes workspace-owned knowledge bases from personal accessible lists', async () => {
+    const userId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
+    const queryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+    };
+    const repository = new LocalKnowledgeBaseRepository(
+      {
+        createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+      } as unknown as Repository<KnowledgeBaseRecord>,
+      {} as Repository<SourceRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      { toDomain: jest.fn() } as unknown as KnowledgeBaseMapper,
+      {} as SourceMapper,
+      { tx: undefined } as never,
+    );
+
+    await repository.findPaginatedAccessible(userId, undefined, [], {
+      limit: 20,
+      offset: 0,
+    });
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'knowledgeBase.workspaceId IS NULL',
+    );
   });
 
   it('queries only active knowledge bases accessible to the user', async () => {
@@ -95,6 +283,7 @@ describe('LocalKnowledgeBaseRepository', () => {
       escape: jest.fn((name: string) => `"${name}"`),
       innerJoin: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
       setParameters: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       addOrderBy: jest.fn().mockReturnThis(),
@@ -105,6 +294,8 @@ describe('LocalKnowledgeBaseRepository', () => {
     } as unknown as Repository<KnowledgeBaseRecord>;
     const mapper = {
       toDomain: jest.fn((record: KnowledgeBaseRecord) => record),
+      toPersonal: jest.fn((record: KnowledgeBaseRecord) => record),
+      toWorkspace: jest.fn((record: KnowledgeBaseRecord) => record),
     } as unknown as KnowledgeBaseMapper;
     const repository = new LocalKnowledgeBaseRepository(
       knowledgeBaseRepository,
@@ -127,7 +318,10 @@ describe('LocalKnowledgeBaseRepository', () => {
       expect.objectContaining({ userId, orgId }),
     );
 
-    const accessBrackets = queryBuilder.where.mock.calls[0][0] as Brackets;
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'knowledgeBase.workspaceId IS NULL',
+    );
+    const accessBrackets = queryBuilder.andWhere.mock.calls[0][0] as Brackets;
     const accessQuery = {
       where: jest.fn().mockReturnThis(),
       orWhere: jest.fn().mockReturnThis(),

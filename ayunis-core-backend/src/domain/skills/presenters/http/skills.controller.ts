@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Controller,
   Post,
   Get,
@@ -14,6 +13,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import {
   ApiTags,
   ApiOperation,
@@ -56,7 +56,6 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
-import { InvalidSkillNameError } from 'src/domain/skills/domain/skill.entity';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
@@ -141,27 +140,22 @@ export class SkillsController {
 
     this.logger.log({ userId, name: dto.name }, 'create');
 
-    try {
-      const skill = await this.createSkillUseCase.execute(
-        new CreateSkillCommand({
-          name: dto.name,
-          shortDescription: dto.shortDescription,
-          instructions: dto.instructions,
-          isActive,
-        }),
-      );
-
-      return this.skillDtoMapper.toDto(skill, {
+    const skill = await this.createSkillUseCase.execute(
+      new CreateSkillCommand({
+        name: dto.name,
+        shortDescription: dto.shortDescription,
+        instructions: dto.instructions,
         isActive,
-        isShared: false,
-        isPinned: false,
-      });
-    } catch (error) {
-      if (error instanceof InvalidSkillNameError) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
+      }),
+    );
+    if (!(skill instanceof PersonalSkill))
+      throw new Error('Personal creation returned a workspace skill');
+
+    return this.skillDtoMapper.toDto(skill, {
+      isActive,
+      isShared: false,
+      isPinned: false,
+    });
   }
 
   @Get()
@@ -263,29 +257,22 @@ export class SkillsController {
   ): Promise<SkillResponseDto> {
     this.logger.log({ id, userId, name: dto.name }, 'update');
 
-    try {
-      const skill = await this.updateSkillUseCase.execute(
-        new UpdateSkillCommand({
-          skillId: id,
-          name: dto.name,
-          shortDescription: dto.shortDescription,
-          instructions: dto.instructions,
-        }),
-      );
+    const skill = await this.updateSkillUseCase.execute(
+      new UpdateSkillCommand({
+        skillId: id,
+        name: dto.name,
+        shortDescription: dto.shortDescription,
+        instructions: dto.instructions,
+      }),
+    );
 
-      const context = await this.skillAccessService.resolveUserContext(id);
+    const context = await this.skillAccessService.resolveUserContext(id);
 
-      const creatorName = context.isShared
-        ? await this.skillCreatorNameService.resolveOne(skill.userId)
-        : null;
+    const creatorName = context.isShared
+      ? await this.skillCreatorNameService.resolveOne(skill.userId)
+      : null;
 
-      return this.skillDtoMapper.toDto(skill, context, creatorName);
-    } catch (error) {
-      if (error instanceof InvalidSkillNameError) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
+    return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)
