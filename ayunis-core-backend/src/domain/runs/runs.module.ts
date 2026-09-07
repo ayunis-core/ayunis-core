@@ -50,6 +50,8 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { GetThreadSourceCitationUseCase } from './application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
+import { ThreadSourceCitationsController } from './presenters/http/thread-source-citations.controller';
 
 @Module({
   imports: [
@@ -75,9 +77,10 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
     WorkspacesModule,
     KnowledgeBasesModule,
   ],
-  controllers: [RunsController],
+  controllers: [RunsController, ThreadSourceCitationsController],
   providers: [
     ExecuteRunUseCase,
+    GetThreadSourceCitationUseCase,
     BackendToolAdapter,
     PersistenceHookFactory,
     UsageHookFactory,

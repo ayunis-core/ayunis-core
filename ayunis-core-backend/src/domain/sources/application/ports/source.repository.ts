@@ -4,7 +4,9 @@ import type { DataSource } from 'src/domain/sources/domain/sources/data-source.e
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import type { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
 
 export interface WorkspaceSourceListOptions {
   workspaceId: UUID;
@@ -56,10 +58,16 @@ export abstract class SourceRepository {
     startLine: number,
     endLine: number,
   ): Promise<{ totalLines: number; text: string } | null>;
-  abstract findContentChunksByIds(
-    chunkIds: UUID[],
-  ): Promise<
-    { chunk: TextSourceContentChunk; sourceId: UUID; sourceName: string }[]
+  abstract findCitationTarget(
+    chunkId: UUID,
+  ): Promise<SourceCitationTarget | null>;
+  abstract findContentChunksByIds(chunkIds: UUID[]): Promise<
+    {
+      chunk: TextSourceContentChunk;
+      sourceId: UUID;
+      sourceName: string;
+      sourceCreatedBy: SourceCreator;
+    }[]
   >;
   abstract delete(sourceId: UUID): Promise<void>;
   abstract deleteMany(sourceIds: UUID[]): Promise<void>;

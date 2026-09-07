@@ -28,8 +28,9 @@ describe('Markdown legal reference rendering', () => {
     );
     expect(federal.getAttribute('target')).toBe('_blank');
     expect(federal.getAttribute('rel')).toBe('noopener noreferrer');
-    expect(federal.className).toContain('bg-brand/15');
-    expect(federal.className).toContain('text-brand');
+    expect(federal.className).toContain('bg-muted');
+    expect(federal.className).toContain('text-foreground');
+    expect(federal.className).not.toContain('bg-brand');
   });
 
   it('leaves legal markers literal by default', () => {

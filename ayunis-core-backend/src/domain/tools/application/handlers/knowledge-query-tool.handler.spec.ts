@@ -9,6 +9,7 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { ContextService } from 'src/common/context/services/context.service';
 import type { KnowledgeBaseQueryResult } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 function createMockTool(knowledgeBaseId: string) {
   return {
@@ -75,6 +76,7 @@ describe('KnowledgeQueryToolHandler', () => {
         }),
         sourceName: 'HR Policies Document',
         sourceId: mockSourceId,
+        sourceCreatedBy: SourceCreator.USER,
       },
     ];
 
@@ -90,6 +92,8 @@ describe('KnowledgeQueryToolHandler', () => {
     const parsed = JSON.parse(result);
     expect(parsed).toHaveLength(1);
     expect(parsed[0]).toEqual({
+      chunkId: mockResults[0].chunk.id,
+      citable: true,
       content: 'Relevant content about vacation policy',
       startLine: 15,
       endLine: 25,
@@ -97,6 +101,31 @@ describe('KnowledgeQueryToolHandler', () => {
       documentId: mockSourceId,
       documentName: 'HR Policies Document',
     });
+  });
+
+  it('should mark system-only document chunks as non-citable', async () => {
+    const chunk = new TextSourceContentChunk({
+      content: 'Internal instructions',
+      meta: {},
+    });
+    mockQueryKbUseCase.execute.mockResolvedValue([
+      {
+        chunk,
+        sourceName: 'Internal instructions',
+        sourceId: mockSourceId,
+        sourceCreatedBy: SourceCreator.SYSTEM,
+      },
+    ]);
+
+    const result = await handler.execute({
+      tool: createMockTool(mockKbId),
+      input: { knowledgeBaseId: mockKbId, query: 'instructions' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(JSON.parse(result)[0]).toEqual(
+      expect.objectContaining({ chunkId: chunk.id, citable: false }),
+    );
   });
 
   it('should return empty array when no results found', async () => {
@@ -121,6 +150,7 @@ describe('KnowledgeQueryToolHandler', () => {
         }),
         sourceName: 'Some Doc',
         sourceId: mockSourceId,
+        sourceCreatedBy: SourceCreator.USER,
       },
     ];
 

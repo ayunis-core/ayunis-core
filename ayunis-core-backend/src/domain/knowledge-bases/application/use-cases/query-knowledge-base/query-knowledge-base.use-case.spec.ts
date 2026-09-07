@@ -11,6 +11,7 @@ import {
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -119,7 +120,12 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
     mockFindChunks.execute.mockResolvedValue([
-      { chunk, sourceId, sourceName: 'Haushaltssatzung_2025.pdf' },
+      {
+        chunk,
+        sourceId,
+        sourceName: 'Haushaltssatzung_2025.pdf',
+        sourceCreatedBy: SourceCreator.USER,
+      },
     ]);
 
     const query = new QueryKnowledgeBaseQuery({
@@ -176,7 +182,12 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
     mockFindChunks.execute.mockResolvedValue([
-      { chunk, sourceId, sourceName: 'Bebauungsplan_42.pdf' },
+      {
+        chunk,
+        sourceId,
+        sourceName: 'Bebauungsplan_42.pdf',
+        sourceCreatedBy: SourceCreator.USER,
+      },
     ]);
 
     const query = new QueryKnowledgeBaseQuery({

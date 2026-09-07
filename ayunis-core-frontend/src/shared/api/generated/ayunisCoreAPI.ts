@@ -197,6 +197,7 @@ import type {
   SkillSourceResponseDto,
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
+  SourceCitationResponseDto,
   SsoAuthorizationResponseDto,
   SsoBackchannelLogoutRequestDto,
   SsoDiscoveryResponseDto,
@@ -19349,6 +19350,106 @@ export const useRunsControllerSendMessage = <TError = void,
       > => {
       return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Get a source citation in a thread
+ */
+export const threadSourceCitationsControllerGetSourceCitation = (
+    threadId: string,
+    chunkId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceCitationResponseDto>(
+      {url: `/threads/${threadId}/source-chunks/${chunkId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryKey = (threadId: string,
+    chunkId: string,) => {
+    return [
+    `/threads/${threadId}/source-chunks/${chunkId}`
+    ] as const;
+    }
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryOptions = <TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadSourceCitationsControllerGetSourceCitationQueryKey(threadId,chunkId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>> = ({ signal }) => threadSourceCitationsControllerGetSourceCitation(threadId,chunkId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined && chunkId !== null && chunkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadSourceCitationsControllerGetSourceCitationQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>>
+export type ThreadSourceCitationsControllerGetSourceCitationQueryError = void
+
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a source citation in a thread
+ */
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadSourceCitationsControllerGetSourceCitationQueryOptions(threadId,chunkId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * Create a new trial for an organization. Only accessible to users with the super admin system role.
