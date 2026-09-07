@@ -33,6 +33,7 @@
     "validateIntegration": {
       "success": "Erfolgreich verbunden. {{prompts}} Prompts, {{resources}} Ressourcen, {{tools}} Tools gefunden.",
       "error": "Integration konnte nicht validiert werden. Bitte versuchen Sie es erneut.",
+      "errorWithReason": "Integration konnte nicht validiert werden. {{message}}",
       "connectionTimeout": "Zeitüberschreitung der Verbindung. Bitte überprüfen Sie, ob der Server läuft.",
       "authenticationFailed": "Authentifizierung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.",
       "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht."
