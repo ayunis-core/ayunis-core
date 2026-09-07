@@ -51,8 +51,26 @@ test('team model access follows the explicit override allowlist', async ({
       fixture.orgModel.id,
     );
 
-    await page.goto(`/admin-settings/teams/${fixture.team.id}`);
-    await page.getByTestId('team-models-tab').click();
+    await page.goto('/admin-settings/models');
+    await page.getByTestId('models-teams-tab').click();
+    await page.getByTestId('models-team-search').fill(fixture.team.name);
+    await expect(
+      page.getByTestId(`models-team-${fixture.team.id}-policy`),
+    ).toHaveAttribute('data-policy', 'inherited');
+    await page.getByTestId(`models-team-${fixture.team.id}-configure`).click();
+    await expect(page).toHaveURL(
+      new RegExp(`/admin-settings/models/teams/${fixture.team.id}\\?`),
+    );
+    expect(new URL(page.url()).searchParams.get('search')).toBe(
+      fixture.team.name,
+    );
+    await expect(
+      page.getByTestId('team-model-override-toggle'),
+    ).toHaveAttribute('data-state', 'unchecked');
+    await expect(page.getByTestId('team-model-inherited')).toHaveCount(0);
+    await expect(
+      page.getByTestId(`team-model-${fixture.orgModel.modelId}-toggle`),
+    ).toHaveCount(0);
     await page.getByTestId('team-model-override-toggle').click();
 
     const orgToggle = page.getByTestId(
@@ -63,9 +81,7 @@ test('team model access follows the explicit override allowlist', async ({
     );
     await expect(orgToggle).toHaveAttribute('data-state', 'unchecked');
     await expect(teamOnlyToggle).toHaveAttribute('data-state', 'unchecked');
-    await expect
-      .poll(() => effectiveModelIds(fixture.member.api))
-      .toEqual([]);
+    await expect.poll(() => effectiveModelIds(fixture.member.api)).toEqual([]);
     await expect
       .poll(() => effectiveModelIds(fixture.nonMember.api))
       .toEqual([fixture.orgModel.modelId]);
@@ -97,7 +113,9 @@ test('team model access follows the explicit override allowlist', async ({
     await expect(memberPage.getByRole('option')).toHaveCount(1);
     await memberPage.getByRole('option').click();
     await sendMessage(memberPage, 'Nutze das Teammodell');
-    await expect(memberPage.getByTestId('assistant-message').last()).toContainText(
+    await expect(
+      memberPage.getByTestId('assistant-message').last(),
+    ).toContainText(
       `${fixture.teamOnlyModel.provider}::${fixture.teamOnlyModel.name}`,
     );
 
@@ -129,9 +147,15 @@ test('team model access follows the explicit override allowlist', async ({
       )
       .toEqual([fixture.imageModel.modelId]);
     await imageToggle.click();
-    await expect.poll(() => getTeamImageGrants(api, fixture.team.id)).toEqual([]);
+    await expect
+      .poll(() => getTeamImageGrants(api, fixture.team.id))
+      .toEqual([]);
 
     await page.getByTestId('team-model-override-toggle').click();
+    await expect(
+      page.getByTestId('team-model-override-toggle'),
+    ).toHaveAttribute('data-state', 'unchecked');
+    await expect(page.getByTestId('team-model-inherited')).toHaveCount(0);
     await expect
       .poll(() => effectiveModelIds(fixture.member.api))
       .toEqual([fixture.orgModel.modelId]);
@@ -148,6 +172,23 @@ test('team model access follows the explicit override allowlist', async ({
     await expect
       .poll(() => effectiveModelIds(fixture.nonMember.api))
       .toEqual([fixture.orgModel.modelId]);
+
+    await page
+      .getByRole('navigation', { name: 'breadcrumb' })
+      .getByRole('link')
+      .nth(1)
+      .click();
+    await expect(page.getByTestId('models-team-search')).toHaveValue(
+      fixture.team.name,
+    );
+    expect(new URL(page.url()).searchParams.get('tab')).toBe('teams');
+    await expect(
+      page.getByTestId(`models-team-${fixture.team.id}-policy`),
+    ).toHaveAttribute('data-policy', 'custom');
+    await page.reload();
+    await expect(page.getByTestId('models-team-search')).toHaveValue(
+      fixture.team.name,
+    );
   } finally {
     await memberContext.close();
     await nonMemberContext.close();

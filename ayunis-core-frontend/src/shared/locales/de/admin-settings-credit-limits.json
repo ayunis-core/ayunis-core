@@ -1,43 +1,62 @@
 {
+  "page": { "title": "Credit-Limits" },
+  "tabs": { "teams": "Teams", "users": "Nutzer" },
+  "budget": {
+    "title": "Credit-Budget der Organisation",
+    "monthly": "Monatliches Budget",
+    "used": "Verbrauchte Credits",
+    "remaining": "Verbleibende Credits",
+    "progress": "Budgetverbrauch",
+    "manage": "Budget und Nutzung ansehen"
+  },
+  "states": {
+    "loading": "Credit-Limits werden geladen…",
+    "error": "Credit-Limits konnten nicht geladen werden. Es sind keine verlässlichen Limitinformationen verfügbar.",
+    "retry": "Erneut versuchen",
+    "unavailable": "Credit-Limits sind nur mit einem nutzungsbasierten Abonnement verfügbar."
+  },
+  "table": {
+    "teamsTitle": "Credit-Limits für Teams",
+    "usersTitle": "Credit-Limits für Nutzer",
+    "limit": "Monatliches Credit-Limit",
+    "used": "Diesen Monat verbraucht",
+    "actions": "Aktionen",
+    "configure": "Konfigurieren",
+    "search": "Teams oder Nutzer suchen",
+    "empty": "Keine passenden Teams oder Nutzer.",
+    "blocked": "Kostenpflichtige Modelle gesperrt",
+    "usageUnavailable": "Ohne konfiguriertes Limit nicht verfügbar"
+  },
+  "form": {
+    "noLimit": "Kein zusätzliches Limit",
+    "monthlyCredits": "Monatliche Credits",
+    "hint": "0 sperrt kostenpflichtige Modelle.",
+    "remove": "Credit-Limit entfernen",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
+  "validation": {
+    "invalid": "Ungültige Eingabe",
+    "monthlyCredits": {
+      "invalid": "Geben Sie eine endliche Credit-Anzahl größer oder gleich null ein.",
+      "min": "Credits müssen mindestens null sein.",
+      "isNumber": "Geben Sie einen gültigen Credit-Betrag ein."
+    }
+  },
   "creditLimits": {
-    "menu": {
-      "set": "Credit-Limit festlegen",
-      "edit": "Credit-Limit bearbeiten",
-      "remove": "Credit-Limit entfernen"
-    },
     "teamCard": {
       "title": "Guthaben-Limit",
-      "current": "{{used}} / {{limit}} Credits diesen Monat verbraucht",
-      "none": "Kein Guthaben-Limit gesetzt — es gilt nur das Organisationsbudget."
-    },
-    "column": {
-      "header": "Credit-Limit",
-      "value": "{{used}} / {{limit}}",
-      "none": "Kein Limit"
+      "current": "{{used}} / {{limit}} Credits diesen Monat verbraucht"
     },
     "set": {
       "success": "Guthaben-Limit gespeichert",
       "notFound": "Dieser Benutzer oder dieses Team existiert nicht mehr",
-      "invalid": "Das Guthaben-Limit muss null oder größer sein",
       "error": "Guthaben-Limit konnte nicht gespeichert werden"
     },
     "remove": {
       "success": "Guthaben-Limit entfernt",
       "notFound": "Dieses Guthaben-Limit existiert nicht mehr",
       "error": "Guthaben-Limit konnte nicht entfernt werden"
-    },
-    "dialog": {
-      "userTitle": "Nutzer-Guthaben-Limit",
-      "teamTitle": "Team-Guthaben-Limit",
-      "description": "Monatliches Guthaben für {{name}}. 0 blockiert jegliche Nutzung; entfernen Sie das Limit, um es innerhalb des Organisationsbudgets unbegrenzt zu lassen.",
-      "creditsLabel": "Monatliche Credits",
-      "creditsRequired": "Bitte einen Credit-Betrag eingeben",
-      "creditsMin": "Muss 0 oder größer sein",
-      "creditsHint": "Credits pro Kalendermonat. 0 sperrt das Ziel vollständig.",
-      "removeHint": "Wenn Sie das Limit entfernen, kann dieser Nutzer ohne individuelle Obergrenze innerhalb des Organisationsbudgets abrechnen.",
-      "removeLimit": "Limit entfernen",
-      "cancel": "Abbrechen",
-      "save": "Speichern"
     }
   }
 }

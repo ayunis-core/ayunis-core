@@ -60,6 +60,11 @@
   },
   "teamDetail": {
     "backToTeams": "Teams",
+    "policyLinks": {
+      "customModels": "This team has a custom model selection.",
+      "organizationModels": "This team uses the organization's model selection.",
+      "manageModels": "Manage in Models"
+    },
     "members": {
       "title": "Members",
       "name": "Name",

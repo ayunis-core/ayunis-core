@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CreditLimitDialog } from '@/widgets/credit-limit-editor/ui/CreditLimitDialog';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -8,8 +9,7 @@ import {
   CardTitle,
 } from '@ayunis/ui/components/card';
 import { Button } from '@ayunis/ui/components/button';
-import { SetTeamCreditLimitDialog } from './SetTeamCreditLimitDialog';
-import { useTeamCreditLimits } from '../api/useTeamCreditLimits';
+import { useTeamCreditLimits } from '@/pages/admin-settings/team-detail/api/useTeamCreditLimits';
 
 interface TeamCreditLimitCardProps {
   teamId: string;
@@ -20,51 +20,42 @@ export function TeamCreditLimitCard({
   teamId,
   teamName,
 }: Readonly<TeamCreditLimitCardProps>) {
-  const { t } = useTranslation('admin-settings-credit-limits');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const { teamLimits, setTeamLimit, removeTeamLimit, isSaving } =
-    useTeamCreditLimits(() => setDialogOpen(false));
+  const { t, i18n } = useTranslation('admin-settings-credit-limits');
+  const { teamLimits, isLoading, isError } = useTeamCreditLimits();
   const limit = teamLimits.get(teamId);
-
+  const [isOpen, setIsOpen] = useState(false);
+  let description = t('form.noLimit');
+  if (limit)
+    description = t('creditLimits.teamCard.current', {
+      used: limit.creditsUsed.toLocaleString(i18n.language),
+      limit: limit.monthlyCredits.toLocaleString(i18n.language),
+    });
+  if (isLoading) description = t('states.loading');
+  if (isError) description = t('states.error');
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t('creditLimits.teamCard.title')}</CardTitle>
-        <CardDescription>
-          {limit
-            ? t('creditLimits.teamCard.current', {
-                used: Math.round(limit.creditsUsed).toLocaleString(),
-                limit: Math.round(limit.monthlyCredits).toLocaleString(),
-              })
-            : t('creditLimits.teamCard.none')}
-        </CardDescription>
-        <CardAction className="flex gap-2">
+        <CardDescription>{description}</CardDescription>
+        <CardAction>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setDialogOpen(true)}
+            disabled={isLoading || isError}
+            onClick={() => setIsOpen(true)}
+            data-testid={`credit-limits-team-${teamId}`}
           >
-            {limit ? t('creditLimits.menu.edit') : t('creditLimits.menu.set')}
+            {t('table.configure')}
           </Button>
-          {limit && (
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => removeTeamLimit(teamId)}
-            >
-              {t('creditLimits.menu.remove')}
-            </Button>
-          )}
         </CardAction>
       </CardHeader>
-      {dialogOpen && (
-        <SetTeamCreditLimitDialog
-          open
-          onOpenChange={setDialogOpen}
-          targetName={teamName}
-          initialMonthlyCredits={limit?.monthlyCredits}
-          onSubmit={(monthlyCredits) => setTeamLimit(teamId, monthlyCredits)}
-          isSaving={isSaving}
+      {isOpen && (
+        <CreditLimitDialog
+          id={teamId}
+          name={teamName}
+          target="teams"
+          initialLimit={limit?.monthlyCredits ?? null}
+          onClose={() => setIsOpen(false)}
         />
       )}
     </Card>

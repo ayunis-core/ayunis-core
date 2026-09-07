@@ -1,43 +1,62 @@
 {
+  "page": { "title": "Credit limits" },
+  "tabs": { "teams": "Teams", "users": "Users" },
+  "budget": {
+    "title": "Organization credit budget",
+    "monthly": "Monthly budget",
+    "used": "Credits used",
+    "remaining": "Credits remaining",
+    "progress": "Budget used",
+    "manage": "View budget and usage"
+  },
+  "states": {
+    "loading": "Loading credit limits…",
+    "error": "Could not load credit limits. No limit information is available.",
+    "retry": "Try again",
+    "unavailable": "Credit limits are available only with a usage-based subscription."
+  },
+  "table": {
+    "teamsTitle": "Credit limits for teams",
+    "usersTitle": "Credit limits for users",
+    "limit": "Monthly credit limit",
+    "used": "Used this month",
+    "actions": "Actions",
+    "configure": "Configure",
+    "search": "Search teams or users",
+    "empty": "No matching teams or users.",
+    "blocked": "Paid-model usage blocked",
+    "usageUnavailable": "Not available without a configured limit"
+  },
+  "form": {
+    "noLimit": "No additional limit",
+    "monthlyCredits": "Monthly credits",
+    "hint": "0 blocks paid-model usage.",
+    "remove": "Remove credit limit",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "validation": {
+    "invalid": "Invalid input",
+    "monthlyCredits": {
+      "invalid": "Enter a finite number of credits, zero or greater.",
+      "min": "Credits must be zero or greater.",
+      "isNumber": "Enter a valid credit amount."
+    }
+  },
   "creditLimits": {
-    "menu": {
-      "set": "Set credit limit",
-      "edit": "Edit credit limit",
-      "remove": "Remove credit limit"
-    },
     "teamCard": {
       "title": "Credit limit",
-      "current": "{{used}} / {{limit}} credits used this month",
-      "none": "No credit limit set — only the organization budget applies."
-    },
-    "column": {
-      "header": "Credit limit",
-      "value": "{{used}} / {{limit}}",
-      "none": "No limit"
+      "current": "{{used}} / {{limit}} credits used this month"
     },
     "set": {
       "success": "Credit limit saved",
       "notFound": "That user or team no longer exists",
-      "invalid": "The credit limit must be zero or greater",
       "error": "Could not save the credit limit"
     },
     "remove": {
       "success": "Credit limit removed",
       "notFound": "That credit limit no longer exists",
       "error": "Could not remove the credit limit"
-    },
-    "dialog": {
-      "userTitle": "User credit limit",
-      "teamTitle": "Team credit limit",
-      "description": "Monthly credit allowance for {{name}}. 0 blocks all usage; remove the limit to make it unlimited within the organization budget.",
-      "creditsLabel": "Monthly credits",
-      "creditsRequired": "Please enter a credit amount",
-      "creditsMin": "Must be 0 or greater",
-      "creditsHint": "Credits per calendar month. 0 freezes the target entirely.",
-      "removeHint": "Removing the limit lets this user spend within the organization budget without an individual cap.",
-      "removeLimit": "Remove limit",
-      "cancel": "Cancel",
-      "save": "Save"
     }
   }
 }

@@ -2,6 +2,7 @@ import {
   User,
   Users,
   Brain,
+  Coins,
   Plug,
   BarChart3,
   Shield,
@@ -20,6 +21,8 @@ import {
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 import { useIsAcademyAddonActive } from '@/features/academy';
+import { useHasCreditBudget } from '@/features/credit-limits';
+import { MeResponseDtoRole } from '@/shared/api';
 import {
   allowedSettingsSections,
   useAuthorization,
@@ -30,6 +33,9 @@ export function AdminSettingsSidebar() {
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
   const academyAddonActive = useIsAcademyAddonActive();
   const authorization = useAuthorization();
+  const hasCreditBudget = useHasCreditBudget(
+    authorization.hasRole(MeResponseDtoRole.admin),
+  );
   const allowedSections = allowedSettingsSections(authorization);
   const canSee = (to: string) =>
     allowedSections.some((path) => to.startsWith(path));
@@ -68,6 +74,15 @@ export function AdminSettingsSidebar() {
           icon: <Brain />,
           label: t('layout.models'),
         },
+        ...(hasCreditBudget
+          ? [
+              {
+                to: '/admin-settings/credit-limits' as const,
+                icon: <Coins />,
+                label: t('layout.creditLimits'),
+              },
+            ]
+          : []),
         {
           to: '/admin-settings/integrations',
           icon: <Plug />,

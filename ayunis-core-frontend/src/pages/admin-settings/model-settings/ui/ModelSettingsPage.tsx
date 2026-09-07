@@ -1,152 +1,71 @@
-import { Card, CardContent } from '@ayunis/ui/components/card';
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from '@ayunis/ui/components/alert';
-import { Info, TriangleAlert } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import ModelTypeCard from './ModelTypeCard';
-import { OrgDefaultModelCard } from './OrgDefaultModelCard';
-import SettingsLayout from '../../admin-settings-layout';
-import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import { Trans, useTranslation } from 'react-i18next';
 import {
-  useLanguageModels,
-  useEmbeddingModels,
-  useImageGenerationModels,
-} from '@/features/models';
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@ayunis/ui/components/card';
+import { useTranslation } from 'react-i18next';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@ayunis/ui/components/tabs';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import OrganizationModels from './OrganizationModels';
+import { ModelTeamsTable } from './ModelTeamsTable';
 
-export default function ModelSettingsPage() {
+interface ModelSettingsPageProps {
+  readonly tab: 'organization' | 'teams';
+  readonly search: string;
+  readonly onSearchChange: (search: string) => void;
+}
+
+export default function ModelSettingsPage({
+  tab,
+  search,
+  onSearchChange,
+}: ModelSettingsPageProps) {
   const { t } = useTranslation('admin-settings-models');
   const { t: tLayout } = useTranslation('admin-settings-layout');
-  const {
-    models: languageModels,
-    isLoading: isLoadingLanguage,
-    isError: hasLanguageError,
-  } = useLanguageModels();
-  const {
-    models: embeddingModels,
-    isLoading: isLoadingEmbedding,
-    isError: hasEmbeddingError,
-  } = useEmbeddingModels();
-  const {
-    models: imageGenerationModels,
-    isLoading: isLoadingImageGen,
-    isError: hasImageGenerationError,
-  } = useImageGenerationModels();
-
-  const modelsLoading =
-    isLoadingLanguage || isLoadingEmbedding || isLoadingImageGen;
-  const hasAnyError =
-    hasLanguageError || hasEmbeddingError || hasImageGenerationError;
-  const hasCriticalError =
-    hasLanguageError && hasEmbeddingError && hasImageGenerationError;
-  const hasPartialError = hasAnyError && !hasCriticalError;
-  const hasModels =
-    languageModels.length > 0 ||
-    embeddingModels.length > 0 ||
-    imageGenerationModels.length > 0;
-
-  const renderModelsContent = () => {
-    if (modelsLoading) {
-      return (
-        <Card>
-          <CardContent>
-            <div className="text-center text-muted-foreground py-8">
-              <p>{t('models.loading')}</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-    if (hasCriticalError) {
-      return (
-        <Alert variant="destructive">
-          <TriangleAlert className="h-4 w-4" />
-          <AlertTitle>{t('models.loadErrorTitle')}</AlertTitle>
-          <AlertDescription>
-            {t('models.loadErrorDescription')}
-          </AlertDescription>
-        </Alert>
-      );
-    }
-    return (
-      <>
-        {hasPartialError && (
-          <Alert variant="warning">
-            <TriangleAlert className="h-4 w-4" />
-            <AlertTitle>{t('models.partialData.title')}</AlertTitle>
-            <AlertDescription>
-              {t('models.partialData.someUnavailable')}
-            </AlertDescription>
-          </Alert>
-        )}
-        {!hasLanguageError && (
-          <OrgDefaultModelCard
-            models={languageModels}
-            isLoading={modelsLoading}
-          />
-        )}
-        {hasModels ? (
-          <>
-            {!hasLanguageError && (
-              <OnboardingTourTarget name={TOUR_TARGET.configureModelsLanguage}>
-                <ModelTypeCard type="language" models={languageModels} />
-              </OnboardingTourTarget>
-            )}
-            {!hasEmbeddingError && (
-              <ModelTypeCard type="embedding" models={embeddingModels} />
-            )}
-            {!hasImageGenerationError && (
-              <ModelTypeCard
-                type="image-generation"
-                models={imageGenerationModels}
-              />
-            )}
-          </>
-        ) : (
-          <Card>
-            <CardContent>
-              <div className="text-center text-muted-foreground">
-                <p>{t('models.noModelsAvailable')}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </>
-    );
-  };
-
   return (
     <SettingsLayout
-      action={<HelpLink path="settings/admin/models/" />}
       title={tLayout('layout.models')}
+      action={<HelpLink path="settings/admin/models/" />}
     >
-      <div className="space-y-4">
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle>{t('models.teamHint.title')}</AlertTitle>
-          <AlertDescription>
-            <span>
-              <Trans
-                i18nKey="models.teamHint.description"
-                ns="admin-settings-models"
-                components={{
-                  teamsLink: (
-                    <Link
-                      to="/admin-settings/teams"
-                      className="font-medium underline underline-offset-4 hover:text-primary"
-                    />
-                  ),
-                }}
+      <Tabs value={tab} className="space-y-4">
+        <TabsList>
+          {(['organization', 'teams'] as const).map((value) => (
+            <TabsTrigger key={value} value={value} asChild>
+              <Link
+                to="/admin-settings/models"
+                search={{ tab: value, search }}
+                data-testid={`models-${value}-tab`}
+              >
+                {t(`tabs.${value}`)}
+              </Link>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value="organization" className="space-y-4">
+          <OrganizationModels />
+        </TabsContent>
+        <TabsContent value="teams">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('teams.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ModelTeamsTable
+                search={search}
+                onSearchChange={onSearchChange}
               />
-            </span>
-          </AlertDescription>
-        </Alert>
-        {renderModelsContent()}
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </SettingsLayout>
   );
 }
