@@ -1,13 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
-  knowledgeBasesControllerCreate,
   getKnowledgeBasesControllerFindAllQueryKey,
+  knowledgeBasesControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useRouter } from '@tanstack/react-router';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export type CreateKnowledgeBaseData = {
@@ -15,44 +12,18 @@ export type CreateKnowledgeBaseData = {
   description?: string;
 };
 
-interface UseCreateKnowledgeBaseOptions {
-  onClose?: () => void;
-}
-
-export function useCreateKnowledgeBase({
-  onClose,
-}: UseCreateKnowledgeBaseOptions = {}) {
+export function useCreateKnowledgeBase() {
   const { t } = useTranslation('knowledge-bases');
   const queryClient = useQueryClient();
   const router = useRouter();
-
-  const createKnowledgeBaseSchema = z.object({
-    name: z.string().min(1, t('createDialog.validation.nameRequired')).max(255),
-    description: z.string().max(2000).optional(),
-  });
-
-  const form = useForm<CreateKnowledgeBaseData>({
-    resolver: zodResolver(createKnowledgeBaseSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-    },
-  });
-
   const mutation = useMutation({
-    mutationFn: async (data: CreateKnowledgeBaseData) => {
-      return await knowledgeBasesControllerCreate({
+    mutationFn: (data: CreateKnowledgeBaseData) =>
+      knowledgeBasesControllerCreate({
         name: data.name,
         description: data.description ?? '',
-      });
-    },
-    onSuccess: () => {
-      showSuccess(t('create.success'));
-      onClose?.();
-    },
-    onError: () => {
-      showError(t('create.error'));
-    },
+      }),
+    onSuccess: () => showSuccess(t('create.success')),
+    onError: () => showError(t('create.error')),
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: getKnowledgeBasesControllerFindAllQueryKey(),
@@ -61,18 +32,8 @@ export function useCreateKnowledgeBase({
     },
   });
 
-  const onSubmit = (data: CreateKnowledgeBaseData) => {
-    mutation.mutate(data);
-  };
-
-  const resetForm = () => {
-    form.reset();
-  };
-
   return {
-    form,
-    onSubmit,
-    resetForm,
+    createKnowledgeBase: mutation.mutateAsync,
     isLoading: mutation.isPending,
   };
 }

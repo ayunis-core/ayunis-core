@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from '@tanstack/react-router';
-import { Sparkles } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Pin, Sparkles, Trash2 } from 'lucide-react';
+import { Button } from '@ayunis/ui/components/button';
 import { ItemGroup } from '@ayunis/ui/components/item';
-import { useWorkspaceContextControllerListSkills } from '@/shared/api/generated/ayunisCoreAPI';
+import { Switch } from '@ayunis/ui/components/switch';
 import {
-  RemoveButton,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
+import { useWorkspaceContextControllerListSkills } from '@/shared/api/generated/ayunisCoreAPI';
+import { SkillListItem } from '@/shared/ui/skill-list-item';
+import {
   WorkspaceContextEmpty,
-  WorkspaceContextItem,
   WorkspaceContextPagination,
-  WorkspaceContextSection,
 } from './WorkspaceContextList';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
-import { CreateWorkspaceResourceDialog } from './CreateWorkspaceResourceDialog';
+import { SkillCreateDialog } from '@/widgets/resource-create-dialog';
 
 export function WorkspaceSkillsTab({
   workspaceId,
@@ -27,24 +32,20 @@ export function WorkspaceSkillsTab({
   };
   const { data: skillPage, isLoading } =
     useWorkspaceContextControllerListSkills(workspaceId, listParams);
-  const { createSkill, deleteSkill } = useWorkspaceContextActions(workspaceId);
+  const {
+    createSkill,
+    deleteSkill,
+    setSkillActive,
+    setSkillPinned,
+    isChangingSkillState,
+  } = useWorkspaceContextActions(workspaceId);
 
   const addButton = (
-    <CreateWorkspaceResourceDialog
+    <SkillCreateDialog
       buttonText={t('context.skills.create')}
       buttonTestId="workspace-skill-create"
-      title={t('context.skills.create')}
-      description={t('context.skills.createDescription')}
-      nameLabel={t('context.skills.name')}
-      descriptionLabel={t('context.skills.shortDescription')}
-      instructionsLabel={t('context.skills.instructions')}
-      confirmText={t('context.skills.create')}
       onCreate={async (data) => {
-        const skill = await createSkill({
-          name: data.name,
-          shortDescription: data.description,
-          instructions: data.instructions,
-        });
+        const skill = await createSkill(data);
         await navigate({
           to: '/workspaces/$workspaceId/skills/$skillId',
           params: { workspaceId, skillId: skill.id },
@@ -55,42 +56,105 @@ export function WorkspaceSkillsTab({
   const skills = skillPage?.data ?? [];
 
   return (
-    <WorkspaceContextSection
-      title={t('context.skills.title')}
-      description={t('context.skills.description')}
-      action={addButton}
-    >
+    <section className="space-y-3">
+      <div className="flex justify-end">{addButton}</div>
       {isLoading ? <p>{t('context.addDialog.loading')}</p> : null}
       {!isLoading && skills.length === 0 ? (
         <WorkspaceContextEmpty
           icon={<Sparkles />}
           title={t('context.skills.emptyTitle')}
           description={t('context.skills.empty')}
-          action={addButton}
         />
       ) : null}
       {skills.length > 0 ? (
         <ItemGroup className="gap-2">
           {skills.map((skill) => (
-            <WorkspaceContextItem
+            <SkillListItem
               key={skill.id}
               testId={`workspace-skill-${skill.id}`}
-              icon={<Sparkles />}
-              title={
-                <Link
-                  to="/workspaces/$workspaceId/skills/$skillId"
-                  params={{ workspaceId, skillId: skill.id }}
-                  className="after:absolute after:inset-0 hover:underline"
-                >
-                  {skill.name}
-                </Link>
-              }
+              title={skill.name}
               description={skill.shortDescription}
-              action={
-                <RemoveButton
-                  label={t('context.skills.delete')}
-                  onClick={() => deleteSkill(skill.id)}
-                />
+              onClick={() =>
+                void navigate({
+                  to: '/workspaces/$workspaceId/skills/$skillId',
+                  params: { workspaceId, skillId: skill.id },
+                })
+              }
+              actions={
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {skill.isActive
+                        ? t('context.skills.active')
+                        : t('context.skills.inactive')}
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          <Switch
+                            data-testid={`workspace-skill-active-${skill.id}`}
+                            checked={skill.isActive}
+                            disabled={isChangingSkillState}
+                            onCheckedChange={(isActive) =>
+                              setSkillActive({ skillId: skill.id, isActive })
+                            }
+                          />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        {t('context.skills.activeTooltip')}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  {skill.isActive ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          data-testid={`workspace-skill-pin-${skill.id}`}
+                          disabled={isChangingSkillState}
+                          aria-label={
+                            skill.isPinned
+                              ? t('context.skills.unpin')
+                              : t('context.skills.pin')
+                          }
+                          onClick={() =>
+                            setSkillPinned({
+                              skillId: skill.id,
+                              isPinned: !skill.isPinned,
+                            })
+                          }
+                        >
+                          <Pin
+                            className={skill.isPinned ? 'fill-current' : ''}
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {skill.isPinned
+                          ? t('context.skills.unpin')
+                          : t('context.skills.pin')}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : null}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        aria-label={t('context.skills.delete')}
+                        onClick={() => deleteSkill(skill.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t('context.skills.delete')}
+                    </TooltipContent>
+                  </Tooltip>
+                </>
               }
             />
           ))}
@@ -102,6 +166,6 @@ export function WorkspaceSkillsTab({
         testId="workspace-skills-pagination"
         onPageChange={setPage}
       />
-    </WorkspaceContextSection>
+    </section>
   );
 }

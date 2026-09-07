@@ -9,7 +9,6 @@ import { Button } from '@ayunis/ui/components/button';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { useWorkspaceContextControllerFindContext } from '@/shared/api/generated/ayunisCoreAPI';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
-import { WorkspaceContextSection } from './WorkspaceContextList';
 
 export function WorkspaceInstructionsTab({
   workspaceId,
@@ -36,10 +35,7 @@ export function WorkspaceInstructionsTab({
   if (error || !context) return <WorkspaceContextLoadError />;
 
   return (
-    <WorkspaceContextSection
-      title={t('context.instructions.title')}
-      description={t('context.instructions.description')}
-    >
+    <section className="space-y-3">
       <Textarea
         value={value}
         data-testid="workspace-instruction-input"
@@ -64,7 +60,7 @@ export function WorkspaceInstructionsTab({
           {t('context.instructions.save')}
         </Button>
       </div>
-    </WorkspaceContextSection>
+    </section>
   );
 }
 

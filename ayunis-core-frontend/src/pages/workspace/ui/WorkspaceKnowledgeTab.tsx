@@ -1,54 +1,54 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from '@tanstack/react-router';
-import { Database } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Database, Trash2 } from 'lucide-react';
+import { Button } from '@ayunis/ui/components/button';
 import { ItemGroup } from '@ayunis/ui/components/item';
-import type { WorkspaceKnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useWorkspaceContextControllerListKnowledgeBases } from '@/shared/api/generated/ayunisCoreAPI';
 import {
-  RemoveButton,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
+import { useWorkspaceContextControllerListKnowledgeBases } from '@/shared/api/generated/ayunisCoreAPI';
+import { KnowledgeBaseListItem } from '@/shared/ui/knowledge-base-list-item';
+import {
   WorkspaceContextEmpty,
-  WorkspaceContextItem,
   WorkspaceContextPagination,
-  WorkspaceContextSection,
 } from './WorkspaceContextList';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
-import {
-  CreateWorkspaceResourceDialog,
-  type WorkspaceResourceFormData,
-} from './CreateWorkspaceResourceDialog';
+import { KnowledgeBaseCreateDialog } from '@/widgets/resource-create-dialog';
+import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 
 export function WorkspaceKnowledgeTab({
   workspaceId,
 }: Readonly<{ workspaceId: string }>) {
+  const { t } = useTranslation('workspace');
   const navigate = useNavigate();
-  const [knowledgePage, setKnowledgePage] = useState(1);
-  const knowledgeParams = {
+  const [page, setPage] = useState(1);
+  const listParams = {
     limit: CONTEXT_PAGE_SIZE,
-    offset: (knowledgePage - 1) * CONTEXT_PAGE_SIZE,
+    offset: (page - 1) * CONTEXT_PAGE_SIZE,
   };
-  const { data: knowledgePageData, isLoading: isKnowledgeLoading } =
-    useWorkspaceContextControllerListKnowledgeBases(
-      workspaceId,
-      knowledgeParams,
-    );
-  const { createKnowledgeBase, deleteKnowledgeBase } =
-    useWorkspaceContextActions(workspaceId);
+  const { data, isLoading } = useWorkspaceContextControllerListKnowledgeBases(
+    workspaceId,
+    listParams,
+  );
+  const {
+    createKnowledgeBase,
+    deleteKnowledgeBase,
+    setKnowledgeBaseActive,
+    isChangingKnowledgeBaseState,
+  } = useWorkspaceContextActions(workspaceId);
 
-  return (
-    <WorkspaceKnowledgeBaseSection
-      workspaceId={workspaceId}
-      items={knowledgePageData?.data ?? []}
-      isLoading={isKnowledgeLoading}
-      page={knowledgePage}
-      total={pageTotal(knowledgePageData?.pagination)}
-      onPageChange={setKnowledgePage}
-      onDetach={deleteKnowledgeBase}
-      onCreate={async (data) => {
+  const createButton = (
+    <KnowledgeBaseCreateDialog
+      buttonText={t('context.knowledge.create')}
+      buttonTestId="workspace-knowledge-create"
+      onCreate={async (formData) => {
         const knowledgeBase = await createKnowledgeBase({
-          name: data.name,
-          description: data.description,
+          name: formData.name,
+          description: formData.description ?? '',
         });
         await navigate({
           to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
@@ -57,83 +57,68 @@ export function WorkspaceKnowledgeTab({
       }}
     />
   );
-}
-
-function WorkspaceKnowledgeBaseSection({
-  workspaceId,
-  items,
-  isLoading,
-  page,
-  total,
-  onPageChange,
-  onDetach,
-  onCreate,
-}: Readonly<{
-  workspaceId: string;
-  items: WorkspaceKnowledgeBaseResponseDto[];
-  isLoading: boolean;
-  page: number;
-  total: number;
-  onPageChange: (page: number) => void;
-  onDetach: (id: string) => void;
-  onCreate: (data: WorkspaceResourceFormData) => Promise<unknown>;
-}>) {
-  const { t } = useTranslation('workspace');
-  const addButton = (
-    <CreateWorkspaceResourceDialog
-      buttonText={t('context.knowledge.create')}
-      buttonTestId="workspace-knowledge-create"
-      title={t('context.knowledge.create')}
-      description={t('context.knowledge.createDescription')}
-      nameLabel={t('context.knowledge.name')}
-      descriptionLabel={t('context.knowledge.descriptionLabel')}
-      confirmText={t('context.knowledge.create')}
-      onCreate={onCreate}
-    />
-  );
+  const knowledgeBases = data?.data ?? [];
 
   return (
-    <WorkspaceContextSection
-      title={t('context.knowledge.title')}
-      description={t('context.knowledge.description')}
-      action={addButton}
-    >
+    <section className="space-y-3">
+      <div className="flex justify-end">{createButton}</div>
       {isLoading ? <p>{t('context.addDialog.loading')}</p> : null}
-      {!isLoading && items.length === 0 ? (
+      {!isLoading && knowledgeBases.length === 0 ? (
         <WorkspaceContextEmpty
           icon={<Database />}
           title={t('context.knowledge.emptyTitle')}
           description={t('context.knowledge.empty')}
-          action={addButton}
         />
       ) : null}
-      {items.length > 0 ? (
+      {knowledgeBases.length > 0 ? (
         <ItemGroup className="gap-2">
-          {items.map((knowledgeBase) => (
-            <WorkspaceContextItem
+          {knowledgeBases.map((knowledgeBase) => (
+            <KnowledgeBaseListItem
               key={knowledgeBase.id}
               testId={`workspace-knowledge-base-${knowledgeBase.id}`}
-              icon={<Database />}
-              title={
-                <Link
-                  to="/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId"
-                  params={{
+              title={knowledgeBase.name}
+              description={knowledgeBase.description}
+              onClick={() =>
+                void navigate({
+                  to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
+                  params: {
                     workspaceId,
                     knowledgeBaseId: knowledgeBase.id,
-                  }}
-                  className="hover:underline"
-                >
-                  {knowledgeBase.name}
-                </Link>
+                  },
+                })
               }
-              description={t('context.knowledge.documentCount', {
-                count: knowledgeBase.documentCount,
-              })}
-              action={
-                <RemoveButton
-                  label={t('context.knowledge.detach')}
-                  onClick={() => onDetach(knowledgeBase.id)}
-                />
+              actions={
+                <>
+                  <KnowledgeBaseActivationToggle
+                    knowledgeBaseId={knowledgeBase.id}
+                    isActive={knowledgeBase.isActive}
+                    isPending={isChangingKnowledgeBaseState}
+                    testId={`workspace-knowledge-base-active-${knowledgeBase.id}`}
+                    tooltip={t('context.knowledge.activeTooltip')}
+                    onToggle={(isActive) =>
+                      setKnowledgeBaseActive({
+                        knowledgeBaseId: knowledgeBase.id,
+                        isActive,
+                      })
+                    }
+                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        aria-label={t('context.knowledge.detach')}
+                        onClick={() => deleteKnowledgeBase(knowledgeBase.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t('context.knowledge.detach')}
+                    </TooltipContent>
+                  </Tooltip>
+                </>
               }
             />
           ))}
@@ -141,10 +126,10 @@ function WorkspaceKnowledgeBaseSection({
       ) : null}
       <WorkspaceContextPagination
         page={page}
-        total={total}
+        total={pageTotal(data?.pagination)}
         testId="workspace-knowledge-pagination"
-        onPageChange={onPageChange}
+        onPageChange={setPage}
       />
-    </WorkspaceContextSection>
+    </section>
   );
 }

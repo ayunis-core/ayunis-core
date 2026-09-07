@@ -110,7 +110,7 @@
   "activation": {
     "activeLabel": "Active",
     "inactiveLabel": "Inactive",
-    "tooltip": "Activating this knowledge base makes it available in every chat.",
+    "tooltip": "Active knowledge bases are available to AI chats. Inactive knowledge bases are not used until they are activated again.",
     "success": "Knowledge base status updated.",
     "error": "Failed to update the knowledge base status.",
     "notFound": "Knowledge base not found. It may have been deleted."

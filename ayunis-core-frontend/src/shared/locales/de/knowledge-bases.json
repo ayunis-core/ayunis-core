@@ -110,7 +110,7 @@
   "activation": {
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
-    "tooltip": "Wenn Sie diese Wissenssammlung aktivieren, steht sie in jedem Chat zur Verfügung.",
+    "tooltip": "Aktive Wissenssammlungen stehen KI-Chats zur Verfügung. Inaktive Wissenssammlungen werden erst wieder verwendet, wenn sie aktiviert werden.",
     "success": "Status der Wissenssammlung aktualisiert.",
     "error": "Status der Wissenssammlung konnte nicht aktualisiert werden.",
     "notFound": "Wissenssammlung nicht gefunden. Sie wurde möglicherweise gelöscht."

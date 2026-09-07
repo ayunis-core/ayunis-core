@@ -7,42 +7,54 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
+import {
+  useSkillsControllerFindAll,
+  useWorkspaceContextControllerFindContext,
+} from '@/shared/api/generated/ayunisCoreAPI';
 import { useIsSkillsEnabled } from '@/features/feature-toggles';
 
 interface PinnedSkillsProps {
-  onSkillSelect: (skillId: string, skillName: string) => void;
+  onSkillSelect: (
+    skillId: string,
+    skillName: string,
+    workspaceId?: string,
+  ) => void;
   selectedSkillId?: string;
+  workspaceId?: string | null;
 }
 
 export function PinnedSkills({
   onSkillSelect,
   selectedSkillId,
+  workspaceId,
 }: Readonly<PinnedSkillsProps>) {
   const { t } = useTranslation('common');
   const skillsEnabled = useIsSkillsEnabled();
   const { data: skills } = useSkillsControllerFindAll({
     query: { enabled: skillsEnabled },
   });
+  const workspaceQuery = useWorkspaceContextControllerFindContext(
+    workspaceId ?? '',
+    {
+      query: { enabled: skillsEnabled && Boolean(workspaceId) },
+    },
+  );
+  const pinnedSkills = [
+    ...(skills?.filter((skill) => skill.isPinned) ?? []),
+    ...(workspaceId
+      ? (workspaceQuery.data?.skills.filter(
+          (skill) => skill.isActive && skill.isPinned,
+        ) ?? [])
+      : []),
+  ];
 
-  const pinnedSkills = skills?.filter((skill) => skill.isPinned) ?? [];
-
-  if (!skillsEnabled) {
-    return null;
-  }
+  if (!skillsEnabled) return null;
 
   const skillsHelpPath =
     'skills/name-and-description/#f%C3%A4higkeiten-anheften--manuelle-aktivierung';
-
-  // Without any pinned skills, a lone (?) icon reads like a UI bug. Show an
-  // explanatory link that teases the "pin skills" capability instead.
-  if (pinnedSkills.length === 0) {
-    return (
-      <div className="flex justify-center items-center">
-        <HelpLink path={skillsHelpPath} label={t('pinnedSkills.pinHint')} />
-      </div>
-    );
-  }
+  const showPinHint =
+    pinnedSkills.length === 0 &&
+    (!workspaceId || (!workspaceQuery.isPending && !workspaceQuery.isError));
 
   return (
     <div className="flex justify-center items-center gap-2 flex-wrap">
@@ -52,7 +64,15 @@ export function PinnedSkills({
             <Button
               variant={selectedSkillId === skill.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => onSkillSelect(skill.id, skill.name)}
+              aria-pressed={selectedSkillId === skill.id}
+              data-testid={`pinned-skill-${skill.id}`}
+              onClick={() =>
+                onSkillSelect(
+                  skill.id,
+                  skill.name,
+                  'workspaceId' in skill ? skill.workspaceId : undefined,
+                )
+              }
             >
               <Sparkles className="h-4 w-4" />
               {skill.name}
@@ -61,7 +81,21 @@ export function PinnedSkills({
           <TooltipContent>{t('pinnedSkills.activateTooltip')}</TooltipContent>
         </Tooltip>
       ))}
-      <HelpLink path={skillsHelpPath} variant="icon" />
+      {workspaceId && workspaceQuery.isPending && (
+        <span role="status" className="text-xs text-muted-foreground">
+          {t('common.loading')}
+        </span>
+      )}
+      {workspaceId && workspaceQuery.isError && (
+        <span role="alert" className="text-xs text-muted-foreground">
+          {t('pinnedSkills.projectLoadError')}
+        </span>
+      )}
+      {showPinHint ? (
+        <HelpLink path={skillsHelpPath} label={t('pinnedSkills.pinHint')} />
+      ) : (
+        <HelpLink path={skillsHelpPath} variant="icon" />
+      )}
     </div>
   );
 }

@@ -1,16 +1,26 @@
 import { useState } from 'react';
-import { Link, useRouter } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
+import { useInvalidateWorkspaceResources } from '@/pages/workspace/api/useInvalidateWorkspaceResources';
+import { showError } from '@/shared/lib/toast';
+import { WorkspaceSkillKnowledgeBases } from './WorkspaceSkillKnowledgeBases';
 import { useTranslation } from 'react-i18next';
-import { Badge } from '@ayunis/ui/components/badge';
+import { Pin, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
-import { Input } from '@ayunis/ui/components/input';
-import { Label } from '@ayunis/ui/components/label';
-import { Textarea } from '@ayunis/ui/components/textarea';
+import { Switch } from '@ayunis/ui/components/switch';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
+import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
+import { useWorkspaceSkillSources } from '@/pages/workspace/api/useWorkspaceSkillSources';
+import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
 import type {
-  WorkspaceKnowledgeBaseResponseDto,
   WorkspaceResponseDto,
   WorkspaceSkillResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -23,48 +33,54 @@ import {
 export function WorkspaceSkillDetailPage({
   workspace,
   skill,
-  knowledgeBases,
+  isEmbeddingModelEnabled,
 }: Readonly<{
   workspace: WorkspaceResponseDto;
   skill: WorkspaceSkillResponseDto;
-  knowledgeBases: WorkspaceKnowledgeBaseResponseDto[];
+  isEmbeddingModelEnabled: boolean;
 }>) {
   const { t } = useTranslation('workspace');
-  const router = useRouter();
-  const [name, setName] = useState(skill.name);
-  const [description, setDescription] = useState(skill.shortDescription);
-  const [instructions, setInstructions] = useState(skill.instructions);
-  const [saving, setSaving] = useState(false);
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      await workspaceContextControllerUpdateSkill(workspace.id, skill.id, {
-        name,
-        shortDescription: description,
-        instructions,
-      });
-      await router.invalidate();
-    } finally {
-      setSaving(false);
-    }
-  };
+  const { t: tSkills } = useTranslation('skills');
+  const { t: tSkill } = useTranslation('skill');
+  const invalidateResources = useInvalidateWorkspaceResources(workspace.id);
+  const navigate = useNavigate();
+  const { confirm } = useConfirmation();
+  const [isAssigning, setIsAssigning] = useState(false);
+  const { deleteSkill, setSkillActive, setSkillPinned, isChangingSkillState } =
+    useWorkspaceContextActions(workspace.id);
+  const sourcesHook = useWorkspaceSkillSources({
+    workspaceId: workspace.id,
+    skillId: skill.id,
+  });
 
   const toggleKnowledgeBase = async (knowledgeBaseId: string) => {
-    if (skill.knowledgeBaseIds.includes(knowledgeBaseId)) {
-      await workspaceContextControllerUnassignSkillKnowledgeBase(
-        workspace.id,
-        skill.id,
-        knowledgeBaseId,
+    setIsAssigning(true);
+    try {
+      if (skill.knowledgeBaseIds.includes(knowledgeBaseId)) {
+        await workspaceContextControllerUnassignSkillKnowledgeBase(
+          workspace.id,
+          skill.id,
+          knowledgeBaseId,
+        );
+      } else {
+        await workspaceContextControllerAssignSkillKnowledgeBase(
+          workspace.id,
+          skill.id,
+          knowledgeBaseId,
+        );
+      }
+      await invalidateResources();
+    } catch {
+      showError(
+        tSkill(
+          skill.knowledgeBaseIds.includes(knowledgeBaseId)
+            ? 'knowledgeBases.errors.failedToUnassign'
+            : 'knowledgeBases.errors.failedToAssign',
+        ),
       );
-    } else {
-      await workspaceContextControllerAssignSkillKnowledgeBase(
-        workspace.id,
-        skill.id,
-        knowledgeBaseId,
-      );
+    } finally {
+      setIsAssigning(false);
     }
-    await router.invalidate();
   };
 
   return (
@@ -75,113 +91,137 @@ export function WorkspaceSkillDetailPage({
             breadcrumbs={[
               { label: t('page.breadcrumb'), href: '/workspaces' },
               { label: workspace.name, href: `/workspaces/${workspace.id}` },
+              {
+                label: t('page.skillsTab'),
+                href: `/workspaces/${workspace.id}`,
+                search: { tab: 'skills' },
+              },
               { label: skill.name },
             ]}
-            badge={
-              <Badge
-                data-testid="workspace-skill-detail-badge"
-                variant="secondary"
-              >
-                {t('detail.projectSkill')}
-              </Badge>
+            action={
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {skill.isActive
+                      ? tSkills('card.activeLabel')
+                      : tSkills('card.inactiveLabel')}
+                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Switch
+                          checked={skill.isActive}
+                          disabled={isChangingSkillState}
+                          onCheckedChange={(isActive) =>
+                            setSkillActive({ skillId: skill.id, isActive })
+                          }
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {t('context.skills.activeTooltip')}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                {skill.isActive ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={isChangingSkillState}
+                        aria-label={
+                          skill.isPinned
+                            ? t('context.skills.unpin')
+                            : t('context.skills.pin')
+                        }
+                        onClick={() =>
+                          setSkillPinned({
+                            skillId: skill.id,
+                            isPinned: !skill.isPinned,
+                          })
+                        }
+                      >
+                        <Pin className={skill.isPinned ? 'fill-current' : ''} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {skill.isPinned
+                        ? t('context.skills.unpin')
+                        : t('context.skills.pin')}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      aria-label={tSkills('card.deleteLabel')}
+                      onClick={() =>
+                        confirm({
+                          title: tSkill('delete.confirmTitle'),
+                          description: tSkill('delete.confirmDescription', {
+                            name: skill.name,
+                          }),
+                          confirmText: tSkill('delete.confirmText'),
+                          cancelText: tSkill('delete.cancelText'),
+                          variant: 'destructive',
+                          onConfirm: () => {
+                            deleteSkill(skill.id, {
+                              onSuccess: () => {
+                                void navigate({
+                                  to: '/workspaces/$workspaceId',
+                                  params: { workspaceId: workspace.id },
+                                });
+                              },
+                            });
+                          },
+                        })
+                      }
+                    >
+                      <Trash2 />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{tSkills('card.deleteLabel')}</TooltipContent>
+                </Tooltip>
+              </>
             }
           />
         }
         contentArea={
-          <div className="mx-auto max-w-3xl space-y-8">
-            <section className="space-y-4">
-              <h1 className="text-2xl font-semibold">{skill.name}</h1>
-              <Field label={t('context.skills.name')}>
-                <Input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                />
-              </Field>
-              <Field label={t('context.skills.shortDescription')}>
-                <Textarea
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                />
-              </Field>
-              <Field label={t('context.skills.instructions')}>
-                <Textarea
-                  className="min-h-48"
-                  value={instructions}
-                  onChange={(event) => setInstructions(event.target.value)}
-                />
-              </Field>
-              <Button
-                disabled={saving || !name || !description}
-                onClick={() => void save()}
-              >
-                {t('detail.save')}
-              </Button>
-            </section>
-
-            <section className="space-y-3">
-              <div>
-                <h2 className="text-lg font-semibold">
-                  {t('detail.skillKnowledge')}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {t('detail.skillKnowledgeDescription')}
-                </p>
-              </div>
-              {knowledgeBases.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t('detail.noWorkspaceKnowledge')}
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {knowledgeBases.map((knowledgeBase) => {
-                    const assigned = skill.knowledgeBaseIds.includes(
-                      knowledgeBase.id,
-                    );
-                    return (
-                      <div
-                        key={knowledgeBase.id}
-                        className="flex items-center justify-between rounded-md border p-3"
-                      >
-                        <Link
-                          to="/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId"
-                          params={{
-                            workspaceId: workspace.id,
-                            knowledgeBaseId: knowledgeBase.id,
-                          }}
-                          className="font-medium hover:underline"
-                        >
-                          {knowledgeBase.name}
-                        </Link>
-                        <Button
-                          variant={assigned ? 'secondary' : 'outline'}
-                          size="sm"
-                          onClick={() =>
-                            void toggleKnowledgeBase(knowledgeBase.id)
-                          }
-                        >
-                          {assigned ? t('detail.detach') : t('detail.attach')}
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
+          <div className="grid gap-4">
+            <SkillPropertiesCard
+              key={skill.id}
+              skill={skill}
+              onUpdate={async (data) => {
+                await workspaceContextControllerUpdateSkill(
+                  workspace.id,
+                  skill.id,
+                  data,
+                );
+                await invalidateResources();
+              }}
+            />
+            <WorkspaceSkillKnowledgeBases
+              key={skill.id}
+              workspaceId={workspace.id}
+              assignedIds={skill.knowledgeBaseIds}
+              isPending={isAssigning}
+              onToggle={(knowledgeBaseId) =>
+                void toggleKnowledgeBase(knowledgeBaseId)
+              }
+            />
+            <KnowledgeBaseCard
+              entity={skill}
+              isEnabled={isEmbeddingModelEnabled}
+              translationNamespace="skill"
+              sourcesHook={sourcesHook}
+            />
           </div>
         }
       />
     </AppLayout>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: Readonly<{ label: string; children: React.ReactNode }>) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
-    </div>
   );
 }

@@ -71,31 +71,6 @@ export function WorkspaceContextPagination({
   );
 }
 
-export function WorkspaceContextSection({
-  title,
-  description,
-  action,
-  children,
-}: Readonly<{
-  title: string;
-  description: string;
-  action?: ReactNode;
-  children: ReactNode;
-}>) {
-  return (
-    <section className="space-y-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h3 className="text-sm font-medium">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
-        {action && <div className="shrink-0">{action}</div>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
 export function WorkspaceContextItem({
   icon,
   title,

@@ -117,6 +117,7 @@
   "pinnedSkills": {
     "empty": "Keine angehefteten Fähigkeiten",
     "activateTooltip": "Fähigkeit aktivieren",
+    "projectLoadError": "Angeheftete Projektfähigkeiten konnten nicht geladen werden.",
     "pinHint": "Fähigkeiten für schnellen Zugriff anheften"
   },
   "common": {

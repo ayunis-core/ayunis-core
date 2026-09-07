@@ -117,6 +117,7 @@
   "pinnedSkills": {
     "empty": "No pinned skills",
     "activateTooltip": "Activate skill",
+    "projectLoadError": "Could not load pinned project skills.",
     "pinHint": "Pin skills for quick access"
   },
   "common": {

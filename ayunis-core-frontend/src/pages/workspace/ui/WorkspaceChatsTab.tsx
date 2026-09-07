@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Trash } from 'lucide-react';
+import { MessageSquare, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Empty,
@@ -10,20 +10,15 @@ import {
   EmptyTitle,
 } from '@ayunis/ui/components/empty';
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemTitle,
-} from '@ayunis/ui/components/item';
-import { useConfirmation } from '@/widgets/confirmation-modal';
-import {
   isFavorite,
   useFavorites,
   useToggleFavorite,
 } from '@/features/favorites';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import { SearchPagination } from '@/widgets/pagination';
+import { ChatListItem } from '@/shared/ui/chat-list-item';
 import { PinButton } from '@/shared/ui/pin-button';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { SearchPagination } from '@/widgets/pagination';
 
 interface WorkspaceChatsTabProps {
   chats: GetThreadsResponseDtoItem[];
@@ -76,7 +71,7 @@ export function WorkspaceChatsTab({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {chats.length === 0 ? (
         <p className="text-muted-foreground">{t('page.noChatResults')}</p>
       ) : null}
@@ -103,34 +98,41 @@ function WorkspaceChatRow({ chat, onDelete }: Readonly<WorkspaceChatRowProps>) {
   const { t } = useTranslation('workspace');
   const { t: tChats } = useTranslation('chats');
   const { favorites } = useFavorites();
-  const { toggle: togglePinned } = useToggleFavorite();
+  const { toggle: toggleFavorite } = useToggleFavorite();
+  const router = useRouter();
   const isPinned = isFavorite(favorites, chat.id, 'thread');
 
   return (
-    <Item variant="outline">
-      <ItemContent>
-        <ItemTitle>
-          <Link to="/chats/$threadId" params={{ threadId: chat.id }}>
-            {chat.title ?? t('chat.untitled')}
-          </Link>
-        </ItemTitle>
-      </ItemContent>
-      <ItemActions>
-        <PinButton
-          isPinned={isPinned}
-          pinLabel={t('chat.pin')}
-          unpinLabel={t('chat.unpin')}
-          onToggle={() => togglePinned('thread', chat.id)}
-        />
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={tChats('card.confirmDelete.title')}
-          onClick={() => onDelete(chat)}
-        >
-          <Trash className="text-destructive" />
-        </Button>
-      </ItemActions>
-    </Item>
+    <ChatListItem
+      chat={chat}
+      testId={`workspace-chat-${chat.id}`}
+      untitledLabel={t('chat.untitled')}
+      anonymousLabel={tChats('card.anonymous')}
+      onClick={() =>
+        void router.navigate({
+          to: '/chats/$threadId',
+          params: { threadId: chat.id },
+        })
+      }
+      actions={
+        <>
+          <PinButton
+            isPinned={isPinned}
+            pinLabel={tChats('card.pin')}
+            unpinLabel={tChats('card.unpin')}
+            onToggle={() => toggleFavorite('thread', chat.id)}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            aria-label={tChats('card.confirmDelete.title')}
+            onClick={() => onDelete(chat)}
+          >
+            <Trash2 />
+          </Button>
+        </>
+      }
+    />
   );
 }

@@ -1,9 +1,8 @@
 {
   "page": {
     "title": "Projects",
-    "heading": "Projects",
     "searchPlaceholder": "Search projects",
-    "newWorkspace": "New project",
+    "addWorkspace": "Add project",
     "emptyTitle": "No projects yet",
     "emptyDescription": "Create a project to group your chats by topic.",
     "viewOptions": "Sorting",
@@ -113,6 +112,11 @@
     "submit": "Create project",
     "submitting": "Creating …"
   },
+  "actions": {
+    "more": "More workspace actions",
+    "edit": "Edit workspace",
+    "delete": "Delete workspace"
+  },
   "settingsDialog": {
     "title": "Project settings",
     "submit": "Save",
@@ -124,6 +128,7 @@
     "rowDescription": "The project and every chat inside it will be deleted.",
     "title": "Delete project",
     "description": "“{{name}}” and every chat inside it will be permanently deleted.",
+    "confirmNameLabel": "If you really want to delete this workspace, enter its name: “{{name}}”.",
     "confirmText": "Delete",
     "cancelText": "Cancel"
   },

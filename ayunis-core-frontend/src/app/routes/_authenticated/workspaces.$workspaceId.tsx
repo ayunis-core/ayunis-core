@@ -18,6 +18,10 @@ const WORKSPACE_CHATS_LIMIT = 20;
 const searchSchema = z.object({
   search: z.string().optional(),
   page: z.number().min(1).optional().catch(1),
+  tab: z
+    .enum(['chats', 'artifacts', 'skills', 'knowledge', 'instructions'])
+    .optional()
+    .catch('chats'),
 });
 
 const queryIsEmbeddingModelEnabledOptions = () => ({
@@ -28,7 +32,7 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
 export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
   {
     validateSearch: searchSchema,
-    loaderDeps: ({ search }) => search,
+    loaderDeps: ({ search: { search, page } }) => ({ search, page }),
     component: RouteComponent,
     loader: async ({
       params: { workspaceId },
@@ -89,6 +93,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
 );
 
 function RouteComponent() {
+  const { tab = 'chats' } = Route.useSearch();
   const {
     workspace,
     chats,
@@ -103,6 +108,7 @@ function RouteComponent() {
     <WorkspacePage
       key={workspace.id}
       workspace={workspace}
+      activeTab={tab}
       chats={chats}
       chatCount={chatCount}
       chatPagination={chatPagination}

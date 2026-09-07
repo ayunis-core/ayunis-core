@@ -35,6 +35,7 @@
   "card": {
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
+    "activeTooltip": "Aktive Fähigkeiten stehen KI-Chats zur Verfügung. Inaktive Fähigkeiten werden erst wieder verwendet, wenn sie aktiviert werden.",
     "pinLabel": "An neuen Chat anheften",
     "unpinLabel": "Von neuem Chat lösen",
     "deleteLabel": "Löschen",
@@ -72,6 +73,7 @@
     }
   },
   "create": {
+    "duplicateName": "In diesem Projekt gibt es bereits eine Fähigkeit mit diesem Namen.",
     "success": "Fähigkeit erfolgreich erstellt!",
     "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },

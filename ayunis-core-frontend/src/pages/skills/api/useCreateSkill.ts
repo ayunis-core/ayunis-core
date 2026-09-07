@@ -1,13 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
-  skillsControllerCreate,
   getSkillsControllerFindAllQueryKey,
+  skillsControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 
@@ -21,48 +18,19 @@ export function useCreateSkill() {
   const { t } = useTranslation('skills');
   const queryClient = useQueryClient();
   const router = useRouter();
-
-  const createSkillSchema = z.object({
-    name: z.string().min(1, t('createDialog.validation.nameRequired')).max(100),
-    shortDescription: z
-      .string()
-      .min(1, t('createDialog.validation.shortDescriptionRequired')),
-    instructions: z
-      .string()
-      .min(1, t('createDialog.validation.instructionsRequired')),
-  });
-
-  const form = useForm<CreateSkillData>({
-    resolver: zodResolver(createSkillSchema),
-    defaultValues: {
-      name: '',
-      shortDescription: '',
-      instructions: '',
-    },
-  });
-
   const mutation = useMutation({
-    mutationFn: async (data: CreateSkillData) => {
-      return await skillsControllerCreate(data);
-    },
+    mutationFn: (data: CreateSkillData) => skillsControllerCreate(data),
     onSuccess: (data) => {
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindAllQueryKey(),
       });
-      if (data.id) {
-        void router.navigate({
-          to: '/skills/$id',
-          params: { id: data.id },
-        });
-      }
+      void router.navigate({ to: '/skills/$id', params: { id: data.id } });
     },
     onError: (error) => {
-      console.error('Create skill failed:', error);
       try {
         extractErrorData(error);
         showError(t('create.error'));
       } catch {
-        // Non-AxiosError (network failure, request cancellation, etc.)
         showError(t('create.error'));
       }
     },
@@ -74,18 +42,8 @@ export function useCreateSkill() {
     },
   });
 
-  const onSubmit = (data: CreateSkillData) => {
-    mutation.mutate(data);
-  };
-
-  const resetForm = () => {
-    form.reset();
-  };
-
   return {
-    form,
-    onSubmit,
-    resetForm,
+    createSkill: mutation.mutateAsync,
     isLoading: mutation.isPending,
   };
 }

@@ -102,6 +102,7 @@ export default function KnowledgeBaseCard({
   return (
     <Card
       ref={cardRef}
+      data-testid="additional-documents-card"
       className={cn(
         'relative',
         isDragging && 'outline-2 outline-dashed outline-primary',

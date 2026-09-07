@@ -4,9 +4,13 @@ Page components composing widgets and features for each application route.
 
 Route-level page modules handle authentication, chat conversations, agent management, prompt libraries, knowledge base management, skill management, user settings, organization admin settings, and super-admin platform management. Each page follows a consistent internal structure with api/, ui/, and model/ subdirectories separating data hooks, components, and types.
 
-The workspace page also includes the Erstellte Inhalte tab for project artifacts. Artifact rows open the corresponding chat editor through URL search parameters, while artifact lists load within the workspace tabs.
+The project and chat overview pages place their search controls in the content header; the project overview also keeps sorting and the add-project action there without repeating a content title. Project rows expose pinning with an explanatory tooltip.
 
-The `workspace/` page slice also includes context tabs for Wissen, Skills and Anweisungen. Skills and knowledge bases are created as workspace-owned resources and open workspace-scoped detail routes after creation. Those detail pages edit resource properties, assign same-workspace knowledge bases to skills, and manage documents in workspace knowledge bases; `api/useWorkspaceContextActions.ts` owns overview mutations and cache invalidation.
+The new-chat page combines personal/shared and selected-workspace pinned skills into the same selectable quick-action buttons. Workspace changes clear only a selected skill belonging to a different workspace; regular skill selections remain available.
+
+The workspace page also includes the Dokumente tab for project artifacts; tabs follow the sidebar-oriented order Chats, Dokumente, Fähigkeiten, Wissen, Anweisungen. Artifact rows open the corresponding chat editor through URL search parameters, while artifact lists load within the workspace tabs.
+
+The `workspace/` page slice also includes context tabs for Wissen, Skills and Anweisungen. Skills and knowledge bases are created as workspace-owned resources and open workspace-scoped detail routes after creation. Those detail pages reuse the personal skill and knowledge-base creation dialogs, property cards, assignment card, document card, and header controls while keeping workspace-scoped mutations and routes; they assign same-workspace knowledge bases to skills, manage additional documents directly on skills, and manage documents inside workspace knowledge bases, while standalone project files do not exist. Project skill and knowledge-base rows reuse their personal-resource presentations, expose workspace-wide activation controls (plus project pinning for skills), and place creation as the tab's top-right action; `api/useWorkspaceContextActions.ts` owns overview mutations and cache invalidation.
 
 The `super-admin-settings/users/` page provides a searchable cross-organization user directory with account lock status, account recovery, password reset, organization navigation, deletion, and CSV export controls. Organization admins see the same lock status and recovery action in their user settings.
 
