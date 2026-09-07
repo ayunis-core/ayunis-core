@@ -1,4 +1,14 @@
 {
+  "navigation": {
+    "back": "Zurück zu den erstellten Inhalten",
+    "close": "Schließen"
+  },
+  "unsavedChanges": {
+    "title": "Ungespeicherte Änderungen",
+    "description": "Dieses Dokument enthält ungespeicherte Änderungen. Vor dem Verlassen speichern?",
+    "saveAndExit": "Speichern & verlassen",
+    "keepEditing": "Weiter bearbeiten"
+  },
   "editor": {
     "save": "Speichern",
     "placeholder": "Schreiben beginnen…",
@@ -45,9 +55,9 @@
     "viewingHistory": "Version {{version}} wird angezeigt (schreibgeschützt). Wählen Sie die aktuelle Version, um weiter zu bearbeiten.",
     "unsavedChanges": {
       "title": "Ungespeicherte Änderungen",
-      "description": "Diese Tabelle enthält ungespeicherte Änderungen. Vor dem Schließen speichern?",
-      "saveAndClose": "Speichern & schließen",
-      "discardAndClose": "Verwerfen & schließen",
+      "description": "Diese Tabelle enthält ungespeicherte Änderungen. Vor dem Fortfahren speichern?",
+      "saveAndContinue": "Speichern & fortfahren",
+      "discardAndContinue": "Verwerfen & fortfahren",
       "keepEditing": "Weiter bearbeiten"
     },
     "toolbar": {

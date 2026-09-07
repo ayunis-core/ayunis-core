@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import { useWorkspaceContextControllerFindContext } from '@/shared/api/generated/ayunisCoreAPI';
 import { hasProcessingWorkspaceDocuments } from '@/shared/lib/workspace-context';
-import type { WorkspaceContextPanel } from '../ui/WorkspaceContextSidePanel';
+import type { WorkspaceContextPanel } from '@/pages/chat/ui/WorkspaceContextSidePanel';
 
-export function useWorkspaceContextPanel({
-  workspaceId,
-  onOpen,
-}: Readonly<{
-  workspaceId?: string | null;
-  onOpen: () => void;
-}>) {
+export function useWorkspaceContextPanel(workspaceId?: string | null) {
   const [panelState, setPanelState] = useState<{
     workspaceId?: string | null;
     panel: WorkspaceContextPanel | null;
@@ -38,7 +32,6 @@ export function useWorkspaceContextPanel({
           ? null
           : panelToToggle,
     }));
-    onOpen();
   }
 
   function close() {

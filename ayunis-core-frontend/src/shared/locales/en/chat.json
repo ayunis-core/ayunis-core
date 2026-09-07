@@ -14,7 +14,14 @@
     "artifactSaved": "Document saved successfully",
     "artifactPanel": {
       "title": "Created content",
-      "close": "Close",
+      "openList": "Open created content",
+      "emptyTitle": "No content created yet",
+      "listLoadError": "Created content could not be loaded",
+      "type": {
+        "document": "Document",
+        "spreadsheet": "Table",
+        "diagram": "Diagram"
+      },
       "loadErrorTitle": "Content could not be loaded",
       "loadErrorDescription": "The content could not be loaded. Please try again.",
       "notFoundTitle": "Content not found",

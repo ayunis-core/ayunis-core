@@ -1,6 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { forwardRef, lazy, Suspense, useImperativeHandle, useRef } from 'react';
 import { isAxiosError } from 'axios';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -10,6 +10,8 @@ import {
 } from '@ayunis/ui/components/alert';
 import type { ArtifactResponseDto } from '@/shared/api';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
+import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
 import ArtifactSidePanelSkeleton from './ArtifactSidePanelSkeleton';
 
 const LazyArtifactEditor = lazy(() =>
@@ -43,30 +45,48 @@ interface ArtifactSidePanelProps {
     versionNumber?: number,
   ) => void;
   readonly onClose: () => void;
+  readonly onBack: () => void;
   readonly onLetterheadChange: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
 }
 
-export function ArtifactSidePanel({
-  artifact,
-  isLoading = false,
-  error,
-  onRetry,
-  onSave,
-  onRevert,
-  onExport,
-  onClose,
-  onLetterheadChange,
-  isExporting,
-}: ArtifactSidePanelProps) {
+export const ArtifactSidePanel = forwardRef<
+  ArtifactPanelHandle,
+  ArtifactSidePanelProps
+>(function ArtifactSidePanel(
+  {
+    artifact,
+    isLoading = false,
+    error,
+    onRetry,
+    onSave,
+    onRevert,
+    onExport,
+    onClose,
+    onBack,
+    onLetterheadChange,
+    isExporting,
+  },
+  ref,
+) {
   const { t } = useTranslation('chat');
+  const editorRef = useRef<ArtifactPanelHandle>(null);
+  useImperativeHandle(ref, () => ({
+    requestExit: (onExit) => {
+      if (editorRef.current) {
+        editorRef.current.requestExit(onExit);
+        return;
+      }
+      onExit();
+    },
+  }));
   const hasArtifactNotFoundError =
     isAxiosError(error) && error.response?.status === 404;
   const hasArtifactLoadError = Boolean(error) && !hasArtifactNotFoundError;
 
   if (!artifact) {
     if (isLoading) {
-      return <ArtifactSidePanelSkeleton onClose={onClose} />;
+      return <ArtifactSidePanelSkeleton onClose={onClose} onBack={onBack} />;
     }
 
     return (
@@ -74,20 +94,15 @@ export function ArtifactSidePanel({
         className="flex h-full min-h-0 flex-col overflow-hidden border-l bg-background"
         data-testid="artifact-side-panel-error"
       >
-        <div className="flex items-center justify-between border-b px-3 py-2">
-          <h2 className="truncate text-sm font-semibold">
-            {t('chat.artifactPanel.title')}
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            data-testid="artifact-side-panel-close"
-            onClick={onClose}
-            aria-label={t('chat.artifactPanel.close')}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
+        <ArtifactPanelHeader
+          title={
+            <h2 className="truncate text-sm font-semibold">
+              {t('chat.artifactPanel.title')}
+            </h2>
+          }
+          onBack={onBack}
+          onClose={onClose}
+        />
         <div className="flex flex-1 items-start p-4">
           <Alert variant="warning">
             <AlertTriangle />
@@ -139,31 +154,34 @@ export function ArtifactSidePanel({
             key={artifact.id}
             artifact={artifact}
             onClose={onClose}
+            onBack={onBack}
           />
         );
       case 'spreadsheet':
         return (
           <LazySpreadsheetEditor
+            ref={editorRef}
             key={artifact.id}
             artifact={artifact}
             onSave={onSave}
             onRevert={onRevert}
             onExport={onExport}
             onClose={onClose}
+            onBack={onBack}
             isExporting={isExporting}
           />
         );
       case 'document':
         return (
           <LazyArtifactEditor
+            ref={editorRef}
             key={artifact.id}
             artifact={artifact}
-            onSave={(content) => {
-              void onSave(content);
-            }}
+            onSave={onSave}
             onRevert={onRevert}
             onExport={onExport}
             onClose={onClose}
+            onBack={onBack}
             onLetterheadChange={onLetterheadChange}
             isExporting={isExporting}
           />
@@ -177,10 +195,11 @@ export function ArtifactSidePanel({
         <ArtifactSidePanelSkeleton
           variant={artifact.type === 'spreadsheet' ? 'spreadsheet' : 'document'}
           onClose={onClose}
+          onBack={onBack}
         />
       }
     >
       {panel()}
     </Suspense>
   );
-}
+});

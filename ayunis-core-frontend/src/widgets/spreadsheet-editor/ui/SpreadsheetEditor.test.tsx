@@ -1,11 +1,14 @@
+import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ArtifactResponseDto } from '@/shared/api';
+import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { SpreadsheetEditor } from './SpreadsheetEditor';
 
 const mocks = vi.hoisted(() => ({
   confirm: vi.fn(),
   onClose: vi.fn(),
+  onBack: vi.fn(),
   onExport: vi.fn(),
   onRevert: vi.fn(),
   onSave: vi.fn(),
@@ -42,7 +45,7 @@ vi.mock('@/widgets/confirmation-modal', () => ({
   useConfirmation: () => ({ confirm: mocks.confirm }),
 }));
 
-vi.mock('../model/useSpreadsheetEditorState', () => ({
+vi.mock('@/widgets/spreadsheet-editor/model/useSpreadsheetEditorState', () => ({
   useSpreadsheetEditorState: () => mocks.editor,
 }));
 
@@ -85,6 +88,7 @@ describe('SpreadsheetEditor', () => {
         onRevert={mocks.onRevert}
         onExport={mocks.onExport}
         onClose={mocks.onClose}
+        onBack={mocks.onBack}
       />,
     );
 
@@ -97,9 +101,37 @@ describe('SpreadsheetEditor', () => {
 
     expect(mocks.onSave).not.toHaveBeenCalled();
     expect(confirmation.confirmText).toBe(
-      'spreadsheet.unsavedChanges.discardAndClose',
+      'spreadsheet.unsavedChanges.discardAndContinue',
     );
     expect(mocks.onClose).toHaveBeenCalledOnce();
+  });
+
+  it('guards an external transition', async () => {
+    const ref = createRef<ArtifactPanelHandle>();
+    const transition = vi.fn();
+    mocks.editor.displayedGridState.columns = ['A'];
+    render(
+      <SpreadsheetEditor
+        ref={ref}
+        artifact={artifact}
+        onSave={mocks.onSave}
+        onRevert={mocks.onRevert}
+        onExport={mocks.onExport}
+        onClose={mocks.onClose}
+        onBack={mocks.onBack}
+      />,
+    );
+
+    ref.current?.requestExit(transition);
+
+    expect(mocks.confirm).toHaveBeenCalledOnce();
+    expect(transition).not.toHaveBeenCalled();
+
+    await mocks.confirm.mock.calls[0][0].onConfirm();
+
+    expect(mocks.onSave).toHaveBeenCalledOnce();
+    expect(transition).toHaveBeenCalledOnce();
+    expect(mocks.onClose).not.toHaveBeenCalled();
   });
 
   it('waits for the save to finish before closing', async () => {
@@ -117,6 +149,7 @@ describe('SpreadsheetEditor', () => {
         onRevert={mocks.onRevert}
         onExport={mocks.onExport}
         onClose={mocks.onClose}
+        onBack={mocks.onBack}
       />,
     );
 

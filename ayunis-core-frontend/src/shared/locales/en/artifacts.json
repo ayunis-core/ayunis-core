@@ -1,4 +1,14 @@
 {
+  "navigation": {
+    "back": "Back to created content",
+    "close": "Close"
+  },
+  "unsavedChanges": {
+    "title": "Unsaved changes",
+    "description": "This document has unsaved changes. Save them before leaving?",
+    "saveAndExit": "Save & leave",
+    "keepEditing": "Keep editing"
+  },
   "editor": {
     "save": "Save",
     "placeholder": "Start writing…",
@@ -45,9 +55,9 @@
     "viewingHistory": "Viewing version {{version}} (read-only). Select the current version to continue editing.",
     "unsavedChanges": {
       "title": "Unsaved changes",
-      "description": "This spreadsheet has unsaved changes. Save them before closing?",
-      "saveAndClose": "Save & close",
-      "discardAndClose": "Discard & close",
+      "description": "This spreadsheet has unsaved changes. Save them before continuing?",
+      "saveAndContinue": "Save & continue",
+      "discardAndContinue": "Discard & continue",
       "keepEditing": "Keep editing"
     },
     "toolbar": {

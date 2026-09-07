@@ -1,11 +1,4 @@
-import {
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-  useEffect,
-  type ReactNode,
-} from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
@@ -27,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import type { RunSessionResponseDto, RunThreadResponseDto } from '@/shared/api';
 import { PiiMaskProvider } from '@/widgets/markdown';
 import type { PiiMaskEntry } from '@/widgets/markdown';
+import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
@@ -50,9 +44,10 @@ import { useDownloadSource } from '@/pages/chat/api/useDownloadSource';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
-import { ArtifactSidePanel } from './ArtifactSidePanel';
-import { WorkspaceContextSidePanel } from './WorkspaceContextSidePanel';
+import { ChatSidePanel } from './ChatSidePanel';
+import { isChatSidePanelVisible } from '@/pages/chat/lib/is-chat-side-panel-visible';
 import { useWorkspaceContextPanel } from '@/pages/chat/hooks/useWorkspaceContextPanel';
+import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -106,6 +101,7 @@ export default function ChatPage({
 
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
+  const artifactPanelRef = useRef<ArtifactPanelHandle>(null);
   const lastSubmissionRef = useRef<{ text: string; images?: File[] } | null>(
     null,
   );
@@ -131,8 +127,11 @@ export default function ChatPage({
   const {
     artifactPanel,
     isArtifactPanelOpen,
+    isArtifactListView,
     isExporting,
     handleOpenArtifact,
+    handleBackToArtifactList,
+    handleToggleArtifactPanel,
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
@@ -147,11 +146,18 @@ export default function ChatPage({
   const {
     context: workspaceContext,
     panel: workspaceContextPanel,
-    toggle: toggleWorkspaceContextPanel,
+    toggle: toggleWorkspacePanel,
     close: closeWorkspaceContextPanel,
-  } = useWorkspaceContextPanel({
-    workspaceId: thread.workspaceId,
-    onOpen: handleCloseArtifact,
+  } = useWorkspaceContextPanel(thread.workspaceId);
+  const sidePanelTransitions = useChatSidePanelTransitions({
+    artifactPanelRef,
+    isArtifactDetailOpen: isArtifactPanelOpen && !isArtifactListView,
+    isArtifactPanelOpen,
+    closeArtifactPanel: handleCloseArtifact,
+    openArtifact: handleOpenArtifact,
+    toggleArtifactPanel: handleToggleArtifactPanel,
+    closeWorkspacePanel: closeWorkspaceContextPanel,
+    toggleWorkspacePanel,
   });
 
   const { deleteChat } = useDeleteThread({
@@ -322,7 +328,6 @@ export default function ChatPage({
           (c) => c.type === 'text' || c.type === 'thinking',
         );
 
-        // If there's content left after filtering, update the message
         if (cleanedContent.length > 0) {
           return prev.map((msg, index) =>
             index === prev.length - 1
@@ -357,11 +362,6 @@ export default function ChatPage({
     setTimeout(() => setRenameDialogOpen(true), 0);
   }
 
-  function openArtifactPanel(artifactId: string) {
-    closeWorkspaceContextPanel();
-    handleOpenArtifact(artifactId);
-  }
-
   const chatHeader = (
     <ChatHeader
       threadId={thread.id}
@@ -370,7 +370,11 @@ export default function ChatPage({
       workspaceId={thread.workspaceId}
       workspaceContext={workspaceContext}
       activeWorkspaceContextPanel={workspaceContextPanel}
-      onToggleWorkspaceContextPanel={toggleWorkspaceContextPanel}
+      onToggleWorkspaceContextPanel={
+        sidePanelTransitions.toggleWorkspaceContextPanel
+      }
+      isArtifactPanelOpen={isArtifactPanelOpen}
+      onToggleArtifactPanel={sidePanelTransitions.toggleArtifactPanel}
       onRename={handleRenameThread}
       onDelete={handleDeleteThread}
     />
@@ -398,7 +402,7 @@ export default function ChatPage({
       threadId={thread.id}
       pendingSubmission={pendingSubmission}
       showLoadingPlaceholder={showLoadingPlaceholder}
-      onOpenArtifact={openArtifactPanel}
+      onOpenArtifact={sidePanelTransitions.openArtifactPanel}
     />
   );
 
@@ -446,27 +450,31 @@ export default function ChatPage({
     </>
   );
 
-  let sidePanel: ReactNode;
-  if (isArtifactPanelOpen) {
-    sidePanel = (
-      <ArtifactSidePanel
-        {...artifactPanel}
-        onSave={handleSaveArtifact}
-        onRevert={handleRevertArtifact}
-        onExport={handleExportArtifact}
-        onLetterheadChange={handleLetterheadChange}
-        isExporting={isExporting}
-      />
-    );
-  } else if (workspaceContextPanel && workspaceContext) {
-    sidePanel = (
-      <WorkspaceContextSidePanel
-        context={workspaceContext}
-        panel={workspaceContextPanel}
-        onClose={closeWorkspaceContextPanel}
-      />
-    );
-  }
+  const sidePanel = isChatSidePanelVisible(
+    isArtifactPanelOpen,
+    workspaceContextPanel,
+    Boolean(workspaceContext),
+  ) ? (
+    <ChatSidePanel
+      threadId={thread.id}
+      artifactListOpen={isArtifactListView}
+      artifactDetailOpen={isArtifactPanelOpen}
+      artifactPanelRef={artifactPanelRef}
+      artifactPanelProps={{
+        ...artifactPanel,
+        onBack: handleBackToArtifactList,
+        onSave: handleSaveArtifact,
+        onRevert: handleRevertArtifact,
+        onExport: handleExportArtifact,
+        onLetterheadChange: handleLetterheadChange,
+        isExporting,
+      }}
+      onSelectArtifact={sidePanelTransitions.openArtifactPanel}
+      workspaceContext={workspaceContext}
+      workspacePanel={workspaceContextPanel}
+      onCloseWorkspacePanel={closeWorkspaceContextPanel}
+    />
+  ) : undefined;
   return (
     <AppLayout>
       <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
