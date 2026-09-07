@@ -33,6 +33,7 @@
     "validateIntegration": {
       "success": "Connected successfully. Found {{prompts}} prompts, {{resources}} resources, {{tools}} tools.",
       "error": "Failed to validate integration. Please try again.",
+      "errorWithReason": "Failed to validate integration. {{message}}",
       "connectionTimeout": "Connection timed out. Please check if the server is running.",
       "authenticationFailed": "Authentication failed. Please check your credentials.",
       "notFound": "Integration not found. It may have been deleted."

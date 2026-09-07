@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useMcpIntegrationsControllerValidate } from '@/shared/api/generated/ayunisCoreAPI';
-import type { McpIntegration } from '../model/types';
+import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
+import { resolveValidateIntegrationErrorMessage } from '@/pages/admin-settings/integrations-settings/lib/resolve-validate-integration-error-message';
 import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useValidateIntegration() {
@@ -13,18 +14,10 @@ export function useValidateIntegration() {
     mutation: {
       onSuccess: (data) => {
         if (!data.valid) {
-          showError(
-            t('integrations.validateIntegration.error', {
-              message: data.error,
-            }),
-          );
+          showError(resolveValidateIntegrationErrorMessage(t, data.error));
           return;
         }
-        const capabilities = (data.capabilities || {
-          prompts: 0,
-          resources: 0,
-          tools: 0,
-        }) as {
+        const capabilities = data.capabilities as {
           prompts: number;
           resources: number;
           tools: number;
