@@ -230,5 +230,6 @@ the admin-settings sidebar + route guard. The backend still 403s regardless.
 
 - **Adding a backend feature**: Start at the relevant domain module's SUMMARY.md
 - **Adding a frontend page**: See [pages/SUMMARY.md](ayunis-core-frontend/src/pages/SUMMARY.md)
-- **Understanding auth**: [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) + [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) + [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md) (RBAC — see "Authorization & RBAC" above)
+- **Understanding authentication end to end**: [Authentication architecture](docs/architecture/authentication.md)
+- **Understanding authorization**: [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) + [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md) (RBAC — see "Authorization & RBAC" above)
 - **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
