@@ -26,10 +26,12 @@ import {
   usePendingImages,
   type PendingImage,
   MAX_IMAGES,
-} from '../hooks/usePendingImages';
-import { useImagePaste } from '../hooks/useImagePaste';
-import { useFileDrop } from '../hooks/useFileDrop';
-import { ACCEPTED_DOCUMENT_EXTENSIONS } from '../utils/fileHandlers';
+} from '@/widgets/chat-input/hooks/usePendingImages';
+import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
+import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
+import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
+import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
+import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { cn } from '@ayunis/ui/lib/cn';
 import { SourcesList } from './SourcesList';
@@ -107,6 +109,7 @@ interface ChatInputProps {
   /** Whether the selected model supports vision (image upload) */
   isVisionEnabled?: boolean;
   initialMessage?: string;
+  draftChatId?: string;
 }
 
 export interface ChatInputRef {
@@ -145,11 +148,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillName,
       onSkillRemove,
       initialMessage,
+      draftChatId,
     },
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState(initialMessage ?? '');
+    const { message, setMessage } = useChatDraft(draftChatId, initialMessage);
     const isSubmitting = submissionState === 'submitting';
     const isStreaming = submissionState === 'streaming';
     const inFlight = submissionState !== 'idle';
@@ -157,6 +161,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const { t } = useTranslation('common');
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    useDraftCursorAtEnd(textareaRef, draftChatId);
 
     // TextareaAutosize corrects its height during mount; the height transition
     // must not be active yet or that correction animates as a visible shrink

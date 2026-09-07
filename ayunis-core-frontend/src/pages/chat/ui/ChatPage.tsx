@@ -417,6 +417,7 @@ export default function ChatPage({
       <ChatInput
         key={thread.id}
         ref={chatInputRef}
+        draftChatId={thread.id}
         modelId={thread.permittedModelId}
         isModelChangeDisabled={true}
         isAnonymousChangeDisabled={true}
