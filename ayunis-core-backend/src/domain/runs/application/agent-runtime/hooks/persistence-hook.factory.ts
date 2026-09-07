@@ -139,6 +139,14 @@ export class PersistenceHookFactory {
     if (!pending || pending.contents.length === 0) {
       return;
     }
+    // Drained before the write, not after it: the runEnd flush exists to
+    // persist contents no earlier phase attempted, not to retry a write that
+    // already failed. Retrying one turned every persistence failure into a
+    // second, critical finalization failure that hid the real cause (AYC-904).
+    context.set(PENDING_TOOL_RESULTS, {
+      iteration: pending.iteration,
+      contents: [],
+    });
     const saved = await this.createToolResultMessageUseCase.execute(
       new CreateToolResultMessageCommand(
         thread.id,
@@ -147,10 +155,6 @@ export class PersistenceHookFactory {
       ),
     );
     if (!saved) {
-      context.set(PENDING_TOOL_RESULTS, {
-        iteration: pending.iteration,
-        contents: [],
-      });
       throw new RunAbortedError(
         'Run aborted because the thread no longer exists',
       );
@@ -158,9 +162,5 @@ export class PersistenceHookFactory {
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(thread, saved),
     );
-    context.set(PENDING_TOOL_RESULTS, {
-      iteration: pending.iteration,
-      contents: [],
-    });
   }
 }

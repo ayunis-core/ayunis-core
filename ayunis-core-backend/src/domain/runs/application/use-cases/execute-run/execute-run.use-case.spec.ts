@@ -820,7 +820,9 @@ describe('ExecuteRunUseCase', () => {
     );
 
     expect(execute).toHaveBeenCalledTimes(50);
-    expect(createToolResult).toHaveBeenCalledTimes(51);
+    // 50, not 51: the failed 50th write is not re-attempted by the runEnd
+    // flush, so the failure is reported once instead of twice (AYC-904).
+    expect(createToolResult).toHaveBeenCalledTimes(50);
     expect(cleanup).toHaveBeenCalledWith(threadId);
   });
 

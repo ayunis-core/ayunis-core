@@ -98,6 +98,35 @@ describe('PersistenceHookFactory', () => {
     expect(addMessage).not.toHaveBeenCalled();
   });
 
+  // A failed flush used to stay in the pending buffer, so the runEnd flush
+  // retried the same poisoned contents and failed a second time. Because the
+  // hook is runEndFailureMode 'critical', that second failure surfaced as
+  // "Agent runtime finalization failed" and became the AppSignal incident
+  // signature, hiding the real cause of the first one (AYC-904).
+  it('does not retry a failed tool-result write when the run ends', async () => {
+    const failure = new Error(
+      'Failed to create tool message: invalid input syntax for type json',
+    );
+    const createToolResult = jest.fn().mockRejectedValue(failure);
+    const { hook } = buildHook(jest.fn(), createToolResult);
+    const context = RunContext.create();
+
+    await expect(
+      hook.afterToolCall?.({
+        context,
+        iteration: 0,
+        toolCall: { id: 'call-1', name: 'website_content', input: {} },
+        result: 'scraped page',
+        isLastToolCall: true,
+      } as never),
+    ).rejects.toBe(failure);
+
+    await expect(
+      hook.runEnd?.({ context, messages: [], status: 'error' } as never),
+    ).resolves.toBeUndefined();
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+  });
+
   it('does not persist an empty assistant message after interruption', async () => {
     const save = jest.fn().mockResolvedValue(undefined);
     const { hook, addMessage } = buildHook(save);
