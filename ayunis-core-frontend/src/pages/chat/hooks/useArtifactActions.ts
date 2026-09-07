@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useArtifact } from '@/pages/chat/api/useArtifact';
@@ -17,6 +17,10 @@ export function useArtifactActions(
   const { t } = useTranslation('chat');
   const navigate = useNavigate();
   const openArtifactId = initialArtifactId ?? null;
+  const [artifactListThreadId, setArtifactListThreadId] = useState<
+    string | null
+  >(null);
+  const isArtifactListOpen = artifactListThreadId === threadId;
 
   const {
     artifact: openArtifact,
@@ -93,6 +97,7 @@ export function useArtifactActions(
   );
 
   const handleCloseArtifact = useCallback(() => {
+    setArtifactListThreadId(null);
     void navigate({
       to: '/chats/$threadId',
       params: { threadId },
@@ -100,6 +105,24 @@ export function useArtifactActions(
       replace: true,
     });
   }, [navigate, threadId]);
+
+  const handleBackToArtifactList = useCallback(() => {
+    setArtifactListThreadId(threadId);
+    void navigate({
+      to: '/chats/$threadId',
+      params: { threadId },
+      search: { artifactId: undefined },
+      replace: true,
+    });
+  }, [navigate, threadId]);
+
+  const handleToggleArtifactPanel = useCallback(() => {
+    if (openArtifactId || isArtifactListOpen) {
+      handleCloseArtifact();
+      return;
+    }
+    setArtifactListThreadId(threadId);
+  }, [handleCloseArtifact, isArtifactListOpen, openArtifactId, threadId]);
 
   const handleRetryArtifact = useCallback(() => {
     void refetchArtifact();
@@ -115,9 +138,12 @@ export function useArtifactActions(
 
   return {
     artifactPanel,
-    isArtifactPanelOpen: Boolean(openArtifactId),
+    isArtifactPanelOpen: Boolean(openArtifactId) || isArtifactListOpen,
+    isArtifactListView: !openArtifactId && isArtifactListOpen,
     isExporting,
     handleOpenArtifact,
+    handleBackToArtifactList,
+    handleToggleArtifactPanel,
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,

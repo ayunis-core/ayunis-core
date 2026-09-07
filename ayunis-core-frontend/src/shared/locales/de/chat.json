@@ -13,8 +13,15 @@
     "errorDeleteThread": "Chat konnte nicht gelöscht werden",
     "artifactSaved": "Dokument erfolgreich gespeichert",
     "artifactPanel": {
-      "title": "Erstellter Inhalt",
-      "close": "Schließen",
+      "title": "Erstellte Inhalte",
+      "openList": "Erstellte Inhalte öffnen",
+      "emptyTitle": "Noch keine Inhalte erstellt",
+      "listLoadError": "Erstellte Inhalte konnten nicht geladen werden",
+      "type": {
+        "document": "Dokument",
+        "spreadsheet": "Tabelle",
+        "diagram": "Diagramm"
+      },
       "loadErrorTitle": "Inhalt konnte nicht geladen werden",
       "loadErrorDescription": "Der Inhalt konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
       "notFoundTitle": "Inhalt nicht gefunden",

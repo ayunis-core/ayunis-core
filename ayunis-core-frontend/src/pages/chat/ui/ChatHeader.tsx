@@ -1,5 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { MoreVertical, Pencil, ShieldCheck, Trash2 } from 'lucide-react';
+import {
+  MoreVertical,
+  PanelRight,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
 import {
   isFavorite,
   useFavorites,
@@ -36,6 +42,8 @@ interface ChatHeaderProps {
   readonly onToggleWorkspaceContextPanel?: (
     panel: WorkspaceContextPanel,
   ) => void;
+  readonly isArtifactPanelOpen: boolean;
+  readonly onToggleArtifactPanel: () => void;
   readonly onRename: () => void;
   readonly onDelete: () => void;
 }
@@ -48,6 +56,8 @@ export default function ChatHeader({
   workspaceContext,
   activeWorkspaceContextPanel,
   onToggleWorkspaceContextPanel,
+  isArtifactPanelOpen,
+  onToggleArtifactPanel,
   onRename,
   onDelete,
 }: Readonly<ChatHeaderProps>) {
@@ -123,6 +133,15 @@ export default function ChatHeader({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button
+            variant={isArtifactPanelOpen ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={onToggleArtifactPanel}
+            aria-label={t('chat.artifactPanel.openList')}
+            aria-pressed={isArtifactPanelOpen}
+          >
+            <PanelRight className="h-5 w-5 text-primary" />
+          </Button>
         </div>
       }
     />

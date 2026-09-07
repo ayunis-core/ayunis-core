@@ -1,14 +1,17 @@
-import { Save, X } from 'lucide-react';
+import { Save } from 'lucide-react';
+import { forwardRef, useCallback, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ArtifactResponseDto } from '@/shared/api';
 import { Button } from '@ayunis/ui/components/button';
 import { VersionHistory } from '@/widgets/artifact-editor';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import { useSpreadsheetEditorState } from '../model/useSpreadsheetEditorState';
-import type { SpreadsheetExportFormat } from '../model/spreadsheet-export';
+import { useSpreadsheetEditorState } from '@/widgets/spreadsheet-editor/model/useSpreadsheetEditorState';
+import type { SpreadsheetExportFormat } from '@/widgets/spreadsheet-editor/model/spreadsheet-export';
 import { SpreadsheetGrid } from './SpreadsheetGrid';
 import { SpreadsheetToolbar } from './SpreadsheetToolbar';
 import { SpreadsheetExportMenu } from './SpreadsheetExportMenu';
+import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
+import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
 
 interface SpreadsheetEditorProps {
   readonly artifact: ArtifactResponseDto;
@@ -20,17 +23,17 @@ interface SpreadsheetEditorProps {
     versionNumber?: number,
   ) => void;
   readonly onClose: () => void;
+  readonly onBack: () => void;
   readonly isExporting?: boolean;
 }
 
-export function SpreadsheetEditor({
-  artifact,
-  onSave,
-  onRevert,
-  onExport,
-  onClose,
-  isExporting,
-}: SpreadsheetEditorProps) {
+export const SpreadsheetEditor = forwardRef<
+  ArtifactPanelHandle,
+  SpreadsheetEditorProps
+>(function SpreadsheetEditor(
+  { artifact, onSave, onRevert, onExport, onClose, onBack, isExporting },
+  ref,
+) {
   const { t } = useTranslation('artifacts');
   const { confirm } = useConfirmation();
   const editor = useSpreadsheetEditorState(artifact);
@@ -39,12 +42,12 @@ export function SpreadsheetEditor({
     !editor.isViewingHistory &&
     editor.displayedGridState.columns.length > 0;
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!canSave) {
       return;
     }
     await onSave(editor.getSerializedContent());
-  };
+  }, [canSave, editor, onSave]);
 
   const handleExport = (format: SpreadsheetExportFormat) => {
     // Historical exports use the immutable server version. Current unsaved
@@ -60,61 +63,64 @@ export function SpreadsheetEditor({
     );
   };
 
-  const handleClose = () => {
-    if (!editor.isDirty) {
-      onClose();
-      return;
-    }
-    confirm({
-      title: t('spreadsheet.unsavedChanges.title'),
-      description: t('spreadsheet.unsavedChanges.description'),
-      confirmText: t(
-        canSave
-          ? 'spreadsheet.unsavedChanges.saveAndClose'
-          : 'spreadsheet.unsavedChanges.discardAndClose',
-      ),
-      cancelText: t('spreadsheet.unsavedChanges.keepEditing'),
-      onConfirm: async () => {
-        if (canSave) {
-          await handleSave();
-        }
-        onClose();
-      },
-    });
-  };
+  const handleExit = useCallback(
+    (onExit: () => void) => {
+      if (!editor.isDirty) {
+        onExit();
+        return;
+      }
+      confirm({
+        title: t('spreadsheet.unsavedChanges.title'),
+        description: t('spreadsheet.unsavedChanges.description'),
+        confirmText: t(
+          canSave
+            ? 'spreadsheet.unsavedChanges.saveAndContinue'
+            : 'spreadsheet.unsavedChanges.discardAndContinue',
+        ),
+        cancelText: t('spreadsheet.unsavedChanges.keepEditing'),
+        onConfirm: async () => {
+          if (canSave) {
+            await handleSave();
+          }
+          onExit();
+        },
+      });
+    },
+    [canSave, confirm, editor.isDirty, handleSave, t],
+  );
+
+  useImperativeHandle(ref, () => ({ requestExit: handleExit }), [handleExit]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden border-l">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <h3 className="truncate text-sm font-semibold" title={artifact.title}>
-          {artifact.title}
-        </h3>
-        <div className="flex items-center gap-1">
-          <SpreadsheetExportMenu
-            onExport={handleExport}
-            isExporting={isExporting}
-            disabled={editor.displayedGridState.columns.length === 0}
-          />
-          <Button
-            variant="default"
-            size="sm"
-            className="h-8"
-            disabled={!canSave}
-            onClick={() => void handleSave()}
-          >
-            <Save className="mr-1 size-3.5" />
-            {t('editor.save')}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={handleClose}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-      </div>
+      <ArtifactPanelHeader
+        title={
+          <h3 className="truncate text-sm font-semibold" title={artifact.title}>
+            {artifact.title}
+          </h3>
+        }
+        actions={
+          <>
+            <SpreadsheetExportMenu
+              onExport={handleExport}
+              isExporting={isExporting}
+              disabled={editor.displayedGridState.columns.length === 0}
+            />
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8"
+              disabled={!canSave}
+              onClick={() => void handleSave()}
+            >
+              <Save className="mr-1 size-3.5" />
+              {t('editor.save')}
+            </Button>
+          </>
+        }
+        onBack={() => handleExit(onBack)}
+        onClose={() => handleExit(onClose)}
+      />
 
       {editor.isViewingHistory ? (
         <div className="flex items-center min-h-[41px] bg-muted text-muted-foreground border-b px-3 py-1.5 text-xs">
@@ -165,4 +171,4 @@ export function SpreadsheetEditor({
       )}
     </div>
   );
-}
+});
