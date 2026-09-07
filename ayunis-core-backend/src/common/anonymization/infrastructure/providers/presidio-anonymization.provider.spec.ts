@@ -143,6 +143,29 @@ describe('PresidioAnonymizationProvider', () => {
     expect(mockAnalyzeTextAnalyzePost).not.toHaveBeenCalled();
   });
 
+  // Presidio returns Python string indices, which count code points — an emoji
+  // is 1 — while substring/slice count UTF-16 code units, where it is 2. Every
+  // span after an astral character used to resolve one unit short per emoji,
+  // masking the wrong text and storing a mask value that cannot round-trip
+  // through de-anonymization (AYC-905).
+  it('resolves spans past an emoji using code-point offsets', async () => {
+    const text = 'Hi \u{1F600} ich bin der Dani';
+    mockResults([{ entity_type: 'PERSON', start: 17, end: 21, score: 0.9 }]);
+
+    const detections = await provider.detect(text);
+
+    expect(detections[0]).toMatchObject({ text: 'Dani', start: 18, end: 22 });
+  });
+
+  it('leaves spans before any astral character untouched', async () => {
+    const text = 'Dani schrieb \u{1F600}';
+    mockResults([{ entity_type: 'PERSON', start: 0, end: 4, score: 0.9 }]);
+
+    const detections = await provider.detect(text);
+
+    expect(detections[0]).toMatchObject({ text: 'Dani', start: 0, end: 4 });
+  });
+
   it('counts Unicode code points like the anonymize service', async () => {
     const text = '😀'.repeat(30_000);
     mockResults([]);
