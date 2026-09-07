@@ -12,6 +12,19 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
 import { effectiveDefaultModelQueryOptions } from './-effective-default-model-query';
 
+function handleDefaultModelLoadError(error: unknown): null {
+  let code: string | undefined;
+  try {
+    code = extractErrorData(error).code;
+  } catch {
+    return null;
+  }
+  if (code === 'NO_DEFAULT_MODEL_FOUND') {
+    throw error;
+  }
+  return null;
+}
+
 const queryHasActiveSubscriptionOptions = () => ({
   queryKey: getSubscriptionsControllerHasActiveSubscriptionQueryKey(),
   queryFn: () => subscriptionsControllerHasActiveSubscription(),
@@ -39,7 +52,7 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     } else {
       const defaultModelResponse = await queryClient
         .fetchQuery(effectiveDefaultModelQueryOptions())
-        .catch(() => null);
+        .catch(handleDefaultModelLoadError);
       selectedModelId = defaultModelResponse?.permittedLanguageModel?.id;
     }
     const { isEmbeddingModelEnabled } = await queryClient.fetchQuery(
