@@ -53,7 +53,7 @@ File source creation authorizes the skill before external processing starts, enf
 
 ## Runtime orchestration
 
-`GetWorkspaceSkillsUseCase`, `ActivateWorkspaceSkillByNameUseCase`, `GetWorkspaceAiContextUseCase`, and `BuildWorkspaceRunContextUseCase` remain. Workspace skills are activation candidates; trusted activation derives workspace scope from the persisted thread. `FindActivatableSkillUseCase` resolves personal or workspace activation access, while `SkillActivationService` attaches sources, knowledge bases, and MCP integrations.
+`GetWorkspaceSkillsUseCase`, `ActivateWorkspaceSkillByNameUseCase`, `GetWorkspaceAiContextUseCase`, and `BuildWorkspaceRunContextUseCase` remain. Workspace skills are activation candidates; trusted activation derives workspace scope from the persisted thread. `FindActivatableSkillUseCase` resolves personal or workspace activation access, while `SkillActivationService` attaches sources, knowledge bases, and MCP integrations. `FindOneSkillUseCase` is exported so cross-module consumers such as citation retrieval can reauthorize a persisted skill reference before exposing its resources.
 
 ## Main structure
 

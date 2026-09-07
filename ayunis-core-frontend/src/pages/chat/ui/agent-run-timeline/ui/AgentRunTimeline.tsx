@@ -96,7 +96,9 @@ function RunBlock({
   }
   return (
     <div data-copyable="true">
-      <Markdown renderLegalReferences>{block.content.text}</Markdown>
+      <Markdown renderLegalReferences renderSourceCitations>
+        {block.content.text}
+      </Markdown>
     </div>
   );
 }
@@ -135,12 +137,7 @@ function ActivityBlock({
             >
               {headerLabel}
             </span>
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform',
-                open && 'rotate-180',
-              )}
-            />
+            <ActivityChevron open={open} />
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -152,6 +149,17 @@ function ActivityBlock({
         </CollapsibleContent>
       </div>
     </Collapsible>
+  );
+}
+
+function ActivityChevron({ open }: Readonly<{ open: boolean }>) {
+  return (
+    <ChevronDown
+      className={cn(
+        'h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform',
+        open && 'rotate-180',
+      )}
+    />
   );
 }
 

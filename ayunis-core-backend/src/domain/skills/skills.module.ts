@@ -163,6 +163,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     GetWorkspaceSkillsUseCase,
     SkillRepository,
     FindActiveSkillsUseCase,
+    FindOneSkillUseCase,
     FindSkillByNameUseCase,
     SkillActivationService,
     SkillShareAuthorizationStrategy,

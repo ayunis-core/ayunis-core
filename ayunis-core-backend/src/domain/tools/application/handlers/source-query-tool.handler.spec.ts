@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 // Helper to create a mock tool with validation bypass
 function createMockTool(sourceId: string) {
@@ -114,6 +115,10 @@ describe('SourceQueryToolHandler', () => {
 
       expect(parsedResult).toHaveLength(2);
       expect(parsedResult[0]).toEqual({
+        chunkId: mockChunks[0].id,
+        sourceId: mockSource.id,
+        sourceName: mockSource.name,
+        citable: true,
         content: 'First chunk content',
         startLine: 1,
         endLine: 10,
@@ -121,12 +126,42 @@ describe('SourceQueryToolHandler', () => {
         url: null,
       });
       expect(parsedResult[1]).toEqual({
+        chunkId: mockChunks[1].id,
+        sourceId: mockSource.id,
+        sourceName: mockSource.name,
+        citable: true,
         content: 'Second chunk content',
         startLine: 8,
         endLine: 20,
         fileName: 'test-file.pdf',
         url: null,
       });
+    });
+
+    it('should mark system-only source chunks as non-citable', async () => {
+      const systemSource = new FileSource({
+        id: mockSourceId,
+        name: 'Internal instructions.pdf',
+        type: TextType.FILE,
+        fileType: FileType.PDF,
+        createdBy: SourceCreator.SYSTEM,
+      });
+      const chunk = new TextSourceContentChunk({
+        content: 'Internal retrieval context',
+        meta: { startLine: 1, endLine: 1 },
+      });
+      mockGetSourceByIdUseCase.execute.mockResolvedValue(systemSource);
+      mockQueryTextSourceUseCase.execute.mockResolvedValue([chunk]);
+
+      const result = await handler.execute({
+        tool: createMockTool(mockSourceId),
+        input: { sourceId: mockSourceId, query: 'internal context' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+
+      expect(JSON.parse(result)[0]).toEqual(
+        expect.objectContaining({ chunkId: chunk.id, citable: false }),
+      );
     });
 
     it('should include URL in response for URL sources', async () => {
@@ -165,6 +200,10 @@ describe('SourceQueryToolHandler', () => {
       const parsedResult = JSON.parse(result);
 
       expect(parsedResult[0]).toEqual({
+        chunkId: mockChunks[0].id,
+        sourceId: mockSource.id,
+        sourceName: mockSource.name,
+        citable: true,
         content: 'Web page content',
         startLine: 1,
         endLine: 50,
@@ -207,6 +246,10 @@ describe('SourceQueryToolHandler', () => {
       const parsedResult = JSON.parse(result);
 
       expect(parsedResult[0]).toEqual({
+        chunkId: mockChunks[0].id,
+        sourceId: mockSource.id,
+        sourceName: mockSource.name,
+        citable: true,
         content: 'Legacy chunk without line numbers',
         startLine: null,
         endLine: null,
@@ -246,6 +289,10 @@ describe('SourceQueryToolHandler', () => {
       const parsedResult = JSON.parse(result);
 
       expect(parsedResult[0]).toEqual({
+        chunkId: mockChunks[0].id,
+        sourceId: mockSource.id,
+        sourceName: mockSource.name,
+        citable: true,
         content: 'Chunk with empty metadata',
         startLine: null,
         endLine: null,

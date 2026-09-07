@@ -16,6 +16,7 @@ import { MessageDtoMapper } from './presenters/http/mappers/message.mapper';
 import { CreateThreadUseCase } from './application/use-cases/create-thread/create-thread.use-case';
 import { FindThreadUseCase } from './application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadContextRefsUseCase } from './application/use-cases/find-thread-context-refs/find-thread-context-refs.use-case';
+import { FindThreadCitationContextUseCase } from './application/use-cases/find-thread-citation-context/find-thread-citation-context.use-case';
 import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/find-all-threads.use-case';
 import { FindThreadsByIdsUseCase } from './application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
@@ -100,6 +101,7 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     CreateThreadUseCase,
     FindThreadUseCase,
     FindThreadContextRefsUseCase,
+    FindThreadCitationContextUseCase,
     FindAllThreadsUseCase,
     FindThreadsByIdsUseCase,
     DeleteThreadUseCase,
@@ -145,6 +147,7 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     // Export use cases
     FindThreadUseCase,
     FindThreadContextRefsUseCase,
+    FindThreadCitationContextUseCase,
     FindAllThreadsUseCase,
     FindThreadsByIdsUseCase,
     DeleteThreadUseCase,
