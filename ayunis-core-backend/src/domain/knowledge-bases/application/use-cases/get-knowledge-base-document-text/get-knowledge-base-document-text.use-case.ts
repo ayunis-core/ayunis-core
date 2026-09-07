@@ -8,7 +8,7 @@ import {
   DocumentNotInKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { Source } from 'src/domain/sources/domain/source.entity';
-import { KnowledgeBaseToolAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-tool-access.service';
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 
 @Injectable()
 export class GetKnowledgeBaseDocumentTextUseCase {
@@ -18,7 +18,7 @@ export class GetKnowledgeBaseDocumentTextUseCase {
 
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseToolAccessService,
+    private readonly findKnowledgeBaseForThread: FindKnowledgeBaseForThreadUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
@@ -31,11 +31,10 @@ export class GetKnowledgeBaseDocumentTextUseCase {
       'Getting document text from knowledge base',
     );
 
-    const knowledgeBase =
-      await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
-        query.knowledgeBaseId,
-        query.threadId,
-      );
+    const knowledgeBase = await this.findKnowledgeBaseForThread.execute({
+      knowledgeBaseId: query.knowledgeBaseId,
+      threadId: query.threadId,
+    });
 
     if (knowledgeBase.orgId !== query.orgId) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);

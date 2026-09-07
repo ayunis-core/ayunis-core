@@ -25,11 +25,5 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     delete: jest.fn().mockResolvedValue(undefined),
     deleteMany: jest.fn().mockResolvedValue(undefined),
     findUnreferencedIds: jest.fn().mockResolvedValue([]),
-    findPaginatedByWorkspaceId: jest.fn().mockResolvedValue({
-      data: [],
-      total: 0,
-      limit: 20,
-      offset: 0,
-    }),
   };
 }

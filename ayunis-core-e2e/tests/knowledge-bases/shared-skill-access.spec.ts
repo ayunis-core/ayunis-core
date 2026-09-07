@@ -60,18 +60,6 @@ test('shows a knowledge base linked to a skill shared with another user', async 
       ),
     ).toBeVisible();
 
-    await memberPage.goto(`/workspaces/${fixture.workspace.id}`);
-    await expect(memberPage.getByTestId('workspace-page')).toBeVisible();
-    await memberPage.getByTestId('workspace-tab-knowledge').click();
-    await expect(
-      memberPage.getByTestId('workspace-knowledge-add').first(),
-    ).toBeVisible();
-    await memberPage.getByTestId('workspace-knowledge-add').first().click();
-    await expect(
-      memberPage.getByTestId(
-        `workspace-add-dialog-item-${fixture.knowledgeBase.id}`,
-      ),
-    ).toBeVisible();
     expect(pageErrors).toEqual([]);
   } finally {
     await memberPage?.close();

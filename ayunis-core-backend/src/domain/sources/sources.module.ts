@@ -33,7 +33,6 @@ import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-u
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
-import { ListSourcesByWorkspaceUseCase } from './application/use-cases/list-sources-by-workspace/list-sources-by-workspace.use-case';
 
 @Module({
   imports: [
@@ -71,7 +70,6 @@ import { ListSourcesByWorkspaceUseCase } from './application/use-cases/list-sour
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
     StartUrlCrawlUseCase,
-    ListSourcesByWorkspaceUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -100,7 +98,6 @@ import { ListSourcesByWorkspaceUseCase } from './application/use-cases/list-sour
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
     StartUrlCrawlUseCase,
-    ListSourcesByWorkspaceUseCase,
   ],
 })
 export class SourcesModule {}

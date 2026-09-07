@@ -193,7 +193,7 @@ describe('LocalSkillRepository', () => {
     });
   });
 
-  it('returns a database-paginated page of accessible skills', async () => {
+  it('paginates workspace skills alphabetically without activation or pinning affecting order', async () => {
     const sharedSkillId = randomUUID();
     const workspaceId = randomUUID();
     const records = [
@@ -240,18 +240,16 @@ describe('LocalSkillRepository', () => {
     );
 
     expect(result.data).toEqual(records);
-    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
-      'workspaceActivation.id IS NOT NULL',
-      'workspace_active',
-    );
+    expect(queryBuilder.leftJoin).not.toHaveBeenCalled();
+    expect(queryBuilder.orderBy).not.toHaveBeenCalled();
     expect(queryBuilder.addSelect).toHaveBeenCalledWith(
       'LOWER(skill.name)',
       'skill_name_sort',
     );
-    expect(queryBuilder.addOrderBy).toHaveBeenCalledWith(
-      'skill_name_sort',
-      'ASC',
-    );
+    expect(queryBuilder.addOrderBy.mock.calls).toEqual([
+      ['skill_name_sort', 'ASC'],
+      ['skill.id', 'ASC'],
+    ]);
     expect(result.total).toBe(7);
     expect(result.limit).toBe(2);
     expect(result.offset).toBe(4);

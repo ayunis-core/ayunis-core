@@ -1,3 +1,4 @@
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
@@ -25,6 +26,7 @@ import {
   SlugCollisionError,
   SYSTEM_PREFIX,
   USER_PREFIX,
+  WORKSPACE_PREFIX,
   type SkillEntry,
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
@@ -87,10 +89,7 @@ export class ToolAssemblyService {
         )
       : [];
 
-    const allSources = this.collectRunSources(
-      thread,
-      skillContext.workspaceContext,
-    );
+    const allSources = this.collectRunSources(thread);
 
     const { orgSystemPrompt, userSystemPrompt } =
       await this.fetchSystemPrompts();
@@ -107,8 +106,7 @@ export class ToolAssemblyService {
             activeKnowledgeBases,
           )
         : [],
-      projectInstruction: skillContext.workspaceContext?.instruction,
-      projectSkills: skillContext.projectSkills,
+      workspaceInstructions: skillContext.workspaceContext?.instruction,
       orgSystemPrompt,
       userSystemPrompt,
       isAnonymous,
@@ -122,7 +120,6 @@ export class ToolAssemblyService {
     workspaceContext?: WorkspaceRunContext,
   ): Promise<{
     workspaceContext?: WorkspaceRunContext;
-    projectSkills: Skill[];
     slugMap: Map<string, string>;
     editableSkillSlugs: Map<string, string>;
     skillEntries: SkillEntry[];
@@ -130,9 +127,10 @@ export class ToolAssemblyService {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
     const effectiveWorkspaceContext =
       this.resolveWorkspaceContext(workspaceContext);
-    const projectSkills = effectiveWorkspaceContext?.skills ?? [];
+    const projectSkills =
+      effectiveWorkspaceContext?.skills.map(({ skill }) => skill) ?? [];
     const { slugMap, skillEntries } = this.buildSkillSlugs(
-      this.excludeProjectSkills(activeSkills, projectSkills),
+      this.mergeById(activeSkills, projectSkills),
       alwaysOnTemplates,
     );
     const { slugMap: editableSkillSlugs } = this.buildSkillSlugs(
@@ -142,7 +140,6 @@ export class ToolAssemblyService {
 
     return {
       workspaceContext: effectiveWorkspaceContext,
-      projectSkills,
       slugMap,
       editableSkillSlugs,
       skillEntries,
@@ -159,19 +156,14 @@ export class ToolAssemblyService {
     return {
       ...workspaceContext,
       skills: [],
-      runtimeSources: workspaceContext.sources,
       runtimeKnowledgeBases: workspaceContext.knowledgeBases,
-      mcpIntegrationIds: [],
     };
   }
 
-  private collectRunSources(
-    thread: Thread,
-    workspaceContext?: WorkspaceRunContext,
-  ): Source[] {
+  private collectRunSources(thread: Thread): Source[] {
     return this.mergeById(
+      [],
       thread.sourceAssignments?.map((a) => a.source) ?? [],
-      workspaceContext?.runtimeSources ?? [],
     );
   }
 
@@ -181,14 +173,6 @@ export class ToolAssemblyService {
   ): SkillEntry[] {
     if (!canUseTools || !this.features.skillsEnabled) return [];
     return skillEntries;
-  }
-
-  private excludeProjectSkills(
-    activeSkills: Skill[],
-    projectSkills: Skill[],
-  ): Skill[] {
-    const projectSkillIds = new Set(projectSkills.map((skill) => skill.id));
-    return activeSkills.filter((skill) => !projectSkillIds.has(skill.id));
   }
 
   private mergeById<T extends { id: string }>(base: T[], additional: T[]): T[] {
@@ -259,7 +243,7 @@ export class ToolAssemblyService {
     const allInputs: SkillInput[] = [
       ...activeSkills.map((s): SkillInput => ({
         name: s.name,
-        prefix: USER_PREFIX,
+        prefix: s instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX,
         description: s.shortDescription,
       })),
       ...alwaysOnTemplates.map((t): SkillInput => ({
@@ -301,7 +285,7 @@ export class ToolAssemblyService {
     const tools: Tool[] = [];
 
     // Code execution tool is always available
-    tools.push(await this.assembleCodeExecutionTool(thread, workspaceContext));
+    tools.push(await this.assembleCodeExecutionTool(thread));
 
     // The map tool stays registered but is temporarily withheld because Azure
     // intermittently returns 500 responses for its GeoJSON tool schema.
@@ -330,7 +314,7 @@ export class ToolAssemblyService {
 
     tools.push(...(await this.assembleImageTools()));
 
-    tools.push(...(await this.assembleSourceTools(thread, workspaceContext)));
+    tools.push(...(await this.assembleSourceTools(thread)));
     tools.push(
       ...(await this.assembleKnowledgeTools(
         thread,
@@ -342,11 +326,7 @@ export class ToolAssemblyService {
 
     const reservedNames = new Set(tools.map((tool) => tool.name));
     tools.push(
-      ...(await this.mcpToolAssembler.assemble(
-        thread,
-        reservedNames,
-        workspaceContext?.mcpIntegrationIds ?? [],
-      )),
+      ...(await this.mcpToolAssembler.assemble(thread, reservedNames)),
     );
 
     return tools;
@@ -362,11 +342,8 @@ export class ToolAssemblyService {
     });
   }
 
-  private async assembleCodeExecutionTool(
-    thread: Thread,
-    workspaceContext?: WorkspaceRunContext,
-  ): Promise<Tool> {
-    const threadSources = this.collectRunSources(thread, workspaceContext);
+  private async assembleCodeExecutionTool(thread: Thread): Promise<Tool> {
+    const threadSources = this.collectRunSources(thread);
     // Match the system prompt's partitioning: PROCESSING/FAILED data sources
     // are announced there as pending/failed, so advertising them here as
     // available would contradict it and steer the model into doomed calls.
@@ -440,11 +417,8 @@ export class ToolAssemblyService {
     return tools;
   }
 
-  private async assembleSourceTools(
-    thread: Thread,
-    workspaceContext?: WorkspaceRunContext,
-  ): Promise<Tool[]> {
-    const sources = this.collectRunSources(thread, workspaceContext);
+  private async assembleSourceTools(thread: Thread): Promise<Tool[]> {
+    const sources = this.collectRunSources(thread);
     const threadTextSources = sources.filter(
       (source): source is TextSource => source instanceof TextSource,
     );

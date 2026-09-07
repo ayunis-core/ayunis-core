@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { randomUUID, type UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import {
   WorkspacesRepository,
   type WorkspaceContextRefs,
@@ -11,9 +11,9 @@ import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/worksp
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
 import { WorkspaceRecord } from './schema/workspace.record';
-import { WorkspaceSkillAssignmentRecord } from './schema/workspace-skill-assignment.record';
-import { WorkspaceKnowledgeBaseAssignmentRecord } from './schema/workspace-knowledge-base-assignment.record';
-import { WorkspaceSourceAssignmentRecord } from './schema/workspace-source-assignment.record';
+import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { KnowledgeBaseActivationRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base-activation.record';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type {
   WorkspaceListOptions,
@@ -25,12 +25,12 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
   constructor(
     @InjectRepository(WorkspaceRecord)
     private readonly repo: Repository<WorkspaceRecord>,
-    @InjectRepository(WorkspaceSkillAssignmentRecord)
-    private readonly skillAssignmentsRepo: Repository<WorkspaceSkillAssignmentRecord>,
-    @InjectRepository(WorkspaceKnowledgeBaseAssignmentRecord)
-    private readonly knowledgeBaseAssignmentsRepo: Repository<WorkspaceKnowledgeBaseAssignmentRecord>,
-    @InjectRepository(WorkspaceSourceAssignmentRecord)
-    private readonly sourceAssignmentsRepo: Repository<WorkspaceSourceAssignmentRecord>,
+    @InjectRepository(SkillRecord)
+    private readonly skillsRepo: Repository<SkillRecord>,
+    @InjectRepository(KnowledgeBaseRecord)
+    private readonly knowledgeBasesRepo: Repository<KnowledgeBaseRecord>,
+    @InjectRepository(KnowledgeBaseActivationRecord)
+    private readonly knowledgeBaseActivationsRepo: Repository<KnowledgeBaseActivationRecord>,
     private readonly mapper: WorkspaceMapper,
   ) {
     super();
@@ -169,89 +169,40 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     return this.mapper.toDomain(saved);
   }
 
-  async attachSkill(workspaceId: UUID, skillId: UUID): Promise<void> {
-    await this.skillAssignmentsRepo
-      .createQueryBuilder()
-      .insert()
-      .values({ id: randomUUID(), workspaceId, skillId })
-      .orIgnore()
-      .execute();
-  }
-
-  async detachSkill(workspaceId: UUID, skillId: UUID): Promise<void> {
-    await this.skillAssignmentsRepo.delete({ workspaceId, skillId });
-  }
-
-  async attachKnowledgeBase(
-    workspaceId: UUID,
-    knowledgeBaseId: UUID,
-  ): Promise<void> {
-    await this.knowledgeBaseAssignmentsRepo
-      .createQueryBuilder()
-      .insert()
-      .values({ id: randomUUID(), workspaceId, knowledgeBaseId })
-      .orIgnore()
-      .execute();
-  }
-
-  async detachKnowledgeBase(
-    workspaceId: UUID,
-    knowledgeBaseId: UUID,
-  ): Promise<void> {
-    await this.knowledgeBaseAssignmentsRepo.delete({
-      workspaceId,
-      knowledgeBaseId,
-    });
-  }
-
-  async attachSource(workspaceId: UUID, sourceId: UUID): Promise<void> {
-    await this.sourceAssignmentsRepo
-      .createQueryBuilder()
-      .insert()
-      .values({ id: randomUUID(), workspaceId, sourceId })
-      .orIgnore()
-      .execute();
-  }
-
   async getContextRefs(workspaceId: UUID): Promise<WorkspaceContextRefs> {
-    const [skillAssignments, knowledgeBaseAssignments, sourceAssignments] =
-      await Promise.all([
-        this.skillAssignmentsRepo.find({ where: { workspaceId } }),
-        this.knowledgeBaseAssignmentsRepo.find({
-          where: { workspaceId },
-          relations: { knowledgeBase: true },
-        }),
-        this.sourceAssignmentsRepo.find({ where: { workspaceId } }),
-      ]);
+    const [skills, knowledgeBases] = await Promise.all([
+      this.skillsRepo.find({ where: { workspaceId }, select: { id: true } }),
+      this.knowledgeBasesRepo.find({ where: { workspaceId } }),
+    ]);
+    const activeKnowledgeBaseIds = new Set(
+      (knowledgeBases.length > 0
+        ? await this.knowledgeBaseActivationsRepo.find({
+            where: {
+              workspaceId,
+              knowledgeBaseId: In(
+                knowledgeBases.map((knowledgeBase) => knowledgeBase.id),
+              ),
+            },
+            select: { knowledgeBaseId: true },
+          })
+        : []
+      ).map((activation) => activation.knowledgeBaseId),
+    );
 
     return {
-      skillIds: skillAssignments.map((assignment) => assignment.skillId),
-      knowledgeBases: knowledgeBaseAssignments.map((assignment) => ({
-        id: assignment.knowledgeBaseId,
-        name: assignment.knowledgeBase.name,
-        description: assignment.knowledgeBase.description,
+      skillIds: skills.map((skill) => skill.id),
+      knowledgeBases: knowledgeBases.map((knowledgeBase) => ({
+        id: knowledgeBase.id,
+        name: knowledgeBase.name,
+        description: knowledgeBase.description,
         documentCount: 0,
+        isActive: activeKnowledgeBaseIds.has(knowledgeBase.id),
       })),
-      sourceIds: sourceAssignments.map((assignment) => assignment.sourceId),
     };
   }
 
-  async delete(userId: UUID, id: UUID): Promise<UUID[]> {
-    return this.repo.manager.transaction(async (manager) => {
-      const workspaces: Array<{ id: UUID }> = await manager.query(
-        `SELECT id FROM workspaces WHERE id = $1 AND "userId" = $2 FOR UPDATE`,
-        [id, userId],
-      );
-      if (workspaces.length === 0) throw new WorkspaceNotFoundError(id);
-
-      const sourceRows: Array<{ sourceId: UUID }> = await manager.query(
-        `DELETE FROM workspace_source_assignments
-         WHERE "workspaceId" = $1
-         RETURNING "sourceId"`,
-        [id],
-      );
-      await manager.delete(WorkspaceRecord, { id });
-      return sourceRows.map((row) => row.sourceId);
-    });
+  async delete(userId: UUID, id: UUID): Promise<void> {
+    const result = await this.repo.delete({ id, userId });
+    if (result.affected === 0) throw new WorkspaceNotFoundError(id);
   }
 }

@@ -1,3 +1,4 @@
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
@@ -19,6 +20,7 @@ export class AddKnowledgeBaseToThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly findAccessibleKnowledgeBase: FindAccessibleKnowledgeBaseUseCase,
     private readonly contextService: ContextService,
+    private readonly findKnowledgeBaseForThread: FindKnowledgeBaseForThreadUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -33,12 +35,8 @@ export class AddKnowledgeBaseToThreadUseCase {
     );
 
     const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-
     const orgId = this.contextService.get('orgId');
-    if (!orgId) {
+    if (!userId || !orgId) {
       throw new UnauthorizedAccessError();
     }
 
@@ -51,9 +49,14 @@ export class AddKnowledgeBaseToThreadUseCase {
       throw new ThreadNotFoundError(command.threadId, userId);
     }
 
-    const knowledgeBase = await this.findAccessibleKnowledgeBase.execute({
-      knowledgeBaseId: command.knowledgeBaseId,
-    });
+    const knowledgeBase = command.originSkillId
+      ? await this.findKnowledgeBaseForThread.execute({
+          knowledgeBaseId: command.knowledgeBaseId,
+          threadId: thread.id,
+        })
+      : await this.findAccessibleKnowledgeBase.execute({
+          knowledgeBaseId: command.knowledgeBaseId,
+        });
 
     if (knowledgeBase.orgId !== orgId) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);

@@ -160,7 +160,6 @@ export class ExecuteRunUseCase {
     const activated = await this.activateSkillIfRequested(
       command,
       found.thread,
-      workspaceContext,
     );
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
@@ -205,7 +204,6 @@ export class ExecuteRunUseCase {
   private async activateSkillIfRequested(
     command: ExecuteRunCommand,
     thread: Thread,
-    workspaceContext?: WorkspaceRunContext,
   ): Promise<{
     thread: Thread;
     skillInstructions?: string;
@@ -214,11 +212,6 @@ export class ExecuteRunUseCase {
     const input = command.input;
     if (!(input instanceof RunUserInput) || !input.skillId) {
       return { thread };
-    }
-    if (workspaceContext?.skills.some((skill) => skill.id === input.skillId)) {
-      throw new RunInvalidInputError(
-        'Project skills are already active in this workspace',
-      );
     }
     const activation = await this.skillActivationService.activateOnThread(
       input.skillId,

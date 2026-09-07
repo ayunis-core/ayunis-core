@@ -6,7 +6,6 @@ export interface ProjectContextFixture {
   skill: { id: string; name: string };
   knowledgeBase: { id: string; name: string };
   instruction: string;
-  knowledgeDocumentName: string;
   workspaceDocument: { id: string; name: string } | null;
   workspaceDocumentName: string;
 }
@@ -49,7 +48,7 @@ export async function createProjectContextFixture(
     },
     { api },
   );
-  const skill = await generatedApi.skillsControllerCreate(
+  const personalSkill = await generatedApi.skillsControllerCreate(
     {
       name: `Bauanträge prüfen ${suffix}`,
       shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
@@ -59,43 +58,52 @@ export async function createProjectContextFixture(
     },
     { api },
   );
-  const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
+  const personalKnowledgeBase =
+    await generatedApi.knowledgeBasesControllerCreate(
     {
       name: `Bauordnung Wissen ${suffix}`,
       description: "Lokale Bauordnung und Stellplatzsatzung für das Projekt",
     },
     { api },
   );
+  let skill: { id: string; name: string } = personalSkill;
+  let knowledgeBase: { id: string; name: string } = personalKnowledgeBase;
   const instruction = `Antworte für ${suffix} mit kurzer Prüfung, Risiko und nächstem Schritt.`;
-  const knowledgeDocumentName = `Bauordnung ${suffix}.txt`;
   const workspaceDocumentName = `Stellplatzsatzung ${suffix}.txt`;
 
   let workspaceDocument: { id: string; name: string } | null = null;
 
   if (options.attach) {
-    await generatedApi.workspaceContextControllerAttachSkill(
+    if (options.includeDocuments && (await permitFirstEmbeddingModel(api))) {
+      workspaceDocument = await uploadProjectContextDocument(api, {
+        workspaceId: workspace.id,
+        workspaceDocumentName,
+      });
+    }
+    skill = await generatedApi.workspaceContextControllerCreateSkill(
       workspace.id,
-      skill.id,
+      {
+        name: personalSkill.name,
+        shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
+        instructions:
+          "Prüfe Bauanträge anhand der Projektvorgaben und nenne offene Punkte.",
+      },
       { api },
     );
-    await generatedApi.workspaceContextControllerAttachKnowledgeBase(
-      workspace.id,
-      knowledgeBase.id,
-      { api },
-    );
+    knowledgeBase =
+      await generatedApi.workspaceContextControllerCreateKnowledgeBase(
+        workspace.id,
+        {
+          name: knowledgeBase.name,
+          description: "Lokale Bauordnung für das Projekt",
+        },
+        { api },
+      );
     await generatedApi.workspaceContextControllerUpdateInstruction(
       workspace.id,
       { instruction },
       { api },
     );
-    if (options.includeDocuments && (await permitFirstEmbeddingModel(api))) {
-      workspaceDocument = await uploadProjectContextDocuments(api, {
-        workspaceId: workspace.id,
-        knowledgeBaseId: knowledgeBase.id,
-        knowledgeDocumentName,
-        workspaceDocumentName,
-      });
-    }
   }
 
   return {
@@ -103,7 +111,6 @@ export async function createProjectContextFixture(
     skill,
     knowledgeBase,
     instruction,
-    knowledgeDocumentName,
     workspaceDocument,
     workspaceDocumentName,
   };
@@ -127,21 +134,13 @@ async function permitFirstEmbeddingModel(
   return true;
 }
 
-async function uploadProjectContextDocuments(
+async function uploadProjectContextDocument(
   api: APIRequestContext,
   context: {
     workspaceId: string;
-    knowledgeBaseId: string;
-    knowledgeDocumentName: string;
     workspaceDocumentName: string;
   },
 ): Promise<{ id: string; name: string }> {
-  await uploadTextFile(
-    api,
-    `/api/knowledge-bases/${context.knowledgeBaseId}/documents`,
-    context.knowledgeDocumentName,
-    "Abstandsflächen, Brandschutz und Nachbarbeteiligung sind zu prüfen.",
-  );
   return uploadTextFile(
     api,
     `/api/workspaces/${context.workspaceId}/context/documents`,

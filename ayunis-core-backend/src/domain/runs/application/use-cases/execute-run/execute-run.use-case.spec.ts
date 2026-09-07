@@ -216,7 +216,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     activateOnThread,
   } as unknown as SkillActivationService;
   const workspaceContext = overrides.workspaceSkills
-    ? ({ skills: overrides.workspaceSkills } as unknown as WorkspaceRunContext)
+    ? ({
+        skills: overrides.workspaceSkills.map((skill) => ({
+          skill,
+          isActive: true,
+          isPinned: false,
+        })),
+      } as unknown as WorkspaceRunContext)
     : undefined;
   const workspaceContextFetch = jest.fn().mockResolvedValue(workspaceContext);
   const buildWorkspaceRunContextUseCase = {
@@ -1405,21 +1411,40 @@ describe('ExecuteRunUseCase', () => {
     });
   });
 
-  it('rejects a quick action for a skill already assigned to the project', async () => {
+  it('activates a workspace skill quick action through the regular resource attachment flow', async () => {
     const projectSkillId = randomUUID();
-    const { useCase, activateOnThread, provider, workspaceContextFetch } =
-      buildHarness({
-        workspaceId: randomUUID(),
-        workspaceSkills: [{ id: projectSkillId } as BackendSkill],
-      });
+    const {
+      useCase,
+      activateOnThread,
+      provider,
+      workspaceContextFetch,
+      createUser,
+    } = buildHarness({
+      workspaceId: randomUUID(),
+      workspaceSkills: [
+        {
+          id: projectSkillId,
+          name: 'Permit Review',
+          instructions: 'Review the permit.',
+        } as BackendSkill,
+      ],
+    });
 
+    activateOnThread.mockResolvedValue({
+      instructions: 'Review the permit.',
+      skillName: 'Permit Review',
+    });
     const command = userCommand(new RunUserInput('Hi', [], projectSkillId));
 
-    await expect(useCase.execute(command)).rejects.toThrow(
-      'Project skills are already active in this workspace',
+    await drain(await useCase.execute(command));
+    expect(activateOnThread).toHaveBeenCalledWith(
+      projectSkillId,
+      expect.anything(),
     );
-    expect(activateOnThread).not.toHaveBeenCalled();
     expect(workspaceContextFetch).toHaveBeenCalledTimes(1);
-    expect(provider.requests).toHaveLength(0);
+    expect(provider.requests).toHaveLength(1);
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      skillInstructions: 'Review the permit.',
+    });
   });
 });

@@ -1,84 +1,93 @@
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import type { UUID } from 'crypto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import type { WorkspaceKnowledgeBaseCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-knowledge-base-candidates/list-workspace-knowledge-base-candidates.use-case';
-import type { WorkspaceSkillCandidate } from 'src/domain/workspaces/application/use-cases/list-workspace-skill-candidates/list-workspace-skill-candidates.use-case';
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+
 import { WorkspaceContextDtoMapper } from './workspace-context-dto.mapper';
 
-describe('WorkspaceContextDtoMapper', () => {
+describe(WorkspaceContextDtoMapper.name, () => {
   const mapper = new WorkspaceContextDtoMapper();
-  const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-  const skill = new PersonalSkill({
-    id: '223e4567-e89b-12d3-a456-426614174000',
-    name: 'Legal Research',
-    shortDescription: 'Research legal topics',
-    instructions: 'Research legal topics carefully.',
-    userId,
-  });
-  const knowledgeBase = new PersonalKnowledgeBase({
-    id: '323e4567-e89b-12d3-a456-426614174000',
-    name: 'Council Documents',
-    description: 'Municipal council documents',
-    orgId: userId,
-    userId,
-  });
+  const workspaceId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
-  it('maps a paginated skill candidate page', () => {
-    const candidate: WorkspaceSkillCandidate = {
-      skill,
-      isAttached: true,
-    };
+  it.each([true, false])(
+    'maps skill context with pinning %s without a separate state lookup',
+    (isPinned) => {
+      const skill = new WorkspaceSkill({
+        name: 'Permit Check',
+        shortDescription: 'Checks permit applications',
+        instructions: 'Check every permit application.',
+        workspaceId,
+      });
+      const dto = mapper.toContextDto({
+        instruction: null,
+        skills: [{ skill, isActive: true, isPinned }],
+        knowledgeBases: [],
+        runtimeKnowledgeBases: [],
+      });
+      expect(dto.skills).toEqual([
+        expect.objectContaining({ id: skill.id, isActive: true, isPinned }),
+      ]);
+    },
+  );
 
-    const result = mapper.toSkillCandidateListDto(
+  it('maps workspace-owned skill pages', () => {
+    const skill = new WorkspaceSkill({
+      id: '223e4567-e89b-12d3-a456-426614174000',
+      name: 'Legal Research',
+      shortDescription: 'Research legal topics',
+      instructions: 'Research legal topics carefully.',
+      workspaceId,
+    });
+
+    const result = mapper.toSkillListDto(
       new Paginated({
-        data: [candidate],
+        data: [{ skill, isActive: true, isPinned: false }],
         limit: 20,
         offset: 0,
         total: 1,
       }),
     );
 
-    expect(result).toEqual({
-      data: [
-        {
-          id: skill.id,
-          name: skill.name,
-          shortDescription: skill.shortDescription,
-          isAttached: true,
-        },
-      ],
-      pagination: { limit: 20, offset: 0, total: 1 },
-    });
+    expect(result.data).toEqual([
+      {
+        id: skill.id,
+        name: skill.name,
+        shortDescription: skill.shortDescription,
+        instructions: skill.instructions,
+        knowledgeBaseIds: [],
+        workspaceId,
+        isActive: true,
+        isPinned: false,
+      },
+    ]);
   });
 
-  it('maps a paginated knowledge-base candidate page', () => {
-    const candidate: WorkspaceKnowledgeBaseCandidate = {
-      knowledgeBase,
-      documentCount: 12,
-      isAttached: false,
-    };
+  it('maps workspace-owned knowledge-base pages', () => {
+    const knowledgeBase = new WorkspaceKnowledgeBase({
+      id: '323e4567-e89b-12d3-a456-426614174000',
+      name: 'Council Documents',
+      description: 'Municipal council documents',
+      orgId: '423e4567-e89b-12d3-a456-426614174000',
+      workspaceId,
+    });
 
-    const result = mapper.toKnowledgeBaseCandidateListDto(
+    const result = mapper.toKnowledgeBaseListDto(
       new Paginated({
-        data: [candidate],
+        data: [{ ...knowledgeBase, documentCount: 12, isActive: true }],
         limit: 20,
-        offset: 20,
-        total: 32,
+        offset: 0,
+        total: 1,
       }),
     );
 
-    expect(result).toEqual({
-      data: [
-        {
-          id: knowledgeBase.id,
-          name: knowledgeBase.name,
-          description: knowledgeBase.description,
-          documentCount: 12,
-          isAttached: false,
-        },
-      ],
-      pagination: { limit: 20, offset: 20, total: 32 },
-    });
+    expect(result.data).toEqual([
+      {
+        id: knowledgeBase.id,
+        name: knowledgeBase.name,
+        description: knowledgeBase.description,
+        documentCount: 12,
+        isActive: true,
+      },
+    ]);
   });
 });

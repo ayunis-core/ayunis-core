@@ -1,3 +1,5 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
@@ -61,6 +63,31 @@ export class SkillAccessService {
     }
 
     return skill;
+  }
+
+  /** Workspace skills are activatable only in their owning thread workspace. */
+  async findActivatableSkill(skillId: UUID, thread: Thread): Promise<Skill> {
+    const userId = this.contextService.get('userId');
+    const orgId = this.contextService.get('orgId');
+    if (!userId || !orgId || thread.userId !== userId) {
+      throw new UnauthorizedAccessError();
+    }
+    if (thread.workspaceId) {
+      const skill = (
+        await this.skillRepository.findByIds([skillId], thread.workspaceId)
+      ).at(0);
+      if (skill) {
+        const states = await this.skillRepository.getWorkspaceSkillStates(
+          [skillId],
+          thread.workspaceId,
+        );
+        if (!states.get(skillId)?.isActive) {
+          throw new SkillNotFoundError(skillId);
+        }
+        return skill;
+      }
+    }
+    return this.findAccessibleSkill(skillId);
   }
 
   /**

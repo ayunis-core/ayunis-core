@@ -11,12 +11,12 @@ import {
 import { randomUUID } from 'crypto';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
-import { KnowledgeBaseToolAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-tool-access.service';
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 
 describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   let useCase: GetKnowledgeBaseDocumentTextUseCase;
   let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
-  let mockAccessService: jest.Mocked<KnowledgeBaseToolAccessService>;
+  let mockFindKnowledgeBaseForThread: jest.Mocked<FindKnowledgeBaseForThreadUseCase>;
 
   const orgId = randomUUID();
   const userId = randomUUID();
@@ -31,12 +31,9 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
       countSourcesByKnowledgeBaseIds: jest.fn(),
     } as unknown as jest.Mocked<KnowledgeBaseRepository>;
 
-    mockAccessService = {
-      findAccessibleKnowledgeBase: jest.fn(),
-      findOneAccessible: jest.fn(),
-      resolveIsShared: jest.fn(),
-      findAllAccessible: jest.fn(),
-    } as unknown as jest.Mocked<KnowledgeBaseToolAccessService>;
+    mockFindKnowledgeBaseForThread = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindKnowledgeBaseForThreadUseCase>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,8 +43,8 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
           useValue: mockRepository,
         },
         {
-          provide: KnowledgeBaseToolAccessService,
-          useValue: mockAccessService,
+          provide: FindKnowledgeBaseForThreadUseCase,
+          useValue: mockFindKnowledgeBaseForThread,
         },
       ],
     }).compile();
@@ -74,9 +71,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
       fileType: FileType.PDF,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(knowledgeBase);
     mockRepository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(source);
 
     const result = await useCase.execute(
@@ -89,17 +84,17 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
     );
 
     expect(result).toBe(source);
-    expect(mockAccessService.findAccessibleKnowledgeBase).toHaveBeenCalledWith(
-      knowledgeBaseId,
-      undefined,
-    );
+    expect(mockFindKnowledgeBaseForThread.execute).toHaveBeenCalledWith({
+      knowledgeBaseId: knowledgeBaseId,
+      threadId: undefined,
+    });
     expect(
       mockRepository.findSourceByIdAndKnowledgeBaseId,
     ).toHaveBeenCalledWith(documentId, knowledgeBaseId);
   });
 
   it('should throw KnowledgeBaseNotFoundError when knowledge base does not exist', async () => {
-    mockAccessService.findAccessibleKnowledgeBase.mockRejectedValue(
+    mockFindKnowledgeBaseForThread.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(knowledgeBaseId),
     );
 
@@ -116,7 +111,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   });
 
   it('should throw KnowledgeBaseNotFoundError when KB is not owned or shared', async () => {
-    mockAccessService.findAccessibleKnowledgeBase.mockRejectedValue(
+    mockFindKnowledgeBaseForThread.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(knowledgeBaseId),
     );
 
@@ -148,7 +143,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
       fileType: FileType.PDF,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(sharedKb);
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(sharedKb);
     mockRepository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(source);
 
     const result = await useCase.execute(
@@ -172,9 +167,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
       userId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(knowledgeBase);
 
     await expect(
       useCase.execute(
@@ -196,9 +189,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
       userId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(knowledgeBase);
     mockRepository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(null);
 
     const query = new GetKnowledgeBaseDocumentTextQuery({

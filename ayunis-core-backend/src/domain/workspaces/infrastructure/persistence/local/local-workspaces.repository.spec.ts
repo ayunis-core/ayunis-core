@@ -3,9 +3,9 @@ import type { Repository } from 'typeorm';
 import { LocalWorkspacesRepository } from './local-workspaces.repository';
 import type { WorkspaceMapper } from './mappers/workspace.mapper';
 import type { WorkspaceRecord } from './schema/workspace.record';
-import type { WorkspaceSkillAssignmentRecord } from './schema/workspace-skill-assignment.record';
-import type { WorkspaceKnowledgeBaseAssignmentRecord } from './schema/workspace-knowledge-base-assignment.record';
-import type { WorkspaceSourceAssignmentRecord } from './schema/workspace-source-assignment.record';
+import type { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
+import type { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import type { KnowledgeBaseActivationRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base-activation.record';
 
 describe('LocalWorkspacesRepository', () => {
   it('uses a PostgreSQL-safe activity alias for paginated ordering', async () => {
@@ -37,9 +37,9 @@ describe('LocalWorkspacesRepository', () => {
     } as unknown as WorkspaceMapper;
     const repository = new LocalWorkspacesRepository(
       workspaceRepository,
-      {} as Repository<WorkspaceSkillAssignmentRecord>,
-      {} as Repository<WorkspaceKnowledgeBaseAssignmentRecord>,
-      {} as Repository<WorkspaceSourceAssignmentRecord>,
+      {} as Repository<SkillRecord>,
+      {} as Repository<KnowledgeBaseRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
       mapper,
     );
 
@@ -57,5 +57,53 @@ describe('LocalWorkspacesRepository', () => {
       'effective_activity_at',
       'DESC',
     );
+  });
+
+  it('builds context references from workspace-owned resources', async () => {
+    const workspaceId = randomUUID();
+    const skillId = randomUUID();
+    const knowledgeBaseId = randomUUID();
+    const skillRepository = {
+      find: jest.fn().mockResolvedValue([{ id: skillId }]),
+    } as unknown as Repository<SkillRecord>;
+    const knowledgeBaseRepository = {
+      find: jest.fn().mockResolvedValue([
+        {
+          id: knowledgeBaseId,
+          name: 'Procurement rules',
+          description: 'Workspace rules',
+        },
+      ]),
+    } as unknown as Repository<KnowledgeBaseRecord>;
+    const activationRepository = {
+      find: jest.fn().mockResolvedValue([{ knowledgeBaseId }]),
+    } as unknown as Repository<KnowledgeBaseActivationRecord>;
+    const repository = new LocalWorkspacesRepository(
+      {} as Repository<WorkspaceRecord>,
+      skillRepository,
+      knowledgeBaseRepository,
+      activationRepository,
+      {} as WorkspaceMapper,
+    );
+
+    await expect(repository.getContextRefs(workspaceId)).resolves.toEqual({
+      skillIds: [skillId],
+      knowledgeBases: [
+        {
+          id: knowledgeBaseId,
+          name: 'Procurement rules',
+          description: 'Workspace rules',
+          documentCount: 0,
+          isActive: true,
+        },
+      ],
+    });
+    expect(skillRepository.find).toHaveBeenCalledWith({
+      where: { workspaceId },
+      select: { id: true },
+    });
+    expect(knowledgeBaseRepository.find).toHaveBeenCalledWith({
+      where: { workspaceId },
+    });
   });
 });
