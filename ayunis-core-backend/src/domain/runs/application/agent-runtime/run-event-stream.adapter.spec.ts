@@ -480,6 +480,7 @@ describe('adaptRunEventsToStream', () => {
           provider: 'anthropic',
           modelId: 'claude-3-7-sonnet',
           upstreamStatus: 429,
+          retryAfterMs: 30_000,
         },
       },
       ProviderRequestRejectedError,
@@ -488,6 +489,7 @@ describe('adaptRunEventsToStream', () => {
         provider: 'anthropic',
         modelId: 'claude-3-7-sonnet',
         upstreamStatus: 429,
+        retryAfterMs: 30_000,
       },
     ],
     [

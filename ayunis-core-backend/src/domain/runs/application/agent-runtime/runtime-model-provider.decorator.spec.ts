@@ -8,7 +8,10 @@ import type {
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
-import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-error.classifier';
+import {
+  RATE_LIMIT_MAX_WAIT_MS,
+  SETUP_RETRY_BACKOFF_MS,
+} from 'src/common/errors/provider-transport-error.classifier';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
 import { RuntimeModelProviderDecorator } from './runtime-model-provider.decorator';
@@ -219,7 +222,7 @@ describe('RuntimeModelProviderDecorator', () => {
       Object.assign(new Error('rate limit exceeded'), { status: 429 }),
       'PROVIDER_UNAVAILABLE_REJECTED_ANTHROPIC',
       'provider_rejected',
-      1,
+      3,
     ],
     [
       'oversized image',
@@ -250,7 +253,7 @@ describe('RuntimeModelProviderDecorator', () => {
           },
         }),
       );
-      await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS * 3);
+      await jest.advanceTimersByTimeAsync(RATE_LIMIT_MAX_WAIT_MS);
       await failure;
 
       expect(emitAsync).toHaveBeenCalledTimes(attempts);
@@ -350,29 +353,82 @@ describe('RuntimeModelProviderDecorator', () => {
     );
   });
 
-  it('logs Azure rate limits as provider-unavailable failures', async () => {
+  it('fails fast on an Azure rate limit whose retry-after exceeds the wait budget, keeping its context', async () => {
+    let calls = 0;
     const upstream = Object.assign(new Error('rate limit exceeded'), {
       status: 429,
       requestID: 'req_azure_429',
+      headers: { 'retry-after': String(RATE_LIMIT_MAX_WAIT_MS / 1000 + 45) },
     });
+    const provider: ModelProvider = {
+      name: 'test:azure-throttled',
+      async *stream() {
+        calls += 1;
+        yield await Promise.reject(upstream);
+      },
+    };
     const azureModel = {
       name: 'gpt-5.6-terra',
       provider: 'azure',
     } as LanguageModel;
     const { decorate, logger } = buildHarness(azureModel);
 
-    await expect(collect(decorate(throwingProvider(upstream)))).rejects.toThrow(
+    await expect(collect(decorate(provider))).rejects.toThrow(
       'Provider azure rejected the request',
     );
+    expect(calls).toBe(1);
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'azure',
         modelId: 'gpt-5.6-terra',
         upstreamStatus: 429,
         upstreamRequestId: 'req_azure_429',
+        retryAfterMs: RATE_LIMIT_MAX_WAIT_MS + 45_000,
       }),
       'Provider unavailable during runtime inference',
     );
+  });
+
+  it('waits out a short Azure retry-after before retrying a rate limit', async () => {
+    jest.useFakeTimers();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:azure-rate-limit-recovery',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield await Promise.reject(
+            Object.assign(new Error('rate limit exceeded'), {
+              status: 429,
+              headers: { 'retry-after': '2' },
+            }),
+          );
+        }
+        yield { textDelta: 'Recovered' };
+      },
+    };
+    const azureModel = {
+      name: 'gpt-5.6-terra',
+      provider: 'azure',
+    } as LanguageModel;
+    const { decorate, logger } = buildHarness(azureModel);
+
+    const collected = collect(decorate(provider));
+    await jest.advanceTimersByTimeAsync(1_999);
+    expect(calls).toBe(1);
+    await jest.advanceTimersByTimeAsync(1);
+
+    await expect(collected).resolves.toEqual([{ textDelta: 'Recovered' }]);
+    expect(calls).toBe(2);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: 'provider rate limit',
+        delayMs: 2_000,
+        attempt: 1,
+      }),
+      'Provider stream failed before producing output; retrying',
+    );
+    jest.useRealTimers();
   });
 
   it('records safe provider diagnostics without the raw provider message', async () => {

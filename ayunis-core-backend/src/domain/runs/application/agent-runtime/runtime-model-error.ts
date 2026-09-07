@@ -164,6 +164,9 @@ function toProviderContext(
     ...(typeof context.upstreamRequestId === 'string' && {
       upstreamRequestId: context.upstreamRequestId,
     }),
+    ...(typeof context.retryAfterMs === 'number' && {
+      retryAfterMs: context.retryAfterMs,
+    }),
   };
 }
 

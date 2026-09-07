@@ -1,8 +1,11 @@
 import {
   classifyTransportError,
+  isRetryableProviderRateLimitFailure,
   isRetryableProviderServerFailure,
   isRetryableProviderTimeoutFailure,
   isRetryableSetupFailure,
+  RATE_LIMIT_MAX_WAIT_MS,
+  rateLimitRetryDelayMs,
 } from './provider-transport-error.classifier';
 import { ProviderFailureClass } from './provider.errors';
 
@@ -225,6 +228,44 @@ describe('classifyTransportError', () => {
           Object.assign(new Error('not a server retry'), { status }),
         ),
       ).toBe(false);
+    });
+  });
+
+  describe('provider rate limits', () => {
+    const rateLimited = (headers?: Record<string, string>) =>
+      Object.assign(new Error('rate limit exceeded'), {
+        status: 429,
+        ...(headers && { headers }),
+      });
+
+    it('accepts upstream 429 responses only', () => {
+      expect(isRetryableProviderRateLimitFailure(rateLimited())).toBe(true);
+      expect(
+        isRetryableProviderRateLimitFailure(
+          Object.assign(new Error('bad request'), { status: 400 }),
+        ),
+      ).toBe(false);
+    });
+
+    it('honors a retry-after header inside the wait budget', () => {
+      expect(
+        rateLimitRetryDelayMs(rateLimited({ 'retry-after': '2' }), 1),
+      ).toBe(2_000);
+      expect(
+        rateLimitRetryDelayMs(rateLimited({ 'retry-after-ms': '750' }), 1),
+      ).toBe(750);
+    });
+
+    it('backs off linearly when the provider sends no retry-after', () => {
+      expect(rateLimitRetryDelayMs(rateLimited(), 1)).toBe(1_000);
+      expect(rateLimitRetryDelayMs(rateLimited(), 2)).toBe(2_000);
+    });
+
+    it('gives up when the provider asks to wait longer than the budget', () => {
+      const tooLong = String(RATE_LIMIT_MAX_WAIT_MS / 1000 + 1);
+      expect(
+        rateLimitRetryDelayMs(rateLimited({ 'retry-after': tooLong }), 1),
+      ).toBeUndefined();
     });
   });
 

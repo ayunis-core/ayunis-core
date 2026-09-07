@@ -4,7 +4,10 @@ import type { StreamInferenceInput } from 'src/domain/models/application/ports/s
 import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
-import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-error.classifier';
+import {
+  RATE_LIMIT_MAX_WAIT_MS,
+  SETUP_RETRY_BACKOFF_MS,
+} from 'src/common/errors/provider-transport-error.classifier';
 
 /** Rejects the way a provider SDK does when its request signal aborts. */
 function whenAborted(signal: AbortSignal | undefined): Promise<never> {
@@ -279,10 +282,70 @@ describe('RuntimeStreamInferenceHandler', () => {
     expect(calls).toBe(1);
   });
 
+  it('waits out a short retry-after before retrying a rate limit', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:rate-limit-recovery',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield await Promise.reject(
+            Object.assign(new Error('rate limit exceeded'), {
+              status: 429,
+              headers: { 'retry-after': '2' },
+            }),
+          );
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+
+    const deltas: (string | null)[] = [];
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: (chunk) => deltas.push(chunk.textContentDelta),
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(1_999);
+    expect(calls).toBe(1);
+    await jest.advanceTimersByTimeAsync(1);
+
+    await completed;
+    expect(deltas).toEqual(['recovered']);
+    expect(calls).toBe(2);
+  });
+
+  it('does not retry a rate limit whose retry-after exceeds the wait budget', async () => {
+    let calls = 0;
+    const rejection = Object.assign(new Error('rate limit exceeded'), {
+      status: 429,
+      headers: { 'retry-after': String(RATE_LIMIT_MAX_WAIT_MS / 1000 + 1) },
+    });
+    const provider: ModelProvider = {
+      name: 'test:rate-limit-too-long',
+      async *stream() {
+        calls += 1;
+        yield await Promise.reject(rejection);
+      },
+    };
+
+    const failed = new Promise<unknown>((resolve) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: () => undefined,
+        error: resolve,
+      });
+    });
+
+    await expect(failed).resolves.toBe(rejection);
+    expect(calls).toBe(1);
+  });
+
   it('does not retry non-transport provider failures', async () => {
     let calls = 0;
-    const rejection = Object.assign(new Error('rate limited'), {
-      status: 429,
+    const rejection = Object.assign(new Error('bad request'), {
+      status: 400,
     });
     const provider: ModelProvider = {
       name: 'test:rejected',
