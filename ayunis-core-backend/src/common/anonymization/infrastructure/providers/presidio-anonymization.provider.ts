@@ -21,15 +21,24 @@ function backoff(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function countCodePoints(text: string): number {
-  let count = 0;
+/**
+ * The UTF-16 offset of every code point in `text`, plus a final entry for the
+ * end of the string. The anonymize service returns Python string indices,
+ * which count code points, so its spans have to be translated before
+ * substring/slice — those count UTF-16 code units, where an astral character
+ * is two (AYC-905). The table's length is the code point count the service
+ * sees, which is also what the input-size limit is measured in.
+ */
+function utf16OffsetsByCodePoint(text: string): number[] {
+  const offsets: number[] = [];
   for (let offset = 0; offset < text.length; offset += 1) {
-    count += 1;
+    offsets.push(offset);
     if ((text.codePointAt(offset) ?? 0) > 0xffff) {
       offset += 1;
     }
   }
-  return count;
+  offsets.push(text.length);
+  return offsets;
 }
 
 @Injectable()
@@ -41,7 +50,8 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
   }
 
   async detect(text: string, entities?: string[]): Promise<PiiDetection[]> {
-    const textLength = countCodePoints(text);
+    const utf16Offsets = utf16OffsetsByCodePoint(text);
+    const textLength = utf16Offsets.length - 1;
     if (textLength > MAX_ANONYMIZATION_TEXT_LENGTH) {
       throw new AnonymizationInputTooLongError(
         textLength,
@@ -56,7 +66,7 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       const results = await this.detectWithRetry(text, entities, textLength);
       const nonOverlappingResults = this.dropOverlappingResults(results);
       const detections = nonOverlappingResults.map((result) =>
-        this.toDetection(text, result),
+        this.toDetection(text, result, utf16Offsets),
       );
 
       this.logDetectionComplete(textLength, detections.length, startedAt);
@@ -142,13 +152,20 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
     );
   }
 
-  private toDetection(text: string, result: RecognizerResult): PiiDetection {
+  private toDetection(
+    text: string,
+    result: RecognizerResult,
+    utf16Offsets: readonly number[],
+  ): PiiDetection {
+    // Clamped rather than trusted: the span comes from an external service.
+    const start = utf16Offsets[result.start] ?? text.length;
+    const end = utf16Offsets[result.end] ?? text.length;
     return {
       entityType: result.entity_type,
       category: mapPresidioEntityToCategory(result.entity_type),
-      text: text.substring(result.start, result.end),
-      start: result.start,
-      end: result.end,
+      text: text.substring(start, end),
+      start,
+      end,
       score: result.score,
     };
   }
