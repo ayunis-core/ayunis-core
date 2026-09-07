@@ -1,24 +1,15 @@
 {
   "page": {
-    "title": "Projekte",
-    "searchPlaceholder": "Projekte durchsuchen",
-    "addWorkspace": "Projekt hinzufügen",
-    "emptyTitle": "Noch keine Projekte",
-    "emptyDescription": "Legen Sie ein Projekt an, um Ihre Chats thematisch zu bündeln.",
-    "viewOptions": "Sortierung",
-    "sortBy": "Sortieren nach",
+    "title": "Arbeitsbereiche",
+    "addWorkspace": "Arbeitsbereich hinzufügen",
+    "emptyTitle": "Noch keine Arbeitsbereiche",
+    "emptyDescription": "Legen Sie einen Arbeitsbereich an, um Ihre Chats thematisch zu bündeln.",
     "chatCount_one": "{{count}} Chat",
-    "chatCount_other": "{{count}} Chats",
-    "noResults": "Keine Projekte gefunden."
-  },
-  "sort": {
-    "updatedAt": "Zuletzt aktualisiert",
-    "createdAt": "Erstellungsdatum",
-    "alpha": "Alphabetisch"
+    "chatCount_other": "{{count}} Chats"
   },
   "card": {
-    "pin": "Anheften",
-    "unpin": "Nicht mehr anheften"
+    "pin": "Zu Favoriten hinzufügen",
+    "unpin": "Aus Favoriten entfernen"
   },
   "appearance": {
     "iconLabel": "Symbol",
@@ -108,36 +99,37 @@
     "cancel": "Abbrechen"
   },
   "createDialog": {
-    "title": "Neues Projekt",
-    "submit": "Projekt erstellen",
+    "title": "Neuer Arbeitsbereich",
+    "submit": "Arbeitsbereich erstellen",
     "submitting": "Wird erstellt …"
   },
   "actions": {
-    "more": "Weitere Projektaktionen",
-    "edit": "Projekt bearbeiten",
-    "delete": "Projekt löschen"
+    "more": "Weitere Aktionen für den Arbeitsbereich",
+    "edit": "Arbeitsbereich bearbeiten",
+    "delete": "Arbeitsbereich löschen"
   },
   "settingsDialog": {
-    "title": "Projekteinstellungen",
+    "title": "Arbeitsbereichseinstellungen",
     "submit": "Speichern",
     "submitting": "Wird gespeichert …",
     "open": "Einstellungen"
   },
   "deleteDialog": {
-    "rowTitle": "Projekt löschen",
-    "rowDescription": "Das Projekt und alle darin enthaltenen Chats werden gelöscht.",
-    "title": "Projekt löschen",
+    "rowTitle": "Arbeitsbereich löschen",
+    "rowDescription": "Der Arbeitsbereich und alle darin enthaltenen Chats werden gelöscht.",
+    "title": "Arbeitsbereich löschen",
     "description": "„{{name}}“ und alle darin enthaltenen Chats werden unwiderruflich gelöscht.",
-    "confirmNameLabel": "Wenn Sie dieses Projekt wirklich löschen möchten, geben Sie den Projektnamen „{{name}}“ ein.",
+    "confirmNameLabel": "Wenn Sie diesen Arbeitsbereich wirklich löschen möchten, geben Sie den Namen des Arbeitsbereichs „{{name}}“ ein.",
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
   },
   "picker": {
-    "empty": "Noch keine Projekte",
-    "placeholder": "Projekt auswählen",
-    "addToWorkspace": "Zu Projekt hinzufügen",
-    "removeFromWorkspace": "Aus Projekt entfernen",
-    "newWorkspace": "Neues Projekt"
+    "empty": "Noch keine Arbeitsbereiche",
+    "noWorkspace": "Kein Arbeitsbereich",
+    "placeholder": "Arbeitsbereich auswählen",
+    "addToWorkspace": "Zu Arbeitsbereich hinzufügen",
+    "removeFromWorkspace": "Aus Arbeitsbereich entfernen",
+    "newWorkspace": "Neuer Arbeitsbereich"
   },
   "validation": {
     "invalid": "Ungültiger Wert",
@@ -151,17 +143,17 @@
     }
   },
   "toast": {
-    "createSuccess": "Projekt erstellt",
-    "createError": "Das Projekt konnte nicht erstellt werden",
-    "updateSuccess": "Projekt gespeichert",
-    "updateError": "Das Projekt konnte nicht gespeichert werden",
-    "deleteSuccess": "Projekt gelöscht",
-    "deleteError": "Das Projekt konnte nicht gelöscht werden",
-    "notFound": "Projekt nicht gefunden",
-    "pinError": "Das Anheften hat nicht funktioniert",
+    "createSuccess": "Arbeitsbereich erstellt",
+    "createError": "Der Arbeitsbereich konnte nicht erstellt werden",
+    "updateSuccess": "Arbeitsbereich gespeichert",
+    "updateError": "Der Arbeitsbereich konnte nicht gespeichert werden",
+    "deleteSuccess": "Arbeitsbereich gelöscht",
+    "deleteError": "Der Arbeitsbereich konnte nicht gelöscht werden",
+    "notFound": "Arbeitsbereich nicht gefunden",
+    "pinError": "Die Favoriten konnten nicht aktualisiert werden",
     "reorderError": "Die Reihenfolge konnte nicht gespeichert werden",
     "chatMoved": "Chat verschoben",
-    "chatRemoved": "Chat aus dem Projekt entfernt",
+    "chatRemoved": "Chat aus dem Arbeitsbereich entfernt",
     "chatMoveError": "Der Chat konnte nicht verschoben werden",
     "chatNotFound": "Chat nicht gefunden"
   }

@@ -19,7 +19,11 @@ interface WorkspaceRowProps {
 export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
   const { t } = useTranslation('workspaces');
   return (
-    <Item variant="outline" className="relative">
+    <Item
+      variant="outline"
+      className="relative"
+      data-testid={`workspace-${workspace.id}`}
+    >
       <ItemMedia>
         <WorkspaceIcon
           icon={workspace.icon}

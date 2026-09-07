@@ -1,13 +1,13 @@
 {
   "page": {
-    "breadcrumb": "Projekte",
+    "breadcrumb": "Arbeitsbereiche",
     "chatsTab": "Ihre Chats",
     "knowledgeTab": "Wissen",
     "skillsTab": "Fähigkeiten",
     "instructionsTab": "Anweisungen",
     "artifactsTab": "Dokumente",
     "emptyChatsTitle": "Noch keine Chats",
-    "emptyChats": "Chats, die Sie diesem Projekt hinzufügen, erscheinen hier.",
+    "emptyChats": "Chats, die Sie diesem Arbeitsbereich hinzufügen, erscheinen hier.",
     "noChatResults": "Keine Chats gefunden.",
     "pin": "Anheften",
     "unpin": "Nicht mehr anheften",
@@ -17,22 +17,22 @@
   "detail": {
     "save": "Änderungen speichern",
     "skillKnowledge": "Wissensdatenbanken",
-    "skillKnowledgeDescription": "Wählen Sie die Projekt-Wissensdatenbanken, die diese Fähigkeit verwenden darf.",
-    "noWorkspaceKnowledge": "Erstellen Sie zuerst eine Wissensdatenbank in diesem Projekt.",
+    "skillKnowledgeDescription": "Wählen Sie die Wissensdatenbanken des Arbeitsbereichs, die diese Fähigkeit verwenden darf.",
+    "noWorkspaceKnowledge": "Erstellen Sie zuerst eine Wissensdatenbank in diesem Arbeitsbereich.",
     "attach": "Hinzufügen",
     "detach": "Entfernen",
     "documents": "Dokumente",
-    "documentsDescription": "Dokumente dieser Projekt-Wissensdatenbank hochladen und verwalten.",
+    "documentsDescription": "Dokumente dieser Wissensdatenbank des Arbeitsbereichs hochladen und verwalten.",
     "noDocuments": "Noch keine Dokumente hochgeladen."
   },
   "artifacts": {
-    "title": "Projektartefakte",
-    "description": "Dokumente, Diagramme und Tabellen aus Chats in diesem Projekt.",
+    "title": "Artefakte des Arbeitsbereichs",
+    "description": "Dokumente, Diagramme und Tabellen aus Chats in diesem Arbeitsbereich.",
     "emptyTitle": "Noch keine Artefakte",
-    "empty": "Artefakte aus Projektchats erscheinen hier.",
+    "empty": "Artefakte aus Chats des Arbeitsbereichs erscheinen hier.",
     "loadError": {
-      "title": "Projektartefakte konnten nicht geladen werden",
-      "description": "Bitte laden Sie die Seite neu, bevor Sie Projektartefakte öffnen."
+      "title": "Artefakte des Arbeitsbereichs konnten nicht geladen werden",
+      "description": "Bitte laden Sie die Seite neu, bevor Sie Artefakte des Arbeitsbereichs öffnen."
     },
     "untitled": "Unbenanntes Artefakt",
     "open": "Öffnen",
@@ -47,48 +47,48 @@
     "untitled": "Unbenannter Chat",
     "pin": "Anheften",
     "unpin": "Nicht mehr anheften",
-    "remove": "Aus Projekt entfernen"
+    "remove": "Aus Arbeitsbereich entfernen"
   },
   "context": {
     "loadError": {
-      "title": "Projektkontext konnte nicht geladen werden",
-      "description": "Bitte laden Sie die Seite neu, bevor Sie Projektwissen, Fähigkeiten oder Anweisungen bearbeiten."
+      "title": "Kontext des Arbeitsbereichs konnte nicht geladen werden",
+      "description": "Bitte laden Sie die Seite neu, bevor Sie Wissen, Fähigkeiten oder Anweisungen des Arbeitsbereichs bearbeiten."
     },
     "addDialog": {
       "loading": "Einträge werden geladen …",
       "cancel": "Abbrechen"
     },
     "skills": {
-      "title": "Projektfähigkeiten",
-      "description": "Fähigkeiten, die der Assistent bei Bedarf in Chats dieses Projekts aktivieren kann.",
+      "title": "Fähigkeiten des Arbeitsbereichs",
+      "description": "Fähigkeiten, die der Assistent bei Bedarf in Chats dieses Arbeitsbereichs aktivieren kann.",
       "create": "Fähigkeit erstellen",
-      "createDescription": "Erstellen Sie eine Fähigkeit, die diesem Projekt gehört.",
+      "createDescription": "Erstellen Sie eine Fähigkeit, die diesem Arbeitsbereich gehört.",
       "name": "Name",
       "shortDescription": "Kurzbeschreibung",
       "instructions": "Anweisungen",
-      "emptyTitle": "Keine Projektfähigkeiten",
-      "empty": "Für dieses Projekt wurden noch keine Fähigkeiten erstellt.",
-      "delete": "Projektfähigkeit löschen",
+      "emptyTitle": "Keine Fähigkeiten im Arbeitsbereich",
+      "empty": "Für diesen Arbeitsbereich wurden noch keine Fähigkeiten erstellt.",
+      "delete": "Fähigkeit des Arbeitsbereichs löschen",
       "active": "Aktiv",
       "inactive": "Inaktiv",
-      "activeTooltip": "Aktive Fähigkeiten können vom Assistenten bei Bedarf in Chats dieses Projekts aktiviert werden. Anweisungen und Ressourcen werden erst bei der Aktivierung geladen. Inaktive Fähigkeiten können nicht aktiviert werden.",
-      "pin": "In Projekt-Chats anheften",
-      "unpin": "Aus Projekt-Chats lösen"
+      "activeTooltip": "Aktive Fähigkeiten können vom Assistenten bei Bedarf in Chats dieses Arbeitsbereichs aktiviert werden. Anweisungen und Ressourcen werden erst bei der Aktivierung geladen. Inaktive Fähigkeiten können nicht aktiviert werden.",
+      "pin": "In Chats des Arbeitsbereichs anheften",
+      "unpin": "Aus Chats des Arbeitsbereichs lösen"
     },
     "knowledge": {
       "title": "Wissensdatenbanken",
-      "description": "Projekteigene Wissensdatenbanken für alle Chats dieses Projekts.",
+      "description": "Eigene Wissensdatenbanken für alle Chats dieses Arbeitsbereichs.",
       "create": "Wissensdatenbank erstellen",
-      "createDescription": "Erstellen Sie eine Wissensdatenbank, die diesem Projekt gehört.",
+      "createDescription": "Erstellen Sie eine Wissensdatenbank, die diesem Arbeitsbereich gehört.",
       "name": "Name",
       "descriptionLabel": "Beschreibung",
-      "emptyTitle": "Keine Projekt-Wissensdatenbanken",
-      "empty": "Für dieses Projekt wurden noch keine Wissensdatenbanken erstellt.",
-      "detach": "Projekt-Wissensdatenbank löschen",
+      "emptyTitle": "Keine Wissensdatenbanken im Arbeitsbereich",
+      "empty": "Für diesen Arbeitsbereich wurden noch keine Wissensdatenbanken erstellt.",
+      "detach": "Wissensdatenbank des Arbeitsbereichs löschen",
       "documentCount": "{{count}} Dokumente",
       "active": "Aktiv",
       "inactive": "Inaktiv",
-      "activeTooltip": "Aktive Wissenssammlungen sind in jedem Chat dieses Projekts verfügbar. Inaktive Wissenssammlungen werden in Projekt-Chats nicht verwendet."
+      "activeTooltip": "Aktive Wissenssammlungen sind in jedem Chat dieses Arbeitsbereichs verfügbar. Inaktive Wissenssammlungen werden in Chats des Arbeitsbereichs nicht verwendet."
     },
     "documents": {
       "upload": "Datei hochladen",
@@ -96,8 +96,8 @@
     },
     "instructions": {
       "title": "Anweisungen",
-      "description": "Anweisungen, die jedem Chat in diesem Projekt hinzugefügt werden.",
-      "placeholder": "Geben Sie Anweisungen ein, die für alle Chats in diesem Projekt gelten.",
+      "description": "Anweisungen, die jedem Chat in diesem Arbeitsbereich hinzugefügt werden.",
+      "placeholder": "Geben Sie Anweisungen ein, die für alle Chats in diesem Arbeitsbereich gelten.",
       "save": "Speichern",
       "saveSuccess": "Anweisungen wurden gespeichert.",
       "saveError": "Anweisungen konnten nicht gespeichert werden."

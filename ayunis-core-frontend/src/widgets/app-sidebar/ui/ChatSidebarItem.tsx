@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
-  FolderMinus,
   FolderOpen,
   MessageCircle,
   MoreHorizontal,
@@ -30,7 +29,7 @@ import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
 import { useWorkspaces } from '@/features/workspaces';
 import { useToggleFavorite } from '@/features/favorites';
 import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
-import { useAssignThreadToWorkspace } from '../api/useAssignThreadToWorkspace';
+import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 
@@ -115,6 +114,12 @@ export function ChatSidebarItem({
                     <WorkspacePickerMenuWithCreate
                       workspaces={workspaces}
                       selectedWorkspaceId={thread.workspaceId}
+                      onClear={() =>
+                        assignToWorkspace({
+                          threadId: thread.id,
+                          workspaceId: null,
+                        })
+                      }
                       onSelect={(workspace) =>
                         assignToWorkspace({
                           threadId: thread.id,
@@ -127,19 +132,6 @@ export function ChatSidebarItem({
                     />
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                {thread.workspaceId && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      assignToWorkspace({
-                        threadId: thread.id,
-                        workspaceId: null,
-                      })
-                    }
-                  >
-                    <FolderMinus />
-                    <span>{t('sidebar.removeFromWorkspace')}</span>
-                  </DropdownMenuItem>
-                )}
               </>
             )}
 

@@ -1,24 +1,15 @@
 {
   "page": {
-    "title": "Projects",
-    "searchPlaceholder": "Search projects",
-    "addWorkspace": "Add project",
-    "emptyTitle": "No projects yet",
-    "emptyDescription": "Create a project to group your chats by topic.",
-    "viewOptions": "Sorting",
-    "sortBy": "Sort by",
+    "title": "Workspaces",
+    "addWorkspace": "Add workspace",
+    "emptyTitle": "No workspaces yet",
+    "emptyDescription": "Create a workspace to group your chats by topic.",
     "chatCount_one": "{{count}} chat",
-    "chatCount_other": "{{count}} chats",
-    "noResults": "No projects found."
-  },
-  "sort": {
-    "updatedAt": "Last updated",
-    "createdAt": "Date created",
-    "alpha": "Alphabetical"
+    "chatCount_other": "{{count}} chats"
   },
   "card": {
-    "pin": "Pin",
-    "unpin": "Unpin"
+    "pin": "Add to favorites",
+    "unpin": "Remove from favorites"
   },
   "appearance": {
     "iconLabel": "Icon",
@@ -108,8 +99,8 @@
     "cancel": "Cancel"
   },
   "createDialog": {
-    "title": "New project",
-    "submit": "Create project",
+    "title": "New workspace",
+    "submit": "Create workspace",
     "submitting": "Creating …"
   },
   "actions": {
@@ -118,26 +109,27 @@
     "delete": "Delete workspace"
   },
   "settingsDialog": {
-    "title": "Project settings",
+    "title": "Workspace settings",
     "submit": "Save",
     "submitting": "Saving …",
     "open": "Settings"
   },
   "deleteDialog": {
-    "rowTitle": "Delete project",
-    "rowDescription": "The project and every chat inside it will be deleted.",
-    "title": "Delete project",
+    "rowTitle": "Delete workspace",
+    "rowDescription": "The workspace and every chat inside it will be deleted.",
+    "title": "Delete workspace",
     "description": "“{{name}}” and every chat inside it will be permanently deleted.",
     "confirmNameLabel": "If you really want to delete this workspace, enter its name: “{{name}}”.",
     "confirmText": "Delete",
     "cancelText": "Cancel"
   },
   "picker": {
-    "empty": "No projects yet",
-    "placeholder": "Select project",
-    "addToWorkspace": "Add to project",
-    "removeFromWorkspace": "Remove from project",
-    "newWorkspace": "New project"
+    "empty": "No workspaces yet",
+    "noWorkspace": "No workspace",
+    "placeholder": "Select workspace",
+    "addToWorkspace": "Add to workspace",
+    "removeFromWorkspace": "Remove from workspace",
+    "newWorkspace": "New workspace"
   },
   "validation": {
     "invalid": "Invalid value",
@@ -151,17 +143,17 @@
     }
   },
   "toast": {
-    "createSuccess": "Project created",
-    "createError": "The project could not be created",
-    "updateSuccess": "Project saved",
-    "updateError": "The project could not be saved",
-    "deleteSuccess": "Project deleted",
-    "deleteError": "The project could not be deleted",
-    "notFound": "Project not found",
-    "pinError": "Pinning did not work",
+    "createSuccess": "Workspace created",
+    "createError": "The workspace could not be created",
+    "updateSuccess": "Workspace saved",
+    "updateError": "The workspace could not be saved",
+    "deleteSuccess": "Workspace deleted",
+    "deleteError": "The workspace could not be deleted",
+    "notFound": "Workspace not found",
+    "pinError": "Favorites could not be updated",
     "reorderError": "The new order could not be saved",
     "chatMoved": "Chat moved",
-    "chatRemoved": "Chat removed from the project",
+    "chatRemoved": "Chat removed from the workspace",
     "chatMoveError": "The chat could not be moved",
     "chatNotFound": "Chat not found"
   }

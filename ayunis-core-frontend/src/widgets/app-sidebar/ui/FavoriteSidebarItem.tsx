@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowDown,
   ArrowUp,
-  FolderMinus,
   FolderOpen,
   MessageCircle,
   MoreHorizontal,
@@ -176,6 +175,12 @@ export function FavoriteSidebarItem({
                     <WorkspacePickerMenuWithCreate
                       workspaces={workspaces}
                       selectedWorkspaceId={threadWorkspaceId}
+                      onClear={() =>
+                        assignToWorkspace({
+                          threadId: item.referenceId,
+                          workspaceId: null,
+                        })
+                      }
                       onSelect={(target) =>
                         assignToWorkspace({
                           threadId: item.referenceId,
@@ -188,19 +193,6 @@ export function FavoriteSidebarItem({
                     />
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                {threadWorkspaceId && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      assignToWorkspace({
-                        threadId: item.referenceId,
-                        workspaceId: null,
-                      })
-                    }
-                  >
-                    <FolderMinus />
-                    <span>{t('sidebar.removeFromWorkspace')}</span>
-                  </DropdownMenuItem>
-                )}
               </>
             )}
             <DropdownMenuItem

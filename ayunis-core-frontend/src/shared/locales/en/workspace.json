@@ -1,13 +1,13 @@
 {
   "page": {
-    "breadcrumb": "Projects",
+    "breadcrumb": "Workspaces",
     "chatsTab": "Your chats",
     "knowledgeTab": "Knowledge",
     "skillsTab": "Skills",
     "instructionsTab": "Instructions",
     "artifactsTab": "Documents",
     "emptyChatsTitle": "No chats yet",
-    "emptyChats": "Chats you add to this project will appear here.",
+    "emptyChats": "Chats you add to this workspace will appear here.",
     "noChatResults": "No chats found.",
     "pin": "Pin",
     "unpin": "Unpin",
@@ -17,22 +17,22 @@
   "detail": {
     "save": "Save changes",
     "skillKnowledge": "Knowledge bases",
-    "skillKnowledgeDescription": "Choose project knowledge bases this skill can use.",
-    "noWorkspaceKnowledge": "Create a knowledge base in this project first.",
+    "skillKnowledgeDescription": "Choose workspace knowledge bases this skill can use.",
+    "noWorkspaceKnowledge": "Create a knowledge base in this workspace first.",
     "attach": "Attach",
     "detach": "Detach",
     "documents": "Documents",
-    "documentsDescription": "Upload and manage the documents in this project knowledge base.",
+    "documentsDescription": "Upload and manage the documents in this workspace knowledge base.",
     "noDocuments": "No documents have been uploaded yet."
   },
   "artifacts": {
-    "title": "Project artifacts",
-    "description": "Documents, diagrams, and spreadsheets created in chats in this project.",
+    "title": "Workspace artifacts",
+    "description": "Documents, diagrams, and spreadsheets created in chats in this workspace.",
     "emptyTitle": "No artifacts yet",
-    "empty": "Artifacts created in project chats will appear here.",
+    "empty": "Artifacts created in workspace chats will appear here.",
     "loadError": {
-      "title": "Project artifacts could not be loaded",
-      "description": "Reload the page before opening project artifacts."
+      "title": "Workspace artifacts could not be loaded",
+      "description": "Reload the page before opening workspace artifacts."
     },
     "untitled": "Untitled artifact",
     "open": "Open",
@@ -47,57 +47,57 @@
     "untitled": "Untitled chat",
     "pin": "Pin",
     "unpin": "Unpin",
-    "remove": "Remove from project"
+    "remove": "Remove from workspace"
   },
   "context": {
     "loadError": {
-      "title": "Project context could not be loaded",
-      "description": "Reload the page before editing project knowledge, skills, or instructions."
+      "title": "Workspace context could not be loaded",
+      "description": "Reload the page before editing workspace knowledge, skills, or instructions."
     },
     "addDialog": {
       "loading": "Loading items…",
       "cancel": "Cancel"
     },
     "skills": {
-      "title": "Project skills",
-      "description": "Skills available for the assistant to activate when needed in project chats.",
+      "title": "Workspace skills",
+      "description": "Skills available for the assistant to activate when needed in workspace chats.",
       "create": "Create skill",
-      "createDescription": "Create a skill owned by this project.",
+      "createDescription": "Create a skill owned by this workspace.",
       "name": "Name",
       "shortDescription": "Short description",
       "instructions": "Instructions",
-      "emptyTitle": "No project skills",
-      "empty": "No skills have been created in this project yet.",
-      "delete": "Delete project skill",
+      "emptyTitle": "No workspace skills",
+      "empty": "No skills have been created in this workspace yet.",
+      "delete": "Delete workspace skill",
       "active": "Active",
       "inactive": "Inactive",
-      "activeTooltip": "Active skills are available for the assistant to activate when needed in project chats. Instructions and resources are loaded only on activation. Inactive skills cannot be activated.",
-      "pin": "Pin in project chats",
-      "unpin": "Unpin from project chats"
+      "activeTooltip": "Active skills are available for the assistant to activate when needed in workspace chats. Instructions and resources are loaded only on activation. Inactive skills cannot be activated.",
+      "pin": "Pin in workspace chats",
+      "unpin": "Unpin from workspace chats"
     },
     "knowledge": {
       "title": "Knowledge bases",
-      "description": "Project-owned knowledge bases available to all project chats.",
+      "description": "Workspace-owned knowledge bases available to all workspace chats.",
       "create": "Create knowledge base",
-      "createDescription": "Create a knowledge base owned by this project.",
+      "createDescription": "Create a knowledge base owned by this workspace.",
       "name": "Name",
       "descriptionLabel": "Description",
-      "emptyTitle": "No project knowledge bases",
-      "empty": "No knowledge bases have been created in this project yet.",
-      "detach": "Delete project knowledge base",
+      "emptyTitle": "No workspace knowledge bases",
+      "empty": "No knowledge bases have been created in this workspace yet.",
+      "detach": "Delete workspace knowledge base",
       "documentCount": "{{count}} documents",
       "active": "Active",
       "inactive": "Inactive",
-      "activeTooltip": "Active knowledge bases are available to every chat in this project. Inactive knowledge bases are excluded from project chats."
+      "activeTooltip": "Active knowledge bases are available to every chat in this workspace. Inactive knowledge bases are excluded from workspace chats."
     },
     "documents": {
       "upload": "Upload file",
       "remove": "Remove file"
     },
     "instructions": {
-      "title": "Project instructions",
-      "description": "Instructions that are added to every chat in this project.",
-      "placeholder": "Enter instructions that apply to every chat in this project.",
+      "title": "Workspace instructions",
+      "description": "Instructions that are added to every chat in this workspace.",
+      "placeholder": "Enter instructions that apply to every chat in this workspace.",
       "save": "Save",
       "saveSuccess": "Instructions were saved.",
       "saveError": "Instructions could not be saved."

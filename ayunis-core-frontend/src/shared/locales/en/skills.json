@@ -75,7 +75,7 @@
   "create": {
     "success": "Skill created successfully!",
     "error": "Failed to create skill. Please try again.",
-    "duplicateName": "A skill with this name already exists in this project."
+    "duplicateName": "A skill with this name already exists in this workspace."
   },
   "toggleActive": {
     "success": "Skill status updated successfully!",

@@ -9,6 +9,39 @@ function uniqueSuffix(): string {
   return `${Date.now()}`;
 }
 
+test("shows project actions and the searchable chat overview", async ({
+  page,
+  api,
+}) => {
+  const fixture = await createProjectContextFixture(api, uniqueSuffix());
+  await createProjectThread(api, fixture.workspace.id);
+
+  await page.goto("/workspaces");
+  await expect(
+    page.getByRole("button", { name: "Arbeitsbereich hinzufügen" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Projekte" })).toHaveCount(0);
+  await expect(page.getByTestId("workspaces-search")).toHaveCount(0);
+  await expect(page.getByTestId("workspace-sort")).toHaveCount(0);
+  const workspaceRow = page.getByTestId(`workspace-${fixture.workspace.id}`);
+  const starButton = workspaceRow.getByRole("button", {
+    name: /Zu Favoriten hinzufügen|Aus Favoriten entfernen/,
+  });
+  await starButton.hover();
+  await expect(page.getByRole("tooltip")).toContainText(/Favoriten/i);
+
+  await page.goto("/chats");
+  await expect(
+    page.getByTestId("chats-toolbar").getByTestId("chats-search"),
+  ).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileSearch = page.getByTestId("chats-search");
+  await expect(mobileSearch).toBeVisible();
+  await mobileSearch.fill("mobile search");
+  await expect(page).toHaveURL(/search=mobile(?:%20|\+)search/);
+});
+
 test("adds skills, knowledge bases, and instructions to a project", async ({
   page,
   api,
@@ -19,9 +52,11 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await expect(page.getByTestId("workspace-page")).toBeVisible();
   await page.getByTestId("workspace-actions-menu").click();
   await expect(
-    page.getByRole("menuitem", { name: "Projekt bearbeiten" }),
+    page.getByRole("menuitem", { name: "Arbeitsbereich bearbeiten" }),
   ).toBeVisible();
-  await page.getByRole("menuitem", { name: "Projekt löschen" }).click();
+  await page
+    .getByRole("menuitem", { name: "Arbeitsbereich löschen" })
+    .click();
   const deleteConfirmation = page.getByTestId("workspace-delete-confirmation");
   const deleteButton = page.getByTestId("workspace-delete-confirm");
   await deleteConfirmation.fill("wrong project name");
@@ -115,7 +150,7 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await expect(activeSwitch).toHaveAttribute("data-state", "checked");
   await activeSwitch.hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Aktive Fähigkeiten sind automatisch",
+    "Aktive Fähigkeiten können vom Assistenten bei Bedarf",
   );
   await activeSwitch.click();
   await expect
