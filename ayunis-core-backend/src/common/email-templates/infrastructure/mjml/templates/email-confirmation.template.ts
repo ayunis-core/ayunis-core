@@ -1,6 +1,7 @@
-import mjml2html from 'mjml';
 import type { MJMLParseResults } from 'mjml-core';
 import type { EmailConfirmationTemplateContent } from 'src/common/email-templates/domain/email-template.entity';
+import { escapeAttribute, escapeText } from './_layout';
+import { renderMjml } from './render-mjml';
 
 export function emailConfirmationText(
   template: EmailConfirmationTemplateContent,
@@ -24,7 +25,12 @@ export function emailConfirmationText(
 export function emailConfirmationHtml(
   template: EmailConfirmationTemplateContent,
 ): MJMLParseResults {
-  return mjml2html(`
+  const confirmationUrl = escapeAttribute(template.confirmationUrl);
+  const userEmail = escapeText(template.userEmail);
+  const currentYear = escapeText(template.currentYear);
+  const companyName = escapeText(template.companyName);
+
+  return renderMjml(`
 <mjml>
   <mj-head>
     <mj-title>E-Mail-Adresse bestätigen</mj-title>
@@ -63,7 +69,7 @@ export function emailConfirmationHtml(
           font-size="16px"
           font-weight="600"
           border-radius="8px"
-          href="${template.confirmationUrl}"
+          href="${confirmationUrl}"
           css-class="confirmation-button"
         >
           E-Mail-Adresse bestätigen
@@ -86,7 +92,7 @@ export function emailConfirmationHtml(
         <mj-divider border-color="#e5e7eb" border-width="1px" padding-bottom="24px" />
 
         <mj-text align="center" color="#6b7280" font-size="14px" padding-bottom="8px">
-          Diese E-Mail wurde gesendet an ${template.userEmail}
+          Diese E-Mail wurde gesendet an ${userEmail}
         </mj-text>
 
         <mj-text align="center" color="#6b7280" font-size="14px" padding-bottom="16px">
@@ -94,7 +100,7 @@ export function emailConfirmationHtml(
         </mj-text>
 
         <mj-text align="center" color="#9ca3af" font-size="12px">
-          © ${template.currentYear} ${template.companyName} . Alle Rechte vorbehalten.
+          © ${currentYear} ${companyName} . Alle Rechte vorbehalten.
         </mj-text>
       </mj-column>
     </mj-section>
