@@ -27,7 +27,11 @@ import RootLayout from './layouts/root-layout';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
-import { openPanel, trackOpenPanelScreenViews } from '@/shared/lib/openpanel';
+import {
+  openPanel,
+  trackOpenPanelOutgoingLinks,
+  trackOpenPanelScreenViews,
+} from '@/shared/lib/openpanel';
 
 // Import the generated route tree
 import { routeTree } from './app/routeTree.gen.ts';
@@ -84,6 +88,7 @@ declare module '@tanstack/react-router' {
 
 if (openPanel) {
   trackOpenPanelScreenViews(router, openPanel);
+  trackOpenPanelOutgoingLinks(openPanel);
 }
 
 // Render the app
