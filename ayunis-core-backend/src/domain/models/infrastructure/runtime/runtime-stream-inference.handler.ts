@@ -18,9 +18,11 @@ import {
   STREAM_IDLE_TIMEOUT_MS,
 } from 'src/common/streaming/stream-idle-watchdog';
 import {
+  isRetryableProviderRateLimitFailure,
   isRetryableProviderServerFailure,
   isRetryableProviderTimeoutFailure,
   isRetryableSetupFailure,
+  rateLimitRetryDelayMs,
   SETUP_RETRY_BACKOFF_MS,
 } from 'src/common/errors/provider-transport-error.classifier';
 import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
@@ -38,7 +40,7 @@ type ProviderStreamRequest = Parameters<ModelProvider['stream']>[0];
 interface RetryableStreamFailure {
   readonly error: Error;
   readonly maxAttempts: number;
-  readonly reason: 'transport' | 'timeout' | 'server';
+  readonly reason: 'transport' | 'timeout' | 'server' | 'rate_limit';
 }
 
 function retryableStreamFailure(error: Error): RetryableStreamFailure | null {
@@ -51,7 +53,21 @@ function retryableStreamFailure(error: Error): RetryableStreamFailure | null {
   if (isRetryableProviderServerFailure(error)) {
     return { error, maxAttempts: MAX_SERVER_ATTEMPTS, reason: 'server' };
   }
+  if (isRetryableProviderRateLimitFailure(error)) {
+    return { error, maxAttempts: MAX_SERVER_ATTEMPTS, reason: 'rate_limit' };
+  }
   return null;
+}
+
+/** Undefined means the failure is not worth another attempt at this point. */
+function retryDelayMs(
+  failure: RetryableStreamFailure,
+  attempt: number,
+): number | undefined {
+  if (attempt >= failure.maxAttempts) return undefined;
+  return failure.reason === 'rate_limit'
+    ? rateLimitRetryDelayMs(failure.error, attempt)
+    : SETUP_RETRY_BACKOFF_MS * attempt;
 }
 
 function backoff(ms: number): Promise<void> {
@@ -152,10 +168,11 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
         if (!setupFailure) {
           return;
         }
-        if (attempt >= setupFailure.maxAttempts) {
+        const delayMs = retryDelayMs(setupFailure, attempt);
+        if (delayMs === undefined) {
           throw setupFailure.error;
         }
-        await backoff(SETUP_RETRY_BACKOFF_MS * attempt);
+        await backoff(delayMs);
         // No retry once the caller has cancelled — the subscriber is gone,
         // so a second attempt would only bill tokens nobody reads.
         if (controller.signal.aborted) {

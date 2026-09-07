@@ -29,6 +29,8 @@ export interface ProviderErrorContext {
   upstreamStatus?: number;
   /** Provider-assigned request id safe to share with support. */
   upstreamRequestId?: string;
+  /** Pause the provider asked for before resending a rate-limited request. */
+  retryAfterMs?: number;
 }
 
 export const PROVIDER_UNAVAILABLE_PREFIX = 'PROVIDER_UNAVAILABLE';

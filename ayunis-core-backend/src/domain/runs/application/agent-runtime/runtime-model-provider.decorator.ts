@@ -16,7 +16,9 @@ import { extractProviderErrorDiagnostics } from 'src/common/errors/extract-provi
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import {
+  isRetryableProviderRateLimitFailure,
   isRetryableSetupFailure,
+  rateLimitRetryDelayMs,
   SETUP_RETRY_BACKOFF_MS,
 } from 'src/common/errors/provider-transport-error.classifier';
 import {
@@ -103,7 +105,7 @@ export class RuntimeModelProviderDecorator {
           attempt,
         );
         if (!decision) throw error;
-        await waitBeforeRetry(decision.reason, attempt, request.signal, error);
+        await waitBeforeRetry(decision.delayMs, request.signal, error);
         this.logger.warn(
           { model: context.model.name, ...decision, attempt },
           'Provider stream failed before producing output; retrying',
@@ -377,15 +379,32 @@ function isProviderServerError(error: unknown): boolean {
   );
 }
 
+function isProviderRateLimitError(error: unknown): boolean {
+  return (
+    error instanceof AgentRuntimeError &&
+    isRetryableProviderRateLimitFailure(error.cause)
+  );
+}
+
 type RetryReason =
   | 'stall'
   | 'transient transport failure'
   | 'transient provider timeout'
-  | 'transient provider server failure';
+  | 'transient provider server failure'
+  | 'provider rate limit';
+
+const MAX_ATTEMPTS_BY_REASON: Record<RetryReason, number> = {
+  stall: MAX_DEFAULT_ATTEMPTS,
+  'transient transport failure': MAX_DEFAULT_ATTEMPTS,
+  'transient provider timeout': MAX_DEFAULT_ATTEMPTS,
+  'transient provider server failure': MAX_SERVER_ATTEMPTS,
+  'provider rate limit': MAX_SERVER_ATTEMPTS,
+};
 
 interface RetryDecision {
   readonly reason: RetryReason;
   readonly maxAttempts: number;
+  readonly delayMs: number;
 }
 
 function retryDecision(
@@ -396,21 +415,32 @@ function retryDecision(
 ): RetryDecision | null {
   const reason = retryReason(error, streamedContent, signal);
   if (!reason) return null;
-  const maxAttempts =
-    reason === 'transient provider server failure'
-      ? MAX_SERVER_ATTEMPTS
-      : MAX_DEFAULT_ATTEMPTS;
-  return attempt < maxAttempts ? { reason, maxAttempts } : null;
+  const maxAttempts = MAX_ATTEMPTS_BY_REASON[reason];
+  if (attempt >= maxAttempts) return null;
+  const delayMs = retryDelayMs(reason, error, attempt);
+  return delayMs === undefined ? null : { reason, maxAttempts, delayMs };
+}
+
+function retryDelayMs(
+  reason: RetryReason,
+  error: unknown,
+  attempt: number,
+): number | undefined {
+  if (reason === 'stall') return 0;
+  if (reason === 'provider rate limit') {
+    const cause: unknown = error instanceof Error ? error.cause : undefined;
+    return rateLimitRetryDelayMs(cause, attempt);
+  }
+  return SETUP_RETRY_BACKOFF_MS * attempt;
 }
 
 async function waitBeforeRetry(
-  reason: RetryReason,
-  attempt: number,
+  delayMs: number,
   signal: AbortSignal | undefined,
   originalError: unknown,
 ): Promise<void> {
-  if (reason === 'stall') return;
-  await backoff(SETUP_RETRY_BACKOFF_MS * attempt);
+  if (delayMs <= 0) return;
+  await backoff(delayMs);
   // Recheck after the wait — cancellation during backoff must not start
   // another billable provider attempt.
   if (signal?.aborted) throw originalError;
@@ -426,5 +456,6 @@ function retryReason(
   if (isTransientSetupError(error)) return 'transient transport failure';
   if (isProviderTimeoutError(error)) return 'transient provider timeout';
   if (isProviderServerError(error)) return 'transient provider server failure';
+  if (isProviderRateLimitError(error)) return 'provider rate limit';
   return null;
 }

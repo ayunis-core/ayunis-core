@@ -62,7 +62,11 @@ function wrapByUpstreamStatus(
     }),
   };
   if (status === 429) {
-    return new ProviderRequestRejectedError(context, error);
+    const retryAfterMs = diagnostics.upstreamRetryAfterMs;
+    return new ProviderRequestRejectedError(
+      { ...context, ...(retryAfterMs !== undefined && { retryAfterMs }) },
+      error,
+    );
   }
   if (status === 504 || status === 408) {
     return new ProviderTimeoutError(context, error);

@@ -74,6 +74,7 @@ describe('wrapProviderFailure', () => {
     const error = Object.assign(new Error('rate limit exceeded'), {
       status: 429,
       requestID: 'req_azure_429',
+      headers: { 'retry-after': '7' },
     });
     const wrapped = wrapProviderFailure(error, source);
 
@@ -81,6 +82,7 @@ describe('wrapProviderFailure', () => {
     expect(wrapped?.context).toMatchObject({
       upstreamStatus: 429,
       upstreamRequestId: 'req_azure_429',
+      retryAfterMs: 7_000,
     });
   });
 

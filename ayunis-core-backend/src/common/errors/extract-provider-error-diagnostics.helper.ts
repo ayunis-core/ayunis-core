@@ -7,6 +7,8 @@ export interface ProviderErrorDiagnostics {
   upstreamParam?: string;
   upstreamRequestId?: string;
   upstreamReason?: ProviderErrorReason;
+  /** Provider-requested pause before resending, from retry-after(-ms) headers. */
+  upstreamRetryAfterMs?: number;
 }
 
 type ProviderErrorReason =
@@ -54,7 +56,30 @@ export function extractProviderErrorDiagnostics(
     upstreamParam: extractParam(record, body),
     upstreamRequestId: extractRequestId(record, body, headers),
     upstreamReason: classifyReason(message, upstreamStatus),
+    upstreamRetryAfterMs: extractRetryAfterMs(headers),
   });
+}
+
+/**
+ * `retry-after-ms` is non-standard but exact; `retry-after` is seconds per
+ * RFC 9110. Its HTTP-date form is deliberately not parsed — providers we
+ * integrate send delay-seconds, and a date would need clock trust we lack.
+ */
+function extractRetryAfterMs(
+  headers: Record<string, unknown> | undefined,
+): number | undefined {
+  const millis = nonNegativeNumber(readHeader(headers, 'retry-after-ms'));
+  if (millis !== undefined) return millis;
+  const seconds = nonNegativeNumber(readHeader(headers, 'retry-after'));
+  return seconds === undefined ? undefined : seconds * 1000;
+}
+
+function nonNegativeNumber(value: unknown): number | undefined {
+  const parsed =
+    typeof value === 'string' && value.trim() !== '' ? Number(value) : value;
+  return typeof parsed === 'number' && Number.isFinite(parsed) && parsed >= 0
+    ? parsed
+    : undefined;
 }
 
 function classifyReason(
