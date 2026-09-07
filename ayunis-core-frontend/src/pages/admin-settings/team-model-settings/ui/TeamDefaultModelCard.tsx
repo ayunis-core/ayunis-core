@@ -1,6 +1,6 @@
 import type { ModelWithConfigResponseDto } from '@/shared/api';
 import { OrgDefaultModelCardWidget } from '@/widgets/org-default-model-card/ui/OrgDefaultModelCardWidget';
-import { useSetTeamDefaultModel } from '../api/useSetTeamDefaultModel';
+import { useSetTeamDefaultModel } from '@/pages/admin-settings/team-model-settings/api/useSetTeamDefaultModel';
 
 interface TeamDefaultModelCardProps {
   readonly teamId: string;

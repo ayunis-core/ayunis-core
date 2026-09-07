@@ -1,24 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import {
   Card,
+  CardAction,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@ayunis/ui/components/tabs';
 import { TeamMembersList } from './TeamMembersList';
 import { AddTeamMemberDialog } from './AddTeamMemberDialog';
-import { TeamModelsTab } from './TeamModelsTab';
 import { TeamCreditLimitCard } from './TeamCreditLimitCard';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { useHasCreditBudget } from '@/features/credit-limits';
@@ -34,91 +30,86 @@ interface TeamDetailPageProps {
   membersResponse: PaginatedTeamMembers;
 }
 
+function TeamModelSummary({ team }: Readonly<{ team: TeamDetail }>) {
+  const { t } = useTranslation('admin-settings-teams');
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('teamDetail.tabs.models')}</CardTitle>
+        <CardDescription>
+          {t(
+            team.modelOverrideEnabled
+              ? 'teamDetail.policyLinks.customModels'
+              : 'teamDetail.policyLinks.organizationModels',
+          )}
+        </CardDescription>
+        <CardAction>
+          <Button variant="outline" size="sm" asChild>
+            <Link
+              to="/admin-settings/models/teams/$id"
+              params={{ id: team.id }}
+              data-testid="team-manage-models"
+            >
+              {t('teamDetail.policyLinks.manageModels')}
+            </Link>
+          </Button>
+        </CardAction>
+      </CardHeader>
+    </Card>
+  );
+}
+
 export function TeamDetailPage({
   team,
   membersResponse,
 }: Readonly<TeamDetailPageProps>) {
   const { t } = useTranslation('admin-settings-teams');
-  const { t: tCredit } = useTranslation('admin-settings-credit-limits');
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('members');
   const { hasRole } = useAuthorization();
-  // Permitted models and credit limits are admin-only endpoints, so managers who
-  // reach this page through a teams permission must not see those tabs.
   const isAdmin = hasRole(MeResponseDtoRole.admin);
   const hasCreditBudget = useHasCreditBudget(isAdmin);
-
-  const headerActions =
-    activeTab === 'members' ? (
-      <PermissionGate permission="assign_users_to_teams">
-        <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
-          <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
-            {t('teamDetail.addMember.button')}
-          </Button>
-        </OnboardingTourTarget>
-      </PermissionGate>
-    ) : null;
+  const headerActions = (
+    <PermissionGate permission="assign_users_to_teams">
+      <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
+        <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
+          {t('teamDetail.addMember.button')}
+        </Button>
+      </OnboardingTourTarget>
+    </PermissionGate>
+  );
 
   return (
-    <SettingsLayout action={headerActions} title={team.name}>
-      <Tabs className="gap-4" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="members">
-            {t('teamDetail.tabs.members')}
-          </TabsTrigger>
-          {isAdmin && (
-            <TabsTrigger value="models" data-testid="team-models-tab">
-              {t('teamDetail.tabs.models')}
-            </TabsTrigger>
-          )}
-          {isAdmin && hasCreditBudget && (
-            <TabsTrigger value="credit-limit">
-              {tCredit('creditLimits.teamCard.title')}
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="members">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {t('teamDetail.members.title')}
-                {membersResponse.pagination.total !== undefined && (
-                  <Badge variant="secondary">
-                    <Users />
-                    {t('teams.list.memberCount', {
-                      count: membersResponse.pagination.total,
-                    })}
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TeamMembersList
-                teamId={team.id}
-                members={membersResponse.data}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {isAdmin && (
-          <TabsContent value="models">
-            <TeamModelsTab
-              teamId={team.id}
-              teamName={team.name}
-              modelOverrideEnabled={team.modelOverrideEnabled}
-            />
-          </TabsContent>
-        )}
-
+    <SettingsLayout
+      action={headerActions}
+      breadcrumbs={[
+        { label: t('teamDetail.backToTeams'), href: '/admin-settings/teams' },
+        { label: team.name },
+      ]}
+    >
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {t('teamDetail.members.title')}
+              {membersResponse.pagination.total !== undefined && (
+                <Badge variant="secondary">
+                  <Users />
+                  {t('teams.list.memberCount', {
+                    count: membersResponse.pagination.total,
+                  })}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TeamMembersList teamId={team.id} members={membersResponse.data} />
+          </CardContent>
+        </Card>
+        {isAdmin && <TeamModelSummary team={team} />}
         {isAdmin && hasCreditBudget && (
-          <TabsContent value="credit-limit">
-            <TeamCreditLimitCard teamId={team.id} teamName={team.name} />
-          </TabsContent>
+          <TeamCreditLimitCard teamId={team.id} teamName={team.name} />
         )}
-      </Tabs>
-
+      </div>
       <AddTeamMemberDialog
         teamId={team.id}
         open={addMemberDialogOpen}

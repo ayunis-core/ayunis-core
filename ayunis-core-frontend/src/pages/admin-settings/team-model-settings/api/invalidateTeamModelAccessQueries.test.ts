@@ -2,6 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
+  getTeamsControllerListTeamsQueryKey,
   getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
@@ -9,6 +10,17 @@ import {
 import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';
 
 describe(invalidateTeamModelAccessQueries.name, () => {
+  it('marks the team policy directory stale after policy changes', async () => {
+    const queryClient = new QueryClient();
+    const queryKey = getTeamsControllerListTeamsQueryKey();
+    queryClient.setQueryData(queryKey, [
+      { id: 'team', modelOverrideEnabled: false },
+    ]);
+
+    await invalidateTeamModelAccessQueries(queryClient, 'team');
+
+    expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true);
+  });
   it('invalidates team grants and current effective model policy', async () => {
     const queryClient = new QueryClient();
     const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
@@ -16,7 +28,7 @@ describe(invalidateTeamModelAccessQueries.name, () => {
 
     await invalidateTeamModelAccessQueries(queryClient, teamId);
 
-    expect(invalidateQueries).toHaveBeenCalledTimes(4);
+    expect(invalidateQueries).toHaveBeenCalledTimes(5);
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey:
         getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(teamId),

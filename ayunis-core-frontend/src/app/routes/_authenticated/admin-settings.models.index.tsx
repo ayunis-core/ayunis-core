@@ -5,10 +5,14 @@ import {
   getModelsControllerGetAvailableImageGenerationModelsQueryOptions,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import ModelSettingsPage from '@/pages/admin-settings/model-settings';
+import { modelSettingsSearchSchema } from '@/pages/admin-settings/model-settings/model/search';
 
-export const Route = createFileRoute('/_authenticated/admin-settings/models')({
+export const Route = createFileRoute('/_authenticated/admin-settings/models/')({
   component: RouteComponent,
-  loader: async ({ context: { queryClient } }) => {
+  validateSearch: modelSettingsSearchSchema,
+  loaderDeps: ({ search: { tab } }) => ({ tab }),
+  loader: async ({ context: { queryClient }, deps: { tab } }) => {
+    if (tab === 'teams') return;
     await Promise.all([
       queryClient.fetchQuery(
         getModelsControllerGetAvailableLanguageModelsQueryOptions(),
@@ -24,5 +28,15 @@ export const Route = createFileRoute('/_authenticated/admin-settings/models')({
 });
 
 function RouteComponent() {
-  return <ModelSettingsPage />;
+  const { tab, search } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  return (
+    <ModelSettingsPage
+      tab={tab}
+      search={search}
+      onSearchChange={(value) => {
+        void navigate({ search: { tab, search: value }, replace: true });
+      }}
+    />
+  );
 }

@@ -1,9 +1,5 @@
 {
   "models": {
-    "teamHint": {
-      "title": "Team-specific model restrictions",
-      "description": "You can restrict which models are available to specific teams in the <teamsLink>Teams settings</teamsLink>."
-    },
     "loading": "Loading models...",
     "loadErrorTitle": "Unable to load model data",
     "loadErrorDescription": "Model data could not be loaded right now. Please refresh and try again.",
@@ -80,5 +76,28 @@
       "success": "Organization default model updated.",
       "error": "Unable to update the organization default model."
     }
+  },
+  "tabs": {
+    "organization": "Organization",
+    "teams": "Teams"
+  },
+  "teams": {
+    "title": "Policies for teams",
+    "search": "Search teams…",
+    "name": "Team",
+    "policy": "Model policy",
+    "custom": "Custom policy",
+    "inherited": "Inherited from organization",
+    "configure": "Configure",
+    "empty": "No teams yet. Create teams in Teams settings.",
+    "noMatches": "No teams match your search.",
+    "loading": "Loading teams…",
+    "loadError": "Unable to load teams. Please refresh and try again."
+  },
+  "teamPolicy": {
+    "title": "Models for {{team}}",
+    "overrideTitle": "Custom model policy",
+    "overrideDescription": "Select the models this team can use. An empty custom policy grants no language or image-generation models through this team. Embedding models remain organization-wide.",
+    "overrideLabel": "Use custom model policy"
   }
 }

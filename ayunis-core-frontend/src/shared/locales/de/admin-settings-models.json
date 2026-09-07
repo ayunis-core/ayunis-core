@@ -1,9 +1,5 @@
 {
   "models": {
-    "teamHint": {
-      "title": "Team-spezifische Modellbeschränkungen",
-      "description": "Sie können in den <teamsLink>Team-Einstellungen</teamsLink> einschränken, welche Modelle für bestimmte Teams verfügbar sind."
-    },
     "loading": "Modelle werden geladen...",
     "loadErrorTitle": "Modelldaten konnten nicht geladen werden",
     "loadErrorDescription": "Die Modelldaten konnten derzeit nicht geladen werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
@@ -80,5 +76,28 @@
       "success": "Standardmodell der Organisation aktualisiert.",
       "error": "Standardmodell der Organisation konnte nicht aktualisiert werden."
     }
+  },
+  "tabs": {
+    "organization": "Organisation",
+    "teams": "Teams"
+  },
+  "teams": {
+    "title": "Richtlinien für Teams",
+    "search": "Teams suchen…",
+    "name": "Team",
+    "policy": "Modellrichtlinie",
+    "custom": "Eigene Richtlinie",
+    "inherited": "Von der Organisation geerbt",
+    "configure": "Konfigurieren",
+    "empty": "Noch keine Teams vorhanden. Erstellen Sie Teams in den Team-Einstellungen.",
+    "noMatches": "Keine Teams entsprechen Ihrer Suche.",
+    "loading": "Teams werden geladen…",
+    "loadError": "Teams konnten nicht geladen werden. Bitte laden Sie die Seite erneut."
+  },
+  "teamPolicy": {
+    "title": "Modelle für {{team}}",
+    "overrideTitle": "Eigene Modellrichtlinie",
+    "overrideDescription": "Wählen Sie die Modelle aus, die dieses Team verwenden darf. Eine leere eigene Richtlinie gewährt über dieses Team keinen Zugriff auf Sprach- oder Bildgenerierungsmodelle. Embedding-Modelle gelten weiterhin organisationsweit.",
+    "overrideLabel": "Eigene Modellrichtlinie verwenden"
   }
 }

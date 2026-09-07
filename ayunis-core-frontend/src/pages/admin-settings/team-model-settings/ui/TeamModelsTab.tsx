@@ -23,13 +23,13 @@ import type {
   TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { getTeamsControllerGetTeamQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import { useTeamPermittedModels } from '@/pages/admin-settings/team-detail/api/useTeamPermittedModels';
-import { useTeamPermittedImageGenerationModels } from '@/pages/admin-settings/team-detail/api/useTeamPermittedImageGenerationModels';
-import { useCreateTeamPermittedModel } from '@/pages/admin-settings/team-detail/api/useCreateTeamPermittedModel';
-import { useDeleteTeamPermittedModel } from '@/pages/admin-settings/team-detail/api/useDeleteTeamPermittedModel';
-import { useUpdateTeamPermittedModel } from '@/pages/admin-settings/team-detail/api/useUpdateTeamPermittedModel';
-import { useToggleModelOverride } from '@/pages/admin-settings/team-detail/api/useToggleModelOverride';
-import { buildTeamModelsForCard } from '@/pages/admin-settings/team-detail/lib/buildTeamModelsForCard';
+import { useTeamPermittedModels } from '@/pages/admin-settings/team-model-settings/api/useTeamPermittedModels';
+import { useTeamPermittedImageGenerationModels } from '@/pages/admin-settings/team-model-settings/api/useTeamPermittedImageGenerationModels';
+import { useCreateTeamPermittedModel } from '@/pages/admin-settings/team-model-settings/api/useCreateTeamPermittedModel';
+import { useDeleteTeamPermittedModel } from '@/pages/admin-settings/team-model-settings/api/useDeleteTeamPermittedModel';
+import { useUpdateTeamPermittedModel } from '@/pages/admin-settings/team-model-settings/api/useUpdateTeamPermittedModel';
+import { useToggleModelOverride } from '@/pages/admin-settings/team-model-settings/api/useToggleModelOverride';
+import { buildTeamModelsForCard } from '@/pages/admin-settings/team-model-settings/lib/buildTeamModelsForCard';
 import { TeamDefaultModelCard } from './TeamDefaultModelCard';
 
 interface TeamModelsTabProps {
@@ -62,22 +62,36 @@ export function TeamModelsTab({
   );
   const effectiveOverrideEnabled =
     cachedTeam?.modelOverrideEnabled ?? modelOverrideEnabled;
-  const { t } = useTranslation('admin-settings-teams');
+  const { t } = useTranslation('admin-settings-models');
   const { toggleModelOverride, isToggling } = useToggleModelOverride(
     teamId,
     teamName,
   );
-  const { models: languageModels, isError: hasLanguageError } =
-    useLanguageModels();
-  const { models: imageGenerationModels, isError: hasImageGenerationError } =
-    useImageGenerationModels();
+  const {
+    models: languageModels,
+    isError: hasLanguageError,
+    isLoading: isLoadingLanguage,
+  } = useLanguageModels();
+  const {
+    models: imageGenerationModels,
+    isError: hasImageGenerationError,
+    isLoading: isLoadingImages,
+  } = useImageGenerationModels();
   const {
     models: teamPermittedModels,
     isLoading: isLoadingTeamModels,
     isError: hasTeamLanguageError,
   } = useTeamPermittedModels(teamId);
-  const { models: teamPermittedImageModels, isError: hasTeamImageError } =
-    useTeamPermittedImageGenerationModels(teamId);
+  const {
+    models: teamPermittedImageModels,
+    isError: hasTeamImageError,
+    isLoading: isLoadingTeamImages,
+  } = useTeamPermittedImageGenerationModels(teamId);
+  const customModelsLoading =
+    isLoadingLanguage ||
+    isLoadingImages ||
+    isLoadingTeamModels ||
+    isLoadingTeamImages;
   const { createTeamPermittedModel, isCreating } =
     useCreateTeamPermittedModel(teamId);
   const { deleteTeamPermittedModel, isDeleting } =
@@ -127,9 +141,9 @@ export function TeamModelsTab({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>{t('teamDetail.models.overrideTitle')}</CardTitle>
+          <CardTitle>{t('teamPolicy.overrideTitle')}</CardTitle>
           <CardDescription>
-            {t('teamDetail.models.overrideDescription')}
+            {t('teamPolicy.overrideDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -142,13 +156,16 @@ export function TeamModelsTab({
               onCheckedChange={toggleModelOverride}
             />
             <Label htmlFor="model-override-toggle">
-              {t('teamDetail.models.overrideLabel')}
+              {t('teamPolicy.overrideLabel')}
             </Label>
           </div>
         </CardContent>
       </Card>
 
-      {effectiveOverrideEnabled ? (
+      {effectiveOverrideEnabled && customModelsLoading && (
+        <p role="status">{t('models.loading')}</p>
+      )}
+      {effectiveOverrideEnabled && !customModelsLoading && (
         <>
           <TeamDefaultModelCard
             teamId={teamId}
@@ -181,14 +198,6 @@ export function TeamModelsTab({
             )
           )}
         </>
-      ) : (
-        <Card>
-          <CardContent className="py-6">
-            <p className="text-muted-foreground text-center">
-              {t('teamDetail.models.overrideDisabledMessage')}
-            </p>
-          </CardContent>
-        </Card>
       )}
     </div>
   );

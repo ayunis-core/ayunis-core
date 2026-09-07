@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
+  getTeamsControllerListTeamsQueryKey,
   getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
@@ -11,6 +12,7 @@ export async function invalidateTeamModelAccessQueries(
   teamId: string,
 ): Promise<void> {
   const queryKeys = [
+    getTeamsControllerListTeamsQueryKey(),
     getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(teamId),
     getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey(
       teamId,

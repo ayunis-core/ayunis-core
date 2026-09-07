@@ -44,7 +44,6 @@ import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
 import { Route as AuthenticatedAdminSettingsRolesRouteImport } from './routes/_authenticated/admin-settings.roles'
 import { Route as AuthenticatedAdminSettingsRetentionRouteImport } from './routes/_authenticated/admin-settings.retention'
-import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
@@ -67,12 +66,15 @@ import { Route as AuthenticatedSuperAdminSettingsAppAlertsIndexRouteImport } fro
 import { Route as AuthenticatedSuperAdminSettingsAnonymizationIndexRouteImport } from './routes/_authenticated/super-admin-settings.anonymization.index'
 import { Route as AuthenticatedSuperAdminSettingsAcademyIndexRouteImport } from './routes/_authenticated/super-admin-settings.academy.index'
 import { Route as AuthenticatedAdminSettingsTeamsIndexRouteImport } from './routes/_authenticated/admin-settings.teams.index'
+import { Route as AuthenticatedAdminSettingsModelsIndexRouteImport } from './routes/_authenticated/admin-settings.models.index'
 import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
+import { Route as AuthenticatedAdminSettingsCreditLimitsIndexRouteImport } from './routes/_authenticated/admin-settings.credit-limits.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 import { Route as AuthenticatedAcademyChapterIdQuizRouteImport } from './routes/_authenticated/academy.$chapterId_.quiz'
 import { Route as AuthenticatedSettingsIntegrationsOauthCallbackRouteImport } from './routes/_authenticated/settings.integrations_.oauth.callback'
+import { Route as AuthenticatedAdminSettingsModelsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.models.teams.$id'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -270,12 +272,6 @@ const AuthenticatedAdminSettingsRetentionRoute =
     path: '/retention',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
-const AuthenticatedAdminSettingsModelsRoute =
-  AuthenticatedAdminSettingsModelsRouteImport.update({
-    id: '/models',
-    path: '/models',
-    getParentRoute: () => AuthenticatedAdminSettingsRoute,
-  } as any)
 const AuthenticatedAdminSettingsIntegrationsRoute =
   AuthenticatedAdminSettingsIntegrationsRouteImport.update({
     id: '/integrations',
@@ -404,10 +400,22 @@ const AuthenticatedAdminSettingsTeamsIndexRoute =
     path: '/teams/',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
+const AuthenticatedAdminSettingsModelsIndexRoute =
+  AuthenticatedAdminSettingsModelsIndexRouteImport.update({
+    id: '/models/',
+    path: '/models/',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
 const AuthenticatedAdminSettingsLetterheadsIndexRoute =
   AuthenticatedAdminSettingsLetterheadsIndexRouteImport.update({
     id: '/letterheads/',
     path: '/letterheads/',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
+const AuthenticatedAdminSettingsCreditLimitsIndexRoute =
+  AuthenticatedAdminSettingsCreditLimitsIndexRouteImport.update({
+    id: '/credit-limits/',
+    path: '/credit-limits/',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
 const AuthenticatedSuperAdminSettingsOrgsIdRoute =
@@ -440,6 +448,12 @@ const AuthenticatedSettingsIntegrationsOauthCallbackRoute =
     path: '/settings/integrations/oauth/callback',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsModelsTeamsIdRoute =
+  AuthenticatedAdminSettingsModelsTeamsIdRouteImport.update({
+    id: '/models/teams/$id',
+    path: '/models/teams/$id',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -465,7 +479,6 @@ export interface FileRoutesByFullPath {
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
-  '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -493,7 +506,9 @@ export interface FileRoutesByFullPath {
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/admin-settings/credit-limits/': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
   '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
+  '/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
@@ -504,6 +519,7 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/admin-settings/models/teams/$id': typeof AuthenticatedAdminSettingsModelsTeamsIdRoute
   '/settings/integrations/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -528,7 +544,6 @@ export interface FileRoutesByTo {
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
-  '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -556,7 +571,9 @@ export interface FileRoutesByTo {
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/admin-settings/credit-limits': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
   '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
+  '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/academy': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/super-admin-settings/anonymization': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
@@ -567,6 +584,7 @@ export interface FileRoutesByTo {
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/users': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/admin-settings/models/teams/$id': typeof AuthenticatedAdminSettingsModelsTeamsIdRoute
   '/settings/integrations/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
 }
 export interface FileRoutesById {
@@ -595,7 +613,6 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
-  '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/_authenticated/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -623,7 +640,9 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/_authenticated/admin-settings/credit-limits/': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
   '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
+  '/_authenticated/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/_authenticated/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/_authenticated/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
@@ -634,6 +653,7 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/_authenticated/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/_authenticated/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/_authenticated/admin-settings/models/teams/$id': typeof AuthenticatedAdminSettingsModelsTeamsIdRoute
   '/_authenticated/settings/integrations_/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
 }
 export interface FileRouteTypes {
@@ -662,7 +682,6 @@ export interface FileRouteTypes {
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
     | '/admin-settings/integrations'
-    | '/admin-settings/models'
     | '/admin-settings/retention'
     | '/admin-settings/roles'
     | '/admin-settings/security'
@@ -690,7 +709,9 @@ export interface FileRouteTypes {
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
+    | '/admin-settings/credit-limits/'
     | '/admin-settings/letterheads/'
+    | '/admin-settings/models/'
     | '/admin-settings/teams/'
     | '/super-admin-settings/academy/'
     | '/super-admin-settings/anonymization/'
@@ -701,6 +722,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/skills/'
     | '/super-admin-settings/super-admins/'
     | '/super-admin-settings/users/'
+    | '/admin-settings/models/teams/$id'
     | '/settings/integrations/oauth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -725,7 +747,6 @@ export interface FileRouteTypes {
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
     | '/admin-settings/integrations'
-    | '/admin-settings/models'
     | '/admin-settings/retention'
     | '/admin-settings/roles'
     | '/admin-settings/security'
@@ -753,7 +774,9 @@ export interface FileRouteTypes {
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
+    | '/admin-settings/credit-limits'
     | '/admin-settings/letterheads'
+    | '/admin-settings/models'
     | '/admin-settings/teams'
     | '/super-admin-settings/academy'
     | '/super-admin-settings/anonymization'
@@ -764,6 +787,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/skills'
     | '/super-admin-settings/super-admins'
     | '/super-admin-settings/users'
+    | '/admin-settings/models/teams/$id'
     | '/settings/integrations/oauth/callback'
   id:
     | '__root__'
@@ -791,7 +815,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/api-keys'
     | '/_authenticated/admin-settings/instructions'
     | '/_authenticated/admin-settings/integrations'
-    | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/retention'
     | '/_authenticated/admin-settings/roles'
     | '/_authenticated/admin-settings/security'
@@ -819,7 +842,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
+    | '/_authenticated/admin-settings/credit-limits/'
     | '/_authenticated/admin-settings/letterheads/'
+    | '/_authenticated/admin-settings/models/'
     | '/_authenticated/admin-settings/teams/'
     | '/_authenticated/super-admin-settings/academy/'
     | '/_authenticated/super-admin-settings/anonymization/'
@@ -830,6 +855,7 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/skills/'
     | '/_authenticated/super-admin-settings/super-admins/'
     | '/_authenticated/super-admin-settings/users/'
+    | '/_authenticated/admin-settings/models/teams/$id'
     | '/_authenticated/settings/integrations_/oauth/callback'
   fileRoutesById: FileRoutesById
 }
@@ -1098,13 +1124,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRetentionRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
-    '/_authenticated/admin-settings/models': {
-      id: '/_authenticated/admin-settings/models'
-      path: '/models'
-      fullPath: '/admin-settings/models'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsModelsRouteImport
-      parentRoute: typeof AuthenticatedAdminSettingsRoute
-    }
     '/_authenticated/admin-settings/integrations': {
       id: '/_authenticated/admin-settings/integrations'
       path: '/integrations'
@@ -1259,11 +1278,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
+    '/_authenticated/admin-settings/models/': {
+      id: '/_authenticated/admin-settings/models/'
+      path: '/models'
+      fullPath: '/admin-settings/models/'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsModelsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
     '/_authenticated/admin-settings/letterheads/': {
       id: '/_authenticated/admin-settings/letterheads/'
       path: '/letterheads'
       fullPath: '/admin-settings/letterheads/'
       preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
+    '/_authenticated/admin-settings/credit-limits/': {
+      id: '/_authenticated/admin-settings/credit-limits/'
+      path: '/credit-limits'
+      fullPath: '/admin-settings/credit-limits/'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsCreditLimitsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
     '/_authenticated/super-admin-settings/orgs/$id': {
@@ -1301,6 +1334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIntegrationsOauthCallbackRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/models/teams/$id': {
+      id: '/_authenticated/admin-settings/models/teams/$id'
+      path: '/models/teams/$id'
+      fullPath: '/admin-settings/models/teams/$id'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsModelsTeamsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
   }
 }
 
@@ -1310,7 +1350,6 @@ interface AuthenticatedAdminSettingsRouteChildren {
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
   AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
-  AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
   AuthenticatedAdminSettingsRetentionRoute: typeof AuthenticatedAdminSettingsRetentionRoute
   AuthenticatedAdminSettingsRolesRoute: typeof AuthenticatedAdminSettingsRolesRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
@@ -1319,8 +1358,11 @@ interface AuthenticatedAdminSettingsRouteChildren {
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
   AuthenticatedAdminSettingsLetterheadsIdRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
+  AuthenticatedAdminSettingsCreditLimitsIndexRoute: typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
   AuthenticatedAdminSettingsLetterheadsIndexRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
+  AuthenticatedAdminSettingsModelsIndexRoute: typeof AuthenticatedAdminSettingsModelsIndexRoute
   AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  AuthenticatedAdminSettingsModelsTeamsIdRoute: typeof AuthenticatedAdminSettingsModelsTeamsIdRoute
 }
 
 const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteChildren =
@@ -1335,8 +1377,6 @@ const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteCh
       AuthenticatedAdminSettingsInstructionsRoute,
     AuthenticatedAdminSettingsIntegrationsRoute:
       AuthenticatedAdminSettingsIntegrationsRoute,
-    AuthenticatedAdminSettingsModelsRoute:
-      AuthenticatedAdminSettingsModelsRoute,
     AuthenticatedAdminSettingsRetentionRoute:
       AuthenticatedAdminSettingsRetentionRoute,
     AuthenticatedAdminSettingsRolesRoute: AuthenticatedAdminSettingsRolesRoute,
@@ -1349,10 +1389,16 @@ const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteCh
       AuthenticatedAdminSettingsLetterheadsIdRoute,
     AuthenticatedAdminSettingsTeamsIdRoute:
       AuthenticatedAdminSettingsTeamsIdRoute,
+    AuthenticatedAdminSettingsCreditLimitsIndexRoute:
+      AuthenticatedAdminSettingsCreditLimitsIndexRoute,
     AuthenticatedAdminSettingsLetterheadsIndexRoute:
       AuthenticatedAdminSettingsLetterheadsIndexRoute,
+    AuthenticatedAdminSettingsModelsIndexRoute:
+      AuthenticatedAdminSettingsModelsIndexRoute,
     AuthenticatedAdminSettingsTeamsIndexRoute:
       AuthenticatedAdminSettingsTeamsIndexRoute,
+    AuthenticatedAdminSettingsModelsTeamsIdRoute:
+      AuthenticatedAdminSettingsModelsTeamsIdRoute,
   }
 
 const AuthenticatedAdminSettingsRouteWithChildren =
