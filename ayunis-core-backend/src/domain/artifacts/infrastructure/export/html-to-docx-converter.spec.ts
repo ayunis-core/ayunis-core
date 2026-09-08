@@ -119,6 +119,27 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toContain('Alice');
   });
 
+  it('should render a header-less table without borders', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<table><tr><td>Herr Müller</td><td>Elisabetta Cavalet</td></tr></table>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Herr Müller');
+    expect(xml).toContain('Elisabetta Cavalet');
+    expect(xml).not.toContain('CCCCCC');
+    expect(xml).toContain('w:val="none"');
+  });
+
+  it('should keep borders on a table that has a header row', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<table><tr><th>Posten</th></tr><tr><td>1</td></tr></table>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('CCCCCC');
+  });
+
   it('should render links as external hyperlinks', async () => {
     const buffer = await convertHtmlToDocx(
       '<p><a href="https://example.com">Click here</a></p>',

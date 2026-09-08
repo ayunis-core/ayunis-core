@@ -58,6 +58,8 @@ artifacts/
 │       ├── html-to-docx-converter.ts
 │       ├── paragraph-style-parser.ts
 │       ├── docx-document-config.ts
+│       ├── docx-table-styles.ts
+│       ├── letter-layout-tables.ts
 │       ├── pdf-letterhead-compositor.ts
 │       └── xlsx-spreadsheet-export.service.ts
 ├── presenters/http/
@@ -77,7 +79,7 @@ artifacts/
 ## Ports
 
 - **ArtifactsRepository** — CRUD for artifacts and versions
-- **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers, optionally compositing PDF output onto stored letterhead backgrounds with configured margins
+- **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers, optionally compositing PDF output onto stored letterhead backgrounds with configured margins. Letterhead exports also render a header-less table as the DIN 5008 head block (recipient address left, sender information block right), tagged at render time by `letter-layout-tables.ts` because the editor schema would drop a stored marker
 - **SpreadsheetExportPort** — Converts validated spreadsheet content to XLSX or CSV buffers
 
 ## Key Behaviors

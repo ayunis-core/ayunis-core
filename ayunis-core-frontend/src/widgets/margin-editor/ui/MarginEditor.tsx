@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
+import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
 import type { PageMargins } from '@/shared/lib/letterhead-margins';
@@ -13,12 +14,19 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 /** A PDF source — either a user-selected File or a remote URL. */
 export type PdfSource = File | string | null;
 
+/** A one-click set of margins, e.g. a DIN 5008 letter layout. */
+export interface MarginPreset {
+  label: string;
+  margins: PageMargins;
+}
+
 interface MarginEditorProps {
   /** File object (new upload) or URL string (existing PDF). */
   pdfSource: PdfSource;
   margins: PageMargins;
   onMarginsChange: (margins: PageMargins) => void;
   label: string;
+  presets?: readonly MarginPreset[];
 }
 
 const CANVAS_MAX_WIDTH = 280;
@@ -94,6 +102,7 @@ export function MarginEditor({
   margins,
   onMarginsChange,
   label,
+  presets,
 }: Readonly<MarginEditorProps>) {
   const { t } = useTranslation('admin-settings-letterheads');
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -224,21 +233,38 @@ export function MarginEditor({
             )}
           </div>
         )}
-        <div className="grid grid-cols-2 gap-2">
-          {(['top', 'bottom', 'left', 'right'] as const).map((field) => (
-            <div key={field} className="space-y-1">
-              <Label className="text-xs text-muted-foreground">
-                {t(`letterheads.createDialog.${field}`)}
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                value={margins[field]}
-                onChange={(e) => handleChange(field, e.target.value)}
-                className="h-8"
-              />
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            {(['top', 'bottom', 'left', 'right'] as const).map((field) => (
+              <div key={field} className="space-y-1">
+                <Label className="text-xs text-muted-foreground">
+                  {t(`letterheads.createDialog.${field}`)}
+                </Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={margins[field]}
+                  onChange={(e) => handleChange(field, e.target.value)}
+                  className="h-8"
+                />
+              </div>
+            ))}
+          </div>
+          {presets && presets.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {presets.map((preset) => (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  onClick={() => onMarginsChange(preset.margins)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

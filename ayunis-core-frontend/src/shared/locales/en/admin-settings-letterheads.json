@@ -59,7 +59,9 @@
       "error": "Failed to delete letterhead."
     },
     "marginEditor": {
-      "contentArea": "Content area"
+      "contentArea": "Content area",
+      "presetFormA": "DIN 5008 Form A",
+      "presetFormB": "DIN 5008 Form B"
     }
   }
 }
