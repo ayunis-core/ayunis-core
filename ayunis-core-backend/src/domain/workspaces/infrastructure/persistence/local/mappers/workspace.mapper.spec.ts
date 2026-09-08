@@ -1,6 +1,7 @@
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 import { WorkspaceMapper } from './workspace.mapper';
+import { WorkspaceVisibility } from 'src/domain/workspaces/domain/value-objects/workspace-visibility.enum';
 import {
   aWorkspace,
   TEST_ORG_ID,
@@ -17,6 +18,7 @@ describe('WorkspaceMapper', () => {
       description: 'Einsätze',
       icon: 'flame',
       color: '#6b5bd6',
+      visibility: WorkspaceVisibility.ORGANIZATION,
     });
 
     const roundTripped = mapper.toDomain(mapper.toRecord(workspace));

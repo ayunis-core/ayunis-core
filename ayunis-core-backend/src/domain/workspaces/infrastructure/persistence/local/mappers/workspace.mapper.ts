@@ -14,6 +14,7 @@ export class WorkspaceMapper {
       instruction: record.instruction,
       icon: record.icon,
       color: record.color,
+      visibility: record.visibility,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -29,6 +30,7 @@ export class WorkspaceMapper {
     record.instruction = domain.instruction;
     record.icon = domain.icon;
     record.color = domain.color;
+    record.visibility = domain.visibility;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;
