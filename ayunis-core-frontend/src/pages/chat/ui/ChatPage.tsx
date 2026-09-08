@@ -40,7 +40,6 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
-import { useDownloadSource } from '@/pages/chat/api/useDownloadSource';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
@@ -186,8 +185,6 @@ export default function ChatPage({
   const { addIntegration, removeIntegration } = useMcpIntegrationAttachment({
     threadId: thread.id,
   });
-  const { downloadSource } = useDownloadSource(thread);
-
   const { unmaskPiiMask } = useUnmaskPiiMask({
     threadId: thread.id,
     onSuccess: (masks) =>
@@ -437,7 +434,6 @@ export default function ChatPage({
         onModelChange={() => {}}
         onFileUpload={handleFileUpload}
         onRemoveSource={deleteFileSource}
-        onDownloadSource={(sourceId) => void downloadSource(sourceId)}
         onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
         onRemoveKnowledgeBase={removeKnowledgeBase}
         onAddIntegration={(integration) => addIntegration(integration.id)}

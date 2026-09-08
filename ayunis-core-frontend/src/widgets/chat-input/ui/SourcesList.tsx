@@ -52,7 +52,6 @@ interface SourcesListProps {
   onRemove: (sourceId: string) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onRemoveIntegration?: (integrationId: string) => void;
-  onDownload?: (sourceId: string) => void;
 }
 
 function getSourceIcon(source: {
@@ -83,7 +82,6 @@ export function SourcesList({
   onRemove,
   onRemoveKnowledgeBase,
   onRemoveIntegration,
-  onDownload,
 }: Readonly<SourcesListProps>) {
   const visibleSources = sources.filter(
     (source) => source.createdBy !== 'system',
@@ -145,15 +143,10 @@ export function SourcesList({
             key={source.id}
             variant="secondary"
             className={cn(
-              'flex items-center gap-1 cursor-pointer',
+              'flex items-center gap-1',
               source.createdBy === 'llm' && 'bg-[#8178C3]/10 text-[#8178C3]',
               isFailed && 'bg-destructive/10 text-destructive',
             )}
-            onClick={() =>
-              source.type === 'data' &&
-              source.status === SourceResponseDtoStatus.ready &&
-              onDownload?.(source.id)
-            }
           >
             {isProcessing && <Loader2 className="h-3 w-3 animate-spin" />}
             {isFailed && <AlertCircle className="h-3 w-3" />}
@@ -162,10 +155,7 @@ export function SourcesList({
             {!isProcessing && (
               <div
                 className="cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove(source.id);
-                }}
+                onClick={() => onRemove(source.id)}
               >
                 <XIcon className="h-3 w-3" />
               </div>

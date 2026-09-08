@@ -53,7 +53,6 @@
     "errorAddIntegration": "Failed to add integration",
     "errorRemoveIntegration": "Failed to remove integration",
     "errorIntegrationNotFound": "This integration no longer exists",
-    "errorDownloadSource": "Failed to download source. Please try again.",
     "errorUpdateModel": "Model could not be updated",
     "errorUpdateAgent": "Agent could not be updated",
     "errorRemoveAgent": "Agent could not be removed",

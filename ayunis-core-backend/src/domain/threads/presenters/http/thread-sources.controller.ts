@@ -9,11 +9,8 @@ import {
   UploadedFile,
   HttpCode,
   HttpStatus,
-  Res,
-  StreamableFile,
   Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
@@ -22,7 +19,6 @@ import {
 } from 'src/common/util/source-file-upload';
 import {
   ApiFileSourceUpload,
-  ApiSourceCsvDownload,
   ApiSourceIdParam,
   ApiSourceListResponse,
   ApiThreadIdParam,
@@ -41,16 +37,6 @@ import {
   CSVDataSourceResponseDto,
 } from './dto/get-thread-response.dto/source-response.dto';
 import { SourceDtoMapper } from './mappers/source.mapper';
-import { convertCSVToString } from 'src/common/util/csv';
-import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
-import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import {
-  InvalidSourceTypeError,
-  SourceNotReadyError,
-} from 'src/domain/sources/application/sources.errors';
-import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { SourceNotFoundError as SourceNotFoundInThreadError } from 'src/domain/threads/application/threads.errors';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 @ApiTags('threads')
@@ -64,7 +50,6 @@ export class ThreadSourcesController {
     private readonly addFileSourceToThreadUseCase: AddFileSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
-    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
   ) {}
 
@@ -139,51 +124,5 @@ export class ThreadSourcesController {
     await this.removeSourceFromThreadUseCase.execute(
       new RemoveSourceCommand(thread, sourceId),
     );
-  }
-
-  @Get(':id/sources/:sourceId/download')
-  @ApiSourceCsvDownload()
-  async downloadSource(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
-    this.logger.log({ threadId, sourceId }, 'downloadSource');
-
-    const { thread } = await this.findThreadUseCase.execute(
-      new FindThreadQuery(threadId),
-    );
-
-    const isAssigned = thread.sourceAssignments?.some(
-      (a) => a.source.id === sourceId,
-    );
-    if (!isAssigned) {
-      throw new SourceNotFoundInThreadError(sourceId, { threadId });
-    }
-
-    const source = await this.loadReadyCsvSource(sourceId);
-
-    const csvString = convertCSVToString(source.data);
-    const encodedName = encodeURIComponent(`${source.name}.csv`);
-    res.set({
-      'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename*=UTF-8''${encodedName}`,
-    });
-
-    return new StreamableFile(Buffer.from(csvString, 'utf-8'));
-  }
-
-  private async loadReadyCsvSource(sourceId: UUID): Promise<CSVDataSource> {
-    const source = await this.getSourceByIdUseCase.execute(
-      new GetSourceByIdQuery(sourceId),
-    );
-
-    if (!(source instanceof CSVDataSource)) {
-      throw new InvalidSourceTypeError(source.constructor.name);
-    }
-    if (source.status !== SourceStatus.READY) {
-      throw new SourceNotReadyError(sourceId);
-    }
-    return source;
   }
 }
