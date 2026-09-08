@@ -1,4 +1,7 @@
-import { extractProviderErrorDiagnostics } from './extract-provider-error-diagnostics.helper';
+import {
+  extractProviderErrorDiagnostics,
+  ProviderErrorReason,
+} from './extract-provider-error-diagnostics.helper';
 
 describe('extractProviderErrorDiagnostics', () => {
   it('extracts a provider request ID from Web API response headers', () => {
@@ -14,7 +17,7 @@ describe('extractProviderErrorDiagnostics', () => {
     expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamStatus: 400,
       upstreamRequestId: 'req_azure_response_123',
-      upstreamReason: 'unsupported_parameter',
+      upstreamReason: ProviderErrorReason.UNSUPPORTED_PARAMETER,
     });
   });
 
@@ -29,7 +32,7 @@ describe('extractProviderErrorDiagnostics', () => {
     expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamStatus: 400,
       upstreamRequestId: 'req_mistral_direct_456',
-      upstreamReason: 'invalid_tool_schema',
+      upstreamReason: ProviderErrorReason.INVALID_TOOL_SCHEMA,
     });
   });
 
@@ -69,7 +72,22 @@ describe('extractProviderErrorDiagnostics', () => {
     expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamStatus: 400,
       upstreamRequestId: 'req_plain_object_789',
-      upstreamReason: 'content_filter',
+      upstreamReason: ProviderErrorReason.CONTENT_FILTER,
+    });
+  });
+
+  it('extracts a provider request ID from AWS metadata', () => {
+    const error = Object.assign(new Error('Malformed input request'), {
+      $metadata: {
+        httpStatusCode: 400,
+        requestId: 'aws-bedrock-request-123',
+      },
+    });
+
+    expect(extractProviderErrorDiagnostics(error)).toMatchObject({
+      upstreamStatus: 400,
+      upstreamRequestId: 'aws-bedrock-request-123',
+      upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
     });
   });
 });

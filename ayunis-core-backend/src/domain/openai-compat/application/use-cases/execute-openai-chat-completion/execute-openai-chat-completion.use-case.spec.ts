@@ -19,8 +19,12 @@ import { OpenAIModelNotFoundError } from 'src/domain/openai-compat/application/o
 import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
-import { InferenceTokenLimitError } from 'src/domain/models/application/models.errors';
+import {
+  InferenceFailedError,
+  InferenceTokenLimitError,
+} from 'src/domain/models/application/models.errors';
 import type { OpenAIFileContentService } from 'src/domain/openai-compat/application/services/openai-file-content.service';
+import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 
 describe('ExecuteOpenAIChatCompletionUseCase', () => {
   let useCase: ExecuteOpenAIChatCompletionUseCase;
@@ -206,6 +210,35 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
     });
 
+    it('classifies a provider context-length rejection as an invalid OpenAI request', async () => {
+      getInferenceUseCase.execute.mockRejectedValue(
+        new InferenceFailedError('Provider inference failed', {
+          upstreamStatus: 400,
+          upstreamReason: ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED,
+        }),
+      );
+
+      await expect(
+        useCase.executeNonStreaming(baseCommand()),
+      ).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_INVALID_REQUEST',
+        statusCode: 400,
+        message: "Request exceeds the model's context length",
+      });
+    });
+
+    it('keeps unclassified provider rejections as inference failures', async () => {
+      const upstream = new InferenceFailedError('Provider inference failed', {
+        upstreamStatus: 400,
+        upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
+      });
+      getInferenceUseCase.execute.mockRejectedValue(upstream);
+
+      await expect(useCase.executeNonStreaming(baseCommand())).rejects.toBe(
+        upstream,
+      );
+    });
+
     it('throws OpenAIModelNotFoundError without calling guard for an unknown model', async () => {
       getPermittedLanguageModelsUseCase.execute.mockResolvedValue([]);
 
@@ -268,6 +301,31 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         (inferenceInput.messages[0].content[0] as TextMessageContent).text,
       ).toContain('Mobility plan');
       subject.complete();
+    });
+
+    it('classifies a provider tool-schema rejection as an invalid OpenAI request', async () => {
+      const subject = new Subject<StreamInferenceResponseChunk>();
+      streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+
+      const result$ = await useCase.executeStreaming(
+        baseCommand({ stream: true }),
+      );
+      const result = new Promise<never>((_resolve, reject) => {
+        result$.subscribe({ error: reject });
+      });
+      subject.error(
+        new InferenceFailedError('Provider inference failed', {
+          upstreamStatus: 400,
+          upstreamReason: ProviderErrorReason.INVALID_TOOL_SCHEMA,
+          upstreamParam: 'tools[14].function.parameters',
+        }),
+      );
+
+      await expect(result).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_INVALID_REQUEST',
+        statusCode: 400,
+        message: "Invalid tool schema at 'tools[14].function.parameters'",
+      });
     });
 
     it('sums usage across chunks via finalize', async () => {
