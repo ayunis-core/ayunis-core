@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.38.0](https://github.com/ayunis-core/ayunis-core/compare/v2.37.0...v2.38.0) (2026-09-08)
+
+
+### Features
+
+* **chat:** add artifact list side panel (AYC-677) ([#1625](https://github.com/ayunis-core/ayunis-core/issues/1625)) ([3565a43](https://github.com/ayunis-core/ayunis-core/commit/3565a43c00912dfbc65e6720455d9821df9c11ef))
+* **sources:** accept .odt and .odp uploads (AYC-159) ([#1633](https://github.com/ayunis-core/ayunis-core/issues/1633)) ([366fb8b](https://github.com/ayunis-core/ayunis-core/commit/366fb8b528a5832d2e7ab546f5864ebac0c776d6))
+
+
+### Bug Fixes
+
+* **letterheads:** position letter content per DIN 5008 (AYC-711) ([#1630](https://github.com/ayunis-core/ayunis-core/issues/1630)) ([ad91de3](https://github.com/ayunis-core/ayunis-core/commit/ad91de371e2dd175de2b5f0399bf50048d8de206))
+* **letterheads:** say why a letterhead PDF was rejected (AYC-921) ([#1634](https://github.com/ayunis-core/ayunis-core/issues/1634)) ([0fc1721](https://github.com/ayunis-core/ayunis-core/commit/0fc172149d5605b843b212740e0881595ca06e16))
+* **openai-compat:** classify provider input rejections (AYC-901) ([#1632](https://github.com/ayunis-core/ayunis-core/issues/1632)) ([771906d](https://github.com/ayunis-core/ayunis-core/commit/771906d30a245d5a622192b828fbfd3eb488c186))
+
+
+### Code Refactoring
+
+* **chat:** remove direct CSV source download (AYC-828) ([#1631](https://github.com/ayunis-core/ayunis-core/issues/1631)) ([ad658df](https://github.com/ayunis-core/ayunis-core/commit/ad658df60d673487759a17a0be79b252f86940c4))
+
 ## [2.37.0](https://github.com/ayunis-core/ayunis-core/compare/v2.36.0...v2.37.0) (2026-09-07)
 
 
