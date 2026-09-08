@@ -6,30 +6,27 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { cn } from '@ayunis/ui/lib/cn';
-import type { PanelKey } from '@/widgets/prototype-journey/model/journey';
 
-interface EntryControlsProps {
+interface PanelToggleProps {
   resultCount: number;
-  activePanel: PanelKey | null;
-  highlight: PanelKey | null;
-  onOpen: (panel: PanelKey) => void;
+  highlight: boolean;
+  onToggle: () => void;
 }
 
-export function EntryControls({
+export function PanelToggle({
   resultCount,
-  activePanel,
   highlight,
-  onOpen,
-}: Readonly<EntryControlsProps>) {
+  onToggle,
+}: Readonly<PanelToggleProps>) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          variant={activePanel ? 'secondary' : 'ghost'}
+          variant="ghost"
           size="icon"
           aria-label="Ergebnisse und Kontext"
           className={cn('relative transition-all', highlight && 'text-brand')}
-          onClick={() => onOpen(resultCount > 0 ? 'results' : 'context')}
+          onClick={onToggle}
         >
           <PanelRight />
           {resultCount > 0 && (

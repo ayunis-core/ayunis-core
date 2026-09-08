@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ChevronLeft, FileText, X } from 'lucide-react';
+import { ChevronLeft, FileText } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Empty,
@@ -53,7 +53,7 @@ interface PrototypeSidePanelProps {
   onOpenSourceFromList: (sourceId: string) => void;
   onOpenDocument: (documentId: string) => void;
   onExpandSource: () => void;
-  onClose: () => void;
+  panelToggle: ReactNode;
 }
 
 export function PrototypeSidePanel(props: Readonly<PrototypeSidePanelProps>) {
@@ -64,7 +64,7 @@ export function PrototypeSidePanel(props: Readonly<PrototypeSidePanelProps>) {
         <DetailView
           title={detail.title}
           onBack={detail.canGoBack ? props.onBackToContext : undefined}
-          onClose={props.onClose}
+          panelToggle={props.panelToggle}
         >
           {detail.body}
         </DetailView>
@@ -110,12 +110,12 @@ function resolveDetail({
 }
 
 function PanelHeader({
-  onClose,
+  panelToggle,
   onBack,
   title,
   children,
 }: Readonly<{
-  onClose: () => void;
+  panelToggle: ReactNode;
   onBack?: () => void;
   title?: string;
   children?: ReactNode;
@@ -139,14 +139,7 @@ function PanelHeader({
           {title}
         </span>
       )}
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={onClose}
-        aria-label="Seitenbereich schließen"
-      >
-        <X />
-      </Button>
+      {panelToggle}
     </div>
   );
 }
@@ -154,17 +147,17 @@ function PanelHeader({
 function DetailView({
   title,
   onBack,
-  onClose,
+  panelToggle,
   children,
 }: Readonly<{
   title: string;
   onBack?: () => void;
-  onClose: () => void;
+  panelToggle: ReactNode;
   children: ReactNode;
 }>) {
   return (
     <>
-      <PanelHeader title={title} onBack={onBack} onClose={onClose} />
+      <PanelHeader title={title} onBack={onBack} panelToggle={panelToggle} />
       <ScrollArea className="min-h-0 flex-1">
         <div className="px-3 pb-10 pt-1">{children}</div>
       </ScrollArea>
@@ -190,7 +183,7 @@ function TabsView({
   onOpenContextDetail,
   onOpenDocument,
   onExpandSource,
-  onClose,
+  panelToggle,
   detailMode,
 }: Readonly<PrototypeSidePanelProps>) {
   return (
@@ -199,7 +192,7 @@ function TabsView({
       onValueChange={(value) => onPanelChange(value as PanelKey)}
       className="flex min-h-0 flex-1 flex-col gap-0"
     >
-      <PanelHeader onClose={onClose}>
+      <PanelHeader panelToggle={panelToggle}>
         <TabsList className="mr-auto h-8">
           <TabsTrigger value="results" className="text-xs">
             Ergebnisse

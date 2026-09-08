@@ -10,7 +10,7 @@ import {
 } from '@/widgets/prototype-journey/model/journey';
 import { useJourneySearch } from '@/widgets/prototype-journey';
 import { ALL_SOURCE_HITS } from '@/pages/chat-context-prototype/model/mock';
-import { EntryControls } from './EntryControls';
+import { PanelToggle } from './PanelToggle';
 import { PrototypeChatInput } from './PrototypeChatInput';
 import { PrototypeChatLayout } from './PrototypeChatLayout';
 import { PrototypeNewChat } from './PrototypeNewChat';
@@ -63,6 +63,19 @@ export function ChatContextPrototypePage() {
       return {
         ...current,
         panel: current.panel === panel ? null : panel,
+        highlight: null,
+      };
+    });
+  }
+
+  function togglePanel() {
+    setState((current) => {
+      if (current.panel) {
+        return { ...current, panel: null, highlight: null };
+      }
+      return {
+        ...current,
+        panel: current.artifactIds.length > 0 ? 'results' : 'context',
         highlight: null,
       };
     });
@@ -139,6 +152,14 @@ export function ChatContextPrototypePage() {
     );
   }
 
+  const panelToggle = (
+    <PanelToggle
+      resultCount={state.artifactIds.length}
+      highlight={state.highlight !== null}
+      onToggle={togglePanel}
+    />
+  );
+
   const overlays = (
     <>
       <SourceDialog
@@ -179,16 +200,6 @@ export function ChatContextPrototypePage() {
                 ]}
                 action={
                   <div className="flex items-center gap-1">
-                    <EntryControls
-                      resultCount={state.artifactIds.length}
-                      activePanel={
-                        (state.openSourceId ?? state.sourceListIds)
-                          ? null
-                          : state.panel
-                      }
-                      highlight={state.highlight}
-                      onOpen={openPanel}
-                    />
                     <Button
                       variant="ghost"
                       size="icon"
@@ -196,6 +207,7 @@ export function ChatContextPrototypePage() {
                     >
                       <MoreVertical />
                     </Button>
+                    {!state.panel && panelToggle}
                   </div>
                 }
               />
@@ -277,9 +289,7 @@ export function ChatContextPrototypePage() {
                     )
                   }
                   onOpenSourceFromList={openSource}
-                  onClose={() =>
-                    setState((current) => ({ ...current, panel: null }))
-                  }
+                  panelToggle={panelToggle}
                 />
               ) : undefined
             }
