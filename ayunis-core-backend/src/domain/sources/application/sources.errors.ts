@@ -10,7 +10,6 @@ export enum SourceErrorCode {
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
   UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
-  SOURCE_NOT_READY = 'SOURCE_NOT_READY',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -87,17 +86,6 @@ export class UnsupportedFileTypeError extends SourceError {
       `File type '${fileType}' is not supported. Supported types: ${supportedTypes.join(', ')}`,
       SourceErrorCode.UNSUPPORTED_FILE_TYPE,
       400,
-      metadata,
-    );
-  }
-}
-
-export class SourceNotReadyError extends SourceError {
-  constructor(sourceId: string, metadata?: ErrorMetadata) {
-    super(
-      `Source '${sourceId}' is still processing or failed and has no data yet`,
-      SourceErrorCode.SOURCE_NOT_READY,
-      409,
       metadata,
     );
   }

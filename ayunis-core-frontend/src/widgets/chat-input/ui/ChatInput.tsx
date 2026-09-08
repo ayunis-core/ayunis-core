@@ -84,7 +84,6 @@ interface ChatInputProps {
   onModelChange: (modelId: string) => void;
   onFileUpload: (files: File[]) => void;
   onRemoveSource: (sourceId: string) => void;
-  onDownloadSource: (sourceId: string) => void;
   onAddKnowledgeBase?: (knowledgeBase: KnowledgeBaseSummary) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onAddIntegration?: (integration: IntegrationSummary) => void;
@@ -132,7 +131,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onModelChange,
       onFileUpload,
       onRemoveSource,
-      onDownloadSource,
       onAddKnowledgeBase,
       onRemoveKnowledgeBase,
       onAddIntegration,
@@ -363,7 +361,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       onRemove={onRemoveSource}
                       onRemoveKnowledgeBase={onRemoveKnowledgeBase}
                       onRemoveIntegration={onRemoveIntegration}
-                      onDownload={onDownloadSource}
                     />
                   </ChatInputExpandable>
                 )}

@@ -156,7 +156,6 @@ export function WorkspaceChatStarter({
         onRemoveSource={(sourceId) =>
           setSources((prev) => prev.filter((s) => s.id !== sourceId))
         }
-        onDownloadSource={() => null}
         onAddKnowledgeBase={(kb) => {
           setSelectedKnowledgeBases((prev) => [...prev, kb]);
         }}

@@ -53,7 +53,6 @@
     "errorAddIntegration": "Integration konnte nicht hinzugefügt werden",
     "errorRemoveIntegration": "Integration konnte nicht entfernt werden",
     "errorIntegrationNotFound": "Diese Integration existiert nicht mehr",
-    "errorDownloadSource": "Quelle konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
     "errorRemoveAgent": "Agent konnte nicht entfernt werden",

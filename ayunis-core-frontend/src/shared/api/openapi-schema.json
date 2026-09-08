@@ -4597,57 +4597,6 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}/sources/{sourceId}/download": {
-      "get": {
-        "operationId": "ThreadSourcesController_downloadSource",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "sourceId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the source to download",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the source as a CSV file",
-            "content": {
-              "text/csv": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Source is not a CSV data source"
-          },
-          "404": {
-            "description": "Thread or source not found"
-          },
-          "409": {
-            "description": "Source is still processing and has no data yet"
-          }
-        },
-        "summary": "Download a data source as CSV",
-        "tags": ["threads"]
-      }
-    },
     "/threads/{id}/knowledge-bases/{knowledgeBaseId}": {
       "post": {
         "operationId": "ThreadKnowledgeBasesController_addKnowledgeBase",
