@@ -48,14 +48,16 @@ import {
   useUploadDocument,
   useAddUrl,
   useRemoveDocument,
-} from '../api';
-import { isValidUrl } from '../lib/isValidUrl';
+} from '@/pages/knowledge-base/api';
+import { isValidUrl } from '@/pages/knowledge-base/lib/isValidUrl';
 import { AddUrlDialog } from './AddUrlDialog';
 
 const ACCEPTED_EXTENSIONS = [
   '.pdf',
   '.docx',
   '.pptx',
+  '.odt',
+  '.odp',
   '.txt',
   '.md',
   '.eml',

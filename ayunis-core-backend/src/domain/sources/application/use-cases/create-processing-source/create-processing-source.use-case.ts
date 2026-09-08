@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { MIME_TYPES } from 'src/common/util/file-type';
+import { fileTypeFromMimeType } from 'src/domain/sources/application/util/source-file-type.helpers';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import {
   UnsupportedSourceFileTypeError,
@@ -50,24 +50,8 @@ export class CreateProcessingSourceUseCase {
   }
 
   private getFileType(mimeType: string): FileType {
-    switch (mimeType) {
-      case MIME_TYPES.PDF:
-        return FileType.PDF;
-      case MIME_TYPES.DOCX:
-        return FileType.DOCX;
-      case MIME_TYPES.PPTX:
-        return FileType.PPTX;
-      case MIME_TYPES.TXT:
-        return FileType.TXT;
-      case MIME_TYPES.EML:
-        return FileType.EML;
-      case MIME_TYPES.MP3:
-      case MIME_TYPES.M4A:
-      case MIME_TYPES.WAV:
-      case MIME_TYPES.WEBM:
-        return FileType.AUDIO;
-      default:
-        throw new UnsupportedSourceFileTypeError(mimeType);
-    }
+    const fileType = fileTypeFromMimeType(mimeType);
+    if (!fileType) throw new UnsupportedSourceFileTypeError(mimeType);
+    return fileType;
   }
 }

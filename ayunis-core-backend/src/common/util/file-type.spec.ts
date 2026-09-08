@@ -2,7 +2,9 @@ import {
   detectFileType,
   getCanonicalMimeType,
   isAudioFile,
+  isDocumentFile,
   isEmailFile,
+  isOfficeDocumentFile,
   MIME_TYPES,
 } from './file-type';
 
@@ -217,6 +219,68 @@ describe('detectFileType', () => {
     it('is case-insensitive for the .eml extension', () => {
       expect(detectFileType('application/octet-stream', 'MESSAGE.EML')).toBe(
         'eml',
+      );
+    });
+  });
+
+  describe('ODF detection', () => {
+    it('returns "odt" when MIME type is correct', () => {
+      expect(detectFileType(MIME_TYPES.ODT, 'letter.odt')).toBe('odt');
+    });
+
+    it('returns "odt" from the .odt extension when MIME type is generic', () => {
+      expect(detectFileType('application/octet-stream', 'letter.odt')).toBe(
+        'odt',
+      );
+    });
+
+    it('is case-insensitive for the .odt extension', () => {
+      expect(detectFileType('application/octet-stream', 'LETTER.ODT')).toBe(
+        'odt',
+      );
+    });
+
+    it('returns "odp" when MIME type is correct', () => {
+      expect(detectFileType(MIME_TYPES.ODP, 'deck.odp')).toBe('odp');
+    });
+
+    it('returns "odp" from the .odp extension when MIME type is generic', () => {
+      expect(detectFileType('application/octet-stream', 'deck.odp')).toBe(
+        'odp',
+      );
+    });
+  });
+
+  describe('isOfficeDocumentFile', () => {
+    it('returns true for the LibreOffice-convertible types', () => {
+      expect(isOfficeDocumentFile('docx')).toBe(true);
+      expect(isOfficeDocumentFile('pptx')).toBe(true);
+      expect(isOfficeDocumentFile('odt')).toBe(true);
+      expect(isOfficeDocumentFile('odp')).toBe(true);
+    });
+
+    it('returns false for pdf and non-document types', () => {
+      expect(isOfficeDocumentFile('pdf')).toBe(false);
+      expect(isOfficeDocumentFile('txt')).toBe(false);
+      expect(isOfficeDocumentFile('xlsx')).toBe(false);
+      expect(isOfficeDocumentFile('unknown')).toBe(false);
+    });
+  });
+
+  describe('isDocumentFile for ODF', () => {
+    it('accepts odt and odp alongside docx and pptx', () => {
+      expect(isDocumentFile('odt')).toBe(true);
+      expect(isDocumentFile('odp')).toBe(true);
+    });
+  });
+
+  describe('getCanonicalMimeType for ODF', () => {
+    it('maps odt and odp to their OASIS MIME types', () => {
+      expect(getCanonicalMimeType('odt')).toBe(
+        'application/vnd.oasis.opendocument.text',
+      );
+      expect(getCanonicalMimeType('odp')).toBe(
+        'application/vnd.oasis.opendocument.presentation',
       );
     });
   });

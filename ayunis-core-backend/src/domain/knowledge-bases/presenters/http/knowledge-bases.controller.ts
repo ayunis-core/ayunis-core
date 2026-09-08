@@ -85,7 +85,8 @@ const DOCUMENT_UPLOAD_API_BODY: ApiBodyOptions = {
       file: {
         type: 'string',
         format: 'binary',
-        description: 'The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)',
+        description:
+          'The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB)',
       },
     },
     required: ['file'],
@@ -350,7 +351,7 @@ export class KnowledgeBasesController {
       errorMessage: (reason, detectedType) =>
         reason === 'missing-mime'
           ? `Unable to determine MIME type for detected file type: ${detectedType}`
-          : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
+          : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, ODT, ODP, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
     });
   }
 

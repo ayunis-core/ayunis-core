@@ -60,6 +60,8 @@ const ACCEPTED_EXTENSIONS = [
   '.pdf',
   '.docx',
   '.pptx',
+  '.odt',
+  '.odp',
   '.txt',
   '.md',
   '.eml',

@@ -7,6 +7,8 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
   '.xls',
   '.docx',
   '.pptx',
+  '.odt',
+  '.odp',
   '.txt',
   '.eml',
 ];

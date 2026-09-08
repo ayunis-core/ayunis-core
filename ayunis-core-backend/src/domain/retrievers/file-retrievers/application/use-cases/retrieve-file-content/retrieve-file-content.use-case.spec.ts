@@ -352,4 +352,45 @@ describe('RetrieveFileContentUseCase', () => {
     );
     expect(result).toBe(expectedResult);
   });
+
+  it.each([
+    ['letter.odt', 'application/vnd.oasis.opendocument.text'],
+    ['deck.odp', 'application/vnd.oasis.opendocument.presentation'],
+  ])(
+    'should convert %s to PDF via Gotenberg then process with Mistral',
+    async (fileName, mimeType) => {
+      const odfBuffer = Buffer.from('fake odf content');
+      const pdfBuffer = Buffer.from('converted pdf content');
+      const expectedResult = new FileRetrieverResult([
+        new FileRetrieverPage('extracted text from converted odf', 1),
+      ]);
+
+      jest
+        .spyOn(mockDocumentConverter, 'convertToPdf')
+        .mockResolvedValue(pdfBuffer);
+      jest
+        .spyOn(mockMistralHandler, 'processFile')
+        .mockResolvedValue(expectedResult);
+
+      const result = await useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: odfBuffer,
+          fileName,
+          fileType: mimeType,
+        }),
+      );
+
+      expect(mockDocumentConverter.convertToPdf).toHaveBeenCalledWith(
+        odfBuffer,
+        fileName,
+      );
+      expect(mockMistralHandler.processFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filename: fileName.replace(/\.od[tp]$/, '.pdf'),
+          fileType: 'application/pdf',
+        }),
+      );
+      expect(result).toBe(expectedResult);
+    },
+  );
 });

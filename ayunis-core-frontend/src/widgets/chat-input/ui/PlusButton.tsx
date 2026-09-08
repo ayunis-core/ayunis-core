@@ -18,14 +18,14 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { Brain, Loader2, Paperclip, Plus } from 'lucide-react';
 import { Input } from '@ayunis/ui/components/input';
 import { useRef } from 'react';
-import { useKnowledgeBases } from '../api/useKnowledgeBases';
+import { useKnowledgeBases } from '@/widgets/chat-input/api/useKnowledgeBases';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useNavigate } from '@tanstack/react-router';
 import {
   separateFilesByType,
   createFileListFromFiles,
-} from '../utils/fileHandlers';
+} from '@/widgets/chat-input/utils/fileHandlers';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -198,7 +198,7 @@ export default function PlusButton({
         type="file"
         hidden
         multiple
-        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.txt,.md,.eml,.mp3,.m4a,.wav,.webm"
+        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.odt,.odp,.txt,.md,.eml,.mp3,.m4a,.wav,.webm"
         onChange={(e) => handleFileChange(e.target.files)}
         ref={fileInputRef}
       />

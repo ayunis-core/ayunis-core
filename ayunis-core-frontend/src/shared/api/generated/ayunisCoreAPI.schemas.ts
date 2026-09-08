@@ -2299,6 +2299,8 @@ export const FileSourceResponseDtoFileType = {
   pdf: 'pdf',
   docx: 'docx',
   pptx: 'pptx',
+  odt: 'odt',
+  odp: 'odp',
   txt: 'txt',
   eml: 'eml',
   audio: 'audio',
@@ -5610,7 +5612,7 @@ export type ThreadSourcesControllerAddFileSourceBody = {
 export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB) */
+  /** The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB) */
   file: Blob;
 };
 
