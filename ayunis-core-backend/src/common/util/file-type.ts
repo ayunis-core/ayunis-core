@@ -13,6 +13,10 @@ export const MIME_TYPES = {
   // PowerPoint
   PPTX: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 
+  // OpenDocument (LibreOffice) — text and presentation
+  ODT: 'application/vnd.oasis.opendocument.text',
+  ODP: 'application/vnd.oasis.opendocument.presentation',
+
   // Excel
   XLSX: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   XLS: 'application/vnd.ms-excel',
@@ -45,6 +49,8 @@ export const FILE_EXTENSIONS = {
   PDF: '.pdf',
   DOCX: '.docx',
   PPTX: '.pptx',
+  ODT: '.odt',
+  ODP: '.odp',
   XLSX: '.xlsx',
   XLS: '.xls',
   CSV: '.csv',
@@ -62,6 +68,8 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'PDF',
   'DOCX',
   'PPTX',
+  'ODT',
+  'ODP',
   'TXT',
   'EML',
   'CSV',
@@ -77,6 +85,8 @@ export type DetectedFileType =
   | 'pdf'
   | 'docx'
   | 'pptx'
+  | 'odt'
+  | 'odp'
   | 'xlsx'
   | 'xls'
   | 'csv'
@@ -93,6 +103,8 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [MIME_TYPES.PDF]: 'pdf',
   [MIME_TYPES.DOCX]: 'docx',
   [MIME_TYPES.PPTX]: 'pptx',
+  [MIME_TYPES.ODT]: 'odt',
+  [MIME_TYPES.ODP]: 'odp',
   [MIME_TYPES.XLSX]: 'xlsx',
   [MIME_TYPES.CSV]: 'csv',
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
@@ -111,6 +123,8 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.PDF]: 'pdf',
   [FILE_EXTENSIONS.DOCX]: 'docx',
   [FILE_EXTENSIONS.PPTX]: 'pptx',
+  [FILE_EXTENSIONS.ODT]: 'odt',
+  [FILE_EXTENSIONS.ODP]: 'odp',
   [FILE_EXTENSIONS.XLSX]: 'xlsx',
   [FILE_EXTENSIONS.XLS]: 'xls',
   [FILE_EXTENSIONS.CSV]: 'csv',
@@ -153,10 +167,25 @@ export function isPlainTextFile(fileType: DetectedFileType): boolean {
 }
 
 /**
- * Check if the file type is a document (PDF, Word, PowerPoint)
+ * Office formats that reach the text pipeline by way of a LibreOffice
+ * conversion to PDF. Callers of the converter must gate on this rather than on
+ * their own literal list, so an added format cannot be accepted on upload and
+ * then rejected during retrieval.
+ */
+export function isOfficeDocumentFile(fileType: DetectedFileType): boolean {
+  return (
+    fileType === 'docx' ||
+    fileType === 'pptx' ||
+    fileType === 'odt' ||
+    fileType === 'odp'
+  );
+}
+
+/**
+ * Check if the file type is a document (PDF, Word, PowerPoint, OpenDocument)
  */
 export function isDocumentFile(fileType: DetectedFileType): boolean {
-  return fileType === 'pdf' || fileType === 'docx' || fileType === 'pptx';
+  return fileType === 'pdf' || isOfficeDocumentFile(fileType);
 }
 
 /**
@@ -214,6 +243,8 @@ const CANONICAL_MIME_BY_FILE_TYPE: Record<
   pdf: MIME_TYPES.PDF,
   docx: MIME_TYPES.DOCX,
   pptx: MIME_TYPES.PPTX,
+  odt: MIME_TYPES.ODT,
+  odp: MIME_TYPES.ODP,
   xlsx: MIME_TYPES.XLSX,
   xls: MIME_TYPES.XLS,
   csv: MIME_TYPES.CSV,

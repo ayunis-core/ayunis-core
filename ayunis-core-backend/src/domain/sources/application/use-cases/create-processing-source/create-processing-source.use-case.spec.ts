@@ -55,6 +55,29 @@ describe('CreateProcessingSourceUseCase', () => {
   });
 
   it.each([
+    ['application/vnd.oasis.opendocument.text', 'Brief.odt', FileType.ODT],
+    [
+      'application/vnd.oasis.opendocument.presentation',
+      'Praesentation.odp',
+      FileType.ODP,
+    ],
+  ])(
+    'should create a FileSource with PROCESSING status for %s',
+    async (mimeType, fileName, expectedFileType) => {
+      const command = new CreateProcessingSourceCommand({
+        fileType: mimeType,
+        fileName,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.fileType).toBe(expectedFileType);
+      expect(result.textType).toBe(TextType.FILE);
+      expect(result.status).toBe(SourceStatus.PROCESSING);
+    },
+  );
+
+  it.each([
     ['audio/mpeg', 'meeting.mp3'],
     ['audio/x-m4a', 'voice-memo.m4a'],
     ['audio/wav', 'interview.wav'],

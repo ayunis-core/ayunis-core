@@ -32,7 +32,7 @@ import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
-import { MIME_TYPES } from 'src/common/util/file-type';
+import { fileTypeFromMimeType } from 'src/domain/sources/application/util/source-file-type.helpers';
 
 interface TextSourceWithContent {
   source: TextSource;
@@ -143,29 +143,15 @@ export class CreateTextSourceUseCase {
   }
 
   private getFileType(mimeType: string): FileType {
-    switch (mimeType) {
-      case MIME_TYPES.PDF:
-        return FileType.PDF;
-      case MIME_TYPES.DOCX:
-        return FileType.DOCX;
-      case MIME_TYPES.PPTX:
-        return FileType.PPTX;
-      case MIME_TYPES.TXT:
-        return FileType.TXT;
-      case MIME_TYPES.EML:
-        return FileType.EML;
-      case MIME_TYPES.MP3:
-      case MIME_TYPES.M4A:
-      case MIME_TYPES.WAV:
-      case MIME_TYPES.WEBM:
-        return FileType.AUDIO;
-      default:
-        // This is a programming error - caller should validate/route file types before calling this use case
-        throw new Error(
-          `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
-            `This use case only handles PDF, DOCX, PPTX, TXT, EML, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
-        );
+    const fileType = fileTypeFromMimeType(mimeType);
+    if (!fileType) {
+      // This is a programming error - caller should validate/route file types before calling this use case
+      throw new Error(
+        `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
+          `This use case only handles PDF, DOCX, PPTX, ODT, ODP, TXT, EML, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
+      );
     }
+    return fileType;
   }
 
   /**

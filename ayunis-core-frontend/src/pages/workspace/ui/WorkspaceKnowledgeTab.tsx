@@ -26,7 +26,7 @@ import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
 
 const ACCEPTED_DOCUMENT_FILE_TYPES =
-  '.pdf,.docx,.pptx,.txt,.md,.eml,.mp3,.m4a,.wav,.webm';
+  '.pdf,.docx,.pptx,.odt,.odp,.txt,.md,.eml,.mp3,.m4a,.wav,.webm';
 
 export function WorkspaceKnowledgeTab({
   workspaceId,

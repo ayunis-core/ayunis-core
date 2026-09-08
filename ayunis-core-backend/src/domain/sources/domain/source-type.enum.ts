@@ -12,6 +12,8 @@ export enum FileType {
   PDF = 'pdf',
   DOCX = 'docx',
   PPTX = 'pptx',
+  ODT = 'odt',
+  ODP = 'odp',
   TXT = 'txt',
   EML = 'eml',
   AUDIO = 'audio',

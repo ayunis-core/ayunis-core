@@ -5038,7 +5038,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)"
+                    "description": "The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB)"
                   }
                 },
                 "required": ["file"]
@@ -15222,7 +15222,7 @@
           "fileType": {
             "type": "string",
             "description": "Type of file",
-            "enum": ["pdf", "docx", "pptx", "txt", "eml", "audio"]
+            "enum": ["pdf", "docx", "pptx", "odt", "odp", "txt", "eml", "audio"]
           }
         },
         "required": [

@@ -18,6 +18,7 @@ import {
 import {
   detectFileType,
   isAudioFile,
+  isOfficeDocumentFile,
   MIME_TYPES,
 } from 'src/common/util/file-type';
 import { extractTextFromEml } from 'src/common/util/eml';
@@ -75,7 +76,7 @@ export class RetrieveFileContentUseCase {
       );
     }
 
-    if (fileType === 'docx' || fileType === 'pptx') {
+    if (isOfficeDocumentFile(fileType)) {
       return await this.processOfficeDocument(
         command.fileData,
         command.fileName,
@@ -158,7 +159,7 @@ export class RetrieveFileContentUseCase {
   }
 
   /**
-   * DOCX/PPTX: Convert to PDF via Gotenberg, then process as PDF.
+   * DOCX/PPTX/ODT/ODP: Convert to PDF via Gotenberg, then process as PDF.
    */
   private async processOfficeDocument(
     fileData: Buffer,
