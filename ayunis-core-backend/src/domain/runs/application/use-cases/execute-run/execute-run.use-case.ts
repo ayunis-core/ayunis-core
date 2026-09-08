@@ -63,7 +63,7 @@ import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/ap
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import type { PreparedRun, PreparedTools } from './execute-run.types';
-import { MAX_CONTEXT_TOKENS } from 'src/domain/runs/application/context-budget.constants';
+import { MAX_CONTEXT_TOKENS } from 'src/common/token-counter/application/context-budget.constants';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
@@ -86,7 +86,6 @@ export class ExecuteRunUseCase {
 
   private readonly logger = new Logger(ExecuteRunUseCase.name);
 
-  // eslint-disable-next-line max-params
   constructor(
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
