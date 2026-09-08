@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { Observable, finalize, map } from 'rxjs';
+import { Observable, catchError, finalize, map, throwError } from 'rxjs';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
-import { InferenceTokenLimitError } from 'src/domain/models/application/models.errors';
+import {
+  InferenceFailedError,
+  InferenceTokenLimitError,
+} from 'src/domain/models/application/models.errors';
 import { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
 import { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -17,6 +20,7 @@ import {
   OpenAIStreamSession,
 } from 'src/domain/openai-compat/application/mappers/openai-stream.mapper';
 import {
+  OpenAIInvalidRequestError,
   OpenAIModelNotFoundError,
   OpenAITokenLimitError,
   OpenAIUnexpectedError,
@@ -26,6 +30,7 @@ import { OpenAIFileContentService } from 'src/domain/openai-compat/application/s
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { ChatCompletionResponse } from 'src/domain/openai-compat/application/types/openai-response.types';
 import type { ChatCompletionChunk } from 'src/domain/openai-compat/application/types/openai-chunk.types';
+import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 
 /**
  * Sole orchestrator on the OpenAI-compat path. Wraps `Get/StreamInference`
@@ -108,7 +113,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
       if (error instanceof InferenceTokenLimitError) {
         throw new OpenAITokenLimitError(error.metadata);
       }
-      throw error;
+      throw this.mapProviderInputError(error);
     }
   }
 
@@ -146,7 +151,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
     // indices into OpenAI's contiguous zero-based numbering.
     const session = new OpenAIStreamSession();
 
-    return source$.pipe(
+    return this.mapProviderInputErrors(source$).pipe(
       map((chunk) => {
         if (chunk.usage) {
           totals.inputTokens += chunk.usage.inputTokens ?? 0;
@@ -211,6 +216,42 @@ export class ExecuteOpenAIChatCompletionUseCase {
   private completionId(): string {
     return `chatcmpl-${randomUUID()}`;
   }
+
+  private mapProviderInputError(error: unknown): unknown {
+    if (!isProviderRequestRejection(error)) return error;
+    const reason = error.metadata?.upstreamReason;
+    if (reason === ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED) {
+      return new OpenAIInvalidRequestError(
+        "Request exceeds the model's context length",
+        error.metadata,
+      );
+    }
+    if (reason === ProviderErrorReason.INVALID_TOOL_SCHEMA) {
+      const param = error.metadata?.upstreamParam;
+      const location = typeof param === 'string' ? ` at '${param}'` : '';
+      return new OpenAIInvalidRequestError(
+        `Invalid tool schema${location}`,
+        error.metadata,
+      );
+    }
+    return error;
+  }
+
+  private mapProviderInputErrors<T>(source$: Observable<T>): Observable<T> {
+    return source$.pipe(
+      catchError((error: unknown) =>
+        throwError(() => this.mapProviderInputError(error)),
+      ),
+    );
+  }
+}
+
+function isProviderRequestRejection(
+  error: unknown,
+): error is InferenceFailedError {
+  if (!(error instanceof InferenceFailedError)) return false;
+  const status = error.metadata?.upstreamStatus;
+  return typeof status === 'number' && status >= 400 && status < 500;
 }
 
 /** RxJS operator: drop null/undefined emissions, narrow the type. */

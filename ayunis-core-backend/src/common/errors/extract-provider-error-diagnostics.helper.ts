@@ -11,26 +11,42 @@ export interface ProviderErrorDiagnostics {
   upstreamRetryAfterMs?: number;
 }
 
-type ProviderErrorReason =
-  | 'invalid_tool_schema'
-  | 'context_length_exceeded'
-  | 'tool_limit_exceeded'
-  | 'unsupported_parameter'
-  | 'content_filter'
-  | 'authentication_failed'
-  | 'unknown_request_rejection';
+export const ProviderErrorReason = {
+  INVALID_TOOL_SCHEMA: 'invalid_tool_schema',
+  CONTEXT_LENGTH_EXCEEDED: 'context_length_exceeded',
+  TOOL_LIMIT_EXCEEDED: 'tool_limit_exceeded',
+  UNSUPPORTED_PARAMETER: 'unsupported_parameter',
+  CONTENT_FILTER: 'content_filter',
+  AUTHENTICATION_FAILED: 'authentication_failed',
+  UNKNOWN_REQUEST_REJECTION: 'unknown_request_rejection',
+} as const;
+
+export type ProviderErrorReason =
+  (typeof ProviderErrorReason)[keyof typeof ProviderErrorReason];
 
 const SAFE_SCALAR = /^[a-zA-Z0-9_$.[\]:-]+$/;
 const REASON_PATTERNS: ReadonlyArray<readonly [ProviderErrorReason, RegExp]> = [
-  ['invalid_tool_schema', /invalid schema|function parameters|tool schema/i],
   [
-    'context_length_exceeded',
+    ProviderErrorReason.INVALID_TOOL_SCHEMA,
+    /invalid schema|function parameters|tool schema/i,
+  ],
+  [
+    ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED,
     /context length|maximum context|too many tokens/i,
   ],
-  ['tool_limit_exceeded', /too many tools|maximum number of tools|tool limit/i],
-  ['unsupported_parameter', /unsupported parameter|not supported.*parameter/i],
-  ['content_filter', /content filter/i],
-  ['authentication_failed', /authentication|unauthorized|invalid api key/i],
+  [
+    ProviderErrorReason.TOOL_LIMIT_EXCEEDED,
+    /too many tools|maximum number of tools|tool limit/i,
+  ],
+  [
+    ProviderErrorReason.UNSUPPORTED_PARAMETER,
+    /unsupported parameter|not supported.*parameter/i,
+  ],
+  [ProviderErrorReason.CONTENT_FILTER, /content filter/i],
+  [
+    ProviderErrorReason.AUTHENTICATION_FAILED,
+    /authentication|unauthorized|invalid api key/i,
+  ],
 ];
 
 export function extractProviderErrorDiagnostics(
@@ -40,6 +56,7 @@ export function extractProviderErrorDiagnostics(
   const body = asRecord(read(record, 'error'));
   const nestedError = asRecord(read(body, 'error'));
   const response = asRecord(read(record, 'response'));
+  const awsMetadata = asRecord(read(record, '$metadata'));
   const headers =
     asRecord(read(response, 'headers')) ?? asRecord(read(record, 'headers'));
   const upstreamStatus = extractUpstreamStatus(error);
@@ -54,7 +71,7 @@ export function extractProviderErrorDiagnostics(
     upstreamCode: extractCode(record, body),
     upstreamType: extractType(record, body, nestedError),
     upstreamParam: extractParam(record, body),
-    upstreamRequestId: extractRequestId(record, body, headers),
+    upstreamRequestId: extractRequestId(record, body, headers, awsMetadata),
     upstreamReason: classifyReason(message, upstreamStatus),
     upstreamRetryAfterMs: extractRetryAfterMs(headers),
   });
@@ -91,7 +108,7 @@ function classifyReason(
   );
   if (match) return match[0];
   return status !== undefined && status >= 400 && status < 500
-    ? 'unknown_request_rejection'
+    ? ProviderErrorReason.UNKNOWN_REQUEST_REJECTION
     : undefined;
 }
 
@@ -130,6 +147,7 @@ function extractRequestId(
   record: Record<string, unknown> | undefined,
   body: Record<string, unknown> | undefined,
   headers: Record<string, unknown> | undefined,
+  awsMetadata: Record<string, unknown> | undefined,
 ): string | undefined {
   return safeScalar(
     firstString(
@@ -137,6 +155,7 @@ function extractRequestId(
       read(record, 'requestId'),
       read(record, 'requestID'),
       read(body, 'request_id'),
+      read(awsMetadata, 'requestId'),
       readHeader(headers, 'x-request-id'),
       readHeader(headers, 'request-id'),
       readHeader(headers, 'apim-request-id'),
