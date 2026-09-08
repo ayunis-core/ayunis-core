@@ -19,13 +19,11 @@
     "teamsTitle": "Credit-Limits für Teams",
     "usersTitle": "Credit-Limits für Nutzer",
     "limit": "Monatliches Credit-Limit",
-    "used": "Diesen Monat verbraucht",
     "actions": "Aktionen",
     "configure": "Konfigurieren",
     "search": "Teams oder Nutzer suchen",
     "empty": "Keine passenden Teams oder Nutzer.",
-    "blocked": "Kostenpflichtige Modelle gesperrt",
-    "usageUnavailable": "Ohne konfiguriertes Limit nicht verfügbar"
+    "blocked": "Kostenpflichtige Modelle gesperrt"
   },
   "form": {
     "noLimit": "Kein zusätzliches Limit",
