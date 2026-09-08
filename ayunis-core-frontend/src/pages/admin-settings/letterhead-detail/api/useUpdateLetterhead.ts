@@ -79,6 +79,9 @@ export function useUpdateLetterhead() {
       try {
         const { code } = extractErrorData(error);
         switch (code) {
+          case 'LETTERHEAD_PDF_NOT_SINGLE_PAGE':
+            showError(t('letterheads.editDialog.pdfNotSinglePage'));
+            break;
           case 'LETTERHEAD_INVALID_PDF':
             showError(t('letterheads.editDialog.invalidPdf'));
             break;

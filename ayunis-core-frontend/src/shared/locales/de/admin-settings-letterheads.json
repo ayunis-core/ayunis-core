@@ -32,7 +32,8 @@
       "success": "Briefpapier erfolgreich erstellt.",
       "error": "Fehler beim Erstellen des Briefpapiers.",
       "firstPageRequired": "Eine PDF-Datei für die erste Seite ist erforderlich.",
-      "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
+      "invalidPdf": "Diese PDF-Datei konnte nicht gelesen werden. Bitte laden Sie eine ungeschützte PDF-Datei hoch – Kennwort- oder Berechtigungsschutz verhindert die Verarbeitung.",
+      "pdfNotSinglePage": "Diese Datei hat mehr als eine Seite. Bitte laden Sie eine einseitige PDF-Datei hoch und verwenden Sie für die Folgeseiten eine separate Datei.",
       "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
       "pdfPreviewError": "PDF-Vorschau konnte nicht gerendert werden."
     },
@@ -43,7 +44,8 @@
       "saving": "Wird gespeichert…",
       "success": "Briefpapier erfolgreich aktualisiert.",
       "error": "Fehler beim Aktualisieren des Briefpapiers.",
-      "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
+      "invalidPdf": "Diese PDF-Datei konnte nicht gelesen werden. Bitte laden Sie eine ungeschützte PDF-Datei hoch – Kennwort- oder Berechtigungsschutz verhindert die Verarbeitung.",
+      "pdfNotSinglePage": "Diese Datei hat mehr als eine Seite. Bitte laden Sie eine einseitige PDF-Datei hoch und verwenden Sie für die Folgeseiten eine separate Datei.",
       "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
       "removeContinuationPage": "Folgeseiten-Briefpapier entfernen",
       "useDifferentFollowingPages": "Anderes Briefpapier für Folgeseiten verwenden"

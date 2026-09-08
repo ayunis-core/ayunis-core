@@ -1,11 +1,12 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 
-export { InvalidPageMarginsError } from '../domain/letterhead.errors';
+export { InvalidPageMarginsError } from 'src/domain/letterheads/domain/letterhead.errors';
 
 export enum LetterheadErrorCode {
   LETTERHEAD_NOT_FOUND = 'LETTERHEAD_NOT_FOUND',
   LETTERHEAD_INVALID_PDF = 'LETTERHEAD_INVALID_PDF',
+  LETTERHEAD_PDF_NOT_SINGLE_PAGE = 'LETTERHEAD_PDF_NOT_SINGLE_PAGE',
   LETTERHEAD_ORG_MISMATCH = 'LETTERHEAD_ORG_MISMATCH',
   UNEXPECTED_LETTERHEAD_ERROR = 'UNEXPECTED_LETTERHEAD_ERROR',
 }
@@ -37,6 +38,23 @@ export class LetterheadInvalidPdfError extends LetterheadError {
     super(
       `Invalid letterhead PDF: ${reason}`,
       LetterheadErrorCode.LETTERHEAD_INVALID_PDF,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Distinct from {@link LetterheadInvalidPdfError}: the file parsed fine, it
+ * just has the wrong number of pages. Letterheads are commonly distributed as
+ * one file holding both the first and the continuation page, so the UI needs
+ * to tell the user to split it rather than claim the PDF is broken.
+ */
+export class LetterheadPdfNotSinglePageError extends LetterheadError {
+  constructor(label: string, pageCount: number, metadata?: ErrorMetadata) {
+    super(
+      `Invalid letterhead PDF: ${label} PDF must be exactly 1 page, got ${pageCount}`,
+      LetterheadErrorCode.LETTERHEAD_PDF_NOT_SINGLE_PAGE,
       400,
       metadata,
     );
