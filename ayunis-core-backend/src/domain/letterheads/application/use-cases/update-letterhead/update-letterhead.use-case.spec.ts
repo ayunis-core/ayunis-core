@@ -12,7 +12,7 @@ import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/de
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   LetterheadNotFoundError,
-  LetterheadInvalidPdfError,
+  LetterheadPdfNotSinglePageError,
 } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
@@ -208,7 +208,7 @@ describe('UpdateLetterheadUseCase', () => {
     });
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      LetterheadInvalidPdfError,
+      LetterheadPdfNotSinglePageError,
     );
   });
 

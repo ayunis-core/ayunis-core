@@ -32,7 +32,8 @@
       "success": "Letterhead created successfully.",
       "error": "Failed to create letterhead.",
       "firstPageRequired": "A PDF file for the first page is required.",
-      "invalidPdf": "Please upload a valid PDF file.",
+      "invalidPdf": "This PDF could not be read. Please upload an unprotected PDF — password or permission protection prevents processing.",
+      "pdfNotSinglePage": "This file has more than one page. Please upload a single-page PDF, and use a separate file for the following pages.",
       "invalidPageMargins": "Please enter valid non-negative page margins.",
       "pdfPreviewError": "Could not render PDF preview."
     },
@@ -43,7 +44,8 @@
       "saving": "Saving…",
       "success": "Letterhead updated successfully.",
       "error": "Failed to update letterhead.",
-      "invalidPdf": "Please upload a valid PDF file.",
+      "invalidPdf": "This PDF could not be read. Please upload an unprotected PDF — password or permission protection prevents processing.",
+      "pdfNotSinglePage": "This file has more than one page. Please upload a single-page PDF, and use a separate file for the following pages.",
       "invalidPageMargins": "Please enter valid non-negative page margins.",
       "removeContinuationPage": "Remove following pages letterhead",
       "useDifferentFollowingPages": "Use different letterhead for following pages"

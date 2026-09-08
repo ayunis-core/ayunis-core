@@ -9,7 +9,10 @@ import { LetterheadPdfService } from 'src/domain/letterheads/application/service
 import { ContextService } from 'src/common/context/services/context.service';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { LetterheadInvalidPdfError } from 'src/domain/letterheads/application/letterheads.errors';
+import {
+  LetterheadInvalidPdfError,
+  LetterheadPdfNotSinglePageError,
+} from 'src/domain/letterheads/application/letterheads.errors';
 
 async function createSinglePagePdf(): Promise<Buffer> {
   const doc = await PDFDocument.create();
@@ -129,7 +132,7 @@ describe('CreateLetterheadUseCase', () => {
     });
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      LetterheadInvalidPdfError,
+      LetterheadPdfNotSinglePageError,
     );
     expect(letterheadsRepository.save).not.toHaveBeenCalled();
   });
@@ -147,7 +150,7 @@ describe('CreateLetterheadUseCase', () => {
     });
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      LetterheadInvalidPdfError,
+      LetterheadPdfNotSinglePageError,
     );
     expect(letterheadsRepository.save).not.toHaveBeenCalled();
   });
