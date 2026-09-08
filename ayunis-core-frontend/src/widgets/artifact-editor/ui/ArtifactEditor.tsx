@@ -72,8 +72,10 @@ export const ArtifactEditor = forwardRef<
     content: currentVersion?.content ?? '',
     editorProps: {
       attributes: {
+        // A table with no header row is a letter's address and contact block,
+        // not tabular data — render it borderless, as PDF export does.
         class:
-          'prose prose-sm dark:prose-invert max-w-none p-4 outline-none min-h-[200px]',
+          'prose prose-sm dark:prose-invert max-w-none p-4 outline-none min-h-[200px] [&_table:not(:has(th))_tr]:border-none [&_table:not(:has(th))_td]:border-none',
       },
     },
   });

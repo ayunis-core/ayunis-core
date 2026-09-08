@@ -59,7 +59,9 @@
       "error": "Fehler beim Löschen des Briefpapiers."
     },
     "marginEditor": {
-      "contentArea": "Inhaltsbereich"
+      "contentArea": "Inhaltsbereich",
+      "presetFormA": "DIN 5008 Form A",
+      "presetFormB": "DIN 5008 Form B"
     }
   }
 }

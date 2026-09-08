@@ -338,6 +338,89 @@ describe('HtmlDocumentExportService', () => {
         );
       });
 
+      describe('DIN 5008 letter layout', () => {
+        const headBlockHtml =
+          '<table><tbody><tr><td><p>Herr Müller</p></td>' +
+          '<td><p>Elisabetta Cavalet</p></td></tr></tbody></table>' +
+          '<p><strong>Beratungsgespräch</strong></p>';
+
+        it('should mark a header-less table as the letter head block', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toContain('<table class="letter-layout">');
+        });
+
+        it('should render the head block borderless', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(/table\.letter-layout td \{[^}]*border: 0/);
+        });
+
+        it('should reserve the DIN 5008 address field height so the body starts below it', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toContain('height: 53.5mm');
+          expect(htmlArg).toMatch(
+            /table\.letter-layout \{[^}]*margin-bottom: 0/,
+          );
+        });
+
+        it('should size the address column so the information block lands at 125mm', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toContain('width: 100mm');
+        });
+
+        it('should reserve the Vermerkzone so the recipient sits in the Anschriftzone', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(
+            /table\.letter-layout td:first-child \{[^}]*padding-top: 17\.7mm/,
+          );
+        });
+
+        it('should clear the top margin after the head block so the subject lands on the DIN line', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(
+            /table\.letter-layout \+ \* \{[^}]*margin-top: 0/,
+          );
+        });
+
+        it('should single-space the head block so a long address stays in its zone', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(
+            /table\.letter-layout p \{[^}]*margin: 0;[^}]*line-height: 1\.25/,
+          );
+        });
+
+        it('should leave a data table with a header row bordered', async () => {
+          await service.exportToPdf(
+            '<table><thead><tr><th>Posten</th></tr></thead>' +
+              '<tbody><tr><td>1</td></tr></tbody></table>',
+            letterheadConfig,
+          );
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).not.toContain('<table class="letter-layout">');
+        });
+
+        it('should not apply letter layout rules without a letterhead', async () => {
+          await service.exportToPdf(headBlockHtml);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).not.toContain('letter-layout');
+        });
+      });
+
       it('should call compositor with content PDF and background PDFs', async () => {
         await service.exportToPdf('<p>Hello</p>', letterheadConfig);
 

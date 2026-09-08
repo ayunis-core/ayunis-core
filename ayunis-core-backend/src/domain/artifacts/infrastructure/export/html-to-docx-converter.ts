@@ -19,6 +19,7 @@ import type { HTMLElement, TextNode } from 'node-html-parser';
 import { parse, NodeType } from 'node-html-parser';
 
 import { buildDocument } from './docx-document-config';
+import { cellFrame, cellSpans } from './docx-table-styles';
 import { parseAlignment, parseSpacing } from './paragraph-style-parser';
 
 /** Inline formatting context accumulated while walking the tree. */
@@ -57,19 +58,6 @@ const INLINE_FORMAT_BY_TAG: Record<string, Partial<InlineContext>> = {
   del: { strike: true },
   strike: { strike: true },
   code: { code: true },
-};
-
-const TABLE_BORDER = {
-  style: BorderStyle.SINGLE,
-  size: 1,
-  color: 'CCCCCC',
-};
-
-const TABLE_BORDERS = {
-  top: TABLE_BORDER,
-  bottom: TABLE_BORDER,
-  left: TABLE_BORDER,
-  right: TABLE_BORDER,
 };
 
 // A4 portrait usable width = 210mm page − 2×25mm margins (see docx-document-config.ts).
@@ -290,8 +278,9 @@ function convertTable(node: HTMLElement): Table {
   );
   const columnCount = Math.max(1, countTableColumns(rowElements));
   const columnWidths = buildEqualColumnWidths(columnCount);
+  const isLayout = !node.querySelector('th');
   const rows = rowElements
-    .map(convertTableRow)
+    .map((tr) => convertTableRow(tr, isLayout))
     .filter((r): r is TableRow => r !== null);
 
   if (rows.length === 0) {
@@ -337,21 +326,24 @@ function buildEqualColumnWidths(columnCount: number): number[] {
   return Array.from({ length: columnCount }, () => width);
 }
 
-function convertTableRow(tr: HTMLElement): TableRow | null {
+function convertTableRow(tr: HTMLElement, isLayout: boolean): TableRow | null {
   const cellElements = tr.querySelectorAll(':scope > td, :scope > th');
   if (cellElements.length === 0) return null;
 
   const isHeader = cellElements[0].tagName.toLowerCase() === 'th';
-  const cells = cellElements.map((cell) => convertTableCell(cell, isHeader));
+  const cells = cellElements.map((cell) =>
+    convertTableCell(cell, isHeader, isLayout),
+  );
 
   return new TableRow({ children: cells });
 }
 
-function convertTableCell(cell: HTMLElement, isHeader: boolean): TableCell {
+function convertTableCell(
+  cell: HTMLElement,
+  isHeader: boolean,
+  isLayout: boolean,
+): TableCell {
   const runs = collectInlineRuns(cell, { bold: isHeader || undefined });
-
-  const columnSpan = parseSpan(cell.getAttribute('colspan'));
-  const rowSpan = parseSpan(cell.getAttribute('rowspan'));
 
   // TipTap wraps cell content in a nested <p> that carries the paragraph
   // styles; fall back to the cell itself when there is no inner paragraph.
@@ -365,16 +357,11 @@ function convertTableCell(cell: HTMLElement, isHeader: boolean): TableCell {
         spacing: parseSpacing(styleNode) ?? parseSpacing(cell),
       }),
     ],
-    borders: TABLE_BORDERS,
+    ...cellFrame(isLayout),
     shading: isHeader ? { fill: 'F5F5F5' } : undefined,
     width: { size: 0, type: WidthType.AUTO },
-    ...(columnSpan && columnSpan > 1 && { columnSpan }),
-    ...(rowSpan && rowSpan > 1 && { rowSpan }),
+    ...cellSpans(cell),
   });
-}
-
-function parseSpan(attr: string | undefined): number | undefined {
-  return attr ? parseInt(attr, 10) : undefined;
 }
 
 // ---------------------------------------------------------------------------
