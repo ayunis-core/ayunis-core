@@ -26,6 +26,7 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
           "'self'",
           'https://appsignal-endpoint.net',
           basemapOrigin(),
+          ...openPanelOrigins(),
         ],
       },
     },
@@ -49,5 +50,16 @@ function basemapOrigin(): string {
     return new URL(tileUrl).origin;
   } catch {
     return new URL(DEFAULT_BASEMAP_TILE_URL).origin;
+  }
+}
+
+function openPanelOrigins(): string[] {
+  const apiUrl = process.env.VITE_OPENPANEL_API_URL?.trim();
+  if (!apiUrl) return [];
+
+  try {
+    return [new URL(apiUrl).origin];
+  } catch {
+    return [];
   }
 }
