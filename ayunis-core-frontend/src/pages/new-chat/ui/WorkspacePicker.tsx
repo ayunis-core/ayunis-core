@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, FolderOpen } from 'lucide-react';
+import { Check, ChevronDown, FolderOpen } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
@@ -54,15 +56,16 @@ export function WorkspacePicker({
           align="start"
           onCloseAutoFocus={handleCloseAutoFocus}
         >
+          <DropdownMenuItem onClick={() => onWorkspaceChange(null)}>
+            <FolderOpen />
+            <span>{t('picker.noWorkspace')}</span>
+            {workspaceId === null && <Check className="ml-auto size-4" />}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <WorkspacePickerMenuWithCreate
             workspaces={workspaces}
             selectedWorkspaceId={workspaceId}
-            // Selecting the attached workspace again detaches it.
-            onSelect={(workspace) =>
-              onWorkspaceChange(
-                workspace.id === workspaceId ? null : workspace.id,
-              )
-            }
+            onSelect={(workspace) => onWorkspaceChange(workspace.id)}
             onCreateNew={() => requestDialogOpen(() => setIsCreateOpen(true))}
           />
         </DropdownMenuContent>
