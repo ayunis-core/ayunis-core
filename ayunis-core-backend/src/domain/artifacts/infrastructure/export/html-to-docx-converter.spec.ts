@@ -267,6 +267,19 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toMatch(/<w:spacing[^>]*w:line="240"/);
   });
 
+  it('should preserve spacing styled directly on list items', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<ul><li style="line-height: 1; margin-top: 0pt; margin-bottom: 0pt; text-align: justify">Direct item</li></ul>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Direct item');
+    expect(xml).toMatch(
+      /<w:spacing[^>]*w:after="0"[^>]*w:before="0"[^>]*w:line="240"[^>]*w:lineRule="auto"/,
+    );
+    expect(xml).toContain('w:val="both"');
+  });
+
   it('should convert px margins to twips', async () => {
     const buffer = await convertHtmlToDocx(
       '<p style="margin-bottom: 16px">Pixels</p>',

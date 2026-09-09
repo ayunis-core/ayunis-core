@@ -68,6 +68,7 @@ const SANITIZE_OPTIONS: IOptions = {
     h6: ['style', 'class'],
     span: ['style', 'class'],
     p: ['style', 'class'],
+    li: ['style', 'class'],
     div: ['style', 'class'],
     blockquote: ['style', 'class'],
     pre: ['class'],
