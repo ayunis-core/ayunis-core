@@ -4,6 +4,26 @@ packages:
   - "ayunis-core-frontend"
   - "ayunis-core-e2e"
 
+# Single source of truth for versions shared between a workspace package and
+# the app that consumes it. When those drift, pnpm keeps whatever the lockfile
+# already pinned and the package silently runs a different copy than its
+# consumer — which breaks anything that relies on a shared module instance
+# (a store, a React context, a class identity). peerDependencies stay explicit:
+# a package's peer range is a compatibility floor, not a pin.
+catalog:
+  react: ^19.2.7
+  react-dom: ^19.2.7
+  react-hook-form: ^7.86.0
+  sonner: ^2.0.8
+  recharts: ^2.15.4
+  lucide-react: ^0.476.0
+  tailwindcss: ^4.3.3
+  '@tailwindcss/vite': ^4.3.3
+  '@mistralai/mistralai': ^2.6.4
+  openai: ^7.12.1
+  ollama: ^0.6.3
+  '@modelcontextprotocol/client': ^2.0.0
+
 # pnpm 10 does not run dependency build scripts unless allowlisted here.
 # Keep in sync with the "Ignored build scripts" notice from `pnpm install`.
 onlyBuiltDependencies:
