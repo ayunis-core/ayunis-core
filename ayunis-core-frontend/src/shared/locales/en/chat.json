@@ -35,6 +35,15 @@
     "context": {
       "tab": "Context",
       "workspaceScope": "Workspace",
+      "hint": {
+        "personal": "Personal context",
+        "workspace": "Workspace: {{name}}",
+        "open": "Open chat context",
+        "skills_one": "{{count}} skill",
+        "skills_other": "{{count}} skills",
+        "knowledgeBases_one": "{{count}} knowledge base",
+        "knowledgeBases_other": "{{count}} knowledge bases"
+      },
       "loadError": "Context could not be loaded",
       "retry": "Try again",
       "skills": {

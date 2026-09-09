@@ -57,6 +57,7 @@ export function WorkspaceArtifactsTab({
           icon={<FileText />}
           title={t('artifacts.emptyTitle')}
           description={t('artifacts.empty')}
+          testId="workspace-artifacts-empty"
         />
       ) : null}
       {artifacts.length > 0 ? (
