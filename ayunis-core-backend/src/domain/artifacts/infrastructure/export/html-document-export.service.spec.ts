@@ -180,6 +180,18 @@ describe('HtmlDocumentExportService', () => {
       expect(xml).toMatch(/<w:spacing[^>]*w:before="0"/);
       expect(xml).toContain('both'); // JUSTIFIED alignment
     });
+
+    it('should preserve spacing styled directly on list items', async () => {
+      const html =
+        '<ul><li style="line-height: 1; margin-top: 0pt; margin-bottom: 0pt; text-align: justify;">Item</li></ul>';
+      const result = await service.exportToDocx(html);
+      const xml = await extractDocumentXml(result);
+
+      expect(xml).toMatch(
+        /<w:spacing[^>]*w:after="0"[^>]*w:before="0"[^>]*w:line="240"[^>]*w:lineRule="auto"/,
+      );
+      expect(xml).toContain('w:val="both"');
+    });
   });
 
   describe('exportToPdf', () => {

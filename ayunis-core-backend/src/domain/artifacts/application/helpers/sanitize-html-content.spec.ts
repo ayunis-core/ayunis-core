@@ -149,6 +149,13 @@ describe('sanitizeHtmlContent', () => {
       expect(result).toContain('margin-bottom:0pt');
     });
 
+    it('should preserve paragraph spacing styles on list items', () => {
+      const html =
+        '<ul><li style="line-height:1;margin-top:0pt;margin-bottom:0pt">Item</li></ul>';
+
+      expect(sanitizeHtmlContent(html)).toBe(html);
+    });
+
     it('should strip spacing styles with unsupported units', () => {
       const html = '<p style="line-height:1.5em;margin-bottom:2rem">Text</p>';
       const result = sanitizeHtmlContent(html);

@@ -249,8 +249,8 @@ function convertListItem(
       out.push(
         new Paragraph({
           children: collectInlineRuns(child, {}),
-          alignment: parseAlignment(child),
-          spacing: parseSpacing(child),
+          alignment: parseAlignment(child) ?? parseAlignment(li),
+          spacing: parseSpacing(child) ?? parseSpacing(li),
           ...listProps(ordered, level),
         }),
       );
@@ -260,6 +260,8 @@ function convertListItem(
         out.push(
           new Paragraph({
             children: [new TextRun(text)],
+            alignment: parseAlignment(li),
+            spacing: parseSpacing(li),
             ...listProps(ordered, level),
           }),
         );
