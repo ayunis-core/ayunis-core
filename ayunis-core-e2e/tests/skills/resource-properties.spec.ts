@@ -28,10 +28,9 @@ for (const kind of ["skill", "knowledge-base"] as const) {
     const card = page.getByTestId(`${kind}-properties-card`);
     const updatedName = `${name} updated`;
     await card.getByRole("textbox").first().fill(updatedName);
-    await card.getByRole("button", { name: "Speichern", exact: true }).click();
-    await expect(
-      card.getByRole("button", { name: "Speichern", exact: true }),
-    ).toBeEnabled();
+    const saveButton = card.getByRole("button", { name: /speichern$/i });
+    await saveButton.click();
+    await expect(saveButton).toBeEnabled();
     await page
       .getByRole("link", {
         name: kind === "skill" ? "Fähigkeiten" : "Wissen",

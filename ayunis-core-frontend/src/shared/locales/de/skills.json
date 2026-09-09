@@ -73,7 +73,7 @@
     }
   },
   "create": {
-    "duplicateName": "In diesem Projekt gibt es bereits eine Fähigkeit mit diesem Namen.",
+    "duplicateName": "In diesem Arbeitsbereich gibt es bereits eine Fähigkeit mit diesem Namen.",
     "success": "Fähigkeit erfolgreich erstellt!",
     "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },

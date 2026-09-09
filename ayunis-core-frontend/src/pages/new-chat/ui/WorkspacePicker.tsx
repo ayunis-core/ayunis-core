@@ -57,6 +57,7 @@ export function WorkspacePicker({
           <WorkspacePickerMenuWithCreate
             workspaces={workspaces}
             selectedWorkspaceId={workspaceId}
+            onClear={() => onWorkspaceChange(null)}
             // Selecting the attached workspace again detaches it.
             onSelect={(workspace) =>
               onWorkspaceChange(

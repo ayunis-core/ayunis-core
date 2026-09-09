@@ -29,11 +29,11 @@ for (const resource of [
     const card = page.getByTestId(resource.card);
     const updatedName = `${fixture[resource.key].name} updated`;
     await card.getByRole("textbox").first().fill(updatedName);
-    await card.getByRole("button", { name: "Speichern", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Speichern", exact: true }),
-    ).toBeEnabled();
+    const saveButton = card.getByRole("button", { name: /speichern$/i });
+    await saveButton.click();
+    await expect(saveButton).toBeEnabled();
     await page
+      .getByLabel("breadcrumb")
       .getByRole("link", { name: fixture.workspace.name, exact: true })
       .click();
     await page.getByTestId(`workspace-tab-${resource.tab}`).click();
