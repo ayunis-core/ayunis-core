@@ -12,7 +12,7 @@ import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import PasswordSettingsPage from '@/pages/settings/account-settings/ui/PasswordSettingsPage';
 import { TwoFactorCard } from '@/pages/settings/account-settings/ui/TwoFactorCard';
 import { AcademyCertificateCard } from '@/pages/settings/account-settings/ui/AcademyCertificateCard';
-import { SettingsFieldRow } from '@/pages/settings/settings-layout';
+import { SettingsFieldRow } from '@/pages/settings/settings-layout/ui/SettingsFieldRow';
 
 export default function AccountSettingsPage({
   user,
