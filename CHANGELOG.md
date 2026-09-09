@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.39.0](https://github.com/ayunis-core/ayunis-core/compare/v2.38.0...v2.39.0) (2026-09-09)
+
+
+### Features
+
+* **chat:** show active AI context in sidebar (AYC-677) ([#1636](https://github.com/ayunis-core/ayunis-core/issues/1636)) ([cfcdb91](https://github.com/ayunis-core/ayunis-core/commit/cfcdb91e4338452e2bc3a89657aea268fd38bd9c))
+* **chat:** show AI context hint at chat start (AYC-936) ([#1652](https://github.com/ayunis-core/ayunis-core/issues/1652)) ([314101e](https://github.com/ayunis-core/ayunis-core/commit/314101e3c1dfff91f9c8c0836053ee593b47299c))
+* **editor:** add justified text alignment (AYC-664) ([#1647](https://github.com/ayunis-core/ayunis-core/issues/1647)) ([ecd2e26](https://github.com/ayunis-core/ayunis-core/commit/ecd2e2631bc666b97aabc7097b58e50eef2a102a))
+* **knowledge-bases:** add per-user active state (AYC-821) ([#1569](https://github.com/ayunis-core/ayunis-core/issues/1569)) ([6d8faf7](https://github.com/ayunis-core/ayunis-core/commit/6d8faf7ccc8a0cdfc6439c7e659c79fc448efe4f))
+* **knowledge-bases:** unify personal and workspace operations (AYC-935) ([#1644](https://github.com/ayunis-core/ayunis-core/issues/1644)) ([d5059d7](https://github.com/ayunis-core/ayunis-core/commit/d5059d7a20fd22d0811a137dff3c41a28f918dbd))
+* **skills:** unify personal and workspace operations (AYC-935) ([#1648](https://github.com/ayunis-core/ayunis-core/issues/1648)) ([87cdc6a](https://github.com/ayunis-core/ayunis-core/commit/87cdc6a9db5b8c2d9f378f904c6895a31c38e776))
+* **workspaces:** add workspace resource backend APIs (AYC-871) ([#1618](https://github.com/ayunis-core/ayunis-core/issues/1618)) ([5c39c19](https://github.com/ayunis-core/ayunis-core/commit/5c39c194dc8dc3c31e7e76bc7fe07a79f336e6c7))
+* **workspaces:** add workspace resource frontend flows (AYC-871) ([#1619](https://github.com/ayunis-core/ayunis-core/issues/1619)) ([8339fa1](https://github.com/ayunis-core/ayunis-core/commit/8339fa12ba257e30254c8090a36fac3c2c8fdeaf))
+
+
+### Bug Fixes
+
+* **artifacts:** preserve list item spacing in Word export (AYC-689) ([#1653](https://github.com/ayunis-core/ayunis-core/issues/1653)) ([451f34f](https://github.com/ayunis-core/ayunis-core/commit/451f34f32e18ac1ea1ccebd1d627ef29efd1b8b4))
+* **chat:** align long-chat warning with context budget (AYC-922) ([#1635](https://github.com/ayunis-core/ayunis-core/issues/1635)) ([7d70f73](https://github.com/ayunis-core/ayunis-core/commit/7d70f73deaea525e04e6576ba42e460c7ff697fa))
+* **i18n:** localize zod's default validation messages (AYC-000) ([#1649](https://github.com/ayunis-core/ayunis-core/issues/1649)) ([7e02b5a](https://github.com/ayunis-core/ayunis-core/commit/7e02b5a66d455f68060e560be4e08e7693a5c128))
+* **invites:** make email delivery logs traceable (AYC-918) ([#1639](https://github.com/ayunis-core/ayunis-core/issues/1639)) ([0a647d9](https://github.com/ayunis-core/ayunis-core/commit/0a647d93146660f095899df7ea7b23702a9edc46))
+* **sources:** bound source query results (AYC-934) ([#1641](https://github.com/ayunis-core/ayunis-core/issues/1641)) ([e502232](https://github.com/ayunis-core/ayunis-core/commit/e502232d2b1f5cc488f44fb55d6b0d6ce1a598be))
+* **ui:** keep primary surfaces usable on mobile (AYC-230) ([#1650](https://github.com/ayunis-core/ayunis-core/issues/1650)) ([294c12e](https://github.com/ayunis-core/ayunis-core/commit/294c12e5e93698386013966b8cd1975ffd8bc680))
+
+
+### Code Refactoring
+
+* **workspaces:** align project overview UI patterns (AYC-871) ([#1580](https://github.com/ayunis-core/ayunis-core/issues/1580)) ([70dcf45](https://github.com/ayunis-core/ayunis-core/commit/70dcf4582a0eefc7fafaa157595fed8756028bff))
+* **workspaces:** establish exclusive resource ownership (AYC-871) ([#1617](https://github.com/ayunis-core/ayunis-core/issues/1617)) ([c8ef1af](https://github.com/ayunis-core/ayunis-core/commit/c8ef1afd02fe0d7e8f9fb4ce8f1948fcd93defb4))
+
+
+### Miscellaneous
+
+* **deps-frontend:** bump the other group across 1 directory with 28 updates ([#1563](https://github.com/ayunis-core/ayunis-core/issues/1563)) ([7d2bf5c](https://github.com/ayunis-core/ayunis-core/commit/7d2bf5ccec74a7e9a8fbc1a89932459c7cc1d741))
+* **deps:** align the Mistral SDK across the workspace (AYC-000) ([#1646](https://github.com/ayunis-core/ayunis-core/issues/1646)) ([658388e](https://github.com/ayunis-core/ayunis-core/commit/658388efef74eb3920dcc9229a89b31a369a66a4))
+* **deps:** bump maplibre-gl past the XSS sanitizer advisory (AYC-000) ([#1643](https://github.com/ayunis-core/ayunis-core/issues/1643)) ([5d53c89](https://github.com/ayunis-core/ayunis-core/commit/5d53c8971ca9e6a1e2ed80cab68350e311650199))
+* **deps:** bump zod from 3.25.76 to 4.5.4 ([#1609](https://github.com/ayunis-core/ayunis-core/issues/1609)) ([fc39db1](https://github.com/ayunis-core/ayunis-core/commit/fc39db1685e590ac2982c8daf49ee5b9ba6fb65e))
+* **deps:** dedupe the workspace lockfile (AYC-000) ([#1655](https://github.com/ayunis-core/ayunis-core/issues/1655)) ([93d8587](https://github.com/ayunis-core/ayunis-core/commit/93d85878563cfd0933d45121752ecba7ff3042ff))
+* **deps:** pin shared runtime versions with a pnpm catalog (AYC-000) ([#1654](https://github.com/ayunis-core/ayunis-core/issues/1654)) ([425a75b](https://github.com/ayunis-core/ayunis-core/commit/425a75b03ce69134693aaed091e1479849d9f9e5))
+* **deps:** upgrade Orval past critical advisories (AYC-871) ([#1616](https://github.com/ayunis-core/ayunis-core/issues/1616)) ([96d8c3b](https://github.com/ayunis-core/ayunis-core/commit/96d8c3b0904a9106fb01a09a117cf04f26660c2e))
+* **deps:** upgrade the OpenAI SDK to v7 (AYC-000) ([#1645](https://github.com/ayunis-core/ayunis-core/issues/1645)) ([7b8d603](https://github.com/ayunis-core/ayunis-core/commit/7b8d603a213ff7674654fb0e3d874ad723c55736))
+
 ## [2.38.0](https://github.com/ayunis-core/ayunis-core/compare/v2.37.0...v2.38.0) (2026-09-08)
 
 
