@@ -6,6 +6,7 @@ import {
   ThreadsFindAllOptions,
   ThreadsPagination,
   ThreadsRepository,
+  ThreadContextRefs,
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -85,6 +86,30 @@ export class LocalThreadsRepository extends ThreadsRepository {
       (left, right) => left.createdAt.getTime() - right.createdAt.getTime(),
     );
     return this.threadMapper.toDomain(threadEntity);
+  }
+
+  async findContextRefs(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadContextRefs | null> {
+    const rows = await this.threadRepository
+      .createQueryBuilder('thread')
+      .leftJoin('thread.knowledgeBaseAssignments', 'assignment')
+      .select('thread.workspaceId', 'workspaceId')
+      .addSelect('assignment.knowledgeBaseId', 'knowledgeBaseId')
+      .where('thread.id = :id', { id })
+      .andWhere('thread.userId = :userId', { userId })
+      .getRawMany<{
+        workspaceId: UUID | null;
+        knowledgeBaseId: UUID | null;
+      }>();
+    if (rows.length === 0) return null;
+    return {
+      workspaceId: rows[0].workspaceId,
+      knowledgeBaseIds: rows.flatMap(({ knowledgeBaseId }) =>
+        knowledgeBaseId ? [knowledgeBaseId] : [],
+      ),
+    };
   }
 
   async findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]> {

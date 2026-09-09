@@ -21,6 +21,10 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   threadsControllerAssignWorkspace: assignWorkspace,
   getThreadsControllerFindAllQueryKey: () => ['threads'],
   getThreadsControllerFindOneQueryKey: (id: string) => ['threads', id],
+  getThreadAiContextControllerGetAiContextQueryKey: (id: string) => [
+    'ai-context',
+    id,
+  ],
   getWorkspacesControllerFindAllQueryKey: () => ['workspaces'],
   getFavoritesControllerFindAllQueryKey: () => ['favorites'],
 }));
@@ -55,6 +59,9 @@ describe('useAssignThreadToWorkspace', () => {
 
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['favorites'],
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['ai-context', 'thread-id'],
     });
   });
 });

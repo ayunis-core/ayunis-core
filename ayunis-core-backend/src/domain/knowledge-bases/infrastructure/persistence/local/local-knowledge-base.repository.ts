@@ -30,10 +30,14 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { buildActiveKnowledgeBaseAccessSubqueries } from './queries/active-knowledge-base-access.db-query';
+import { buildKnowledgeBaseAccessSubqueries } from './queries/knowledge-base-access.db-query';
+import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 
 @Injectable()
-export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
+export class LocalKnowledgeBaseRepository
+  extends KnowledgeBaseRepository
+  implements AccessibleKnowledgeBasesByIdsRepository
+{
   private readonly logger = new Logger(LocalKnowledgeBaseRepository.name);
 
   constructor(
@@ -227,16 +231,41 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     userId: UUID,
     orgId: UUID,
   ): Promise<PersonalKnowledgeBase[]> {
-    const query =
-      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
-    const access = buildActiveKnowledgeBaseAccessSubqueries(query);
-    const records = await query
+    const records = await this.buildAccessiblePersonalQuery(userId, orgId)
       .innerJoin(
         KnowledgeBaseActivationRecord,
         'activation',
         'activation.knowledgeBaseId = knowledgeBase.id AND activation.userId = :userId',
       )
+      .orderBy('LOWER(knowledgeBase.name)', 'ASC')
+      .addOrderBy('knowledgeBase.id', 'ASC')
+      .getMany();
+    return records.map((record) => this.mapper.toPersonal(record));
+  }
+
+  async findAccessibleByIds(
+    ids: UUID[],
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<PersonalKnowledgeBase[]> {
+    if (ids.length === 0) return [];
+
+    const records = await this.buildAccessiblePersonalQuery(userId, orgId)
+      .andWhere('knowledgeBase.id IN (:...ids)', { ids })
+      .getMany();
+    return records.map((record) => this.mapper.toPersonal(record));
+  }
+
+  private buildAccessiblePersonalQuery(
+    userId: UUID,
+    orgId: UUID,
+  ): SelectQueryBuilder<KnowledgeBaseRecord> {
+    const query =
+      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
+    const access = buildKnowledgeBaseAccessSubqueries(query);
+    return query
       .where('knowledgeBase.workspaceId IS NULL')
+      .andWhere('knowledgeBase.orgId = :orgId')
       .andWhere(
         new Brackets((accessQuery) => {
           accessQuery
@@ -251,11 +280,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
         skillEntityType: SharedEntityType.SKILL,
         orgScopeType: ShareScopeType.ORG,
         teamScopeType: ShareScopeType.TEAM,
-      })
-      .orderBy('LOWER(knowledgeBase.name)', 'ASC')
-      .addOrderBy('knowledgeBase.id', 'ASC')
-      .getMany();
-    return records.map((record) => this.mapper.toPersonal(record));
+      });
   }
 
   findPaginatedAccessible(

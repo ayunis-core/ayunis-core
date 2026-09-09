@@ -9718,6 +9718,39 @@
         "tags": ["runs"]
       }
     },
+    "/threads/{threadId}/ai-context": {
+      "get": {
+        "operationId": "ThreadAiContextController_getAiContext",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadAiContextResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found"
+          }
+        },
+        "summary": "Get the AI resources available in a thread",
+        "tags": ["threads"]
+      }
+    },
     "/super-admin/trials": {
       "post": {
         "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
@@ -19385,6 +19418,66 @@
           }
         },
         "required": ["threadId"]
+      },
+      "ThreadAiContextSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": ["id", "name", "shortDescription", "workspaceId"]
+      },
+      "ThreadAiContextKnowledgeBaseResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "documentCount": {
+            "type": "number"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": ["id", "name", "documentCount", "workspaceId"]
+      },
+      "ThreadAiContextResponseDto": {
+        "type": "object",
+        "properties": {
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThreadAiContextSkillResponseDto"
+            }
+          },
+          "knowledgeBases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThreadAiContextKnowledgeBaseResponseDto"
+            }
+          }
+        },
+        "required": ["skills", "knowledgeBases"]
       },
       "SuperAdminTrialResponseDto": {
         "type": "object",

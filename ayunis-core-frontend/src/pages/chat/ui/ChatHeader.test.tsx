@@ -28,7 +28,7 @@ vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
 }));
 
 describe('ChatHeader', () => {
-  it('opens the artifact list from the right-sidebar button', () => {
+  it('opens the chat side panel from its header button', () => {
     const onToggleArtifactPanel = vi.fn();
 
     render(
@@ -43,7 +43,7 @@ describe('ChatHeader', () => {
     );
 
     const button = screen.getByRole('button', {
-      name: 'chat.artifactPanel.openList',
+      name: 'chat.sidePanel.open',
     });
     expect(button.getAttribute('aria-pressed')).toBe('false');
 

@@ -4426,6 +4426,27 @@ export interface SendMessageDto {
   streaming?: boolean;
 }
 
+export interface ThreadAiContextSkillResponseDto {
+  id: string;
+  name: string;
+  shortDescription: string;
+  /** @nullable */
+  workspaceId: string | null;
+}
+
+export interface ThreadAiContextKnowledgeBaseResponseDto {
+  id: string;
+  name: string;
+  documentCount: number;
+  /** @nullable */
+  workspaceId: string | null;
+}
+
+export interface ThreadAiContextResponseDto {
+  skills: ThreadAiContextSkillResponseDto[];
+  knowledgeBases: ThreadAiContextKnowledgeBaseResponseDto[];
+}
+
 export interface SuperAdminTrialResponseDto {
   /** Trial unique identifier */
   id: string;

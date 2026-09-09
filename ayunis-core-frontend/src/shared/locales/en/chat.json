@@ -28,6 +28,26 @@
       "notFoundDescription": "This content may no longer exist.",
       "retry": "Try again"
     },
+    "sidePanel": {
+      "open": "Open side panel",
+      "close": "Close side panel"
+    },
+    "context": {
+      "tab": "Context",
+      "workspaceScope": "Workspace",
+      "loadError": "Context could not be loaded",
+      "retry": "Try again",
+      "skills": {
+        "title": "Skills",
+        "empty": "No skills available"
+      },
+      "knowledgeBases": {
+        "title": "Knowledge bases",
+        "empty": "No knowledge bases available",
+        "documents_one": "{{count}} document",
+        "documents_other": "{{count}} documents"
+      }
+    },
     "unknownMessageType": "Unknown message type",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "errorExecutionError": "Error fetching response",
@@ -50,6 +70,7 @@
     "errorTeamCreditLimitExceeded": "Your team has reached its monthly credit limit. Please contact your administrator.",
     "errorAddKnowledgeBase": "Failed to add knowledge base. Please try again.",
     "errorRemoveKnowledgeBase": "Failed to remove knowledge base. Please try again.",
+    "errorKnowledgeBaseUnavailable": "This knowledge base or chat is no longer available.",
     "errorAddIntegration": "Failed to add integration",
     "errorRemoveIntegration": "Failed to remove integration",
     "errorIntegrationNotFound": "This integration no longer exists",

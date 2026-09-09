@@ -48,6 +48,7 @@ interface ArtifactSidePanelProps {
   readonly onBack: () => void;
   readonly onLetterheadChange: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
+  readonly showClose?: boolean;
 }
 
 export const ArtifactSidePanel = forwardRef<
@@ -66,6 +67,7 @@ export const ArtifactSidePanel = forwardRef<
     onBack,
     onLetterheadChange,
     isExporting,
+    showClose = true,
   },
   ref,
 ) {
@@ -86,7 +88,13 @@ export const ArtifactSidePanel = forwardRef<
 
   if (!artifact) {
     if (isLoading) {
-      return <ArtifactSidePanelSkeleton onClose={onClose} onBack={onBack} />;
+      return (
+        <ArtifactSidePanelSkeleton
+          onClose={onClose}
+          onBack={onBack}
+          showClose={showClose}
+        />
+      );
     }
 
     return (
@@ -102,6 +110,7 @@ export const ArtifactSidePanel = forwardRef<
           }
           onBack={onBack}
           onClose={onClose}
+          showClose={showClose}
         />
         <div className="flex flex-1 items-start p-4">
           <Alert variant="warning">
@@ -155,6 +164,7 @@ export const ArtifactSidePanel = forwardRef<
             artifact={artifact}
             onClose={onClose}
             onBack={onBack}
+            showClose={showClose}
           />
         );
       case 'spreadsheet':
@@ -169,6 +179,7 @@ export const ArtifactSidePanel = forwardRef<
             onClose={onClose}
             onBack={onBack}
             isExporting={isExporting}
+            showClose={showClose}
           />
         );
       case 'document':
@@ -184,6 +195,7 @@ export const ArtifactSidePanel = forwardRef<
             onBack={onBack}
             onLetterheadChange={onLetterheadChange}
             isExporting={isExporting}
+            showClose={showClose}
           />
         );
     }
@@ -196,6 +208,7 @@ export const ArtifactSidePanel = forwardRef<
           variant={artifact.type === 'spreadsheet' ? 'spreadsheet' : 'document'}
           onClose={onClose}
           onBack={onBack}
+          showClose={showClose}
         />
       }
     >

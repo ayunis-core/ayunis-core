@@ -28,6 +28,26 @@
       "notFoundDescription": "Dieser Inhalt existiert möglicherweise nicht mehr.",
       "retry": "Erneut versuchen"
     },
+    "sidePanel": {
+      "open": "Seitenleiste öffnen",
+      "close": "Seitenleiste schließen"
+    },
+    "context": {
+      "tab": "Kontext",
+      "workspaceScope": "Arbeitsbereich",
+      "loadError": "Kontext konnte nicht geladen werden",
+      "retry": "Erneut versuchen",
+      "skills": {
+        "title": "Fähigkeiten",
+        "empty": "Keine Fähigkeiten verfügbar"
+      },
+      "knowledgeBases": {
+        "title": "Wissenssammlungen",
+        "empty": "Keine Wissenssammlungen verfügbar",
+        "documents_one": "{{count}} Dokument",
+        "documents_other": "{{count}} Dokumente"
+      }
+    },
     "unknownMessageType": "Unbekannter Nachrichtentyp",
     "upgradeToProError": "Sie müssen ein Abonnement haben, um diese Funktion zu verwenden.",
     "errorExecutionError": "Fehler beim Abruf der Antwort",
@@ -50,6 +70,7 @@
     "errorTeamCreditLimitExceeded": "Ihr Team hat sein monatliches Guthaben-Limit erreicht. Bitte wenden Sie sich an Ihren Administrator.",
     "errorAddKnowledgeBase": "Wissenssammlung konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
     "errorRemoveKnowledgeBase": "Wissenssammlung konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+    "errorKnowledgeBaseUnavailable": "Diese Wissenssammlung oder dieser Chat ist nicht mehr verfügbar.",
     "errorAddIntegration": "Integration konnte nicht hinzugefügt werden",
     "errorRemoveIntegration": "Integration konnte nicht entfernt werden",
     "errorIntegrationNotFound": "Diese Integration existiert nicht mehr",

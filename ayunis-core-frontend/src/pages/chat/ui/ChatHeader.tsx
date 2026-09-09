@@ -122,8 +122,9 @@ export default function ChatHeader({
           <Button
             variant={isArtifactPanelOpen ? 'secondary' : 'ghost'}
             size="icon"
+            data-testid="chat-side-panel-toggle"
             onClick={onToggleArtifactPanel}
-            aria-label={t('chat.artifactPanel.openList')}
+            aria-label={t('chat.sidePanel.open')}
             aria-pressed={isArtifactPanelOpen}
           >
             <PanelRight className="h-5 w-5 text-primary" />

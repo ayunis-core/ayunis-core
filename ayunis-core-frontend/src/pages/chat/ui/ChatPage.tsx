@@ -45,6 +45,7 @@ import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
+import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -121,14 +122,10 @@ export default function ChatPage({
     null,
   );
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const sidePanelState = useChatSidePanelState(thread.id, initialArtifactId);
   const {
     artifactPanel,
-    isArtifactPanelOpen,
-    isArtifactListView,
     isExporting,
-    handleOpenArtifact,
-    handleBackToArtifactList,
-    handleToggleArtifactPanel,
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
@@ -141,9 +138,10 @@ export default function ChatPage({
   });
   const sidePanelTransitions = useChatSidePanelTransitions({
     artifactPanelRef,
-    isArtifactDetailOpen: isArtifactPanelOpen && !isArtifactListView,
-    openArtifact: handleOpenArtifact,
-    toggleArtifactPanel: handleToggleArtifactPanel,
+    isArtifactDetailOpen: sidePanelState.view === 'artifact-detail',
+    openArtifact: sidePanelState.openArtifact,
+    toggleArtifactPanel: sidePanelState.toggle,
+    changeTab: sidePanelState.openTab,
   });
 
   const { deleteChat } = useDeleteThread({
@@ -352,7 +350,7 @@ export default function ChatPage({
       threadTitle={threadTitle}
       isAnonymous={thread.isAnonymous}
       workspaceId={thread.workspaceId}
-      isArtifactPanelOpen={isArtifactPanelOpen}
+      isArtifactPanelOpen={sidePanelState.isOpen}
       onToggleArtifactPanel={sidePanelTransitions.toggleArtifactPanel}
       onRename={handleRenameThread}
       onDelete={handleDeleteThread}
@@ -428,15 +426,15 @@ export default function ChatPage({
     </>
   );
 
-  const sidePanel = isArtifactPanelOpen ? (
+  const sidePanel = sidePanelState.isOpen ? (
     <ChatSidePanel
       threadId={thread.id}
-      artifactListOpen={isArtifactListView}
-      artifactDetailOpen={isArtifactPanelOpen}
+      view={sidePanelState.view}
       artifactPanelRef={artifactPanelRef}
       artifactPanelProps={{
         ...artifactPanel,
-        onBack: handleBackToArtifactList,
+        onBack: () => sidePanelState.openTab('artifacts'),
+        onClose: sidePanelState.close,
         onSave: handleSaveArtifact,
         onRevert: handleRevertArtifact,
         onExport: handleExportArtifact,
@@ -444,6 +442,8 @@ export default function ChatPage({
         isExporting,
       }}
       onSelectArtifact={sidePanelTransitions.openArtifactPanel}
+      onTabChange={sidePanelTransitions.changeTab}
+      onClose={sidePanelTransitions.toggleArtifactPanel}
     />
   ) : undefined;
   return (

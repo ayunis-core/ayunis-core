@@ -8,7 +8,7 @@ instructions. It owns workspace-specific skills and knowledge bases. Documents
 exist only inside those knowledge bases. User-specific favorites and their order
 are owned by the `favorites` module.
 
-User-facing copy calls them "Projekte"; the code, tables and routes say
+User-facing German copy calls them "Arbeitsbereiche"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
 Workspace skills and knowledge bases are isolated from personal resources and
 must be created directly in the workspace; personal resources cannot be copied
@@ -53,8 +53,10 @@ The whole module sits behind the `workspacesEnabled` feature flag
   database state, including knowledge-base sources and their indexed data.
   Removing individual documents uses `DeleteSourceUseCase`; workspace deletion
   only schedules external processing cleanup for knowledge-base sources.
-- **Run context** — `BuildWorkspaceRunContextUseCase` resolves the workspace's
-  instruction, enabled skill candidates and independently enabled knowledge bases.
+- **Run context** — `GetWorkspaceAiContextUseCase` resolves the workspace's
+  instruction, enabled skill candidates, independently enabled knowledge bases,
+  and document counts. `BuildWorkspaceRunContextUseCase` reuses that context for
+  inference.
   Skills carry their activation and pinning state in one `WorkspaceSkillContext[]`
   collection. Only their names/descriptions are advertised initially; full
   instructions, sources and MCP integrations are not loaded into the run until

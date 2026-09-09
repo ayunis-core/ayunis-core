@@ -14,6 +14,7 @@ import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
   getArtifactsControllerFindByThreadQueryKey,
+  getThreadAiContextControllerGetAiContextQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import {
   registerActiveThreadRun,
@@ -281,6 +282,7 @@ export function useMessageSend(params: UseMessageSendParams) {
           [
             getThreadsControllerFindAllQueryKey(),
             getArtifactsControllerFindByThreadQueryKey(params.threadId),
+            getThreadAiContextControllerGetAiContextQueryKey(params.threadId),
           ].forEach((queryKey) => {
             void queryClient.invalidateQueries({
               queryKey,

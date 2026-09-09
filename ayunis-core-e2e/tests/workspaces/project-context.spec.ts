@@ -366,7 +366,7 @@ test("recovers from a missing artifact deep link", async ({ page, api }) => {
   await expect(page.getByTestId("artifact-side-panel-not-found")).toBeVisible();
   await expect(page.getByTestId("artifact-side-panel-retry")).toHaveCount(0);
 
-  await page.getByTestId("artifact-side-panel-close").click();
+  await page.getByTestId("chat-side-panel-close").click();
   await expect(page).toHaveURL(new RegExp(`/chats/${thread.id}$`));
   await expect(page.getByTestId("artifact-side-panel-error")).toHaveCount(0);
 });

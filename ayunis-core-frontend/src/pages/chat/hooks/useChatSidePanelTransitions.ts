@@ -1,11 +1,13 @@
 import { useCallback, type RefObject } from 'react';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
+import type { ChatSidePanelTab } from '@/pages/chat/model/chat-side-panel';
 
 interface ChatSidePanelTransitionOptions {
   artifactPanelRef: RefObject<ArtifactPanelHandle | null>;
   isArtifactDetailOpen: boolean;
   openArtifact: (artifactId: string) => void;
   toggleArtifactPanel: () => void;
+  changeTab: (tab: ChatSidePanelTab) => void;
 }
 
 function useArtifactExitRequest(
@@ -29,6 +31,7 @@ export function useChatSidePanelTransitions({
   isArtifactDetailOpen,
   openArtifact,
   toggleArtifactPanel,
+  changeTab,
 }: ChatSidePanelTransitionOptions) {
   const requestArtifactExit = useArtifactExitRequest(
     artifactPanelRef,
@@ -45,8 +48,14 @@ export function useChatSidePanelTransitions({
     [requestArtifactExit, toggleArtifactPanel],
   );
 
+  const changeSidePanelTab = useCallback(
+    (tab: ChatSidePanelTab) => requestArtifactExit(() => changeTab(tab)),
+    [changeTab, requestArtifactExit],
+  );
+
   return {
     openArtifactPanel,
     toggleArtifactPanel: toggleArtifactPanelView,
+    changeTab: changeSidePanelTab,
   };
 }

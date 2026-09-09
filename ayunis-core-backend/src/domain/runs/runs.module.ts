@@ -4,10 +4,13 @@ import { ToolsModule } from 'src/domain/tools/tools.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsController } from './presenters/http/runs.controller';
+import { ThreadAiContextController } from './presenters/http/thread-ai-context.controller';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SendMessageUseCase } from './application/use-cases/send-message/send-message.use-case';
+import { GetThreadAiContextUseCase } from './application/use-cases/get-thread-ai-context/get-thread-ai-context.use-case';
 import { RunEventResponseMapper } from './presenters/http/mappers/run-event-response.mapper';
+import { ThreadAiContextResponseMapper } from './presenters/http/mappers/thread-ai-context-response.mapper';
 import { RunSsePresenter } from './presenters/http/sse/run-sse.presenter';
 import { SendMessageRequestValidator } from './presenters/http/validation/send-message-request.validator';
 import { BackendToolAdapter } from './application/agent-runtime/backend-tool.adapter';
@@ -75,9 +78,10 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
     WorkspacesModule,
     KnowledgeBasesModule,
   ],
-  controllers: [RunsController],
+  controllers: [RunsController, ThreadAiContextController],
   providers: [
     ExecuteRunUseCase,
+    GetThreadAiContextUseCase,
     BackendToolAdapter,
     PersistenceHookFactory,
     UsageHookFactory,
@@ -90,6 +94,7 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,
+    ThreadAiContextResponseMapper,
     RunSsePresenter,
     SendMessageRequestValidator,
     SystemPromptBuilderService,

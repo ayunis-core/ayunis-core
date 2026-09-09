@@ -25,7 +25,6 @@ const artifacts = [
 
 describe('ArtifactListSidePanel', () => {
   const onSelect = vi.fn();
-  const onClose = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,13 +37,7 @@ describe('ArtifactListSidePanel', () => {
   });
 
   it('lists every artifact with an icon matching its type', () => {
-    render(
-      <ArtifactListSidePanel
-        threadId="thread-id"
-        onSelect={onSelect}
-        onClose={onClose}
-      />,
-    );
+    render(<ArtifactListSidePanel threadId="thread-id" onSelect={onSelect} />);
 
     expect(screen.getByText('Document')).toBeTruthy();
     expect(screen.getByText('Table')).toBeTruthy();
@@ -55,20 +48,14 @@ describe('ArtifactListSidePanel', () => {
   });
 
   it('opens a selected artifact in the same panel', () => {
-    render(
-      <ArtifactListSidePanel
-        threadId="thread-id"
-        onSelect={onSelect}
-        onClose={onClose}
-      />,
-    );
+    render(<ArtifactListSidePanel threadId="thread-id" onSelect={onSelect} />);
 
     fireEvent.click(screen.getByTestId('artifact-list-item-document'));
 
     expect(onSelect).toHaveBeenCalledWith('document');
   });
 
-  it('keeps an empty list closeable', () => {
+  it('shows the artifact-list empty state', () => {
     mocks.useThreadArtifacts.mockReturnValue({
       artifacts: [],
       isLoading: false,
@@ -76,17 +63,9 @@ describe('ArtifactListSidePanel', () => {
       refetch: vi.fn(),
     });
 
-    render(
-      <ArtifactListSidePanel
-        threadId="thread-id"
-        onSelect={onSelect}
-        onClose={onClose}
-      />,
-    );
+    render(<ArtifactListSidePanel threadId="thread-id" onSelect={onSelect} />);
 
     expect(screen.getByText('chat.artifactPanel.emptyTitle')).toBeTruthy();
-    fireEvent.click(screen.getByTestId('artifact-side-panel-close'));
-    expect(onClose).toHaveBeenCalledOnce();
   });
 });
 

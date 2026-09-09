@@ -1,5 +1,5 @@
-import type { SourceAssignment } from '../../domain/thread-source-assignment.entity';
-import type { Thread } from '../../domain/thread.entity';
+import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -39,9 +39,18 @@ export interface StaleThreadSourceRef {
   orgId: UUID;
 }
 
+export interface ThreadContextRefs {
+  workspaceId: UUID | null;
+  knowledgeBaseIds: UUID[];
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
+  abstract findContextRefs(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadContextRefs | null>;
   abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]>;
   abstract findAll(
     userId: UUID,

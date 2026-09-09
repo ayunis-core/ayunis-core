@@ -34,6 +34,7 @@ interface ArtifactEditorProps {
   readonly onBack: () => void;
   readonly onLetterheadChange?: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
+  readonly showClose?: boolean;
 }
 
 export const ArtifactEditor = forwardRef<
@@ -49,6 +50,7 @@ export const ArtifactEditor = forwardRef<
     onBack,
     onLetterheadChange,
     isExporting,
+    showClose = true,
   },
   ref,
 ) {
@@ -159,6 +161,7 @@ export const ArtifactEditor = forwardRef<
         }
         onBack={() => requestExit(onBack)}
         onClose={() => requestExit(onClose)}
+        showClose={showClose}
       />
 
       {/* Toolbar */}

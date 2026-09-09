@@ -279,6 +279,8 @@ describe('LocalKnowledgeBaseRepository', () => {
       subQuery: jest
         .fn()
         .mockReturnValueOnce(directShareSubQuery)
+        .mockReturnValueOnce(sharedSkillSubQuery)
+        .mockReturnValueOnce(directShareSubQuery)
         .mockReturnValueOnce(sharedSkillSubQuery),
       escape: jest.fn((name: string) => `"${name}"`),
       innerJoin: jest.fn().mockReturnThis(),
@@ -321,7 +323,10 @@ describe('LocalKnowledgeBaseRepository', () => {
     expect(queryBuilder.where).toHaveBeenCalledWith(
       'knowledgeBase.workspaceId IS NULL',
     );
-    const accessBrackets = queryBuilder.andWhere.mock.calls[0][0] as Brackets;
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'knowledgeBase.orgId = :orgId',
+    );
+    const accessBrackets = queryBuilder.andWhere.mock.calls[1][0] as Brackets;
     const accessQuery = {
       where: jest.fn().mockReturnThis(),
       orWhere: jest.fn().mockReturnThis(),
@@ -339,6 +344,12 @@ describe('LocalKnowledgeBaseRepository', () => {
     );
     expect(sharedSkillSubQuery.andWhere).toHaveBeenCalledWith(
       'sharedSkill.userId = "knowledgeBase"."userId"',
+    );
+
+    await repository.findAccessibleByIds([firstKnowledgeBaseId], userId, orgId);
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'knowledgeBase.id IN (:...ids)',
+      { ids: [firstKnowledgeBaseId] },
     );
   });
 

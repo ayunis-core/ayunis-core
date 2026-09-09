@@ -225,6 +225,7 @@ import type {
   TeamMemberResponseDto,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
+  ThreadAiContextResponseDto,
   ThreadFavoriteResponseDto,
   ThreadSourcesControllerAddFileSourceBody,
   ThreadsControllerFindAllParams,
@@ -20020,6 +20021,99 @@ export const useRunsControllerSendMessage = <TError = void,
       > => {
       return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Get the AI resources available in a thread
+ */
+export const threadAiContextControllerGetAiContext = (
+    threadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ThreadAiContextResponseDto>(
+      {url: `/threads/${threadId}/ai-context`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadAiContextControllerGetAiContextQueryKey = (threadId: string,) => {
+    return [
+    `/threads/${threadId}/ai-context`
+    ] as const;
+    }
+
+
+export const getThreadAiContextControllerGetAiContextQueryOptions = <TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadAiContextControllerGetAiContextQueryKey(threadId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>> = ({ signal }) => threadAiContextControllerGetAiContext(threadId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadAiContextControllerGetAiContextQueryResult = NonNullable<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>>
+export type ThreadAiContextControllerGetAiContextQueryError = void
+
+
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
+          TError,
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
+          TError,
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the AI resources available in a thread
+ */
+
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadAiContextControllerGetAiContextQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * Create a new trial for an organization. Only accessible to users with the super admin system role.

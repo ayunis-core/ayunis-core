@@ -3,6 +3,8 @@ import { generatedApi } from "../clients/api/generated-api";
 
 export interface ProjectContextFixture {
   workspace: { id: string; name: string };
+  personalSkill: { id: string; name: string };
+  personalKnowledgeBase: { id: string; name: string };
   skill: { id: string; name: string };
   knowledgeBase: { id: string; name: string };
   instruction: string;
@@ -15,9 +17,22 @@ interface ProjectContextOptions {
   includeDocuments?: boolean;
 }
 
-export async function createProjectThread(
+export function createPersonalThread(
+  api: APIRequestContext,
+): Promise<{ id: string }> {
+  return createContextThread(api);
+}
+
+export function createProjectThread(
   api: APIRequestContext,
   workspaceId: string,
+): Promise<{ id: string }> {
+  return createContextThread(api, workspaceId);
+}
+
+async function createContextThread(
+  api: APIRequestContext,
+  workspaceId?: string,
 ): Promise<{ id: string }> {
   const model =
     await generatedApi.modelsDefaultsControllerGetEffectiveDefaultModel({
@@ -108,6 +123,8 @@ export async function createProjectContextFixture(
 
   return {
     workspace,
+    personalSkill,
+    personalKnowledgeBase,
     skill,
     knowledgeBase,
     instruction,
