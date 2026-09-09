@@ -2534,7 +2534,17 @@ export interface GeneratedImageUrlResponseDto {
   expiresAt: string;
 }
 
+export type CreateKnowledgeBaseDtoOwnerType = typeof CreateKnowledgeBaseDtoOwnerType[keyof typeof CreateKnowledgeBaseDtoOwnerType];
+
+
+export const CreateKnowledgeBaseDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
+
 export interface CreateKnowledgeBaseDto {
+  ownerType: CreateKnowledgeBaseDtoOwnerType;
+  workspaceId?: string;
   /**
      * The name of the knowledge base
      * @minLength 1
@@ -2548,9 +2558,20 @@ export interface CreateKnowledgeBaseDto {
   description?: string;
 }
 
+export type KnowledgeBaseResponseDtoOwnerType = typeof KnowledgeBaseResponseDtoOwnerType[keyof typeof KnowledgeBaseResponseDtoOwnerType];
+
+
+export const KnowledgeBaseResponseDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
+
 export interface KnowledgeBaseResponseDto {
   /** The unique identifier of the knowledge base */
   id: string;
+  ownerType: KnowledgeBaseResponseDtoOwnerType;
+  /** The owning workspace for workspace-owned knowledge bases */
+  workspaceId?: string;
   /** The name of the knowledge base */
   name: string;
   /** The description of the knowledge base */
@@ -2559,6 +2580,8 @@ export interface KnowledgeBaseResponseDto {
   createdAt: string;
   /** The date and time when the knowledge base was last updated */
   updatedAt: string;
+  /** Number of documents assigned to the knowledge base */
+  documentCount: number;
   /** Whether the knowledge base is active for the current user */
   isActive: boolean;
   /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
@@ -2568,6 +2591,7 @@ export interface KnowledgeBaseResponseDto {
 export interface KnowledgeBaseListResponseDto {
   /** The list of knowledge bases */
   data: KnowledgeBaseResponseDto[];
+  pagination: PaginationDto;
 }
 
 export interface UpdateKnowledgeBaseDto {
@@ -3491,68 +3515,6 @@ export interface UpdateWorkspaceSkillPinDto {
 
 export interface WorkspaceSkillListResponseDto {
   data: WorkspaceSkillResponseDto[];
-  pagination: PaginationDto;
-}
-
-export interface CreateWorkspaceKnowledgeBaseDto {
-  name: string;
-  description: string;
-}
-
-export type WorkspaceDocumentResponseDtoType = typeof WorkspaceDocumentResponseDtoType[keyof typeof WorkspaceDocumentResponseDtoType];
-
-
-export const WorkspaceDocumentResponseDtoType = {
-  text: 'text',
-  data: 'data',
-} as const;
-
-export type WorkspaceDocumentResponseDtoCreatedBy = typeof WorkspaceDocumentResponseDtoCreatedBy[keyof typeof WorkspaceDocumentResponseDtoCreatedBy];
-
-
-export const WorkspaceDocumentResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
-} as const;
-
-export type WorkspaceDocumentResponseDtoStatus = typeof WorkspaceDocumentResponseDtoStatus[keyof typeof WorkspaceDocumentResponseDtoStatus];
-
-
-export const WorkspaceDocumentResponseDtoStatus = {
-  processing: 'processing',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-export type WorkspaceDocumentResponseDtoTextType = typeof WorkspaceDocumentResponseDtoTextType[keyof typeof WorkspaceDocumentResponseDtoTextType];
-
-
-export const WorkspaceDocumentResponseDtoTextType = {
-  file: 'file',
-  web: 'web',
-} as const;
-
-export interface WorkspaceDocumentResponseDto {
-  id: string;
-  name: string;
-  type: WorkspaceDocumentResponseDtoType;
-  createdBy: WorkspaceDocumentResponseDtoCreatedBy;
-  status: WorkspaceDocumentResponseDtoStatus;
-  /** @nullable */
-  processingError: string | null;
-  textType?: WorkspaceDocumentResponseDtoTextType;
-  url?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UpdateWorkspaceKnowledgeBaseActivationDto {
-  isActive: boolean;
-}
-
-export interface WorkspaceKnowledgeBaseListResponseDto {
-  data: WorkspaceKnowledgeBaseResponseDto[];
   pagination: PaginationDto;
 }
 
@@ -5460,6 +5422,29 @@ export type ThreadSourcesControllerAddFileSourceBody = {
   file: Blob | File;
 };
 
+export type KnowledgeBasesControllerFindAllParams = {
+ownerType: KnowledgeBasesControllerFindAllOwnerType;
+workspaceId?: string;
+search?: string;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
+};
+
+export type KnowledgeBasesControllerFindAllOwnerType = typeof KnowledgeBasesControllerFindAllOwnerType[keyof typeof KnowledgeBasesControllerFindAllOwnerType];
+
+
+export const KnowledgeBasesControllerFindAllOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
+
 export type KnowledgeBasesControllerAddDocumentBody = {
   /** The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB) */
   file: Blob | File;
@@ -5510,16 +5495,6 @@ export type WorkspaceContextControllerListSkillsParams = {
 offset?: number;
 limit?: number;
 search?: string;
-};
-
-export type WorkspaceContextControllerListKnowledgeBasesParams = {
-offset?: number;
-limit?: number;
-search?: string;
-};
-
-export type WorkspaceContextControllerAddKnowledgeBaseDocumentBody = {
-  file: Blob | File;
 };
 
 export type WorkspaceSkillSourcesControllerAddFileBody = {

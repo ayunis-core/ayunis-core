@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import {
+  getKnowledgeBasesControllerFindAllQueryKey,
   getWorkspaceContextControllerFindContextQueryKey,
   getWorkspaceContextControllerListSkillsQueryKey,
-  getWorkspaceContextControllerListKnowledgeBasesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { workspaceKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 export function useInvalidateWorkspaceResources(workspaceId: string) {
   const queryClient = useQueryClient();
@@ -14,7 +15,9 @@ export function useInvalidateWorkspaceResources(workspaceId: string) {
       [
         getWorkspaceContextControllerFindContextQueryKey(workspaceId),
         getWorkspaceContextControllerListSkillsQueryKey(workspaceId),
-        getWorkspaceContextControllerListKnowledgeBasesQueryKey(workspaceId),
+        getKnowledgeBasesControllerFindAllQueryKey(
+          workspaceKnowledgeBaseListParams(workspaceId),
+        ),
       ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
     );
     await router.invalidate({

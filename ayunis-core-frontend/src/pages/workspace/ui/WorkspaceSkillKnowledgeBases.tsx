@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useWorkspaceContextControllerListKnowledgeBases } from '@/shared/api/generated/ayunisCoreAPI';
+import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
 import { SkillKnowledgeBasesCard } from '@/widgets/skill-knowledge-bases-card';
 import { WorkspaceContextPagination } from './WorkspaceContextList';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
@@ -18,7 +18,7 @@ export function WorkspaceSkillKnowledgeBases({
 }>) {
   const { t } = useTranslation('skill');
   const [page, setPage] = useState(1);
-  const { data, isError } = useWorkspaceContextControllerListKnowledgeBases(
+  const { knowledgeBases, pagination, isError } = useWorkspaceKnowledgeBases(
     workspaceId,
     { limit: CONTEXT_PAGE_SIZE, offset: (page - 1) * CONTEXT_PAGE_SIZE },
   );
@@ -27,14 +27,14 @@ export function WorkspaceSkillKnowledgeBases({
   return (
     <div>
       <SkillKnowledgeBasesCard
-        knowledgeBases={data?.data ?? []}
+        knowledgeBases={knowledgeBases}
         assignedIds={assignedIds}
         isPending={isPending}
         onToggle={onToggle}
       />
       <WorkspaceContextPagination
         page={page}
-        total={pageTotal(data?.pagination)}
+        total={pageTotal(pagination)}
         testId="workspace-skill-knowledge-bases"
         onPageChange={setPage}
       />

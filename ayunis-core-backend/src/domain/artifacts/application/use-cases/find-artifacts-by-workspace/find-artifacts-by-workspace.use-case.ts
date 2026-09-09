@@ -6,8 +6,7 @@ import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { UnexpectedArtifactError } from 'src/domain/artifacts/application/artifacts.errors';
 import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
-import { FindWorkspaceQuery } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.query';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { FindArtifactsByWorkspaceQuery } from './find-artifacts-by-workspace.query';
 
 @Injectable()
@@ -17,7 +16,7 @@ export class FindArtifactsByWorkspaceUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
-    private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
+    private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
@@ -33,9 +32,7 @@ export class FindArtifactsByWorkspaceUseCase {
       { workspaceId: query.workspaceId },
       'Finding artifacts by workspace',
     );
-    await this.findWorkspaceUseCase.execute(
-      new FindWorkspaceQuery(query.workspaceId),
-    );
+    await this.workspaceReadAccess.execute({ workspaceId: query.workspaceId });
 
     return this.artifactsRepository.findByWorkspaceId(
       query.workspaceId,

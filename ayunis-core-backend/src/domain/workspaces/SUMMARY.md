@@ -12,9 +12,7 @@ User-facing German copy calls them "Arbeitsbereiche"; the code, tables and route
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
 Workspace skills and knowledge bases are isolated from personal resources and
 must be created directly in the workspace; personal resources cannot be copied
-or attached. Workspace-scoped detail endpoints edit those resources, restrict
-skill knowledge-base assignments to the same workspace, and manage documents
-inside workspace knowledge bases. Activation is a shared project setting for
+or attached. The canonical `/knowledge-bases` API manages those resources. Workspace routes retain only skill-to-knowledge-base assignment and strictly match persisted knowledge-base ownership to the skill workspace. Activation is a shared project setting for
 skills and knowledge bases, and both start active. An enabled skill is available
 for on-demand activation, not automatically applied. Inactive resources are
 excluded from run context; deactivating a skill also clears its project pin.
@@ -67,30 +65,21 @@ The whole module sits behind the `workspacesEnabled` feature flag
 ## Resource operation boundaries
 
 The context and skill-source controllers call dedicated workspace use cases, not
-an editor service. `WorkspaceAccessService.requireOwned` is the shared internal
-caller-ownership policy. Skill operations (`GetWorkspaceSkillUseCase`,
+an editor service. `AssertWorkspaceReadAccessUseCase`,
+`AssertWorkspaceWriteAccessUseCase`, and `AssertWorkspaceExecutionAccessUseCase`
+are the exported capability boundary over the internal owner policy. The execution
+capability resolves the thread under the authenticated principal and requires its
+persisted `workspaceId` to match; callers cannot establish trust with a raw
+workspace ID. Skill operations (`GetWorkspaceSkillUseCase`,
 `UpdateWorkspaceSkillUseCase`, `SetWorkspaceSkillActivationUseCase`,
 `SetWorkspaceSkillPinUseCase`, `SetWorkspaceSkillKnowledgeBaseUseCase`) authorize
 first, then invoke exported skill/knowledge-base use cases and return resource
 state ready for DTO mapping. Assignment validates the knowledge base's workspace
 before changing the skill.
 
-Knowledge-base operations (`GetWorkspaceKnowledgeBaseUseCase`,
-`UpdateWorkspaceKnowledgeBaseUseCase`, `SetWorkspaceKnowledgeBaseActivationUseCase`,
-`ListWorkspaceKnowledgeBaseDocumentsUseCase`, `AddWorkspaceKnowledgeBaseDocumentUseCase`,
-`RemoveWorkspaceKnowledgeBaseDocumentUseCase`) follow the same boundary. Detail
-responses obtain document counts through the exported bulk-count use case rather
-than loading full source entities. Skill files are orchestrated by
-`ListWorkspaceSkillSourcesUseCase`, `AddWorkspaceSkillFileUseCase`, and
-`RemoveWorkspaceSkillSourceUseCase`; controllers retain multipart parsing and
-temporary-file cleanup only. Creation returns the initial active resource context.
+Workspace knowledge-base resources are managed by the canonical knowledge-bases application and HTTP boundaries. The workspace module keeps no duplicate CRUD, activation, list, or document wrappers and exposes no nested knowledge-base resource routes. `SetWorkspaceSkillKnowledgeBaseUseCase` authorizes workspace writes, resolves the knowledge base through canonical `FindKnowledgeBaseUseCase`, and rejects personal or different-workspace ownership before mutation.
 
-Document upload validates nested-route knowledge-base membership in
-`AddWorkspaceKnowledgeBaseDocumentUseCase`, then delegates the complete operation
-to the shared `AddDocumentToKnowledgeBaseUseCase` in knowledge-bases. That operation
-checks caller authorization via the knowledge-base write policy, which calls the
-exported `AssertWorkspaceWriteAccessUseCase`; its workspace ownership policy
-remains internal. The wrapper has no upload processing, capacity, or cleanup logic.
+Skill files are orchestrated by `ListWorkspaceSkillSourcesUseCase`, `AddWorkspaceSkillFileUseCase`, and `RemoveWorkspaceSkillSourceUseCase`; controllers retain multipart parsing and temporary-file cleanup only.
 
 ## Architecture
 
@@ -110,9 +99,7 @@ workspaces/
 │   └── use-cases/
 │       ├── create-workspace/
 │       ├── create-workspace-skill/
-│       ├── create-workspace-knowledge-base/
 │       ├── list-workspace-skills/
-│       ├── list-workspace-knowledge-bases/
 │       ├── build-workspace-run-context/
 │       ├── update-workspace-instruction/
 │       ├── find-all-workspaces/
@@ -135,26 +122,21 @@ workspaces/
 
 ## HTTP API
 
-| Method          | Route                                                                              | Purpose                                   |
-| --------------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
-| POST            | `/workspaces`                                                                      | Create a workspace                        |
-| GET             | `/workspaces`                                                                      | List by most recently updated             |
-| GET             | `/workspaces/:id`                                                                  | Read one                                  |
-| PATCH           | `/workspaces/:id`                                                                  | Update name / description / icon / colour |
-| DELETE          | `/workspaces/:id`                                                                  | Delete the workspace and its chats        |
-| GET             | `/workspaces/:id/context`                                                          | Read the full runtime context             |
-| POST            | `/workspaces/:id/context/skills`                                                   | Create a workspace-owned skill            |
-| GET             | `/workspaces/:id/context/skills`                                                   | List workspace-owned skills               |
-| DELETE          | `/workspaces/:id/context/skills/:skillId`                                          | Delete a workspace-owned skill            |
-| GET             | `/workspaces/:id/context/skills/:skillId/sources`                                  | List skill documents                      |
-| POST            | `/workspaces/:id/context/skills/:skillId/sources/file`                             | Upload a skill document                   |
-| DELETE          | `/workspaces/:id/context/skills/:skillId/sources/:sourceId`                        | Remove a skill document                   |
-| POST            | `/workspaces/:id/context/knowledge-bases`                                          | Create a workspace-owned knowledge base   |
-| GET             | `/workspaces/:id/context/knowledge-bases`                                          | List workspace-owned knowledge bases      |
-| DELETE          | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId`                         | Delete a workspace-owned knowledge base   |
-| PATCH           | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId/activation`              | Set project-wide KB activation            |
-| GET/POST/DELETE | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId/documents[/:documentId]` | Manage KB documents                       |
-| PATCH           | `/workspaces/:id/context/instruction`                                              | Update the workspace instruction          |
+| Method | Route                                                       | Purpose                                   |
+| ------ | ----------------------------------------------------------- | ----------------------------------------- |
+| POST   | `/workspaces`                                               | Create a workspace                        |
+| GET    | `/workspaces`                                               | List by most recently updated             |
+| GET    | `/workspaces/:id`                                           | Read one                                  |
+| PATCH  | `/workspaces/:id`                                           | Update name / description / icon / colour |
+| DELETE | `/workspaces/:id`                                           | Delete the workspace and its chats        |
+| GET    | `/workspaces/:id/context`                                   | Read the full runtime context             |
+| POST   | `/workspaces/:id/context/skills`                            | Create a workspace-owned skill            |
+| GET    | `/workspaces/:id/context/skills`                            | List workspace-owned skills               |
+| DELETE | `/workspaces/:id/context/skills/:skillId`                   | Delete a workspace-owned skill            |
+| GET    | `/workspaces/:id/context/skills/:skillId/sources`           | List skill documents                      |
+| POST   | `/workspaces/:id/context/skills/:skillId/sources/file`      | Upload a skill document                   |
+| DELETE | `/workspaces/:id/context/skills/:skillId/sources/:sourceId` | Remove a skill document                   |
+| PATCH  | `/workspaces/:id/context/instruction`                       | Update the workspace instruction          |
 
 ## Cross-Module Boundaries
 
@@ -174,11 +156,14 @@ records may be referenced by the local workspace repository to resolve resources
 that are directly owned by a workspace; application code does not import the
 other modules' repository ports.
 
-The repository port is deliberately not exported — cross-module access goes
-through the exported use cases.
+The repository port and `WorkspaceAccessService` are deliberately not exported —
+cross-module access goes through the exported read, write, and trusted-execution
+use cases. Threads and artifacts use the read capability; knowledge bases and
+skills dispatch workspace-owned resource authorization to the appropriate
+capability. Trusted execution resolves an owner-scoped thread through the threads
+module, which forms an explicit `forwardRef` module relationship without exposing
+either module's repository.
 
-Workspace context list endpoints use dedicated paginated use cases. Resource
-lists apply search, workspace ownership, ordering, offset, limit, and total-count
-queries in the database. The full `/context`
+The workspace skill list uses its dedicated paginated use case. Knowledge-base listing lives in the canonical knowledge-bases module. The full `/context`
 endpoint remains the unpaginated runtime-context projection used when starting
 or running a workspace chat.

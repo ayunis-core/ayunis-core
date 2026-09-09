@@ -100,7 +100,8 @@
   },
   "create": {
     "success": "Wissenssammlung erfolgreich erstellt!",
-    "error": "Wissenssammlung konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    "error": "Wissenssammlung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "validationError": "Bitte überprüfen Sie die Angaben zur Wissenssammlung und versuchen Sie es erneut."
   },
   "delete": {
     "success": "Wissenssammlung erfolgreich gelöscht!",
@@ -174,6 +175,7 @@
       "retryUpload": "Entfernen und erneut hochladen",
       "removeSuccess": "Dokument erfolgreich entfernt!",
       "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+      "removeNotFound": "Das Dokument wurde bereits aus dieser Wissenssammlung entfernt.",
       "urlDialogCancel": "Abbrechen"
     }
   },

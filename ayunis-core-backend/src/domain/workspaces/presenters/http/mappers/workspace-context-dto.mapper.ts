@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginationDto } from 'src/common/pagination/pagination.dto';
-import type { Source } from 'src/domain/sources/domain/source.entity';
-import {
-  TextSource,
-  UrlSource,
-} from 'src/domain/sources/domain/sources/text-source.entity';
 import type {
   WorkspaceKnowledgeBaseContext,
   WorkspaceRunContext,
@@ -13,8 +8,6 @@ import type {
 } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import {
   WorkspaceContextResponseDto,
-  WorkspaceDocumentResponseDto,
-  WorkspaceKnowledgeBaseListResponseDto,
   WorkspaceKnowledgeBaseResponseDto,
   WorkspaceSkillListResponseDto,
   WorkspaceSkillResponseDto,
@@ -57,39 +50,11 @@ export class WorkspaceContextDtoMapper {
     );
   }
 
-  toDocumentDto(source: Source): WorkspaceDocumentResponseDto {
-    const dto = new WorkspaceDocumentResponseDto();
-    dto.id = source.id;
-    dto.name = source.name;
-    dto.type = source.type;
-    dto.createdBy = source.createdBy;
-    dto.status = source.status;
-    dto.processingError = source.processingError;
-    dto.createdAt = source.createdAt.toISOString();
-    dto.updatedAt = source.updatedAt.toISOString();
-    if (source instanceof TextSource) {
-      dto.textType = source.textType;
-      if (source instanceof UrlSource) dto.url = source.url;
-    }
-    return dto;
-  }
-
   toSkillListDto(
     page: Paginated<WorkspaceSkillContext>,
   ): WorkspaceSkillListResponseDto {
     return {
       data: page.data.map((skill) => this.toSkillDto(skill)),
-      pagination: this.toPaginationDto(page),
-    };
-  }
-
-  toKnowledgeBaseListDto(
-    page: Paginated<WorkspaceKnowledgeBaseContext>,
-  ): WorkspaceKnowledgeBaseListResponseDto {
-    return {
-      data: page.data.map((knowledgeBase) =>
-        this.toKnowledgeBaseDto(knowledgeBase),
-      ),
       pagination: this.toPaginationDto(page),
     };
   }

@@ -6,7 +6,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
-import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { FindArtifactsByWorkspaceQuery } from './find-artifacts-by-workspace.query';
 import { FindArtifactsByWorkspaceUseCase } from './find-artifacts-by-workspace.use-case';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -15,7 +15,7 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
   let useCase: FindArtifactsByWorkspaceUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let contextService: jest.Mocked<ContextService>;
-  let findWorkspaceUseCase: jest.Mocked<FindWorkspaceUseCase>;
+  let workspaceReadAccess: jest.Mocked<AssertWorkspaceReadAccessUseCase>;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const workspaceId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -28,23 +28,26 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
     const context = {
       get: jest.fn((key: string) => (key === 'userId' ? userId : undefined)),
     } as unknown as jest.Mocked<ContextService>;
-    const findWorkspace = {
+    const workspaceReadAccessMock = {
       execute: jest.fn().mockResolvedValue({}),
-    } as unknown as jest.Mocked<FindWorkspaceUseCase>;
+    } as unknown as jest.Mocked<AssertWorkspaceReadAccessUseCase>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindArtifactsByWorkspaceUseCase,
         { provide: ArtifactsRepository, useValue: repository },
         { provide: ContextService, useValue: context },
-        { provide: FindWorkspaceUseCase, useValue: findWorkspace },
+        {
+          provide: AssertWorkspaceReadAccessUseCase,
+          useValue: workspaceReadAccessMock,
+        },
       ],
     }).compile();
 
     useCase = module.get(FindArtifactsByWorkspaceUseCase);
     artifactsRepository = repository;
     contextService = context;
-    findWorkspaceUseCase = findWorkspace;
+    workspaceReadAccess = workspaceReadAccessMock;
   });
 
   afterEach(() => {
@@ -106,7 +109,7 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
   });
 
   it('rejects requests for workspaces unavailable to the caller', async () => {
-    findWorkspaceUseCase.execute.mockRejectedValue(
+    workspaceReadAccess.execute.mockRejectedValue(
       new WorkspaceNotFoundError(workspaceId),
     );
 

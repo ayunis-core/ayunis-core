@@ -100,7 +100,8 @@
   },
   "create": {
     "success": "Knowledge base created successfully!",
-    "error": "Failed to create knowledge base. Please try again."
+    "error": "Failed to create knowledge base. Please try again.",
+    "validationError": "Please check the knowledge base details and try again."
   },
   "delete": {
     "success": "Knowledge base deleted successfully!",
@@ -174,6 +175,7 @@
       "retryUpload": "Remove and re-upload",
       "removeSuccess": "Document removed successfully!",
       "removeError": "Failed to remove document. Please try again.",
+      "removeNotFound": "The document was already removed from this knowledge base.",
       "urlDialogCancel": "Cancel"
     }
   },

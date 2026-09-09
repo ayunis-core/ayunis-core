@@ -7,12 +7,6 @@ export class UpdateWorkspaceSkillActivationDto {
   isActive: boolean;
 }
 
-export class UpdateWorkspaceKnowledgeBaseActivationDto {
-  @ApiProperty()
-  @IsBoolean()
-  isActive: boolean;
-}
-
 export class UpdateWorkspaceSkillPinDto {
   @ApiProperty()
   @IsBoolean()

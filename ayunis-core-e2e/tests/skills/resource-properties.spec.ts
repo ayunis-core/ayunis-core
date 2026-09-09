@@ -1,3 +1,4 @@
+/* eslint-disable playwright/no-conditional-in-test -- The parameterized cases share the same resource workflow. */
 import { test, expect } from "../../src/fixtures/test";
 import { generatedApi } from "../../src/clients/api/generated-api";
 
@@ -18,7 +19,11 @@ for (const kind of ["skill", "knowledge-base"] as const) {
             { api },
           )
         : await generatedApi.knowledgeBasesControllerCreate(
-            { name, description: "Building regulations" },
+            {
+              ownerType: "personal",
+              name,
+              description: "Building regulations",
+            },
             { api },
           );
     const listPath = kind === "skill" ? "/skills" : "/knowledge-bases";

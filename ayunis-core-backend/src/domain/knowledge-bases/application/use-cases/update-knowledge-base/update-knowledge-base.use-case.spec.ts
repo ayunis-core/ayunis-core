@@ -1,198 +1,172 @@
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-
-// Mock the Transactional decorator
-jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional:
-    () =>
-    (_target: unknown, _propertyName: string, descriptor: PropertyDescriptor) =>
-      descriptor,
-}));
-
-import { UpdateKnowledgeBaseUseCase } from './update-knowledge-base.use-case';
-import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { randomUUID, type UUID } from 'crypto';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import type { UUID } from 'crypto';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
+import { UpdateKnowledgeBaseUseCase } from './update-knowledge-base.use-case';
 
-describe('UpdateKnowledgeBaseUseCase', () => {
-  let useCase: UpdateKnowledgeBaseUseCase;
-  let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
+const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
+const ORG_ID = '22222222-2222-2222-2222-222222222222' as UUID;
+const WORKSPACE_ID = '33333333-3333-3333-3333-333333333333' as UUID;
 
-  const userId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
-  const knowledgeBaseId = '33333333-3333-3333-3333-333333333333' as UUID;
-
-  beforeEach(async () => {
-    mockRepository = {
-      findById: jest.fn(),
-      findAllByUserId: jest.fn(),
-      findAllOwnedByUserId: jest.fn(),
-      findAllByWorkspaceId: jest.fn(),
-      findByIds: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-      assignSourceToKnowledgeBase: jest.fn(),
-      findSourcesByKnowledgeBaseId: jest.fn(),
-      findSourcesByKnowledgeBaseIds: jest.fn(),
-      findSourceByIdAndKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseIds: jest.fn(),
-      activate: jest.fn(),
-      deactivate: jest.fn(),
-      isActive: jest.fn(),
-      getActiveIds: jest.fn(),
-      activateForWorkspace: jest.fn(),
-      deactivateForWorkspace: jest.fn(),
-      getWorkspaceStates: jest.fn(),
-      findActiveAccessible: jest.fn(),
-      findPaginatedAccessible: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UpdateKnowledgeBaseUseCase,
-        { provide: KnowledgeBaseRepository, useValue: mockRepository },
-      ],
-    }).compile();
-
-    useCase = module.get(UpdateKnowledgeBaseUseCase);
+function command(knowledgeBaseId: UUID): UpdateKnowledgeBaseCommand {
+  return new UpdateKnowledgeBaseCommand({
+    knowledgeBaseId,
+    name: 'Updated permit regulations',
+    description: 'Updated municipal permit guidance.',
   });
+}
 
-  it('should update name and description of an existing knowledge base', async () => {
+async function setup(knowledgeBase: KnowledgeBase) {
+  const repository = {
+    findById: jest.fn().mockResolvedValue(knowledgeBase),
+    save: jest.fn(async (saved) => saved),
+  };
+  const writeAccess = {
+    requireWrite: jest.fn(),
+  } as unknown as jest.Mocked<KnowledgeBaseWriteAccessService>;
+  const module = await Test.createTestingModule({
+    providers: [
+      UpdateKnowledgeBaseUseCase,
+      { provide: KnowledgeBaseRepository, useValue: repository },
+      { provide: KnowledgeBaseWriteAccessService, useValue: writeAccess },
+    ],
+  }).compile();
+  return {
+    useCase: module.get(UpdateKnowledgeBaseUseCase),
+    repository,
+    writeAccess,
+  };
+}
+
+describe(UpdateKnowledgeBaseUseCase.name, () => {
+  it('updates a personal knowledge base while preserving its concrete owner', async () => {
     const existing = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Alte Bezeichnung',
-      description: 'Alte Beschreibung',
-      orgId,
-      userId,
-      createdAt: new Date('2025-01-01T00:00:00Z'),
+      name: 'Permit regulations',
+      description: 'Original guidance.',
+      userId: USER_ID,
+      orgId: ORG_ID,
     });
+    const { useCase } = await setup(existing);
 
-    mockRepository.findById.mockResolvedValue(existing);
-    mockRepository.save.mockImplementation(async (kb) => kb);
+    const result = await useCase.execute(command(existing.id));
 
-    const command = new UpdateKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      name: 'Neue Bezeichnung',
-      description: 'Neue Beschreibung',
+    expect(result).toBeInstanceOf(PersonalKnowledgeBase);
+    expect(result).toMatchObject({
+      id: existing.id,
+      userId: USER_ID,
+      name: 'Updated permit regulations',
+      description: 'Updated municipal permit guidance.',
     });
-
-    const result = await useCase.execute(command);
-
-    expect(result.name).toBe('Neue Bezeichnung');
-    expect(result.description).toBe('Neue Beschreibung');
-    expect(result.id).toBe(knowledgeBaseId);
-    expect(result.createdAt).toEqual(new Date('2025-01-01T00:00:00Z'));
-    expect(result.orgId).toBe(orgId);
-    expect(result).toMatchObject({ userId });
   });
 
-  it('should throw KnowledgeBaseNotFoundError when knowledge base does not exist', async () => {
-    mockRepository.findById.mockResolvedValue(null);
-
-    const command = new UpdateKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      name: 'Neue Bezeichnung',
-      description: 'Neue Beschreibung',
+  it('updates a workspace knowledge base while preserving its persisted workspace owner', async () => {
+    const existing = new WorkspaceKnowledgeBase({
+      name: 'Project regulations',
+      description: 'Original project guidance.',
+      workspaceId: WORKSPACE_ID,
+      orgId: ORG_ID,
     });
+    const { useCase } = await setup(existing);
 
-    await expect(useCase.execute(command)).rejects.toThrow(
+    const result = await useCase.execute(command(existing.id));
+
+    expect(result).toBeInstanceOf(WorkspaceKnowledgeBase);
+    expect(result).toMatchObject({
+      id: existing.id,
+      workspaceId: WORKSPACE_ID,
+      name: 'Updated permit regulations',
+    });
+  });
+
+  it.each([
+    [
+      'an unrelated personal owner',
+      () =>
+        new PersonalKnowledgeBase({
+          name: 'Shared regulations',
+          userId: randomUUID(),
+          orgId: ORG_ID,
+        }),
+    ],
+    [
+      'another organization',
+      () =>
+        new WorkspaceKnowledgeBase({
+          name: 'Foreign project regulations',
+          workspaceId: WORKSPACE_ID,
+          orgId: randomUUID(),
+        }),
+    ],
+  ])('does not mutate for %s', async (_scenario, makeKnowledgeBase) => {
+    const existing = makeKnowledgeBase();
+    const { useCase, repository, writeAccess } = await setup(existing);
+    writeAccess.requireWrite.mockRejectedValue(
+      new KnowledgeBaseNotFoundError(existing.id),
+    );
+
+    await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
       KnowledgeBaseNotFoundError,
     );
-    expect(mockRepository.save).not.toHaveBeenCalled();
+    expect(writeAccess.requireWrite).toHaveBeenCalledWith(existing);
+    expect(repository.save).not.toHaveBeenCalled();
   });
 
-  it('should throw KnowledgeBaseNotFoundError when knowledge base belongs to another user', async () => {
-    const otherUserId = '44444444-4444-4444-4444-444444444444' as UUID;
+  it('leaves omitted fields unchanged without changing ownership', async () => {
+    const existing = new WorkspaceKnowledgeBase({
+      name: 'Project regulations',
+      description: 'Original project guidance.',
+      workspaceId: WORKSPACE_ID,
+      orgId: ORG_ID,
+    });
+    const { useCase } = await setup(existing);
+    const input = new UpdateKnowledgeBaseCommand({
+      knowledgeBaseId: existing.id,
+      name: 'Updated project regulations',
+    });
+
+    const result = await useCase.execute(input);
+
+    expect(result).toMatchObject({
+      workspaceId: WORKSPACE_ID,
+      name: 'Updated project regulations',
+      description: 'Original project guidance.',
+    });
+  });
+
+  it('returns not found without saving when the entity does not exist', async () => {
     const existing = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Fremde Wissenssammlung',
-      orgId,
-      userId: otherUserId,
+      name: 'Permit regulations',
+      userId: USER_ID,
+      orgId: ORG_ID,
     });
+    const { useCase, repository, writeAccess } = await setup(existing);
+    repository.findById.mockResolvedValue(null);
 
-    mockRepository.findById.mockResolvedValue(existing);
-
-    const command = new UpdateKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      name: 'Versuch zu ändern',
-      description: '',
-    });
-
-    await expect(useCase.execute(command)).rejects.toThrow(
+    await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
       KnowledgeBaseNotFoundError,
     );
-    expect(mockRepository.save).not.toHaveBeenCalled();
+    expect(writeAccess.requireWrite).not.toHaveBeenCalled();
+    expect(repository.save).not.toHaveBeenCalled();
   });
 
-  it('should only update name when description is not provided', async () => {
+  it('wraps unexpected persistence failures', async () => {
     const existing = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Alte Bezeichnung',
-      description: 'Bestehende Beschreibung',
-      orgId,
-      userId,
-      createdAt: new Date('2025-01-01T00:00:00Z'),
+      name: 'Permit regulations',
+      userId: USER_ID,
+      orgId: ORG_ID,
     });
+    const { useCase, repository } = await setup(existing);
+    repository.findById.mockRejectedValue(new Error('Connection refused'));
 
-    mockRepository.findById.mockResolvedValue(existing);
-    mockRepository.save.mockImplementation(async (kb) => kb);
-
-    const command = new UpdateKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      name: 'Neue Bezeichnung',
-    });
-
-    const result = await useCase.execute(command);
-
-    expect(result.name).toBe('Neue Bezeichnung');
-    expect(result.description).toBe('Bestehende Beschreibung');
-  });
-
-  it('should only update description when name is not provided', async () => {
-    const existing = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Bestehender Name',
-      description: 'Alte Beschreibung',
-      orgId,
-      userId,
-      createdAt: new Date('2025-01-01T00:00:00Z'),
-    });
-
-    mockRepository.findById.mockResolvedValue(existing);
-    mockRepository.save.mockImplementation(async (kb) => kb);
-
-    const command = new UpdateKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      description: 'Neue Beschreibung',
-    });
-
-    const result = await useCase.execute(command);
-
-    expect(result.name).toBe('Bestehender Name');
-    expect(result.description).toBe('Neue Beschreibung');
-  });
-
-  it('should wrap unexpected repository errors into UnexpectedKnowledgeBaseError', async () => {
-    mockRepository.findById.mockRejectedValue(new Error('Connection refused'));
-
-    const command = new UpdateKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      name: 'Neuer Name',
-    });
-
-    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+    await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
       UnexpectedKnowledgeBaseError,
     );
   });

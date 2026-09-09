@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
+import type { ConfigType } from '@nestjs/config';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import type { featuresConfig } from 'src/config/features.config';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import {
   aWorkspace,
@@ -10,13 +12,16 @@ import {
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { WorkspaceAccessService } from './workspace-access.service';
 
-function setup() {
+function setup(workspacesEnabled = true) {
   const repository = createMockWorkspacesRepository();
   const context = createMockContextService();
+  const features = {
+    workspacesEnabled,
+  } as ConfigType<typeof featuresConfig>;
   return {
     repository,
     context,
-    service: new WorkspaceAccessService(repository, context),
+    service: new WorkspaceAccessService(repository, context, features),
   };
 }
 
@@ -33,6 +38,15 @@ describe(WorkspaceAccessService.name, () => {
     );
   });
 
+  it('hides workspace access while the feature is disabled', async () => {
+    const { service, repository } = setup(false);
+
+    await expect(
+      service.requireOwned(TEST_WORKSPACE_ID),
+    ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
+    expect(repository.findById).not.toHaveBeenCalled();
+  });
+
   it('rejects unauthenticated callers before querying persistence', async () => {
     const { service, repository, context } = setup();
     context.get.mockReturnValue(undefined);
@@ -40,6 +54,25 @@ describe(WorkspaceAccessService.name, () => {
       service.requireOwned(TEST_WORKSPACE_ID),
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
     expect(repository.findById).not.toHaveBeenCalled();
+  });
+
+  it('requires authenticated organization context before querying persistence', async () => {
+    const { service, repository, context } = setup();
+    context.get.mockImplementation((key) =>
+      key === 'userId' ? TEST_USER_ID : undefined,
+    );
+    await expect(
+      service.requireOwned(TEST_WORKSPACE_ID),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+    expect(repository.findById).not.toHaveBeenCalled();
+  });
+
+  it('hides a workspace outside the active organization', async () => {
+    const { service, repository } = setup();
+    repository.findById.mockResolvedValue(aWorkspace({ orgId: randomUUID() }));
+    await expect(
+      service.requireOwned(TEST_WORKSPACE_ID),
+    ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
   });
 
   it('rejects a workspace absent from the authenticated user scope', async () => {

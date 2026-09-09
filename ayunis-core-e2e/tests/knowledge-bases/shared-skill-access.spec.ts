@@ -1,9 +1,9 @@
-import type { BrowserContext, Page } from '@playwright/test';
-import { generatedApi } from '../../src/clients/api/generated-api';
-import { createSharedSkillAccessFixture } from '../../src/factories/shared-skill-access.factory';
-import { test, expect } from '../../src/fixtures/test';
+import type { BrowserContext, Page } from "@playwright/test";
+import { generatedApi } from "../../src/clients/api/generated-api";
+import { createSharedSkillAccessFixture } from "../../src/factories/shared-skill-access.factory";
+import { test, expect } from "../../src/fixtures/test";
 
-test('shows a knowledge base linked to a skill shared with another user', async ({
+test("shows a knowledge base linked to a skill shared with another user", async ({
   api,
   browser,
   mail,
@@ -22,12 +22,13 @@ test('shows a knowledge base linked to a skill shared with another user', async 
       storageState: await fixture.memberApi.storageState(),
     });
     memberPage = await memberContext.newPage();
-    memberPage.on('pageerror', (error) => pageErrors.push(error.message));
+    memberPage.on("pageerror", (error) => pageErrors.push(error.message));
 
     const knowledgeBasesBeforeShare =
-      await generatedApi.knowledgeBasesControllerFindAll({
-        api: fixture.memberApi,
-      });
+      await generatedApi.knowledgeBasesControllerFindAll(
+        { ownerType: "personal" },
+        { api: fixture.memberApi },
+      );
     expect(knowledgeBasesBeforeShare.data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: fixture.knowledgeBase.id }),
@@ -36,10 +37,10 @@ test('shows a knowledge base linked to a skill shared with another user', async 
 
     await fixture.shareSkill();
 
-    const knowledgeBases =
-      await generatedApi.knowledgeBasesControllerFindAll({
-        api: fixture.memberApi,
-      });
+    const knowledgeBases = await generatedApi.knowledgeBasesControllerFindAll(
+      { ownerType: "personal" },
+      { api: fixture.memberApi },
+    );
     expect(knowledgeBases.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -49,8 +50,8 @@ test('shows a knowledge base linked to a skill shared with another user', async 
       ]),
     );
 
-    await memberPage.goto('/knowledge-bases');
-    await memberPage.getByTestId('knowledge-base-tab-shared').click();
+    await memberPage.goto("/knowledge-bases");
+    await memberPage.getByTestId("knowledge-base-tab-shared").click();
     await expect(
       memberPage.getByTestId(`knowledge-base-card-${fixture.knowledgeBase.id}`),
     ).toBeVisible();

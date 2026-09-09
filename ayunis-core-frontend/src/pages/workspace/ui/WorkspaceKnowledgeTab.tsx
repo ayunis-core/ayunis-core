@@ -9,14 +9,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { useWorkspaceContextControllerListKnowledgeBases } from '@/shared/api/generated/ayunisCoreAPI';
+import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
 import { KnowledgeBaseListItem } from '@/shared/ui/knowledge-base-list-item';
 import {
   WorkspaceContextEmpty,
   WorkspaceContextPagination,
 } from './WorkspaceContextList';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
-import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
+import { useWorkspaceKnowledgeBaseActions } from '@/pages/workspace/api/useWorkspaceKnowledgeBaseActions';
 import { KnowledgeBaseCreateDialog } from '@/widgets/resource-create-dialog';
 import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 
@@ -30,7 +30,7 @@ export function WorkspaceKnowledgeTab({
     limit: CONTEXT_PAGE_SIZE,
     offset: (page - 1) * CONTEXT_PAGE_SIZE,
   };
-  const { data, isLoading } = useWorkspaceContextControllerListKnowledgeBases(
+  const { knowledgeBases, pagination, isLoading } = useWorkspaceKnowledgeBases(
     workspaceId,
     listParams,
   );
@@ -39,7 +39,7 @@ export function WorkspaceKnowledgeTab({
     deleteKnowledgeBase,
     setKnowledgeBaseActive,
     isChangingKnowledgeBaseState,
-  } = useWorkspaceContextActions(workspaceId);
+  } = useWorkspaceKnowledgeBaseActions(workspaceId);
 
   const createButton = (
     <KnowledgeBaseCreateDialog
@@ -57,8 +57,6 @@ export function WorkspaceKnowledgeTab({
       }}
     />
   );
-  const knowledgeBases = data?.data ?? [];
-
   return (
     <section className="space-y-3">
       <div className="flex justify-end">{createButton}</div>
@@ -126,7 +124,7 @@ export function WorkspaceKnowledgeTab({
       ) : null}
       <WorkspaceContextPagination
         page={page}
-        total={pageTotal(data?.pagination)}
+        total={pageTotal(pagination)}
         testId="workspace-knowledge-pagination"
         onPageChange={setPage}
       />

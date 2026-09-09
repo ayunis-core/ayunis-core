@@ -75,12 +75,13 @@ export async function createProjectContextFixture(
   );
   const personalKnowledgeBase =
     await generatedApi.knowledgeBasesControllerCreate(
-    {
-      name: `Bauordnung Wissen ${suffix}`,
-      description: "Lokale Bauordnung und Stellplatzsatzung für das Projekt",
-    },
-    { api },
-  );
+      {
+        ownerType: "personal",
+        name: `Bauordnung Wissen ${suffix}`,
+        description: "Lokale Bauordnung und Stellplatzsatzung für das Projekt",
+      },
+      { api },
+    );
   let skill: { id: string; name: string } = personalSkill;
   let knowledgeBase: { id: string; name: string } = personalKnowledgeBase;
   const instruction = `Antworte für ${suffix} mit kurzer Prüfung, Risiko und nächstem Schritt.`;
@@ -105,15 +106,15 @@ export async function createProjectContextFixture(
       },
       { api },
     );
-    knowledgeBase =
-      await generatedApi.workspaceContextControllerCreateKnowledgeBase(
-        workspace.id,
-        {
-          name: knowledgeBase.name,
-          description: "Lokale Bauordnung für das Projekt",
-        },
-        { api },
-      );
+    knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
+      {
+        ownerType: "workspace",
+        workspaceId: workspace.id,
+        name: knowledgeBase.name,
+        description: "Lokale Bauordnung für das Projekt",
+      },
+      { api },
+    );
     await generatedApi.workspaceContextControllerUpdateInstruction(
       workspace.id,
       { instruction },

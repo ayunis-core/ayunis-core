@@ -86,7 +86,6 @@ import type {
   CreateTrialRequestDto,
   CreateUserDto,
   CreateWorkspaceDto,
-  CreateWorkspaceKnowledgeBaseDto,
   CreateWorkspaceSkillDto,
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
@@ -118,6 +117,7 @@ import type {
   KnowledgeBaseListResponseDto,
   KnowledgeBaseResponseDto,
   KnowledgeBasesControllerAddDocumentBody,
+  KnowledgeBasesControllerFindAllParams,
   LanguageModelResponseDto,
   LetterheadResponseDto,
   LoginDto,
@@ -265,7 +265,6 @@ import type {
   UpdateUserRoleDto,
   UpdateWorkspaceDto,
   UpdateWorkspaceInstructionDto,
-  UpdateWorkspaceKnowledgeBaseActivationDto,
   UpdateWorkspaceSkillActivationDto,
   UpdateWorkspaceSkillPinDto,
   UpsertOrgAcademyAccessSettingsDto,
@@ -289,14 +288,9 @@ import type {
   UserSystemPromptResponseDto,
   UserUsageResponseDto,
   ValidationResponseDto,
-  WorkspaceContextControllerAddKnowledgeBaseDocumentBody,
-  WorkspaceContextControllerListKnowledgeBasesParams,
   WorkspaceContextControllerListSkillsParams,
   WorkspaceContextResponseDto,
-  WorkspaceDocumentResponseDto,
   WorkspaceFavoriteResponseDto,
-  WorkspaceKnowledgeBaseListResponseDto,
-  WorkspaceKnowledgeBaseResponseDto,
   WorkspaceListResponseDto,
   WorkspaceResponseDto,
   WorkspaceSkillListResponseDto,
@@ -9973,13 +9967,14 @@ export const useKnowledgeBasesControllerCreate = <TError = void,
  * @summary List all knowledge bases for the current user
  */
 export const knowledgeBasesControllerFindAll = (
-
+    params: KnowledgeBasesControllerFindAllParams,
  signal?: AbortSignal
 ) => {
 
 
       return customAxiosInstance<KnowledgeBaseListResponseDto>(
-      {url: `/knowledge-bases`, method: 'GET', signal
+      {url: `/knowledge-bases`, method: 'GET',
+        params, signal
     },
       );
     }
@@ -9987,23 +9982,23 @@ export const knowledgeBasesControllerFindAll = (
 
 
 
-export const getKnowledgeBasesControllerFindAllQueryKey = () => {
+export const getKnowledgeBasesControllerFindAllQueryKey = (params?: KnowledgeBasesControllerFindAllParams,) => {
     return [
-    `/knowledge-bases`
+    `/knowledge-bases`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getKnowledgeBasesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>>, }
+export const getKnowledgeBasesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError = unknown>(params: KnowledgeBasesControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBasesControllerFindAllQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBasesControllerFindAllQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>> = ({ signal }) => knowledgeBasesControllerFindAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>> = ({ signal }) => knowledgeBasesControllerFindAll(params, signal);
 
 
 
@@ -10017,7 +10012,7 @@ export type KnowledgeBasesControllerFindAllQueryError = unknown
 
 
 export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>> & Pick<
+ params: KnowledgeBasesControllerFindAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>,
           TError,
@@ -10027,7 +10022,7 @@ export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<ty
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>> & Pick<
+ params: KnowledgeBasesControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>,
           TError,
@@ -10037,7 +10032,7 @@ export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<ty
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>>, }
+ params: KnowledgeBasesControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -10045,11 +10040,11 @@ export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<ty
  */
 
 export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>>, }
+ params: KnowledgeBasesControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getKnowledgeBasesControllerFindAllQueryOptions(options)
+  const queryOptions = getKnowledgeBasesControllerFindAllQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -14964,669 +14959,6 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getWorkspaceContextControllerUnassignSkillKnowledgeBaseMutationOptions(options), queryClient);
-    }
-
-export const workspaceContextControllerCreateKnowledgeBase = (
-    id: string,
-    createWorkspaceKnowledgeBaseDto: CreateWorkspaceKnowledgeBaseDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<WorkspaceKnowledgeBaseResponseDto>(
-      {url: `/workspaces/${id}/context/knowledge-bases`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createWorkspaceKnowledgeBaseDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerCreateKnowledgeBaseMutationKey = () => ['workspaceContextControllerCreateKnowledgeBase'] as const;
-
-export const getWorkspaceContextControllerCreateKnowledgeBaseMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerCreateKnowledgeBase>>, TError,WorkspaceContextControllerCreateKnowledgeBaseMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerCreateKnowledgeBase>>, TError,WorkspaceContextControllerCreateKnowledgeBaseMutationVariables, TContext> => {
-
-const mutationKey = getWorkspaceContextControllerCreateKnowledgeBaseMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerCreateKnowledgeBase>>, WorkspaceContextControllerCreateKnowledgeBaseMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  workspaceContextControllerCreateKnowledgeBase(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceContextControllerCreateKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerCreateKnowledgeBase>>>
-    export type WorkspaceContextControllerCreateKnowledgeBaseMutationBody = CreateWorkspaceKnowledgeBaseDto
-    export type WorkspaceContextControllerCreateKnowledgeBaseMutationError = unknown
-    export type WorkspaceContextControllerCreateKnowledgeBaseMutationVariables = {id: string;data: CreateWorkspaceKnowledgeBaseDto}
-
-    export const useWorkspaceContextControllerCreateKnowledgeBase = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerCreateKnowledgeBase>>, TError,WorkspaceContextControllerCreateKnowledgeBaseMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceContextControllerCreateKnowledgeBase>>,
-        TError,
-        WorkspaceContextControllerCreateKnowledgeBaseMutationVariables,
-        TContext
-      > => {
-      return useMutation(getWorkspaceContextControllerCreateKnowledgeBaseMutationOptions(options), queryClient);
-    }
-
-export const workspaceContextControllerListKnowledgeBases = (
-    id: string,
-    params?: WorkspaceContextControllerListKnowledgeBasesParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<WorkspaceKnowledgeBaseListResponseDto>(
-      {url: `/workspaces/${id}/context/knowledge-bases`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerListKnowledgeBasesQueryKey = (id: string,
-    params?: WorkspaceContextControllerListKnowledgeBasesParams,) => {
-    return [
-    `/workspaces/${id}/context/knowledge-bases`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getWorkspaceContextControllerListKnowledgeBasesQueryOptions = <TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError = unknown>(id: string,
-    params?: WorkspaceContextControllerListKnowledgeBasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getWorkspaceContextControllerListKnowledgeBasesQueryKey(id,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>> = ({ signal }) => workspaceContextControllerListKnowledgeBases(id,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type WorkspaceContextControllerListKnowledgeBasesQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>>
-export type WorkspaceContextControllerListKnowledgeBasesQueryError = unknown
-
-
-export function useWorkspaceContextControllerListKnowledgeBases<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError = unknown>(
- id: string,
-    params: undefined |  WorkspaceContextControllerListKnowledgeBasesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>,
-          TError,
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useWorkspaceContextControllerListKnowledgeBases<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError = unknown>(
- id: string,
-    params?: WorkspaceContextControllerListKnowledgeBasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>,
-          TError,
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useWorkspaceContextControllerListKnowledgeBases<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError = unknown>(
- id: string,
-    params?: WorkspaceContextControllerListKnowledgeBasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useWorkspaceContextControllerListKnowledgeBases<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError = unknown>(
- id: string,
-    params?: WorkspaceContextControllerListKnowledgeBasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBases>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getWorkspaceContextControllerListKnowledgeBasesQueryOptions(id,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const workspaceContextControllerFindKnowledgeBase = (
-    id: string,
-    knowledgeBaseId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<WorkspaceKnowledgeBaseResponseDto>(
-      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerFindKnowledgeBaseQueryKey = (id: string,
-    knowledgeBaseId: string,) => {
-    return [
-    `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}`
-    ] as const;
-    }
-
-
-export const getWorkspaceContextControllerFindKnowledgeBaseQueryOptions = <TData = Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError = unknown>(id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getWorkspaceContextControllerFindKnowledgeBaseQueryKey(id,knowledgeBaseId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>> = ({ signal }) => workspaceContextControllerFindKnowledgeBase(id,knowledgeBaseId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && knowledgeBaseId !== null && knowledgeBaseId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type WorkspaceContextControllerFindKnowledgeBaseQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>>
-export type WorkspaceContextControllerFindKnowledgeBaseQueryError = unknown
-
-
-export function useWorkspaceContextControllerFindKnowledgeBase<TData = Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>,
-          TError,
-          Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useWorkspaceContextControllerFindKnowledgeBase<TData = Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>,
-          TError,
-          Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useWorkspaceContextControllerFindKnowledgeBase<TData = Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useWorkspaceContextControllerFindKnowledgeBase<TData = Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindKnowledgeBase>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getWorkspaceContextControllerFindKnowledgeBaseQueryOptions(id,knowledgeBaseId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const workspaceContextControllerUpdateKnowledgeBase = (
-    id: string,
-    knowledgeBaseId: string,
-    createWorkspaceKnowledgeBaseDto: CreateWorkspaceKnowledgeBaseDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<WorkspaceKnowledgeBaseResponseDto>(
-      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: createWorkspaceKnowledgeBaseDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerUpdateKnowledgeBaseMutationKey = () => ['workspaceContextControllerUpdateKnowledgeBase'] as const;
-
-export const getWorkspaceContextControllerUpdateKnowledgeBaseMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateKnowledgeBase>>, TError,WorkspaceContextControllerUpdateKnowledgeBaseMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateKnowledgeBase>>, TError,WorkspaceContextControllerUpdateKnowledgeBaseMutationVariables, TContext> => {
-
-const mutationKey = getWorkspaceContextControllerUpdateKnowledgeBaseMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerUpdateKnowledgeBase>>, WorkspaceContextControllerUpdateKnowledgeBaseMutationVariables> = (props) => {
-          const {id,knowledgeBaseId,data} = props ?? {};
-
-          return  workspaceContextControllerUpdateKnowledgeBase(id,knowledgeBaseId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceContextControllerUpdateKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerUpdateKnowledgeBase>>>
-    export type WorkspaceContextControllerUpdateKnowledgeBaseMutationBody = CreateWorkspaceKnowledgeBaseDto
-    export type WorkspaceContextControllerUpdateKnowledgeBaseMutationError = unknown
-    export type WorkspaceContextControllerUpdateKnowledgeBaseMutationVariables = {id: string;knowledgeBaseId: string;data: CreateWorkspaceKnowledgeBaseDto}
-
-    export const useWorkspaceContextControllerUpdateKnowledgeBase = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateKnowledgeBase>>, TError,WorkspaceContextControllerUpdateKnowledgeBaseMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceContextControllerUpdateKnowledgeBase>>,
-        TError,
-        WorkspaceContextControllerUpdateKnowledgeBaseMutationVariables,
-        TContext
-      > => {
-      return useMutation(getWorkspaceContextControllerUpdateKnowledgeBaseMutationOptions(options), queryClient);
-    }
-
-export const workspaceContextControllerDeleteKnowledgeBase = (
-    id: string,
-    knowledgeBaseId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerDeleteKnowledgeBaseMutationKey = () => ['workspaceContextControllerDeleteKnowledgeBase'] as const;
-
-export const getWorkspaceContextControllerDeleteKnowledgeBaseMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDeleteKnowledgeBase>>, TError,WorkspaceContextControllerDeleteKnowledgeBaseMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDeleteKnowledgeBase>>, TError,WorkspaceContextControllerDeleteKnowledgeBaseMutationVariables, TContext> => {
-
-const mutationKey = getWorkspaceContextControllerDeleteKnowledgeBaseMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerDeleteKnowledgeBase>>, WorkspaceContextControllerDeleteKnowledgeBaseMutationVariables> = (props) => {
-          const {id,knowledgeBaseId} = props ?? {};
-
-          return  workspaceContextControllerDeleteKnowledgeBase(id,knowledgeBaseId,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceContextControllerDeleteKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerDeleteKnowledgeBase>>>
-
-    export type WorkspaceContextControllerDeleteKnowledgeBaseMutationError = unknown
-    export type WorkspaceContextControllerDeleteKnowledgeBaseMutationVariables = {id: string;knowledgeBaseId: string}
-
-    export const useWorkspaceContextControllerDeleteKnowledgeBase = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDeleteKnowledgeBase>>, TError,WorkspaceContextControllerDeleteKnowledgeBaseMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceContextControllerDeleteKnowledgeBase>>,
-        TError,
-        WorkspaceContextControllerDeleteKnowledgeBaseMutationVariables,
-        TContext
-      > => {
-      return useMutation(getWorkspaceContextControllerDeleteKnowledgeBaseMutationOptions(options), queryClient);
-    }
-
-export const workspaceContextControllerListKnowledgeBaseDocuments = (
-    id: string,
-    knowledgeBaseId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<WorkspaceDocumentResponseDto[]>(
-      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}/documents`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerListKnowledgeBaseDocumentsQueryKey = (id: string,
-    knowledgeBaseId: string,) => {
-    return [
-    `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}/documents`
-    ] as const;
-    }
-
-
-export const getWorkspaceContextControllerListKnowledgeBaseDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError = unknown>(id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getWorkspaceContextControllerListKnowledgeBaseDocumentsQueryKey(id,knowledgeBaseId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>> = ({ signal }) => workspaceContextControllerListKnowledgeBaseDocuments(id,knowledgeBaseId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && knowledgeBaseId !== null && knowledgeBaseId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type WorkspaceContextControllerListKnowledgeBaseDocumentsQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>>
-export type WorkspaceContextControllerListKnowledgeBaseDocumentsQueryError = unknown
-
-
-export function useWorkspaceContextControllerListKnowledgeBaseDocuments<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>,
-          TError,
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useWorkspaceContextControllerListKnowledgeBaseDocuments<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>,
-          TError,
-          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useWorkspaceContextControllerListKnowledgeBaseDocuments<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useWorkspaceContextControllerListKnowledgeBaseDocuments<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError = unknown>(
- id: string,
-    knowledgeBaseId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseDocuments>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getWorkspaceContextControllerListKnowledgeBaseDocumentsQueryOptions(id,knowledgeBaseId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const workspaceContextControllerAddKnowledgeBaseDocument = (
-    id: string,
-    knowledgeBaseId: string,
-    workspaceContextControllerAddKnowledgeBaseDocumentBody: WorkspaceContextControllerAddKnowledgeBaseDocumentBody,
- signal?: AbortSignal
-) => {
-
-      const formData = new FormData();
-formData.append(`file`, workspaceContextControllerAddKnowledgeBaseDocumentBody.file);
-
-      return customAxiosInstance<WorkspaceDocumentResponseDto>(
-      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}/documents`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerAddKnowledgeBaseDocumentMutationKey = () => ['workspaceContextControllerAddKnowledgeBaseDocument'] as const;
-
-export const getWorkspaceContextControllerAddKnowledgeBaseDocumentMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAddKnowledgeBaseDocument>>, TError,WorkspaceContextControllerAddKnowledgeBaseDocumentMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAddKnowledgeBaseDocument>>, TError,WorkspaceContextControllerAddKnowledgeBaseDocumentMutationVariables, TContext> => {
-
-const mutationKey = getWorkspaceContextControllerAddKnowledgeBaseDocumentMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerAddKnowledgeBaseDocument>>, WorkspaceContextControllerAddKnowledgeBaseDocumentMutationVariables> = (props) => {
-          const {id,knowledgeBaseId,data} = props ?? {};
-
-          return  workspaceContextControllerAddKnowledgeBaseDocument(id,knowledgeBaseId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceContextControllerAddKnowledgeBaseDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerAddKnowledgeBaseDocument>>>
-    export type WorkspaceContextControllerAddKnowledgeBaseDocumentMutationBody = WorkspaceContextControllerAddKnowledgeBaseDocumentBody
-    export type WorkspaceContextControllerAddKnowledgeBaseDocumentMutationError = unknown
-    export type WorkspaceContextControllerAddKnowledgeBaseDocumentMutationVariables = {id: string;knowledgeBaseId: string;data: WorkspaceContextControllerAddKnowledgeBaseDocumentBody}
-
-    export const useWorkspaceContextControllerAddKnowledgeBaseDocument = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAddKnowledgeBaseDocument>>, TError,WorkspaceContextControllerAddKnowledgeBaseDocumentMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceContextControllerAddKnowledgeBaseDocument>>,
-        TError,
-        WorkspaceContextControllerAddKnowledgeBaseDocumentMutationVariables,
-        TContext
-      > => {
-      return useMutation(getWorkspaceContextControllerAddKnowledgeBaseDocumentMutationOptions(options), queryClient);
-    }
-
-export const workspaceContextControllerRemoveKnowledgeBaseDocument = (
-    id: string,
-    knowledgeBaseId: string,
-    documentId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}/documents/${documentId}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationKey = () => ['workspaceContextControllerRemoveKnowledgeBaseDocument'] as const;
-
-export const getWorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerRemoveKnowledgeBaseDocument>>, TError,WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerRemoveKnowledgeBaseDocument>>, TError,WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationVariables, TContext> => {
-
-const mutationKey = getWorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerRemoveKnowledgeBaseDocument>>, WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationVariables> = (props) => {
-          const {id,knowledgeBaseId,documentId} = props ?? {};
-
-          return  workspaceContextControllerRemoveKnowledgeBaseDocument(id,knowledgeBaseId,documentId,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerRemoveKnowledgeBaseDocument>>>
-
-    export type WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationError = unknown
-    export type WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationVariables = {id: string;knowledgeBaseId: string;documentId: string}
-
-    export const useWorkspaceContextControllerRemoveKnowledgeBaseDocument = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerRemoveKnowledgeBaseDocument>>, TError,WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceContextControllerRemoveKnowledgeBaseDocument>>,
-        TError,
-        WorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationVariables,
-        TContext
-      > => {
-      return useMutation(getWorkspaceContextControllerRemoveKnowledgeBaseDocumentMutationOptions(options), queryClient);
-    }
-
-export const workspaceContextControllerSetKnowledgeBaseActivation = (
-    id: string,
-    knowledgeBaseId: string,
-    updateWorkspaceKnowledgeBaseActivationDto: UpdateWorkspaceKnowledgeBaseActivationDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<WorkspaceKnowledgeBaseResponseDto>(
-      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}/activation`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateWorkspaceKnowledgeBaseActivationDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getWorkspaceContextControllerSetKnowledgeBaseActivationMutationKey = () => ['workspaceContextControllerSetKnowledgeBaseActivation'] as const;
-
-export const getWorkspaceContextControllerSetKnowledgeBaseActivationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerSetKnowledgeBaseActivation>>, TError,WorkspaceContextControllerSetKnowledgeBaseActivationMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerSetKnowledgeBaseActivation>>, TError,WorkspaceContextControllerSetKnowledgeBaseActivationMutationVariables, TContext> => {
-
-const mutationKey = getWorkspaceContextControllerSetKnowledgeBaseActivationMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerSetKnowledgeBaseActivation>>, WorkspaceContextControllerSetKnowledgeBaseActivationMutationVariables> = (props) => {
-          const {id,knowledgeBaseId,data} = props ?? {};
-
-          return  workspaceContextControllerSetKnowledgeBaseActivation(id,knowledgeBaseId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceContextControllerSetKnowledgeBaseActivationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerSetKnowledgeBaseActivation>>>
-    export type WorkspaceContextControllerSetKnowledgeBaseActivationMutationBody = UpdateWorkspaceKnowledgeBaseActivationDto
-    export type WorkspaceContextControllerSetKnowledgeBaseActivationMutationError = unknown
-    export type WorkspaceContextControllerSetKnowledgeBaseActivationMutationVariables = {id: string;knowledgeBaseId: string;data: UpdateWorkspaceKnowledgeBaseActivationDto}
-
-    export const useWorkspaceContextControllerSetKnowledgeBaseActivation = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerSetKnowledgeBaseActivation>>, TError,WorkspaceContextControllerSetKnowledgeBaseActivationMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceContextControllerSetKnowledgeBaseActivation>>,
-        TError,
-        WorkspaceContextControllerSetKnowledgeBaseActivationMutationVariables,
-        TContext
-      > => {
-      return useMutation(getWorkspaceContextControllerSetKnowledgeBaseActivationMutationOptions(options), queryClient);
     }
 
 export const workspaceContextControllerUpdateInstruction = (

@@ -2,13 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
-import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { FindWorkspaceSkillUseCase } from 'src/domain/skills/application/use-cases/find-workspace-skill/find-workspace-skill.use-case';
 @Injectable()
 export class GetWorkspaceSkillUseCase {
   private readonly logger = new Logger(GetWorkspaceSkillUseCase.name);
   constructor(
-    private readonly access: WorkspaceAccessService,
+    private readonly access: AssertWorkspaceReadAccessUseCase,
     private readonly find: FindWorkspaceSkillUseCase,
   ) {}
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -17,7 +17,7 @@ export class GetWorkspaceSkillUseCase {
       { workspaceId: command.workspaceId },
       'get-workspace-skill',
     );
-    await this.access.requireOwned(command.workspaceId);
+    await this.access.execute({ workspaceId: command.workspaceId });
     return this.find.execute(command);
   }
 }

@@ -12,8 +12,7 @@ import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/us
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
-import { FindWorkspaceQuery } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.query';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -23,7 +22,7 @@ export class CreateThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly contextService: ContextService,
-    private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
+    private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -39,9 +38,9 @@ export class CreateThreadUseCase {
 
     // Throws WorkspaceNotFoundError for an id the caller does not own.
     if (command.workspaceId) {
-      await this.findWorkspaceUseCase.execute(
-        new FindWorkspaceQuery(command.workspaceId),
-      );
+      await this.workspaceReadAccess.execute({
+        workspaceId: command.workspaceId,
+      });
     }
 
     try {

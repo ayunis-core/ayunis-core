@@ -6,6 +6,7 @@ import {
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 export const Route = createFileRoute('/_authenticated/knowledge-bases/')({
   component: RouteComponent,
@@ -18,8 +19,11 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/')({
       throw redirect({ to: '/chat' });
     }
     const knowledgeBases = await queryClient.fetchQuery({
-      queryKey: getKnowledgeBasesControllerFindAllQueryKey(),
-      queryFn: () => knowledgeBasesControllerFindAll(),
+      queryKey: getKnowledgeBasesControllerFindAllQueryKey(
+        personalKnowledgeBaseListParams,
+      ),
+      queryFn: () =>
+        knowledgeBasesControllerFindAll(personalKnowledgeBaseListParams),
     });
     return { knowledgeBases };
   },

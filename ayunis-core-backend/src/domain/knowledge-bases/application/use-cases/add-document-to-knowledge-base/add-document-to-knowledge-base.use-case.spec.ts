@@ -186,14 +186,14 @@ describe(AddDocumentToKnowledgeBaseUseCase.name, () => {
     expect(repository.countSourcesByKnowledgeBaseId).not.toHaveBeenCalled();
     expect(processing.execute).not.toHaveBeenCalled();
   });
-  it('does not process if workspace write authorization is rejected', async () => {
+  it('returns knowledge-base not found without processing when workspace write authorization is rejected', async () => {
     const { useCase, command, workspaceAccess, repository, processing } =
       setup('workspace');
     workspaceAccess.execute.mockRejectedValue(
       new WorkspaceNotFoundError(randomUUID()),
     );
     await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-      WorkspaceNotFoundError,
+      KnowledgeBaseNotFoundError,
     );
     expect(repository.countSourcesByKnowledgeBaseId).not.toHaveBeenCalled();
     expect(processing.execute).not.toHaveBeenCalled();

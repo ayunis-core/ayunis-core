@@ -88,8 +88,18 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
       skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
       getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([kb1, kb2]);
       const expected = [
-        { knowledgeBase: kb1, isActive: true, isShared: false },
-        { knowledgeBase: kb2, isActive: false, isShared: true },
+        {
+          knowledgeBase: kb1,
+          isActive: true,
+          isShared: false,
+          documentCount: 2,
+        },
+        {
+          knowledgeBase: kb2,
+          isActive: false,
+          isShared: true,
+          documentCount: 1,
+        },
       ];
       contexts.execute.mockResolvedValue(expected);
 

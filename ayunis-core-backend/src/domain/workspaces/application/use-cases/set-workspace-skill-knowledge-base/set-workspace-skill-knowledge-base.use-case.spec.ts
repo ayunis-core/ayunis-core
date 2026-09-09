@@ -4,16 +4,18 @@ import {
   WorkspaceNotFoundError,
   UnexpectedWorkspaceError,
 } from 'src/domain/workspaces/application/workspaces.errors';
-import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { SetWorkspaceSkillKnowledgeBaseUseCase as Operation } from 'src/domain/skills/application/use-cases/set-workspace-skill-knowledge-base/set-workspace-skill-knowledge-base.use-case';
 import { FindWorkspaceSkillUseCase as FindSkill } from 'src/domain/skills/application/use-cases/find-workspace-skill/find-workspace-skill.use-case';
-import { FindWorkspaceKnowledgeBaseUseCase as FindKnowledgeBase } from 'src/domain/knowledge-bases/application/use-cases/find-workspace-knowledge-base/find-workspace-knowledge-base.use-case';
+import { FindKnowledgeBaseUseCase as FindKnowledgeBase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
+import { FindKnowledgeBaseQuery } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.query';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 async function setup() {
   const fixture = await workspaceOperationUseCaseFixture(
     SetWorkspaceSkillKnowledgeBaseUseCase,
   );
-  const access = fixture.dependency(WorkspaceAccessService);
+  const access = fixture.dependency(AssertWorkspaceWriteAccessUseCase);
   const find = fixture.dependency(FindSkill);
   const knowledgeBases = fixture.dependency(FindKnowledgeBase);
   const operation = fixture.dependency(Operation);
@@ -22,6 +24,8 @@ async function setup() {
   knowledgeBases.execute.mockResolvedValue({
     knowledgeBase: fixture.knowledgeBase,
     isActive: true,
+    isShared: false,
+    documentCount: 0,
   });
   const command = {
     ...fixture.skillQuery,
@@ -53,13 +57,17 @@ describe(SetWorkspaceSkillKnowledgeBaseUseCase.name, () => {
     await expect(useCase.execute(command)).resolves.toEqual(expected);
     expect(operation.execute).toHaveBeenCalledWith(command);
     expect(find.execute).toHaveBeenCalledWith(command);
-    expect(knowledgeBases.execute).toHaveBeenCalledWith(command);
-    expect(access.requireOwned).toHaveBeenCalledWith(command.workspaceId);
+    expect(knowledgeBases.execute).toHaveBeenCalledWith(
+      new FindKnowledgeBaseQuery(command.knowledgeBaseId),
+    );
+    expect(access.execute).toHaveBeenCalledWith({
+      workspaceId: command.workspaceId,
+    });
   });
   it('does not execute the operation when workspace authorization fails', async () => {
     const { useCase, operation, command, access } = await setup();
     const error = new WorkspaceNotFoundError(command.workspaceId);
-    access.requireOwned.mockRejectedValue(error);
+    access.execute.mockRejectedValue(error);
     await expect(useCase.execute(command)).rejects.toBe(error);
     expect(operation.execute).not.toHaveBeenCalled();
   });
@@ -79,6 +87,32 @@ describe(SetWorkspaceSkillKnowledgeBaseUseCase.name, () => {
       assigned: false,
     });
   });
+
+  it('rejects a readable knowledge base owned by another workspace', async () => {
+    const {
+      useCase,
+      command,
+      knowledgeBases,
+      operation,
+      knowledgeBase: fixtureKnowledgeBase,
+    } = await setup();
+    knowledgeBases.execute.mockResolvedValue({
+      knowledgeBase: new WorkspaceKnowledgeBase({
+        name: 'Other workspace knowledge',
+        workspaceId: '99999999-9999-4999-8999-999999999999',
+        orgId: fixtureKnowledgeBase.orgId,
+      }),
+      isActive: true,
+      isShared: false,
+      documentCount: 0,
+    });
+
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      KnowledgeBaseNotFoundError,
+    );
+    expect(operation.execute).not.toHaveBeenCalled();
+  });
+
   it('rejects a knowledge base outside the workspace before assigning', async () => {
     const { useCase, command, knowledgeBases, operation } = await setup();
     const error = new KnowledgeBaseNotFoundError(command.knowledgeBaseId);

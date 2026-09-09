@@ -6,6 +6,7 @@ import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/worksp
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
+import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 
 @Injectable()
 export class KnowledgeBaseWriteAccessService {
@@ -28,9 +29,16 @@ export class KnowledgeBaseWriteAccessService {
       return;
     }
     if (knowledgeBase instanceof WorkspaceKnowledgeBase) {
-      await this.workspaceWriteAccess.execute({
-        workspaceId: knowledgeBase.workspaceId,
-      });
+      try {
+        await this.workspaceWriteAccess.execute({
+          workspaceId: knowledgeBase.workspaceId,
+        });
+      } catch (error) {
+        if (error instanceof WorkspaceNotFoundError) {
+          throw new KnowledgeBaseNotFoundError(knowledgeBase.id);
+        }
+        throw error;
+      }
       return;
     }
     throw new KnowledgeBaseNotFoundError(knowledgeBaseId);

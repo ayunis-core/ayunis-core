@@ -1,44 +1,53 @@
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import { Test, type TestingModule } from '@nestjs/testing';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { Test } from '@nestjs/testing';
+import type { UUID } from 'crypto';
+import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { FindActiveKnowledgeBasesUseCase } from './find-active-knowledge-bases.use-case';
 
-describe('FindActiveKnowledgeBasesUseCase', () => {
-  it('returns only active accessible knowledge bases', async () => {
+const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
+const ORG_ID = '22222222-2222-2222-2222-222222222222' as UUID;
+
+async function setup() {
+  const repository = { findActiveAccessible: jest.fn() };
+  const principal = { userId: USER_ID, orgId: ORG_ID };
+  const context = {
+    get: jest.fn((key: keyof typeof principal) => principal[key]),
+  };
+  const module = await Test.createTestingModule({
+    providers: [
+      FindActiveKnowledgeBasesUseCase,
+      { provide: KnowledgeBaseRepository, useValue: repository },
+      { provide: ContextService, useValue: context },
+    ],
+  }).compile();
+  return { useCase: module.get(FindActiveKnowledgeBasesUseCase), repository };
+}
+
+describe(FindActiveKnowledgeBasesUseCase.name, () => {
+  it('returns active knowledge bases accessible to the principal', async () => {
     const active = new PersonalKnowledgeBase({
-      id: '11111111-1111-1111-1111-111111111111',
       name: 'Active regulations',
-      orgId: '22222222-2222-2222-2222-222222222222',
-      userId: '33333333-3333-3333-3333-333333333333',
+      orgId: ORG_ID,
+      userId: USER_ID,
     });
-    const accessService = {
-      findActiveAccessible: jest.fn().mockResolvedValue([active]),
-    } as unknown as KnowledgeBaseAccessService;
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        FindActiveKnowledgeBasesUseCase,
-        { provide: KnowledgeBaseAccessService, useValue: accessService },
-      ],
-    }).compile();
-    const useCase = module.get(FindActiveKnowledgeBasesUseCase);
+    const { useCase, repository } = await setup();
+    repository.findActiveAccessible.mockResolvedValue([active]);
 
     await expect(useCase.execute()).resolves.toEqual([active]);
+    expect(repository.findActiveAccessible).toHaveBeenCalledWith(
+      USER_ID,
+      ORG_ID,
+    );
   });
 
-  it('wraps unexpected access errors with the knowledge-base taxonomy', async () => {
+  it('wraps unexpected repository errors with the knowledge-base taxonomy', async () => {
     const cause = new Error('database unavailable');
-    const accessService = {
-      findActiveAccessible: jest.fn().mockRejectedValue(cause),
-    } as unknown as KnowledgeBaseAccessService;
-    const module = await Test.createTestingModule({
-      providers: [
-        FindActiveKnowledgeBasesUseCase,
-        { provide: KnowledgeBaseAccessService, useValue: accessService },
-      ],
-    }).compile();
+    const { useCase, repository } = await setup();
+    repository.findActiveAccessible.mockRejectedValue(cause);
 
-    const execution = module.get(FindActiveKnowledgeBasesUseCase).execute();
+    const execution = useCase.execute();
     await expect(execution).rejects.toBeInstanceOf(
       UnexpectedKnowledgeBaseError,
     );

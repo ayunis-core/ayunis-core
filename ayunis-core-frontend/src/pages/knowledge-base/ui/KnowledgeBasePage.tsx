@@ -37,6 +37,7 @@ import {
   getKnowledgeBasesControllerFindAllQueryKey,
   getKnowledgeBasesControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 export function KnowledgeBasePage({
   knowledgeBase,
@@ -105,7 +106,9 @@ export function KnowledgeBasePage({
           await knowledgeBasesControllerUpdate(knowledgeBase.id, data);
           await Promise.all(
             [
-              getKnowledgeBasesControllerFindAllQueryKey(),
+              getKnowledgeBasesControllerFindAllQueryKey(
+                personalKnowledgeBaseListParams,
+              ),
               getKnowledgeBasesControllerFindOneQueryKey(knowledgeBase.id),
             ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
           );

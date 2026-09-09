@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useInvalidateWorkspaceResources } from '@/pages/workspace/api/useInvalidateWorkspaceResources';
+import { useWorkspaceKnowledgeBaseActions } from '@/pages/workspace/api/useWorkspaceKnowledgeBaseActions';
 import { useWorkspaceKnowledgeBaseDocuments } from '@/pages/workspace/api/useWorkspaceKnowledgeBaseDocuments';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
@@ -16,13 +16,11 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 import { KnowledgeBasePropertiesCard } from '@/widgets/resource-properties-card';
 import { KnowledgeBaseDocumentsCard } from '@/widgets/knowledge-base-documents-card';
-import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
 import type {
-  WorkspaceDocumentResponseDto,
-  WorkspaceKnowledgeBaseResponseDto,
+  KnowledgeBaseDocumentListResponseDto,
+  KnowledgeBaseResponseDto,
   WorkspaceResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { workspaceContextControllerUpdateKnowledgeBase } from '@/shared/api/generated/ayunisCoreAPI';
 
 export function WorkspaceKnowledgeBaseDetailPage({
   workspace,
@@ -30,12 +28,11 @@ export function WorkspaceKnowledgeBaseDetailPage({
   documents,
 }: Readonly<{
   workspace: WorkspaceResponseDto;
-  knowledgeBase: WorkspaceKnowledgeBaseResponseDto;
-  documents: WorkspaceDocumentResponseDto[];
+  knowledgeBase: KnowledgeBaseResponseDto;
+  documents: KnowledgeBaseDocumentListResponseDto;
 }>) {
   const { t } = useTranslation('workspace');
   const { t: tKnowledge } = useTranslation('knowledge-bases');
-  const invalidateResources = useInvalidateWorkspaceResources(workspace.id);
   const documentsController = useWorkspaceKnowledgeBaseDocuments(
     workspace.id,
     knowledgeBase.id,
@@ -47,7 +44,8 @@ export function WorkspaceKnowledgeBaseDetailPage({
     deleteKnowledgeBase,
     setKnowledgeBaseActive,
     isChangingKnowledgeBaseState,
-  } = useWorkspaceContextActions(workspace.id);
+    updateKnowledgeBase,
+  } = useWorkspaceKnowledgeBaseActions(workspace.id);
 
   return (
     <AppLayout>
@@ -130,16 +128,9 @@ export function WorkspaceKnowledgeBaseDetailPage({
               key={knowledgeBase.id}
               knowledgeBase={{
                 name: knowledgeBase.name,
-                description: knowledgeBase.description ?? '',
+                description: knowledgeBase.description,
               }}
-              onUpdate={async (data) => {
-                await workspaceContextControllerUpdateKnowledgeBase(
-                  workspace.id,
-                  knowledgeBase.id,
-                  data,
-                );
-                await invalidateResources();
-              }}
+              onUpdate={(data) => updateKnowledgeBase(knowledgeBase.id, data)}
             />
             <KnowledgeBaseDocumentsCard controller={documentsController} />
           </div>

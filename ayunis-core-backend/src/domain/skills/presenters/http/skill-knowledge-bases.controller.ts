@@ -157,11 +157,13 @@ export class SkillKnowledgeBasesController {
       new ListSkillKnowledgeBasesQuery(skillId),
     );
 
-    return contexts.map(({ knowledgeBase, isActive, isShared }) =>
-      this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
-        isActive,
-        isShared,
-      }),
+    return contexts.map(
+      ({ knowledgeBase, isActive, isShared, documentCount }) =>
+        this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+          isActive,
+          isShared,
+          documentCount,
+        }),
     );
   }
 }

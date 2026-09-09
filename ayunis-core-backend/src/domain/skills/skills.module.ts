@@ -12,6 +12,7 @@ import { SkillActivationRecord } from './infrastructure/persistence/local/schema
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 
 // Use Cases
 import { CreateSkillUseCase } from './application/use-cases/create-skill/create-skill.use-case';
@@ -43,6 +44,7 @@ import { GetSkillsByIdsUseCase } from './application/use-cases/get-skills-by-ids
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
 import { SkillAccessService } from './application/services/skill-access.service';
+import { SkillAuthorizationService } from './application/services/skill-authorization.service';
 import { FindWorkspaceSkillUseCase } from './application/use-cases/find-workspace-skill/find-workspace-skill.use-case';
 import { GetWorkspaceSkillsUseCase } from './application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
 import { UpdateWorkspaceSkillUseCase } from './application/use-cases/update-workspace-skill/update-workspace-skill.use-case';
@@ -95,6 +97,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     UsersModule,
     forwardRef(() => SharesModule),
     forwardRef(() => ThreadsModule),
+    forwardRef(() => WorkspacesModule),
   ],
   providers: [
     ActivateWorkspaceSkillByNameUseCase,
@@ -111,6 +114,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     },
     // Services
     SkillAccessService,
+    SkillAuthorizationService,
     WorkspaceSkillAccessService,
     SkillActivationService,
     SkillCreatorNameService,

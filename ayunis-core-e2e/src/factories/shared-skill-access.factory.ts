@@ -1,16 +1,16 @@
-import { request } from '@playwright/test';
-import type { APIRequestContext } from '@playwright/test';
-import { config } from '../config';
-import { acceptInvite, inviteUser } from '../clients/api/invites.client';
-import { login } from '../clients/api/auth.client';
-import { skipChatPersonalization } from '../clients/api/chat-settings.client';
-import { generatedApi } from '../clients/api/generated-api';
-import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
-import { createOrgSkillShare } from '../clients/api/shares.client';
-import type { MailcatcherClient } from '../clients/mailcatcher.client';
-import type { ShareResponseDto } from '../clients/generated/ayunisCoreAPI.schemas';
+import { request } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
+import { config } from "../config";
+import { acceptInvite, inviteUser } from "../clients/api/invites.client";
+import { login } from "../clients/api/auth.client";
+import { skipChatPersonalization } from "../clients/api/chat-settings.client";
+import { generatedApi } from "../clients/api/generated-api";
+import { dismissWelcomeVideo } from "../clients/api/onboarding.client";
+import { createOrgSkillShare } from "../clients/api/shares.client";
+import type { MailcatcherClient } from "../clients/mailcatcher.client";
+import type { ShareResponseDto } from "../clients/generated/ayunisCoreAPI.schemas";
 
-const MEMBER_PASSWORD = 'E2e-Password-1';
+const MEMBER_PASSWORD = "E2e-Password-1";
 
 export interface SharedSkillAccessFixture {
   skill: { id: string; name: string };
@@ -28,16 +28,19 @@ export async function createSharedSkillAccessFixture(
   const skill = await generatedApi.skillsControllerCreate(
     {
       name: `Shared civic knowledge ${suffix}`,
-      shortDescription: 'Provides shared civic knowledge for organization members',
-      instructions: 'Use the linked civic knowledge base for relevant questions.',
+      shortDescription:
+        "Provides shared civic knowledge for organization members",
+      instructions:
+        "Use the linked civic knowledge base for relevant questions.",
       isActive: true,
     },
     { api: adminApi },
   );
   const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
     {
+      ownerType: "personal",
       name: `Shared civic knowledge base ${suffix}`,
-      description: 'Knowledge base shared through a skill',
+      description: "Knowledge base shared through a skill",
     },
     { api: adminApi },
   );
@@ -51,7 +54,7 @@ export async function createSharedSkillAccessFixture(
   await inviteUser(adminApi, memberEmail);
   const inviteToken = await mail.extractLinkToken(
     memberEmail,
-    '/accept-invite',
+    "/accept-invite",
   );
   const memberApi = await request.newContext({ baseURL: config.apiURL });
 
@@ -68,8 +71,8 @@ export async function createSharedSkillAccessFixture(
     const workspace = await generatedApi.workspacesControllerCreate(
       {
         name: `Shared skill workspace ${suffix}`,
-        description: 'Workspace for shared skill access coverage',
-        icon: 'building-2',
+        description: "Workspace for shared skill access coverage",
+        icon: "building-2",
       },
       { api: memberApi },
     );

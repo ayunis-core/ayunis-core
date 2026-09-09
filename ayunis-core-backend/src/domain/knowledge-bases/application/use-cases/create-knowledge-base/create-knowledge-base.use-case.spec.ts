@@ -1,12 +1,14 @@
-import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { CreateKnowledgeBaseUseCase } from './create-knowledge-base.use-case';
-import { CreateKnowledgeBaseCommand } from './create-knowledge-base.command';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import type { UUID } from 'crypto';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
-import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import type { UUID } from 'crypto';
+import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
+import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import { ContextService } from 'src/common/context/services/context.service';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { CreateKnowledgeBaseCommand } from './create-knowledge-base.command';
+import { CreateKnowledgeBaseUseCase } from './create-knowledge-base.use-case';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -15,119 +17,122 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-describe('CreateKnowledgeBaseUseCase', () => {
-  let useCase: CreateKnowledgeBaseUseCase;
-  let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
+const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
+const ORG_ID = '22222222-2222-2222-2222-222222222222' as UUID;
+const WORKSPACE_ID = '33333333-3333-3333-3333-333333333333' as UUID;
 
-  const userId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
-
-  beforeEach(async () => {
-    mockRepository = {
-      findById: jest.fn(),
-      findAllByUserId: jest.fn(),
-      findAllOwnedByUserId: jest.fn(),
-      findAllByWorkspaceId: jest.fn(),
-      findByIds: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-      assignSourceToKnowledgeBase: jest.fn(),
-      findSourcesByKnowledgeBaseId: jest.fn(),
-      findSourcesByKnowledgeBaseIds: jest.fn(),
-      findSourceByIdAndKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseIds: jest.fn(),
-      activate: jest.fn(),
-      deactivate: jest.fn(),
-      isActive: jest.fn(),
-      getActiveIds: jest.fn(),
-      activateForWorkspace: jest.fn(),
-      deactivateForWorkspace: jest.fn(),
-      getWorkspaceStates: jest.fn(),
-      findActiveAccessible: jest.fn(),
-      findPaginatedAccessible: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CreateKnowledgeBaseUseCase,
-        { provide: KnowledgeBaseRepository, useValue: mockRepository },
-      ],
-    }).compile();
-
-    useCase = module.get(CreateKnowledgeBaseUseCase);
+function command(
+  owner: { type: 'personal' } | { type: 'workspace'; workspaceId: UUID },
+) {
+  return new CreateKnowledgeBaseCommand({
+    name: 'Municipal building regulations',
+    description: 'Regulations used while reviewing permits.',
+    owner,
   });
+}
 
-  it('should create a knowledge base with name and description', async () => {
-    const command = new CreateKnowledgeBaseCommand({
-      name: 'Stadtratsprotokolle 2025',
-      description: 'Sammlung aller Protokolle',
-      userId,
-      orgId,
-    });
+async function setup() {
+  const repository = {
+    save: jest.fn(async (knowledgeBase) => knowledgeBase),
+    activate: jest.fn(),
+    activateForWorkspace: jest.fn(),
+  } as unknown as jest.Mocked<KnowledgeBaseRepository>;
+  const context = {
+    get: jest.fn((key: string) => {
+      if (key === 'userId') return USER_ID;
+      if (key === 'orgId') return ORG_ID;
+      return undefined;
+    }),
+  } as unknown as jest.Mocked<ContextService>;
+  const workspaceWriteAccess = {
+    execute: jest.fn(),
+  } as unknown as jest.Mocked<AssertWorkspaceWriteAccessUseCase>;
+  const module = await Test.createTestingModule({
+    providers: [
+      CreateKnowledgeBaseUseCase,
+      { provide: KnowledgeBaseRepository, useValue: repository },
+      { provide: ContextService, useValue: context },
+      {
+        provide: AssertWorkspaceWriteAccessUseCase,
+        useValue: workspaceWriteAccess,
+      },
+    ],
+  }).compile();
+  return {
+    useCase: module.get(CreateKnowledgeBaseUseCase),
+    repository,
+    workspaceWriteAccess,
+  };
+}
 
-    mockRepository.save.mockImplementation(async (kb) => kb);
+describe(CreateKnowledgeBaseUseCase.name, () => {
+  it('creates and activates a personal knowledge base for the authenticated principal', async () => {
+    const { useCase, repository } = await setup();
 
-    const result = await useCase.execute(command);
+    const result = await useCase.execute(command({ type: 'personal' }));
 
     expect(result).toBeInstanceOf(PersonalKnowledgeBase);
-    expect(result.name).toBe('Stadtratsprotokolle 2025');
-    expect(result.description).toBe('Sammlung aller Protokolle');
-    expect(result.orgId).toBe(orgId);
-    expect(result).toMatchObject({ userId });
-    expect(mockRepository.save).toHaveBeenCalledTimes(1);
-    expect(mockRepository.activate).toHaveBeenCalledWith(result.id, userId);
+    expect(result).toMatchObject({ userId: USER_ID, orgId: ORG_ID });
+    expect(repository.activate).toHaveBeenCalledWith(result.id, USER_ID);
+    expect(repository.activateForWorkspace).not.toHaveBeenCalled();
   });
 
-  it('creates and activates a workspace-owned knowledge base', async () => {
-    const workspaceId = '33333333-3333-3333-3333-333333333333' as UUID;
-    const command = new CreateKnowledgeBaseCommand({
-      name: 'Project regulations',
-      description: 'Project-specific regulations.',
-      userId,
-      orgId,
-      workspaceId,
-    });
-    mockRepository.save.mockImplementation(
-      async (knowledgeBase) => knowledgeBase,
-    );
+  it('creates and activates a workspace-owned knowledge base from its explicit owner scope', async () => {
+    const { useCase, repository } = await setup();
 
-    const result = await useCase.execute(command);
+    const result = await useCase.execute(
+      command({ type: 'workspace', workspaceId: WORKSPACE_ID }),
+    );
 
     expect(result).toBeInstanceOf(WorkspaceKnowledgeBase);
-    expect(result).toMatchObject({ workspaceId });
-    expect(mockRepository.activate).not.toHaveBeenCalled();
-    expect(mockRepository.activateForWorkspace).toHaveBeenCalledWith(
+    expect(result).toMatchObject({ workspaceId: WORKSPACE_ID, orgId: ORG_ID });
+    expect(repository.activateForWorkspace).toHaveBeenCalledWith(
       result.id,
-      workspaceId,
+      WORKSPACE_ID,
     );
+    expect(repository.activate).not.toHaveBeenCalled();
   });
 
-  it('should create a knowledge base with empty description when not provided', async () => {
-    const command = new CreateKnowledgeBaseCommand({
-      name: 'Haushaltspläne',
-      userId,
-      orgId,
+  it('propagates workspace authorization denial for the requested workspace', async () => {
+    const { useCase, repository, workspaceWriteAccess } = await setup();
+    const denial = new WorkspaceNotFoundError(WORKSPACE_ID);
+    workspaceWriteAccess.execute.mockRejectedValue(denial);
+
+    await expect(
+      useCase.execute(
+        command({ type: 'workspace', workspaceId: WORKSPACE_ID }),
+      ),
+    ).rejects.toBe(denial);
+
+    expect(workspaceWriteAccess.execute).toHaveBeenCalledWith({
+      workspaceId: WORKSPACE_ID,
     });
-
-    mockRepository.save.mockImplementation(async (kb) => kb);
-
-    const result = await useCase.execute(command);
-
-    expect(result.description).toBe('');
+    expect(repository.save).not.toHaveBeenCalled();
+    expect(repository.activateForWorkspace).not.toHaveBeenCalled();
   });
 
-  it('should wrap unexpected repository errors into UnexpectedKnowledgeBaseError', async () => {
-    const command = new CreateKnowledgeBaseCommand({
-      name: 'Fehlerhafter Versuch',
-      userId,
-      orgId,
+  it('defaults an omitted description without changing personal ownership', async () => {
+    const { useCase } = await setup();
+    const input = new CreateKnowledgeBaseCommand({
+      name: 'Municipal budgets',
+      owner: { type: 'personal' },
     });
 
-    mockRepository.save.mockRejectedValue(new Error('Connection refused'));
+    const result = await useCase.execute(input);
 
-    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-      UnexpectedKnowledgeBaseError,
-    );
+    expect(result).toMatchObject({
+      description: '',
+      userId: USER_ID,
+      orgId: ORG_ID,
+    });
+  });
+
+  it('wraps unexpected persistence failures', async () => {
+    const { useCase, repository } = await setup();
+    repository.save.mockRejectedValue(new Error('Connection refused'));
+
+    await expect(
+      useCase.execute(command({ type: 'personal' })),
+    ).rejects.toBeInstanceOf(UnexpectedKnowledgeBaseError);
   });
 });
