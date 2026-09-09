@@ -63,7 +63,7 @@ export default function ContentAreaHeader({
         </Breadcrumb>
       </div>
       {action && (
-        <div className="content-area-header-actions flex shrink-0 items-center gap-2 empty:hidden max-sm:justify-end">
+        <div className="content-area-header-actions flex min-w-0 shrink-0 flex-wrap items-center gap-2 empty:hidden max-sm:w-full max-sm:justify-end">
           {action}
         </div>
       )}

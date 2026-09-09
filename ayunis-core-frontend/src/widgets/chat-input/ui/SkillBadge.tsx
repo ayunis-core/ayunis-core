@@ -19,12 +19,12 @@ export function SkillBadge({ skillName, onRemove }: Readonly<SkillBadgeProps>) {
       <TooltipTrigger asChild>
         <Badge
           variant="secondary"
-          className="cursor-pointer"
+          className="max-w-[9rem] min-w-0 cursor-pointer"
           onClick={() => onRemove()}
         >
-          <Sparkles className="h-3 w-3" />
-          {skillName}
-          <XIcon className="h-3 w-3" />
+          <Sparkles className="h-3 w-3 shrink-0" />
+          <span className="truncate">{skillName}</span>
+          <XIcon className="h-3 w-3 shrink-0" />
         </Badge>
       </TooltipTrigger>
       <TooltipContent>{t('chatInput.deactivateSkillTooltip')}</TooltipContent>

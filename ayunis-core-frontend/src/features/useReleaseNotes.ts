@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import config from '@/shared/config';
+import { patchAnnouncableMobileLayout } from '@/features/patchAnnouncableMobileLayout';
 
 interface AnnouncableInit {
   org_id: string;
@@ -21,6 +22,11 @@ let announcableLoaded = false;
  * Must be called in a component that renders AFTER the #updates-button element exists.
  */
 export function useReleaseNotes(): void {
+  useEffect(() => {
+    const observer = patchAnnouncableMobileLayout();
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const orgId = config.features.announcableOrgId;
 

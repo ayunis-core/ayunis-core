@@ -7,7 +7,6 @@ import {
 } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@ayunis/ui/components/card';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -16,12 +15,6 @@ import type {
   SourceResponseDtoStatus,
   SourceResponseDtoType,
 } from '@/shared/api';
-import PlusButton from './PlusButton';
-import ModelSelector from './ModelSelector';
-import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
-import { SendButton } from './SendButton';
-import { AnonymousButton } from './AnonymousButton';
-import { SkillBadge } from './SkillBadge';
 import {
   usePendingImages,
   type PendingImage,
@@ -36,9 +29,9 @@ import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { cn } from '@ayunis/ui/lib/cn';
 import { SourcesList } from './SourcesList';
 import { ChatInputExpandable } from './ChatInputExpandable';
+import { ChatInputActionBar } from './ChatInputActionBar';
 import { showError } from '@/shared/lib/toast';
 import './chat-input-glow.css';
-import { MicrophoneButton } from './MicrophoneButton';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -344,13 +337,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
           )}
           <Card
             className={cn(
-              'chat-input-shell__card py-4',
+              'chat-input-shell__card py-3 sm:py-4',
               isDragging &&
                 'border-2 border-dashed border-primary bg-primary/5',
               showProcessingGlow && !isDragging && 'bg-card',
             )}
           >
-            <CardContent className="px-4">
+            <CardContent className="px-3 sm:px-4">
               <div className="chat-input-body flex flex-col gap-4">
                 {hasAttachmentChips && (
                   <ChatInputExpandable show>
@@ -403,84 +396,33 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   data-testid="input"
                 />
 
-                <div className="flex items-center justify-between">
-                  {/* Left side */}
-                  <div className="flex-shrink-0 flex items-center space-x-2">
-                    <OnboardingTourTarget
-                      name={TOUR_TARGET.chatUpload}
-                      settleMs={900}
-                    >
-                      <PlusButton
-                        onFileUpload={onFileUpload}
-                        onImageSelect={handleImageSelect}
-                        isFileSourceDisabled={
-                          !isEmbeddingModelEnabled || isSubmitting
-                        }
-                        isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-                        onKnowledgeBaseSelect={onAddKnowledgeBase}
-                        attachedKnowledgeBaseIds={knowledgeBases?.map(
-                          (kb) => kb.id,
-                        )}
-                        onIntegrationSelect={onAddIntegration}
-                        attachedIntegrationIds={mcpIntegrations?.map(
-                          (integration) => integration.id,
-                        )}
-                      />
-                    </OnboardingTourTarget>
-                    <OnboardingTourTarget
-                      name={TOUR_TARGET.anonymousMode}
-                      settleMs={900}
-                    >
-                      <AnonymousButton
-                        isAnonymous={isAnonymous}
-                        onAnonymousChange={onAnonymousChange}
-                        isDisabled={isAnonymousChangeDisabled}
-                        isEnforced={isAnonymousEnforced}
-                      />
-                    </OnboardingTourTarget>
-                    {selectedSkillId && selectedSkillName && onSkillRemove && (
-                      <SkillBadge
-                        skillName={selectedSkillName}
-                        onRemove={() => onSkillRemove()}
-                      />
-                    )}
-                  </div>
-
-                  <div className="flex-shrink-0 flex space-x-2">
-                    <TooltipIf
-                      condition={isModelChangeDisabled ?? false}
-                      tooltip={t('chatInput.modelChangeDisabledTooltip')}
-                    >
-                      <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
-                        <ModelSelector
-                          isDisabled={isModelChangeDisabled ?? false}
-                          selectedModelId={modelId}
-                          onModelChange={onModelChange}
-                        />
-                      </OnboardingTourTarget>
-                    </TooltipIf>
-                    <MicrophoneButton
-                      onTranscriptionComplete={(text) => {
-                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                        // Focus textarea and place cursor at end after transcription
-                        setTimeout(() => {
-                          const textarea = textareaRef.current;
-                          if (textarea) {
-                            textarea.focus();
-                            const length = textarea.value.length;
-                            textarea.setSelectionRange(length, length);
-                          }
-                        }, 0);
-                      }}
-                    />
-                    <SendButton
-                      inFlight={inFlight}
-                      canSend={!!canSend}
-                      onSend={handleSend}
-                      onCancel={onCancel}
-                    />
-                  </div>
-                </div>
+                <ChatInputActionBar
+                  isSubmitting={isSubmitting}
+                  isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+                  isVisionEnabled={isVisionEnabled}
+                  knowledgeBases={knowledgeBases}
+                  mcpIntegrations={mcpIntegrations}
+                  onFileUpload={onFileUpload}
+                  onImageSelect={handleImageSelect}
+                  onAddKnowledgeBase={onAddKnowledgeBase}
+                  onAddIntegration={onAddIntegration}
+                  isAnonymous={isAnonymous}
+                  onAnonymousChange={onAnonymousChange}
+                  isAnonymousChangeDisabled={isAnonymousChangeDisabled}
+                  isAnonymousEnforced={isAnonymousEnforced}
+                  selectedSkillId={selectedSkillId}
+                  selectedSkillName={selectedSkillName}
+                  onSkillRemove={onSkillRemove}
+                  isModelChangeDisabled={isModelChangeDisabled}
+                  modelId={modelId}
+                  onModelChange={onModelChange}
+                  inFlight={inFlight}
+                  canSend={!!canSend}
+                  onSend={handleSend}
+                  onCancel={onCancel}
+                  setMessage={setMessage}
+                  textareaRef={textareaRef}
+                />
               </div>
             </CardContent>
           </Card>

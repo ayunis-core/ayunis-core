@@ -14,6 +14,7 @@ import {
 } from '@ayunis/ui/components/select';
 import { useLanguage, type Language } from '@/features/language';
 import { useTranslation } from 'react-i18next';
+import { SettingsFieldRow } from '@/pages/settings/settings-layout';
 
 export function LanguageSettingsCard() {
   const { t } = useTranslation('settings');
@@ -25,8 +26,8 @@ export function LanguageSettingsCard() {
         <CardTitle>{t('general.languageRegion')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
+        <SettingsFieldRow>
+          <div className="min-w-0 space-y-0.5">
             <Label htmlFor="language-select">
               {t('general.displayLanguage')}
             </Label>
@@ -40,7 +41,10 @@ export function LanguageSettingsCard() {
               void setLanguage(value);
             }}
           >
-            <SelectTrigger id="language-select" className="w-[180px]">
+            <SelectTrigger
+              id="language-select"
+              className="w-full min-w-0 sm:w-[180px]"
+            >
               <SelectValue placeholder={t('general.selectLanguage')} />
             </SelectTrigger>
             <SelectContent>
@@ -51,7 +55,7 @@ export function LanguageSettingsCard() {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </SettingsFieldRow>
       </CardContent>
     </Card>
   );

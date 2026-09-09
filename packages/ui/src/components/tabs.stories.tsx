@@ -20,3 +20,16 @@ export const Default: Story = {
     </Tabs>
   ),
 };
+
+export const Overflow: Story = {
+  render: () => (
+    <Tabs defaultValue="personal" className="w-72">
+      <TabsList>
+        <TabsTrigger value="personal">Eigene Wissenssammlungen</TabsTrigger>
+        <TabsTrigger value="shared">Geteilte Wissenssammlungen</TabsTrigger>
+      </TabsList>
+      <TabsContent value="personal">Personal collections.</TabsContent>
+      <TabsContent value="shared">Shared collections.</TabsContent>
+    </Tabs>
+  ),
+};

@@ -35,7 +35,7 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
             <div className="content-scroll-header-offset" aria-hidden />
           )}
           <div
-            className={`mx-auto w-full px-2 pb-3 ${fullWidth ? '' : 'max-w-[800px]'}`}
+            className={`mx-auto w-full min-w-0 px-1 pb-3 sm:px-2 ${fullWidth ? '' : 'max-w-[800px]'}`}
           >
             {contentArea}
           </div>

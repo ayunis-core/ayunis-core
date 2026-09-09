@@ -14,8 +14,9 @@ import {
 } from '@ayunis/ui/components/select';
 import { useTranslation } from 'react-i18next';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { useUserDefaultModel } from '../api/useUserDefaultModel';
+import { useUserDefaultModel } from '@/pages/settings/chat-settings/api/useUserDefaultModel';
 import { ModelSelectOptions } from '@/widgets/model-select-options';
+import { SettingsFieldRow } from '@/pages/settings/settings-layout';
 
 export function ChatSettingsCard() {
   const { t } = useTranslation('settings');
@@ -44,8 +45,8 @@ export function ChatSettingsCard() {
         <CardTitle>{t('chat.defaultModel')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
+        <SettingsFieldRow>
+          <div className="min-w-0 space-y-0.5">
             <Label htmlFor="default-settings-select">
               {t('chat.defaultModelSelection')}
             </Label>
@@ -58,7 +59,10 @@ export function ChatSettingsCard() {
             onValueChange={handleDefaultSettingChange}
             disabled={modelsLoading}
           >
-            <SelectTrigger id="default-settings-select" className="w-[180px]">
+            <SelectTrigger
+              id="default-settings-select"
+              className="w-full min-w-0 sm:w-[180px]"
+            >
               <SelectValue
                 placeholder={
                   modelsLoading ? 'Loading...' : t('chat.selectDefaultModel')
@@ -74,7 +78,7 @@ export function ChatSettingsCard() {
               />
             </SelectContent>
           </Select>
-        </div>
+        </SettingsFieldRow>
       </CardContent>
     </Card>
   );
