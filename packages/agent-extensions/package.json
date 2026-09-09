@@ -46,7 +46,7 @@
     "deps:check": "madge --circular --extensions ts src"
   },
   "dependencies": {
-    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/client": "catalog:",
     "yaml": "^2.9.0"
   },
   "peerDependencies": {

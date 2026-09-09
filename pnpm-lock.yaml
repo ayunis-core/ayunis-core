@@ -4,6 +4,45 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@mistralai/mistralai':
+      specifier: ^2.6.4
+      version: 2.6.4
+    '@modelcontextprotocol/client':
+      specifier: ^2.0.0
+      version: 2.0.0
+    '@tailwindcss/vite':
+      specifier: ^4.3.3
+      version: 4.3.3
+    lucide-react:
+      specifier: ^0.476.0
+      version: 0.476.0
+    ollama:
+      specifier: ^0.6.3
+      version: 0.6.3
+    openai:
+      specifier: ^7.12.1
+      version: 7.12.1
+    react:
+      specifier: ^19.2.7
+      version: 19.2.7
+    react-dom:
+      specifier: ^19.2.7
+      version: 19.2.7
+    react-hook-form:
+      specifier: ^7.86.0
+      version: 7.87.0
+    recharts:
+      specifier: ^2.15.4
+      version: 2.15.4
+    sonner:
+      specifier: ^2.0.8
+      version: 2.0.8
+    tailwindcss:
+      specifier: ^4.3.3
+      version: 4.3.3
+
 overrides:
   basic-ftp: '>=5.2.0 <6'
   protobufjs: '>=7.5.5 <8'
@@ -54,10 +93,10 @@ importers:
         specifier: workspace:*
         version: link:../packages/provider-openai
       '@mistralai/mistralai':
-        specifier: ^2.6.4
+        specifier: 'catalog:'
         version: 2.6.4(@opentelemetry/api@1.9.1)
       '@modelcontextprotocol/client':
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       '@nestjs-cls/transactional':
         specifier: ^3.2.2
@@ -192,10 +231,10 @@ importers:
         specifier: ^7.0.5
         version: 7.0.13
       ollama:
-        specifier: ^0.6.3
+        specifier: 'catalog:'
         version: 0.6.3
       openai:
-        specifier: ^7.12.1
+        specifier: 'catalog:'
         version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@4.5.4)
       openid-client:
         specifier: ^6.8.7
@@ -481,7 +520,7 @@ importers:
         specifier: ^0.5.20
         version: 0.5.20(tailwindcss@4.3.3)
       '@tailwindcss/vite':
-        specifier: ^4.3.3
+        specifier: 'catalog:'
         version: 4.3.3(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
       '@tanstack/react-query':
         specifier: ^5.101.2
@@ -541,7 +580,7 @@ importers:
         specifier: ^8.2.0
         version: 8.2.1
       lucide-react:
-        specifier: ^0.476.0
+        specifier: 'catalog:'
         version: 0.476.0(react@19.2.7)
       maplibre-gl:
         specifier: ^6.8.0
@@ -553,13 +592,13 @@ importers:
         specifier: ^5.5.207
         version: 5.7.284
       react:
-        specifier: ^19.2.7
+        specifier: 'catalog:'
         version: 19.2.7
       react-dom:
-        specifier: ^19.2.7
+        specifier: 'catalog:'
         version: 19.2.7(react@19.2.7)
       react-hook-form:
-        specifier: ^7.86.0
+        specifier: 'catalog:'
         version: 7.87.0(react@19.2.7)
       react-i18next:
         specifier: ^15.5.3
@@ -583,16 +622,16 @@ importers:
         specifier: ^4.0.4
         version: 4.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       recharts:
-        specifier: ^2.15.4
+        specifier: 'catalog:'
         version: 2.15.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
       sonner:
-        specifier: ^2.0.8
+        specifier: 'catalog:'
         version: 2.0.8(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       tailwindcss:
-        specifier: ^4.3.3
+        specifier: 'catalog:'
         version: 4.3.3
       zod:
         specifier: ^4.5.4
@@ -683,7 +722,7 @@ importers:
   packages/agent-extensions:
     dependencies:
       '@modelcontextprotocol/client':
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       yaml:
         specifier: ^2.9.0
@@ -960,7 +999,7 @@ importers:
         specifier: workspace:*
         version: link:../inference
       '@mistralai/mistralai':
-        specifier: ^2.6.4
+        specifier: 'catalog:'
         version: 2.6.4(@opentelemetry/api@1.9.1)
     devDependencies:
       '@eslint/js':
@@ -1015,7 +1054,7 @@ importers:
         specifier: workspace:*
         version: link:../inference
       ollama:
-        specifier: ^0.6.3
+        specifier: 'catalog:'
         version: 0.6.3
     devDependencies:
       '@eslint/js':
@@ -1070,7 +1109,7 @@ importers:
         specifier: workspace:*
         version: link:../inference
       openai:
-        specifier: ^7.12.1
+        specifier: 'catalog:'
         version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@4.5.4)
     devDependencies:
       '@eslint/js':
@@ -1188,7 +1227,7 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       lucide-react:
-        specifier: ^0.476.0
+        specifier: 'catalog:'
         version: 0.476.0(react@19.2.7)
       radix-ui:
         specifier: ^1.6.1
@@ -1216,7 +1255,7 @@ importers:
         specifier: 10.5.7
         version: 10.5.7(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.63.1)(storybook@10.5.7(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7))(typescript@6.0.3)(vite@7.3.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.106.2(esbuild@0.28.2)(lightningcss@1.32.0)(postcss@8.5.15))
       '@tailwindcss/vite':
-        specifier: ^4.3.3
+        specifier: 'catalog:'
         version: 4.3.3(vite@7.3.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
       '@types/react':
         specifier: ^19.2.17
@@ -1258,25 +1297,25 @@ importers:
         specifier: ^3.9.4
         version: 3.9.4
       react:
-        specifier: ^19.2.7
+        specifier: 'catalog:'
         version: 19.2.7
       react-dom:
-        specifier: ^19.2.7
+        specifier: 'catalog:'
         version: 19.2.7(react@19.2.7)
       react-hook-form:
-        specifier: ^7.86.0
+        specifier: 'catalog:'
         version: 7.87.0(react@19.2.7)
       recharts:
-        specifier: ^2.15.4
+        specifier: 'catalog:'
         version: 2.15.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       sonner:
-        specifier: ^2.0.8
+        specifier: 'catalog:'
         version: 2.0.8(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       storybook:
         specifier: 10.5.7
         version: 10.5.7(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7)
       tailwindcss:
-        specifier: ^4.3.3
+        specifier: 'catalog:'
         version: 4.3.3
       typescript:
         specifier: ^6.0.3
@@ -9195,10 +9234,6 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
 
-  eventsource-parser@3.1.0:
-    resolution: {integrity: sha512-kJezFj9YFAMLeORyi7aCLxLbD5/qWMQnoMVlVPyHIll7lgRJCc3JVln9Vgl9nwQi0YkMnhdGTMNn7CkRRAptMg==}
-    engines: {node: '>=18.0.0'}
-
   eventsource-parser@3.1.1:
     resolution: {integrity: sha512-EKN1vKAMcZ8MlYMpaNuxN6R9yakzH6uajHcHVTqWJzvu5pWw9DyhbP35HH8MVBQ+dZjAfDxk+A8NiR9KWaXiyQ==}
     engines: {node: '>=18.0.0'}
@@ -16157,10 +16192,10 @@ snapshots:
       '@modelcontextprotocol/core': 2.0.0
       cross-spawn: 7.0.6
       eventsource: 3.0.7
-      eventsource-parser: 3.1.0
-      jose: 6.2.10
+      eventsource-parser: 3.1.1
+      jose: 6.2.12
       pkce-challenge: 5.0.1
-      zod: 4.4.3
+      zod: 4.5.4
 
   '@modelcontextprotocol/core@2.0.0':
     dependencies:
@@ -23060,14 +23095,11 @@ snapshots:
 
   events@3.3.0: {}
 
-  eventsource-parser@3.1.0: {}
-
-  eventsource-parser@3.1.1:
-    optional: true
+  eventsource-parser@3.1.1: {}
 
   eventsource@3.0.7:
     dependencies:
-      eventsource-parser: 3.1.0
+      eventsource-parser: 3.1.1
 
   exceljs@4.4.0:
     dependencies:
@@ -24639,8 +24671,7 @@ snapshots:
 
   jose@6.2.10: {}
 
-  jose@6.2.12:
-    optional: true
+  jose@6.2.12: {}
 
   joycon@3.1.1: {}
 
