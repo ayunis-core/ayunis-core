@@ -25,8 +25,8 @@ export function buildSubscriptionFormSchema(t: (key: string) => string) {
       country: z.string().min(1, t('subscription.createErrorCountryRequired')),
       vatNumber: z.string().optional(),
       type: z.enum(subscriptionTypes),
-      noOfSeats: z.coerce.number().optional(),
-      monthlyCredits: z.coerce.number().optional(),
+      noOfSeats: z.coerce.number<number>().optional(),
+      monthlyCredits: z.coerce.number<number>().optional(),
       startsAt: z.string().optional(),
     })
     .superRefine((data, ctx) => {
@@ -35,7 +35,7 @@ export function buildSubscriptionFormSchema(t: (key: string) => string) {
         (!data.noOfSeats || data.noOfSeats < 1)
       ) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message: t('subscription.createErrorNoOfSeatsRequired'),
           path: ['noOfSeats'],
         });
@@ -45,7 +45,7 @@ export function buildSubscriptionFormSchema(t: (key: string) => string) {
         (!data.monthlyCredits || data.monthlyCredits < 1)
       ) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message: t('subscription.createErrorMonthlyCreditsRequired'),
           path: ['monthlyCredits'],
         });

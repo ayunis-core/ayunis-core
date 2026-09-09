@@ -13,7 +13,7 @@ interface SsoStartPageProps {
   identifier: string;
 }
 
-const orgIdSchema = z.string().uuid();
+const orgIdSchema = z.uuid();
 
 export function SsoStartPage({ identifier }: Readonly<SsoStartPageProps>) {
   const { t } = useTranslation('auth');

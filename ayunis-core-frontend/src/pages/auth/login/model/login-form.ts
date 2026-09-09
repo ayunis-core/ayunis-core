@@ -7,7 +7,7 @@ interface LoginFormMessages {
 
 export function createLoginFormSchema(messages: LoginFormMessages) {
   return z.object({
-    email: z.string().email({ message: messages.emailInvalid }),
+    email: z.email({ message: messages.emailInvalid }),
     password: z.string().min(1, { message: messages.passwordRequired }),
   });
 }

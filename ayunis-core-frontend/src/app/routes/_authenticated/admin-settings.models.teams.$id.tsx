@@ -8,8 +8,8 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
   validateSearch: z.object({
-    tab: z.literal('teams').catch('teams'),
-    search: z.string().catch(''),
+    tab: z.literal('teams').default('teams').catch('teams'),
+    search: z.string().default('').catch(''),
   }),
   loader: async ({ context: { queryClient }, params: { id } }) => {
     const team = await queryClient.fetchQuery(
