@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ayunis/ui/components/select';
-import { isValidUrl } from '../lib/isValidUrl';
+import { isValidUrl } from '@/widgets/knowledge-base-documents-card/lib/isValidUrl';
 
 /** Link-depth options offered when adding a URL (0 = just this page). */
 const URL_DEPTH_OPTIONS = [0, 1, 2] as const;

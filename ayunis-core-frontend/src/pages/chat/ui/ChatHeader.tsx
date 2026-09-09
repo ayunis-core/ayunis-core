@@ -69,7 +69,8 @@ export default function ChatHeader({
         { label: workspace.name, href: `/workspaces/${workspace.id}` },
         {
           label: t('chat.chats'),
-          href: `/workspaces/${workspace.id}?tab=chats`,
+          href: `/workspaces/${workspace.id}`,
+          search: { tab: 'chats' },
         },
         { label: displayTitle },
       ]

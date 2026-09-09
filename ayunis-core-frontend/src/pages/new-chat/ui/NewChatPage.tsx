@@ -121,8 +121,13 @@ export default function NewChatPage({
   const [selectedIntegrations, setSelectedIntegrations] = useState<
     IntegrationSummary[]
   >([]);
-  const [selectedSkillId, setSelectedSkillId] = useState<string>();
-  const [selectedSkillName, setSelectedSkillName] = useState<string>();
+  const [selectedSkill, setSelectedSkill] = useState<{
+    id: string;
+    name: string;
+    workspaceId?: string;
+  }>();
+  const selectedSkillId = selectedSkill?.id;
+  const selectedSkillName = selectedSkill?.name;
   const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
 
   const handleMistExitComplete = useCallback(() => {
@@ -153,19 +158,27 @@ export default function NewChatPage({
     setModelId(modelId);
   }
 
-  function handleSkillSelect(skillId: string, skillName: string) {
-    if (selectedSkillId === skillId) {
-      setSelectedSkillId(undefined);
-      setSelectedSkillName(undefined);
-    } else {
-      setSelectedSkillId(skillId);
-      setSelectedSkillName(skillName);
-    }
+  function handleSkillSelect(
+    id: string,
+    name: string,
+    skillWorkspaceId?: string,
+  ) {
+    setSelectedSkill(
+      selectedSkillId === id
+        ? undefined
+        : { id, name, workspaceId: skillWorkspaceId },
+    );
   }
 
   function handleSkillRemove() {
-    setSelectedSkillId(undefined);
-    setSelectedSkillName(undefined);
+    setSelectedSkill(undefined);
+  }
+
+  function handleWorkspaceChange(id: string | null) {
+    if (selectedSkill?.workspaceId && selectedSkill.workspaceId !== id) {
+      setSelectedSkill(undefined);
+    }
+    setWorkspaceId(id);
   }
 
   function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
@@ -313,7 +326,7 @@ export default function NewChatPage({
               <div className="mt-1.5 flex justify-start">
                 <WorkspacePicker
                   workspaceId={workspaceId}
-                  onWorkspaceChange={setWorkspaceId}
+                  onWorkspaceChange={handleWorkspaceChange}
                 />
               </div>
             )}
@@ -331,6 +344,7 @@ export default function NewChatPage({
               settleMs={900}
             >
               <PinnedSkills
+                workspaceId={workspaceId}
                 onSkillSelect={handleSkillSelect}
                 selectedSkillId={selectedSkillId}
               />

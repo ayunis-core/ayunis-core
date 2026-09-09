@@ -1,6 +1,11 @@
 import { Star } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { cn } from '@ayunis/ui/lib/cn';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
 
 interface PinButtonProps {
   isPinned: boolean;
@@ -15,14 +20,22 @@ export function PinButton({
   unpinLabel,
   onToggle,
 }: Readonly<PinButtonProps>) {
+  const label = isPinned ? unpinLabel : pinLabel;
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      aria-label={isPinned ? unpinLabel : pinLabel}
-      onClick={onToggle}
-    >
-      <Star className={cn(isPinned && 'fill-brand text-brand')} />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={label}
+            onClick={onToggle}
+          >
+            <Star className={cn(isPinned && 'fill-brand text-brand')} />
+          </Button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }

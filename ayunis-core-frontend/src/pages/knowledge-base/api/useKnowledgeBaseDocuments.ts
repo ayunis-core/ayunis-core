@@ -3,9 +3,10 @@ import { KnowledgeBaseDocumentResponseDtoStatus } from '@/shared/api/generated/a
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
-export function useKnowledgeBaseDocuments(id: string) {
+export function useKnowledgeBaseDocuments(id: string, enabled = true) {
   const { data, isLoading } = useKnowledgeBasesControllerListDocuments(id, {
     query: {
+      enabled,
       staleTime: 0,
       // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
       refetchInterval: (query) => {

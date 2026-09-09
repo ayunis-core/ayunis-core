@@ -6,7 +6,7 @@ import type {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
-import SkillPropertiesCard from './SkillPropertiesCard';
+import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
@@ -29,10 +29,16 @@ import {
 import { Trash2, Pin } from 'lucide-react';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDeleteSkill, useSkillSources } from '../api';
+import { useDeleteSkill, useSkillSources } from '@/pages/skill/api';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  skillsControllerUpdate,
+  getSkillsControllerFindAllQueryKey,
+  getSkillsControllerFindOneQueryKey,
+} from '@/shared/api/generated/ayunisCoreAPI';
 import {
   useToggleSkillActive,
   useToggleSkillPinned,
@@ -52,6 +58,8 @@ export function SkillPage({
   initialTab?: 'config' | 'share';
 }>) {
   const navigate = useNavigate();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { t } = useTranslation('skill');
   const { id } = useParams({
     from: '/_authenticated/skills/$id',
@@ -124,13 +132,22 @@ export function SkillPage({
                       ? tSkills('card.activeLabel')
                       : tSkills('card.inactiveLabel')}
                   </span>
-                  <Switch
-                    checked={skill.isActive}
-                    onCheckedChange={() =>
-                      toggleActive.mutate({ id: skill.id })
-                    }
-                    disabled={toggleActive.isPending}
-                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Switch
+                          checked={skill.isActive}
+                          onCheckedChange={() =>
+                            toggleActive.mutate({ id: skill.id })
+                          }
+                          disabled={toggleActive.isPending}
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {tSkills('card.activeTooltip')}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 {skill.isActive && (
                   <Tooltip>
@@ -184,7 +201,11 @@ export function SkillPage({
         contentArea={
           isReadOnly ? (
             <div className="grid gap-4">
-              <SkillPropertiesCard skill={skill} disabled />
+              <SkillPropertiesCard
+                skill={skill}
+                disabled
+                onUpdate={(data) => skillsControllerUpdate(skill.id, data)}
+              />
               {isEmbeddingModelEnabled && <SkillKnowledgeBasesCard disabled />}
               <SkillMcpIntegrationsCard disabled />
               <KnowledgeBaseCard
@@ -210,8 +231,21 @@ export function SkillPage({
               <TabsContent value="config" className="mt-4">
                 <div className="grid gap-4">
                   <SkillPropertiesCard
+                    key={skill.id}
                     skill={skill}
                     disabled={!canManageSkills}
+                    onUpdate={async (data) => {
+                      await skillsControllerUpdate(skill.id, data);
+                      await Promise.all(
+                        [
+                          getSkillsControllerFindAllQueryKey(),
+                          getSkillsControllerFindOneQueryKey(skill.id),
+                        ].map((queryKey) =>
+                          queryClient.invalidateQueries({ queryKey }),
+                        ),
+                      );
+                      await router.invalidate();
+                    }}
                   />
                   {isEmbeddingModelEnabled && (
                     <SkillKnowledgeBasesCard disabled={!canManageSkills} />

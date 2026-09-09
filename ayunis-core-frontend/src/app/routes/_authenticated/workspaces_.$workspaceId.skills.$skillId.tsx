@@ -1,8 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import {
   workspaceContextControllerFindSkill,
-  workspaceContextControllerListKnowledgeBases,
   workspacesControllerFindOne,
+  modelsControllerIsEmbeddingModelEnabled,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { WorkspaceSkillDetailPage } from '@/pages/workspace/ui/WorkspaceSkillDetailPage';
 
@@ -12,15 +12,16 @@ export const Route = createFileRoute(
   component: RouteComponent,
   loader: async ({ params: { workspaceId, skillId } }) => {
     try {
-      const [workspace, skill, knowledgeBases] = await Promise.all([
+      const [workspace, skill, embeddingModel] = await Promise.all([
         workspacesControllerFindOne(workspaceId),
         workspaceContextControllerFindSkill(workspaceId, skillId),
-        workspaceContextControllerListKnowledgeBases(workspaceId, {
-          limit: 100,
-          offset: 0,
-        }),
+        modelsControllerIsEmbeddingModelEnabled(),
       ]);
-      return { workspace, skill, knowledgeBases: knowledgeBases.data };
+      return {
+        workspace,
+        skill,
+        isEmbeddingModelEnabled: embeddingModel.isEmbeddingModelEnabled,
+      };
     } catch {
       throw redirect({
         to: '/workspaces/$workspaceId',

@@ -1,9 +1,8 @@
 {
   "page": {
     "title": "Projekte",
-    "heading": "Projekte",
     "searchPlaceholder": "Projekte durchsuchen",
-    "newWorkspace": "Neues Projekt",
+    "addWorkspace": "Projekt hinzufügen",
     "emptyTitle": "Noch keine Projekte",
     "emptyDescription": "Legen Sie ein Projekt an, um Ihre Chats thematisch zu bündeln.",
     "viewOptions": "Sortierung",
@@ -113,6 +112,11 @@
     "submit": "Projekt erstellen",
     "submitting": "Wird erstellt …"
   },
+  "actions": {
+    "more": "Weitere Projektaktionen",
+    "edit": "Projekt bearbeiten",
+    "delete": "Projekt löschen"
+  },
   "settingsDialog": {
     "title": "Projekteinstellungen",
     "submit": "Speichern",
@@ -124,6 +128,7 @@
     "rowDescription": "Das Projekt und alle darin enthaltenen Chats werden gelöscht.",
     "title": "Projekt löschen",
     "description": "„{{name}}“ und alle darin enthaltenen Chats werden unwiderruflich gelöscht.",
+    "confirmNameLabel": "Wenn Sie dieses Projekt wirklich löschen möchten, geben Sie den Projektnamen „{{name}}“ ein.",
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
   },

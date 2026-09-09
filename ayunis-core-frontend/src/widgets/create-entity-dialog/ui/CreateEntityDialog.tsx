@@ -28,6 +28,7 @@ interface CreateEntityDialogProps {
   buttonText?: string;
   showIcon?: boolean;
   buttonClassName?: string;
+  buttonTestId?: string;
   footerHint?: ReactNode;
   children: ReactNode;
 }
@@ -42,6 +43,7 @@ export default function CreateEntityDialog({
   buttonText,
   showIcon = false,
   buttonClassName = '',
+  buttonTestId,
   footerHint,
   children,
 }: Readonly<CreateEntityDialogProps>) {
@@ -50,6 +52,7 @@ export default function CreateEntityDialog({
       <DialogTrigger asChild>
         <Button
           size="sm"
+          data-testid={buttonTestId}
           className={`${showIcon ? 'inline-flex items-center gap-2' : ''} max-sm:max-w-full ${buttonClassName}`}
         >
           {showIcon && <Plus className="h-4 w-4" />}

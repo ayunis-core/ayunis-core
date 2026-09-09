@@ -9,7 +9,6 @@ import {
   MessageCircle,
   MoreHorizontal,
   Pencil,
-  Settings2,
   StarOff,
   Trash,
 } from 'lucide-react';
@@ -33,7 +32,7 @@ import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
 import { useToggleFavorite, type Favorite } from '@/features/favorites';
 import { useWorkspaces, type Workspace } from '@/features/workspaces';
-import { useAssignThreadToWorkspace } from '../api/useAssignThreadToWorkspace';
+import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 
 interface FavoriteSidebarItemProps {
@@ -58,6 +57,7 @@ export function FavoriteSidebarItem({
   onOpenWorkspaceSettings,
 }: Readonly<FavoriteSidebarItemProps>) {
   const { t } = useTranslation('common');
+  const { t: tWorkspaces } = useTranslation('workspaces');
   const params = useParams({ strict: false });
   const { toggle } = useToggleFavorite();
   const { workspaces } = useWorkspaces();
@@ -126,8 +126,8 @@ export function FavoriteSidebarItem({
                   }
                 }}
               >
-                <Settings2 />
-                <span>{t('sidebar.settings')}</span>
+                <Pencil />
+                <span>{tWorkspaces('actions.edit')}</span>
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
@@ -210,7 +210,7 @@ export function FavoriteSidebarItem({
               <Trash />
               <span>
                 {isWorkspace
-                  ? t('sidebar.deleteWorkspace')
+                  ? tWorkspaces('actions.delete')
                   : t('sidebar.deleteChat')}
               </span>
             </DropdownMenuItem>

@@ -9,32 +9,32 @@ import {
 } from '@ayunis/ui/components/sidebar';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
-import { WorkspaceSettingsDialog } from '@/widgets/workspace-settings-dialog';
-import { useDeleteThread } from '@/features/thread-run';
 import {
-  useDeleteWorkspace,
-  useWorkspaces,
-  type Workspace,
-} from '@/features/workspaces';
+  WorkspaceDeleteDialog,
+  WorkspaceSettingsDialog,
+} from '@/widgets/workspace-settings-dialog';
+import { useDeleteThread } from '@/features/thread-run';
+import { useWorkspaces, type Workspace } from '@/features/workspaces';
 import { useFavorites, type Favorite } from '@/features/favorites';
 import { moveById } from '@/shared/lib/move-by-id';
-import { useReorderFavorites } from '../api/useReorderFavorites';
-import { applyPendingOrder } from '../lib/applyPendingOrder';
+import { useReorderFavorites } from '@/widgets/app-sidebar/api/useReorderFavorites';
+import { applyPendingOrder } from '@/widgets/app-sidebar/lib/applyPendingOrder';
 import { FavoriteSidebarItem } from './FavoriteSidebarItem';
 
 export function FavoritesSidebarGroup() {
   const { t } = useTranslation('common');
-  const { t: tWorkspaces } = useTranslation('workspaces');
   const { favorites } = useFavorites();
   const { workspaces } = useWorkspaces();
   const { mutate: reorder } = useReorderFavorites();
   const { confirm } = useConfirmation();
   const { deleteChat } = useDeleteThread({});
-  const { mutate: deleteWorkspace } = useDeleteWorkspace();
   const navigate = useNavigate();
   const params = useParams({ strict: false });
   const [pendingOrder, setPendingOrder] = useState<string[] | null>(null);
   const [settingsWorkspace, setSettingsWorkspace] = useState<Workspace | null>(
+    null,
+  );
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<Workspace | null>(
     null,
   );
   const [threadToRename, setThreadToRename] = useState<{
@@ -88,39 +88,21 @@ export function FavoritesSidebarGroup() {
   }
 
   function handleDelete(item: Favorite) {
-    const isWorkspace = item.referenceType === 'workspace';
-    const target = isWorkspace
-      ? workspaceById.get(item.referenceId)
-      : undefined;
+    if (item.referenceType === 'workspace') {
+      const workspace = workspaceById.get(item.referenceId);
+      if (workspace) setWorkspaceToDelete(workspace);
+      return;
+    }
     confirm({
-      title: isWorkspace
-        ? tWorkspaces('deleteDialog.title')
-        : t('sidebar.deleteChatTitle'),
-      description: isWorkspace
-        ? tWorkspaces('deleteDialog.description', {
-            name: target?.name ?? item.name,
-          })
-        : t('sidebar.deleteChatDescription'),
-      confirmText: isWorkspace
-        ? tWorkspaces('deleteDialog.confirmText')
-        : t('sidebar.deleteChatConfirm'),
-      cancelText: isWorkspace
-        ? tWorkspaces('deleteDialog.cancelText')
-        : t('sidebar.deleteChatCancel'),
+      title: t('sidebar.deleteChatTitle'),
+      description: t('sidebar.deleteChatDescription'),
+      confirmText: t('sidebar.deleteChatConfirm'),
+      cancelText: t('sidebar.deleteChatCancel'),
       variant: 'destructive',
       onConfirm: () => {
-        if (isWorkspace) {
-          deleteWorkspace(item.referenceId, {
-            onSuccess: () => {
-              if (params.workspaceId === item.referenceId)
-                void navigate({ to: '/chat' });
-            },
-          });
-        } else {
-          deleteChat(item.referenceId);
-          if (params.threadId === item.referenceId)
-            void navigate({ to: '/chat' });
-        }
+        deleteChat(item.referenceId);
+        if (params.threadId === item.referenceId)
+          void navigate({ to: '/chat' });
       },
     });
   }
@@ -154,6 +136,19 @@ export function FavoritesSidebarGroup() {
           open
           onOpenChange={(open) => {
             if (!open) setSettingsWorkspace(null);
+          }}
+        />
+      )}
+      {workspaceToDelete && (
+        <WorkspaceDeleteDialog
+          workspace={workspaceToDelete}
+          open
+          onOpenChange={(open) => {
+            if (!open) setWorkspaceToDelete(null);
+          }}
+          onDeleted={() => {
+            if (params.workspaceId === workspaceToDelete.id)
+              void navigate({ to: '/chat' });
           }}
         />
       )}

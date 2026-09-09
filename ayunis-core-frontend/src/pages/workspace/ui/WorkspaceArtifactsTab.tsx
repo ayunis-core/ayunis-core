@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, GitBranch, Table2, type LucideIcon } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,24 +13,15 @@ import {
   ItemContent,
   ItemDescription,
   ItemGroup,
-  ItemMedia,
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ayunisCoreAPI';
-import type { ArtifactResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import {
   WorkspaceContextEmpty,
   WorkspaceContextPagination,
-  WorkspaceContextSection,
 } from './WorkspaceContextList';
 import { getWorkspaceArtifactRoute } from '@/pages/workspace/lib/workspace-artifact-route';
-
-const artifactIcons: Record<ArtifactResponseDtoType, LucideIcon> = {
-  document: FileText,
-  diagram: GitBranch,
-  spreadsheet: Table2,
-};
 
 export function WorkspaceArtifactsTab({
   workspaceId,
@@ -59,10 +50,7 @@ export function WorkspaceArtifactsTab({
   }
 
   return (
-    <WorkspaceContextSection
-      title={t('artifacts.title')}
-      description={t('artifacts.description')}
-    >
+    <section className="space-y-3">
       {isLoading ? <p>{t('context.addDialog.loading')}</p> : null}
       {!isLoading && artifacts.length === 0 ? (
         <WorkspaceContextEmpty
@@ -74,7 +62,6 @@ export function WorkspaceArtifactsTab({
       {artifacts.length > 0 ? (
         <ItemGroup className="gap-2">
           {artifacts.map((artifact) => {
-            const Icon = artifactIcons[artifact.type];
             const route = getWorkspaceArtifactRoute(artifact);
             return (
               <Item
@@ -89,9 +76,6 @@ export function WorkspaceArtifactsTab({
                   params={{ threadId: route.threadId }}
                   search={{ artifactId: route.artifactId }}
                 >
-                  <ItemMedia variant="icon">
-                    <Icon />
-                  </ItemMedia>
                   <ItemContent>
                     <ItemTitle>
                       {artifact.title || t('artifacts.untitled')}
@@ -117,7 +101,7 @@ export function WorkspaceArtifactsTab({
         testId="workspace-artifacts-pagination"
         onPageChange={setPage}
       />
-    </WorkspaceContextSection>
+    </section>
   );
 }
 

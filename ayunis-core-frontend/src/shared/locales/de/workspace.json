@@ -5,7 +5,7 @@
     "knowledgeTab": "Wissen",
     "skillsTab": "Fähigkeiten",
     "instructionsTab": "Anweisungen",
-    "artifactsTab": "Erstellte Inhalte",
+    "artifactsTab": "Dokumente",
     "emptyChatsTitle": "Noch keine Chats",
     "emptyChats": "Chats, die Sie diesem Projekt hinzufügen, erscheinen hier.",
     "noChatResults": "Keine Chats gefunden.",
@@ -15,8 +15,6 @@
     "truncatedChats": "Die ersten {{count}} Chats werden angezeigt"
   },
   "detail": {
-    "projectSkill": "Projekt-Fähigkeit",
-    "projectKnowledgeBase": "Projekt-Wissensdatenbank",
     "save": "Änderungen speichern",
     "skillKnowledge": "Wissensdatenbanken",
     "skillKnowledgeDescription": "Wählen Sie die Projekt-Wissensdatenbanken, die diese Fähigkeit verwenden darf.",
@@ -51,27 +49,6 @@
     "unpin": "Nicht mehr anheften",
     "remove": "Aus Projekt entfernen"
   },
-  "contextDock": {
-    "close": "Kontext schließen",
-    "skills": {
-      "title": "Fähigkeiten",
-      "toggle": "Fähigkeiten anzeigen",
-      "description": "In diesem Projekt immer aktiv — Sie müssen im Chat nichts auswählen.",
-      "empty": "Keine Fähigkeiten eingebunden"
-    },
-    "knowledge": {
-      "title": "Wissen",
-      "toggle": "Wissen anzeigen",
-      "knowledgeBases": "Wissensdatenbanken",
-      "documents": "Dateien",
-      "empty": "Kein Wissen eingebunden"
-    },
-    "instructions": {
-      "title": "Anweisungen",
-      "toggle": "Anweisungen anzeigen",
-      "empty": "Keine Anweisungen gespeichert"
-    }
-  },
   "context": {
     "loadError": {
       "title": "Projektkontext konnte nicht geladen werden",
@@ -83,7 +60,7 @@
     },
     "skills": {
       "title": "Projektfähigkeiten",
-      "description": "In diesem Projekt immer aktiv — Sie müssen im Chat nichts auswählen.",
+      "description": "Fähigkeiten, die der Assistent bei Bedarf in Chats dieses Projekts aktivieren kann.",
       "create": "Fähigkeit erstellen",
       "createDescription": "Erstellen Sie eine Fähigkeit, die diesem Projekt gehört.",
       "name": "Name",
@@ -91,7 +68,12 @@
       "instructions": "Anweisungen",
       "emptyTitle": "Keine Projektfähigkeiten",
       "empty": "Für dieses Projekt wurden noch keine Fähigkeiten erstellt.",
-      "delete": "Projektfähigkeit löschen"
+      "delete": "Projektfähigkeit löschen",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "activeTooltip": "Aktive Fähigkeiten können vom Assistenten bei Bedarf in Chats dieses Projekts aktiviert werden. Anweisungen und Ressourcen werden erst bei der Aktivierung geladen. Inaktive Fähigkeiten können nicht aktiviert werden.",
+      "pin": "In Projekt-Chats anheften",
+      "unpin": "Aus Projekt-Chats lösen"
     },
     "knowledge": {
       "title": "Wissensdatenbanken",
@@ -103,23 +85,14 @@
       "emptyTitle": "Keine Projekt-Wissensdatenbanken",
       "empty": "Für dieses Projekt wurden noch keine Wissensdatenbanken erstellt.",
       "detach": "Projekt-Wissensdatenbank löschen",
-      "documentCount": "{{count}} Dokumente"
+      "documentCount": "{{count}} Dokumente",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "activeTooltip": "Aktive Wissenssammlungen sind in jedem Chat dieses Projekts verfügbar. Inaktive Wissenssammlungen werden in Projekt-Chats nicht verwendet."
     },
     "documents": {
-      "title": "Dateien",
-      "description": "Dateien, die direkt in dieses Projekt hochgeladen wurden und in Projektchats verfügbar sind.",
       "upload": "Datei hochladen",
-      "emptyTitle": "Keine Dateien hochgeladen",
-      "empty": "Noch keine Dateien in diesem Projekt.",
-      "remove": "Datei entfernen",
-      "status": {
-        "processing": "Wird verarbeitet",
-        "failed": "Fehlgeschlagen"
-      },
-      "uploadSuccess": "Datei wurde hochgeladen und wird verarbeitet.",
-      "uploadError": "Datei konnte nicht hochgeladen werden.",
-      "removeSuccess": "Datei wurde entfernt.",
-      "removeError": "Datei konnte nicht entfernt werden."
+      "remove": "Datei entfernen"
     },
     "instructions": {
       "title": "Anweisungen",

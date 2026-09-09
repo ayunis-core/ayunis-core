@@ -11,7 +11,10 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { WorkspaceSettingsDialog } from '@/widgets/workspace-settings-dialog';
+import {
+  WorkspaceDeleteDialog,
+  WorkspaceSettingsDialog,
+} from '@/widgets/workspace-settings-dialog';
 import type { Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import {
@@ -31,8 +34,12 @@ import {
   WorkspaceSkillsTab,
 } from './WorkspaceContextTabs';
 
+type WorkspaceTab =
+  'chats' | 'artifacts' | 'skills' | 'knowledge' | 'instructions';
+
 interface WorkspacePageProps {
   workspace: Workspace;
+  activeTab: WorkspaceTab;
   chats: GetThreadsResponseDtoItem[];
   chatCount: number;
   chatPagination: { total?: number; limit: number; offset: number };
@@ -44,6 +51,7 @@ interface WorkspacePageProps {
 
 export default function WorkspacePage({
   workspace,
+  activeTab,
   chats,
   chatCount,
   chatPagination,
@@ -55,6 +63,7 @@ export default function WorkspacePage({
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { deleteChat } = useDeleteChat();
   const countParams = { limit: 1, offset: 0 };
   const { data: skillsPage } = useWorkspaceContextControllerListSkills(
@@ -84,6 +93,7 @@ export default function WorkspacePage({
               <WorkspaceHeaderActions
                 workspace={workspace}
                 onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenDelete={() => setIsDeleteOpen(true)}
               />
             }
           />
@@ -98,8 +108,19 @@ export default function WorkspacePage({
               isEmbeddingModelEnabled={isEmbeddingModelEnabled}
             />
 
-            <Tabs defaultValue="chats">
-              <TabsList>
+            <Tabs
+              value={activeTab}
+              onValueChange={(tab) =>
+                void navigate({
+                  to: '/workspaces/$workspaceId',
+                  params: { workspaceId: workspace.id },
+                  search: {
+                    tab: tab === 'chats' ? undefined : (tab as WorkspaceTab),
+                  },
+                })
+              }
+            >
+              <TabsList data-testid="workspace-tabs">
                 <TabsTrigger value="chats" data-testid="workspace-tab-chats">
                   {t('page.chatsTab')}
                   <Badge variant="secondary">{chatCount}</Badge>
@@ -111,16 +132,16 @@ export default function WorkspacePage({
                   {t('page.artifactsTab')}
                   <Badge variant="secondary">{artifactCount}</Badge>
                 </TabsTrigger>
+                <TabsTrigger value="skills" data-testid="workspace-tab-skills">
+                  {t('page.skillsTab')}
+                  <Badge variant="secondary">{skillsCount}</Badge>
+                </TabsTrigger>
                 <TabsTrigger
                   value="knowledge"
                   data-testid="workspace-tab-knowledge"
                 >
                   {t('page.knowledgeTab')}
                   <Badge variant="secondary">{knowledgeCount}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="skills" data-testid="workspace-tab-skills">
-                  {t('page.skillsTab')}
-                  <Badge variant="secondary">{skillsCount}</Badge>
                 </TabsTrigger>
                 <TabsTrigger
                   value="instructions"
@@ -142,11 +163,11 @@ export default function WorkspacePage({
               <TabsContent value="artifacts" className="pt-4">
                 <WorkspaceArtifactsTab workspaceId={workspace.id} />
               </TabsContent>
-              <TabsContent value="knowledge" className="pt-4">
-                <WorkspaceKnowledgeTab workspaceId={workspace.id} />
-              </TabsContent>
               <TabsContent value="skills" className="pt-4">
                 <WorkspaceSkillsTab workspaceId={workspace.id} />
+              </TabsContent>
+              <TabsContent value="knowledge" className="pt-4">
+                <WorkspaceKnowledgeTab workspaceId={workspace.id} />
               </TabsContent>
               <TabsContent value="instructions" className="pt-4">
                 <WorkspaceInstructionsTab workspaceId={workspace.id} />
@@ -160,6 +181,11 @@ export default function WorkspacePage({
         workspace={workspace}
         open={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
+      />
+      <WorkspaceDeleteDialog
+        workspace={workspace}
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
         onDeleted={() => void navigate({ to: '/workspaces' })}
       />
     </AppLayout>

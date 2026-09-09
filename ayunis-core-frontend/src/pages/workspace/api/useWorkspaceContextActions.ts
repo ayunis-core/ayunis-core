@@ -1,13 +1,13 @@
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from '@tanstack/react-router';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 import type {
   CreateWorkspaceKnowledgeBaseDto,
   CreateWorkspaceSkillDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
-  getWorkspaceContextControllerFindContextQueryKey,
-  getWorkspaceContextControllerListKnowledgeBasesQueryKey,
-  getWorkspaceContextControllerListSkillsQueryKey,
   getWorkspacesControllerFindOneQueryKey,
   workspaceContextControllerCreateKnowledgeBase,
   workspaceContextControllerCreateSkill,
@@ -19,28 +19,35 @@ import {
   workspaceContextControllerUpdateInstruction,
 } from '@/shared/api/generated/ayunisCoreAPI';
 export function useWorkspaceContextActions(workspaceId: string) {
+  const { t } = useTranslation(['skills', 'knowledge-bases', 'workspace']);
   const queryClient = useQueryClient();
-  const router = useRouter();
-  const invalidateContext = () => {
-    for (const queryKey of [
-      getWorkspaceContextControllerFindContextQueryKey(workspaceId),
-      getWorkspaceContextControllerListSkillsQueryKey(workspaceId),
-      getWorkspaceContextControllerListKnowledgeBasesQueryKey(workspaceId),
-    ]) {
-      void queryClient.invalidateQueries({ queryKey });
-    }
-    void router.invalidate();
-  };
+  const invalidateContext = useInvalidateWorkspaceResources(workspaceId);
 
   const createSkill = useMutation({
     mutationFn: (data: CreateWorkspaceSkillDto) =>
       workspaceContextControllerCreateSkill(workspaceId, data),
+    retry: 0,
     onSuccess: invalidateContext,
+    onError: (error) => {
+      try {
+        const { code } = extractErrorData(error);
+        showError(
+          t(
+            code === 'DUPLICATE_SKILL_NAME'
+              ? 'create.duplicateName'
+              : 'create.error',
+          ),
+        );
+      } catch {
+        showError(t('create.error'));
+      }
+    },
   });
   const deleteSkill = useMutation({
     mutationFn: (skillId: string) =>
       workspaceContextControllerDeleteSkill(workspaceId, skillId),
     onSuccess: invalidateContext,
+    onError: () => showError(t('delete.error', { ns: 'skills' })),
   });
   const setSkillActive = useMutation({
     mutationFn: ({
@@ -54,6 +61,7 @@ export function useWorkspaceContextActions(workspaceId: string) {
         isActive,
       }),
     onSuccess: invalidateContext,
+    onError: () => showError(t('toggleActive.error', { ns: 'skills' })),
   });
   const setSkillPinned = useMutation({
     mutationFn: ({
@@ -65,11 +73,14 @@ export function useWorkspaceContextActions(workspaceId: string) {
     }) =>
       workspaceContextControllerSetSkillPin(workspaceId, skillId, { isPinned }),
     onSuccess: invalidateContext,
+    onError: () => showError(t('togglePinned.error', { ns: 'skills' })),
   });
   const createKnowledgeBase = useMutation({
     mutationFn: (data: CreateWorkspaceKnowledgeBaseDto) =>
       workspaceContextControllerCreateKnowledgeBase(workspaceId, data),
+    retry: 0,
     onSuccess: invalidateContext,
+    onError: () => showError(t('create.error', { ns: 'knowledge-bases' })),
   });
   const deleteKnowledgeBase = useMutation({
     mutationFn: (knowledgeBaseId: string) =>
@@ -78,6 +89,7 @@ export function useWorkspaceContextActions(workspaceId: string) {
         knowledgeBaseId,
       ),
     onSuccess: invalidateContext,
+    onError: () => showError(t('delete.error', { ns: 'knowledge-bases' })),
   });
   const setKnowledgeBaseActive = useMutation({
     mutationFn: ({
@@ -93,6 +105,7 @@ export function useWorkspaceContextActions(workspaceId: string) {
         { isActive },
       ),
     onSuccess: invalidateContext,
+    onError: () => showError(t('activation.error', { ns: 'knowledge-bases' })),
   });
   const updateInstruction = useMutation({
     mutationFn: (instruction: string | null) =>
@@ -101,8 +114,10 @@ export function useWorkspaceContextActions(workspaceId: string) {
       void queryClient.invalidateQueries({
         queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
       });
-      invalidateContext();
+      void invalidateContext();
     },
+    onError: () =>
+      showError(t('context.instructions.saveError', { ns: 'workspace' })),
   });
 
   return {

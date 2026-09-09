@@ -14,6 +14,7 @@ import {
 export interface BreadcrumbEntry {
   label: string;
   href?: string;
+  search?: Record<string, unknown>;
 }
 
 interface ContentAreaHeaderProps {
@@ -51,7 +52,9 @@ export default function ContentAreaHeader({
                       </>
                     ) : (
                       <BreadcrumbLink asChild>
-                        <Link to={crumb.href}>{crumb.label}</Link>
+                        <Link to={crumb.href} search={crumb.search as never}>
+                          {crumb.label}
+                        </Link>
                       </BreadcrumbLink>
                     )}
                   </BreadcrumbItem>

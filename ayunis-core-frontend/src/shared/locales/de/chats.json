@@ -15,6 +15,8 @@
   "card": {
     "untitled": "Ohne Titel",
     "anonymous": "Anonym",
+    "pin": "Zu Favoriten hinzufügen",
+    "unpin": "Aus Favoriten entfernen",
     "confirmDelete": {
       "title": "Chat löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",

@@ -5,7 +5,7 @@
     "knowledgeTab": "Knowledge",
     "skillsTab": "Skills",
     "instructionsTab": "Instructions",
-    "artifactsTab": "Created content",
+    "artifactsTab": "Documents",
     "emptyChatsTitle": "No chats yet",
     "emptyChats": "Chats you add to this project will appear here.",
     "noChatResults": "No chats found.",
@@ -15,8 +15,6 @@
     "truncatedChats": "Showing the first {{count}} chats"
   },
   "detail": {
-    "projectSkill": "Project skill",
-    "projectKnowledgeBase": "Project knowledge base",
     "save": "Save changes",
     "skillKnowledge": "Knowledge bases",
     "skillKnowledgeDescription": "Choose project knowledge bases this skill can use.",
@@ -51,27 +49,6 @@
     "unpin": "Unpin",
     "remove": "Remove from project"
   },
-  "contextDock": {
-    "close": "Close context",
-    "skills": {
-      "title": "Skills",
-      "toggle": "Show project skills",
-      "description": "Always active in this project — you do not need to select them in chat.",
-      "empty": "No project skills attached"
-    },
-    "knowledge": {
-      "title": "Knowledge",
-      "toggle": "Show project knowledge",
-      "knowledgeBases": "Knowledge bases",
-      "documents": "Files",
-      "empty": "No project knowledge attached"
-    },
-    "instructions": {
-      "title": "Instructions",
-      "toggle": "Show project instructions",
-      "empty": "No project instructions saved"
-    }
-  },
   "context": {
     "loadError": {
       "title": "Project context could not be loaded",
@@ -83,7 +60,7 @@
     },
     "skills": {
       "title": "Project skills",
-      "description": "Skills that are always active in every chat in this project.",
+      "description": "Skills available for the assistant to activate when needed in project chats.",
       "create": "Create skill",
       "createDescription": "Create a skill owned by this project.",
       "name": "Name",
@@ -91,7 +68,12 @@
       "instructions": "Instructions",
       "emptyTitle": "No project skills",
       "empty": "No skills have been created in this project yet.",
-      "delete": "Delete project skill"
+      "delete": "Delete project skill",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activeTooltip": "Active skills are available for the assistant to activate when needed in project chats. Instructions and resources are loaded only on activation. Inactive skills cannot be activated.",
+      "pin": "Pin in project chats",
+      "unpin": "Unpin from project chats"
     },
     "knowledge": {
       "title": "Knowledge bases",
@@ -103,23 +85,14 @@
       "emptyTitle": "No project knowledge bases",
       "empty": "No knowledge bases have been created in this project yet.",
       "detach": "Delete project knowledge base",
-      "documentCount": "{{count}} documents"
+      "documentCount": "{{count}} documents",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activeTooltip": "Active knowledge bases are available to every chat in this project. Inactive knowledge bases are excluded from project chats."
     },
     "documents": {
-      "title": "Project files",
-      "description": "Files uploaded directly to this project and available in project chats.",
       "upload": "Upload file",
-      "emptyTitle": "No project files uploaded",
-      "empty": "No files in this project yet.",
-      "remove": "Remove file",
-      "status": {
-        "processing": "Processing",
-        "failed": "Failed"
-      },
-      "uploadSuccess": "File was uploaded and is being processed.",
-      "uploadError": "File could not be uploaded.",
-      "removeSuccess": "File was removed.",
-      "removeError": "File could not be removed."
+      "remove": "Remove file"
     },
     "instructions": {
       "title": "Project instructions",
