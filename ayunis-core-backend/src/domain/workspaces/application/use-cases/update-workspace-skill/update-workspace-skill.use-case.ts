@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
-import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { UpdateWorkspaceSkillUseCase as MutateSkillUseCase } from 'src/domain/skills/application/use-cases/update-workspace-skill/update-workspace-skill.use-case';
 import { FindWorkspaceSkillUseCase } from 'src/domain/skills/application/use-cases/find-workspace-skill/find-workspace-skill.use-case';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
@@ -10,7 +10,7 @@ import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.en
 export class UpdateWorkspaceSkillUseCase {
   private readonly logger = new Logger(UpdateWorkspaceSkillUseCase.name);
   constructor(
-    private readonly access: WorkspaceAccessService,
+    private readonly access: AssertWorkspaceWriteAccessUseCase,
     private readonly mutate: MutateSkillUseCase,
     private readonly find: FindWorkspaceSkillUseCase,
   ) {}
@@ -24,7 +24,7 @@ export class UpdateWorkspaceSkillUseCase {
       { workspaceId: command.workspaceId },
       'update-workspace-skill',
     );
-    await this.access.requireOwned(command.workspaceId);
+    await this.access.execute({ workspaceId: command.workspaceId });
     await this.mutate.execute(command);
     return this.find.execute(command);
   }

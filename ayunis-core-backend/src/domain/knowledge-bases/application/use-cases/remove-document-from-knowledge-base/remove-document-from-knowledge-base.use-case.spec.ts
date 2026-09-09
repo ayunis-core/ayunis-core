@@ -1,150 +1,175 @@
+import { Test } from '@nestjs/testing';
+import { randomUUID, type UUID } from 'crypto';
+import {
+  DocumentNotInKnowledgeBaseError,
+  KnowledgeBaseNotFoundError,
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
+import { RemoveDocumentFromKnowledgeBaseCommand } from './remove-document-from-knowledge-base.command';
+import { RemoveDocumentFromKnowledgeBaseUseCase } from './remove-document-from-knowledge-base.use-case';
+
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () =>
-    (_target: unknown, _propertyName: string, descriptor: PropertyDescriptor) =>
+    (_target: object, _propertyName: string, descriptor: PropertyDescriptor) =>
       descriptor,
 }));
 
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
-import { RemoveDocumentFromKnowledgeBaseUseCase } from './remove-document-from-knowledge-base.use-case';
-import { RemoveDocumentFromKnowledgeBaseCommand } from './remove-document-from-knowledge-base.command';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import {
-  KnowledgeBaseNotFoundError,
-  DocumentNotInKnowledgeBaseError,
-} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
-import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { TextType } from 'src/domain/sources/domain/source-type.enum';
+const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
+const ORG_ID = '22222222-2222-2222-2222-222222222222' as UUID;
+const WORKSPACE_ID = '33333333-3333-3333-3333-333333333333' as UUID;
 
-describe('RemoveDocumentFromKnowledgeBaseUseCase', () => {
-  let useCase: RemoveDocumentFromKnowledgeBaseUseCase;
-  let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
-  let mockDeleteSourceUseCase: jest.Mocked<DeleteSourceUseCase>;
+function command(
+  knowledgeBaseId: UUID,
+  documentId: UUID,
+): RemoveDocumentFromKnowledgeBaseCommand {
+  return new RemoveDocumentFromKnowledgeBaseCommand({
+    knowledgeBaseId,
+    documentId,
+  });
+}
 
-  const userId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
-  const knowledgeBaseId = '33333333-3333-3333-3333-333333333333' as UUID;
-  const documentId = '44444444-4444-4444-4444-444444444444' as UUID;
+async function setup(knowledgeBase: KnowledgeBase) {
+  const documentId = randomUUID();
+  const repository = {
+    findById: jest.fn().mockResolvedValue(knowledgeBase),
+    findSourceByIdAndKnowledgeBaseId: jest
+      .fn()
+      .mockResolvedValue({ id: documentId }),
+  };
+  const writeAccess = {
+    requireWrite: jest.fn(),
+  } as unknown as jest.Mocked<KnowledgeBaseWriteAccessService>;
+  const deleteSource = { execute: jest.fn() };
+  const module = await Test.createTestingModule({
+    providers: [
+      RemoveDocumentFromKnowledgeBaseUseCase,
+      { provide: KnowledgeBaseRepository, useValue: repository },
+      { provide: KnowledgeBaseWriteAccessService, useValue: writeAccess },
+      { provide: DeleteSourceUseCase, useValue: deleteSource },
+    ],
+  }).compile();
+  return {
+    useCase: module.get(RemoveDocumentFromKnowledgeBaseUseCase),
+    repository,
+    writeAccess,
+    deleteSource,
+    documentId,
+  };
+}
 
-  beforeEach(async () => {
-    mockRepository = {
-      findById: jest.fn(),
-      findAllByUserId: jest.fn(),
-      findAllOwnedByUserId: jest.fn(),
-      findAllByWorkspaceId: jest.fn(),
-      findByIds: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-      assignSourceToKnowledgeBase: jest.fn(),
-      findSourcesByKnowledgeBaseId: jest.fn(),
-      findSourcesByKnowledgeBaseIds: jest.fn(),
-      findSourceByIdAndKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseIds: jest.fn(),
-      activate: jest.fn(),
-      deactivate: jest.fn(),
-      isActive: jest.fn(),
-      getActiveIds: jest.fn(),
-      activateForWorkspace: jest.fn(),
-      deactivateForWorkspace: jest.fn(),
-      getWorkspaceStates: jest.fn(),
-      findActiveAccessible: jest.fn(),
-      findPaginatedAccessible: jest.fn(),
-    };
+describe(RemoveDocumentFromKnowledgeBaseUseCase.name, () => {
+  it.each([
+    [
+      'personal',
+      () =>
+        new PersonalKnowledgeBase({
+          name: 'Permit regulations',
+          userId: USER_ID,
+          orgId: ORG_ID,
+        }),
+    ],
+    [
+      'workspace',
+      () =>
+        new WorkspaceKnowledgeBase({
+          name: 'Project regulations',
+          workspaceId: WORKSPACE_ID,
+          orgId: ORG_ID,
+        }),
+    ],
+  ])(
+    'removes a document from an authorized %s knowledge base by entity id',
+    async (_scope, makeKnowledgeBase) => {
+      const knowledgeBase = makeKnowledgeBase();
+      const { useCase, deleteSource, documentId } = await setup(knowledgeBase);
 
-    mockDeleteSourceUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<DeleteSourceUseCase>;
+      await expect(
+        useCase.execute(command(knowledgeBase.id, documentId)),
+      ).resolves.toBeUndefined();
+      expect(deleteSource.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceId: documentId,
+          orgId: knowledgeBase.orgId,
+        }),
+      );
+    },
+  );
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RemoveDocumentFromKnowledgeBaseUseCase,
-        { provide: KnowledgeBaseRepository, useValue: mockRepository },
-        {
-          provide: DeleteSourceUseCase,
-          useValue: mockDeleteSourceUseCase,
-        },
-      ],
-    }).compile();
+  it('does not inspect or delete a document when owner authorization is denied', async () => {
+    const knowledgeBase = new PersonalKnowledgeBase({
+      name: 'Shared regulations',
+      userId: randomUUID(),
+      orgId: ORG_ID,
+    });
+    const { useCase, repository, writeAccess, deleteSource, documentId } =
+      await setup(knowledgeBase);
+    writeAccess.requireWrite.mockRejectedValue(
+      new KnowledgeBaseNotFoundError(knowledgeBase.id),
+    );
 
-    useCase = module.get(RemoveDocumentFromKnowledgeBaseUseCase);
+    await expect(
+      useCase.execute(command(knowledgeBase.id, documentId)),
+    ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
+    expect(repository.findSourceByIdAndKnowledgeBaseId).not.toHaveBeenCalled();
+    expect(deleteSource.execute).not.toHaveBeenCalled();
   });
 
-  it('should delete the source when it belongs to the knowledge base', async () => {
-    const knowledgeBase = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Stadtratsprotokolle 2025',
-      orgId,
-      userId,
+  it('keeps document membership scoped to the persisted knowledge base', async () => {
+    const knowledgeBase = new WorkspaceKnowledgeBase({
+      name: 'Project regulations',
+      workspaceId: WORKSPACE_ID,
+      orgId: ORG_ID,
     });
-    mockRepository.findById.mockResolvedValue(knowledgeBase);
+    const { useCase, repository, deleteSource, documentId } =
+      await setup(knowledgeBase);
+    repository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(null);
 
-    const source = new UrlSource({
-      id: documentId,
-      url: 'https://stadt.de/protokoll',
-      name: 'Protokoll März 2025',
-      type: TextType.WEB,
-    });
-    mockRepository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(source);
-    mockDeleteSourceUseCase.execute.mockResolvedValue(undefined);
-
-    const command = new RemoveDocumentFromKnowledgeBaseCommand({
-      knowledgeBaseId,
-      documentId,
-      userId,
-    });
-
-    await useCase.execute(command);
-
-    expect(mockDeleteSourceUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ sourceId: documentId, orgId }),
-    );
+    await expect(
+      useCase.execute(command(knowledgeBase.id, documentId)),
+    ).rejects.toBeInstanceOf(DocumentNotInKnowledgeBaseError);
+    expect(deleteSource.execute).not.toHaveBeenCalled();
   });
 
-  it('should throw DocumentNotInKnowledgeBaseError when document is not in the KB', async () => {
+  it('returns not found without inspecting the document when the entity does not exist', async () => {
     const knowledgeBase = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Stadtratsprotokolle 2025',
-      orgId,
-      userId,
+      name: 'Permit regulations',
+      userId: USER_ID,
+      orgId: ORG_ID,
     });
-    mockRepository.findById.mockResolvedValue(knowledgeBase);
-    mockRepository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(null);
+    const { useCase, repository, writeAccess, deleteSource, documentId } =
+      await setup(knowledgeBase);
+    repository.findById.mockResolvedValue(null);
 
-    const command = new RemoveDocumentFromKnowledgeBaseCommand({
-      knowledgeBaseId,
-      documentId,
-      userId,
-    });
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      DocumentNotInKnowledgeBaseError,
-    );
-    expect(mockDeleteSourceUseCase.execute).not.toHaveBeenCalled();
+    await expect(
+      useCase.execute(command(knowledgeBase.id, documentId)),
+    ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
+    expect(writeAccess.requireWrite).not.toHaveBeenCalled();
+    expect(repository.findSourceByIdAndKnowledgeBaseId).not.toHaveBeenCalled();
+    expect(deleteSource.execute).not.toHaveBeenCalled();
   });
 
-  it('should throw KnowledgeBaseNotFoundError when KB does not belong to user', async () => {
-    const otherUserId = '99999999-9999-9999-9999-999999999999' as UUID;
-    const knowledgeBase = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Anderer Benutzer KB',
-      orgId,
-      userId: otherUserId,
+  it('does not inspect or delete a cross-organization document', async () => {
+    const knowledgeBase = new WorkspaceKnowledgeBase({
+      name: 'Foreign project regulations',
+      workspaceId: WORKSPACE_ID,
+      orgId: randomUUID(),
     });
-    mockRepository.findById.mockResolvedValue(knowledgeBase);
-
-    const command = new RemoveDocumentFromKnowledgeBaseCommand({
-      knowledgeBaseId,
-      documentId,
-      userId,
-    });
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      KnowledgeBaseNotFoundError,
+    const { useCase, repository, writeAccess, deleteSource, documentId } =
+      await setup(knowledgeBase);
+    writeAccess.requireWrite.mockRejectedValue(
+      new KnowledgeBaseNotFoundError(knowledgeBase.id),
     );
+
+    await expect(
+      useCase.execute(command(knowledgeBase.id, documentId)),
+    ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
+    expect(repository.findSourceByIdAndKnowledgeBaseId).not.toHaveBeenCalled();
+    expect(deleteSource.execute).not.toHaveBeenCalled();
   });
 });

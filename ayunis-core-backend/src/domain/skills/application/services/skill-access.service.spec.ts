@@ -3,6 +3,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { SkillAccessService } from './skill-access.service';
+import { SkillAuthorizationService } from './skill-authorization.service';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -52,6 +53,10 @@ describe('SkillAccessService', () => {
         {
           provide: FindShareByEntityUseCase,
           useValue: { execute: jest.fn() },
+        },
+        {
+          provide: SkillAuthorizationService,
+          useValue: { requireExecution: jest.fn() },
         },
         {
           provide: ContextService,

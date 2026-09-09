@@ -68,11 +68,14 @@ describe(KnowledgeBaseWriteAccessService.name, () => {
       workspaceId: workspace.workspaceId,
     });
   });
-  it('preserves workspace access denial', async () => {
+  it('hides workspace access denial behind resource not found', async () => {
     const { policy, workspace, workspaceAccess } = setup();
-    const error = new WorkspaceNotFoundError(workspace.workspaceId);
-    workspaceAccess.execute.mockRejectedValue(error);
-    await expect(policy.requireWrite(workspace)).rejects.toBe(error);
+    workspaceAccess.execute.mockRejectedValue(
+      new WorkspaceNotFoundError(workspace.workspaceId),
+    );
+    await expect(policy.requireWrite(workspace)).rejects.toBeInstanceOf(
+      KnowledgeBaseNotFoundError,
+    );
   });
   it('rejects cross-organization ownership before delegation', async () => {
     const { policy, workspace, workspaceAccess } = setup();

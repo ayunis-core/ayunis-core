@@ -2,11 +2,20 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getWorkspaceContextControllerListSkillsQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import type { WorkspaceDocumentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  getKnowledgeBasesControllerFindAllQueryKey,
+  getWorkspaceContextControllerListSkillsQueryKey,
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { KnowledgeBaseDocumentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  personalKnowledgeBaseListParams,
+  workspaceKnowledgeBaseListParams,
+} from '@/shared/api/knowledge-base-scopes';
 import { useWorkspaceContextActions } from './useWorkspaceContextActions';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
+import { useWorkspaceKnowledgeBaseActions } from './useWorkspaceKnowledgeBaseActions';
 import { useWorkspaceKnowledgeBaseDocuments } from './useWorkspaceKnowledgeBaseDocuments';
+import { useWorkspaceKnowledgeBases } from './useWorkspaceKnowledgeBases';
 
 const { request, showError, invalidate } = vi.hoisted(() => ({
   request: vi.fn(),
@@ -14,7 +23,11 @@ const { request, showError, invalidate } = vi.hoisted(() => ({
   invalidate: vi.fn(),
 }));
 vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
-vi.mock('@/shared/lib/toast', () => ({ showError }));
+vi.mock('@/shared/lib/toast', () => ({
+  showError,
+  showSuccess: vi.fn(),
+  showInfo: vi.fn(),
+}));
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate }),
 }));
@@ -45,35 +58,120 @@ afterEach(() => {
 });
 
 describe('workspace resource regressions', () => {
-  it.each(['skill', 'knowledge-base'])(
-    'surfaces failed %s creation',
-    async (kind) => {
-      request.mockRejectedValue(new Error('Request rejected'));
-      const { wrapper } = setup();
-      const { result } = renderHook(
-        () => useWorkspaceContextActions('project'),
-        { wrapper },
-      );
-      await act(async () => {
-        const promise =
-          kind === 'skill'
-            ? result.current.createSkill({
-                name: 'Permit review',
-                shortDescription: 'Check permits',
-                instructions: 'Check regulations.',
-              })
-            : result.current.createKnowledgeBase({
-                name: 'Regulations',
-                description: 'Building regulations',
-              });
-        await expect(promise).rejects.toThrow('Request rejected');
-      });
-      expect(showError).toHaveBeenCalledWith('create.error');
-      expect(request).toHaveBeenCalledOnce();
-    },
-  );
+  it('creates workspace knowledge bases through the canonical owner-scoped endpoint', async () => {
+    request.mockResolvedValue({ id: 'knowledge' });
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => useWorkspaceKnowledgeBaseActions('project'),
+      { wrapper },
+    );
 
-  it.each(['skill activation', 'skill pin', 'knowledge activation'])(
+    await act(() =>
+      result.current.createKnowledgeBase({
+        name: 'Regulations',
+        description: 'Building regulations',
+      }),
+    );
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/knowledge-bases',
+        method: 'POST',
+        data: {
+          ownerType: 'workspace',
+          workspaceId: 'project',
+          name: 'Regulations',
+          description: 'Building regulations',
+        },
+      }),
+    );
+  });
+
+  it('updates workspace knowledge bases by entity ID through the canonical endpoint', async () => {
+    request.mockResolvedValue({ id: 'knowledge' });
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => useWorkspaceKnowledgeBaseActions('project'),
+      { wrapper },
+    );
+
+    await act(() =>
+      result.current.updateKnowledgeBase('knowledge', {
+        name: 'Updated regulations',
+        description: 'Updated reference',
+      }),
+    );
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/knowledge-bases/knowledge',
+        method: 'PATCH',
+        data: {
+          name: 'Updated regulations',
+          description: 'Updated reference',
+        },
+      }),
+    );
+  });
+
+  it('sets workspace knowledge-base activation by entity ID', async () => {
+    request.mockResolvedValue({ id: 'knowledge' });
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => useWorkspaceKnowledgeBaseActions('project'),
+      { wrapper },
+    );
+
+    act(() =>
+      result.current.setKnowledgeBaseActive({
+        knowledgeBaseId: 'knowledge',
+        isActive: false,
+      }),
+    );
+
+    await waitFor(() =>
+      expect(request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: '/knowledge-bases/knowledge/activation',
+          method: 'PATCH',
+          data: { isActive: false },
+        }),
+      ),
+    );
+  });
+
+  it('lists a paginated workspace scope through the canonical endpoint', async () => {
+    request.mockResolvedValue({
+      data: [{ id: 'knowledge', name: 'Regulations' }],
+      pagination: { limit: 20, offset: 20, total: 42 },
+    });
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => useWorkspaceKnowledgeBases('project', { limit: 20, offset: 20 }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/knowledge-bases',
+        method: 'GET',
+        params: {
+          ownerType: 'workspace',
+          workspaceId: 'project',
+          limit: 20,
+          offset: 20,
+        },
+      }),
+    );
+    expect(result.current.knowledgeBases).toEqual([
+      expect.objectContaining({ id: 'knowledge' }),
+    ]);
+    expect(result.current.pagination?.total).toBe(42);
+  });
+
+  it.each(['skill activation', 'skill pin'])(
     'surfaces failed %s changes',
     async (kind) => {
       request.mockRejectedValue(new Error('Request rejected'));
@@ -85,68 +183,105 @@ describe('workspace resource regressions', () => {
       act(() => {
         if (kind === 'skill activation')
           result.current.setSkillActive({ skillId: 'skill', isActive: false });
-        else if (kind === 'skill pin')
-          result.current.setSkillPinned({ skillId: 'skill', isPinned: true });
         else
-          result.current.setKnowledgeBaseActive({
-            knowledgeBaseId: 'knowledge',
-            isActive: false,
-          });
+          result.current.setSkillPinned({ skillId: 'skill', isPinned: true });
       });
       await waitFor(() => expect(showError).toHaveBeenCalledOnce());
     },
   );
 
-  it('invalidates cached list pages without expiring other projects', async () => {
+  it('invalidates canonical workspace caches without expiring other scopes', async () => {
     const { client, wrapper } = setup();
-    const key = getWorkspaceContextControllerListSkillsQueryKey('project', {
-      limit: 20,
-      offset: 20,
-    });
-    const otherKey =
-      getWorkspaceContextControllerListSkillsQueryKey('other-project');
-    client.setQueryData(key, { data: [] });
-    client.setQueryData(otherKey, { data: [] });
+    const skillsKey = getWorkspaceContextControllerListSkillsQueryKey(
+      'project',
+      { limit: 20, offset: 20 },
+    );
+    const workspaceKey = getKnowledgeBasesControllerFindAllQueryKey(
+      workspaceKnowledgeBaseListParams('project', {
+        limit: 20,
+        offset: 20,
+      }),
+    );
+    const otherWorkspaceKey = getKnowledgeBasesControllerFindAllQueryKey(
+      workspaceKnowledgeBaseListParams('other-project'),
+    );
+    const personalKey = getKnowledgeBasesControllerFindAllQueryKey(
+      personalKnowledgeBaseListParams,
+    );
+    client.setQueryData(skillsKey, { data: [] });
+    client.setQueryData(workspaceKey, { data: [] });
+    client.setQueryData(otherWorkspaceKey, { data: [] });
+    client.setQueryData(personalKey, { data: [] });
     const { result } = renderHook(
       () => useInvalidateWorkspaceResources('project'),
       { wrapper },
     );
+
     await act(() => result.current());
-    expect(client.getQueryState(key)?.isInvalidated).toBe(true);
-    expect(client.getQueryState(otherKey)?.isInvalidated).toBe(false);
+
+    expect(client.getQueryState(skillsKey)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(workspaceKey)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(otherWorkspaceKey)?.isInvalidated).toBe(false);
+    expect(client.getQueryState(personalKey)?.isInvalidated).toBe(false);
     const filter = invalidate.mock.calls[0][0].filter;
     expect(filter({ params: { workspaceId: 'project' } })).toBe(true);
     expect(filter({ params: { workspaceId: 'other-project' } })).toBe(false);
   });
 
-  it('polls processing documents and stops after completion', async () => {
+  it('polls canonical document responses and stops after completion', async () => {
     vi.useFakeTimers();
     const document = {
       id: 'document',
       name: 'Building regulations.pdf',
       status: 'processing',
-      processingError: null,
-    } as WorkspaceDocumentResponseDto;
-    request.mockResolvedValue([document]);
+      processingError: undefined,
+    } as KnowledgeBaseDocumentResponseDto;
+    request.mockResolvedValue({ data: [document] });
     const { wrapper } = setup();
     const { result } = renderHook(
       () =>
-        useWorkspaceKnowledgeBaseDocuments('project', 'knowledge', [document]),
+        useWorkspaceKnowledgeBaseDocuments('project', 'knowledge', {
+          data: [document],
+        }),
       { wrapper },
     );
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1);
-    });
+
+    await act(() => vi.advanceTimersByTimeAsync(1));
     expect(result.current.documents[0].status).toBe('processing');
-    request.mockResolvedValue([{ ...document, status: 'ready' }]);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(5100);
-    });
+    request.mockResolvedValue({ data: [{ ...document, status: 'ready' }] });
+    await act(() => vi.advanceTimersByTimeAsync(5100));
     expect(result.current.documents[0].status).toBe('ready');
     const calls = request.mock.calls.length;
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(15000);
-    });
+    await act(() => vi.advanceTimersByTimeAsync(15000));
     expect(request).toHaveBeenCalledTimes(calls);
+  });
+
+  it('uses canonical entity-id document operations and enables URL sources', async () => {
+    const document = {
+      id: 'document',
+      name: 'Building regulations.pdf',
+      status: 'ready',
+      processingError: undefined,
+    } as KnowledgeBaseDocumentResponseDto;
+    request.mockResolvedValue({ data: [document] });
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () =>
+        useWorkspaceKnowledgeBaseDocuments('project', 'knowledge', {
+          data: [document],
+        }),
+      { wrapper },
+    );
+
+    await act(() => result.current.addUrlAsync?.('https://example.com', 1));
+
+    expect(result.current.documents).toEqual([document]);
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/knowledge-bases/knowledge/urls',
+        method: 'POST',
+        data: { url: 'https://example.com', maxDepth: 1 },
+      }),
+    );
   });
 });

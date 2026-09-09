@@ -1,5 +1,4 @@
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
-import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import type { UUID } from 'crypto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -58,35 +57,6 @@ describe(WorkspaceContextDtoMapper.name, () => {
         workspaceId,
         isActive: true,
         isPinned: false,
-      },
-    ]);
-  });
-
-  it('maps workspace-owned knowledge-base pages', () => {
-    const knowledgeBase = new WorkspaceKnowledgeBase({
-      id: '323e4567-e89b-12d3-a456-426614174000',
-      name: 'Council Documents',
-      description: 'Municipal council documents',
-      orgId: '423e4567-e89b-12d3-a456-426614174000',
-      workspaceId,
-    });
-
-    const result = mapper.toKnowledgeBaseListDto(
-      new Paginated({
-        data: [{ ...knowledgeBase, documentCount: 12, isActive: true }],
-        limit: 20,
-        offset: 0,
-        total: 1,
-      }),
-    );
-
-    expect(result.data).toEqual([
-      {
-        id: knowledgeBase.id,
-        name: knowledgeBase.name,
-        description: knowledgeBase.description,
-        documentCount: 12,
-        isActive: true,
       },
     ]);
   });

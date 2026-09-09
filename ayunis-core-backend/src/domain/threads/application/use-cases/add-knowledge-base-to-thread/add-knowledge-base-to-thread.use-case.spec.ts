@@ -7,7 +7,6 @@ import { AddKnowledgeBaseToThreadUseCase } from './add-knowledge-base-to-thread.
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { FindAccessibleKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
@@ -19,7 +18,7 @@ import type { UUID } from 'crypto';
 describe('AddKnowledgeBaseToThreadUseCase', () => {
   let useCase: AddKnowledgeBaseToThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
-  let knowledgeBaseAccessService: jest.Mocked<KnowledgeBaseAccessService>;
+  let findAccessibleKnowledgeBaseUseCase: jest.Mocked<FindAccessibleKnowledgeBaseUseCase>;
   let mockContextService: { get: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -35,8 +34,8 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       addKnowledgeBaseAssignment: jest.fn(),
     };
 
-    const mockKnowledgeBaseAccessService = {
-      findAccessibleKnowledgeBase: jest.fn(),
+    const mockFindAccessibleKnowledgeBaseUseCase = {
+      execute: jest.fn(),
     };
 
     mockContextService = {
@@ -50,21 +49,20 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddKnowledgeBaseToThreadUseCase,
-        FindAccessibleKnowledgeBaseUseCase,
         {
           provide: FindKnowledgeBaseForThreadUseCase,
           useValue: {
             execute: jest.fn(({ knowledgeBaseId }) =>
-              mockKnowledgeBaseAccessService.findAccessibleKnowledgeBase(
+              mockFindAccessibleKnowledgeBaseUseCase.execute({
                 knowledgeBaseId,
-              ),
+              }),
             ),
           },
         },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
-          provide: KnowledgeBaseAccessService,
-          useValue: mockKnowledgeBaseAccessService,
+          provide: FindAccessibleKnowledgeBaseUseCase,
+          useValue: mockFindAccessibleKnowledgeBaseUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -72,7 +70,9 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
 
     useCase = module.get(AddKnowledgeBaseToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-    knowledgeBaseAccessService = module.get(KnowledgeBaseAccessService);
+    findAccessibleKnowledgeBaseUseCase = module.get(
+      FindAccessibleKnowledgeBaseUseCase,
+    );
   });
 
   afterEach(() => {
@@ -95,9 +95,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
@@ -128,9 +126,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(
@@ -169,9 +165,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 
@@ -200,9 +194,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(
@@ -242,9 +234,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
-      knowledgeBase,
-    );
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
 
     const command = new AddKnowledgeBaseToThreadCommand(
       mockThreadId,
@@ -274,7 +264,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockRejectedValue(
+    findAccessibleKnowledgeBaseUseCase.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(mockKbId),
     );
 
@@ -301,7 +291,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockResolvedValue(
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(
       foreignKnowledgeBase,
     );
 
@@ -321,7 +311,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       knowledgeBaseAssignments: [],
     });
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseAccessService.findAccessibleKnowledgeBase.mockRejectedValue(
+    findAccessibleKnowledgeBaseUseCase.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(mockKbId),
     );
 

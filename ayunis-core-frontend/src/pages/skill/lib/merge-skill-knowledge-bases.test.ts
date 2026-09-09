@@ -5,9 +5,11 @@ import { mergeSkillKnowledgeBases } from './merge-skill-knowledge-bases';
 const makeKb = (
   overrides: Partial<KnowledgeBaseResponseDto> & { id: string; name: string },
 ): KnowledgeBaseResponseDto => ({
+  ownerType: 'personal',
   description: 'Articles and guides from the help center',
   createdAt: '2026-01-15T10:00:00.000Z',
   updatedAt: '2026-01-20T10:00:00.000Z',
+  documentCount: 0,
   isActive: false,
   ...overrides,
 });

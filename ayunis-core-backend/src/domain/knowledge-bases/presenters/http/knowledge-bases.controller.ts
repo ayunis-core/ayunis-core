@@ -12,9 +12,9 @@ import {
   UseInterceptors,
   UploadedFile,
   Logger,
+  Query,
 } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import {
   ApiTags,
   ApiOperation,
@@ -27,19 +27,18 @@ import {
 } from '@nestjs/swagger';
 import * as fs from 'fs';
 import {
-  CurrentUser,
-  UserProperty,
-} from 'src/iam/authentication/application/decorators/current-user.decorator';
-import {
   cleanupTempUploadFile,
   createDocumentUploadInterceptor,
   resolveDocumentUploadMimeType,
   type UploadedDocument,
 } from 'src/common/http/document-upload';
 
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { CreateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
 import { CreateKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.command';
+import { FindKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
+import { FindKnowledgeBaseQuery } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.query';
+import { ListKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-bases/list-knowledge-bases.use-case';
+import { ListKnowledgeBasesQuery } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-bases/list-knowledge-bases.query';
 import { SetKnowledgeBaseActivationUseCase } from 'src/domain/knowledge-bases/application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.use-case';
 import { SetKnowledgeBaseActivationCommand } from 'src/domain/knowledge-bases/application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.command';
 import { UpdateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
@@ -58,6 +57,8 @@ import { MissingFileError } from 'src/domain/knowledge-bases/application/knowled
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
+import { ListKnowledgeBasesQueryDto } from './dto/list-knowledge-bases-query.dto';
+import { toKnowledgeBaseOwner } from './dto/knowledge-base-owner.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
 import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
 import { SetKnowledgeBaseActivationRequestDto } from './dto/set-knowledge-base-activation.request-dto';
@@ -109,6 +110,8 @@ export class KnowledgeBasesController {
 
   constructor(
     private readonly createKnowledgeBaseUseCase: CreateKnowledgeBaseUseCase,
+    private readonly listKnowledgeBasesUseCase: ListKnowledgeBasesUseCase,
+    private readonly findKnowledgeBaseUseCase: FindKnowledgeBaseUseCase,
     private readonly setKnowledgeBaseActivationUseCase: SetKnowledgeBaseActivationUseCase,
     private readonly updateKnowledgeBaseUseCase: UpdateKnowledgeBaseUseCase,
     private readonly deleteKnowledgeBaseUseCase: DeleteKnowledgeBaseUseCase,
@@ -116,7 +119,6 @@ export class KnowledgeBasesController {
     private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
@@ -131,22 +133,20 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   async create(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: CreateKnowledgeBaseDto,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log({ name: dto.name, userId }, 'create');
+    this.logger.log({ name: dto.name, ownerType: dto.ownerType }, 'create');
     const knowledgeBase = await this.createKnowledgeBaseUseCase.execute(
       new CreateKnowledgeBaseCommand({
         name: dto.name,
         description: dto.description,
-        userId,
-        orgId,
+        owner: toKnowledgeBaseOwner(dto),
       }),
     );
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
       isActive: true,
       isShared: false,
+      documentCount: 0,
     });
   }
 
@@ -160,17 +160,26 @@ export class KnowledgeBasesController {
     type: KnowledgeBaseListResponseDto,
   })
   async findAll(
-    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Query() query: ListKnowledgeBasesQueryDto,
   ): Promise<KnowledgeBaseListResponseDto> {
-    this.logger.log({ userId }, 'findAll');
-    const results = await this.knowledgeBaseAccessService.findAllAccessible();
+    this.logger.log({ ownerType: query.ownerType }, 'findAll');
+    const page = await this.listKnowledgeBasesUseCase.execute(
+      new ListKnowledgeBasesQuery({
+        owner: toKnowledgeBaseOwner(query),
+        search: query.search,
+        limit: query.limit,
+        offset: query.offset,
+      }),
+    );
     return {
-      data: results.map(({ knowledgeBase, isActive, isShared }) =>
-        this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
-          isActive,
-          isShared,
-        }),
+      data: page.data.map(({ knowledgeBase, ...context }) =>
+        this.knowledgeBaseDtoMapper.toDto(knowledgeBase, context),
       ),
+      pagination: {
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
+      },
     };
   }
 
@@ -192,12 +201,11 @@ export class KnowledgeBasesController {
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseResponseDto> {
     this.logger.log({ id }, 'findOne');
-    const { knowledgeBase, isActive, isShared } =
-      await this.knowledgeBaseAccessService.findOneAccessible(id);
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
-      isActive,
-      isShared,
-    });
+    const { knowledgeBase, ...context } =
+      await this.findKnowledgeBaseUseCase.execute(
+        new FindKnowledgeBaseQuery(id),
+      );
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, context);
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -218,25 +226,18 @@ export class KnowledgeBasesController {
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   async update(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateKnowledgeBaseDto,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log({ id, name: dto.name, userId }, 'update');
-    const knowledgeBase = await this.updateKnowledgeBaseUseCase.execute(
+    this.logger.log({ id, name: dto.name }, 'update');
+    await this.updateKnowledgeBaseUseCase.execute(
       new UpdateKnowledgeBaseCommand({
         knowledgeBaseId: id,
-        userId,
         name: dto.name,
         description: dto.description,
       }),
     );
-    const { isActive } =
-      await this.knowledgeBaseAccessService.findOneAccessible(id);
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
-      isActive,
-      isShared: false,
-    });
+    return this.findOne(id);
   }
 
   @Patch(':id/activation')
@@ -250,19 +251,13 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   async setActivation(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: SetKnowledgeBaseActivationRequestDto,
   ): Promise<KnowledgeBaseResponseDto> {
-    const knowledgeBase = await this.setKnowledgeBaseActivationUseCase.execute(
+    await this.setKnowledgeBaseActivationUseCase.execute(
       new SetKnowledgeBaseActivationCommand(id, dto.isActive),
     );
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
-      isActive: dto.isActive,
-      isShared:
-        knowledgeBase instanceof PersonalKnowledgeBase &&
-        knowledgeBase.userId !== userId,
-    });
+    return this.findOne(id);
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -280,13 +275,10 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Param('id', ParseUUIDPipe) id: UUID,
-  ): Promise<void> {
-    this.logger.log({ id, userId }, 'delete');
+  async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    this.logger.log({ id }, 'delete');
     await this.deleteKnowledgeBaseUseCase.execute(
-      new DeleteKnowledgeBaseCommand({ knowledgeBaseId: id, userId }),
+      new DeleteKnowledgeBaseCommand({ knowledgeBaseId: id }),
     );
   }
 
@@ -307,15 +299,12 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   async listDocuments(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseDocumentListResponseDto> {
-    this.logger.log({ knowledgeBaseId: id, userId }, 'listDocuments');
-    await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(id);
+    this.logger.log({ knowledgeBaseId: id }, 'listDocuments');
     const sources = await this.listDocumentsUseCase.execute(
       new ListKnowledgeBaseDocumentsQuery(id),
     );
-
     return {
       data: sources.map((source) =>
         this.knowledgeBaseDtoMapper.toDocumentDto(source),
@@ -409,7 +398,6 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   async addUrl(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: AddUrlToKnowledgeBaseDto,
   ): Promise<KnowledgeBaseDocumentResponseDto> {
@@ -424,7 +412,6 @@ export class KnowledgeBasesController {
     const source = await this.addUrlUseCase.execute(
       new AddUrlToKnowledgeBaseCommand({
         knowledgeBaseId: id,
-        userId,
         url: dto.url,
         maxDepth: dto.maxDepth,
       }),
@@ -458,7 +445,6 @@ export class KnowledgeBasesController {
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeDocument(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @Param('documentId', ParseUUIDPipe) documentId: UUID,
   ): Promise<void> {
@@ -466,7 +452,6 @@ export class KnowledgeBasesController {
       {
         knowledgeBaseId: id,
         documentId,
-        userId,
       },
       'removeDocument',
     );
@@ -474,7 +459,6 @@ export class KnowledgeBasesController {
       new RemoveDocumentFromKnowledgeBaseCommand({
         knowledgeBaseId: id,
         documentId,
-        userId,
       }),
     );
   }

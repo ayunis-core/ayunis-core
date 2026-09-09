@@ -1,60 +1,51 @@
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
-import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Transactional } from '@nestjs-cls/transactional';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
-import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
-import { GetSourcesByKnowledgeBaseIdUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
-import { GetSourcesByKnowledgeBaseIdQuery } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.query';
-import { DeleteKnowledgeBaseCommand } from './delete-knowledge-base.command';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
+import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
+import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
+import { GetSourcesByKnowledgeBaseIdQuery } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.query';
+import { GetSourcesByKnowledgeBaseIdUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
+import { DeleteKnowledgeBaseCommand } from './delete-knowledge-base.command';
 
 @Injectable()
 export class DeleteKnowledgeBaseUseCase {
   private readonly logger = new Logger(DeleteKnowledgeBaseUseCase.name);
 
   constructor(
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
-    private readonly getSourcesByKnowledgeBaseIdUseCase: GetSourcesByKnowledgeBaseIdUseCase,
-    private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
+    private readonly repository: KnowledgeBaseRepository,
+    private readonly writeAccess: KnowledgeBaseWriteAccessService,
+    private readonly getSources: GetSourcesByKnowledgeBaseIdUseCase,
+    private readonly deleteSources: DeleteSourcesUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   @Transactional()
   async execute(command: DeleteKnowledgeBaseCommand): Promise<void> {
     this.logger.log(
-      {
-        knowledgeBaseId: command.knowledgeBaseId,
-        userId: command.userId,
-      },
+      { knowledgeBaseId: command.knowledgeBaseId },
       'Deleting knowledge base',
     );
-
-    const existing = await this.knowledgeBaseRepository.findById(
-      command.knowledgeBaseId,
-    );
-    const hasExpectedOwner = command.workspaceId
-      ? existing instanceof WorkspaceKnowledgeBase &&
-        existing.workspaceId === command.workspaceId
-      : existing instanceof PersonalKnowledgeBase &&
-        existing.userId === command.userId;
-    if (!existing || !hasExpectedOwner) {
+    const existing = await this.repository.findById(command.knowledgeBaseId);
+    if (!existing) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
+    await this.writeAccess.requireWrite(existing);
 
-    const sources = await this.getSourcesByKnowledgeBaseIdUseCase.execute(
-      new GetSourcesByKnowledgeBaseIdQuery(command.knowledgeBaseId),
+    const sources = await this.getSources.execute(
+      new GetSourcesByKnowledgeBaseIdQuery(existing.id),
     );
-    const sourceIds = sources.map((s) => s.id);
-    await this.deleteSourcesUseCase.execute(
-      new DeleteSourcesCommand(sourceIds, existing.orgId),
+    await this.deleteSources.execute(
+      new DeleteSourcesCommand(
+        sources.map(({ id }) => id),
+        existing.orgId,
+      ),
     );
-
-    await this.knowledgeBaseRepository.delete(existing);
+    await this.repository.delete(existing);
   }
 }

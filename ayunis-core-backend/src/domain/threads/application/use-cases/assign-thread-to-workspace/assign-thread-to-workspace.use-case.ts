@@ -3,8 +3,7 @@ import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
-import { FindWorkspaceQuery } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.query';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
 import { AssignThreadToWorkspaceCommand } from './assign-thread-to-workspace.command';
@@ -16,7 +15,7 @@ export class AssignThreadToWorkspaceUseCase {
   constructor(
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
-    private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
+    private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -35,9 +34,9 @@ export class AssignThreadToWorkspaceUseCase {
     // is what stops a chat being filed into someone else's workspace — the FK
     // alone would happily accept it.
     if (command.workspaceId !== null) {
-      await this.findWorkspaceUseCase.execute(
-        new FindWorkspaceQuery(command.workspaceId),
-      );
+      await this.workspaceReadAccess.execute({
+        workspaceId: command.workspaceId,
+      });
     }
 
     // The user-scoped update throws ThreadNotFoundError itself, so no

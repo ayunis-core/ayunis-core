@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
@@ -17,21 +17,24 @@ const WORKSPACE_ID = '33333333-3333-4333-8333-333333333333' as UUID;
 describe('AssignThreadToWorkspaceUseCase', () => {
   let useCase: AssignThreadToWorkspaceUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
-  let findWorkspaceUseCase: jest.Mocked<FindWorkspaceUseCase>;
+  let workspaceReadAccess: jest.Mocked<AssertWorkspaceReadAccessUseCase>;
 
   async function setup(context: { userId?: UUID } = { userId: USER_ID }) {
     threadsRepository = {
       assignToWorkspace: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ThreadsRepository>;
-    findWorkspaceUseCase = {
+    workspaceReadAccess = {
       execute: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<FindWorkspaceUseCase>;
+    } as unknown as jest.Mocked<AssertWorkspaceReadAccessUseCase>;
 
     const module = await Test.createTestingModule({
       providers: [
         AssignThreadToWorkspaceUseCase,
         { provide: ThreadsRepository, useValue: threadsRepository },
-        { provide: FindWorkspaceUseCase, useValue: findWorkspaceUseCase },
+        {
+          provide: AssertWorkspaceReadAccessUseCase,
+          useValue: workspaceReadAccess,
+        },
         {
           provide: ContextService,
           useValue: { get: jest.fn(() => context.userId) },
@@ -72,7 +75,7 @@ describe('AssignThreadToWorkspaceUseCase', () => {
       }),
     );
 
-    expect(findWorkspaceUseCase.execute).not.toHaveBeenCalled();
+    expect(workspaceReadAccess.execute).not.toHaveBeenCalled();
     expect(threadsRepository.assignToWorkspace).toHaveBeenCalledWith({
       threadId: THREAD_ID,
       userId: USER_ID,
@@ -81,7 +84,7 @@ describe('AssignThreadToWorkspaceUseCase', () => {
   });
 
   it('refuses a workspace the caller does not own', async () => {
-    findWorkspaceUseCase.execute.mockRejectedValue(
+    workspaceReadAccess.execute.mockRejectedValue(
       new WorkspaceNotFoundError(WORKSPACE_ID),
     );
 

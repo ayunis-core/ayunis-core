@@ -5,6 +5,8 @@ import {
   getKnowledgeBasesControllerFindAllQueryKey,
   knowledgeBasesControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export type CreateKnowledgeBaseData = {
@@ -19,16 +21,32 @@ export function useCreateKnowledgeBase() {
   const mutation = useMutation({
     mutationFn: (data: CreateKnowledgeBaseData) =>
       knowledgeBasesControllerCreate({
+        ownerType: 'personal',
         name: data.name,
         description: data.description ?? '',
       }),
-    onSuccess: () => showSuccess(t('create.success')),
-    onError: () => showError(t('create.error')),
-    onSettled: () => {
+    onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: getKnowledgeBasesControllerFindAllQueryKey(),
+        queryKey: getKnowledgeBasesControllerFindAllQueryKey(
+          personalKnowledgeBaseListParams,
+        ),
       });
       void router.invalidate();
+      showSuccess(t('create.success'));
+    },
+    onError: (error) => {
+      try {
+        const { code } = extractErrorData(error);
+        showError(
+          t(
+            code === 'VALIDATION_ERROR'
+              ? 'create.validationError'
+              : 'create.error',
+          ),
+        );
+      } catch {
+        showError(t('create.error'));
+      }
     },
   });
 

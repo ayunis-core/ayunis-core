@@ -24,6 +24,7 @@ import {
   useKnowledgeBasesControllerFindAll,
   useSkillsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 interface OnboardingStepItemProps {
   step: OnboardingStep;
@@ -46,9 +47,10 @@ export default function OnboardingStepItem({
   const navigate = useNavigate();
   const { launchTour, armReturn } = useOnboardingTour();
   const isAddDocumentsStep = step.id === 'addDocuments';
-  const { data: kbResponse } = useKnowledgeBasesControllerFindAll({
-    query: { enabled: isAddDocumentsStep && !locked },
-  });
+  const { data: kbResponse } = useKnowledgeBasesControllerFindAll(
+    personalKnowledgeBaseListParams,
+    { query: { enabled: isAddDocumentsStep && !locked } },
+  );
   const firstKnowledgeBase = kbResponse?.data[0];
 
   const isPinSkillStep = step.id === 'useSkillInChat';

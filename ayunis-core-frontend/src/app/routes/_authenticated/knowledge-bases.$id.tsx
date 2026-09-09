@@ -57,7 +57,17 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
     const knowledgeBase = await queryClient.fetchQuery(
       knowledgeBaseQueryOptions(id),
     );
-    // Only query shares and user teams if the user owns the KB (not shared)
+    if (knowledgeBase.ownerType !== 'personal') {
+      if (!knowledgeBase.workspaceId)
+        throw redirect({ to: '/knowledge-bases' });
+      throw redirect({
+        to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
+        params: {
+          workspaceId: knowledgeBase.workspaceId,
+          knowledgeBaseId: knowledgeBase.id,
+        },
+      });
+    }
     const shares = knowledgeBase.isShared
       ? []
       : await queryClient.fetchQuery(sharesQueryOptions(id));

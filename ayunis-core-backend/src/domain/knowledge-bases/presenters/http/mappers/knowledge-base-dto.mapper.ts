@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   TextSource,
@@ -12,16 +13,26 @@ import type { KnowledgeBaseDocumentResponseDto } from 'src/domain/knowledge-base
 export class KnowledgeBaseDtoMapper {
   toDto(
     entity: KnowledgeBase,
-    context: { isActive: boolean; isShared?: boolean },
+    context: {
+      isActive: boolean;
+      isShared?: boolean;
+      documentCount: number;
+    },
   ): KnowledgeBaseResponseDto {
     const dto: KnowledgeBaseResponseDto = {
       id: entity.id,
+      ownerType:
+        entity instanceof PersonalKnowledgeBase ? 'personal' : 'workspace',
       name: entity.name,
       description: entity.description,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       isActive: context.isActive,
+      documentCount: context.documentCount,
     };
+    if (!(entity instanceof PersonalKnowledgeBase)) {
+      dto.workspaceId = entity.workspaceId;
+    }
     if (context.isShared !== undefined) {
       dto.isShared = context.isShared;
     }

@@ -7,6 +7,7 @@ import {
   knowledgeBasesControllerSetActivation,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useSetKnowledgeBaseActivation() {
@@ -19,7 +20,9 @@ export function useSetKnowledgeBaseActivation() {
       await knowledgeBasesControllerSetActivation(id, { isActive }),
     onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({
-        queryKey: getKnowledgeBasesControllerFindAllQueryKey(),
+        queryKey: getKnowledgeBasesControllerFindAllQueryKey(
+          personalKnowledgeBaseListParams,
+        ),
       });
       void queryClient.invalidateQueries({
         queryKey: getKnowledgeBasesControllerFindOneQueryKey(id),

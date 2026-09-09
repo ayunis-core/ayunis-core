@@ -1,3 +1,4 @@
+/* eslint-disable playwright/no-conditional-in-test -- The parameterized cases use resource-specific API routes. */
 import { test, expect } from "../../src/fixtures/test";
 import { createProjectContextFixture } from "../../src/factories/workspace-context.factory";
 
@@ -14,7 +15,10 @@ for (const [kind, fixtureKey] of [
     });
     const id = fixture[fixtureKey].id;
     const detailPath = `/workspaces/${fixture.workspace.id}/${kind}/${id}`;
-    const deleteUrl = `**/api/workspaces/${fixture.workspace.id}/context/${kind}/${id}`;
+    const deleteUrl =
+      kind === "knowledge-bases"
+        ? `**/api/knowledge-bases/${id}`
+        : `**/api/workspaces/${fixture.workspace.id}/context/${kind}/${id}`;
     await page.goto(detailPath);
     await page.route(deleteUrl, async (route) => {
       if (route.request().method() !== "DELETE") return route.continue();

@@ -1,23 +1,17 @@
-import type { UUID } from 'crypto';
+import type { KnowledgeBaseOwner } from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
 
 export class CreateKnowledgeBaseCommand {
   public readonly name: string;
   public readonly description: string;
-  public readonly userId: UUID;
-  public readonly orgId: UUID;
-  public readonly workspaceId?: UUID;
+  public readonly owner: KnowledgeBaseOwner;
 
   constructor(params: {
     name: string;
     description?: string;
-    userId: UUID;
-    orgId: UUID;
-    workspaceId?: UUID;
+    owner: KnowledgeBaseOwner;
   }) {
     this.name = params.name;
     this.description = params.description ?? '';
-    this.userId = params.userId;
-    this.orgId = params.orgId;
-    this.workspaceId = params.workspaceId;
+    this.owner = params.owner;
   }
 }

@@ -4,14 +4,14 @@ import {
   WorkspaceNotFoundError,
   UnexpectedWorkspaceError,
 } from 'src/domain/workspaces/application/workspaces.errors';
-import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { SetWorkspaceSkillPinUseCase as Operation } from 'src/domain/skills/application/use-cases/set-workspace-skill-pin/set-workspace-skill-pin.use-case';
 import { FindWorkspaceSkillUseCase as FindSkill } from 'src/domain/skills/application/use-cases/find-workspace-skill/find-workspace-skill.use-case';
 async function setup() {
   const fixture = await workspaceOperationUseCaseFixture(
     SetWorkspaceSkillPinUseCase,
   );
-  const access = fixture.dependency(WorkspaceAccessService);
+  const access = fixture.dependency(AssertWorkspaceWriteAccessUseCase);
   const find = fixture.dependency(FindSkill);
   const operation = fixture.dependency(Operation);
   operation.execute.mockResolvedValue(fixture.skill);
@@ -33,12 +33,14 @@ describe(SetWorkspaceSkillPinUseCase.name, () => {
     await expect(useCase.execute(command)).resolves.toEqual(expected);
     expect(operation.execute).toHaveBeenCalledWith(command);
     expect(find.execute).toHaveBeenCalledWith(command);
-    expect(access.requireOwned).toHaveBeenCalledWith(command.workspaceId);
+    expect(access.execute).toHaveBeenCalledWith({
+      workspaceId: command.workspaceId,
+    });
   });
   it('does not execute the operation when workspace authorization fails', async () => {
     const { useCase, operation, command, access } = await setup();
     const error = new WorkspaceNotFoundError(command.workspaceId);
-    access.requireOwned.mockRejectedValue(error);
+    access.execute.mockRejectedValue(error);
     await expect(useCase.execute(command)).rejects.toBe(error);
     expect(operation.execute).not.toHaveBeenCalled();
   });

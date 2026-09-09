@@ -5,12 +5,12 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import type { KnowledgeBaseWithUserContext } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import type { KnowledgeBaseContext } from 'src/domain/knowledge-bases/application/models/knowledge-base-context';
 import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { FindAccessibleKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
 
 export type AccessibleKnowledgeBaseContext =
-  KnowledgeBaseWithUserContext<PersonalKnowledgeBase>;
+  KnowledgeBaseContext<PersonalKnowledgeBase>;
 
 @Injectable()
 export class GetAccessibleKnowledgeBaseContextsUseCase {
@@ -36,18 +36,20 @@ export class GetAccessibleKnowledgeBaseContextsUseCase {
       'Resolving knowledge-base access and activation',
     );
     if (ids.length === 0) return [];
-    const [knowledgeBases, activeIds] = await Promise.all([
+    const [knowledgeBases, activeIds, documentCounts] = await Promise.all([
       Promise.all(
         ids.map((knowledgeBaseId) =>
           this.findAccessible.execute({ knowledgeBaseId }),
         ),
       ),
       this.repository.getActiveIds(userId),
+      this.repository.countSourcesByKnowledgeBaseIds(ids),
     ]);
     return knowledgeBases.map((knowledgeBase) => ({
       knowledgeBase,
       isShared: knowledgeBase.userId !== userId,
       isActive: activeIds.has(knowledgeBase.id),
+      documentCount: documentCounts.get(knowledgeBase.id) ?? 0,
     }));
   }
 }

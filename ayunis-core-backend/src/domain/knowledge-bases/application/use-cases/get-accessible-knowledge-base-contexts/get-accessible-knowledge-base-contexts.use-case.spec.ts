@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
@@ -24,23 +24,29 @@ function setup() {
   const repository = {
     findById: jest.fn().mockResolvedValue(knowledgeBase),
     getActiveIds: jest.fn().mockResolvedValue(new Set()),
+    countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
   };
   const directShare = { execute: jest.fn().mockResolvedValue(null) };
   const skillShare = { execute: jest.fn().mockResolvedValue(false) };
   const context = {
     get: (key: keyof typeof principal) => principal[key],
   } as unknown as ContextService;
-  const access = new KnowledgeBaseAccessService(
+  const readAccess = new KnowledgeBaseReadAccessService(
     ...([
-      repository,
       directShare,
-      {},
       skillShare,
-      {},
+      { execute: jest.fn() },
+      { execute: jest.fn() },
       context,
-    ] as unknown as ConstructorParameters<typeof KnowledgeBaseAccessService>),
+    ] as unknown as ConstructorParameters<
+      typeof KnowledgeBaseReadAccessService
+    >),
   );
-  const find = new FindAccessibleKnowledgeBaseUseCase(access, context);
+  const find = new FindAccessibleKnowledgeBaseUseCase(
+    repository as unknown as KnowledgeBaseRepository,
+    readAccess,
+    context,
+  );
   const useCase = new GetAccessibleKnowledgeBaseContextsUseCase(
     find,
     repository as unknown as KnowledgeBaseRepository,
@@ -62,11 +68,16 @@ describe(GetAccessibleKnowledgeBaseContextsUseCase.name, () => {
   it('returns personal ownership and per-user activation, deduplicating inputs', async () => {
     const { useCase, knowledgeBase, repository, principal } = setup();
     repository.getActiveIds.mockResolvedValue(new Set([knowledgeBase.id]));
+    repository.countSourcesByKnowledgeBaseIds.mockResolvedValue(
+      new Map([[knowledgeBase.id, 3]]),
+    );
     await expect(
       useCase.execute({
         knowledgeBaseIds: [knowledgeBase.id, knowledgeBase.id],
       }),
-    ).resolves.toEqual([{ knowledgeBase, isActive: true, isShared: false }]);
+    ).resolves.toEqual([
+      { knowledgeBase, isActive: true, isShared: false, documentCount: 3 },
+    ]);
     expect(repository.getActiveIds).toHaveBeenCalledTimes(1);
     expect(repository.getActiveIds).toHaveBeenCalledWith(principal.userId);
     expect(repository.findById).toHaveBeenCalledTimes(1);
@@ -92,7 +103,7 @@ describe(GetAccessibleKnowledgeBaseContextsUseCase.name, () => {
         directShare.execute.mockResolvedValue({ id: randomUUID() });
       else skillShare.execute.mockResolvedValue(true);
       await expect(useCase.execute(query)).resolves.toEqual([
-        { knowledgeBase, isActive: false, isShared: true },
+        { knowledgeBase, isActive: false, isShared: true, documentCount: 0 },
       ]);
       directShare.execute.mockResolvedValue(null);
       skillShare.execute.mockResolvedValue(false);

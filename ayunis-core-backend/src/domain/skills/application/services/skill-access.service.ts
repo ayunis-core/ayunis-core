@@ -10,6 +10,7 @@ import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 
 export interface SkillUserContext {
   isActive: boolean;
@@ -28,6 +29,7 @@ export class SkillAccessService {
     private readonly skillRepository: SkillRepository,
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly contextService: ContextService,
+    private readonly authorization: SkillAuthorizationService,
   ) {}
 
   /**
@@ -77,6 +79,7 @@ export class SkillAccessService {
         await this.skillRepository.findByIds([skillId], thread.workspaceId)
       ).at(0);
       if (skill) {
+        await this.authorization.requireExecution(skill, thread.id);
         const states = await this.skillRepository.getWorkspaceSkillStates(
           [skillId],
           thread.workspaceId,

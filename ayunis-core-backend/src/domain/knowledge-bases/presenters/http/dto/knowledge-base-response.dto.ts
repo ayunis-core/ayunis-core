@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
 export class KnowledgeBaseResponseDto {
   @ApiProperty({
@@ -9,6 +10,17 @@ export class KnowledgeBaseResponseDto {
     format: 'uuid',
   })
   id: UUID;
+
+  @ApiProperty({ enum: ['personal', 'workspace'] })
+  ownerType: 'personal' | 'workspace';
+
+  @ApiProperty({
+    type: 'string',
+    format: 'uuid',
+    required: false,
+    description: 'The owning workspace for workspace-owned knowledge bases',
+  })
+  workspaceId?: UUID;
 
   @ApiProperty({
     description: 'The name of the knowledge base',
@@ -39,6 +51,12 @@ export class KnowledgeBaseResponseDto {
   updatedAt: Date;
 
   @ApiProperty({
+    description: 'Number of documents assigned to the knowledge base',
+    example: 3,
+  })
+  documentCount: number;
+
+  @ApiProperty({
     description: 'Whether the knowledge base is active for the current user',
     example: true,
   })
@@ -59,4 +77,7 @@ export class KnowledgeBaseListResponseDto {
     type: [KnowledgeBaseResponseDto],
   })
   data: KnowledgeBaseResponseDto[];
+
+  @ApiProperty({ type: PaginationDto })
+  pagination: PaginationDto;
 }

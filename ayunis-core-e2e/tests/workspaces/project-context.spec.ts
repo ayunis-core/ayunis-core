@@ -54,9 +54,7 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await expect(
     page.getByRole("menuitem", { name: "Arbeitsbereich bearbeiten" }),
   ).toBeVisible();
-  await page
-    .getByRole("menuitem", { name: "Arbeitsbereich löschen" })
-    .click();
+  await page.getByRole("menuitem", { name: "Arbeitsbereich löschen" }).click();
   const deleteConfirmation = page.getByTestId("workspace-delete-confirmation");
   const deleteButton = page.getByTestId("workspace-delete-confirm");
   await deleteConfirmation.fill("wrong project name");
@@ -219,9 +217,11 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await expect
     .poll(async () => {
       const workspaceKnowledgeBases =
-        await generatedApi.workspaceContextControllerListKnowledgeBases(
-          fixture.workspace.id,
-          undefined,
+        await generatedApi.knowledgeBasesControllerFindAll(
+          {
+            ownerType: "workspace",
+            workspaceId: fixture.workspace.id,
+          },
           { api },
         );
       createdKnowledgeBaseId = workspaceKnowledgeBases.data.find(
