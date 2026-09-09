@@ -1,66 +1,60 @@
-import { InvalidSkillNameError } from 'src/domain/skills/domain/abstract-skill.entity';
-import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import { UpdateSkillCommand } from './update-skill.command';
-
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
   DuplicateSkillNameError,
   SkillInvalidInputError,
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { InvalidSkillNameError } from 'src/domain/skills/domain/abstract-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { UpdateSkillCommand } from './update-skill.command';
 
 @Injectable()
 export class UpdateSkillUseCase {
   private readonly logger = new Logger(UpdateSkillUseCase.name);
 
   constructor(
-    private readonly skillRepository: SkillRepository,
-    private readonly contextService: ContextService,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
   @Transactional()
-  async execute(command: UpdateSkillCommand): Promise<PersonalSkill> {
+  async execute(command: UpdateSkillCommand): Promise<Skill> {
     this.logger.log({ skillId: command.skillId }, 'Updating skill');
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
-    const existingSkill = await this.skillRepository.findOne(
-      command.skillId,
-      userId,
-    );
-    if (!existingSkill) throw new SkillNotFoundError(command.skillId);
-
-    let updatedSkill: PersonalSkill;
+    const existing = await this.repository.findById(command.skillId);
+    if (!existing) throw new SkillNotFoundError(command.skillId);
+    await this.authorization.requireWrite(existing);
+    await this.assertUniqueName(existing, command.name);
     try {
-      updatedSkill = existingSkill.withUpdates({
-        ...existingSkill,
+      const updated = existing.withUpdates({
         name: command.name,
         shortDescription: command.shortDescription,
         instructions: command.instructions,
         updatedAt: new Date(),
       });
+      return this.repository.update(updated, existing);
     } catch (error) {
       if (error instanceof InvalidSkillNameError) {
         throw new SkillInvalidInputError(error.message);
       }
       throw error;
     }
+  }
 
-    if (command.name !== existingSkill.name) {
-      const duplicate = await this.skillRepository.findByNameAndOwner(
-        command.name,
-        userId,
-      );
-      if (duplicate) throw new DuplicateSkillNameError(command.name);
+  private async assertUniqueName(skill: Skill, name: string): Promise<void> {
+    if (name === skill.name) return;
+    const duplicate =
+      skill instanceof WorkspaceSkill
+        ? await this.repository.findByNameAndWorkspace(name, skill.workspaceId)
+        : await this.repository.findByNameAndOwner(name, skill.userId);
+    if (duplicate && duplicate.id !== skill.id) {
+      throw new DuplicateSkillNameError(name);
     }
-
-    return this.skillRepository.update(updatedSkill, existingSkill);
   }
 }

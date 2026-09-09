@@ -25,6 +25,7 @@ import {
   useSkillsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 interface OnboardingStepItemProps {
   step: OnboardingStep;
@@ -54,10 +55,12 @@ export default function OnboardingStepItem({
   const firstKnowledgeBase = kbResponse?.data[0];
 
   const isPinSkillStep = step.id === 'useSkillInChat';
-  const { data: skills } = useSkillsControllerFindAll({
-    query: { enabled: isPinSkillStep && !locked },
-  });
-  const hasPersonalSkill = skills?.some((skill) => !skill.isShared) ?? false;
+  const { data: skillsResponse } = useSkillsControllerFindAll(
+    personalSkillListParams,
+    { query: { enabled: isPinSkillStep && !locked } },
+  );
+  const hasPersonalSkill =
+    skillsResponse?.data.some((skill) => !skill.isShared) ?? false;
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt

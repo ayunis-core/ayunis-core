@@ -1,23 +1,28 @@
-import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-
+import type { SkillUserContext } from 'src/domain/skills/application/models/skill-context';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   SkillResponseDto,
   SkillSourceResponseDto,
 } from 'src/domain/skills/presenters/http/dto/skill-response.dto';
-import { Source } from 'src/domain/sources/domain/source.entity';
-import { SkillUserContext } from 'src/domain/skills/application/services/skill-access.service';
 
 @Injectable()
 export class SkillDtoMapper {
   toDto(
-    skill: PersonalSkill,
+    skill: Skill,
     context: SkillUserContext,
     creatorName?: string | null,
   ): SkillResponseDto {
+    const personal = skill instanceof PersonalSkill;
     return {
       id: skill.id,
+      ownerType: personal ? 'personal' : 'workspace',
+      ...(personal
+        ? { userId: skill.userId }
+        : { workspaceId: skill.workspaceId }),
       name: skill.name,
       shortDescription: skill.shortDescription,
       instructions: skill.instructions,
@@ -25,7 +30,6 @@ export class SkillDtoMapper {
       isActive: context.isActive,
       isShared: context.isShared,
       isPinned: context.isPinned,
-      userId: skill.userId,
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
       creatorName: context.isShared ? (creatorName ?? null) : null,

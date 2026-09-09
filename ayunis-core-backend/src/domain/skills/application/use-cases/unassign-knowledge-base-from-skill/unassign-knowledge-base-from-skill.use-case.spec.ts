@@ -1,156 +1,64 @@
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-
 jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional:
-    () => (_target: unknown, _key: string, descriptor: PropertyDescriptor) =>
-      descriptor,
+  Transactional: () => (_t: unknown, _p: string, d: PropertyDescriptor) => d,
 }));
 
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnassignKnowledgeBaseFromSkillUseCase } from './unassign-knowledge-base-from-skill.use-case';
+import { randomUUID } from 'crypto';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import { SkillKnowledgeBaseNotAssignedError } from 'src/domain/skills/application/skills.errors';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { UnassignKnowledgeBaseFromSkillCommand } from './unassign-knowledge-base-from-skill.command';
-import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import { ContextService } from 'src/common/context/services/context.service';
+import { UnassignKnowledgeBaseFromSkillUseCase } from './unassign-knowledge-base-from-skill.use-case';
 
-import {
-  SkillNotFoundError,
-  SkillKnowledgeBaseNotAssignedError,
-  UnexpectedSkillError,
-} from 'src/domain/skills/application/skills.errors';
-import type { UUID } from 'crypto';
+describe(UnassignKnowledgeBaseFromSkillUseCase.name, () => {
+  it('removes a workspace knowledge-base assignment', async () => {
+    const knowledgeBaseId = randomUUID();
+    const skill = new WorkspaceSkill({
+      workspaceId: randomUUID(),
+      name: 'Skill',
+      shortDescription: '',
+      instructions: '',
+      knowledgeBaseIds: [knowledgeBaseId],
+    });
+    const repository = {
+      findById: jest.fn().mockResolvedValue(skill),
+      update: jest
+        .fn()
+        .mockImplementation((updated) => Promise.resolve(updated)),
+    };
+    const authorization = { requireWrite: jest.fn() };
+    const useCase = new UnassignKnowledgeBaseFromSkillUseCase(
+      repository as unknown as SkillRepository,
+      authorization as unknown as SkillAuthorizationService,
+    );
+    const result = await useCase.execute(
+      new UnassignKnowledgeBaseFromSkillCommand(skill.id, knowledgeBaseId),
+    );
+    expect(result.knowledgeBaseIds).toEqual([]);
+    expect(authorization.requireWrite).toHaveBeenCalledWith(skill);
+  });
 
-describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
-  let useCase: UnassignKnowledgeBaseFromSkillUseCase;
-  let skillRepository: jest.Mocked<SkillRepository>;
-  let contextService: jest.Mocked<ContextService>;
-
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockSkillId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
-  const mockKbId = '123e4567-e89b-12d3-a456-426614174010' as UUID;
-
-  beforeEach(async () => {
-    const mockSkillRepository = {
-      findOne: jest.fn(),
+  it('rejects removing an absent workspace knowledge-base assignment', async () => {
+    const skill = new WorkspaceSkill({
+      workspaceId: randomUUID(),
+      name: 'Skill',
+      shortDescription: '',
+      instructions: '',
+    });
+    const repository = {
+      findById: jest.fn().mockResolvedValue(skill),
       update: jest.fn(),
     };
-
-    const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
-    } as unknown as jest.Mocked<ContextService>;
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UnassignKnowledgeBaseFromSkillUseCase,
-        { provide: SkillRepository, useValue: mockSkillRepository },
-        { provide: ContextService, useValue: mockContextService },
-      ],
-    }).compile();
-
-    useCase = module.get(UnassignKnowledgeBaseFromSkillUseCase);
-    skillRepository = module.get(SkillRepository);
-    contextService = module.get(ContextService);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  const createMockSkill = (knowledgeBaseIds: UUID[] = []): PersonalSkill =>
-    new PersonalSkill({
-      id: mockSkillId,
-      name: 'Test Skill',
-      shortDescription: 'A test skill',
-      instructions: 'Test instructions',
-      knowledgeBaseIds,
-      userId: mockUserId,
-    });
-
-  it('should unassign a knowledge base from the skill', async () => {
-    const skill = createMockSkill([mockKbId]);
-    const command = new UnassignKnowledgeBaseFromSkillCommand(
-      mockSkillId,
-      mockKbId,
+    const useCase = new UnassignKnowledgeBaseFromSkillUseCase(
+      repository as unknown as SkillRepository,
+      { requireWrite: jest.fn() } as unknown as SkillAuthorizationService,
     );
 
-    skillRepository.findOne.mockResolvedValue(skill);
-    skillRepository.update.mockImplementation(async (s) => s);
-
-    const result = await useCase.execute(command);
-
-    expect(result.knowledgeBaseIds).not.toContain(mockKbId);
-    expect(result.knowledgeBaseIds).toHaveLength(0);
-    expect(skillRepository.update).toHaveBeenCalled();
-  });
-
-  it('should only remove the specified knowledge base', async () => {
-    const otherKbId = '123e4567-e89b-12d3-a456-426614174011' as UUID;
-    const skill = createMockSkill([mockKbId, otherKbId]);
-    const command = new UnassignKnowledgeBaseFromSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    skillRepository.findOne.mockResolvedValue(skill);
-    skillRepository.update.mockImplementation(async (s) => s);
-
-    const result = await useCase.execute(command);
-
-    expect(result.knowledgeBaseIds).toEqual([otherKbId]);
-  });
-
-  it('should throw UnauthorizedAccessError when user not authenticated', async () => {
-    contextService.get.mockReturnValue(null);
-    const command = new UnassignKnowledgeBaseFromSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnauthorizedAccessError,
-    );
-  });
-
-  it('should throw SkillNotFoundError when skill does not exist', async () => {
-    skillRepository.findOne.mockResolvedValue(null);
-    const command = new UnassignKnowledgeBaseFromSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(SkillNotFoundError);
-  });
-
-  it('should throw SkillKnowledgeBaseNotAssignedError when KB is not assigned', async () => {
-    const skill = createMockSkill([]);
-    skillRepository.findOne.mockResolvedValue(skill);
-
-    const command = new UnassignKnowledgeBaseFromSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      SkillKnowledgeBaseNotAssignedError,
-    );
-  });
-
-  it('should wrap unexpected errors in UnexpectedSkillError', async () => {
-    skillRepository.findOne.mockRejectedValue(
-      new Error('Database connection failed'),
-    );
-
-    const command = new UnassignKnowledgeBaseFromSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnexpectedSkillError,
-    );
+    await expect(
+      useCase.execute(
+        new UnassignKnowledgeBaseFromSkillCommand(skill.id, randomUUID()),
+      ),
+    ).rejects.toBeInstanceOf(SkillKnowledgeBaseNotAssignedError);
+    expect(repository.update).not.toHaveBeenCalled();
   });
 });

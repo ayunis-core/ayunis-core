@@ -19,8 +19,8 @@ import { AssignKnowledgeBaseToSkillCommand } from 'src/domain/skills/application
 import { UnassignKnowledgeBaseFromSkillCommand } from 'src/domain/skills/application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.command';
 import { ListSkillKnowledgeBasesQuery } from 'src/domain/skills/application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.query';
 
-import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
-import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
+import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
+import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
 
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
@@ -44,8 +44,7 @@ export class SkillKnowledgeBasesController {
     private readonly listSkillKnowledgeBasesUseCase: ListSkillKnowledgeBasesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
-    private readonly skillAccessService: SkillAccessService,
-    private readonly skillCreatorNameService: SkillCreatorNameService,
+    private readonly findSkill: FindOneSkillUseCase,
   ) {}
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -80,16 +79,11 @@ export class SkillKnowledgeBasesController {
   ): Promise<SkillResponseDto> {
     this.logger.log({ skillId, knowledgeBaseId }, 'assignKnowledgeBase');
 
-    const skill = await this.assignKnowledgeBaseToSkillUseCase.execute(
+    await this.assignKnowledgeBaseToSkillUseCase.execute(
       new AssignKnowledgeBaseToSkillCommand(skillId, knowledgeBaseId),
     );
 
-    const context = await this.skillAccessService.resolveUserContext(skillId);
-    const creatorName = context.isShared
-      ? await this.skillCreatorNameService.resolveOne(skill.userId)
-      : null;
-
-    return this.skillDtoMapper.toDto(skill, context, creatorName);
+    return this.toSkillDto(skillId);
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -122,15 +116,17 @@ export class SkillKnowledgeBasesController {
   ): Promise<SkillResponseDto> {
     this.logger.log({ skillId, knowledgeBaseId }, 'unassignKnowledgeBase');
 
-    const skill = await this.unassignKnowledgeBaseFromSkillUseCase.execute(
+    await this.unassignKnowledgeBaseFromSkillUseCase.execute(
       new UnassignKnowledgeBaseFromSkillCommand(skillId, knowledgeBaseId),
     );
 
-    const context = await this.skillAccessService.resolveUserContext(skillId);
-    const creatorName = context.isShared
-      ? await this.skillCreatorNameService.resolveOne(skill.userId)
-      : null;
+    return this.toSkillDto(skillId);
+  }
 
+  private async toSkillDto(skillId: UUID): Promise<SkillResponseDto> {
+    const { skill, creatorName, ...context } = await this.findSkill.execute(
+      new FindOneSkillQuery(skillId),
+    );
     return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 

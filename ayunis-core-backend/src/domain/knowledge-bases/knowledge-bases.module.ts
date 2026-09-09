@@ -35,7 +35,6 @@ import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { GetKnowledgeBaseDocumentTextUseCase } from './application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
-import { GetKnowledgeBasesByIdsUseCase } from './application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { SetKnowledgeBaseActivationUseCase } from './application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.use-case';
 import { FindActiveKnowledgeBasesUseCase } from './application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.use-case';
 
@@ -76,7 +75,6 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,
-    GetKnowledgeBasesByIdsUseCase,
     SetKnowledgeBaseActivationUseCase,
     FindActiveKnowledgeBasesUseCase,
     // Presenters
@@ -112,7 +110,6 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,
-    GetKnowledgeBasesByIdsUseCase,
     FindActiveKnowledgeBasesUseCase,
   ],
 })

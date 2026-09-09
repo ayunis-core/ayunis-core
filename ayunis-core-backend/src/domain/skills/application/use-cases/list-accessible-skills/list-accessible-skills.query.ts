@@ -1,18 +1,20 @@
-import type { UUID } from 'crypto';
-import { PaginatedQuery } from 'src/common/pagination/paginated.query';
+import type { SkillOwner } from 'src/domain/skills/application/models/skill-owner';
 
-export class ListAccessibleSkillsQuery extends PaginatedQuery {
+export class ListAccessibleSkillsQuery {
+  public readonly owner: SkillOwner;
   public readonly search?: string;
-  public readonly workspaceId?: UUID;
+  public readonly limit?: number;
+  public readonly offset?: number;
 
   constructor(params: {
+    owner: SkillOwner;
     search?: string;
-    workspaceId?: UUID;
-    limit: number;
-    offset: number;
+    limit?: number;
+    offset?: number;
   }) {
-    super({ limit: params.limit, offset: params.offset });
+    this.owner = params.owner;
     this.search = params.search?.trim() || undefined;
-    this.workspaceId = params.workspaceId;
+    this.limit = params.limit;
+    this.offset = params.offset;
   }
 }

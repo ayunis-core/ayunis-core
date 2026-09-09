@@ -1,10 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  getWorkspaceSkillSourcesControllerListQueryKey,
-  useWorkspaceSkillSourcesControllerAddFile,
-  useWorkspaceSkillSourcesControllerList,
-  useWorkspaceSkillSourcesControllerRemove,
+  getSkillSourcesControllerGetSkillSourcesQueryKey,
+  useSkillSourcesControllerAddFileSource,
+  useSkillSourcesControllerGetSkillSources,
+  useSkillSourcesControllerRemoveSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { SkillSourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
@@ -12,25 +12,15 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
-export function useWorkspaceSkillSources({
-  workspaceId,
-  skillId,
-}: {
-  workspaceId: string;
-  skillId: string;
-}) {
+export function useWorkspaceSkillSources({ skillId }: { skillId: string }) {
   const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
-  const queryKey = getWorkspaceSkillSourcesControllerListQueryKey(
-    workspaceId,
-    skillId,
-  );
+  const queryKey = getSkillSourcesControllerGetSkillSourcesQueryKey(skillId);
 
   const { data: sources = [], isLoading: isLoadingSources } =
-    useWorkspaceSkillSourcesControllerList(workspaceId, skillId, {
+    useSkillSourcesControllerGetSkillSources(skillId, {
       query: {
         staleTime: 0,
-
         refetchInterval: (query) =>
           (query.state.data ?? []).some(
             (source) =>
@@ -41,7 +31,7 @@ export function useWorkspaceSkillSources({
       },
     });
 
-  const addMutation = useWorkspaceSkillSourcesControllerAddFile({
+  const addMutation = useSkillSourcesControllerAddFileSource({
     mutation: {
       retry: 0,
       onSuccess: () => {
@@ -52,7 +42,7 @@ export function useWorkspaceSkillSources({
     },
   });
 
-  const removeMutation = useWorkspaceSkillSourcesControllerRemove({
+  const removeMutation = useSkillSourcesControllerRemoveSource({
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey });
@@ -66,10 +56,10 @@ export function useWorkspaceSkillSources({
     sources,
     isLoadingSources,
     addFileSource: ({ data }: { id: string; data: { file: File } }) =>
-      addMutation.mutate({ id: workspaceId, skillId, data }),
+      addMutation.mutate({ id: skillId, data }),
     addFileSourcePending: addMutation.isPending,
     removeSource: (sourceId: string) =>
-      removeMutation.mutate({ id: workspaceId, skillId, sourceId }),
+      removeMutation.mutate({ id: skillId, sourceId }),
     removeSourcePending: removeMutation.isPending,
   };
 }

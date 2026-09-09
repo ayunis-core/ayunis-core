@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { ToolUseMessageContent } from '../../model/openapi';
-import { slugify } from '../../lib/slugify';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import { slugify } from '@/pages/chat/lib/slugify';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@ayunis/ui/components/label';
 import { Input } from '@ayunis/ui/components/input';
@@ -16,6 +16,7 @@ import {
   useSkillsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export default function EditSkillWidget({
   content,
@@ -37,9 +38,11 @@ export default function EditSkillWidget({
   };
 
   // Resolve skill_slug to existing skill via the skills list
-  const { data: skills } = useSkillsControllerFindAll({
-    query: { staleTime: Infinity },
-  });
+  const { data: skillsResponse } = useSkillsControllerFindAll(
+    personalSkillListParams,
+    { query: { staleTime: Infinity } },
+  );
+  const skills = skillsResponse?.data;
   const skillSlug = params.skill_slug ?? '';
   const bareSlug = skillSlug.replace(/^(user|system)__/, '');
   const existingSkill = skills?.find((s) => slugify(s.name) === bareSlug);
@@ -89,7 +92,7 @@ export default function EditSkillWidget({
       setUpdated(true);
       showSuccess(t('chat.tools.edit_skill.success'));
       void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(),
+        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       });
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindOneQueryKey(skillId),

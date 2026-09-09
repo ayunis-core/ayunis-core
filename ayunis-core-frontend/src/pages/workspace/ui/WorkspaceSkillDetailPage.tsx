@@ -22,22 +22,24 @@ import { useWorkspaceSkillSources } from '@/pages/workspace/api/useWorkspaceSkil
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
 import type {
   WorkspaceResponseDto,
-  WorkspaceSkillResponseDto,
+  SkillResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
-  workspaceContextControllerAssignSkillKnowledgeBase,
-  workspaceContextControllerUnassignSkillKnowledgeBase,
-  workspaceContextControllerUpdateSkill,
+  skillKnowledgeBasesControllerAssignKnowledgeBase,
+  skillKnowledgeBasesControllerUnassignKnowledgeBase,
+  skillsControllerUpdate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 export function WorkspaceSkillDetailPage({
   workspace,
   skill,
   isEmbeddingModelEnabled,
+  assignedKnowledgeBaseIds,
 }: Readonly<{
   workspace: WorkspaceResponseDto;
-  skill: WorkspaceSkillResponseDto;
+  skill: SkillResponseDto;
   isEmbeddingModelEnabled: boolean;
+  assignedKnowledgeBaseIds: string[];
 }>) {
   const { t } = useTranslation('workspace');
   const { t: tSkills } = useTranslation('skills');
@@ -48,23 +50,18 @@ export function WorkspaceSkillDetailPage({
   const [isAssigning, setIsAssigning] = useState(false);
   const { deleteSkill, setSkillActive, setSkillPinned, isChangingSkillState } =
     useWorkspaceContextActions(workspace.id);
-  const sourcesHook = useWorkspaceSkillSources({
-    workspaceId: workspace.id,
-    skillId: skill.id,
-  });
+  const sourcesHook = useWorkspaceSkillSources({ skillId: skill.id });
 
   const toggleKnowledgeBase = async (knowledgeBaseId: string) => {
     setIsAssigning(true);
     try {
-      if (skill.knowledgeBaseIds.includes(knowledgeBaseId)) {
-        await workspaceContextControllerUnassignSkillKnowledgeBase(
-          workspace.id,
+      if (assignedKnowledgeBaseIds.includes(knowledgeBaseId)) {
+        await skillKnowledgeBasesControllerUnassignKnowledgeBase(
           skill.id,
           knowledgeBaseId,
         );
       } else {
-        await workspaceContextControllerAssignSkillKnowledgeBase(
-          workspace.id,
+        await skillKnowledgeBasesControllerAssignKnowledgeBase(
           skill.id,
           knowledgeBaseId,
         );
@@ -73,7 +70,7 @@ export function WorkspaceSkillDetailPage({
     } catch {
       showError(
         tSkill(
-          skill.knowledgeBaseIds.includes(knowledgeBaseId)
+          assignedKnowledgeBaseIds.includes(knowledgeBaseId)
             ? 'knowledgeBases.errors.failedToUnassign'
             : 'knowledgeBases.errors.failedToAssign',
         ),
@@ -196,18 +193,14 @@ export function WorkspaceSkillDetailPage({
               key={skill.id}
               skill={skill}
               onUpdate={async (data) => {
-                await workspaceContextControllerUpdateSkill(
-                  workspace.id,
-                  skill.id,
-                  data,
-                );
+                await skillsControllerUpdate(skill.id, data);
                 await invalidateResources();
               }}
             />
             <WorkspaceSkillKnowledgeBases
               key={skill.id}
               workspaceId={workspace.id}
-              assignedIds={skill.knowledgeBaseIds}
+              assignedIds={assignedKnowledgeBaseIds}
               isPending={isAssigning}
               onToggle={(knowledgeBaseId) =>
                 void toggleKnowledgeBase(knowledgeBaseId)

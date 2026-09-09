@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 interface DeleteSkillParams {
   id: string;
@@ -23,7 +24,7 @@ export function useDeleteSkill() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(),
+        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       });
       void router.invalidate();
       showSuccess(t('delete.success'));

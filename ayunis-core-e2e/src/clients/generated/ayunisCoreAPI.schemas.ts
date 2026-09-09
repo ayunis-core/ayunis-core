@@ -2789,38 +2789,40 @@ export interface InstallSkillFromMarketplaceDto {
   identifier: string;
 }
 
+export type SkillResponseDtoOwnerType = typeof SkillResponseDtoOwnerType[keyof typeof SkillResponseDtoOwnerType];
+
+
+export const SkillResponseDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
+
 export interface SkillResponseDto {
-  /** The unique identifier of the skill */
   id: string;
-  /** The name of the skill */
+  ownerType: SkillResponseDtoOwnerType;
+  userId?: string;
+  workspaceId?: string;
   name: string;
-  /** A short description of the skill */
   shortDescription: string;
-  /** Detailed instructions for the skill */
   instructions: string;
-  /**
-     * The marketplace identifier if this skill was installed from the marketplace
-     * @nullable
-     */
+  /** @nullable */
   marketplaceIdentifier: string | null;
-  /** Whether the skill is active and available for use in chats */
   isActive: boolean;
-  /** The unique identifier of the user who owns this skill */
-  userId: string;
-  /** The date and time when the skill was created */
   createdAt: string;
-  /** The date and time when the skill was last updated */
   updatedAt: string;
-  /** Whether the skill is shared with the current user (not owned) */
   isShared: boolean;
-  /** Whether the skill is pinned for quick access in chat */
   isPinned: boolean;
-  /**
-     * Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller’s organisation; otherwise null.
-     * @nullable
-     */
+  /** @nullable */
   creatorName: string | null;
 }
+
+export type CreateSkillDtoOwnerType = typeof CreateSkillDtoOwnerType[keyof typeof CreateSkillDtoOwnerType];
+
+
+export const CreateSkillDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
 
 export interface CreateSkillDto {
   /**
@@ -2833,8 +2835,15 @@ export interface CreateSkillDto {
   shortDescription: string;
   /** Detailed instructions for the skill (injected when the skill is activated) */
   instructions: string;
-  /** Whether the skill is active (defaults to true) */
+  ownerType: CreateSkillDtoOwnerType;
+  workspaceId?: string;
+  /** Whether a personal skill is active (defaults to true) */
   isActive?: boolean;
+}
+
+export interface SkillListResponseDto {
+  data: SkillResponseDto[];
+  pagination: PaginationDto;
 }
 
 export interface UpdateSkillDto {
@@ -2850,9 +2859,14 @@ export interface UpdateSkillDto {
   instructions: string;
 }
 
-/**
- * Processing status of the source
- */
+export interface SetSkillActivationDto {
+  isActive: boolean;
+}
+
+export interface SetSkillPinDto {
+  isPinned: boolean;
+}
+
 export type SkillSourceResponseDtoStatus = typeof SkillSourceResponseDtoStatus[keyof typeof SkillSourceResponseDtoStatus];
 
 
@@ -2863,17 +2877,11 @@ export const SkillSourceResponseDtoStatus = {
 } as const;
 
 export interface SkillSourceResponseDto {
-  /** The unique identifier of the source */
   id: string;
-  /** The name of the source */
   name: string;
-  /** The type of source */
   type: string;
-  /** Processing status of the source */
   status: SkillSourceResponseDtoStatus;
-  /** Error message if processing failed */
   processingError?: string;
-  /** The date and time when the source was created */
   createdAt: string;
 }
 
@@ -3497,25 +3505,6 @@ export interface WorkspaceContextResponseDto {
   instruction: string | null;
   skills: WorkspaceSkillResponseDto[];
   knowledgeBases: WorkspaceKnowledgeBaseResponseDto[];
-}
-
-export interface CreateWorkspaceSkillDto {
-  name: string;
-  shortDescription: string;
-  instructions: string;
-}
-
-export interface UpdateWorkspaceSkillActivationDto {
-  isActive: boolean;
-}
-
-export interface UpdateWorkspaceSkillPinDto {
-  isPinned: boolean;
-}
-
-export interface WorkspaceSkillListResponseDto {
-  data: WorkspaceSkillResponseDto[];
-  pagination: PaginationDto;
 }
 
 export interface UpdateWorkspaceInstructionDto {
@@ -5470,6 +5459,29 @@ export const SharesControllerGetSharesEntityType = {
   knowledge_base: 'knowledge_base',
 } as const;
 
+export type SkillsControllerFindAllParams = {
+ownerType: SkillsControllerFindAllOwnerType;
+workspaceId?: string;
+search?: string;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
+};
+
+export type SkillsControllerFindAllOwnerType = typeof SkillsControllerFindAllOwnerType[keyof typeof SkillsControllerFindAllOwnerType];
+
+
+export const SkillsControllerFindAllOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
+
 export type SkillSourcesControllerAddFileSourceBody = {
   /** The file to upload (max 25 MB) */
   file: Blob | File;
@@ -5490,17 +5502,6 @@ export const WorkspacesControllerFindAllSort = {
   createdAt: 'createdAt',
   name: 'name',
 } as const;
-
-export type WorkspaceContextControllerListSkillsParams = {
-offset?: number;
-limit?: number;
-search?: string;
-};
-
-export type WorkspaceSkillSourcesControllerAddFileBody = {
-  /** The file to upload (max 25 MB) */
-  file: Blob | File;
-};
 
 export type ArtifactsControllerFindByWorkspaceParams = {
 /**

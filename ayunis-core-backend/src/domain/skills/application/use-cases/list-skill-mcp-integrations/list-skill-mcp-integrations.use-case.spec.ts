@@ -62,7 +62,7 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
       findKnowledgeBaseIdsBySkillIds: jest.fn(),
       removeKnowledgeBaseFromSkills: jest.fn(),
       findPaginatedAccessible: jest.fn(),
-    } as jest.Mocked<SkillRepository>;
+    } as unknown as jest.Mocked<SkillRepository>;
 
     const mockGetMcpIntegrationsByIdsUseCase = {
       execute: jest.fn(),

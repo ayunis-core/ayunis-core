@@ -12,6 +12,7 @@ for (const kind of ["skill", "knowledge-base"] as const) {
       kind === "skill"
         ? await generatedApi.skillsControllerCreate(
             {
+              ownerType: "personal",
               name,
               shortDescription: "Check permits",
               instructions: "Check building regulations.",

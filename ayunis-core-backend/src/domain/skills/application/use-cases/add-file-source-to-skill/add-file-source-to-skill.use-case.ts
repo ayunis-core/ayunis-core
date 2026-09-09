@@ -1,4 +1,3 @@
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import * as fs from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
@@ -36,6 +35,7 @@ import { assertSkillHasSourceCapacity } from 'src/domain/skills/application/util
 import { AddSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
 import { AddSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.command';
 import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 
 @Injectable()
 export class AddFileSourceToSkillUseCase {
@@ -48,62 +48,36 @@ export class AddFileSourceToSkillUseCase {
     private readonly startDataSourceProcessingUseCase: StartDataSourceProcessingUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
     private readonly contextService: ContextService,
+    private readonly authorization: SkillAuthorizationService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
-  async execute(command: AddFileSourceToSkillCommand): Promise<PersonalSkill> {
+  async execute(command: AddFileSourceToSkillCommand): Promise<Skill> {
     this.logger.log(
-      {
-        skillId: command.skillId,
-        fileName: command.file.originalname,
-      },
+      { skillId: command.skillId, fileName: command.file.originalname },
       'addFileSourceToSkill',
     );
-
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    // Processing uploads to object storage and enqueues a job, neither of
-    // which the attach below can undo cheaply — so ownership and the cap are
-    // checked first. AddSourceToSkillUseCase re-checks both against a freshly
-    // loaded skill and stays authoritative for concurrent adds.
-    const skill = await this.skillRepository.findOne(command.skillId, userId);
-    if (!skill) {
-      throw new SkillNotFoundError(command.skillId);
-    }
-    const updated = await this.processFile(skill, command.file, false);
-    if (!(updated instanceof PersonalSkill))
-      throw new SkillNotFoundError(skill.id);
-    return updated;
-  }
-
-  @HandleUnexpectedErrors(UnexpectedSkillError)
-  async executeForAuthorizedSkill(
-    skill: Skill,
-    file: UploadedFileRef,
-  ): Promise<Skill> {
-    return this.processFile(skill, file, true);
+    const skill = await this.skillRepository.findById(command.skillId);
+    if (!skill) throw new SkillNotFoundError(command.skillId);
+    await this.authorization.requireWrite(skill);
+    return this.processFile(skill, command.file);
   }
 
   private async processFile(
     skill: Skill,
     file: UploadedFileRef,
-    authorized: boolean,
   ): Promise<Skill> {
     const detectedType = detectFileType(file.mimetype, file.originalname);
     assertSkillHasSourceCapacity(skill.sourceIds);
 
     if (isDocumentSourceFile(detectedType)) {
-      return this.addDocumentSource(skill, file, detectedType, authorized);
+      return this.addDocumentSource(skill, file, detectedType);
     }
     if (isCSVFile(detectedType) || isSpreadsheetFile(detectedType)) {
       return this.addDataSources(
         skill,
         file,
         isCSVFile(detectedType) ? 'csv' : 'spreadsheet',
-        authorized,
       );
     }
     throw new UnsupportedFileTypeError(
@@ -116,7 +90,6 @@ export class AddFileSourceToSkillUseCase {
     skill: Skill,
     file: UploadedFileRef,
     detectedType: DetectedFileType,
-    authorized: boolean,
   ): Promise<Skill> {
     const canonicalMimeType = getCanonicalMimeType(detectedType);
     if (!canonicalMimeType) {
@@ -129,14 +102,13 @@ export class AddFileSourceToSkillUseCase {
         fileType: canonicalMimeType,
       }),
     );
-    return this.attachOrCompensate(skill, [source], authorized);
+    return this.attachOrCompensate(skill, [source]);
   }
 
   private async addDataSources(
     skill: Skill,
     file: UploadedFileRef,
     kind: DataSourceFileKind,
-    authorized: boolean,
   ): Promise<Skill> {
     const sources = await this.startDataSourceProcessingUseCase.execute(
       new StartDataSourceProcessingCommand({
@@ -150,7 +122,7 @@ export class AddFileSourceToSkillUseCase {
           assertSkillHasSourceCapacity(skill.sourceIds, sourceCount),
       }),
     );
-    return this.attachOrCompensate(skill, sources, authorized);
+    return this.attachOrCompensate(skill, sources);
   }
 
   // Processing has already started when attaching fails, so the pre-created
@@ -158,10 +130,9 @@ export class AddFileSourceToSkillUseCase {
   private async attachOrCompensate(
     skill: Skill,
     sources: Source[],
-    authorized: boolean,
   ): Promise<Skill> {
     try {
-      return await this.attachSources(skill, sources, authorized);
+      return await this.attachSources(skill, sources);
     } catch (error) {
       try {
         await this.deleteCreatedSources(sources);
@@ -190,24 +161,15 @@ export class AddFileSourceToSkillUseCase {
   }
 
   @Transactional()
-  private async attachSources(
-    skill: Skill,
-    sources: Source[],
-    authorized: boolean,
-  ): Promise<Skill> {
+  private async attachSources(skill: Skill, sources: Source[]): Promise<Skill> {
     let updatedSkill = skill;
     for (const source of sources) {
-      updatedSkill = authorized
-        ? await this.addSourceToSkillUseCase.executeForAuthorizedSkill(
-            updatedSkill,
-            source.id,
-          )
-        : await this.addSourceToSkillUseCase.execute(
-            new AddSourceToSkillCommand({
-              skillId: skill.id,
-              sourceId: source.id,
-            }),
-          );
+      updatedSkill = await this.addSourceToSkillUseCase.execute(
+        new AddSourceToSkillCommand({
+          skillId: skill.id,
+          sourceId: source.id,
+        }),
+      );
     }
     // The start use case guarantees at least one source.
     return updatedSkill;

@@ -18,7 +18,7 @@ for (const [kind, fixtureKey] of [
     const deleteUrl =
       kind === "knowledge-bases"
         ? `**/api/knowledge-bases/${id}`
-        : `**/api/workspaces/${fixture.workspace.id}/context/${kind}/${id}`;
+        : `**/api/skills/${id}`;
     await page.goto(detailPath);
     await page.route(deleteUrl, async (route) => {
       if (route.request().method() !== "DELETE") return route.continue();

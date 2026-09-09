@@ -33,7 +33,7 @@ import {
   getPinnedSkillIds,
   isSkillPinned,
   pinSkill,
-  togglePinnedSkill,
+  setSkillPinned as updateSkillPinned,
 } from './local-skill-pinning.repository-helper';
 import {
   activateWorkspaceSkill as activateWorkspaceSkillRecord,
@@ -119,24 +119,18 @@ export class LocalSkillRepository implements SkillRepository {
     return updateSkill(this.getManager(), this.skillMapper, skill, previous);
   }
 
-  async delete(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log({ skillId, userId }, 'delete');
-
-    const result = await this.skillRepository.delete({
-      id: skillId,
-      userId,
-    });
-    if (result.affected === 0) {
-      throw new SkillNotFoundError(skillId);
-    }
+  async delete(skillId: UUID): Promise<void> {
+    this.logger.log({ skillId }, 'delete');
+    const result = await this.skillRepository.delete({ id: skillId });
+    if (result.affected === 0) throw new SkillNotFoundError(skillId);
   }
 
-  async deleteByWorkspace(skillId: UUID, workspaceId: UUID): Promise<void> {
-    const result = await this.skillRepository.delete({
-      id: skillId,
-      workspaceId,
+  async findById(id: UUID): Promise<Skill | null> {
+    const record = await this.skillRepository.findOne({
+      where: { id },
+      relations: [...SKILL_RELATIONS],
     });
-    if (result.affected === 0) throw new SkillNotFoundError(skillId);
+    return record ? this.skillMapper.toDomain(record) : null;
   }
 
   async findOne(id: UUID, userId: UUID): Promise<PersonalSkill | null> {
@@ -160,6 +154,15 @@ export class LocalSkillRepository implements SkillRepository {
     });
 
     return records.map((r) => this.skillMapper.toPersonal(r));
+  }
+
+  async findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceSkill[]> {
+    this.logger.log({ workspaceId }, 'findAllByWorkspaceId');
+    const records = await this.skillRepository.find({
+      where: { workspaceId },
+      relations: [...SKILL_RELATIONS],
+    });
+    return records.map((record) => this.skillMapper.toWorkspace(record));
   }
 
   findPaginatedAccessible(
@@ -377,8 +380,17 @@ export class LocalSkillRepository implements SkillRepository {
     return pinSkill(this.skillActivationRepository, skillId, userId);
   }
 
-  async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
-    return togglePinnedSkill(this.skillActivationRepository, skillId, userId);
+  async setSkillPinned(
+    skillId: UUID,
+    userId: UUID,
+    isPinned: boolean,
+  ): Promise<void> {
+    return updateSkillPinned(
+      this.skillActivationRepository,
+      skillId,
+      userId,
+      isPinned,
+    );
   }
 
   async isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {

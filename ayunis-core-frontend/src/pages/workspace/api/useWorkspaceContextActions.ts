@@ -1,25 +1,35 @@
-import { useTranslation } from 'react-i18next';
-import { showError } from '@/shared/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
-import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
-import type { CreateWorkspaceSkillDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
   getWorkspacesControllerFindOneQueryKey,
-  workspaceContextControllerCreateSkill,
-  workspaceContextControllerDeleteSkill,
-  workspaceContextControllerSetSkillActivation,
-  workspaceContextControllerSetSkillPin,
+  skillsControllerActivate,
+  skillsControllerCreate,
+  skillsControllerDelete,
+  skillsControllerPin,
   workspaceContextControllerUpdateInstruction,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import type { CreateSkillDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { showError } from '@/shared/lib/toast';
+import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
+
+type WorkspaceSkillInput = Omit<
+  CreateSkillDto,
+  'ownerType' | 'workspaceId' | 'isActive'
+>;
+
 export function useWorkspaceContextActions(workspaceId: string) {
   const { t } = useTranslation(['skills', 'workspace']);
   const queryClient = useQueryClient();
   const invalidateContext = useInvalidateWorkspaceResources(workspaceId);
 
   const createSkill = useMutation({
-    mutationFn: (data: CreateWorkspaceSkillDto) =>
-      workspaceContextControllerCreateSkill(workspaceId, data),
+    mutationFn: (data: WorkspaceSkillInput) =>
+      skillsControllerCreate({
+        ...data,
+        ownerType: 'workspace',
+        workspaceId,
+      }),
     retry: 0,
     onSuccess: invalidateContext,
     onError: (error) => {
@@ -38,34 +48,19 @@ export function useWorkspaceContextActions(workspaceId: string) {
     },
   });
   const deleteSkill = useMutation({
-    mutationFn: (skillId: string) =>
-      workspaceContextControllerDeleteSkill(workspaceId, skillId),
+    mutationFn: (skillId: string) => skillsControllerDelete(skillId),
     onSuccess: invalidateContext,
     onError: () => showError(t('delete.error', { ns: 'skills' })),
   });
   const setSkillActive = useMutation({
-    mutationFn: ({
-      skillId,
-      isActive,
-    }: {
-      skillId: string;
-      isActive: boolean;
-    }) =>
-      workspaceContextControllerSetSkillActivation(workspaceId, skillId, {
-        isActive,
-      }),
+    mutationFn: ({ skillId, isActive }: SkillActivationInput) =>
+      skillsControllerActivate(skillId, { isActive }),
     onSuccess: invalidateContext,
     onError: () => showError(t('toggleActive.error', { ns: 'skills' })),
   });
   const setSkillPinned = useMutation({
-    mutationFn: ({
-      skillId,
-      isPinned,
-    }: {
-      skillId: string;
-      isPinned: boolean;
-    }) =>
-      workspaceContextControllerSetSkillPin(workspaceId, skillId, { isPinned }),
+    mutationFn: ({ skillId, isPinned }: SkillPinInput) =>
+      skillsControllerPin(skillId, { isPinned }),
     onSuccess: invalidateContext,
     onError: () => showError(t('togglePinned.error', { ns: 'skills' })),
   });
@@ -91,4 +86,14 @@ export function useWorkspaceContextActions(workspaceId: string) {
     updateInstruction: updateInstruction.mutateAsync,
     isSavingInstruction: updateInstruction.isPending,
   };
+}
+
+interface SkillActivationInput {
+  skillId: string;
+  isActive: boolean;
+}
+
+interface SkillPinInput {
+  skillId: string;
+  isPinned: boolean;
 }

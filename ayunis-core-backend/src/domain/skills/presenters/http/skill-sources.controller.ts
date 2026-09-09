@@ -1,4 +1,3 @@
-import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import {
   Controller,
   Post,
@@ -13,19 +12,14 @@ import {
 } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  UserProperty,
-} from 'src/iam/authentication/application/decorators/current-user.decorator';
-
 import { RemoveSourceFromSkillUseCase } from 'src/domain/skills/application/use-cases/remove-source-from-skill/remove-source-from-skill.use-case';
 import { ListSkillSourcesUseCase } from 'src/domain/skills/application/use-cases/list-skill-sources/list-skill-sources.use-case';
 
 import { RemoveSourceFromSkillCommand } from 'src/domain/skills/application/use-cases/remove-source-from-skill/remove-source-from-skill.command';
 import { ListSkillSourcesQuery } from 'src/domain/skills/application/use-cases/list-skill-sources/list-skill-sources.query';
 
-import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
-import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
+import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
+import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
 
 import {
   SkillResponseDto,
@@ -58,8 +52,7 @@ export class SkillSourcesController {
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly addFileSourceToSkillUseCase: AddFileSourceToSkillUseCase,
-    private readonly skillAccessService: SkillAccessService,
-    private readonly skillCreatorNameService: SkillCreatorNameService,
+    private readonly findSkill: FindOneSkillUseCase,
   ) {}
 
   @Get(':id/sources')
@@ -77,10 +70,9 @@ export class SkillSourcesController {
   })
   @ApiResponse({ status: 404, description: 'Skill not found' })
   async getSkillSources(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
   ): Promise<SkillSourceResponseDto[]> {
-    this.logger.log({ skillId, userId }, 'getSkillSources');
+    this.logger.log({ skillId }, 'getSkillSources');
 
     const sources = await this.listSkillSourcesUseCase.execute(
       new ListSkillSourcesQuery(skillId),
@@ -93,7 +85,6 @@ export class SkillSourcesController {
   @Post(':id/sources/file')
   @ApiSkillFileSourceUpload()
   async addFileSource(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
     @UploadedFile() file: UploadedSourceFile | undefined,
   ): Promise<SkillResponseDto> {
@@ -104,17 +95,16 @@ export class SkillSourcesController {
     this.logger.log(
       {
         skillId,
-        userId,
         fileName: file.originalname,
       },
       'addFileSource',
     );
     try {
-      const updatedSkill = await this.addFileSourceToSkillUseCase.execute(
+      await this.addFileSourceToSkillUseCase.execute(
         new AddFileSourceToSkillCommand({ skillId, file }),
       );
 
-      return await this.toSkillDtoWithCreator(updatedSkill, skillId);
+      return await this.toSkillDtoWithCreator(skillId);
     } catch (error: unknown) {
       this.logger.error({ err: error as Error }, 'addFileSource');
       throw error;
@@ -124,13 +114,11 @@ export class SkillSourcesController {
   }
 
   private async toSkillDtoWithCreator(
-    skill: PersonalSkill,
     skillId: UUID,
   ): Promise<SkillResponseDto> {
-    const context = await this.skillAccessService.resolveUserContext(skillId);
-    const creatorName = context.isShared
-      ? await this.skillCreatorNameService.resolveOne(skill.userId)
-      : null;
+    const { skill, creatorName, ...context } = await this.findSkill.execute(
+      new FindOneSkillQuery(skillId),
+    );
     return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
@@ -159,11 +147,10 @@ export class SkillSourcesController {
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeSource(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
   ): Promise<void> {
-    this.logger.log({ skillId, sourceId, userId }, 'removeSource');
+    this.logger.log({ skillId, sourceId }, 'removeSource');
 
     await this.removeSourceFromSkillUseCase.execute(
       new RemoveSourceFromSkillCommand({ skillId, sourceId }),

@@ -13,7 +13,7 @@ import { SkillNotActiveError } from 'src/domain/skills/application/skills.errors
 
 describe('LocalSkillRepository', () => {
   let repository: LocalSkillRepository;
-  let skillMapper: jest.Mocked<Pick<SkillMapper, 'toPersonal'>>;
+  let skillMapper: jest.Mocked<Pick<SkillMapper, 'toDomain' | 'toPersonal'>>;
   let mockManager: {
     findOne: jest.Mock;
     find: jest.Mock;
@@ -57,6 +57,7 @@ describe('LocalSkillRepository', () => {
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
 
     skillMapper = {
+      toDomain: jest.fn(),
       toPersonal: jest.fn(),
     };
 
@@ -104,10 +105,29 @@ describe('LocalSkillRepository', () => {
       expect(mockManager.getRepository).toHaveBeenCalledWith(SkillRecord);
     });
 
+    it('finds a skill without trusting a caller-supplied owner', async () => {
+      const record = {
+        id: skillId,
+        userId,
+        sources: [],
+        mcpIntegrations: [],
+        knowledgeBases: [],
+      } as unknown as SkillRecord;
+      const expected = { id: skillId };
+      mockManager.findOne.mockResolvedValue(record);
+      skillMapper.toDomain.mockReturnValue(expected as never);
+
+      await expect(repository.findById(skillId)).resolves.toBe(expected);
+      expect(mockManager.findOne).toHaveBeenCalledWith({
+        where: { id: skillId },
+        relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+      });
+    });
+
     it('deletes a skill through the ambient transaction', async () => {
       mockManager.delete.mockResolvedValue({ affected: 1 });
 
-      await expect(repository.delete(skillId, userId)).resolves.toBeUndefined();
+      await expect(repository.delete(skillId)).resolves.toBeUndefined();
     });
 
     it('reads activation state from the ambient transaction', async () => {
@@ -160,6 +180,19 @@ describe('LocalSkillRepository', () => {
       await expect(
         repository.setWorkspaceSkillPinned(skillId, workspaceId, true),
       ).rejects.toThrow(SkillNotActiveError);
+    });
+  });
+
+  describe('setSkillPinned', () => {
+    it('sets an explicit personal pin state idempotently', async () => {
+      mockManager.update.mockResolvedValue({ affected: 1 });
+
+      await repository.setSkillPinned(skillId, userId, false);
+
+      expect(mockManager.update).toHaveBeenCalledWith(
+        { skillId, userId },
+        { isPinned: false },
+      );
     });
   });
 
@@ -308,36 +341,6 @@ describe('LocalSkillRepository', () => {
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       '"knowledgeBase"."userId" = skill."userId"',
     );
-  });
-
-  describe('toggleSkillPinned', () => {
-    it('should toggle isPinned and return new value using RETURNING clause', async () => {
-      mockManager.query.mockResolvedValue([{ isPinned: true }]);
-
-      const result = await repository.toggleSkillPinned(skillId, userId);
-
-      expect(result).toBe(true);
-      expect(mockManager.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE skill_activations'),
-        [skillId, userId],
-      );
-    });
-
-    it('should return false when skill was unpinned', async () => {
-      mockManager.query.mockResolvedValue([{ isPinned: false }]);
-
-      const result = await repository.toggleSkillPinned(skillId, userId);
-
-      expect(result).toBe(false);
-    });
-
-    it('should throw SkillNotActiveError when no activation row exists', async () => {
-      mockManager.query.mockResolvedValue([]);
-
-      await expect(
-        repository.toggleSkillPinned(skillId, userId),
-      ).rejects.toThrow(SkillNotActiveError);
-    });
   });
 
   describe('isSkillPinned', () => {

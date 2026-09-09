@@ -17,12 +17,10 @@ import {
 } from '@/widgets/workspace-settings-dialog';
 import type { Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
-import {
-  useArtifactsControllerFindByWorkspace,
-  useWorkspaceContextControllerListSkills,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ayunisCoreAPI';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
+import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
 import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
 import { WorkspaceChatStarter } from './WorkspaceChatStarter';
@@ -66,7 +64,7 @@ export default function WorkspacePage({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { deleteChat } = useDeleteChat();
   const countParams = { limit: 1, offset: 0 };
-  const { data: skillsPage } = useWorkspaceContextControllerListSkills(
+  const { pagination: skillsPagination } = useWorkspaceSkills(
     workspace.id,
     countParams,
   );
@@ -79,7 +77,7 @@ export default function WorkspacePage({
     countParams,
   );
   const knowledgeCount = knowledgeBasesPagination?.total ?? 0;
-  const skillsCount = skillsPage?.pagination.total ?? 0;
+  const skillsCount = skillsPagination?.total ?? 0;
   const artifactCount = artifactCountPage?.pagination.total ?? 0;
 
   return (

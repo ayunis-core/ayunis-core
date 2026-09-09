@@ -4,7 +4,7 @@ import { act, renderHook, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getKnowledgeBasesControllerFindAllQueryKey,
-  getWorkspaceContextControllerListSkillsQueryKey,
+  getSkillsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { KnowledgeBaseDocumentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
@@ -16,6 +16,11 @@ import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResourc
 import { useWorkspaceKnowledgeBaseActions } from './useWorkspaceKnowledgeBaseActions';
 import { useWorkspaceKnowledgeBaseDocuments } from './useWorkspaceKnowledgeBaseDocuments';
 import { useWorkspaceKnowledgeBases } from './useWorkspaceKnowledgeBases';
+import { useWorkspaceSkills } from './useWorkspaceSkills';
+import {
+  personalSkillListParams,
+  workspaceSkillListParams,
+} from '@/shared/api/skill-scopes';
 
 const { request, showError, invalidate } = vi.hoisted(() => ({
   request: vi.fn(),
@@ -171,6 +176,96 @@ describe('workspace resource regressions', () => {
     expect(result.current.pagination?.total).toBe(42);
   });
 
+  it('lists paginated workspace skills through the canonical owner-scoped endpoint', async () => {
+    request.mockResolvedValue({
+      data: [{ id: 'skill', name: 'Permit review' }],
+      pagination: { limit: 20, offset: 20, total: 42 },
+    });
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => useWorkspaceSkills('project', { limit: 20, offset: 20 }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/skills',
+        method: 'GET',
+        params: {
+          ownerType: 'workspace',
+          workspaceId: 'project',
+          limit: 20,
+          offset: 20,
+        },
+      }),
+    );
+    expect(result.current.skills).toEqual([
+      expect.objectContaining({ id: 'skill' }),
+    ]);
+    expect(result.current.pagination?.total).toBe(42);
+  });
+
+  it('creates workspace skills through the canonical owner-scoped endpoint', async () => {
+    request.mockResolvedValue({ id: 'skill' });
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useWorkspaceContextActions('project'), {
+      wrapper,
+    });
+
+    await act(() =>
+      result.current.createSkill({
+        name: 'Permit review',
+        shortDescription: 'Reviews permits',
+        instructions: 'Review the permit.',
+      }),
+    );
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/skills',
+        method: 'POST',
+        data: {
+          ownerType: 'workspace',
+          workspaceId: 'project',
+          name: 'Permit review',
+          shortDescription: 'Reviews permits',
+          instructions: 'Review the permit.',
+        },
+      }),
+    );
+  });
+
+  it('sends desired skill activation and pin states to canonical setters', async () => {
+    request.mockResolvedValue({ id: 'skill' });
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useWorkspaceContextActions('project'), {
+      wrapper,
+    });
+
+    act(() => {
+      result.current.setSkillActive({ skillId: 'skill', isActive: false });
+      result.current.setSkillPinned({ skillId: 'skill', isPinned: true });
+    });
+
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/skills/skill/activation',
+        method: 'PATCH',
+        data: { isActive: false },
+      }),
+    );
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/skills/skill/pin',
+        method: 'PATCH',
+        data: { isPinned: true },
+      }),
+    );
+  });
+
   it.each(['skill activation', 'skill pin'])(
     'surfaces failed %s changes',
     async (kind) => {
@@ -192,9 +287,14 @@ describe('workspace resource regressions', () => {
 
   it('invalidates canonical workspace caches without expiring other scopes', async () => {
     const { client, wrapper } = setup();
-    const skillsKey = getWorkspaceContextControllerListSkillsQueryKey(
-      'project',
-      { limit: 20, offset: 20 },
+    const skillsKey = getSkillsControllerFindAllQueryKey(
+      workspaceSkillListParams('project', { limit: 20, offset: 20 }),
+    );
+    const otherSkillsKey = getSkillsControllerFindAllQueryKey(
+      workspaceSkillListParams('other-project'),
+    );
+    const personalSkillsKey = getSkillsControllerFindAllQueryKey(
+      personalSkillListParams,
     );
     const workspaceKey = getKnowledgeBasesControllerFindAllQueryKey(
       workspaceKnowledgeBaseListParams('project', {
@@ -209,6 +309,8 @@ describe('workspace resource regressions', () => {
       personalKnowledgeBaseListParams,
     );
     client.setQueryData(skillsKey, { data: [] });
+    client.setQueryData(otherSkillsKey, { data: [] });
+    client.setQueryData(personalSkillsKey, { data: [] });
     client.setQueryData(workspaceKey, { data: [] });
     client.setQueryData(otherWorkspaceKey, { data: [] });
     client.setQueryData(personalKey, { data: [] });
@@ -220,6 +322,8 @@ describe('workspace resource regressions', () => {
     await act(() => result.current());
 
     expect(client.getQueryState(skillsKey)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(otherSkillsKey)?.isInvalidated).toBe(false);
+    expect(client.getQueryState(personalSkillsKey)?.isInvalidated).toBe(false);
     expect(client.getQueryState(workspaceKey)?.isInvalidated).toBe(true);
     expect(client.getQueryState(otherWorkspaceKey)?.isInvalidated).toBe(false);
     expect(client.getQueryState(personalKey)?.isInvalidated).toBe(false);
