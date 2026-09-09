@@ -105,7 +105,7 @@
     "node-html-parser": "^7.1.0",
     "nodemailer": "^7.0.5",
     "ollama": "^0.6.3",
-    "openai": "^4.104.0",
+    "openai": "^7.12.1",
     "openid-client": "^6.8.7",
     "otplib": "^12.0.1",
     "p-limit": "^7.3.1",
