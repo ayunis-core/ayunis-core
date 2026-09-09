@@ -70,7 +70,10 @@ beforeEach(() => {
               },
             ],
           }
-        : [{ id: 'personal', name: 'Personal Skill', isPinned: true }],
+        : {
+            data: [{ id: 'personal', name: 'Personal Skill', isPinned: true }],
+            pagination: { limit: 100, offset: 0, total: 1 },
+          },
     ),
   );
 });
@@ -113,15 +116,23 @@ describe('PinnedSkills project context', () => {
     setup();
     await screen.findByRole('button', { name: 'Personal Skill' });
     expect(mocks.request).toHaveBeenCalledTimes(1);
+    expect(mocks.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/skills',
+        method: 'GET',
+        params: { ownerType: 'personal' },
+      }),
+    );
   });
 
   it('preserves personal pins if project loading fails', async () => {
     mocks.request.mockImplementation(({ url }: { url: string }) =>
       url.includes('/context')
         ? Promise.reject(new Error('Unavailable'))
-        : Promise.resolve([
-            { id: 'personal', name: 'Personal Skill', isPinned: true },
-          ]),
+        : Promise.resolve({
+            data: [{ id: 'personal', name: 'Personal Skill', isPinned: true }],
+            pagination: { limit: 100, offset: 0, total: 1 },
+          }),
     );
     setup('project-a');
     expect(await screen.findByRole('alert')).toBeTruthy();

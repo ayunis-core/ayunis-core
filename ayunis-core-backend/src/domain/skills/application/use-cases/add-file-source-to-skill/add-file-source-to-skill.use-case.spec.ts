@@ -1,5 +1,4 @@
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import type { Skill } from 'src/domain/skills/domain/skill';
 import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
@@ -53,11 +52,10 @@ describe('AddFileSourceToSkillUseCase', () => {
 
   beforeEach(() => {
     skillRepository = {
-      findOne: jest.fn().mockResolvedValue({ id: skillId, sourceIds: [] }),
+      findById: jest.fn().mockResolvedValue({ id: skillId, sourceIds: [] }),
     } as unknown as jest.Mocked<SkillRepository>;
     addSourceToSkill = {
       execute: jest.fn().mockResolvedValue(updatedSkill),
-      executeForAuthorizedSkill: jest.fn().mockResolvedValue(updatedSkill),
     } as unknown as jest.Mocked<AddSourceToSkillUseCase>;
     startDocumentProcessing = {
       execute: jest.fn(),
@@ -76,6 +74,8 @@ describe('AddFileSourceToSkillUseCase', () => {
       get: jest.fn((key: string) => (key === 'orgId' ? orgId : userId)),
     } as unknown as ContextService;
 
+    const authorization = { requireWrite: jest.fn() };
+
     useCase = new AddFileSourceToSkillUseCase(
       skillRepository,
       addSourceToSkill,
@@ -83,6 +83,7 @@ describe('AddFileSourceToSkillUseCase', () => {
       startDataSourceProcessing,
       deleteSources,
       contextService,
+      authorization as never,
     );
   });
 
@@ -91,7 +92,7 @@ describe('AddFileSourceToSkillUseCase', () => {
   });
 
   it('rejects a skill at the source cap before any processing starts', async () => {
-    skillRepository.findOne.mockResolvedValue({
+    skillRepository.findById.mockResolvedValue({
       id: skillId,
       sourceIds: Array.from({ length: SkillsConstants.MAX_SOURCES }, () =>
         randomUUID(),
@@ -111,7 +112,7 @@ describe('AddFileSourceToSkillUseCase', () => {
   });
 
   it('passes a capacity check that accounts for every sheet of a workbook', async () => {
-    skillRepository.findOne.mockResolvedValue({
+    skillRepository.findById.mockResolvedValue({
       id: skillId,
       sourceIds: Array.from({ length: SkillsConstants.MAX_SOURCES - 1 }, () =>
         randomUUID(),
@@ -134,30 +135,6 @@ describe('AddFileSourceToSkillUseCase', () => {
     await expect(
       useCase.execute(new AddFileSourceToSkillCommand({ skillId, file })),
     ).rejects.toBeInstanceOf(SkillSourceLimitExceededError);
-    expect(addSourceToSkill.execute).not.toHaveBeenCalled();
-  });
-
-  it('uses an already-authorized workspace skill without personal ownership lookup', async () => {
-    const workspaceSkill = {
-      id: skillId,
-      workspaceId: randomUUID(),
-      sourceIds: [],
-    } as unknown as Skill;
-    const created = dataSource();
-    startDataSourceProcessing.execute.mockResolvedValue([created]);
-    const file = {
-      originalname: 'vereine.csv',
-      mimetype: 'text/csv',
-      path: '/uploads/workspace-upload',
-    };
-
-    await useCase.executeForAuthorizedSkill(workspaceSkill, file);
-
-    expect(skillRepository.findOne).not.toHaveBeenCalled();
-    expect(addSourceToSkill.executeForAuthorizedSkill).toHaveBeenCalledWith(
-      workspaceSkill,
-      created.id,
-    );
     expect(addSourceToSkill.execute).not.toHaveBeenCalled();
   });
 

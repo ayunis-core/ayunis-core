@@ -11,11 +11,6 @@ import {
 } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  UserProperty,
-} from 'src/iam/authentication/application/decorators/current-user.decorator';
-
 import { AssignMcpIntegrationToSkillUseCase } from 'src/domain/skills/application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
 import { UnassignMcpIntegrationFromSkillUseCase } from 'src/domain/skills/application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.use-case';
 import { ListSkillMcpIntegrationsUseCase } from 'src/domain/skills/application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
@@ -24,8 +19,8 @@ import { AssignMcpIntegrationToSkillCommand } from 'src/domain/skills/applicatio
 import { UnassignMcpIntegrationFromSkillCommand } from 'src/domain/skills/application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.command';
 import { ListSkillMcpIntegrationsQuery } from 'src/domain/skills/application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.query';
 
-import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
-import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
+import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
+import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
 
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
@@ -48,8 +43,7 @@ export class SkillMcpIntegrationsController {
     private readonly listSkillMcpIntegrationsUseCase: ListSkillMcpIntegrationsUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
-    private readonly skillAccessService: SkillAccessService,
-    private readonly skillCreatorNameService: SkillCreatorNameService,
+    private readonly findOneSkill: FindOneSkillUseCase,
   ) {}
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -76,22 +70,15 @@ export class SkillMcpIntegrationsController {
   @ApiResponse({ status: 409, description: 'Integration already assigned' })
   @HttpCode(HttpStatus.CREATED)
   async assignMcpIntegration(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
     this.logger.log({ skillId, integrationId }, 'assignMcpIntegration');
 
-    const skill = await this.assignMcpIntegrationToSkillUseCase.execute(
+    await this.assignMcpIntegrationToSkillUseCase.execute(
       new AssignMcpIntegrationToSkillCommand(skillId, integrationId),
     );
-
-    const context = await this.skillAccessService.resolveUserContext(skillId);
-    const creatorName = context.isShared
-      ? await this.skillCreatorNameService.resolveOne(skill.userId)
-      : null;
-
-    return this.skillDtoMapper.toDto(skill, context, creatorName);
+    return this.findSkillDto(skillId);
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -119,22 +106,26 @@ export class SkillMcpIntegrationsController {
     description: 'Skill not found or integration not assigned',
   })
   async unassignMcpIntegration(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
     this.logger.log({ skillId, integrationId }, 'unassignMcpIntegration');
 
-    const skill = await this.unassignMcpIntegrationFromSkillUseCase.execute(
+    await this.unassignMcpIntegrationFromSkillUseCase.execute(
       new UnassignMcpIntegrationFromSkillCommand(skillId, integrationId),
     );
+    return this.findSkillDto(skillId);
+  }
 
-    const context = await this.skillAccessService.resolveUserContext(skillId);
-    const creatorName = context.isShared
-      ? await this.skillCreatorNameService.resolveOne(skill.userId)
-      : null;
-
-    return this.skillDtoMapper.toDto(skill, context, creatorName);
+  private async findSkillDto(skillId: UUID): Promise<SkillResponseDto> {
+    const context = await this.findOneSkill.execute(
+      new FindOneSkillQuery(skillId),
+    );
+    return this.skillDtoMapper.toDto(
+      context.skill,
+      context,
+      context.creatorName,
+    );
   }
 
   @Get(':skillId/mcp-integrations')

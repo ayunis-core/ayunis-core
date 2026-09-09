@@ -5421,7 +5421,7 @@
         },
         "responses": {
           "201": {
-            "description": "The skill has been successfully installed from the marketplace",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -5429,9 +5429,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Marketplace skill not found"
           }
         },
         "summary": "Install a skill from the marketplace",
@@ -5454,7 +5451,7 @@
         },
         "responses": {
           "201": {
-            "description": "The skill has been successfully created",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -5462,12 +5459,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid skill data"
-          },
-          "409": {
-            "description": "A skill with this name already exists"
           }
         },
         "summary": "Create a new skill",
@@ -5475,23 +5466,66 @@
       },
       "get": {
         "operationId": "SkillsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["personal", "workspace"]
+            }
+          },
+          {
+            "name": "workspaceId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Returns all skills for the current user",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SkillResponseDto"
-                  }
+                  "$ref": "#/components/schemas/SkillListResponseDto"
                 }
               }
             }
           }
         },
-        "summary": "Get all skills for the current user",
+        "summary": "List skills for an owner scope",
         "tags": ["skills"]
       }
     },
@@ -5503,7 +5537,6 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "The UUID of the skill to retrieve",
             "schema": {
               "format": "uuid",
               "type": "string"
@@ -5512,7 +5545,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns the skill with the specified ID",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -5520,9 +5553,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Skill not found"
           }
         },
         "summary": "Get a skill by ID",
@@ -5535,9 +5565,7 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "The UUID of the skill to update",
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -5554,7 +5582,7 @@
         },
         "responses": {
           "200": {
-            "description": "The skill has been successfully updated",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -5562,15 +5590,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid skill data"
-          },
-          "404": {
-            "description": "Skill not found"
-          },
-          "409": {
-            "description": "A skill with this name already exists"
           }
         },
         "summary": "Update a skill",
@@ -5583,43 +5602,45 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "The UUID of the skill to delete",
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": "The skill has been successfully deleted"
-          },
-          "404": {
-            "description": "Skill not found"
+            "description": ""
           }
         },
-        "summary": "Delete a skill",
         "tags": ["skills"]
       }
     },
-    "/skills/{id}/toggle-active": {
+    "/skills/{id}/activation": {
       "patch": {
-        "operationId": "SkillsController_toggleActive",
+        "operationId": "SkillsController_activate",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "The UUID of the skill to toggle",
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSkillActivationDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "The skill active status has been toggled",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -5627,33 +5648,38 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Skill not found"
           }
         },
-        "summary": "Toggle skill active/inactive status",
+        "summary": "Set skill activation",
         "tags": ["skills"]
       }
     },
-    "/skills/{id}/toggle-pinned": {
+    "/skills/{id}/pin": {
       "patch": {
-        "operationId": "SkillsController_togglePinned",
+        "operationId": "SkillsController_pin",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "The UUID of the skill to toggle pinned status",
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSkillPinDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "The skill pinned status has been toggled",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -5661,15 +5687,9 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Skill is not active"
-          },
-          "404": {
-            "description": "Skill not found"
           }
         },
-        "summary": "Toggle skill pinned/unpinned status",
+        "summary": "Set skill pinning",
         "tags": ["skills"]
       }
     },
@@ -6903,381 +6923,6 @@
         "tags": ["workspaces"]
       }
     },
-    "/workspaces/{id}/context/skills": {
-      "post": {
-        "operationId": "WorkspaceContextController_createSkill",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateWorkspaceSkillDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      },
-      "get": {
-        "operationId": "WorkspaceContextController_listSkills",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 0,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillListResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/skills/{skillId}": {
-      "get": {
-        "operationId": "WorkspaceContextController_findSkill",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      },
-      "patch": {
-        "operationId": "WorkspaceContextController_updateSkill",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateWorkspaceSkillDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      },
-      "delete": {
-        "operationId": "WorkspaceContextController_deleteSkill",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/skills/{skillId}/activation": {
-      "patch": {
-        "operationId": "WorkspaceContextController_setSkillActivation",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateWorkspaceSkillActivationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/skills/{skillId}/pin": {
-      "patch": {
-        "operationId": "WorkspaceContextController_setSkillPin",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateWorkspaceSkillPinDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/skills/{skillId}/knowledge-bases/{knowledgeBaseId}": {
-      "post": {
-        "operationId": "WorkspaceContextController_assignSkillKnowledgeBase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      },
-      "delete": {
-        "operationId": "WorkspaceContextController_unassignSkillKnowledgeBase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
     "/workspaces/{id}/context/instruction": {
       "patch": {
         "operationId": "WorkspaceContextController_updateInstruction",
@@ -7311,137 +6956,6 @@
                 }
               }
             }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/skills/{skillId}/sources": {
-      "get": {
-        "operationId": "WorkspaceSkillSourcesController_list",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SkillSourceResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/skills/{skillId}/sources/file": {
-      "post": {
-        "operationId": "WorkspaceSkillSourcesController_addFile",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "The file to upload (max 25 MB)"
-                  }
-                },
-                "required": ["file"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/skills/{skillId}/sources/{sourceId}": {
-      "delete": {
-        "operationId": "WorkspaceSkillSourcesController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "sourceId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
           }
         },
         "tags": ["workspaces"]
@@ -16231,79 +15745,63 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "The unique identifier of the skill",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
           },
-          "name": {
+          "ownerType": {
             "type": "string",
-            "description": "The name of the skill",
-            "example": "Legal Research"
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "A short description of the skill",
-            "example": "Research legal topics, find relevant case law, and draft legal documents."
-          },
-          "instructions": {
-            "type": "string",
-            "description": "Detailed instructions for the skill",
-            "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
-          },
-          "marketplaceIdentifier": {
-            "type": "string",
-            "description": "The marketplace identifier if this skill was installed from the marketplace",
-            "example": "meeting-summarizer",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the skill is active and available for use in chats",
-            "example": true
+            "enum": ["personal", "workspace"]
           },
           "userId": {
             "type": "string",
-            "description": "The unique identifier of the user who owns this skill",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "marketplaceIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
-            "description": "The date and time when the skill was created",
-            "example": "2023-12-01T10:00:00.000Z",
             "format": "date-time"
           },
           "updatedAt": {
             "type": "string",
-            "description": "The date and time when the skill was last updated",
-            "example": "2023-12-01T10:00:00.000Z",
             "format": "date-time"
           },
           "isShared": {
-            "type": "boolean",
-            "description": "Whether the skill is shared with the current user (not owned)",
-            "example": false
+            "type": "boolean"
           },
           "isPinned": {
-            "type": "boolean",
-            "description": "Whether the skill is pinned for quick access in chat",
-            "example": false
+            "type": "boolean"
           },
           "creatorName": {
             "type": "string",
-            "description": "Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller’s organisation; otherwise null.",
-            "example": "Florian Obermeier",
             "nullable": true
           }
         },
         "required": [
           "id",
+          "ownerType",
           "name",
           "shortDescription",
           "instructions",
           "marketplaceIdentifier",
           "isActive",
-          "userId",
           "createdAt",
           "updatedAt",
           "isShared",
@@ -16331,13 +15829,36 @@
             "description": "Detailed instructions for the skill (injected when the skill is activated)",
             "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
           },
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "workspace"]
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "isActive": {
             "type": "boolean",
-            "description": "Whether the skill is active (defaults to true)",
+            "description": "Whether a personal skill is active (defaults to true)",
             "example": true
           }
         },
-        "required": ["name", "shortDescription", "instructions"]
+        "required": ["name", "shortDescription", "instructions", "ownerType"]
+      },
+      "SkillListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": ["data", "pagination"]
       },
       "UpdateSkillDto": {
         "type": "object",
@@ -16362,40 +15883,46 @@
         },
         "required": ["name", "shortDescription", "instructions"]
       },
+      "SetSkillActivationDto": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": ["isActive"]
+      },
+      "SetSkillPinDto": {
+        "type": "object",
+        "properties": {
+          "isPinned": {
+            "type": "boolean"
+          }
+        },
+        "required": ["isPinned"]
+      },
       "SkillSourceResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "The unique identifier of the source",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
           },
           "name": {
-            "type": "string",
-            "description": "The name of the source",
-            "example": "Legal Database 2024"
+            "type": "string"
           },
           "type": {
-            "type": "string",
-            "description": "The type of source",
-            "example": "file"
+            "type": "string"
           },
           "status": {
             "type": "string",
-            "description": "Processing status of the source",
-            "enum": ["processing", "ready", "failed"],
-            "example": "ready"
+            "enum": ["processing", "ready", "failed"]
           },
           "processingError": {
-            "type": "string",
-            "description": "Error message if processing failed",
-            "example": "OCR extraction timed out"
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
-            "description": "The date and time when the source was created",
-            "example": "2025-01-15T10:00:00.000Z",
             "format": "date-time"
           }
         },
@@ -17483,54 +17010,6 @@
           }
         },
         "required": ["instruction", "skills", "knowledgeBases"]
-      },
-      "CreateWorkspaceSkillDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "shortDescription": {
-            "type": "string"
-          },
-          "instructions": {
-            "type": "string"
-          }
-        },
-        "required": ["name", "shortDescription", "instructions"]
-      },
-      "UpdateWorkspaceSkillActivationDto": {
-        "type": "object",
-        "properties": {
-          "isActive": {
-            "type": "boolean"
-          }
-        },
-        "required": ["isActive"]
-      },
-      "UpdateWorkspaceSkillPinDto": {
-        "type": "object",
-        "properties": {
-          "isPinned": {
-            "type": "boolean"
-          }
-        },
-        "required": ["isPinned"]
-      },
-      "WorkspaceSkillListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationDto"
-          }
-        },
-        "required": ["data", "pagination"]
       },
       "UpdateWorkspaceInstructionDto": {
         "type": "object",

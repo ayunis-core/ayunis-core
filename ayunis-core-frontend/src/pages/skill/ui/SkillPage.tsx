@@ -40,9 +40,10 @@ import {
   getSkillsControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import {
-  useToggleSkillActive,
-  useToggleSkillPinned,
+  useSetSkillActivation,
+  useSetSkillPin,
 } from '@/features/skill-actions';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export function SkillPage({
   skill,
@@ -66,8 +67,8 @@ export function SkillPage({
   });
   const { t: tSkills } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
-  const toggleActive = useToggleSkillActive();
-  const togglePinned = useToggleSkillPinned();
+  const setActivation = useSetSkillActivation();
+  const setPin = useSetSkillPin();
   const { confirm } = useConfirmation();
 
   const sourcesHook = useSkillSources({
@@ -138,9 +139,12 @@ export function SkillPage({
                         <Switch
                           checked={skill.isActive}
                           onCheckedChange={() =>
-                            toggleActive.mutate({ id: skill.id })
+                            setActivation.mutate({
+                              id: skill.id,
+                              isActive: !skill.isActive,
+                            })
                           }
-                          disabled={toggleActive.isPending}
+                          disabled={setActivation.isPending}
                         />
                       </span>
                     </TooltipTrigger>
@@ -155,8 +159,13 @@ export function SkillPage({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => togglePinned.mutate({ id: skill.id })}
-                        disabled={togglePinned.isPending}
+                        onClick={() =>
+                          setPin.mutate({
+                            id: skill.id,
+                            isPinned: !skill.isPinned,
+                          })
+                        }
+                        disabled={setPin.isPending}
                         aria-label={
                           skill.isPinned
                             ? tSkills('card.unpinLabel')
@@ -238,7 +247,9 @@ export function SkillPage({
                       await skillsControllerUpdate(skill.id, data);
                       await Promise.all(
                         [
-                          getSkillsControllerFindAllQueryKey(),
+                          getSkillsControllerFindAllQueryKey(
+                            personalSkillListParams,
+                          ),
                           getSkillsControllerFindOneQueryKey(skill.id),
                         ].map((queryKey) =>
                           queryClient.invalidateQueries({ queryKey }),

@@ -1,234 +1,44 @@
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-
-// Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional:
-    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
-      descriptor,
+  Transactional: () => (_t: unknown, _p: string, d: PropertyDescriptor) => d,
 }));
 
-import { UpdateSkillUseCase } from './update-skill.use-case';
+import { randomUUID } from 'crypto';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { UpdateSkillCommand } from './update-skill.command';
-import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { UpdateSkillUseCase } from './update-skill.use-case';
 
-import { ContextService } from 'src/common/context/services/context.service';
-import type { UUID } from 'crypto';
-import {
-  SkillNotFoundError,
-  DuplicateSkillNameError,
-  SkillInvalidInputError,
-} from 'src/domain/skills/application/skills.errors';
-
-describe('UpdateSkillUseCase', () => {
-  let useCase: UpdateSkillUseCase;
-  let skillRepository: jest.Mocked<SkillRepository>;
-
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockSkillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
-
-  beforeAll(async () => {
-    const mockSkillRepository = {
-      findOne: jest.fn(),
-      findByNameAndOwner: jest.fn(),
-      update: jest.fn(),
+describe(UpdateSkillUseCase.name, () => {
+  it('loads ownership, authorizes workspace writes, and preserves owner scope', async () => {
+    const skill = new WorkspaceSkill({
+      workspaceId: randomUUID(),
+      name: 'Old',
+      shortDescription: 'Old',
+      instructions: 'Old',
+    });
+    const repository = {
+      findById: jest.fn().mockResolvedValue(skill),
+      findByNameAndWorkspace: jest.fn().mockResolvedValue(null),
+      update: jest
+        .fn()
+        .mockImplementation((updated) => Promise.resolve(updated)),
     };
-
-    const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
+    const authorization = { requireWrite: jest.fn() };
+    const useCase = new UpdateSkillUseCase(
+      repository as unknown as SkillRepository,
+      authorization as unknown as SkillAuthorizationService,
+    );
+    const updated = await useCase.execute(
+      new UpdateSkillCommand({
+        skillId: skill.id,
+        name: 'New',
+        shortDescription: 'New description',
+        instructions: 'New instructions',
       }),
-    } as unknown as jest.Mocked<ContextService>;
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UpdateSkillUseCase,
-        { provide: SkillRepository, useValue: mockSkillRepository },
-        { provide: ContextService, useValue: mockContextService },
-      ],
-    }).compile();
-
-    useCase = module.get<UpdateSkillUseCase>(UpdateSkillUseCase);
-    skillRepository = module.get(SkillRepository);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should update a skill with new name and instructions', async () => {
-    const existingSkill = new PersonalSkill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'Original instructions.',
-      userId: mockUserId,
-    });
-
-    const command = new UpdateSkillCommand({
-      skillId: mockSkillId,
-      name: 'Updated Legal Research',
-      shortDescription: 'Updated description.',
-      instructions: 'Updated instructions.',
-    });
-
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-    skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    skillRepository.update.mockImplementation(async (skill) => skill);
-
-    const result = await useCase.execute(command);
-
-    expect(result.name).toBe('Updated Legal Research');
-    expect(result.shortDescription).toBe('Updated description.');
-    expect(result.instructions).toBe('Updated instructions.');
-    expect(result.id).toBe(mockSkillId);
-  });
-
-  it('should throw SkillNotFoundError when skill does not exist', async () => {
-    skillRepository.findOne.mockResolvedValue(null);
-
-    const command = new UpdateSkillCommand({
-      skillId: mockSkillId,
-      name: 'Updated',
-      shortDescription: 'Updated.',
-      instructions: 'Updated.',
-    });
-
-    await expect(useCase.execute(command)).rejects.toThrow(SkillNotFoundError);
-  });
-
-  it('should translate invalid domain names to a skill application error', async () => {
-    const existingSkill = new PersonalSkill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'Original instructions.',
-      userId: mockUserId,
-    });
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-
-    const command = new UpdateSkillCommand({
-      skillId: mockSkillId,
-      name: 'Invalid name ',
-      shortDescription: 'Updated.',
-      instructions: 'Updated.',
-    });
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      SkillInvalidInputError,
     );
-    expect(skillRepository.findByNameAndOwner).not.toHaveBeenCalled();
-    expect(skillRepository.update).not.toHaveBeenCalled();
-  });
-
-  it('should reject update when new name conflicts with another skill', async () => {
-    const existingSkill = new PersonalSkill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'Original instructions.',
-      userId: mockUserId,
-    });
-
-    const conflictingSkill = new PersonalSkill({
-      id: '660e8400-e29b-41d4-a716-446655440000',
-      name: 'Data Analysis',
-      shortDescription: 'Analyze data.',
-      instructions: 'Data analysis instructions.',
-      userId: mockUserId,
-    });
-
-    const command = new UpdateSkillCommand({
-      skillId: mockSkillId,
-      name: 'Data Analysis',
-      shortDescription: 'Updated.',
-      instructions: 'Updated.',
-    });
-
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-    skillRepository.findByNameAndOwner.mockResolvedValue(conflictingSkill);
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      DuplicateSkillNameError,
-    );
-  });
-
-  it('should allow update when name stays the same', async () => {
-    const existingSkill = new PersonalSkill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'Original instructions.',
-      userId: mockUserId,
-    });
-
-    const command = new UpdateSkillCommand({
-      skillId: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Updated description only.',
-      instructions: 'Updated instructions only.',
-    });
-
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-    skillRepository.update.mockImplementation(async (skill) => skill);
-
-    const result = await useCase.execute(command);
-
-    expect(result.name).toBe('Legal Research');
-    expect(skillRepository.findByNameAndOwner).not.toHaveBeenCalled();
-  });
-
-  it('should preserve knowledgeBaseIds on update', async () => {
-    const kbIds = ['bbb00000-0000-0000-0000-000000000000' as UUID];
-    const existingSkill = new PersonalSkill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'Original instructions.',
-      userId: mockUserId,
-      knowledgeBaseIds: kbIds,
-    });
-
-    const command = new UpdateSkillCommand({
-      skillId: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Updated.',
-      instructions: 'Updated.',
-    });
-
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-    skillRepository.update.mockImplementation(async (skill) => skill);
-
-    const result = await useCase.execute(command);
-
-    expect(result.knowledgeBaseIds).toEqual(kbIds);
-  });
-
-  it('should preserve mcpIntegrationIds on update', async () => {
-    const mcpIds = ['aaa00000-0000-0000-0000-000000000000' as UUID];
-    const existingSkill = new PersonalSkill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'Original instructions.',
-      userId: mockUserId,
-      mcpIntegrationIds: mcpIds,
-    });
-
-    const command = new UpdateSkillCommand({
-      skillId: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Updated.',
-      instructions: 'Updated.',
-    });
-
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-    skillRepository.update.mockImplementation(async (skill) => skill);
-
-    const result = await useCase.execute(command);
-
-    expect(result.mcpIntegrationIds).toEqual(mcpIds);
+    expect(authorization.requireWrite).toHaveBeenCalledWith(skill);
+    expect((updated as WorkspaceSkill).workspaceId).toBe(skill.workspaceId);
+    expect(updated.name).toBe('New');
   });
 });

@@ -12,6 +12,7 @@ import {
   useWorkspaceContextControllerFindContext,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useIsSkillsEnabled } from '@/features/feature-toggles';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 interface PinnedSkillsProps {
   onSkillSelect: (
@@ -30,9 +31,10 @@ export function PinnedSkills({
 }: Readonly<PinnedSkillsProps>) {
   const { t } = useTranslation('common');
   const skillsEnabled = useIsSkillsEnabled();
-  const { data: skills } = useSkillsControllerFindAll({
-    query: { enabled: skillsEnabled },
-  });
+  const { data: skillsResponse } = useSkillsControllerFindAll(
+    personalSkillListParams,
+    { query: { enabled: skillsEnabled } },
+  );
   const workspaceQuery = useWorkspaceContextControllerFindContext(
     workspaceId ?? '',
     {
@@ -40,7 +42,7 @@ export function PinnedSkills({
     },
   );
   const pinnedSkills = [
-    ...(skills?.filter((skill) => skill.isPinned) ?? []),
+    ...(skillsResponse?.data.filter((skill) => skill.isPinned) ?? []),
     ...(workspaceId
       ? (workspaceQuery.data?.skills.filter(
           (skill) => skill.isActive && skill.isPinned,

@@ -13,16 +13,16 @@ import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 
 // Use Cases
 import { CreateSkillUseCase } from './application/use-cases/create-skill/create-skill.use-case';
 import { UpdateSkillUseCase } from './application/use-cases/update-skill/update-skill.use-case';
 import { DeleteSkillUseCase } from './application/use-cases/delete-skill/delete-skill.use-case';
 import { FindOneSkillUseCase } from './application/use-cases/find-one-skill/find-one-skill.use-case';
-import { FindAllSkillsUseCase } from './application/use-cases/find-all-skills/find-all-skills.use-case';
 import { ListAccessibleSkillsUseCase } from './application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
-import { ToggleSkillActiveUseCase } from './application/use-cases/toggle-skill-active/toggle-skill-active.use-case';
-import { ToggleSkillPinnedUseCase } from './application/use-cases/toggle-skill-pinned/toggle-skill-pinned.use-case';
+import { SetSkillActivationUseCase } from './application/use-cases/set-skill-activation/set-skill-activation.use-case';
+import { SetSkillPinUseCase } from './application/use-cases/set-skill-pin/set-skill-pin.use-case';
 import { FindActiveSkillsUseCase } from './application/use-cases/find-active-skills/find-active-skills.use-case';
 import { AddSourceToSkillUseCase } from './application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
 import { AddFileSourceToSkillUseCase } from './application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
@@ -43,16 +43,9 @@ import { GetSkillsByIdsUseCase } from './application/use-cases/get-skills-by-ids
 
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
-import { SkillAccessService } from './application/services/skill-access.service';
+import { FindActivatableSkillUseCase } from './application/use-cases/find-activatable-skill/find-activatable-skill.use-case';
 import { SkillAuthorizationService } from './application/services/skill-authorization.service';
-import { FindWorkspaceSkillUseCase } from './application/use-cases/find-workspace-skill/find-workspace-skill.use-case';
 import { GetWorkspaceSkillsUseCase } from './application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
-import { UpdateWorkspaceSkillUseCase } from './application/use-cases/update-workspace-skill/update-workspace-skill.use-case';
-import { SetWorkspaceSkillActivationUseCase } from './application/use-cases/set-workspace-skill-activation/set-workspace-skill-activation.use-case';
-import { SetWorkspaceSkillPinUseCase } from './application/use-cases/set-workspace-skill-pin/set-workspace-skill-pin.use-case';
-import { SetWorkspaceSkillKnowledgeBaseUseCase } from './application/use-cases/set-workspace-skill-knowledge-base/set-workspace-skill-knowledge-base.use-case';
-import { GetWorkspaceSkillStatesUseCase } from './application/use-cases/get-workspace-skill-states/get-workspace-skill-states.use-case';
-import { WorkspaceSkillAccessService } from './application/services/workspace-skill-access.service';
 import { SkillActivationService } from './application/services/skill-activation.service';
 import { SkillCreatorNameService } from './application/services/skill-creator-name.service';
 
@@ -98,24 +91,18 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     forwardRef(() => SharesModule),
     forwardRef(() => ThreadsModule),
     forwardRef(() => WorkspacesModule),
+    PermissionsModule,
   ],
   providers: [
     ActivateWorkspaceSkillByNameUseCase,
-    GetWorkspaceSkillStatesUseCase,
-    FindWorkspaceSkillUseCase,
     GetWorkspaceSkillsUseCase,
-    UpdateWorkspaceSkillUseCase,
-    SetWorkspaceSkillActivationUseCase,
-    SetWorkspaceSkillPinUseCase,
-    SetWorkspaceSkillKnowledgeBaseUseCase,
     {
       provide: SkillRepository,
       useClass: LocalSkillRepository,
     },
     // Services
-    SkillAccessService,
     SkillAuthorizationService,
-    WorkspaceSkillAccessService,
+    FindActivatableSkillUseCase,
     SkillActivationService,
     SkillCreatorNameService,
 
@@ -124,10 +111,9 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     UpdateSkillUseCase,
     DeleteSkillUseCase,
     FindOneSkillUseCase,
-    FindAllSkillsUseCase,
     ListAccessibleSkillsUseCase,
-    ToggleSkillActiveUseCase,
-    ToggleSkillPinnedUseCase,
+    SetSkillActivationUseCase,
+    SetSkillPinUseCase,
     FindActiveSkillsUseCase,
     AddSourceToSkillUseCase,
     AddFileSourceToSkillUseCase,
@@ -174,34 +160,16 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
   ],
   exports: [
     ActivateWorkspaceSkillByNameUseCase,
-    GetWorkspaceSkillStatesUseCase,
-    FindWorkspaceSkillUseCase,
     GetWorkspaceSkillsUseCase,
-    UpdateWorkspaceSkillUseCase,
-    SetWorkspaceSkillActivationUseCase,
-    SetWorkspaceSkillPinUseCase,
-    SetWorkspaceSkillKnowledgeBaseUseCase,
     SkillRepository,
     FindActiveSkillsUseCase,
-    FindAllSkillsUseCase,
-    ListAccessibleSkillsUseCase,
-    FindOneSkillUseCase,
-    AddSourceToSkillUseCase,
-    AddFileSourceToSkillUseCase,
-    RemoveSourceFromSkillUseCase,
-    ListSkillSourcesUseCase,
-    SkillDtoMapper,
     FindSkillByNameUseCase,
-    SkillAccessService,
     SkillActivationService,
     SkillShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.SKILL),
-    CreateSkillUseCase,
-    DeleteSkillUseCase,
     CreateSkillWithUniqueNameUseCase,
     CheckKnowledgeBaseSkillShareAccessUseCase,
     FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
-    GetSkillsByIdsUseCase,
   ],
 })
 export class SkillsModule {}

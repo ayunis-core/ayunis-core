@@ -10,7 +10,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { useWorkspaceContextControllerListSkills } from '@/shared/api/generated/ayunisCoreAPI';
+import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
 import { SkillListItem } from '@/shared/ui/skill-list-item';
 import {
   WorkspaceContextEmpty,
@@ -30,8 +30,10 @@ export function WorkspaceSkillsTab({
     limit: CONTEXT_PAGE_SIZE,
     offset: (page - 1) * CONTEXT_PAGE_SIZE,
   };
-  const { data: skillPage, isLoading } =
-    useWorkspaceContextControllerListSkills(workspaceId, listParams);
+  const { skills, pagination, isLoading } = useWorkspaceSkills(
+    workspaceId,
+    listParams,
+  );
   const {
     createSkill,
     deleteSkill,
@@ -53,7 +55,6 @@ export function WorkspaceSkillsTab({
       }}
     />
   );
-  const skills = skillPage?.data ?? [];
 
   return (
     <section className="space-y-3">
@@ -162,7 +163,7 @@ export function WorkspaceSkillsTab({
       ) : null}
       <WorkspaceContextPagination
         page={page}
-        total={pageTotal(skillPage?.pagination)}
+        total={pageTotal(pagination)}
         testId="workspace-skills-pagination"
         onPageChange={setPage}
       />

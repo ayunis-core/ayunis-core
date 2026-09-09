@@ -3,9 +3,10 @@ import { useRouter } from '@tanstack/react-router';
 import {
   getKnowledgeBasesControllerFindAllQueryKey,
   getWorkspaceContextControllerFindContextQueryKey,
-  getWorkspaceContextControllerListSkillsQueryKey,
+  getSkillsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { workspaceKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
+import { workspaceSkillListParams } from '@/shared/api/skill-scopes';
 
 export function useInvalidateWorkspaceResources(workspaceId: string) {
   const queryClient = useQueryClient();
@@ -14,7 +15,9 @@ export function useInvalidateWorkspaceResources(workspaceId: string) {
     await Promise.all(
       [
         getWorkspaceContextControllerFindContextQueryKey(workspaceId),
-        getWorkspaceContextControllerListSkillsQueryKey(workspaceId),
+        getSkillsControllerFindAllQueryKey(
+          workspaceSkillListParams(workspaceId),
+        ),
         getKnowledgeBasesControllerFindAllQueryKey(
           workspaceKnowledgeBaseListParams(workspaceId),
         ),

@@ -13,6 +13,7 @@ test("keeps every worksheet attached after uploading a workbook", async ({
 }) => {
   const skill = await generatedApi.skillsControllerCreate(
     {
+      ownerType: "personal",
       name: `Multi-sheet upload ${Date.now()}`,
       shortDescription: "Use municipal data from the attached workbook.",
       instructions: "Answer with information from the attached workbook.",

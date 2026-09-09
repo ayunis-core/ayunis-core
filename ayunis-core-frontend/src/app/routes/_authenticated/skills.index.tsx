@@ -6,6 +6,7 @@ import {
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export const Route = createFileRoute('/_authenticated/skills/')({
   component: RouteComponent,
@@ -18,10 +19,10 @@ export const Route = createFileRoute('/_authenticated/skills/')({
       throw redirect({ to: '/chat' });
     }
     const skills = await queryClient.fetchQuery({
-      queryKey: getSkillsControllerFindAllQueryKey(),
-      queryFn: () => skillsControllerFindAll(),
+      queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
+      queryFn: () => skillsControllerFindAll(personalSkillListParams),
     });
-    return { skills };
+    return { skills: skills.data };
   },
 });
 

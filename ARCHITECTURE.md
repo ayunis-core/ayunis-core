@@ -67,64 +67,66 @@ none of these packages implements the Agent Plugins standard.
 
 ### Domain Modules — Core Business Logic
 
-| Module | Summary | Detail |
-| ------ | ------- | ------ |
-| [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) | Conversations | Chat session management with organization sharing |
-| [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md) | Chat History | Message storage and retrieval |
-| [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) | AI Execution | LLM request tracking and streaming |
-| [models](ayunis-core-backend/src/domain/models/SUMMARY.md) | LLM Config | Multi-provider model management |
-| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md) | Capabilities | Extensible tool system with JSON schema |
-| [prompts](ayunis-core-backend/src/domain/prompts/SUMMARY.md) | Templates | Reusable prompt library |
-| [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md) | Documents | File and URL data sources |
-| [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md) | Retrieval | Embeddings, chunking, semantic search |
-| [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md) | Search | File, URL, and internet search retrieval |
-| [storage](ayunis-core-backend/src/domain/storage/SUMMARY.md) | Files | MinIO-based file storage |
-| [mcp](ayunis-core-backend/src/domain/mcp/SUMMARY.md) | Integrations | Model Context Protocol server connections |
-| [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md) | Sharing | Organization-wide resource sharing |
-| [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md) | Voice | Audio transcription service |
-| [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md) | Metering | Token and credit usage tracking |
-| [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md) | Blueprints | Admin-managed skill templates with distribution modes |
-| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning | Academy chapters and lessons managed by super admins |
-| [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode |
-| [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md) | Privacy | Per-thread PII mask dictionary for anonymous mode |
-| [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md) | Favorites | User-owned ordered references resolved for navigation |
-| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md) | Folders | Personal project folders ("Projekte") that group chats and attach skills, knowledge, documents and instructions |
+| Module                                                                          | Summary        | Detail                                                                                                         |
+| ------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
+| [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md)                    | Conversations  | Chat session management with organization sharing                                                              |
+| [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)                  | Chat History   | Message storage and retrieval                                                                                  |
+| [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md)                          | AI Execution   | LLM request tracking and streaming                                                                             |
+| [models](ayunis-core-backend/src/domain/models/SUMMARY.md)                      | LLM Config     | Multi-provider model management                                                                                |
+| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema                                                                        |
+| [prompts](ayunis-core-backend/src/domain/prompts/SUMMARY.md)                    | Templates      | Reusable prompt library                                                                                        |
+| [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal and workspace instruction bundles                                                         |
+| [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal and workspace document collections                                                        |
+| [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                    | Documents      | File and URL data sources                                                                                      |
+| [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md)                            | Retrieval      | Embeddings, chunking, semantic search                                                                          |
+| [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |
+| [storage](ayunis-core-backend/src/domain/storage/SUMMARY.md)                    | Files          | MinIO-based file storage                                                                                       |
+| [mcp](ayunis-core-backend/src/domain/mcp/SUMMARY.md)                            | Integrations   | Model Context Protocol server connections                                                                      |
+| [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md)                      | Sharing        | Organization-wide resource sharing                                                                             |
+| [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md)      | Voice          | Audio transcription service                                                                                    |
+| [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md)                        | Metering       | Token and credit usage tracking                                                                                |
+| [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md)    | Blueprints     | Admin-managed skill templates with distribution modes                                                          |
+| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md)                    | Learning       | Academy chapters and lessons managed by super admins                                                           |
+| [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode                                                                     |
+| [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md)  | Privacy        | Per-thread PII mask dictionary for anonymous mode                                                              |
+| [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md)                | Favorites      | User-owned ordered references resolved for navigation                                                          |
+| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Personal project folders ("Projekte") that group chats and own scoped skills, knowledge bases and instructions |
 
 ### IAM Modules — Identity & Access Management
 
-| Module | Summary | Detail |
-| ------ | ------- | ------ |
-| [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) | User Auth | Login, registration, JWT tokens |
-| [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) | Access Control | Role & permission guards |
-| [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md) | RBAC | Per-org role/permission grants (MANAGER/USER configurable) |
-| [users](ayunis-core-backend/src/iam/users/SUMMARY.md) | Accounts | User profiles and credentials |
-| [orgs](ayunis-core-backend/src/iam/orgs/SUMMARY.md) | Tenants | Multi-tenant organization management |
-| [subscriptions](ayunis-core-backend/src/iam/subscriptions/SUMMARY.md) | Billing | Package and subscription management |
-| [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md) | Add-ons | Per-org add-on activation managed by super admins |
-| [academy-access](ayunis-core-backend/src/iam/academy-access/SUMMARY.md) | Access Gate | Per-org KI-Schulung nach EU AI Act certificate requirement for the chat surface |
-| [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md) | Limits | Usage quota enforcement |
-| [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md) | Limits | Per-user, per-team, and per-API-key monthly credit allowances |
-| [budget-alerts](ayunis-core-backend/src/iam/budget-alerts/SUMMARY.md) | Alerts | Budget-warning and budget-exhausted emails when credit budgets cross usage thresholds |
-| [teams](ayunis-core-backend/src/iam/teams/SUMMARY.md) | Groups | Team-based access control |
-| [invites](ayunis-core-backend/src/iam/invites/SUMMARY.md) | Onboarding | User invitation flows |
-| [trials](ayunis-core-backend/src/iam/trials/SUMMARY.md) | Trial Access | Free trial management |
-| [legal-acceptances](ayunis-core-backend/src/iam/legal-acceptances/SUMMARY.md) | Compliance | Terms acceptance tracking |
-| [onboarding](ayunis-core-backend/src/iam/onboarding/SUMMARY.md) | Onboarding | Per-user onboarding progress |
-| [hashing](ayunis-core-backend/src/iam/hashing/SUMMARY.md) | Security | Password hashing |
-| [ip-allowlist](ayunis-core-backend/src/iam/ip-allowlist/SUMMARY.md) | Network Security | Per-organization IP allowlist enforcement |
-| [sso](ayunis-core-backend/src/iam/sso/SUMMARY.md) | Federated Identity | Municipal SSO connections and broker identity mappings |
+| Module                                                                        | Summary            | Detail                                                                                |
+| ----------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md)       | User Auth          | Login, registration, JWT tokens                                                       |
+| [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md)         | Access Control     | Role & permission guards                                                              |
+| [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md)             | RBAC               | Per-org role/permission grants (MANAGER/USER configurable)                            |
+| [users](ayunis-core-backend/src/iam/users/SUMMARY.md)                         | Accounts           | User profiles and credentials                                                         |
+| [orgs](ayunis-core-backend/src/iam/orgs/SUMMARY.md)                           | Tenants            | Multi-tenant organization management                                                  |
+| [subscriptions](ayunis-core-backend/src/iam/subscriptions/SUMMARY.md)         | Billing            | Package and subscription management                                                   |
+| [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md)                       | Add-ons            | Per-org add-on activation managed by super admins                                     |
+| [academy-access](ayunis-core-backend/src/iam/academy-access/SUMMARY.md)       | Access Gate        | Per-org KI-Schulung nach EU AI Act certificate requirement for the chat surface       |
+| [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md)                       | Limits             | Usage quota enforcement                                                               |
+| [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md)         | Limits             | Per-user, per-team, and per-API-key monthly credit allowances                         |
+| [budget-alerts](ayunis-core-backend/src/iam/budget-alerts/SUMMARY.md)         | Alerts             | Budget-warning and budget-exhausted emails when credit budgets cross usage thresholds |
+| [teams](ayunis-core-backend/src/iam/teams/SUMMARY.md)                         | Groups             | Team-based access control                                                             |
+| [invites](ayunis-core-backend/src/iam/invites/SUMMARY.md)                     | Onboarding         | User invitation flows                                                                 |
+| [trials](ayunis-core-backend/src/iam/trials/SUMMARY.md)                       | Trial Access       | Free trial management                                                                 |
+| [legal-acceptances](ayunis-core-backend/src/iam/legal-acceptances/SUMMARY.md) | Compliance         | Terms acceptance tracking                                                             |
+| [onboarding](ayunis-core-backend/src/iam/onboarding/SUMMARY.md)               | Onboarding         | Per-user onboarding progress                                                          |
+| [hashing](ayunis-core-backend/src/iam/hashing/SUMMARY.md)                     | Security           | Password hashing                                                                      |
+| [ip-allowlist](ayunis-core-backend/src/iam/ip-allowlist/SUMMARY.md)           | Network Security   | Per-organization IP allowlist enforcement                                             |
+| [sso](ayunis-core-backend/src/iam/sso/SUMMARY.md)                             | Federated Identity | Municipal SSO connections and broker identity mappings                                |
 
 ### Infrastructure & Support
 
-| Module | Summary | Detail |
-| ------ | ------- | ------ |
-| [common](ayunis-core-backend/src/common/SUMMARY.md) | Shared Infrastructure | Base classes, utilities, cross-cutting concerns |
+| Module                                                          | Summary               | Detail                                           |
+| --------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
+| [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns  |
 | [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Prometheus metrics and outbound webhook delivery |
-| [admin](ayunis-core-backend/src/admin/SUMMARY.md) | Platform Admin | Super admin routes for platform management |
-| [app](ayunis-core-backend/src/app/SUMMARY.md) | Bootstrap | Application initialization |
-| [config](ayunis-core-backend/src/config/SUMMARY.md) | Configuration | Environment config modules |
-| [db](ayunis-core-backend/src/db/SUMMARY.md) | Database | Migrations, fixtures, TypeORM setup |
-| [cli](ayunis-core-backend/src/cli/SUMMARY.md) | Commands | CLI utilities for ops |
+| [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management       |
+| [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                       |
+| [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                       |
+| [db](ayunis-core-backend/src/db/SUMMARY.md)                     | Database              | Migrations, fixtures, TypeORM setup              |
+| [cli](ayunis-core-backend/src/cli/SUMMARY.md)                   | Commands              | CLI utilities for ops                            |
 
 ---
 
@@ -137,12 +139,12 @@ Application-independent components and theme tokens live in the private
 `shared` layer contains application-aware shared components and consumes the UI
 package as its design-system foundation.
 
-| Layer | Summary | Detail |
-| ----- | ------- | ------ |
-| [pages](ayunis-core-frontend/src/pages/SUMMARY.md) | Routes | Auth, chat, skills, knowledge bases, settings |
-| [features](ayunis-core-frontend/src/features/SUMMARY.md) | Business Logic | Theme, language, models, usage tracking |
-| [widgets](ayunis-core-frontend/src/widgets/SUMMARY.md) | Composites | Sidebar, chat input, markdown renderer |
-| [shared](ayunis-core-frontend/src/shared/SUMMARY.md) | Shared application infrastructure | Generated API client, i18n, app-aware components |
+| Layer                                                    | Summary                           | Detail                                           |
+| -------------------------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| [pages](ayunis-core-frontend/src/pages/SUMMARY.md)       | Routes                            | Auth, chat, skills, knowledge bases, settings    |
+| [features](ayunis-core-frontend/src/features/SUMMARY.md) | Business Logic                    | Theme, language, models, usage tracking          |
+| [widgets](ayunis-core-frontend/src/widgets/SUMMARY.md)   | Composites                        | Sidebar, chat input, markdown renderer           |
+| [shared](ayunis-core-frontend/src/shared/SUMMARY.md)     | Shared application infrastructure | Generated API client, i18n, app-aware components |
 
 ---
 

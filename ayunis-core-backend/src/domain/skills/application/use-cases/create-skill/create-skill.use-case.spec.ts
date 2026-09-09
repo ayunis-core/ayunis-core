@@ -4,13 +4,15 @@ import { Test } from '@nestjs/testing';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
-    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+    () =>
+    (_target: unknown, _propertyName: string, descriptor: PropertyDescriptor) =>
       descriptor,
 }));
 
 import { CreateSkillUseCase } from './create-skill.use-case';
 import { CreateSkillCommand } from './create-skill.command';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
@@ -46,6 +48,10 @@ describe('CreateSkillUseCase', () => {
         CreateSkillUseCase,
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: SkillAuthorizationService,
+          useValue: { requireWrite: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -59,6 +65,7 @@ describe('CreateSkillUseCase', () => {
 
   it('should create a skill successfully', async () => {
     const command = new CreateSkillCommand({
+      owner: { type: 'personal' },
       name: 'Legal Research',
       shortDescription: 'Research legal topics and find case law.',
       instructions:
@@ -92,6 +99,7 @@ describe('CreateSkillUseCase', () => {
 
   it('should translate invalid domain names to a skill application error', async () => {
     const command = new CreateSkillCommand({
+      owner: { type: 'personal' },
       name: ' Invalid name',
       shortDescription: 'Invalid skill.',
       instructions: 'Invalid instructions.',
@@ -106,6 +114,7 @@ describe('CreateSkillUseCase', () => {
 
   it('should reject creation when skill name already exists for the user', async () => {
     const command = new CreateSkillCommand({
+      owner: { type: 'personal' },
       name: 'Legal Research',
       shortDescription: 'Duplicate name skill.',
       instructions: 'Some instructions.',
@@ -130,11 +139,12 @@ describe('CreateSkillUseCase', () => {
     const workspaceId = '223e4567-e89b-12d3-a456-426614174001' as UUID;
     const mcpIntegrationId = '423e4567-e89b-12d3-a456-426614174003' as UUID;
     const command = new CreateSkillCommand({
+      owner: { type: 'workspace', workspaceId },
       name: 'Workspace legal research',
       shortDescription: 'Researches workspace legal topics.',
       instructions: 'Use the workspace legal sources.',
-      workspaceId,
       mcpIntegrationIds: [mcpIntegrationId],
+      isActive: false,
     });
     skillRepository.findByNameAndWorkspace.mockResolvedValue(null);
     skillRepository.create.mockImplementation(async (skill) => skill);
@@ -148,14 +158,12 @@ describe('CreateSkillUseCase', () => {
       knowledgeBaseIds: [],
     });
     expect(skillRepository.activateSkill).not.toHaveBeenCalled();
-    expect(skillRepository.activateWorkspaceSkill).toHaveBeenCalledWith(
-      result.id,
-      workspaceId,
-    );
+    expect(skillRepository.activateWorkspaceSkill).not.toHaveBeenCalled();
   });
 
   it('should activate the skill when isActive is true in command', async () => {
     const command = new CreateSkillCommand({
+      owner: { type: 'personal' },
       name: 'Active Skill',
       shortDescription: 'An active skill.',
       instructions: 'You are an active assistant.',
@@ -181,8 +189,9 @@ describe('CreateSkillUseCase', () => {
     );
   });
 
-  it('should not activate the skill when isActive is not set', async () => {
+  it('activates the skill by default when isActive is not set', async () => {
     const command = new CreateSkillCommand({
+      owner: { type: 'personal' },
       name: 'Data Analysis',
       shortDescription: 'Analyze data.',
       instructions: 'You are a data analysis expert.',
@@ -200,6 +209,9 @@ describe('CreateSkillUseCase', () => {
 
     await useCase.execute(command);
 
-    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
+    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+      expect.any(String),
+      mockUserId,
+    );
   });
 });

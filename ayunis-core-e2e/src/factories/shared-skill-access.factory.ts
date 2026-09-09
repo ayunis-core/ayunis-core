@@ -27,6 +27,7 @@ export async function createSharedSkillAccessFixture(
 ): Promise<SharedSkillAccessFixture> {
   const skill = await generatedApi.skillsControllerCreate(
     {
+      ownerType: "personal",
       name: `Shared civic knowledge ${suffix}`,
       shortDescription:
         "Provides shared civic knowledge for organization members",

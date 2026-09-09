@@ -1,4 +1,5 @@
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { UUID } from 'crypto';
 import { SkillDtoMapper } from './skill.mapper';
 
@@ -19,6 +20,36 @@ describe('SkillDtoMapper', () => {
   });
 
   describe('toDto', () => {
+    it('exposes personal and workspace ownership without user IDs', () => {
+      const workspaceId = '00000000-0000-0000-0000-000000000099' as UUID;
+      const workspaceSkill = new WorkspaceSkill({
+        workspaceId,
+        name: 'Workspace skill',
+        shortDescription: 'Workspace',
+        instructions: 'Workspace instructions',
+      });
+
+      const personalDto = mapper.toDto(skill, {
+        isActive: true,
+        isShared: false,
+        isPinned: false,
+      });
+      const workspaceDto = mapper.toDto(workspaceSkill, {
+        isActive: true,
+        isShared: false,
+        isPinned: true,
+      });
+
+      expect(personalDto).toMatchObject({
+        ownerType: 'personal',
+        userId: OWNER_ID,
+      });
+      expect(workspaceDto).toMatchObject({
+        ownerType: 'workspace',
+        workspaceId,
+      });
+    });
+
     it('writes creatorName when the skill is shared and a name is supplied', () => {
       const dto = mapper.toDto(
         skill,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@ayunis/ui/components/label';
 import { Input } from '@ayunis/ui/components/input';
@@ -14,6 +14,7 @@ import {
   getSkillsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export default function CreateSkillWidget({
   content,
@@ -67,13 +68,14 @@ export default function CreateSkillWidget({
         shortDescription,
         instructions,
         isActive,
+        ownerType: 'personal',
       });
     },
     onSuccess: () => {
       setCreated(true);
       showSuccess(t('chat.tools.create_skill.success'));
       void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(),
+        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       });
     },
     onError: (error) => {

@@ -1,137 +1,76 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
 export class SkillResponseDto {
-  @ApiProperty({
-    description: 'The unique identifier of the skill',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiProperty({ type: 'string', format: 'uuid' })
   id: UUID;
 
-  @ApiProperty({
-    description: 'The name of the skill',
-    example: 'Legal Research',
-  })
+  @ApiProperty({ enum: ['personal', 'workspace'] })
+  ownerType: 'personal' | 'workspace';
+
+  @ApiPropertyOptional({ type: 'string', format: 'uuid' })
+  userId?: UUID;
+
+  @ApiPropertyOptional({ type: 'string', format: 'uuid' })
+  workspaceId?: UUID;
+
+  @ApiProperty()
   name: string;
 
-  @ApiProperty({
-    description: 'A short description of the skill',
-    example:
-      'Research legal topics, find relevant case law, and draft legal documents.',
-  })
+  @ApiProperty()
   shortDescription: string;
 
-  @ApiProperty({
-    description: 'Detailed instructions for the skill',
-    example:
-      'You are a legal research assistant. When activated, search through the attached legal databases...',
-  })
+  @ApiProperty()
   instructions: string;
 
-  @ApiProperty({
-    description:
-      'The marketplace identifier if this skill was installed from the marketplace',
-    example: 'meeting-summarizer',
-    type: 'string',
-    nullable: true,
-  })
+  @ApiProperty({ type: 'string', nullable: true })
   marketplaceIdentifier: string | null;
 
-  @ApiProperty({
-    description: 'Whether the skill is active and available for use in chats',
-    example: true,
-  })
+  @ApiProperty()
   isActive: boolean;
 
-  @ApiProperty({
-    description: 'The unique identifier of the user who owns this skill',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    type: 'string',
-    format: 'uuid',
-  })
-  userId: UUID;
-
-  @ApiProperty({
-    description: 'The date and time when the skill was created',
-    example: '2023-12-01T10:00:00.000Z',
-    type: 'string',
-    format: 'date-time',
-  })
+  @ApiProperty({ type: 'string', format: 'date-time' })
   createdAt: Date;
 
-  @ApiProperty({
-    description: 'The date and time when the skill was last updated',
-    example: '2023-12-01T10:00:00.000Z',
-    type: 'string',
-    format: 'date-time',
-  })
+  @ApiProperty({ type: 'string', format: 'date-time' })
   updatedAt: Date;
 
-  @ApiProperty({
-    description:
-      'Whether the skill is shared with the current user (not owned)',
-    example: false,
-  })
+  @ApiProperty()
   isShared: boolean;
 
-  @ApiProperty({
-    description: 'Whether the skill is pinned for quick access in chat',
-    example: false,
-  })
+  @ApiProperty()
   isPinned: boolean;
 
-  @ApiProperty({
-    description:
-      'Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller’s organisation; otherwise null.',
-    example: 'Florian Obermeier',
-    type: 'string',
-    nullable: true,
-  })
+  @ApiProperty({ type: 'string', nullable: true })
   creatorName: string | null;
 }
 
+export class SkillListResponseDto {
+  @ApiProperty({ type: [SkillResponseDto] })
+  data: SkillResponseDto[];
+
+  @ApiProperty({ type: PaginationDto })
+  pagination: PaginationDto;
+}
+
 export class SkillSourceResponseDto {
-  @ApiProperty({
-    description: 'The unique identifier of the source',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiProperty({ type: 'string', format: 'uuid' })
   id: UUID;
 
-  @ApiProperty({
-    description: 'The name of the source',
-    example: 'Legal Database 2024',
-  })
+  @ApiProperty()
   name: string;
 
-  @ApiProperty({
-    description: 'The type of source',
-    example: 'file',
-  })
+  @ApiProperty()
   type: string;
 
-  @ApiProperty({
-    description: 'Processing status of the source',
-    enum: SourceStatus,
-    example: SourceStatus.READY,
-  })
+  @ApiProperty({ enum: SourceStatus })
   status: SourceStatus;
 
-  @ApiPropertyOptional({
-    description: 'Error message if processing failed',
-    example: 'OCR extraction timed out',
-  })
+  @ApiPropertyOptional()
   processingError?: string;
 
-  @ApiProperty({
-    description: 'The date and time when the source was created',
-    example: '2025-01-15T10:00:00.000Z',
-    type: 'string',
-    format: 'date-time',
-  })
+  @ApiProperty({ type: 'string', format: 'date-time' })
   createdAt: string;
 }

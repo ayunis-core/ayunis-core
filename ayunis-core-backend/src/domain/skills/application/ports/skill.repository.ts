@@ -17,6 +17,7 @@ export interface WorkspaceSkillState {
 }
 
 export abstract class SkillRepository {
+  abstract findById(id: UUID): Promise<Skill | null>;
   abstract create(skill: PersonalSkill): Promise<PersonalSkill>;
   abstract create(skill: WorkspaceSkill): Promise<WorkspaceSkill>;
   abstract create(skill: Skill): Promise<Skill>;
@@ -29,10 +30,10 @@ export abstract class SkillRepository {
     previous: WorkspaceSkill,
   ): Promise<WorkspaceSkill>;
   abstract update(skill: Skill, previous: Skill): Promise<Skill>;
-  abstract delete(skillId: UUID, userId: UUID): Promise<void>;
-  abstract deleteByWorkspace(skillId: UUID, workspaceId: UUID): Promise<void>;
+  abstract delete(skillId: UUID): Promise<void>;
   abstract findOne(id: UUID, userId: UUID): Promise<PersonalSkill | null>;
   abstract findAllByOwner(userId: UUID): Promise<PersonalSkill[]>;
+  abstract findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceSkill[]>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: undefined,
@@ -94,7 +95,11 @@ export abstract class SkillRepository {
   abstract findByIds(ids: UUID[], workspaceId: UUID): Promise<WorkspaceSkill[]>;
   abstract findByIds(ids: UUID[], workspaceId?: UUID | null): Promise<Skill[]>;
   abstract pinSkill(skillId: UUID, userId: UUID): Promise<void>;
-  abstract toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean>;
+  abstract setSkillPinned(
+    skillId: UUID,
+    userId: UUID,
+    isPinned: boolean,
+  ): Promise<void>;
   abstract isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean>;
   abstract getPinnedSkillIds(userId: UUID): Promise<Set<UUID>>;
   abstract findSkillsByKnowledgeBaseAndOwners(

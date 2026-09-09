@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export type CreateSkillData = {
   name: string;
@@ -19,10 +20,11 @@ export function useCreateSkill() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useMutation({
-    mutationFn: (data: CreateSkillData) => skillsControllerCreate(data),
+    mutationFn: (data: CreateSkillData) =>
+      skillsControllerCreate({ ...data, ownerType: 'personal' }),
     onSuccess: (data) => {
       void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(),
+        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       });
       void router.navigate({ to: '/skills/$id', params: { id: data.id } });
     },
@@ -36,7 +38,7 @@ export function useCreateSkill() {
     },
     onSettled: () => {
       void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(),
+        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       });
       void router.invalidate();
     },

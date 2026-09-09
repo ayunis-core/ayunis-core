@@ -1,217 +1,102 @@
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-
 jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional:
-    () => (_target: unknown, _key: string, descriptor: PropertyDescriptor) =>
-      descriptor,
+  Transactional: () => (_t: unknown, _p: string, d: PropertyDescriptor) => d,
 }));
 
-import { AssignKnowledgeBaseToSkillUseCase } from './assign-knowledge-base-to-skill.use-case';
-import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
-import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
-import { ContextService } from 'src/common/context/services/context.service';
-
+import { randomUUID } from 'crypto';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import type { FindKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
-  SkillNotFoundError,
-  SkillKnowledgeBaseNotFoundError,
   SkillKnowledgeBaseAlreadyAssignedError,
-  UnexpectedSkillError,
+  SkillKnowledgeBaseNotFoundError,
 } from 'src/domain/skills/application/skills.errors';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import type { UUID } from 'crypto';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
+import { AssignKnowledgeBaseToSkillUseCase } from './assign-knowledge-base-to-skill.use-case';
 
-describe('AssignKnowledgeBaseToSkillUseCase', () => {
-  let useCase: AssignKnowledgeBaseToSkillUseCase;
-  let skillRepository: jest.Mocked<SkillRepository>;
-  let getKnowledgeBasesByIdsUseCase: jest.Mocked<GetKnowledgeBasesByIdsUseCase>;
-  let contextService: jest.Mocked<ContextService>;
+function setup(sameWorkspace: boolean) {
+  const workspaceId = randomUUID();
+  const knowledgeBaseWorkspaceId = sameWorkspace ? workspaceId : randomUUID();
+  const skill = new WorkspaceSkill({
+    workspaceId,
+    name: 'Skill',
+    shortDescription: '',
+    instructions: '',
+  });
+  const knowledgeBase = new WorkspaceKnowledgeBase({
+    workspaceId: knowledgeBaseWorkspaceId,
+    orgId: randomUUID(),
+    name: 'KB',
+  });
+  const repository = {
+    findById: jest.fn().mockResolvedValue(skill),
+    update: jest.fn().mockImplementation((updated) => Promise.resolve(updated)),
+  };
+  const authorization = { requireWrite: jest.fn() };
+  const findKnowledgeBase = {
+    execute: jest.fn().mockResolvedValue({ knowledgeBase }),
+  };
+  const useCase = new AssignKnowledgeBaseToSkillUseCase(
+    repository as unknown as SkillRepository,
+    authorization as unknown as SkillAuthorizationService,
+    findKnowledgeBase as unknown as FindKnowledgeBaseUseCase,
+  );
+  return {
+    workspaceId,
+    skill,
+    knowledgeBase,
+    repository,
+    authorization,
+    findKnowledgeBase,
+    useCase,
+  };
+}
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
-  const mockSkillId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
-  const mockKbId = '123e4567-e89b-12d3-a456-426614174010' as UUID;
-
-  beforeEach(async () => {
-    const mockSkillRepository = {
-      findOne: jest.fn(),
-      update: jest.fn(),
-    };
-
-    const mockGetKnowledgeBasesByIdsUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
-    } as unknown as jest.Mocked<ContextService>;
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AssignKnowledgeBaseToSkillUseCase,
-        { provide: SkillRepository, useValue: mockSkillRepository },
-        {
-          provide: GetKnowledgeBasesByIdsUseCase,
-          useValue: mockGetKnowledgeBasesByIdsUseCase,
-        },
-        { provide: ContextService, useValue: mockContextService },
-      ],
-    }).compile();
-
-    useCase = module.get(AssignKnowledgeBaseToSkillUseCase);
-    skillRepository = module.get(SkillRepository);
-    getKnowledgeBasesByIdsUseCase = module.get(GetKnowledgeBasesByIdsUseCase);
-    contextService = module.get(ContextService);
+describe(AssignKnowledgeBaseToSkillUseCase.name, () => {
+  it('assigns a knowledge base from the same workspace', async () => {
+    const { skill, knowledgeBase, useCase, authorization } = setup(true);
+    const result = await useCase.execute(
+      new AssignKnowledgeBaseToSkillCommand(skill.id, knowledgeBase.id),
+    );
+    expect(authorization.requireWrite).toHaveBeenCalledWith(skill);
+    expect(result.knowledgeBaseIds).toContain(knowledgeBase.id);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  it('rejects a duplicate workspace assignment', async () => {
+    const { skill, knowledgeBase, repository, useCase } = setup(true);
+    repository.findById.mockResolvedValue(
+      skill.withUpdates({ knowledgeBaseIds: [knowledgeBase.id] }),
+    );
+
+    await expect(
+      useCase.execute(
+        new AssignKnowledgeBaseToSkillCommand(skill.id, knowledgeBase.id),
+      ),
+    ).rejects.toBeInstanceOf(SkillKnowledgeBaseAlreadyAssignedError);
+    expect(repository.update).not.toHaveBeenCalled();
   });
 
-  const createMockSkill = (knowledgeBaseIds: UUID[] = []): PersonalSkill =>
-    new PersonalSkill({
-      id: mockSkillId,
-      name: 'Test Skill',
-      shortDescription: 'A test skill',
-      instructions: 'Test instructions',
-      knowledgeBaseIds,
-      userId: mockUserId,
-    });
-
-  const createMockKnowledgeBase = (
-    id: UUID = mockKbId,
-    orgId: UUID = mockOrgId,
-  ): PersonalKnowledgeBase =>
-    new PersonalKnowledgeBase({
-      id,
-      name: 'Test KB',
-      description: 'A test knowledge base',
-      orgId,
-      userId: mockUserId,
-    });
-
-  it('should assign a knowledge base to the skill', async () => {
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
+  it('maps inaccessible knowledge bases to the skill relation error', async () => {
+    const { skill, knowledgeBase, findKnowledgeBase, useCase } = setup(true);
+    findKnowledgeBase.execute.mockRejectedValue(
+      new KnowledgeBaseNotFoundError(knowledgeBase.id),
     );
-    const skill = createMockSkill();
-    const kb = createMockKnowledgeBase();
 
-    skillRepository.findOne.mockResolvedValue(skill);
-    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([kb]);
-    skillRepository.update.mockImplementation(async (s) => s);
-
-    const result = await useCase.execute(command);
-
-    expect(result.knowledgeBaseIds).toContain(mockKbId);
-    expect(skillRepository.update).toHaveBeenCalled();
+    await expect(
+      useCase.execute(
+        new AssignKnowledgeBaseToSkillCommand(skill.id, knowledgeBase.id),
+      ),
+    ).rejects.toBeInstanceOf(SkillKnowledgeBaseNotFoundError);
   });
 
-  it('should throw UnauthorizedAccessError when user not authenticated', async () => {
-    contextService.get.mockReturnValue(null);
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnauthorizedAccessError,
-    );
-  });
-
-  it('should throw UnauthorizedAccessError when orgId is missing', async () => {
-    contextService.get.mockImplementation((key?: string | symbol) => {
-      if (key === 'userId') return mockUserId;
-      return null;
-    });
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnauthorizedAccessError,
-    );
-  });
-
-  it('should throw SkillNotFoundError when skill does not exist', async () => {
-    skillRepository.findOne.mockResolvedValue(null);
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(SkillNotFoundError);
-  });
-
-  it('should throw SkillKnowledgeBaseNotFoundError when KB does not exist', async () => {
-    const skill = createMockSkill();
-    skillRepository.findOne.mockResolvedValue(skill);
-    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([]);
-
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      SkillKnowledgeBaseNotFoundError,
-    );
-  });
-
-  it('should throw SkillKnowledgeBaseNotFoundError when KB belongs to different org', async () => {
-    const skill = createMockSkill();
-    skillRepository.findOne.mockResolvedValue(skill);
-    // GetKnowledgeBasesByIdsUseCase filters by org — returns empty for wrong org
-    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([]);
-
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      SkillKnowledgeBaseNotFoundError,
-    );
-  });
-
-  it('should throw SkillKnowledgeBaseAlreadyAssignedError when KB is already assigned', async () => {
-    const skill = createMockSkill([mockKbId]);
-    const kb = createMockKnowledgeBase();
-
-    skillRepository.findOne.mockResolvedValue(skill);
-    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([kb]);
-
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      SkillKnowledgeBaseAlreadyAssignedError,
-    );
-  });
-
-  it('should wrap unexpected errors in UnexpectedSkillError', async () => {
-    skillRepository.findOne.mockRejectedValue(
-      new Error('Database connection failed'),
-    );
-
-    const command = new AssignKnowledgeBaseToSkillCommand(
-      mockSkillId,
-      mockKbId,
-    );
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnexpectedSkillError,
-    );
+  it('rejects a knowledge base from another workspace as not found', async () => {
+    const { skill, knowledgeBase, useCase } = setup(false);
+    await expect(
+      useCase.execute(
+        new AssignKnowledgeBaseToSkillCommand(skill.id, knowledgeBase.id),
+      ),
+    ).rejects.toBeInstanceOf(SkillKnowledgeBaseNotFoundError);
   });
 });

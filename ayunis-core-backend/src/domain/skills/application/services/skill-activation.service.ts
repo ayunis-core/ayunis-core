@@ -1,6 +1,6 @@
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable, Logger } from '@nestjs/common';
-import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
+import { FindActivatableSkillUseCase } from 'src/domain/skills/application/use-cases/find-activatable-skill/find-activatable-skill.use-case';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
@@ -30,7 +30,7 @@ export class SkillActivationService {
   private readonly logger = new Logger(SkillActivationService.name);
 
   constructor(
-    private readonly skillAccessService: SkillAccessService,
+    private readonly findActivatableSkill: FindActivatableSkillUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
     private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
@@ -56,10 +56,7 @@ export class SkillActivationService {
       'Activating skill on thread',
     );
 
-    const skill = await this.skillAccessService.findActivatableSkill(
-      skillId,
-      thread,
-    );
+    const skill = await this.findActivatableSkill.execute({ skillId, thread });
 
     await this.copySourcesToThread(skill, thread);
     await this.copyMcpIntegrationsToThread(skill, thread);

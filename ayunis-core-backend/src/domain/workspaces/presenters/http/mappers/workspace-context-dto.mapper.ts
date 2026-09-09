@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { Paginated } from 'src/common/pagination/paginated.entity';
-import type { PaginationDto } from 'src/common/pagination/pagination.dto';
 import type {
   WorkspaceKnowledgeBaseContext,
   WorkspaceRunContext,
@@ -9,7 +7,6 @@ import type {
 import {
   WorkspaceContextResponseDto,
   WorkspaceKnowledgeBaseResponseDto,
-  WorkspaceSkillListResponseDto,
   WorkspaceSkillResponseDto,
 } from 'src/domain/workspaces/presenters/http/dtos/workspace-context-response.dto';
 
@@ -50,15 +47,6 @@ export class WorkspaceContextDtoMapper {
     );
   }
 
-  toSkillListDto(
-    page: Paginated<WorkspaceSkillContext>,
-  ): WorkspaceSkillListResponseDto {
-    return {
-      data: page.data.map((skill) => this.toSkillDto(skill)),
-      pagination: this.toPaginationDto(page),
-    };
-  }
-
   private toKnowledgeBaseResponseDto(
     knowledgeBase: Pick<
       WorkspaceKnowledgeBaseContext,
@@ -73,13 +61,5 @@ export class WorkspaceContextDtoMapper {
     dto.documentCount = documentCount;
     dto.isActive = knowledgeBase.isActive;
     return dto;
-  }
-
-  private toPaginationDto<T>(page: Paginated<T>): PaginationDto {
-    return {
-      limit: page.limit,
-      offset: page.offset,
-      total: page.total,
-    };
   }
 }

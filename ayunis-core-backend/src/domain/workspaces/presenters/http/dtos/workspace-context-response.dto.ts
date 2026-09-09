@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
 export class WorkspaceSkillResponseDto {
   @ApiProperty()
@@ -27,11 +26,6 @@ export class WorkspaceSkillResponseDto {
   isPinned: boolean;
 }
 
-export class WorkspaceSkillCandidateResponseDto extends WorkspaceSkillResponseDto {
-  @ApiProperty()
-  isAttached: boolean;
-}
-
 export class WorkspaceKnowledgeBaseResponseDto {
   @ApiProperty()
   id: string;
@@ -49,11 +43,6 @@ export class WorkspaceKnowledgeBaseResponseDto {
   isActive: boolean;
 }
 
-export class WorkspaceKnowledgeBaseCandidateResponseDto extends WorkspaceKnowledgeBaseResponseDto {
-  @ApiProperty()
-  isAttached: boolean;
-}
-
 export class WorkspaceContextResponseDto {
   @ApiProperty({ type: String, nullable: true })
   instruction: string | null;
@@ -63,28 +52,4 @@ export class WorkspaceContextResponseDto {
 
   @ApiProperty({ type: [WorkspaceKnowledgeBaseResponseDto] })
   knowledgeBases: WorkspaceKnowledgeBaseResponseDto[];
-}
-
-export class WorkspaceSkillListResponseDto {
-  @ApiProperty({ type: [WorkspaceSkillResponseDto] })
-  data: WorkspaceSkillResponseDto[];
-
-  @ApiProperty({ type: PaginationDto })
-  pagination: PaginationDto;
-}
-
-export class WorkspaceSkillCandidateListResponseDto {
-  @ApiProperty({ type: [WorkspaceSkillCandidateResponseDto] })
-  data: WorkspaceSkillCandidateResponseDto[];
-
-  @ApiProperty({ type: PaginationDto })
-  pagination: PaginationDto;
-}
-
-export class WorkspaceKnowledgeBaseCandidateListResponseDto {
-  @ApiProperty({ type: [WorkspaceKnowledgeBaseCandidateResponseDto] })
-  data: WorkspaceKnowledgeBaseCandidateResponseDto[];
-
-  @ApiProperty({ type: PaginationDto })
-  pagination: PaginationDto;
 }

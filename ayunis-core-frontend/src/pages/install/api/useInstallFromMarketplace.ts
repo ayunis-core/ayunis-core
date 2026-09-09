@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export function useInstallFromMarketplace() {
   const { t } = useTranslation('install');
@@ -18,7 +19,7 @@ export function useInstallFromMarketplace() {
       onSuccess: (skill) => {
         showSuccess(t('success'));
         void queryClient.invalidateQueries({
-          queryKey: getSkillsControllerFindAllQueryKey(),
+          queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
         });
         void router.navigate({
           to: '/skills/$id',

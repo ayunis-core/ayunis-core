@@ -116,8 +116,7 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await expect(
     page.getByRole("button", { name: "Quelle hinzufügen" }),
   ).toBeVisible();
-  const skillSources = await generatedApi.workspaceSkillSourcesControllerList(
-    fixture.workspace.id,
+  const skillSources = await generatedApi.skillSourcesControllerGetSkillSources(
     detailSkillId as string,
     { api },
   );
@@ -127,12 +126,10 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   let createdSkillId: string | undefined;
   await expect
     .poll(async () => {
-      const workspaceSkills =
-        await generatedApi.workspaceContextControllerListSkills(
-          fixture.workspace.id,
-          undefined,
-          { api },
-        );
+      const workspaceSkills = await generatedApi.skillsControllerFindAll(
+        { ownerType: "workspace", workspaceId: fixture.workspace.id },
+        { api },
+      );
       createdSkillId = workspaceSkills.data.find(
         ({ name }) => name === fixture.skill.name,
       )?.id;
@@ -153,12 +150,10 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await activeSwitch.click();
   await expect
     .poll(async () => {
-      const workspaceSkills =
-        await generatedApi.workspaceContextControllerListSkills(
-          fixture.workspace.id,
-          undefined,
-          { api },
-        );
+      const workspaceSkills = await generatedApi.skillsControllerFindAll(
+        { ownerType: "workspace", workspaceId: fixture.workspace.id },
+        { api },
+      );
       return workspaceSkills.data.find(({ id }) => id === createdSkillId)
         ?.isActive;
     })
@@ -168,12 +163,10 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await page.getByTestId(`workspace-skill-pin-${createdSkillId}`).click();
   await expect
     .poll(async () => {
-      const workspaceSkills =
-        await generatedApi.workspaceContextControllerListSkills(
-          fixture.workspace.id,
-          undefined,
-          { api },
-        );
+      const workspaceSkills = await generatedApi.skillsControllerFindAll(
+        { ownerType: "workspace", workspaceId: fixture.workspace.id },
+        { api },
+      );
       return workspaceSkills.data.find(({ id }) => id === createdSkillId)
         ?.isPinned;
     })

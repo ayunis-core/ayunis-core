@@ -65,6 +65,7 @@ export async function createProjectContextFixture(
   );
   const personalSkill = await generatedApi.skillsControllerCreate(
     {
+      ownerType: "personal",
       name: `Bauanträge prüfen ${suffix}`,
       shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
       instructions:
@@ -96,9 +97,10 @@ export async function createProjectContextFixture(
         workspaceDocumentName,
       });
     }
-    skill = await generatedApi.workspaceContextControllerCreateSkill(
-      workspace.id,
+    skill = await generatedApi.skillsControllerCreate(
       {
+        ownerType: "workspace",
+        workspaceId: workspace.id,
         name: personalSkill.name,
         shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
         instructions:
