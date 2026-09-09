@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
   SidebarGroupContent,
 } from '@ayunis/ui/components/sidebar';
-import { useThreads } from '../api';
+import { useThreads } from '@/widgets/app-sidebar/api';
 import { useDeleteThread } from '@/features/thread-run';
 import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
 import { useFavorites } from '@/features/favorites';
@@ -144,11 +144,8 @@ export function ChatsSidebarGroup() {
                   <div className="text-xs text-muted-foreground">
                     {t('sidebar.emptyChatsDescription')}
                   </div>
-                  <Button
-                    className="mt-2"
-                    onClick={() => void navigate({ to: '/chat' })}
-                  >
-                    {t('sidebar.newChat')}
+                  <Button asChild className="mt-2">
+                    <Link to="/chat">{t('sidebar.newChat')}</Link>
                   </Button>
                 </div>
               </div>

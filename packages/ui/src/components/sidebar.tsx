@@ -83,17 +83,43 @@ function SidebarProvider({
 }): React.ReactElement {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const cleanupTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const cancelPendingCleanup = React.useCallback((): void => {
+    if (cleanupTimeoutRef.current !== null) {
+      clearTimeout(cleanupTimeoutRef.current);
+      cleanupTimeoutRef.current = null;
+    }
+  }, []);
+
+  React.useEffect(() => cancelPendingCleanup, [cancelPendingCleanup]);
+
+  React.useEffect(() => {
+    if (openMobile) cancelPendingCleanup();
+  }, [cancelPendingCleanup, openMobile]);
 
   // Defensive cleanup function for Radix/Chrome quirks when the mobile sidebar
   // closes. Several browser bugs leave artifacts behind (stuck inert,
   // aria-hidden, stale overlays, pointer-events on body, scroll-lock styles)
-  // that can make the page unresponsive. We run cleanup three times to catch
-  // Chrome's delayed paint passes.
+  // that can make the page unresponsive. The pass runs after Radix's exit
+  // animation so React-owned portal nodes have already unmounted.
   const cleanupMobileSidebar = React.useCallback((): void => {
     if (isMobile && openMobile) {
       setOpenMobile(false);
+      cancelPendingCleanup();
 
       const performCleanup = (): void => {
+        cleanupTimeoutRef.current = null;
+        if (
+          document.querySelector(
+            '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+          )
+        ) {
+          return;
+        }
+
         // Remove any lingering inert attributes
         document.querySelectorAll('[inert]').forEach((el) => {
           el.removeAttribute('inert');
@@ -104,26 +130,6 @@ function SidebarProvider({
           .querySelectorAll('body > *[aria-hidden="true"]')
           .forEach((el) => {
             el.removeAttribute('aria-hidden');
-          });
-
-        // Remove any sheet overlays that might still exist
-        document
-          .querySelectorAll('[data-slot="sheet-overlay"]')
-          .forEach((el) => {
-            el.remove();
-          });
-
-        // Chrome-specific: remove any radix overlays still pointing at a
-        // closed state (or outside the sidebar tree)
-        document
-          .querySelectorAll('[data-radix-dismissable-layer]')
-          .forEach((el) => {
-            if (
-              el.getAttribute('data-state') === 'closed' ||
-              !el.closest('[data-slot="sidebar"]')
-            ) {
-              el.remove();
-            }
           });
 
         // Ensure body doesn't have pointer-events / overflow / transform stuck
@@ -139,23 +145,9 @@ function SidebarProvider({
             (el as HTMLElement).style.pointerEvents = '';
           });
 
-        // Remove lingering radix focus guards from closed overlays
-        document.querySelectorAll('[data-radix-focus-guard]').forEach((el) => {
-          if (!el.closest('[data-state="open"]')) {
-            el.remove();
-          }
-        });
-
         // Reset scroll-lock styles on html element
         document.documentElement.style.overflow = '';
         document.documentElement.style.paddingRight = '';
-
-        // Remove style tags injected by radix for scroll lock
-        document
-          .querySelectorAll('style[data-radix-scroll-area-viewport]')
-          .forEach((el) => {
-            el.remove();
-          });
 
         // If focus is trapped inside the closed sheet, release it
         if (document.activeElement?.closest('[data-slot="sheet-content"]')) {
@@ -168,11 +160,9 @@ function SidebarProvider({
         document.body.offsetHeight;
       };
 
-      performCleanup();
-      setTimeout(performCleanup, 50);
-      setTimeout(performCleanup, 150);
+      cleanupTimeoutRef.current = setTimeout(performCleanup, 350);
     }
-  }, [isMobile, openMobile]);
+  }, [cancelPendingCleanup, isMobile, openMobile]);
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -290,6 +280,7 @@ function Sidebar({
   collapsible = 'offcanvas',
   className,
   children,
+  onClickCapture,
   ...props
 }: React.ComponentProps<'div'> & {
   side?: 'left' | 'right';
@@ -302,6 +293,7 @@ function Sidebar({
     return (
       <div
         data-slot="sidebar"
+        onClickCapture={onClickCapture}
         className={cn(
           'bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col',
           className,
@@ -332,7 +324,12 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div
+            className="flex h-full w-full flex-col"
+            onClickCapture={onClickCapture}
+          >
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -361,6 +358,7 @@ function Sidebar({
       />
       <div
         data-slot="sidebar-container"
+        onClickCapture={onClickCapture}
         className={cn(
           'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex',
           side === 'left'

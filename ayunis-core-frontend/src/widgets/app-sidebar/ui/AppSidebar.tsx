@@ -39,7 +39,6 @@ import { useNavigate } from '@tanstack/react-router';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
 import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
 import { useTheme } from '@/features/theme';
-import { useSidebar } from '@ayunis/ui/components/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
@@ -56,6 +55,7 @@ import {
   ACADEMY_LANDING_PAGE_URL,
 } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
+import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/useMobileSidebarNavigationHandler';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -68,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { logout } = useLogout();
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { closeMobileWithCleanup } = useSidebar();
+  const handleMobileNavigation = useMobileSidebarNavigationHandler();
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
   const academyAddonActive = useIsAcademyAddonActive();
@@ -121,7 +121,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   return (
-    <Sidebar {...props} variant="inset" data-testid="sidebar">
+    <Sidebar
+      {...props}
+      variant="inset"
+      data-testid="sidebar"
+      onClickCapture={handleMobileNavigation}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -154,6 +159,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 >
                   <Link
                     to={item.url}
+                    data-testid={
+                      item.url === '/chat'
+                        ? 'sidebar-navigation-new-chat'
+                        : undefined
+                    }
                     // `disabled` is inert on an anchor; the sidebar variants
                     // style aria-disabled and block pointer events for us.
                     aria-disabled={item.disabled}
@@ -235,14 +245,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 sideOffset={4}
               >
                 <DropdownMenuItem asChild>
-                  <Link to="/settings/general" onClick={closeMobileWithCleanup}>
+                  <Link to="/settings/general">
                     <User2 />
                     {t('sidebar.accountSettings')}
                   </Link>
                 </DropdownMenuItem>
                 {canOpenSettings && (
                   <DropdownMenuItem asChild>
-                    <Link to="/admin-settings" onClick={closeMobileWithCleanup}>
+                    <Link to="/admin-settings">
                       <Settings2 />
                       {t('sidebar.adminSettings')}
                     </Link>
@@ -250,10 +260,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 )}
                 {user?.systemRole === MeResponseDtoSystemRole.super_admin && (
                   <DropdownMenuItem asChild>
-                    <Link
-                      to="/super-admin-settings"
-                      onClick={closeMobileWithCleanup}
-                    >
+                    <Link to="/super-admin-settings">
                       <Settings2 />
                       {t('sidebar.superAdminSettings')}
                     </Link>
