@@ -5,6 +5,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import {
@@ -27,6 +28,7 @@ import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -338,10 +340,52 @@ export class LocalSourceRepository extends SourceRepository {
     };
   }
 
-  async findContentChunksByIds(
-    chunkIds: UUID[],
-  ): Promise<
-    { chunk: TextSourceContentChunk; sourceId: UUID; sourceName: string }[]
+  async findCitationTarget(
+    chunkId: UUID,
+  ): Promise<SourceCitationTarget | null> {
+    this.logger.log({ chunkId }, 'findCitationTarget');
+    const record = await this.sourceContentChunkRepository
+      .createQueryBuilder('chunk')
+      .innerJoinAndSelect('chunk.source', 'details')
+      .innerJoinAndSelect('details.source', 'source')
+      .select([
+        'chunk.id',
+        'chunk.content',
+        'chunk.meta',
+        'chunk.createdAt',
+        'chunk.updatedAt',
+        'details.id',
+        'source.id',
+        'source.name',
+        'source.createdBy',
+        'source.status',
+        'source.knowledgeBaseId',
+        'source.url',
+      ])
+      .where('chunk.id = :chunkId', { chunkId })
+      .getOne();
+    if (!record) return null;
+
+    return {
+      chunk: this.chunkMapper.toDomain(record),
+      source: {
+        id: record.source.source.id,
+        name: record.source.source.name,
+        createdBy: record.source.source.createdBy,
+        status: record.source.source.status,
+        knowledgeBaseId: record.source.source.knowledgeBaseId,
+        url: record.source.source.url,
+      },
+    };
+  }
+
+  async findContentChunksByIds(chunkIds: UUID[]): Promise<
+    {
+      chunk: TextSourceContentChunk;
+      sourceId: UUID;
+      sourceName: string;
+      sourceCreatedBy: SourceCreator;
+    }[]
   > {
     this.logger.log({ count: chunkIds.length }, 'findContentChunksByIds');
     if (chunkIds.length === 0) {
@@ -351,7 +395,7 @@ export class LocalSourceRepository extends SourceRepository {
       .createQueryBuilder('chunk')
       .innerJoinAndSelect('chunk.source', 'details')
       .innerJoin('details.source', 'source')
-      .addSelect(['source.id', 'source.name'])
+      .addSelect(['source.id', 'source.name', 'source.createdBy'])
       .where('chunk.id IN (:...ids)', { ids: chunkIds })
       .getMany();
 
@@ -359,6 +403,7 @@ export class LocalSourceRepository extends SourceRepository {
       chunk: this.chunkMapper.toDomain(record),
       sourceId: record.source.source.id,
       sourceName: record.source.source.name,
+      sourceCreatedBy: record.source.source.createdBy,
     }));
   }
 

@@ -15,11 +15,13 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
+import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 export interface KnowledgeBaseQueryResult {
   chunk: TextSourceContentChunk;
   sourceName: string;
   sourceId: string;
+  sourceCreatedBy: SourceCreator;
 }
 
 @Injectable()
@@ -109,6 +111,7 @@ export class QueryKnowledgeBaseUseCase {
               chunk: match.chunk,
               sourceName: match.sourceName,
               sourceId: match.sourceId,
+              sourceCreatedBy: match.sourceCreatedBy,
             },
           ]
         : [];

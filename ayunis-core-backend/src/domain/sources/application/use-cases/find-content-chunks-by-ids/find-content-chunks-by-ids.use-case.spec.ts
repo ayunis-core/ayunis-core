@@ -5,6 +5,7 @@ import { FindContentChunksByIdsQuery } from './find-content-chunks-by-ids.query'
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { randomUUID } from 'crypto';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import type { UUID } from 'crypto';
 
@@ -45,7 +46,12 @@ describe('FindContentChunksByIdsUseCase', () => {
       meta: { lineStart: 1, lineEnd: 10 },
     });
     const expected = [
-      { chunk, sourceId, sourceName: 'Zoning Regulations 2025.pdf' },
+      {
+        chunk,
+        sourceId,
+        sourceName: 'Zoning Regulations 2025.pdf',
+        sourceCreatedBy: SourceCreator.USER,
+      },
     ];
 
     (

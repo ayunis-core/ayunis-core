@@ -11,6 +11,7 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { handleEmbeddingError } from 'src/domain/tools/application/utils/embedding-error.utils';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 @Injectable()
 export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
@@ -51,6 +52,8 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
       );
 
       const formatted = results.map((result) => ({
+        chunkId: result.chunk.id,
+        citable: result.sourceCreatedBy !== SourceCreator.SYSTEM,
         content: result.chunk.content,
         startLine: (result.chunk.meta.startLine as number | undefined) ?? null,
         endLine: (result.chunk.meta.endLine as number | undefined) ?? null,

@@ -227,6 +227,15 @@
     "longChatWarningTitle": "Konversation zu lang",
     "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
     "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",
+    "sourceCitation": {
+      "title": "Quellenbeleg",
+      "loading": "Quelle wird geladen…",
+      "unavailable": "Diese Quelle ist nicht verfügbar oder Sie haben keinen Zugriff.",
+      "line": "Zeile {{line}}",
+      "lines": "Zeilen {{start}}–{{end}}",
+      "excerpt": "Zitierter Auszug",
+      "close": "Schließen"
+    },
     "piiMask": {
       "tooltip": "{{category}} — vor dem Senden an das KI-Modell anonymisiert",
       "tooltipClickable": "{{category}} — vor dem Senden an das KI-Modell anonymisiert. Klicken, um die Maskierung aufzuheben.",

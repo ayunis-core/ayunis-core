@@ -1,3 +1,4 @@
+import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   ExpiredThreadRef,
@@ -18,6 +19,7 @@ import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assign
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
+import { findThreadCitationContext } from './queries/find-thread-citation-context';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -85,6 +87,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
       (left, right) => left.createdAt.getTime() - right.createdAt.getTime(),
     );
     return this.threadMapper.toDomain(threadEntity);
+  }
+
+  async findCitationContext(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadCitationContext | null> {
+    this.logger.log({ id, userId }, 'findCitationContext');
+    return findThreadCitationContext(this.threadRepository, id, userId);
   }
 
   async findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]> {

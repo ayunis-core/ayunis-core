@@ -5,11 +5,13 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { FindContentChunksByIdsQuery } from './find-content-chunks-by-ids.query';
+import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 export interface ContentChunkWithSource {
   chunk: TextSourceContentChunk;
   sourceId: UUID;
   sourceName: string;
+  sourceCreatedBy: SourceCreator;
 }
 
 @Injectable()

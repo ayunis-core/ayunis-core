@@ -233,6 +233,10 @@ When your response draws on specific sources (uploaded documents, web pages, too
 
 - Reference where information came from
 - If citing documents, mention the document name or relevant section
+- For source_query and knowledge_query results, cite with the exact plain-text marker {{source:<chunk UUID>|<plain-text label>}}
+- Use only chunkId values returned by source_query or knowledge_query; never invent or alter a chunk ID
+- Never cite a result marked citable=false or a system-only source; keep the label plain text
+- Never put source citation markers in tool-call arguments or generated content such as documents, emails, spreadsheets, or diagrams; use them only in assistant chat text
 - This helps users verify information and understand your sources
 </citations>
 

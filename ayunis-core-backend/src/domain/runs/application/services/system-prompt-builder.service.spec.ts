@@ -83,6 +83,26 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 
+  describe('source citation markers', () => {
+    it('requires exact chunk IDs from retrieval tools in plain-text markers', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain('{{source:<chunk UUID>|<plain-text label>}}');
+      expect(result).toContain(
+        'Use only chunkId values returned by source_query or knowledge_query',
+      );
+      expect(result).toContain(
+        'Never cite a result marked citable=false or a system-only source',
+      );
+      expect(result).toContain(
+        'Never put source citation markers in tool-call arguments or generated content',
+      );
+    });
+  });
+
   describe('legal reference markers', () => {
     it('requires structured markers instead of plain German legal citations', () => {
       const result = service.build({

@@ -227,6 +227,15 @@
     "longChatWarningTitle": "Conversation too long",
     "longChatWarningDescription": "For better results, consider starting a new chat.",
     "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers.",
+    "sourceCitation": {
+      "title": "Source citation",
+      "loading": "Loading source…",
+      "unavailable": "This source is unavailable or you do not have access.",
+      "line": "Line {{line}}",
+      "lines": "Lines {{start}}–{{end}}",
+      "excerpt": "Cited excerpt",
+      "close": "Close"
+    },
     "piiMask": {
       "tooltip": "{{category}} — anonymized before being sent to the AI model",
       "tooltipClickable": "{{category}} — anonymized before being sent to the AI model. Click to unmask.",

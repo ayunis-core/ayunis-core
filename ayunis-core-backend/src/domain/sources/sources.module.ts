@@ -34,6 +34,7 @@ import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { ListSourcesByWorkspaceUseCase } from './application/use-cases/list-sources-by-workspace/list-sources-by-workspace.use-case';
+import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ListSourcesByWorkspaceUseCase } from './application/use-cases/list-sour
     GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
     FindContentChunksByIdsUseCase,
+    FindSourceCitationTargetUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
     CreateProcessingSourceUseCase,
@@ -88,6 +90,7 @@ import { ListSourcesByWorkspaceUseCase } from './application/use-cases/list-sour
     GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
     FindContentChunksByIdsUseCase,
+    FindSourceCitationTargetUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
     CreateProcessingSourceUseCase,

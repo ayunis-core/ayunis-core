@@ -91,6 +91,9 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
           }
           return providerTextResponse(`recovered::${defaultResponseText}`);
         }
+        if (lastUserText === SOURCE_CITATION_E2E_PROMPT) {
+          return sourceCitationResponse(request);
+        }
         return providerTextResponse(buildResponseText(lastUserText, model));
       },
     };
@@ -100,6 +103,8 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
 const MOCK_CHUNK_DELAY_MS = 40;
 const MALFORMED_TOOL_CALL_RETRY_PROMPT =
   'E2E trigger malformed completed tool call';
+const SOURCE_CITATION_E2E_PROMPT = 'E2E cite first source';
+const SOURCE_CITATION_TOOL_CALL_ID = 'mock-source-citation-call';
 
 function firstTextContent(
   content: StreamInferenceInput['messages'][number]['content'] | undefined,
@@ -139,6 +144,143 @@ async function* providerTextResponse(
       finishReason: index === deltas.length - 1 ? 'stop' : undefined,
     };
   }
+}
+
+function sourceCitationResponse(
+  request: ProviderRequest,
+): AsyncIterable<ProviderChunk> {
+  const citation = findSourceCitation(request);
+  if (citation) {
+    return providerTextResponse(
+      `${citation.content} {{source:${citation.chunkId}|${citation.label}}}`,
+    );
+  }
+
+  const sourceId = firstAvailableSourceId(request);
+  if (sourceId) {
+    return sourceCitationToolCallResponse('source_query', {
+      sourceId,
+      query: 'source citation evidence',
+    });
+  }
+  const knowledgeBaseId = firstAvailableKnowledgeBaseId(request);
+  if (knowledgeBaseId) {
+    return sourceCitationToolCallResponse('knowledge_query', {
+      knowledgeBaseId,
+      query: 'source citation evidence',
+    });
+  }
+  const skillSlug = firstAvailableSkillSlug(request);
+  return skillSlug
+    ? sourceCitationToolCallResponse('activate_skill', {
+        skill_slug: skillSlug,
+      })
+    : providerTextResponse('No citable source is available.');
+}
+
+function findSourceCitation(
+  request: ProviderRequest,
+): { chunkId: string; content: string; label: string } | null {
+  const toolResult = request.messages
+    .findLast((message) => message.role === 'tool_result')
+    ?.content.find(isCitationToolResult);
+  if (toolResult?.type !== 'tool_result') return null;
+
+  try {
+    return sourceCitationFromResult(JSON.parse(toolResult.result) as unknown);
+  } catch {
+    return null;
+  }
+}
+
+function sourceCitationFromResult(
+  value: unknown,
+): { chunkId: string; content: string; label: string } | null {
+  if (!Array.isArray(value) || !isRecord(value[0])) return null;
+  const result = value[0];
+  if (
+    result.citable !== true ||
+    typeof result.chunkId !== 'string' ||
+    typeof result.content !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    chunkId: result.chunkId,
+    content: result.content,
+    label: sourceCitationLabel(result.sourceName ?? result.documentName),
+  };
+}
+
+function firstAvailableSourceId(request: ProviderRequest): string | null {
+  const hasSourceQuery = request.tools.some(
+    (tool) => tool.name === 'source_query',
+  );
+  if (!hasSourceQuery) return null;
+  return /<file id="([0-9a-f-]{36})"/i.exec(request.instructions)?.[1] ?? null;
+}
+
+function isCitationToolResult(
+  content: ProviderRequest['messages'][number]['content'][number],
+): boolean {
+  return (
+    content.type === 'tool_result' &&
+    ['source_query', 'knowledge_query'].includes(content.toolName)
+  );
+}
+
+function firstAvailableKnowledgeBaseId(
+  request: ProviderRequest,
+): string | null {
+  return firstToolEnumValue(request, 'knowledge_query', 'knowledgeBaseId');
+}
+
+function firstAvailableSkillSlug(request: ProviderRequest): string | null {
+  return firstToolEnumValue(request, 'activate_skill', 'skill_slug');
+}
+
+function firstToolEnumValue(
+  request: ProviderRequest,
+  toolName: string,
+  propertyName: string,
+): string | null {
+  const tool = request.tools.find((item) => item.name === toolName);
+  if (!tool || !isRecord(tool.parameters.properties)) return null;
+  const property = tool.parameters.properties[propertyName];
+  if (!isRecord(property) || !Array.isArray(property.enum)) return null;
+  const firstValue: unknown = property.enum[0];
+  return typeof firstValue === 'string' ? firstValue : null;
+}
+
+function sourceCitationLabel(value: unknown): string {
+  if (typeof value !== 'string') return 'Source';
+  const plainLabel = value
+    .replace(/[|{}\r\n]/g, ' ')
+    .trim()
+    .slice(0, 200);
+  return plainLabel || 'Source';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+async function* sourceCitationToolCallResponse(
+  toolName: 'source_query' | 'knowledge_query' | 'activate_skill',
+  input: Record<string, string>,
+): AsyncIterable<ProviderChunk> {
+  await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+  yield {
+    toolCallDeltas: [
+      {
+        index: 0,
+        id: SOURCE_CITATION_TOOL_CALL_ID,
+        name: toolName,
+        argumentsDelta: JSON.stringify(input),
+      },
+    ],
+    finishReason: 'tool_calls',
+  };
 }
 
 async function* malformedProviderToolCallResponse(): AsyncIterable<ProviderChunk> {

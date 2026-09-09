@@ -9296,6 +9296,48 @@
         "tags": ["runs"]
       }
     },
+    "/threads/{threadId}/source-chunks/{chunkId}": {
+      "get": {
+        "operationId": "ThreadSourceCitationsController_getSourceCitation",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "chunkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the cited chunk and source metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCitationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Citation not found"
+          }
+        },
+        "summary": "Get a source citation in a thread",
+        "tags": ["threads"]
+      }
+    },
     "/super-admin/trials": {
       "post": {
         "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
@@ -18970,6 +19012,57 @@
           }
         },
         "required": ["threadId"]
+      },
+      "SourceCitationChunkResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string",
+            "description": "Exact extracted chunk text shown to the model"
+          },
+          "startLine": {
+            "type": "number",
+            "nullable": true
+          },
+          "endLine": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": ["id", "content", "startLine", "endLine"]
+      },
+      "SourceCitationSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "name", "url"]
+      },
+      "SourceCitationResponseDto": {
+        "type": "object",
+        "properties": {
+          "chunk": {
+            "$ref": "#/components/schemas/SourceCitationChunkResponseDto"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceCitationSourceResponseDto"
+          }
+        },
+        "required": ["chunk", "source"]
       },
       "SuperAdminTrialResponseDto": {
         "type": "object",
