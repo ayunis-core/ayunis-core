@@ -53,6 +53,7 @@ export function ChatSidePanel({
 
   return (
     <aside
+      id="chat-side-panel"
       className="flex h-full min-h-0 flex-col overflow-hidden border-l bg-background"
       data-testid="chat-side-panel"
     >

@@ -101,14 +101,16 @@ export function WorkspaceContextEmpty({
   title,
   description,
   action,
+  testId,
 }: Readonly<{
   icon: ReactNode;
   title: string;
   description: string;
   action?: ReactNode;
+  testId?: string;
 }>) {
   return (
-    <Empty>
+    <Empty data-testid={testId}>
       <EmptyMedia variant="icon">{icon}</EmptyMedia>
       <EmptyHeader>
         <EmptyTitle>{title}</EmptyTitle>

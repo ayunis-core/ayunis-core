@@ -5,7 +5,7 @@
     "knowledgeTab": "Knowledge",
     "skillsTab": "Skills",
     "instructionsTab": "Instructions",
-    "artifactsTab": "Documents",
+    "artifactsTab": "Created content",
     "emptyChatsTitle": "No chats yet",
     "emptyChats": "Chats you add to this workspace will appear here.",
     "noChatResults": "No chats found.",
@@ -28,8 +28,8 @@
   "artifacts": {
     "title": "Workspace artifacts",
     "description": "Documents, diagrams, and spreadsheets created in chats in this workspace.",
-    "emptyTitle": "No artifacts yet",
-    "empty": "Artifacts created in workspace chats will appear here.",
+    "emptyTitle": "No content created yet",
+    "empty": "Content created in workspace chats will appear here.",
     "loadError": {
       "title": "Workspace artifacts could not be loaded",
       "description": "Reload the page before opening workspace artifacts."

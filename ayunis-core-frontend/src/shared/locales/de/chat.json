@@ -35,6 +35,15 @@
     "context": {
       "tab": "Kontext",
       "workspaceScope": "Arbeitsbereich",
+      "hint": {
+        "personal": "Persönlicher Kontext",
+        "workspace": "Arbeitsbereich: {{name}}",
+        "open": "Chatkontext öffnen",
+        "skills_one": "{{count}} Fähigkeit",
+        "skills_other": "{{count}} Fähigkeiten",
+        "knowledgeBases_one": "{{count}} Wissenssammlung",
+        "knowledgeBases_other": "{{count}} Wissenssammlungen"
+      },
       "loadError": "Kontext konnte nicht geladen werden",
       "retry": "Erneut versuchen",
       "skills": {

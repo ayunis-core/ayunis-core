@@ -81,9 +81,14 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
       "workspace-tab-instructions",
     ]);
   await expect(page.getByTestId("workspace-tab-artifacts")).toContainText(
-    "Dokumente",
+    "Erstellte Inhalte",
   );
   await page.getByTestId("workspace-tab-artifacts").click();
+  const artifactsEmpty = page.getByTestId("workspace-artifacts-empty");
+  await expect(artifactsEmpty).toContainText("Noch keine Inhalte erstellt");
+  await expect(artifactsEmpty).toContainText(
+    "Inhalte aus Chats des Arbeitsbereichs erscheinen hier.",
+  );
   await expect(page.getByTestId("workspace-artifacts-search")).toHaveCount(0);
 
   await page.getByTestId("workspace-tab-skills").click();

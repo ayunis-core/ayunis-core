@@ -5,7 +5,7 @@
     "knowledgeTab": "Wissen",
     "skillsTab": "Fähigkeiten",
     "instructionsTab": "Anweisungen",
-    "artifactsTab": "Dokumente",
+    "artifactsTab": "Erstellte Inhalte",
     "emptyChatsTitle": "Noch keine Chats",
     "emptyChats": "Chats, die Sie diesem Arbeitsbereich hinzufügen, erscheinen hier.",
     "noChatResults": "Keine Chats gefunden.",
@@ -28,8 +28,8 @@
   "artifacts": {
     "title": "Artefakte des Arbeitsbereichs",
     "description": "Dokumente, Diagramme und Tabellen aus Chats in diesem Arbeitsbereich.",
-    "emptyTitle": "Noch keine Artefakte",
-    "empty": "Artefakte aus Chats des Arbeitsbereichs erscheinen hier.",
+    "emptyTitle": "Noch keine Inhalte erstellt",
+    "empty": "Inhalte aus Chats des Arbeitsbereichs erscheinen hier.",
     "loadError": {
       "title": "Artefakte des Arbeitsbereichs konnten nicht geladen werden",
       "description": "Bitte laden Sie die Seite neu, bevor Sie Artefakte des Arbeitsbereichs öffnen."

@@ -64,7 +64,7 @@ describe('ChatSidePanel', () => {
       />,
     );
 
-    expect(screen.getByTestId('chat-side-panel')).toBeTruthy();
+    expect(screen.getByTestId('chat-side-panel').id).toBe('chat-side-panel');
     expect(screen.getByRole('tabpanel')).toBeTruthy();
     expect(screen.getByText('artifact-list')).toBeTruthy();
     fireEvent.mouseDown(screen.getByTestId('chat-side-panel-tab-context'), {

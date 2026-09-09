@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
+import { ChatContextHint } from '@/pages/chat/ui/ChatContextHint';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
 import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
 import { useMessageSend } from '@/pages/chat/api/useMessageSend';
@@ -378,6 +379,13 @@ export default function ChatPage({
       renderUnits={renderUnits}
       threadId={thread.id}
       pendingSubmission={pendingSubmission}
+      contextHint={
+        <ChatContextHint
+          threadId={thread.id}
+          workspaceId={thread.workspaceId}
+          onOpen={() => sidePanelTransitions.changeTab('context')}
+        />
+      }
       showLoadingPlaceholder={showLoadingPlaceholder}
       onOpenArtifact={sidePanelTransitions.openArtifactPanel}
     />
