@@ -16,6 +16,13 @@
       "protobufjs": ">=7.5.5 <8",
       "puppeteer-core": "24.37.5",
       "@types/mjml-core": "4.15.2"
+    },
+    "packageExtensions": {
+      "@hookform/resolvers": {
+        "peerDependencies": {
+          "zod": "^4.0.0"
+        }
+      }
     }
   },
   "overridesNotes": {
@@ -23,5 +30,8 @@
     "protobufjs": "Patches GHSA-xq3m-2v4x-88gg (arbitrary code execution, fixed in 7.5.5). Transitive via @google/genai. @google/genai declares `^7.5.4`, so this floor stays within its range. Remove when @google/genai's declared range moves past 7.5.5 — verify with `pnpm why protobufjs` after any @google/genai upgrade.",
     "puppeteer-core": "Pinned to 24.37.5 (the version the npm lockfile resolved pre-pnpm-migration) to keep the workspace migration behavior-neutral. puppeteer-core 24.4x narrowed Page.setContent's waitUntil to exclude 'networkidle0'/'networkidle2'; absorbing that upgrade + adjusting PDF wait behavior belongs in its own reviewed PR. Remove this pin when intentionally upgrading puppeteer-core (see html-document-export.service.ts).",
     "@types/mjml-core": "Pinned to 4.15.2 to match the mjml@4 runtime (sync mjml2html). @types/mjml declares @types/mjml-core:'*', which otherwise resolves to 5.0.0 (the async mjml v5 API) and breaks the sync `.html` usage in mjml.handler.ts. Remove when upgrading to mjml v5."
+  },
+  "packageExtensionsNotes": {
+    "@hookform/resolvers": "Declares the zod peer that @hookform/resolvers omits. Its zod/v4/core type import otherwise resolves through pnpm's hoisted fallback, and this workspace contains both zod 4 (frontend, direct) and zod 3.25.76 (transitive: openai@4 declares an optional peer of zod ^3.23.8, zod 4 support only landed in openai 7). When the fallback lands on 3.25.76, its bundled v4 core brands itself as 4.0 and every zodResolver() call fails to typecheck with TS2769 ('_zod.version.minor' 5 vs 0). Declaring the peer places the frontend's zod next to the package, making resolution deterministic. Remove when @hookform/resolvers declares the peer itself, or when the workspace no longer resolves two zod majors — verify with `pnpm why zod`."
   }
 }
