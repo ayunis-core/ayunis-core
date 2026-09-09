@@ -130,6 +130,7 @@
   "picker": {
     "empty": "No projects yet",
     "placeholder": "Select project",
+    "noWorkspace": "No workspace",
     "addToWorkspace": "Add to project",
     "removeFromWorkspace": "Remove from project",
     "newWorkspace": "New project"
