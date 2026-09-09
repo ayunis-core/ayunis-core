@@ -107,6 +107,14 @@
     "error": "Wissenssammlung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "notFound": "Wissenssammlung nicht gefunden. Sie wurde möglicherweise gelöscht."
   },
+  "activation": {
+    "activeLabel": "Aktiv",
+    "inactiveLabel": "Inaktiv",
+    "tooltip": "Wenn Sie diese Wissenssammlung aktivieren, steht sie in jedem Chat zur Verfügung.",
+    "success": "Status der Wissenssammlung aktualisiert.",
+    "error": "Status der Wissenssammlung konnte nicht aktualisiert werden.",
+    "notFound": "Wissenssammlung nicht gefunden. Sie wurde möglicherweise gelöscht."
+  },
   "detail": {
     "properties": {
       "title": "Eigenschaften",

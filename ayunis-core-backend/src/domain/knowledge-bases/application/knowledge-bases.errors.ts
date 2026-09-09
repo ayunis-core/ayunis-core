@@ -32,13 +32,13 @@ export class KnowledgeBaseNotFoundError extends KnowledgeBaseError {
 }
 
 export class UnexpectedKnowledgeBaseError extends KnowledgeBaseError {
-  constructor(message: string, metadata?: ErrorMetadata) {
+  constructor(cause: Error) {
     super(
-      message,
+      'Unexpected error occurred',
       KnowledgeBaseErrorCode.UNEXPECTED_KNOWLEDGE_BASE_ERROR,
       500,
-      metadata,
     );
+    this.cause = cause;
   }
 }
 

@@ -39,6 +39,12 @@ export class KnowledgeBaseResponseDto {
   updatedAt: Date;
 
   @ApiProperty({
+    description: 'Whether the knowledge base is active for the current user',
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiProperty({
     description:
       'Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases).',
     example: false,

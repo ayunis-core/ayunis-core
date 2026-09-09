@@ -30,6 +30,7 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import KnowledgeBasePropertiesCard from './KnowledgeBasePropertiesCard';
 import KnowledgeBaseDocumentsCard from './KnowledgeBaseDocumentsCard';
+import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 
 export function KnowledgeBasePage({
   knowledgeBase,
@@ -113,23 +114,30 @@ export function KnowledgeBasePage({
               ) : undefined
             }
             action={
-              !isReadOnly && canManageKb ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={handleDelete}
-                      disabled={deleteKnowledgeBase.isPending}
-                      aria-label={t('detail.deleteLabel')}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>
-                </Tooltip>
-              ) : undefined
+              <>
+                <KnowledgeBaseActivationToggle
+                  knowledgeBaseId={knowledgeBase.id}
+                  isActive={knowledgeBase.isActive}
+                  testId="knowledge-base-detail-active-toggle"
+                />
+                {!isReadOnly && canManageKb && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={handleDelete}
+                        disabled={deleteKnowledgeBase.isPending}
+                        aria-label={t('detail.deleteLabel')}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>
+                  </Tooltip>
+                )}
+              </>
             }
           />
         }

@@ -5,27 +5,27 @@ import {
   TextSource,
   UrlSource,
 } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { KnowledgeBaseResponseDto } from '../dto/knowledge-base-response.dto';
-import type { KnowledgeBaseDocumentResponseDto } from '../dto/knowledge-base-document-response.dto';
+import type { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-response.dto';
+import type { KnowledgeBaseDocumentResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-document-response.dto';
 
 @Injectable()
 export class KnowledgeBaseDtoMapper {
-  toDto(entity: KnowledgeBase, isShared?: boolean): KnowledgeBaseResponseDto {
+  toDto(
+    entity: KnowledgeBase,
+    context: { isActive: boolean; isShared?: boolean },
+  ): KnowledgeBaseResponseDto {
     const dto: KnowledgeBaseResponseDto = {
       id: entity.id,
       name: entity.name,
       description: entity.description,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      isActive: context.isActive,
     };
-    if (isShared !== undefined) {
-      dto.isShared = isShared;
+    if (context.isShared !== undefined) {
+      dto.isShared = context.isShared;
     }
     return dto;
-  }
-
-  toDtoArray(entities: KnowledgeBase[]): KnowledgeBaseResponseDto[] {
-    return entities.map((entity) => this.toDto(entity));
   }
 
   toDocumentDto(source: Source): KnowledgeBaseDocumentResponseDto {
