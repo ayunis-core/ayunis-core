@@ -19,7 +19,7 @@ const MEMBERS_PER_PAGE = 25;
 
 const searchSchema = z.object({
   search: z.string().optional(),
-  status: z.nativeEnum(CertificateValidityStatus).optional().catch(undefined),
+  status: z.enum(CertificateValidityStatus).optional().catch(undefined),
   page: z.number().min(1).optional().catch(1),
 });
 

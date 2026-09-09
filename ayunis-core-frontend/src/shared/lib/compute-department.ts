@@ -1,5 +1,4 @@
 import type { RefinementCtx } from 'zod';
-import { ZodIssueCode } from 'zod';
 
 /**
  * Resolves the department value to send to the backend.
@@ -32,7 +31,7 @@ export function refineDepartmentOther(
 ): void {
   if (data.department === 'other' && !data.departmentOther?.trim()) {
     ctx.addIssue({
-      code: ZodIssueCode.custom,
+      code: 'custom',
       message,
       path: ['departmentOther'],
     });

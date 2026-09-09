@@ -2,7 +2,7 @@ import config from '@/shared/config';
 import { rememberSsoAttempt } from '@/features/sso/lib/sso-login-memory';
 import { z } from 'zod';
 
-const orgIdSchema = z.string().uuid();
+const orgIdSchema = z.uuid();
 const postLoginPathKey = 'ayunis.sso.postLoginPath';
 
 export function buildSsoStartUrl(

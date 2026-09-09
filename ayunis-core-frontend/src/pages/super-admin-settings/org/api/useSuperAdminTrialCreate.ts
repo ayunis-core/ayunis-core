@@ -26,7 +26,7 @@ export default function useSuperAdminTrialCreate({
     resolver: zodResolver(
       z.object({
         maxMessages: z.coerce
-          .number()
+          .number<number>()
           .min(1, t('trial.createErrorMaxMessagesRequired')),
       }),
     ),

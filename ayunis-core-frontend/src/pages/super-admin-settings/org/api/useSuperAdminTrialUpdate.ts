@@ -30,10 +30,10 @@ export default function useSuperAdminTrialUpdate({
     resolver: zodResolver(
       z.object({
         maxMessages: z.coerce
-          .number()
+          .number<number>()
           .min(1, t('trial.updateErrorMaxMessagesRequired')),
         messagesSent: z.coerce
-          .number()
+          .number<number>()
           .min(0, t('trial.updateErrorMessagesSentRequired')),
       }),
     ),

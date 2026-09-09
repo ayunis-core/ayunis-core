@@ -12,7 +12,7 @@ export function useForgotPassword() {
   const navigate = useNavigate();
 
   const forgotPasswordFormSchema = z.object({
-    email: z.string().email({
+    email: z.email({
       message: t('forgotPassword.emailInvalid'),
     }),
   });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const orgIdSchema = z.string().uuid();
+const orgIdSchema = z.uuid();
 const pendingOrgIdKey = 'ayunis.sso.pendingOrgId';
 const rememberedOrgIdKey = 'ayunis.sso.rememberedOrgId';
 
