@@ -3,7 +3,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {

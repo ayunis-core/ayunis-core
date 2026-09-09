@@ -1,86 +1,76 @@
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillRecord } from '../schema/skill.record';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { randomUUID } from 'crypto';
+
 import { SkillMapper } from './skill.mapper';
-import type { UUID } from 'crypto';
+import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
 
-describe('SkillMapper', () => {
-  let mapper: SkillMapper;
+describe(SkillMapper.name, () => {
+  const mapper = new SkillMapper();
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockSkillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
-  const mockSourceId = '770e8400-e29b-41d4-a716-446655440000' as UUID;
-  const mockMcpId = '660e8400-e29b-41d4-a716-446655440000' as UUID;
-  const mockKbId = '880e8400-e29b-41d4-a716-446655440000' as UUID;
-
-  beforeEach(() => {
-    mapper = new SkillMapper();
+  it.each([
+    { userId: null, workspaceId: null },
+    { userId: randomUUID(), workspaceId: randomUUID() },
+  ])('rejects invalid ownership: %j', (owners) => {
+    const record = Object.assign(new SkillRecord(), {
+      id: randomUUID(),
+      ...owners,
+    });
+    expect(() => mapper.toDomain(record)).toThrow('invalid ownership');
   });
 
-  describe('toDomain', () => {
-    it('should map a SkillRecord to Skill domain entity', () => {
-      const record = new SkillRecord();
-      record.id = mockSkillId;
-      record.name = 'Legal Research';
-      record.shortDescription = 'Research legal topics.';
-      record.instructions = 'You are a legal research assistant.';
-      record.userId = mockUserId;
-      record.sources = [{ id: mockSourceId } as any];
-      record.mcpIntegrations = [{ id: mockMcpId } as any];
-      record.knowledgeBases = [{ id: mockKbId } as any];
-      record.createdAt = new Date('2026-01-01');
-      record.updatedAt = new Date('2026-01-02');
+  it('preserves personal ownership and rejects scope mismatches', () => {
+    const personal = new PersonalSkill({
+      name: 'Personal skill',
+      shortDescription: '',
+      instructions: '',
+      userId: randomUUID(),
+    });
+    const record = mapper.toRecord(personal);
+    expect(mapper.toPersonal(record)).toBeInstanceOf(PersonalSkill);
+    expect(record.workspaceId).toBeNull();
+    expect(() => mapper.toWorkspace(record)).toThrow(
+      'Expected workspace skill',
+    );
+  });
 
-      const domain = mapper.toDomain(record);
-
-      expect(domain.id).toBe(mockSkillId);
-      expect(domain.name).toBe('Legal Research');
-      expect(domain.shortDescription).toBe('Research legal topics.');
-      expect(domain.instructions).toBe('You are a legal research assistant.');
-      expect(domain.userId).toBe(mockUserId);
-      expect(domain.sourceIds).toEqual([mockSourceId]);
-      expect(domain.mcpIntegrationIds).toEqual([mockMcpId]);
-      expect(domain.knowledgeBaseIds).toEqual([mockKbId]);
-      expect(domain.createdAt).toEqual(new Date('2026-01-01'));
-      expect(domain.updatedAt).toEqual(new Date('2026-01-02'));
+  it('preserves exclusive workspace ownership', () => {
+    const workspaceId = randomUUID();
+    const skill = new WorkspaceSkill({
+      name: 'Workspace procurement review',
+      shortDescription: 'Reviews procurement documents.',
+      instructions: 'Check the procurement requirements.',
+      workspaceId,
     });
 
-    it('should default to empty arrays when relations are undefined', () => {
-      const record = new SkillRecord();
-      record.id = mockSkillId;
-      record.name = 'Minimal Skill';
-      record.shortDescription = 'Short.';
-      record.instructions = 'Instructions.';
-      record.userId = mockUserId;
-      record.createdAt = new Date('2026-01-01');
-      record.updatedAt = new Date('2026-01-02');
+    const record = mapper.toRecord(skill);
+    record.createdAt = skill.createdAt;
+    record.updatedAt = skill.updatedAt;
+    record.sources = [];
+    record.mcpIntegrations = [];
+    record.knowledgeBases = [];
 
-      const domain = mapper.toDomain(record);
-
-      expect(domain.sourceIds).toEqual([]);
-      expect(domain.mcpIntegrationIds).toEqual([]);
-      expect(domain.knowledgeBaseIds).toEqual([]);
+    expect(mapper.toWorkspace(record)).toBeInstanceOf(WorkspaceSkill);
+    expect(record.userId).toBeNull();
+    expect(() => mapper.toPersonal(record)).toThrow('Expected personal skill');
+    expect(mapper.toDomain(record)).toMatchObject({
+      workspaceId,
     });
   });
 
-  describe('toRecord', () => {
-    it('should map a Skill domain entity to SkillRecord', () => {
-      const domain = new Skill({
-        id: mockSkillId,
-        name: 'Legal Research',
-        shortDescription: 'Research legal topics.',
-        instructions: 'You are a legal research assistant.',
-        userId: mockUserId,
-        sourceIds: [mockSourceId],
-        mcpIntegrationIds: [mockMcpId],
-      });
-
-      const record = mapper.toRecord(domain);
-
-      expect(record.id).toBe(mockSkillId);
-      expect(record.name).toBe('Legal Research');
-      expect(record.shortDescription).toBe('Research legal topics.');
-      expect(record.instructions).toBe('You are a legal research assistant.');
-      expect(record.userId).toBe(mockUserId);
+  it('maps legacy records to personal resources', () => {
+    const record = Object.assign(new SkillRecord(), {
+      id: randomUUID(),
+      name: 'Citizen requests',
+      shortDescription: 'Handles citizen requests.',
+      instructions: 'Answer the request.',
+      marketplaceIdentifier: null,
+      userId: randomUUID(),
+      workspaceId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
+
+    expect(mapper.toPersonal(record).userId).toBe(record.userId);
   });
 });

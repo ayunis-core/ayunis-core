@@ -1,9 +1,9 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ListKnowledgeBasesUseCase } from './list-knowledge-bases.use-case';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { UUID } from 'crypto';
 
@@ -18,11 +18,14 @@ describe('ListKnowledgeBasesUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -30,6 +33,9 @@ describe('ListKnowledgeBasesUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -45,12 +51,12 @@ describe('ListKnowledgeBasesUseCase', () => {
   });
 
   it('should return all knowledge bases for the current user', async () => {
-    const kb1 = new KnowledgeBase({
+    const kb1 = new PersonalKnowledgeBase({
       name: 'Stadtratsprotokolle 2025',
       orgId,
       userId,
     });
-    const kb2 = new KnowledgeBase({
+    const kb2 = new PersonalKnowledgeBase({
       name: 'Haushaltspläne',
       orgId,
       userId,

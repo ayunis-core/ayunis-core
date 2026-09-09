@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
@@ -8,7 +9,7 @@ import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
@@ -34,14 +35,20 @@ describe('ListSkillSourcesUseCase', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      deleteByWorkspace: jest.fn(),
       findOne: jest.fn(),
       findAllByOwner: jest.fn(),
       findActiveByOwner: jest.fn(),
       findByNameAndOwner: jest.fn(),
+      findByNameAndWorkspace: jest.fn(),
       activateSkill: jest.fn(),
       deactivateSkill: jest.fn(),
       isSkillActive: jest.fn(),
       getActiveSkillIds: jest.fn(),
+      activateWorkspaceSkill: jest.fn(),
+      deactivateWorkspaceSkill: jest.fn(),
+      setWorkspaceSkillPinned: jest.fn(),
+      getWorkspaceSkillStates: jest.fn(),
       deactivateAllExceptOwner: jest.fn(),
       deactivateUsersNotInSet: jest.fn(),
       findByIds: jest.fn(),
@@ -97,8 +104,8 @@ describe('ListSkillSourcesUseCase', () => {
     jest.clearAllMocks();
   });
 
-  const createMockSkill = (sourceIds: UUID[] = []): Skill => {
-    return new Skill({
+  const createMockSkill = (sourceIds: UUID[] = []): PersonalSkill => {
+    return new PersonalSkill({
       id: mockSkillId,
       name: 'Test Skill',
       shortDescription: 'A test skill',
@@ -207,7 +214,7 @@ describe('ListSkillSourcesUseCase', () => {
       const query = new ListSkillSourcesQuery(mockSkillId);
       skillRepository.findOne.mockResolvedValue(null);
       findShareByEntityUseCase.execute.mockResolvedValue({} as any);
-      skillRepository.findByIds.mockResolvedValue([]); // Skill deleted?
+      skillRepository.findByIds.mockResolvedValue([]); // PersonalSkill deleted?
 
       await expect(useCase.execute(query)).rejects.toThrow(SkillNotFoundError);
     });

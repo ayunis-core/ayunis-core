@@ -1,17 +1,18 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import {
   SkillResponseDto,
   SkillSourceResponseDto,
-} from '../dto/skill-response.dto';
+} from 'src/domain/skills/presenters/http/dto/skill-response.dto';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SkillUserContext } from 'src/domain/skills/application/services/skill-access.service';
 
 @Injectable()
 export class SkillDtoMapper {
   toDto(
-    skill: Skill,
+    skill: PersonalSkill,
     context: SkillUserContext,
     creatorName?: string | null,
   ): SkillResponseDto {
@@ -32,7 +33,7 @@ export class SkillDtoMapper {
   }
 
   toDtoArray(
-    skills: Skill[],
+    skills: PersonalSkill[],
     activeSkillIds: Set<string>,
     sharedSkillIds: Set<string> = new Set(),
     pinnedSkillIds: Set<string> = new Set(),

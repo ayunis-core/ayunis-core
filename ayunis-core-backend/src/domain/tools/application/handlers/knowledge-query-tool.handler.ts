@@ -28,7 +28,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log({ tool: tool.name, input }, 'execute');
 
     try {
@@ -47,6 +47,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
           knowledgeBaseId: validatedInput.knowledgeBaseId as UUID,
           query: validatedInput.query,
           userId,
+          threadId: context.threadId,
         }),
       );
 

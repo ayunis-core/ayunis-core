@@ -3,7 +3,8 @@ import { Test } from '@nestjs/testing';
 import { CreateKnowledgeBaseUseCase } from './create-knowledge-base.use-case';
 import { CreateKnowledgeBaseCommand } from './create-knowledge-base.command';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { UUID } from 'crypto';
 
@@ -25,11 +26,14 @@ describe('CreateKnowledgeBaseUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -37,6 +41,9 @@ describe('CreateKnowledgeBaseUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -63,13 +70,37 @@ describe('CreateKnowledgeBaseUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result).toBeInstanceOf(KnowledgeBase);
+    expect(result).toBeInstanceOf(PersonalKnowledgeBase);
     expect(result.name).toBe('Stadtratsprotokolle 2025');
     expect(result.description).toBe('Sammlung aller Protokolle');
     expect(result.orgId).toBe(orgId);
-    expect(result.userId).toBe(userId);
+    expect(result).toMatchObject({ userId });
     expect(mockRepository.save).toHaveBeenCalledTimes(1);
     expect(mockRepository.activate).toHaveBeenCalledWith(result.id, userId);
+  });
+
+  it('creates and activates a workspace-owned knowledge base', async () => {
+    const workspaceId = '33333333-3333-3333-3333-333333333333' as UUID;
+    const command = new CreateKnowledgeBaseCommand({
+      name: 'Project regulations',
+      description: 'Project-specific regulations.',
+      userId,
+      orgId,
+      workspaceId,
+    });
+    mockRepository.save.mockImplementation(
+      async (knowledgeBase) => knowledgeBase,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(WorkspaceKnowledgeBase);
+    expect(result).toMatchObject({ workspaceId });
+    expect(mockRepository.activate).not.toHaveBeenCalled();
+    expect(mockRepository.activateForWorkspace).toHaveBeenCalledWith(
+      result.id,
+      workspaceId,
+    );
   });
 
   it('should create a knowledge base with empty description when not provided', async () => {

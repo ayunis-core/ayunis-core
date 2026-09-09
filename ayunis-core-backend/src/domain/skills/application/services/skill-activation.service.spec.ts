@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -15,7 +16,7 @@ import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threa
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -52,9 +53,9 @@ describe('SkillActivationService', () => {
     });
 
   const makeSkill = (
-    overrides?: Partial<ConstructorParameters<typeof Skill>[0]>,
+    overrides?: Partial<ConstructorParameters<typeof PersonalSkill>[0]>,
   ) =>
-    new Skill({
+    new PersonalSkill({
       id: skillId,
       name: 'Legal Research',
       shortDescription: 'Research legal topics.',

@@ -1,16 +1,17 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
-import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
+import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
-import { ToolAssemblyService } from '../../services/tool-assembly.service';
-import { BackendToolAdapter } from '../backend-tool.adapter';
-import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 
 export interface SkillActivationHookParams {
   threadId: UUID;

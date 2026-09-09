@@ -1,12 +1,14 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { randomUUID } from 'crypto';
-import { KnowledgeBase } from './knowledge-base.entity';
 
-describe('KnowledgeBase Entity', () => {
+describe('AbstractKnowledgeBase Entity', () => {
   const orgId = randomUUID();
   const userId = randomUUID();
+  const workspaceId = randomUUID();
 
   it('should generate a UUID when id is not provided', () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       name: 'Stadtrecht Gemeinde Musterstadt',
       orgId,
       userId,
@@ -20,7 +22,7 @@ describe('KnowledgeBase Entity', () => {
 
   it('should use the provided id when given', () => {
     const id = randomUUID();
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id,
       name: 'Bauordnung',
       orgId,
@@ -31,17 +33,33 @@ describe('KnowledgeBase Entity', () => {
   });
 
   it('should default description to empty string when not provided', () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       name: 'Verwaltungsvorschriften',
       orgId,
       userId,
     });
 
     expect(kb.description).toBe('');
+    expect(kb).toBeInstanceOf(PersonalKnowledgeBase);
+    expect(kb).not.toBeInstanceOf(WorkspaceKnowledgeBase);
+    expect('workspaceId' in kb).toBe(false);
+  });
+
+  it('preserves exclusive workspace ownership', () => {
+    const kb = new WorkspaceKnowledgeBase({
+      name: 'Workspace procurement rules',
+      orgId,
+      workspaceId,
+    });
+
+    expect(kb).not.toBeInstanceOf(PersonalKnowledgeBase);
+    expect(kb).toBeInstanceOf(WorkspaceKnowledgeBase);
+    expect('userId' in kb).toBe(false);
+    expect(kb.workspaceId).toBe(workspaceId);
   });
 
   it('should use the provided description when given', () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       name: 'Haushaltsplan 2025',
       description: 'Alle Dokumente zum kommunalen Haushaltsplan',
       orgId,
@@ -53,7 +71,7 @@ describe('KnowledgeBase Entity', () => {
 
   it('should default createdAt and updatedAt to current date', () => {
     const before = new Date();
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       name: 'Protokolle Gemeinderat',
       orgId,
       userId,
@@ -71,7 +89,7 @@ describe('KnowledgeBase Entity', () => {
     const createdAt = new Date('2025-06-01');
     const updatedAt = new Date('2025-06-15');
 
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id,
       name: 'Bebauungspläne',
       description: 'Sammlung aller B-Pläne der Gemeinde',

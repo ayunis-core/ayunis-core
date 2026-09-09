@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,7 +13,7 @@ import { UnassignKnowledgeBaseFromSkillUseCase } from './unassign-knowledge-base
 import { UnassignKnowledgeBaseFromSkillCommand } from './unassign-knowledge-base-from-skill.command';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import {
   SkillNotFoundError,
   SkillKnowledgeBaseNotAssignedError,
@@ -59,8 +60,8 @@ describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
     jest.clearAllMocks();
   });
 
-  const createMockSkill = (knowledgeBaseIds: UUID[] = []): Skill =>
-    new Skill({
+  const createMockSkill = (knowledgeBaseIds: UUID[] = []): PersonalSkill =>
+    new PersonalSkill({
       id: mockSkillId,
       name: 'Test Skill',
       shortDescription: 'A test skill',
@@ -77,7 +78,7 @@ describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
     );
 
     skillRepository.findOne.mockResolvedValue(skill);
-    skillRepository.update.mockImplementation(async (s: Skill) => s);
+    skillRepository.update.mockImplementation(async (s) => s);
 
     const result = await useCase.execute(command);
 
@@ -95,7 +96,7 @@ describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
     );
 
     skillRepository.findOne.mockResolvedValue(skill);
-    skillRepository.update.mockImplementation(async (s: Skill) => s);
+    skillRepository.update.mockImplementation(async (s) => s);
 
     const result = await useCase.execute(command);
 

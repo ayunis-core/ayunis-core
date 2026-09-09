@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
@@ -38,7 +38,7 @@ describe('BuildWorkspaceRunContextUseCase', () => {
       ],
       sourceIds: [sourceId],
     });
-    const skill = new Skill({
+    const skill = new PersonalSkill({
       id: skillId,
       name: 'Permit Check',
       shortDescription: 'Checks permit applications',
@@ -95,7 +95,7 @@ describe('BuildWorkspaceRunContextUseCase', () => {
       sourceIds: [],
     });
     repository.findById.mockResolvedValue(aWorkspace());
-    const accessibleSkill = new Skill({
+    const accessibleSkill = new PersonalSkill({
       id: accessibleSkillId,
       name: 'Accessible Skill',
       shortDescription: 'Still shared',

@@ -31,7 +31,20 @@ function validateSkillName(name: string): void {
   }
 }
 
-export class Skill {
+export interface SkillParams {
+  id?: UUID;
+  name: string;
+  shortDescription: string;
+  instructions: string;
+  sourceIds?: UUID[];
+  mcpIntegrationIds?: UUID[];
+  knowledgeBaseIds?: UUID[];
+  marketplaceIdentifier?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export abstract class AbstractSkill {
   public readonly id: UUID;
   public readonly name: string;
   public readonly shortDescription: string;
@@ -40,23 +53,10 @@ export class Skill {
   public readonly mcpIntegrationIds: UUID[];
   public readonly knowledgeBaseIds: UUID[];
   public readonly marketplaceIdentifier: string | null;
-  public readonly userId: UUID;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
-  constructor(params: {
-    id?: UUID;
-    name: string;
-    shortDescription: string;
-    instructions: string;
-    sourceIds?: UUID[];
-    mcpIntegrationIds?: UUID[];
-    knowledgeBaseIds?: UUID[];
-    marketplaceIdentifier?: string | null;
-    userId: UUID;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }) {
+  protected constructor(params: SkillParams) {
     this.id = params.id ?? randomUUID();
     validateSkillName(params.name);
     this.name = params.name;
@@ -66,8 +66,8 @@ export class Skill {
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.knowledgeBaseIds = params.knowledgeBaseIds ?? [];
     this.marketplaceIdentifier = params.marketplaceIdentifier ?? null;
-    this.userId = params.userId;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
+  abstract withUpdates(params: Partial<SkillParams>): AbstractSkill;
 }

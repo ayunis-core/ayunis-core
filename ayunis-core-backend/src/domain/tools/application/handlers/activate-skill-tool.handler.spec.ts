@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
@@ -7,7 +8,7 @@ import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { FindAlwaysOnTemplateByNameUseCase } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
 import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
@@ -60,9 +61,9 @@ describe('ActivateSkillToolHandler', () => {
   });
 
   function createMockSkill(
-    overrides?: Partial<ConstructorParameters<typeof Skill>[0]>,
+    overrides?: Partial<ConstructorParameters<typeof PersonalSkill>[0]>,
   ) {
-    return new Skill({
+    return new PersonalSkill({
       id: mockSkillId,
       name: 'Budget Analysis',
       shortDescription: 'Analyzes municipal budgets',

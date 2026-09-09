@@ -1,3 +1,5 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,8 +14,7 @@ import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-sk
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+
 import {
   SkillNotFoundError,
   SkillKnowledgeBaseNotFoundError,
@@ -74,8 +75,8 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
     jest.clearAllMocks();
   });
 
-  const createMockSkill = (knowledgeBaseIds: UUID[] = []): Skill =>
-    new Skill({
+  const createMockSkill = (knowledgeBaseIds: UUID[] = []): PersonalSkill =>
+    new PersonalSkill({
       id: mockSkillId,
       name: 'Test Skill',
       shortDescription: 'A test skill',
@@ -87,8 +88,8 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
   const createMockKnowledgeBase = (
     id: UUID = mockKbId,
     orgId: UUID = mockOrgId,
-  ): KnowledgeBase =>
-    new KnowledgeBase({
+  ): PersonalKnowledgeBase =>
+    new PersonalKnowledgeBase({
       id,
       name: 'Test KB',
       description: 'A test knowledge base',
@@ -106,7 +107,7 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
 
     skillRepository.findOne.mockResolvedValue(skill);
     getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([kb]);
-    skillRepository.update.mockImplementation(async (s: Skill) => s);
+    skillRepository.update.mockImplementation(async (s) => s);
 
     const result = await useCase.execute(command);
 

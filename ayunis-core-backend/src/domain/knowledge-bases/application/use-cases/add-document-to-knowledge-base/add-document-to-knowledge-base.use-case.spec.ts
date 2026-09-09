@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -5,7 +6,6 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { AddDocumentToKnowledgeBaseUseCase } from './add-document-to-knowledge-base.use-case';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -38,11 +38,14 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
     mockKbRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -50,6 +53,9 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -85,7 +91,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
   });
 
   it('should validate KB, start document processing, and assign source to KB', async () => {
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       orgId,
@@ -125,7 +131,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
 
   it('should throw KnowledgeBaseNotFoundError when KB does not belong to user', async () => {
     const otherUserId = '99999999-9999-9999-9999-999999999999' as UUID;
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Anderer Benutzer KB',
       orgId,
@@ -164,7 +170,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
   });
 
   it('should propagate StartDocumentProcessingUseCase failure', async () => {
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       orgId,
@@ -190,7 +196,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
   });
 
   it('should leave orphaned source when KB assignment fails after processing starts', async () => {
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       orgId,

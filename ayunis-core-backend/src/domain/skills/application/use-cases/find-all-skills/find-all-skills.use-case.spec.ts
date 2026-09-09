@@ -1,10 +1,11 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { FindAllSkillsUseCase } from './find-all-skills.use-case';
 import { FindAllSkillsQuery } from './find-all-skills.query';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
@@ -19,10 +20,10 @@ describe('FindAllSkillsUseCase', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = 'org-00000-0000-0000-000000000001' as UUID;
 
-  const makeSkill = (id: string, userId: UUID = mockUserId): Skill =>
-    new Skill({
+  const makeSkill = (id: string, userId: UUID = mockUserId): PersonalSkill =>
+    new PersonalSkill({
       id: id as UUID,
-      name: `Skill ${id}`,
+      name: `PersonalSkill ${id}`,
       shortDescription: 'desc',
       instructions: 'instructions',
       userId,

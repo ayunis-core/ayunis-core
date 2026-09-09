@@ -1,3 +1,4 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -6,7 +7,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { ListAccessibleSkillsQuery } from './list-accessible-skills.query';

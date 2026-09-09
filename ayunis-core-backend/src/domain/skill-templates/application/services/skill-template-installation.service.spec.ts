@@ -1,10 +1,11 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { SkillTemplateInstallationService } from './skill-template-installation.service';
 import type { FindActivePreCreatedTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-pre-created-templates/find-active-pre-created-templates.use-case';
 import type { CreateSkillWithUniqueNameUseCase } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import type { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
 
 import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { randomUUID } from 'crypto';
 
 describe('SkillTemplateInstallationService', () => {
@@ -45,7 +46,7 @@ describe('SkillTemplateInstallationService', () => {
         .fn()
         .mockImplementation((command: CreateSkillWithUniqueNameCommand) =>
           Promise.resolve(
-            new Skill({
+            new PersonalSkill({
               name: command.name,
               shortDescription: command.shortDescription,
               instructions: command.instructions,

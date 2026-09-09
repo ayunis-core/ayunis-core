@@ -9,7 +9,7 @@ function uniqueSuffix(): string {
   return `${Date.now()}`;
 }
 
-test("attaches skills, knowledge bases, and instructions to a project", async ({
+test("keeps legacy personal attachments out of workspace-owned lists", async ({
   page,
   api,
 }) => {
@@ -41,6 +41,8 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
   await page.getByTestId("workspace-tab-artifacts").click();
   await expect(page.getByTestId("workspace-artifacts-search")).toHaveCount(0);
 
+  // Legacy attachment endpoints are removed in the next stack layer. They
+  // must not turn personal resources into workspace-owned list entries.
   await page.getByTestId("workspace-tab-skills").click();
   await expect(page.getByTestId("workspace-skills-search")).toHaveCount(0);
   await page.getByTestId("workspace-skills-add").first().click();
@@ -52,7 +54,7 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
   await page.getByTestId("workspace-add-dialog-confirm").click();
   await expect(
     page.getByTestId(`workspace-skill-${fixture.skill.id}`),
-  ).toBeVisible();
+  ).toHaveCount(0);
 
   await page.getByTestId("workspace-tab-knowledge").click();
   await expect(page.getByTestId("workspace-knowledge-search")).toHaveCount(0);
@@ -66,7 +68,7 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
   await page.getByTestId("workspace-add-dialog-confirm").click();
   await expect(
     page.getByTestId(`workspace-knowledge-base-${fixture.knowledgeBase.id}`),
-  ).toBeVisible();
+  ).toHaveCount(0);
 
   await page.getByTestId("workspace-tab-instructions").click();
   await page

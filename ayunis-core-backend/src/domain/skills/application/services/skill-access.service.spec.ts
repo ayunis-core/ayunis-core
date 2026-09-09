@@ -1,12 +1,13 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
 import { SkillAccessService } from './skill-access.service';
-import { SkillRepository } from '../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Skill } from '../../domain/skill.entity';
-import { SkillNotFoundError } from '../skills.errors';
+
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -21,7 +22,7 @@ describe('SkillAccessService', () => {
   const skillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
   const makeSkill = (id: UUID = skillId, owner: UUID = userId) =>
-    new Skill({
+    new PersonalSkill({
       id,
       name: 'Legal Research',
       shortDescription: 'Research legal topics.',
@@ -41,6 +42,10 @@ describe('SkillAccessService', () => {
             isSkillActive: jest.fn(),
             isSkillPinned: jest.fn(),
             getActiveSkillIds: jest.fn(),
+            activateWorkspaceSkill: jest.fn(),
+            deactivateWorkspaceSkill: jest.fn(),
+            setWorkspaceSkillPinned: jest.fn(),
+            getWorkspaceSkillStates: jest.fn(),
             getPinnedSkillIds: jest.fn(),
           },
         },

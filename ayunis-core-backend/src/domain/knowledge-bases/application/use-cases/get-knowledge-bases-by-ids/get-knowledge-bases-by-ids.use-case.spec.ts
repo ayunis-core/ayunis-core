@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -5,7 +6,7 @@ import { GetKnowledgeBasesByIdsUseCase } from './get-knowledge-bases-by-ids.use-
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
@@ -55,7 +56,7 @@ describe('GetKnowledgeBasesByIdsUseCase', () => {
     name: string,
     orgId: UUID = mockOrgId,
   ): KnowledgeBase =>
-    new KnowledgeBase({
+    new PersonalKnowledgeBase({
       id,
       name,
       description: `Description for ${name}`,
@@ -73,27 +74,13 @@ describe('GetKnowledgeBasesByIdsUseCase', () => {
         new GetKnowledgeBasesByIdsQuery([mockKbId1, mockKbId2]),
       );
 
-      expect(knowledgeBaseRepository.findByIds).toHaveBeenCalledWith([
-        mockKbId1,
-        mockKbId2,
-      ]);
+      expect(knowledgeBaseRepository.findByIds).toHaveBeenCalledWith(
+        [mockKbId1, mockKbId2],
+        { orgId: mockOrgId, workspaceId: null },
+      );
       expect(result).toHaveLength(2);
       expect(result[0]).toBe(kb1);
       expect(result[1]).toBe(kb2);
-    });
-
-    it('should filter out knowledge bases from other organizations', async () => {
-      const otherOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
-      const kb1 = createKnowledgeBase(mockKbId1, 'Own Org KB', mockOrgId);
-      const kb2 = createKnowledgeBase(mockKbId2, 'Other Org KB', otherOrgId);
-      knowledgeBaseRepository.findByIds.mockResolvedValue([kb1, kb2]);
-
-      const result = await useCase.execute(
-        new GetKnowledgeBasesByIdsQuery([mockKbId1, mockKbId2]),
-      );
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toBe(kb1);
     });
 
     it('should return empty array when given empty IDs', async () => {

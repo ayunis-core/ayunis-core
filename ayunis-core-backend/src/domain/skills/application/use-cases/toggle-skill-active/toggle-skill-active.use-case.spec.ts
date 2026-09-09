@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -12,7 +13,7 @@ import { ToggleSkillActiveUseCase } from './toggle-skill-active.use-case';
 import { ToggleSkillActiveCommand } from './toggle-skill-active.command';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
@@ -26,7 +27,7 @@ describe('ToggleSkillActiveUseCase', () => {
   const mockSkillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
   const makeSkill = (id: UUID = mockSkillId, userId: UUID = mockUserId) =>
-    new Skill({
+    new PersonalSkill({
       id,
       name: 'Legal Research',
       shortDescription: 'Research legal topics.',

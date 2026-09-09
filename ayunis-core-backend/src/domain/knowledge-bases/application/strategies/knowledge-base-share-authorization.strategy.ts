@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
@@ -25,7 +26,7 @@ export class KnowledgeBaseShareAuthorizationStrategy implements ShareAuthorizati
     this.logger.log({ knowledgeBaseId, userId }, 'canViewShares');
 
     const kb = await this.knowledgeBaseRepository.findById(knowledgeBaseId);
-    return kb !== null && kb.userId === userId;
+    return kb instanceof PersonalKnowledgeBase && kb.userId === userId;
   }
 
   /**
@@ -36,7 +37,7 @@ export class KnowledgeBaseShareAuthorizationStrategy implements ShareAuthorizati
     this.logger.log({ knowledgeBaseId, userId }, 'canCreateShare');
 
     const kb = await this.knowledgeBaseRepository.findById(knowledgeBaseId);
-    return kb !== null && kb.userId === userId;
+    return kb instanceof PersonalKnowledgeBase && kb.userId === userId;
   }
 
   /**

@@ -5,7 +5,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ListAccessibleSkillsUseCase } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
 import { ListAccessibleSkillsQuery } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.query';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {
   UnexpectedWorkspaceError,

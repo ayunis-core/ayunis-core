@@ -1,3 +1,6 @@
+import { GetAccessibleKnowledgeBaseContextsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-accessible-knowledge-base-contexts/get-accessible-knowledge-base-contexts.use-case';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -5,8 +8,7 @@ import { ListSkillKnowledgeBasesUseCase } from './list-skill-knowledge-bases.use
 import { ListSkillKnowledgeBasesQuery } from './list-skill-knowledge-bases.query';
 import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
@@ -17,6 +19,7 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
   let useCase: ListSkillKnowledgeBasesUseCase;
   let getKnowledgeBasesByIdsUseCase: jest.Mocked<GetKnowledgeBasesByIdsUseCase>;
   let skillAccessService: jest.Mocked<SkillAccessService>;
+  let contexts: jest.Mocked<GetAccessibleKnowledgeBaseContextsUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
@@ -28,6 +31,10 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListSkillKnowledgeBasesUseCase,
+        {
+          provide: GetAccessibleKnowledgeBaseContextsUseCase,
+          useValue: { execute: jest.fn() },
+        },
         {
           provide: GetKnowledgeBasesByIdsUseCase,
           useValue: { execute: jest.fn() },
@@ -42,14 +49,15 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
     useCase = module.get(ListSkillKnowledgeBasesUseCase);
     getKnowledgeBasesByIdsUseCase = module.get(GetKnowledgeBasesByIdsUseCase);
     skillAccessService = module.get(SkillAccessService);
+    contexts = module.get(GetAccessibleKnowledgeBaseContextsUseCase);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  const createMockSkill = (knowledgeBaseIds: UUID[] = []): Skill =>
-    new Skill({
+  const createMockSkill = (knowledgeBaseIds: UUID[] = []): PersonalSkill =>
+    new PersonalSkill({
       id: mockSkillId,
       name: 'Test Skill',
       shortDescription: 'A test skill',
@@ -58,8 +66,11 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
       userId: mockUserId,
     });
 
-  const createMockKnowledgeBase = (id: UUID, name: string): KnowledgeBase =>
-    new KnowledgeBase({
+  const createMockKnowledgeBase = (
+    id: UUID,
+    name: string,
+  ): PersonalKnowledgeBase =>
+    new PersonalKnowledgeBase({
       id,
       name,
       description: `Description for ${name}`,
@@ -76,6 +87,11 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
 
       skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
       getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([kb1, kb2]);
+      const expected = [
+        { knowledgeBase: kb1, isActive: true, isShared: false },
+        { knowledgeBase: kb2, isActive: false, isShared: true },
+      ];
+      contexts.execute.mockResolvedValue(expected);
 
       const result = await useCase.execute(query);
 
@@ -88,8 +104,10 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
         }),
       );
       expect(result).toHaveLength(2);
-      expect(result[0]).toBe(kb1);
-      expect(result[1]).toBe(kb2);
+      expect(result).toEqual(expected);
+      expect(contexts.execute).toHaveBeenCalledWith({
+        knowledgeBaseIds: [mockKbId1, mockKbId2],
+      });
     });
 
     it('should return empty array when skill has no knowledge bases', async () => {
@@ -101,6 +119,7 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
       const result = await useCase.execute(query);
 
       expect(getKnowledgeBasesByIdsUseCase.execute).not.toHaveBeenCalled();
+      expect(contexts.execute).not.toHaveBeenCalled();
       expect(result).toEqual([]);
     });
 
@@ -122,6 +141,32 @@ describe('ListSkillKnowledgeBasesUseCase', () => {
       await expect(useCase.execute(query)).rejects.toThrow(
         UnexpectedSkillError,
       );
+    });
+
+    it('wraps asynchronous failures from knowledge-base resolution', async () => {
+      skillAccessService.findAccessibleSkill.mockResolvedValue(
+        createMockSkill([mockKbId1]),
+      );
+      getKnowledgeBasesByIdsUseCase.execute.mockRejectedValue(
+        new Error('Knowledge-base lookup failed'),
+      );
+
+      await expect(
+        useCase.execute(new ListSkillKnowledgeBasesQuery(mockSkillId)),
+      ).rejects.toThrow(UnexpectedSkillError);
+    });
+
+    it('wraps asynchronous context resolution failures', async () => {
+      skillAccessService.findAccessibleSkill.mockResolvedValue(
+        createMockSkill([mockKbId1]),
+      );
+      getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([
+        createMockKnowledgeBase(mockKbId1, 'Permit regulations'),
+      ]);
+      contexts.execute.mockRejectedValue(new Error('Context lookup failed'));
+      await expect(
+        useCase.execute(new ListSkillKnowledgeBasesQuery(mockSkillId)),
+      ).rejects.toBeInstanceOf(UnexpectedSkillError);
     });
 
     it('should rethrow ApplicationError without wrapping', async () => {

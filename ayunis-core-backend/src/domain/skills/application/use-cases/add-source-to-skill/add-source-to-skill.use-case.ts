@@ -1,4 +1,9 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { AddSourceToSkillCommand } from './add-source-to-skill.command';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -8,9 +13,8 @@ import {
   SkillSourceAlreadyAssignedError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { assertSkillHasSourceCapacity } from 'src/domain/skills/application/util/skill-source-capacity';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class AddSourceToSkillUseCase {
@@ -21,7 +25,8 @@ export class AddSourceToSkillUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(command: AddSourceToSkillCommand): Promise<Skill> {
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async execute(command: AddSourceToSkillCommand): Promise<PersonalSkill> {
     this.logger.log(
       {
         skillId: command.skillId,
@@ -29,38 +34,52 @@ export class AddSourceToSkillUseCase {
       },
       'Adding source to skill',
     );
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+    const userId = this.contextService.get('userId');
+    if (!userId) throw new UnauthorizedAccessError();
+    const skill = await this.skillRepository.findOne(command.skillId, userId);
+    if (!skill) throw new SkillNotFoundError(command.skillId);
+    const updated = await this.addSource(skill, command.sourceId);
+    if (!(updated instanceof PersonalSkill))
+      throw new SkillNotFoundError(skill.id);
+    return updated;
+  }
 
-      const skill = await this.skillRepository.findOne(command.skillId, userId);
-      if (!skill) {
-        throw new SkillNotFoundError(command.skillId);
-      }
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async executeForAuthorizedSkill(
+    authorizedSkill: Skill,
+    sourceId: UUID,
+  ): Promise<Skill> {
+    const skill = await this.reloadAuthorizedSkill(authorizedSkill);
+    return this.addSource(skill, sourceId);
+  }
 
-      if (skill.sourceIds.includes(command.sourceId)) {
-        throw new SkillSourceAlreadyAssignedError(command.sourceId);
-      }
+  private async reloadAuthorizedSkill(authorizedSkill: Skill): Promise<Skill> {
+    const skill = (
+      await this.skillRepository.findByIds([authorizedSkill.id])
+    ).find(
+      (candidate) =>
+        (candidate instanceof PersonalSkill &&
+          authorizedSkill instanceof PersonalSkill &&
+          candidate.userId === authorizedSkill.userId) ||
+        (candidate instanceof WorkspaceSkill &&
+          authorizedSkill instanceof WorkspaceSkill &&
+          candidate.workspaceId === authorizedSkill.workspaceId),
+    );
+    if (!skill) throw new SkillNotFoundError(authorizedSkill.id);
+    return skill;
+  }
 
-      assertSkillHasSourceCapacity(skill.sourceIds);
-
-      const updatedSkill = new Skill({
-        ...skill,
-        sourceIds: [...skill.sourceIds, command.sourceId],
-      });
-
-      return await this.skillRepository.update(updatedSkill);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error adding source to skill',
-      );
-      throw new UnexpectedSkillError(error);
+  private async addSource(skill: Skill, sourceId: UUID): Promise<Skill> {
+    if (skill.sourceIds.includes(sourceId)) {
+      throw new SkillSourceAlreadyAssignedError(sourceId);
     }
+    assertSkillHasSourceCapacity(skill.sourceIds);
+    return this.skillRepository.update(
+      skill.withUpdates({
+        ...skill,
+        sourceIds: [...skill.sourceIds, sourceId],
+      }),
+      skill,
+    );
   }
 }

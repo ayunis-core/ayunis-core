@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { randomUUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
@@ -7,7 +8,6 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { PermittedImageGenerationModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
 import { ToolAssemblyService } from './tool-assembly.service';
 import { McpToolAssemblerService } from './mcp-tool-assembler.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 describe('ToolAssemblyService — image generation tool assembly', () => {
   const mockOrgId = randomUUID();
@@ -338,14 +338,14 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
   });
 
   it('excludes project skills from activatable skills', async () => {
-    const projectSkill = new Skill({
+    const projectSkill = new PersonalSkill({
       id: randomUUID(),
       name: 'Project Skill',
       shortDescription: 'Assigned to the project',
       instructions: 'Use project context',
       userId: randomUUID(),
     });
-    const activeSkill = new Skill({
+    const activeSkill = new PersonalSkill({
       id: randomUUID(),
       name: 'User Skill',
       shortDescription: 'Activated by the user',
@@ -418,7 +418,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
   });
 
   it('does not apply project skills when the skills feature is disabled', async () => {
-    const projectSkill = new Skill({
+    const projectSkill = new PersonalSkill({
       id: randomUUID(),
       name: 'Project Skill',
       shortDescription: 'Assigned to the project',

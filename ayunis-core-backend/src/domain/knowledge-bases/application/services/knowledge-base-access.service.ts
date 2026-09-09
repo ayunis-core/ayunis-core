@@ -1,3 +1,5 @@
+import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
@@ -15,11 +17,13 @@ import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
-export interface KnowledgeBaseWithUserContext {
-  knowledgeBase: KnowledgeBase;
+export interface KnowledgeBaseWithUserContext<
+  T extends KnowledgeBase = KnowledgeBase,
+> {
+  knowledgeBase: T;
   isShared: boolean;
   isActive: boolean;
 }
@@ -37,11 +41,13 @@ export class KnowledgeBaseAccessService {
     private readonly contextService: ContextService,
   ) {}
 
-  async findAccessibleKnowledgeBase(id: UUID): Promise<KnowledgeBase> {
+  async findAccessibleKnowledgeBase(id: UUID): Promise<PersonalKnowledgeBase> {
     return this.findAccessibleKnowledgeBaseForUser(id, this.getUserId());
   }
 
-  async findOneAccessible(id: UUID): Promise<KnowledgeBaseWithUserContext> {
+  async findOneAccessible(
+    id: UUID,
+  ): Promise<KnowledgeBaseWithUserContext<PersonalKnowledgeBase>> {
     const userId = this.getUserId();
     const knowledgeBase = await this.findAccessibleKnowledgeBaseForUser(
       id,
@@ -50,7 +56,9 @@ export class KnowledgeBaseAccessService {
     const isActive = await this.knowledgeBaseRepository.isActive(id, userId);
     return {
       knowledgeBase,
-      isShared: knowledgeBase.userId !== userId,
+      isShared:
+        knowledgeBase instanceof PersonalKnowledgeBase &&
+        knowledgeBase.userId !== userId,
       isActive,
     };
   }
@@ -71,7 +79,7 @@ export class KnowledgeBaseAccessService {
 
   async resolveIsShared(kbId: UUID, userId: UUID): Promise<boolean> {
     const kb = await this.knowledgeBaseRepository.findById(kbId);
-    if (kb?.userId === userId) {
+    if (kb instanceof PersonalKnowledgeBase && kb.userId === userId) {
       return false;
     }
 
@@ -85,14 +93,16 @@ export class KnowledgeBaseAccessService {
    * Finds all knowledge bases accessible to the current user (owned + shared).
    * Returns each KB with an isShared flag.
    */
-  async findActiveAccessible(): Promise<KnowledgeBase[]> {
+  async findActiveAccessible(): Promise<PersonalKnowledgeBase[]> {
     return this.knowledgeBaseRepository.findActiveAccessible(
       this.getUserId(),
       this.getOrgId(),
     );
   }
 
-  async findAllAccessible(): Promise<KnowledgeBaseWithUserContext[]> {
+  async findAllAccessible(): Promise<
+    KnowledgeBaseWithUserContext<PersonalKnowledgeBase>[]
+  > {
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedAccessError();
@@ -129,29 +139,42 @@ export class KnowledgeBaseAccessService {
     // 3. Fetch shared KBs
     const sharedKbs =
       sharedKbIds.length > 0
-        ? await this.knowledgeBaseRepository.findByIds(sharedKbIds)
+        ? await this.knowledgeBaseRepository.findByIds(sharedKbIds, {
+            orgId: this.getOrgId(),
+            workspaceId: null,
+          })
         : [];
 
     // 4. Combine results with isShared flag
-    const ownedResults: KnowledgeBaseWithUserContext[] = ownedKbs.map(
-      (knowledgeBase) => ({
+    const ownedResults: KnowledgeBaseWithUserContext<PersonalKnowledgeBase>[] =
+      ownedKbs.map((knowledgeBase) => ({
         knowledgeBase,
         isShared: false,
         isActive: activeIds.has(knowledgeBase.id),
-      }),
-    );
+      }));
 
-    const sharedResults: KnowledgeBaseWithUserContext[] = sharedKbs.map(
-      (knowledgeBase) => ({
+    const sharedResults: KnowledgeBaseWithUserContext<PersonalKnowledgeBase>[] =
+      sharedKbs.map((knowledgeBase) => ({
         knowledgeBase,
         isShared: true,
         isActive: activeIds.has(knowledgeBase.id),
-      }),
-    );
+      }));
 
     return [...ownedResults, ...sharedResults];
   }
 
+  findAllAccessiblePaginated(
+    workspaceId: undefined,
+    options: KnowledgeBaseListOptions,
+  ): Promise<Paginated<KnowledgeBaseWithUserContext<PersonalKnowledgeBase>>>;
+  findAllAccessiblePaginated(
+    workspaceId: UUID,
+    options: KnowledgeBaseListOptions,
+  ): Promise<Paginated<KnowledgeBaseWithUserContext<WorkspaceKnowledgeBase>>>;
+  findAllAccessiblePaginated(
+    workspaceId: UUID | undefined,
+    options: KnowledgeBaseListOptions,
+  ): Promise<Paginated<KnowledgeBaseWithUserContext>>;
   async findAllAccessiblePaginated(
     workspaceId: UUID | undefined,
     options: KnowledgeBaseListOptions,
@@ -159,6 +182,10 @@ export class KnowledgeBaseAccessService {
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedAccessError();
+    }
+
+    if (workspaceId !== undefined) {
+      return this.findWorkspacePaginated(userId, workspaceId, options);
     }
 
     const [sharedIds, activeIds] = await Promise.all([
@@ -177,8 +204,37 @@ export class KnowledgeBaseAccessService {
       data: page.data.map((knowledgeBase) => ({
         knowledgeBase,
         isShared:
-          knowledgeBase.userId !== userId && sharedIdSet.has(knowledgeBase.id),
+          knowledgeBase instanceof PersonalKnowledgeBase &&
+          knowledgeBase.userId !== userId &&
+          sharedIdSet.has(knowledgeBase.id),
         isActive: activeIds.has(knowledgeBase.id),
+      })),
+      limit: page.limit,
+      offset: page.offset,
+      total: page.total,
+    });
+  }
+
+  private async findWorkspacePaginated(
+    userId: UUID,
+    workspaceId: UUID,
+    options: KnowledgeBaseListOptions,
+  ): Promise<Paginated<KnowledgeBaseWithUserContext<WorkspaceKnowledgeBase>>> {
+    const page = await this.knowledgeBaseRepository.findPaginatedAccessible(
+      userId,
+      workspaceId,
+      [],
+      options,
+    );
+    const states = await this.knowledgeBaseRepository.getWorkspaceStates(
+      page.data.map(({ id }) => id),
+      workspaceId,
+    );
+    return new Paginated({
+      data: page.data.map((knowledgeBase) => ({
+        knowledgeBase,
+        isShared: false,
+        isActive: states.get(knowledgeBase.id)?.isActive ?? false,
       })),
       limit: page.limit,
       offset: page.offset,
@@ -205,9 +261,12 @@ export class KnowledgeBaseAccessService {
   private async findAccessibleKnowledgeBaseForUser(
     id: UUID,
     userId: UUID,
-  ): Promise<KnowledgeBase> {
+  ): Promise<PersonalKnowledgeBase> {
     const knowledgeBase = await this.knowledgeBaseRepository.findById(id);
     if (!knowledgeBase) {
+      throw new KnowledgeBaseNotFoundError(id);
+    }
+    if (!(knowledgeBase instanceof PersonalKnowledgeBase)) {
       throw new KnowledgeBaseNotFoundError(id);
     }
     if (knowledgeBase.userId === userId) {

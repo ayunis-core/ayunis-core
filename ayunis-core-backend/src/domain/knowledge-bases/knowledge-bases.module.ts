@@ -8,9 +8,13 @@ import { SharesModule } from 'src/domain/shares/shares.module';
 import { getShareAuthStrategyToken } from 'src/domain/shares/application/factories/share-authorization.factory';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
+import { FindAccessibleKnowledgeBaseUseCase } from './application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
+import { GetAccessibleKnowledgeBaseContextsUseCase } from './application/use-cases/get-accessible-knowledge-base-contexts/get-accessible-knowledge-base-contexts.use-case';
+import { KnowledgeBaseToolAccessService } from './application/services/knowledge-base-tool-access.service';
 import { KnowledgeBaseAccessService } from './application/services/knowledge-base-access.service';
 import { KnowledgeBaseShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { KnowledgeBasesUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
+import { KnowledgeBasesWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 
@@ -46,6 +50,8 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     forwardRef(() => ThreadsModule),
   ],
   providers: [
+    FindAccessibleKnowledgeBaseUseCase,
+    GetAccessibleKnowledgeBaseContextsUseCase,
     // Use Cases
     CreateKnowledgeBaseUseCase,
     UpdateKnowledgeBaseUseCase,
@@ -64,10 +70,12 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     // Presenters
     KnowledgeBaseDtoMapper,
     // Services
+    KnowledgeBaseToolAccessService,
     KnowledgeBaseAccessService,
     // Listeners
     KnowledgeBaseShareDeletedListener,
     KnowledgeBasesUserDeletionRequestedListener,
+    KnowledgeBasesWorkspaceDeletionRequestedListener,
     // Strategies
     KnowledgeBaseShareAuthorizationStrategy,
     {
@@ -77,6 +85,8 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
   ],
   controllers: [KnowledgeBasesController],
   exports: [
+    FindAccessibleKnowledgeBaseUseCase,
+    GetAccessibleKnowledgeBaseContextsUseCase,
     LocalKnowledgeBaseRepositoryModule,
     KnowledgeBaseAccessService,
     KnowledgeBaseShareAuthorizationStrategy,

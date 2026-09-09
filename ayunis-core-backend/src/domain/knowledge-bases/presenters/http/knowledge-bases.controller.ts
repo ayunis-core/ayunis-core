@@ -14,6 +14,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import {
   ApiTags,
   ApiOperation,
@@ -106,7 +107,6 @@ const DocumentUploadInterceptor = createDocumentUploadInterceptor(
 export class KnowledgeBasesController {
   private readonly logger = new Logger(KnowledgeBasesController.name);
 
-  // eslint-disable-next-line max-params -- NestJS injects endpoint use cases.
   constructor(
     private readonly createKnowledgeBaseUseCase: CreateKnowledgeBaseUseCase,
     private readonly setKnowledgeBaseActivationUseCase: SetKnowledgeBaseActivationUseCase,
@@ -259,7 +259,9 @@ export class KnowledgeBasesController {
     );
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
       isActive: dto.isActive,
-      isShared: knowledgeBase.userId !== userId,
+      isShared:
+        knowledgeBase instanceof PersonalKnowledgeBase &&
+        knowledgeBase.userId !== userId,
     });
   }
 

@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Transactional } from '@nestjs-cls/transactional';
@@ -38,7 +39,10 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
     const knowledgeBase = await this.knowledgeBaseRepository.findById(
       command.knowledgeBaseId,
     );
-    if (knowledgeBase?.userId !== command.userId) {
+    if (
+      !(knowledgeBase instanceof PersonalKnowledgeBase) ||
+      knowledgeBase.userId !== command.userId
+    ) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 

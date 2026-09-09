@@ -1,9 +1,9 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindKnowledgeBaseUseCase } from './find-knowledge-base.use-case';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
@@ -22,11 +22,14 @@ describe('FindKnowledgeBaseUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -34,6 +37,9 @@ describe('FindKnowledgeBaseUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -49,7 +55,7 @@ describe('FindKnowledgeBaseUseCase', () => {
   });
 
   it('should return a knowledge base when found and owned by user', async () => {
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       description: 'Protokolle des Stadtrats',
@@ -78,7 +84,7 @@ describe('FindKnowledgeBaseUseCase', () => {
 
   it('should throw KnowledgeBaseNotFoundError when owned by another user', async () => {
     const otherUserId = '44444444-4444-4444-4444-444444444444' as UUID;
-    const existing = new KnowledgeBase({
+    const existing = new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Fremde Wissenssammlung',
       orgId,

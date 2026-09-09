@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
@@ -22,7 +22,7 @@ export class SetKnowledgeBaseActivationUseCase {
   @Transactional()
   async execute(
     command: SetKnowledgeBaseActivationCommand,
-  ): Promise<KnowledgeBase> {
+  ): Promise<PersonalKnowledgeBase> {
     this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,

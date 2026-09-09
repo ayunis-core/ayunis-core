@@ -1,8 +1,9 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SkillShareAuthorizationStrategy } from './skill-share-authorization.strategy';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { randomUUID } from 'crypto';
 
 describe('SkillShareAuthorizationStrategy', () => {
@@ -22,6 +23,10 @@ describe('SkillShareAuthorizationStrategy', () => {
       deactivateSkill: jest.fn(),
       isSkillActive: jest.fn(),
       getActiveSkillIds: jest.fn(),
+      activateWorkspaceSkill: jest.fn(),
+      deactivateWorkspaceSkill: jest.fn(),
+      setWorkspaceSkillPinned: jest.fn(),
+      getWorkspaceSkillStates: jest.fn(),
       findByIds: jest.fn(),
       toggleSkillPinned: jest.fn(),
       isSkillPinned: jest.fn(),
@@ -55,7 +60,7 @@ describe('SkillShareAuthorizationStrategy', () => {
         id: skillId,
         userId,
         name: 'Research Assistant',
-      } as Skill;
+      } as PersonalSkill;
 
       skillRepository.findOne.mockResolvedValue(mockSkill);
 
@@ -98,7 +103,7 @@ describe('SkillShareAuthorizationStrategy', () => {
         id: skillId,
         userId,
         name: 'Code Review',
-      } as Skill;
+      } as PersonalSkill;
 
       skillRepository.findOne.mockResolvedValue(mockSkill);
 

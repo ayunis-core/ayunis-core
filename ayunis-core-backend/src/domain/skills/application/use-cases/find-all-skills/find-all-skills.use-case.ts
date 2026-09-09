@@ -1,8 +1,11 @@
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindAllSkillsQuery } from './find-all-skills.query';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
@@ -13,7 +16,7 @@ import { SkillShare } from 'src/domain/shares/domain/share.entity';
  * Result type that includes skill and whether it's shared
  */
 export interface SkillWithShareStatus {
-  skill: Skill;
+  skill: PersonalSkill;
   isShared: boolean;
 }
 
@@ -40,6 +43,7 @@ export class FindAllSkillsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(query: FindAllSkillsQuery): Promise<FindAllSkillsResult> {
     this.logger.log(query, 'Finding all skills');
 
@@ -78,7 +82,7 @@ export class FindAllSkillsUseCase {
     // 3. Fetch shared skills
     const sharedSkills =
       sharedSkillIds.length > 0
-        ? await this.skillRepository.findByIds(sharedSkillIds)
+        ? await this.skillRepository.findByIds(sharedSkillIds, null)
         : [];
 
     // 4. Combine results with isShared flag

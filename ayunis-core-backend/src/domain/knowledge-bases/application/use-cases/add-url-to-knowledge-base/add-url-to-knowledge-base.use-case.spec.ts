@@ -1,3 +1,4 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { TransactionHost } from '@nestjs-cls/transactional';
@@ -5,7 +6,7 @@ import type { UUID } from 'crypto';
 import { AddUrlToKnowledgeBaseUseCase } from './add-url-to-knowledge-base.use-case';
 import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.command';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import {
   KnowledgeBaseNotFoundError,
   KnowledgeBaseSourceLimitExceededError,
@@ -32,7 +33,7 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
   };
 
   function ownedKnowledgeBase(): KnowledgeBase {
-    return new KnowledgeBase({
+    return new PersonalKnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       orgId,
@@ -54,11 +55,14 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn().mockResolvedValue(0),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -66,6 +70,9 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
       deactivate: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
@@ -116,7 +123,7 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
   it('throws KnowledgeBaseNotFoundError when the KB does not belong to the user', async () => {
     const otherUserId = '99999999-9999-9999-9999-999999999999' as UUID;
     mockRepository.findById.mockResolvedValue(
-      new KnowledgeBase({
+      new PersonalKnowledgeBase({
         id: knowledgeBaseId,
         name: 'Anderer Benutzer KB',
         orgId,

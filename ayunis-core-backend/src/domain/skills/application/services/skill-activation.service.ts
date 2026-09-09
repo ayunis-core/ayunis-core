@@ -1,3 +1,4 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
@@ -13,7 +14,7 @@ import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/applicati
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
