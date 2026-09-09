@@ -26,7 +26,7 @@ export default function AppLayout({
         <div className="flex flex-1 flex-col min-h-0">
           <AppAlertBanner />
           <CertificateExpiryBanner />
-          <div className="flex flex-1 flex-col min-h-0 p-4 pt-0 relative md:rounded-xl md:overflow-hidden">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden p-2 pt-0 sm:p-4 sm:pt-0 md:rounded-xl md:overflow-hidden">
             {children}
           </div>
           <CertificateExpiryDialog />

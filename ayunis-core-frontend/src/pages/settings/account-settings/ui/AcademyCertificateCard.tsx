@@ -18,6 +18,7 @@ import {
 } from '@/features/academy';
 import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { formatDate } from '@/shared/lib/format-date';
+import { SettingsFieldRow } from '@/pages/settings/settings-layout';
 
 /**
  * When the user last completed the KI-Schulung nach EU AI Act and — for orgs
@@ -79,13 +80,13 @@ export function AcademyCertificateCard() {
       <CardContent className="space-y-4">
         {isLoading && <Skeleton className="h-5 w-2/3" />}
         {!isLoading && (
-          <div className="flex items-center justify-between gap-4">
+          <SettingsFieldRow>
             {lastPassedAt === null ? (
-              <div className="text-sm text-muted-foreground">
+              <div className="min-w-0 text-sm text-muted-foreground">
                 {t('account.notPassedDescription')}
               </div>
             ) : (
-              <dl className="space-y-1 text-sm">
+              <dl className="min-w-0 space-y-1 text-sm">
                 <div className="flex gap-2">
                   <dt className="text-muted-foreground">
                     {t('account.lastPassed')}
@@ -104,10 +105,14 @@ export function AcademyCertificateCard() {
                 )}
               </dl>
             )}
-            <Button variant="outline" asChild>
+            <Button
+              variant="outline"
+              className="w-full shrink-0 sm:w-auto"
+              asChild
+            >
               <Link to="/academy">{t('account.action')}</Link>
             </Button>
-          </div>
+          </SettingsFieldRow>
         )}
       </CardContent>
     </Card>

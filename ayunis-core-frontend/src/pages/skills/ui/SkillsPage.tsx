@@ -5,7 +5,7 @@ import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import CreateSkillDialog from './CreateSkillDialog';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
-import type { Skill } from '../model/openapi';
+import type { Skill } from '@/pages/skills/model/openapi';
 import SkillsEmptyState from './SkillsEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
@@ -49,7 +49,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   );
 
   const headerAction = (
-    <div className="flex gap-2">
+    <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="skills/" />
       {hasPinnableSkill ? (
         createSkillAction

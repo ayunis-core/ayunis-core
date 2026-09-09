@@ -38,10 +38,10 @@ export default function KnowledgeBasesPage({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const headerAction = (
-    <div className="flex gap-2">
+    <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="knowledge-collections/" />
       <OnboardingTourTarget name={TOUR_TARGET.createKnowledgeBase}>
-        <CreateKnowledgeBaseDialog />
+        <CreateKnowledgeBaseDialog buttonClassName="max-sm:max-w-full" />
       </OnboardingTourTarget>
     </div>
   );

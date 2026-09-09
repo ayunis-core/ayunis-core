@@ -3,9 +3,13 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import AccountSettingsPage from '@/pages/settings/account-settings/ui/AccountSettingsPage';
 
-vi.mock('@/pages/settings/settings-layout', () => ({
-  SettingsLayout: ({ children }: { children: ReactNode }) => children,
-}));
+vi.mock('@/pages/settings/settings-layout', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    SettingsLayout: ({ children }: { children: ReactNode }) => children,
+  };
+});
 vi.mock('@/pages/settings/account-settings/ui/ProfileInformationCard', () => ({
   ProfileInformationCard: () => null,
 }));

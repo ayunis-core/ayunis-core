@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@ayunis/ui/lib/cn';
 import NewChatBackdrop, { type NewChatBackdropPhase } from './NewChatBackdrop';
-import { useComposeLift } from '../model/useComposeLift';
+import { useComposeLift } from '@/pages/new-chat/model/useComposeLift';
 
 export type NewChatMistPhase = NewChatBackdropPhase | 'hidden';
 
@@ -45,7 +45,7 @@ export default function NewChatPageLayout({
           {useComposeLayout ? (
             <div
               ref={stageRef}
-              className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-4"
+              className="flex min-h-0 flex-1 flex-col justify-end px-2 pb-2 sm:px-4 sm:pb-4"
             >
               <div
                 ref={composeRef}
@@ -72,7 +72,7 @@ export default function NewChatPageLayout({
               </div>
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-4">
+            <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-2 pb-2 sm:px-4 sm:pb-4">
               <div className="w-full max-w-[800px]">{children}</div>
             </div>
           )}

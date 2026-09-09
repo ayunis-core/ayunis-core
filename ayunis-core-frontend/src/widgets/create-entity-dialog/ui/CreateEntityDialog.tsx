@@ -50,7 +50,7 @@ export default function CreateEntityDialog({
       <DialogTrigger asChild>
         <Button
           size="sm"
-          className={`${showIcon ? 'inline-flex items-center gap-2' : ''} ${buttonClassName}`}
+          className={`${showIcon ? 'inline-flex items-center gap-2' : ''} max-sm:max-w-full ${buttonClassName}`}
         >
           {showIcon && <Plus className="h-4 w-4" />}
           {buttonText ?? translations.buttonText}

@@ -22,6 +22,8 @@ describe('ContentAreaHeader', () => {
 
     expect(header.className).toContain('max-sm:flex-col');
     expect(actionRegion?.className).toContain('content-area-header-actions');
+    expect(actionRegion?.className).toContain('flex-wrap');
+    expect(actionRegion?.className).toContain('max-sm:w-full');
     expect(actionRegion?.className).toContain('max-sm:justify-end');
   });
 
