@@ -65,7 +65,7 @@
     "@storybook/addon-a11y": "10.5.7",
     "@storybook/addon-docs": "10.5.7",
     "@storybook/react-vite": "10.5.7",
-    "@tailwindcss/vite": "^4.3.2",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.0.3",
     "eslint": "^10.6.0",
@@ -81,11 +81,11 @@
     "prettier": "^3.9.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-hook-form": "^7.81.0",
+    "react-hook-form": "^7.86.0",
     "recharts": "^2.15.4",
-    "sonner": "^2.0.5",
+    "sonner": "^2.0.8",
     "storybook": "10.5.7",
-    "tailwindcss": "^4.3.2",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0"
   }
