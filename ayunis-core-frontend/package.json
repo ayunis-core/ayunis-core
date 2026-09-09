@@ -51,7 +51,7 @@
     "i18next": "^26.3.4",
     "i18next-browser-languagedetector": "^8.2.0",
     "lucide-react": "^0.476.0",
-    "maplibre-gl": "^6.3.0",
+    "maplibre-gl": "^6.8.0",
     "mermaid": "^11.16.0",
     "pdfjs-dist": "^5.5.207",
     "react": "^19.2.7",
