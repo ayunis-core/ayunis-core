@@ -8,6 +8,7 @@ import { generatedApi } from '../clients/api/generated-api';
 import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
 import { createOrgSkillShare } from '../clients/api/shares.client';
 import type { MailcatcherClient } from '../clients/mailcatcher.client';
+import type { ShareResponseDto } from '../clients/generated/ayunisCoreAPI.schemas';
 
 const MEMBER_PASSWORD = 'E2e-Password-1';
 
@@ -16,7 +17,7 @@ export interface SharedSkillAccessFixture {
   knowledgeBase: { id: string; name: string };
   workspace: { id: string; name: string };
   memberApi: APIRequestContext;
-  shareSkill: () => Promise<void>;
+  shareSkill: () => Promise<ShareResponseDto>;
 }
 
 export async function createSharedSkillAccessFixture(
@@ -72,9 +73,7 @@ export async function createSharedSkillAccessFixture(
       },
       { api: memberApi },
     );
-    const shareSkill = async (): Promise<void> => {
-      await createOrgSkillShare(adminApi, skill.id);
-    };
+    const shareSkill = () => createOrgSkillShare(adminApi, skill.id);
 
     return {
       skill: { id: skill.id, name: skill.name },

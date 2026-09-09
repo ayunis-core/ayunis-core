@@ -9,12 +9,14 @@ interface DiagramViewerProps {
   readonly artifact: ArtifactResponseDto;
   readonly onClose: () => void;
   readonly onBack: () => void;
+  readonly showClose?: boolean;
 }
 
 export function DiagramViewer({
   artifact,
   onClose,
   onBack,
+  showClose = true,
 }: DiagramViewerProps) {
   // null = follow latest; set to a specific version number when the user
   // picks one from the history. Resets on artifact change via key prop.
@@ -46,6 +48,7 @@ export function DiagramViewer({
         }
         onBack={onBack}
         onClose={onClose}
+        showClose={showClose}
       />
 
       <div className="flex-1 overflow-hidden">

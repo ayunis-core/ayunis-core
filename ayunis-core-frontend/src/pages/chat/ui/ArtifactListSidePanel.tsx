@@ -15,7 +15,6 @@ import {
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useThreadArtifacts } from '@/pages/chat/api/useThreadArtifacts';
-import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
 import type {
   ArtifactResponseDto,
   ArtifactResponseDtoType,
@@ -30,35 +29,22 @@ const artifactIcons: Record<ArtifactResponseDtoType, LucideIcon> = {
 interface ArtifactListSidePanelProps {
   readonly threadId: string;
   readonly onSelect: (artifactId: string) => void;
-  readonly onClose: () => void;
 }
 
 export function ArtifactListSidePanel({
   threadId,
   onSelect,
-  onClose,
 }: Readonly<ArtifactListSidePanelProps>) {
-  const { t } = useTranslation('chat');
   const { artifacts, isLoading, error, refetch } = useThreadArtifacts(threadId);
 
   return (
-    <aside className="flex h-full min-h-0 flex-col overflow-hidden border-l bg-background">
-      <ArtifactPanelHeader
-        title={
-          <h2 className="truncate text-sm font-semibold">
-            {t('chat.artifactPanel.title')}
-          </h2>
-        }
-        onClose={onClose}
-      />
-      <ArtifactListContent
-        artifacts={artifacts}
-        isLoading={isLoading}
-        error={error}
-        onRetry={() => void refetch()}
-        onSelect={onSelect}
-      />
-    </aside>
+    <ArtifactListContent
+      artifacts={artifacts}
+      isLoading={isLoading}
+      error={error}
+      onRetry={() => void refetch()}
+      onSelect={onSelect}
+    />
   );
 }
 

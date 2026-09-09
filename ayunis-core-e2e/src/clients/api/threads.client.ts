@@ -23,6 +23,13 @@ export function sendThreadMessage(
   });
 }
 
+export function getThreadAiContextResponse(
+  api: APIRequestContext,
+  threadId: string,
+): Promise<APIResponse> {
+  return api.get(`${config.apiURL}/api/threads/${threadId}/ai-context`);
+}
+
 export async function deleteThread(
   api: APIRequestContext,
   threadId: string,

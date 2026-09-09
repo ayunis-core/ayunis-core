@@ -20,6 +20,7 @@ import { WorkspaceSkillSourcesController } from './presenters/http/workspace-ski
 import { WorkspaceContextDtoMapper } from './presenters/http/mappers/workspace-context-dto.mapper';
 import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/update-workspace-instruction/update-workspace-instruction.use-case';
 import { BuildWorkspaceRunContextUseCase } from './application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { GetWorkspaceAiContextUseCase } from './application/use-cases/get-workspace-ai-context/get-workspace-ai-context.use-case';
 import { CreateWorkspaceSkillUseCase } from './application/use-cases/create-workspace-skill/create-workspace-skill.use-case';
 import { DeleteWorkspaceSkillUseCase } from './application/use-cases/delete-workspace-skill/delete-workspace-skill.use-case';
 import { ListWorkspaceSkillsUseCase } from './application/use-cases/list-workspace-skills/list-workspace-skills.use-case';
@@ -67,6 +68,7 @@ import { RemoveWorkspaceSkillSourceUseCase } from './application/use-cases/remov
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
     UpdateWorkspaceInstructionUseCase,
+    GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
     CreateWorkspaceSkillUseCase,
     DeleteWorkspaceSkillUseCase,
@@ -101,6 +103,7 @@ import { RemoveWorkspaceSkillSourceUseCase } from './application/use-cases/remov
     FindWorkspacesByIdsUseCase,
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
+    GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
   ],
 })

@@ -29,12 +29,14 @@ interface ArtifactSidePanelSkeletonProps {
   readonly variant?: 'spreadsheet' | 'document';
   readonly onClose: () => void;
   readonly onBack: () => void;
+  readonly showClose?: boolean;
 }
 
 export default function ArtifactSidePanelSkeleton({
   variant = 'document',
   onClose,
   onBack,
+  showClose = true,
 }: ArtifactSidePanelSkeletonProps) {
   return (
     <div
@@ -45,6 +47,7 @@ export default function ArtifactSidePanelSkeleton({
         title={<Skeleton className="h-5 w-44" />}
         onBack={onBack}
         onClose={onClose}
+        showClose={showClose}
       />
 
       <div className="flex items-center gap-1 border-b px-3 py-1.5">

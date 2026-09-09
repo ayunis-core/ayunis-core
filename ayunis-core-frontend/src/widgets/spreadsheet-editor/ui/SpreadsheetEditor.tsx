@@ -25,13 +25,23 @@ interface SpreadsheetEditorProps {
   readonly onClose: () => void;
   readonly onBack: () => void;
   readonly isExporting?: boolean;
+  readonly showClose?: boolean;
 }
 
 export const SpreadsheetEditor = forwardRef<
   ArtifactPanelHandle,
   SpreadsheetEditorProps
 >(function SpreadsheetEditor(
-  { artifact, onSave, onRevert, onExport, onClose, onBack, isExporting },
+  {
+    artifact,
+    onSave,
+    onRevert,
+    onExport,
+    onClose,
+    onBack,
+    isExporting,
+    showClose = true,
+  },
   ref,
 ) {
   const { t } = useTranslation('artifacts');
@@ -120,6 +130,7 @@ export const SpreadsheetEditor = forwardRef<
         }
         onBack={() => handleExit(onBack)}
         onClose={() => handleExit(onClose)}
+        showClose={showClose}
       />
 
       {editor.isViewingHistory ? (

@@ -80,4 +80,44 @@ describe('LocalThreadsRepository', () => {
 
     expect(thread?.messages).toEqual([olderMessage, newerMessage]);
   });
+
+  it('loads owner-scoped context references without hydrating the thread', async () => {
+    const threadId = randomUUID();
+    const userId = randomUUID();
+    const workspaceId = randomUUID();
+    const knowledgeBaseId = randomUUID();
+    const queryBuilder = {
+      leftJoin: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue([
+        { workspaceId, knowledgeBaseId },
+        { workspaceId, knowledgeBaseId: null },
+      ]),
+    };
+    const threadRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as jest.Mocked<Repository<ThreadRecord>>;
+    const repository = new LocalThreadsRepository(
+      threadRepository,
+      {} as ThreadMapper,
+      {} as LocalThreadAssignmentsRepository,
+    );
+
+    await expect(repository.findContextRefs(threadId, userId)).resolves.toEqual(
+      {
+        workspaceId,
+        knowledgeBaseIds: [knowledgeBaseId],
+      },
+    );
+    expect(queryBuilder.where).toHaveBeenCalledWith('thread.id = :id', {
+      id: threadId,
+    });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'thread.userId = :userId',
+      { userId },
+    );
+  });
 });

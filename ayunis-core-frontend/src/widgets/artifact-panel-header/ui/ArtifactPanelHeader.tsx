@@ -8,6 +8,7 @@ interface ArtifactPanelHeaderProps {
   readonly actions?: ReactNode;
   readonly onBack?: () => void;
   readonly onClose: () => void;
+  readonly showClose?: boolean;
 }
 
 export function ArtifactPanelHeader({
@@ -15,6 +16,7 @@ export function ArtifactPanelHeader({
   actions,
   onBack,
   onClose,
+  showClose = true,
 }: Readonly<ArtifactPanelHeaderProps>) {
   const { t } = useTranslation('artifacts');
   return (
@@ -35,15 +37,17 @@ export function ArtifactPanelHeader({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {actions}
-        <Button
-          variant="ghost"
-          size="icon"
-          data-testid="artifact-side-panel-close"
-          onClick={onClose}
-          aria-label={t('navigation.close')}
-        >
-          <X className="size-4" />
-        </Button>
+        {showClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            data-testid="artifact-side-panel-close"
+            onClick={onClose}
+            aria-label={t('navigation.close')}
+          >
+            <X className="size-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

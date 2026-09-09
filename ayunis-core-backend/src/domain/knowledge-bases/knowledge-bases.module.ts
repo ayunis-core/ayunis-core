@@ -10,6 +10,7 @@ import { getShareAuthStrategyToken } from 'src/domain/shares/application/factori
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
 import { FindAccessibleKnowledgeBaseUseCase } from './application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
+import { FindAccessibleKnowledgeBasesByIdsUseCase } from './application/use-cases/find-accessible-knowledge-bases-by-ids/find-accessible-knowledge-bases-by-ids.use-case';
 import { GetAccessibleKnowledgeBaseContextsUseCase } from './application/use-cases/get-accessible-knowledge-base-contexts/get-accessible-knowledge-base-contexts.use-case';
 import { KnowledgeBaseAccessService } from './application/services/knowledge-base-access.service';
 import { FindWorkspaceKnowledgeBaseUseCase } from './application/use-cases/find-workspace-knowledge-base/find-workspace-knowledge-base.use-case';
@@ -63,6 +64,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
   providers: [
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
+    FindAccessibleKnowledgeBasesByIdsUseCase,
     GetAccessibleKnowledgeBaseContextsUseCase,
     FindWorkspaceKnowledgeBasePageUseCase,
     FindWorkspaceKnowledgeBaseUseCase,
@@ -107,6 +109,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
   exports: [
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
+    FindAccessibleKnowledgeBasesByIdsUseCase,
     GetAccessibleKnowledgeBaseContextsUseCase,
     FindWorkspaceKnowledgeBasePageUseCase,
     FindWorkspaceKnowledgeBaseUseCase,

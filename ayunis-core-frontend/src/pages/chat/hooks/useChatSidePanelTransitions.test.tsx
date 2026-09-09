@@ -6,6 +6,7 @@ import { useChatSidePanelTransitions } from './useChatSidePanelTransitions';
 function setup(isArtifactDetailOpen = true) {
   const openArtifact = vi.fn();
   const toggleArtifactPanel = vi.fn();
+  const changeTab = vi.fn();
   let continueExit: (() => void) | undefined;
   const requestExit = vi.fn((onExit: () => void) => {
     continueExit = onExit;
@@ -19,12 +20,14 @@ function setup(isArtifactDetailOpen = true) {
       isArtifactDetailOpen,
       openArtifact,
       toggleArtifactPanel,
+      changeTab,
     }),
   );
   return {
     result,
     openArtifact,
     toggleArtifactPanel,
+    changeTab,
     requestExit,
     confirmExit: () => continueExit?.(),
   };
@@ -45,6 +48,16 @@ describe('useChatSidePanelTransitions', () => {
     expect(toggleArtifactPanel).not.toHaveBeenCalled();
     act(confirmExit);
     expect(toggleArtifactPanel).toHaveBeenCalledOnce();
+  });
+
+  it('does not change tabs until the artifact exit guard confirms', () => {
+    const { result, changeTab, confirmExit } = setup();
+
+    act(() => result.current.changeTab('context'));
+    expect(changeTab).not.toHaveBeenCalled();
+
+    act(confirmExit);
+    expect(changeTab).toHaveBeenCalledWith('context');
   });
 
   it('opens an artifact from the list without requesting an exit', () => {

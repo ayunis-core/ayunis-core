@@ -6,6 +6,7 @@ import {
   getFavoritesControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
+  getThreadAiContextControllerGetAiContextQueryKey,
   getWorkspacesControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -37,6 +38,9 @@ export function useAssignThreadToWorkspace() {
       // keeps its old workspaceId until the cache expires.
       void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindOneQueryKey(threadId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getThreadAiContextControllerGetAiContextQueryKey(threadId),
       });
       // Workspace cards derive chatCount/lastActivityAt from the list query.
       void queryClient.invalidateQueries({

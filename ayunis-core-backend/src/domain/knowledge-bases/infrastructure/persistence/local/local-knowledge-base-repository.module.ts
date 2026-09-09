@@ -7,6 +7,7 @@ import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/persistence/local/local-source-repository.module';
 import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
+import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 
 @Module({
   imports: [
@@ -24,7 +25,11 @@ import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activatio
       provide: KnowledgeBaseRepository,
       useExisting: LocalKnowledgeBaseRepository,
     },
+    {
+      provide: AccessibleKnowledgeBasesByIdsRepository,
+      useExisting: LocalKnowledgeBaseRepository,
+    },
   ],
-  exports: [KnowledgeBaseRepository],
+  exports: [KnowledgeBaseRepository, AccessibleKnowledgeBasesByIdsRepository],
 })
 export class LocalKnowledgeBaseRepositoryModule {}

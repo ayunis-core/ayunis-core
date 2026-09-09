@@ -61,7 +61,7 @@
     "skills": {
       "title": "Fähigkeiten des Arbeitsbereichs",
       "description": "Fähigkeiten, die der Assistent bei Bedarf in Chats dieses Arbeitsbereichs aktivieren kann.",
-      "create": "Fähigkeit erstellen",
+      "create": "Fähigkeit hinzufügen",
       "createDescription": "Erstellen Sie eine Fähigkeit, die diesem Arbeitsbereich gehört.",
       "name": "Name",
       "shortDescription": "Kurzbeschreibung",
@@ -78,7 +78,7 @@
     "knowledge": {
       "title": "Wissensdatenbanken",
       "description": "Eigene Wissensdatenbanken für alle Chats dieses Arbeitsbereichs.",
-      "create": "Wissensdatenbank erstellen",
+      "create": "Wissenssammlung hinzufügen",
       "createDescription": "Erstellen Sie eine Wissensdatenbank, die diesem Arbeitsbereich gehört.",
       "name": "Name",
       "descriptionLabel": "Beschreibung",

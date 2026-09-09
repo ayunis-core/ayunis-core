@@ -7,14 +7,14 @@ import {
 import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
 import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team-member.record';
 
-export interface ActiveKnowledgeBaseAccessSubqueries {
+export interface KnowledgeBaseAccessSubqueries {
   directShare: string;
   sharedSkill: string;
 }
 
-export function buildActiveKnowledgeBaseAccessSubqueries(
+export function buildKnowledgeBaseAccessSubqueries(
   query: SelectQueryBuilder<KnowledgeBaseRecord>,
-): ActiveKnowledgeBaseAccessSubqueries {
+): KnowledgeBaseAccessSubqueries {
   return {
     directShare: buildDirectShareAccessQuery(query),
     sharedSkill: buildSharedSkillAccessQuery(query),

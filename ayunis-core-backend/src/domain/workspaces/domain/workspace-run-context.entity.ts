@@ -14,9 +14,12 @@ export interface WorkspaceKnowledgeBaseContext extends KnowledgeBaseSummary {
   isActive: boolean;
 }
 
-export interface WorkspaceRunContext {
+export interface WorkspaceAiContext {
   instruction: string | null;
   skills: WorkspaceSkillContext[];
   knowledgeBases: WorkspaceKnowledgeBaseContext[];
+}
+
+export interface WorkspaceRunContext extends WorkspaceAiContext {
   runtimeKnowledgeBases: WorkspaceKnowledgeBaseContext[];
 }

@@ -1,5 +1,4 @@
-import { useCallback, useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useArtifact } from '@/pages/chat/api/useArtifact';
 import { useUpdateArtifact } from '@/pages/chat/api/useUpdateArtifact';
@@ -15,12 +14,7 @@ export function useArtifactActions(
   workspaceId?: string | null,
 ) {
   const { t } = useTranslation('chat');
-  const navigate = useNavigate();
   const openArtifactId = initialArtifactId ?? null;
-  const [artifactListThreadId, setArtifactListThreadId] = useState<
-    string | null
-  >(null);
-  const isArtifactListOpen = artifactListThreadId === threadId;
 
   const {
     artifact: openArtifact,
@@ -46,18 +40,6 @@ export function useArtifactActions(
     artifactId: openArtifactId ?? '',
     title: openArtifact?.title ?? 'document',
   });
-
-  const handleOpenArtifact = useCallback(
-    (artifactId: string) => {
-      void navigate({
-        to: '/chats/$threadId',
-        params: { threadId },
-        search: { artifactId },
-        replace: true,
-      });
-    },
-    [navigate, threadId],
-  );
 
   const handleSaveArtifact = useCallback(
     async (content: string) => {
@@ -96,34 +78,6 @@ export function useArtifactActions(
     [exportArtifact, saveArtifactAsync],
   );
 
-  const handleCloseArtifact = useCallback(() => {
-    setArtifactListThreadId(null);
-    void navigate({
-      to: '/chats/$threadId',
-      params: { threadId },
-      search: { artifactId: undefined },
-      replace: true,
-    });
-  }, [navigate, threadId]);
-
-  const handleBackToArtifactList = useCallback(() => {
-    setArtifactListThreadId(threadId);
-    void navigate({
-      to: '/chats/$threadId',
-      params: { threadId },
-      search: { artifactId: undefined },
-      replace: true,
-    });
-  }, [navigate, threadId]);
-
-  const handleToggleArtifactPanel = useCallback(() => {
-    if (openArtifactId || isArtifactListOpen) {
-      handleCloseArtifact();
-      return;
-    }
-    setArtifactListThreadId(threadId);
-  }, [handleCloseArtifact, isArtifactListOpen, openArtifactId, threadId]);
-
   const handleRetryArtifact = useCallback(() => {
     void refetchArtifact();
   }, [refetchArtifact]);
@@ -133,20 +87,13 @@ export function useArtifactActions(
     isLoading: isArtifactLoading,
     error: artifactError,
     onRetry: handleRetryArtifact,
-    onClose: handleCloseArtifact,
   };
 
   return {
     artifactPanel,
-    isArtifactPanelOpen: Boolean(openArtifactId) || isArtifactListOpen,
-    isArtifactListView: !openArtifactId && isArtifactListOpen,
     isExporting,
-    handleOpenArtifact,
-    handleBackToArtifactList,
-    handleToggleArtifactPanel,
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
-    handleCloseArtifact,
   };
 }
