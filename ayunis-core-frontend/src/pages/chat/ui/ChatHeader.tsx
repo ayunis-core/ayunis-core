@@ -28,20 +28,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import type { WorkspaceContextResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { WorkspaceContextPanel } from './WorkspaceContextSidePanel';
-import { WorkspaceContextHeaderActions } from './WorkspaceContextHeaderActions';
 
 interface ChatHeaderProps {
   readonly threadId: string;
   readonly threadTitle?: string;
   readonly isAnonymous: boolean;
   readonly workspaceId?: string | null;
-  readonly workspaceContext?: WorkspaceContextResponseDto;
-  readonly activeWorkspaceContextPanel?: WorkspaceContextPanel | null;
-  readonly onToggleWorkspaceContextPanel?: (
-    panel: WorkspaceContextPanel,
-  ) => void;
   readonly isArtifactPanelOpen: boolean;
   readonly onToggleArtifactPanel: () => void;
   readonly onRename: () => void;
@@ -53,9 +45,6 @@ export default function ChatHeader({
   threadTitle,
   isAnonymous,
   workspaceId,
-  workspaceContext,
-  activeWorkspaceContextPanel,
-  onToggleWorkspaceContextPanel,
   isArtifactPanelOpen,
   onToggleArtifactPanel,
   onRename,
@@ -63,6 +52,7 @@ export default function ChatHeader({
 }: Readonly<ChatHeaderProps>) {
   const { t } = useTranslation('chat');
   const { t: tCommon } = useTranslation('common');
+  const { t: tWorkspace } = useTranslation('workspace');
   const isWorkspacesEnabled = useIsWorkspacesEnabled();
   const { favorites } = useFavorites();
   const { toggle: togglePinned } = useToggleFavorite();
@@ -70,16 +60,20 @@ export default function ChatHeader({
   const isPinned = isFavorite(favorites, threadId, 'thread');
 
   const displayTitle = threadTitle || t('chat.untitled');
-  // A chat filed under a workspace is presented as the workspace's child, so
-  // the parent crumb leads back to the workspace instead of the chats list.
-  // Falls back to "Chats" when the workspace is not loadable (flag off,
-  // workspace deleted).
   const workspace = workspaceId
     ? workspaces.find((w) => w.id === workspaceId)
     : undefined;
-  const parentCrumb = workspace
-    ? { label: workspace.name, href: `/workspaces/${workspace.id}` }
-    : { label: t('chat.chats'), href: '/chats' };
+  const breadcrumbs = workspace
+    ? [
+        { label: tWorkspace('page.breadcrumb'), href: '/workspaces' },
+        { label: workspace.name, href: `/workspaces/${workspace.id}` },
+        {
+          label: t('chat.chats'),
+          href: `/workspaces/${workspace.id}?tab=chats`,
+        },
+        { label: displayTitle },
+      ]
+    : [{ label: t('chat.chats'), href: '/chats' }, { label: displayTitle }];
 
   const anonymousBadge = isAnonymous ? (
     <Tooltip>
@@ -93,21 +87,12 @@ export default function ChatHeader({
     </Tooltip>
   ) : undefined;
 
-  const contextActions = workspaceContext ? (
-    <WorkspaceContextHeaderActions
-      context={workspaceContext}
-      activePanel={activeWorkspaceContextPanel ?? null}
-      onToggle={onToggleWorkspaceContextPanel}
-    />
-  ) : null;
-
   return (
     <ContentAreaHeader
-      breadcrumbs={[parentCrumb, { label: displayTitle }]}
+      breadcrumbs={breadcrumbs}
       badge={anonymousBadge}
       action={
         <div className="flex items-center gap-1">
-          {contextActions}
           {isWorkspacesEnabled && (
             <PinButton
               isPinned={isPinned}

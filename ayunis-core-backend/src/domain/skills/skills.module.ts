@@ -1,3 +1,4 @@
+import { ActivateWorkspaceSkillByNameUseCase } from './application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SourcesModule } from 'src/domain/sources/sources.module';
@@ -42,7 +43,14 @@ import { GetSkillsByIdsUseCase } from './application/use-cases/get-skills-by-ids
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
 import { SkillAccessService } from './application/services/skill-access.service';
-import { WorkspaceSkillService } from './application/services/workspace-skill.service';
+import { FindWorkspaceSkillUseCase } from './application/use-cases/find-workspace-skill/find-workspace-skill.use-case';
+import { GetWorkspaceSkillsUseCase } from './application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
+import { UpdateWorkspaceSkillUseCase } from './application/use-cases/update-workspace-skill/update-workspace-skill.use-case';
+import { SetWorkspaceSkillActivationUseCase } from './application/use-cases/set-workspace-skill-activation/set-workspace-skill-activation.use-case';
+import { SetWorkspaceSkillPinUseCase } from './application/use-cases/set-workspace-skill-pin/set-workspace-skill-pin.use-case';
+import { SetWorkspaceSkillKnowledgeBaseUseCase } from './application/use-cases/set-workspace-skill-knowledge-base/set-workspace-skill-knowledge-base.use-case';
+import { GetWorkspaceSkillStatesUseCase } from './application/use-cases/get-workspace-skill-states/get-workspace-skill-states.use-case';
+import { WorkspaceSkillAccessService } from './application/services/workspace-skill-access.service';
 import { SkillActivationService } from './application/services/skill-activation.service';
 import { SkillCreatorNameService } from './application/services/skill-creator-name.service';
 
@@ -89,13 +97,21 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     forwardRef(() => ThreadsModule),
   ],
   providers: [
+    ActivateWorkspaceSkillByNameUseCase,
+    GetWorkspaceSkillStatesUseCase,
+    FindWorkspaceSkillUseCase,
+    GetWorkspaceSkillsUseCase,
+    UpdateWorkspaceSkillUseCase,
+    SetWorkspaceSkillActivationUseCase,
+    SetWorkspaceSkillPinUseCase,
+    SetWorkspaceSkillKnowledgeBaseUseCase,
     {
       provide: SkillRepository,
       useClass: LocalSkillRepository,
     },
     // Services
     SkillAccessService,
-    WorkspaceSkillService,
+    WorkspaceSkillAccessService,
     SkillActivationService,
     SkillCreatorNameService,
 
@@ -153,12 +169,19 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     SkillKnowledgeBasesController,
   ],
   exports: [
+    ActivateWorkspaceSkillByNameUseCase,
+    GetWorkspaceSkillStatesUseCase,
+    FindWorkspaceSkillUseCase,
+    GetWorkspaceSkillsUseCase,
+    UpdateWorkspaceSkillUseCase,
+    SetWorkspaceSkillActivationUseCase,
+    SetWorkspaceSkillPinUseCase,
+    SetWorkspaceSkillKnowledgeBaseUseCase,
     SkillRepository,
     FindActiveSkillsUseCase,
     FindAllSkillsUseCase,
     ListAccessibleSkillsUseCase,
     FindOneSkillUseCase,
-    WorkspaceSkillService,
     AddSourceToSkillUseCase,
     AddFileSourceToSkillUseCase,
     RemoveSourceFromSkillUseCase,

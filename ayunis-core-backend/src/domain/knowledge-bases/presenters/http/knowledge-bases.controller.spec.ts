@@ -7,7 +7,6 @@ import { KnowledgeBasesController } from './knowledge-bases.controller';
 
 describe('KnowledgeBasesController', () => {
   it('cleans up an uploaded file when MIME validation rejects it', async () => {
-    const userId: UUID = '123e4567-e89b-12d3-a456-426614174000';
     const knowledgeBaseId: UUID = '223e4567-e89b-12d3-a456-426614174001';
     const file: UploadedDocument = {
       fieldname: 'file',
@@ -31,9 +30,9 @@ describe('KnowledgeBasesController', () => {
       null as never,
     );
 
-    await expect(
-      controller.addDocument(userId, knowledgeBaseId, file),
-    ).rejects.toThrow(BadRequestException);
+    await expect(controller.addDocument(knowledgeBaseId, file)).rejects.toThrow(
+      BadRequestException,
+    );
 
     expect(unlink).toHaveBeenCalledWith(file.path);
     unlink.mockRestore();

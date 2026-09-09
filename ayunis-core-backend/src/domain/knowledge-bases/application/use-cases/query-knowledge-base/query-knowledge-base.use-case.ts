@@ -12,7 +12,7 @@ import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-ty
 import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBaseToolAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-tool-access.service';
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
 
@@ -31,7 +31,7 @@ export class QueryKnowledgeBaseUseCase {
     private readonly findContentChunksByIdsUseCase: FindContentChunksByIdsUseCase,
     private readonly searchContentUseCase: SearchContentUseCase,
     private readonly contextService: ContextService,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseToolAccessService,
+    private readonly findKnowledgeBaseForThread: FindKnowledgeBaseForThreadUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
@@ -53,11 +53,10 @@ export class QueryKnowledgeBaseUseCase {
       'Querying knowledge base',
     );
 
-    const knowledgeBase =
-      await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
-        query.knowledgeBaseId,
-        query.threadId,
-      );
+    const knowledgeBase = await this.findKnowledgeBaseForThread.execute({
+      knowledgeBaseId: query.knowledgeBaseId,
+      threadId: query.threadId,
+    });
 
     if (knowledgeBase.orgId !== orgId) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);

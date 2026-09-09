@@ -1,4 +1,3 @@
-import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
@@ -24,8 +23,7 @@ export interface SystemPromptBuildParams {
   sources?: Source[];
   skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
-  projectInstruction?: string | null;
-  projectSkills?: Skill[];
+  workspaceInstructions?: string | null;
   orgSystemPrompt?: string;
   userSystemPrompt?: string;
   isAnonymous?: boolean;
@@ -40,8 +38,7 @@ export class SystemPromptBuilderService {
       sources = [],
       skills = [],
       knowledgeBases = [],
-      projectInstruction,
-      projectSkills = [],
+      workspaceInstructions,
       orgSystemPrompt,
       userSystemPrompt,
       isAnonymous = false,
@@ -54,10 +51,9 @@ export class SystemPromptBuilderService {
       this.buildSkillsSection(skills),
       this.buildFilesSection(sources),
       this.buildKnowledgeBasesSection(knowledgeBases),
-      projectInstruction
-        ? this.buildProjectInstructionsSection(projectInstruction)
+      workspaceInstructions
+        ? this.buildWorkspaceInstructionsSection(workspaceInstructions)
         : '',
-      this.buildProjectSkillsSection(projectSkills),
       this.buildDataHandlingSection(),
       isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
@@ -308,22 +304,8 @@ ${skillEntries}
 </available_skills>`;
   }
 
-  private buildProjectInstructionsSection(instruction: string): string {
-    return `<project_instructions>\nThese instructions apply to every chat in this project.\n\n${escapeXml(instruction)}\n</project_instructions>`;
-  }
-
-  private buildProjectSkillsSection(skills: Skill[]): string {
-    if (skills.length === 0) return '';
-    const entries = skills.map((skill) => this.formatSkill(skill)).join('\n');
-    return `<project_skills>
-The following skills are active for this project. Apply their instructions without requiring the user to activate them manually.
-
-${entries}
-</project_skills>`;
-  }
-
-  private formatSkill(skill: Skill): string {
-    return `<skill name="${escapeXml(skill.name)}">\n${escapeXml(skill.instructions)}\n</skill>`;
+  private buildWorkspaceInstructionsSection(instruction: string): string {
+    return `<workspace_instructions>\nThese instructions apply to every chat in this workspace.\n\n${escapeXml(instruction)}\n</workspace_instructions>`;
   }
 
   private buildFilesSection(sources: Source[]): string {

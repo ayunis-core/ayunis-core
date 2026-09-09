@@ -40,9 +40,8 @@ export class McpToolAssemblerService {
   async assemble(
     thread: Thread,
     reservedNames: ReadonlySet<string>,
-    extraIntegrationIds: UUID[] = [],
   ): Promise<Tool[]> {
-    const mcpTools = await this.assembleMcpTools(thread, extraIntegrationIds);
+    const mcpTools = await this.assembleMcpTools(thread);
     const { unique, duplicates } = McpToolAssemblerService.filterDuplicateNames(
       mcpTools,
       reservedNames,
@@ -80,13 +79,9 @@ export class McpToolAssemblerService {
     return { unique, duplicates };
   }
 
-  private async assembleMcpTools(
-    thread: Thread,
-    extraIntegrationIds: UUID[],
-  ): Promise<Tool[]> {
+  private async assembleMcpTools(thread: Thread): Promise<Tool[]> {
     const mcpIntegrationIds = new Set<UUID>();
     thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
-    extraIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
 
     if (mcpIntegrationIds.size === 0) return [];
 

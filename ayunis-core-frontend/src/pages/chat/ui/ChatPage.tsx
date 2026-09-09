@@ -44,8 +44,6 @@ import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { ChatSidePanel } from './ChatSidePanel';
-import { isChatSidePanelVisible } from '@/pages/chat/lib/is-chat-side-panel-visible';
-import { useWorkspaceContextPanel } from '@/pages/chat/hooks/useWorkspaceContextPanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 
 const PROCESSING_POLL_INTERVAL = 5000;
@@ -134,7 +132,6 @@ export default function ChatPage({
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
-    handleCloseArtifact,
   } = useArtifactActions(thread.id, initialArtifactId, thread.workspaceId);
 
   const { handleLetterheadChange } = useLetterheadChange({
@@ -142,21 +139,11 @@ export default function ChatPage({
     threadId: thread.id,
     workspaceId: thread.workspaceId,
   });
-  const {
-    context: workspaceContext,
-    panel: workspaceContextPanel,
-    toggle: toggleWorkspacePanel,
-    close: closeWorkspaceContextPanel,
-  } = useWorkspaceContextPanel(thread.workspaceId);
   const sidePanelTransitions = useChatSidePanelTransitions({
     artifactPanelRef,
     isArtifactDetailOpen: isArtifactPanelOpen && !isArtifactListView,
-    isArtifactPanelOpen,
-    closeArtifactPanel: handleCloseArtifact,
     openArtifact: handleOpenArtifact,
     toggleArtifactPanel: handleToggleArtifactPanel,
-    closeWorkspacePanel: closeWorkspaceContextPanel,
-    toggleWorkspacePanel,
   });
 
   const { deleteChat } = useDeleteThread({
@@ -365,11 +352,6 @@ export default function ChatPage({
       threadTitle={threadTitle}
       isAnonymous={thread.isAnonymous}
       workspaceId={thread.workspaceId}
-      workspaceContext={workspaceContext}
-      activeWorkspaceContextPanel={workspaceContextPanel}
-      onToggleWorkspaceContextPanel={
-        sidePanelTransitions.toggleWorkspaceContextPanel
-      }
       isArtifactPanelOpen={isArtifactPanelOpen}
       onToggleArtifactPanel={sidePanelTransitions.toggleArtifactPanel}
       onRename={handleRenameThread}
@@ -446,11 +428,7 @@ export default function ChatPage({
     </>
   );
 
-  const sidePanel = isChatSidePanelVisible(
-    isArtifactPanelOpen,
-    workspaceContextPanel,
-    Boolean(workspaceContext),
-  ) ? (
+  const sidePanel = isArtifactPanelOpen ? (
     <ChatSidePanel
       threadId={thread.id}
       artifactListOpen={isArtifactListView}
@@ -466,9 +444,6 @@ export default function ChatPage({
         isExporting,
       }}
       onSelectArtifact={sidePanelTransitions.openArtifactPanel}
-      workspaceContext={workspaceContext}
-      workspacePanel={workspaceContextPanel}
-      onCloseWorkspacePanel={closeWorkspaceContextPanel}
     />
   ) : undefined;
   return (

@@ -73,6 +73,8 @@ import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './rou
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 import { Route as AuthenticatedAcademyChapterIdQuizRouteImport } from './routes/_authenticated/academy.$chapterId_.quiz'
+import { Route as AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRouteImport } from './routes/_authenticated/workspaces_.$workspaceId.skills.$skillId'
+import { Route as AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRouteImport } from './routes/_authenticated/workspaces_.$workspaceId.knowledge-bases.$knowledgeBaseId'
 import { Route as AuthenticatedSettingsIntegrationsOauthCallbackRouteImport } from './routes/_authenticated/settings.integrations_.oauth.callback'
 import { Route as AuthenticatedAdminSettingsModelsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.models.teams.$id'
 
@@ -442,6 +444,20 @@ const AuthenticatedAcademyChapterIdQuizRoute =
     path: '/academy/$chapterId/quiz',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute =
+  AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRouteImport.update({
+    id: '/workspaces_/$workspaceId/skills/$skillId',
+    path: '/workspaces/$workspaceId/skills/$skillId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute =
+  AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRouteImport.update(
+    {
+      id: '/workspaces_/$workspaceId/knowledge-bases/$knowledgeBaseId',
+      path: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
+      getParentRoute: () => AuthenticatedRoute,
+    } as any,
+  )
 const AuthenticatedSettingsIntegrationsOauthCallbackRoute =
   AuthenticatedSettingsIntegrationsOauthCallbackRouteImport.update({
     id: '/settings/integrations_/oauth/callback',
@@ -521,6 +537,8 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
   '/admin-settings/models/teams/$id': typeof AuthenticatedAdminSettingsModelsTeamsIdRoute
   '/settings/integrations/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
+  '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId': typeof AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute
+  '/workspaces/$workspaceId/skills/$skillId': typeof AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -586,6 +604,8 @@ export interface FileRoutesByTo {
   '/super-admin-settings/users': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
   '/admin-settings/models/teams/$id': typeof AuthenticatedAdminSettingsModelsTeamsIdRoute
   '/settings/integrations/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
+  '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId': typeof AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute
+  '/workspaces/$workspaceId/skills/$skillId': typeof AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -655,6 +675,8 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
   '/_authenticated/admin-settings/models/teams/$id': typeof AuthenticatedAdminSettingsModelsTeamsIdRoute
   '/_authenticated/settings/integrations_/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
+  '/_authenticated/workspaces_/$workspaceId/knowledge-bases/$knowledgeBaseId': typeof AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute
+  '/_authenticated/workspaces_/$workspaceId/skills/$skillId': typeof AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -724,6 +746,8 @@ export interface FileRouteTypes {
     | '/super-admin-settings/users/'
     | '/admin-settings/models/teams/$id'
     | '/settings/integrations/oauth/callback'
+    | '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId'
+    | '/workspaces/$workspaceId/skills/$skillId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -789,6 +813,8 @@ export interface FileRouteTypes {
     | '/super-admin-settings/users'
     | '/admin-settings/models/teams/$id'
     | '/settings/integrations/oauth/callback'
+    | '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId'
+    | '/workspaces/$workspaceId/skills/$skillId'
   id:
     | '__root__'
     | '/'
@@ -857,6 +883,8 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/users/'
     | '/_authenticated/admin-settings/models/teams/$id'
     | '/_authenticated/settings/integrations_/oauth/callback'
+    | '/_authenticated/workspaces_/$workspaceId/knowledge-bases/$knowledgeBaseId'
+    | '/_authenticated/workspaces_/$workspaceId/skills/$skillId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1327,6 +1355,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAcademyChapterIdQuizRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/workspaces_/$workspaceId/skills/$skillId': {
+      id: '/_authenticated/workspaces_/$workspaceId/skills/$skillId'
+      path: '/workspaces/$workspaceId/skills/$skillId'
+      fullPath: '/workspaces/$workspaceId/skills/$skillId'
+      preLoaderRoute: typeof AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/workspaces_/$workspaceId/knowledge-bases/$knowledgeBaseId': {
+      id: '/_authenticated/workspaces_/$workspaceId/knowledge-bases/$knowledgeBaseId'
+      path: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId'
+      fullPath: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId'
+      preLoaderRoute: typeof AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/settings/integrations_/oauth/callback': {
       id: '/_authenticated/settings/integrations_/oauth/callback'
       path: '/settings/integrations/oauth/callback'
@@ -1474,6 +1516,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedWorkspacesIndexRoute: typeof AuthenticatedWorkspacesIndexRoute
   AuthenticatedAcademyChapterIdQuizRoute: typeof AuthenticatedAcademyChapterIdQuizRoute
   AuthenticatedSettingsIntegrationsOauthCallbackRoute: typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
+  AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute
+  AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1504,6 +1548,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAcademyChapterIdQuizRoute,
   AuthenticatedSettingsIntegrationsOauthCallbackRoute:
     AuthenticatedSettingsIntegrationsOauthCallbackRoute,
+  AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute:
+    AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute,
+  AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute:
+    AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -56,7 +56,10 @@ export class SkillActivationService {
       'Activating skill on thread',
     );
 
-    const skill = await this.skillAccessService.findAccessibleSkill(skillId);
+    const skill = await this.skillAccessService.findActivatableSkill(
+      skillId,
+      thread,
+    );
 
     await this.copySourcesToThread(skill, thread);
     await this.copyMcpIntegrationsToThread(skill, thread);

@@ -1,8 +1,10 @@
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { ListAccessibleSkillsUseCase } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { GetWorkspaceSkillStatesUseCase } from 'src/domain/skills/application/use-cases/get-workspace-skill-states/get-workspace-skill-states.use-case';
+
 import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { ListWorkspaceSkillsUseCase } from './list-workspace-skills.use-case';
 import { ListWorkspaceSkillsQuery } from './list-workspace-skills.query';
@@ -10,12 +12,12 @@ import { ListWorkspaceSkillsQuery } from './list-workspace-skills.query';
 describe('ListWorkspaceSkillsUseCase', () => {
   it('returns the paginated skills attached to a workspace', async () => {
     const workspaceId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-    const skill = new PersonalSkill({
+    const skill = new WorkspaceSkill({
       id: '223e4567-e89b-12d3-a456-426614174001',
       name: 'Citizen requests',
       shortDescription: 'Handles citizen requests',
       instructions: 'Use the request workflow',
-      userId: '323e4567-e89b-12d3-a456-426614174002',
+      workspaceId,
     });
     const page = new Paginated({
       data: [skill],
@@ -29,12 +31,20 @@ describe('ListWorkspaceSkillsUseCase', () => {
     const listAccessibleSkillsUseCase = {
       execute: jest.fn().mockResolvedValue(page),
     } as unknown as jest.Mocked<ListAccessibleSkillsUseCase>;
+    const workspaceSkillService = {
+      execute: jest
+        .fn()
+        .mockResolvedValue(
+          new Map([[skill.id, { isActive: true, isPinned: false }]]),
+        ),
+    } as unknown as jest.Mocked<GetWorkspaceSkillStatesUseCase>;
     const contextService = {
       get: jest.fn().mockReturnValue('423e4567-e89b-12d3-a456-426614174003'),
     } as unknown as jest.Mocked<ContextService>;
     const useCase = new ListWorkspaceSkillsUseCase(
       workspacesRepository,
       listAccessibleSkillsUseCase,
+      workspaceSkillService,
       contextService,
     );
 
@@ -47,7 +57,8 @@ describe('ListWorkspaceSkillsUseCase', () => {
       }),
     );
 
-    expect(result).toBe(page);
+    expect(result.data).toEqual([{ skill, isActive: true, isPinned: false }]);
+    expect(result.total).toBe(page.total);
     expect(listAccessibleSkillsUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         search: 'citizen',

@@ -3452,6 +3452,11 @@ export interface WorkspaceSkillResponseDto {
   id: string;
   name: string;
   shortDescription: string;
+  instructions: string;
+  knowledgeBaseIds: string[];
+  workspaceId: string;
+  isActive: boolean;
+  isPinned: boolean;
 }
 
 export interface WorkspaceKnowledgeBaseResponseDto {
@@ -3460,6 +3465,38 @@ export interface WorkspaceKnowledgeBaseResponseDto {
   /** @nullable */
   description: string | null;
   documentCount: number;
+  isActive: boolean;
+}
+
+export interface WorkspaceContextResponseDto {
+  /** @nullable */
+  instruction: string | null;
+  skills: WorkspaceSkillResponseDto[];
+  knowledgeBases: WorkspaceKnowledgeBaseResponseDto[];
+}
+
+export interface CreateWorkspaceSkillDto {
+  name: string;
+  shortDescription: string;
+  instructions: string;
+}
+
+export interface UpdateWorkspaceSkillActivationDto {
+  isActive: boolean;
+}
+
+export interface UpdateWorkspaceSkillPinDto {
+  isPinned: boolean;
+}
+
+export interface WorkspaceSkillListResponseDto {
+  data: WorkspaceSkillResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface CreateWorkspaceKnowledgeBaseDto {
+  name: string;
+  description: string;
 }
 
 export type WorkspaceDocumentResponseDtoType = typeof WorkspaceDocumentResponseDtoType[keyof typeof WorkspaceDocumentResponseDtoType];
@@ -3510,52 +3547,12 @@ export interface WorkspaceDocumentResponseDto {
   updatedAt: string;
 }
 
-export interface WorkspaceContextResponseDto {
-  /** @nullable */
-  instruction: string | null;
-  skills: WorkspaceSkillResponseDto[];
-  knowledgeBases: WorkspaceKnowledgeBaseResponseDto[];
-  documents: WorkspaceDocumentResponseDto[];
-}
-
-export interface WorkspaceSkillCandidateResponseDto {
-  id: string;
-  name: string;
-  shortDescription: string;
-  isAttached: boolean;
-}
-
-export interface WorkspaceSkillCandidateListResponseDto {
-  data: WorkspaceSkillCandidateResponseDto[];
-  pagination: PaginationDto;
-}
-
-export interface WorkspaceKnowledgeBaseCandidateResponseDto {
-  id: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  documentCount: number;
-  isAttached: boolean;
-}
-
-export interface WorkspaceKnowledgeBaseCandidateListResponseDto {
-  data: WorkspaceKnowledgeBaseCandidateResponseDto[];
-  pagination: PaginationDto;
-}
-
-export interface WorkspaceSkillListResponseDto {
-  data: WorkspaceSkillResponseDto[];
-  pagination: PaginationDto;
+export interface UpdateWorkspaceKnowledgeBaseActivationDto {
+  isActive: boolean;
 }
 
 export interface WorkspaceKnowledgeBaseListResponseDto {
   data: WorkspaceKnowledgeBaseResponseDto[];
-  pagination: PaginationDto;
-}
-
-export interface WorkspaceDocumentListResponseDto {
-  data: WorkspaceDocumentResponseDto[];
   pagination: PaginationDto;
 }
 
@@ -5488,18 +5485,6 @@ export const WorkspacesControllerFindAllSort = {
   name: 'name',
 } as const;
 
-export type WorkspaceContextControllerListSkillCandidatesParams = {
-offset?: number;
-limit?: number;
-search?: string;
-};
-
-export type WorkspaceContextControllerListKnowledgeBaseCandidatesParams = {
-offset?: number;
-limit?: number;
-search?: string;
-};
-
 export type WorkspaceContextControllerListSkillsParams = {
 offset?: number;
 limit?: number;
@@ -5512,13 +5497,12 @@ limit?: number;
 search?: string;
 };
 
-export type WorkspaceContextControllerListDocumentsParams = {
-offset?: number;
-limit?: number;
-search?: string;
+export type WorkspaceContextControllerAddKnowledgeBaseDocumentBody = {
+  file: Blob | File;
 };
 
-export type WorkspaceContextControllerAddDocumentBody = {
+export type WorkspaceSkillSourcesControllerAddFileBody = {
+  /** The file to upload (max 25 MB) */
   file: Blob | File;
 };
 

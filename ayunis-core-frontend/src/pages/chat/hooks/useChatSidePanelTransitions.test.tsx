@@ -3,68 +3,54 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useChatSidePanelTransitions } from './useChatSidePanelTransitions';
 
-function createCallbacks() {
+function setup(isArtifactDetailOpen = true) {
+  const openArtifact = vi.fn();
+  const toggleArtifactPanel = vi.fn();
+  let continueExit: (() => void) | undefined;
+  const requestExit = vi.fn((onExit: () => void) => {
+    continueExit = onExit;
+  });
+  const artifactPanelRef = {
+    current: { requestExit } satisfies ArtifactPanelHandle,
+  };
+  const { result } = renderHook(() =>
+    useChatSidePanelTransitions({
+      artifactPanelRef,
+      isArtifactDetailOpen,
+      openArtifact,
+      toggleArtifactPanel,
+    }),
+  );
   return {
-    closeArtifactPanel: vi.fn(),
-    openArtifact: vi.fn(),
-    toggleArtifactPanel: vi.fn(),
-    closeWorkspacePanel: vi.fn(),
-    toggleWorkspacePanel: vi.fn(),
+    result,
+    openArtifact,
+    toggleArtifactPanel,
+    requestExit,
+    confirmExit: () => continueExit?.(),
   };
 }
 
 describe('useChatSidePanelTransitions', () => {
   it('waits for the artifact exit guard before opening another artifact', () => {
-    const callbacks = createCallbacks();
-    let continueExit: (() => void) | undefined;
-    const artifactPanelRef = {
-      current: {
-        requestExit: (onExit: () => void) => {
-          continueExit = onExit;
-        },
-      } satisfies ArtifactPanelHandle,
-    };
-    const { result } = renderHook(() =>
-      useChatSidePanelTransitions({
-        ...callbacks,
-        artifactPanelRef,
-        isArtifactDetailOpen: true,
-        isArtifactPanelOpen: true,
-      }),
-    );
-
+    const { result, openArtifact, confirmExit } = setup();
     act(() => result.current.openArtifactPanel('artifact-b'));
-    expect(callbacks.openArtifact).not.toHaveBeenCalled();
-
-    act(() => continueExit?.());
-    expect(callbacks.closeWorkspacePanel).toHaveBeenCalledOnce();
-    expect(callbacks.openArtifact).toHaveBeenCalledWith('artifact-b');
+    expect(openArtifact).not.toHaveBeenCalled();
+    act(confirmExit);
+    expect(openArtifact).toHaveBeenCalledWith('artifact-b');
   });
 
-  it('does not switch to workspace context until artifact exit is confirmed', () => {
-    const callbacks = createCallbacks();
-    let continueExit: (() => void) | undefined;
-    const artifactPanelRef = {
-      current: {
-        requestExit: (onExit: () => void) => {
-          continueExit = onExit;
-        },
-      } satisfies ArtifactPanelHandle,
-    };
-    const { result } = renderHook(() =>
-      useChatSidePanelTransitions({
-        ...callbacks,
-        artifactPanelRef,
-        isArtifactDetailOpen: true,
-        isArtifactPanelOpen: true,
-      }),
-    );
+  it('waits for the artifact exit guard before toggling the panel', () => {
+    const { result, toggleArtifactPanel, confirmExit } = setup();
+    act(() => result.current.toggleArtifactPanel());
+    expect(toggleArtifactPanel).not.toHaveBeenCalled();
+    act(confirmExit);
+    expect(toggleArtifactPanel).toHaveBeenCalledOnce();
+  });
 
-    act(() => result.current.toggleWorkspaceContextPanel('knowledge'));
-    expect(callbacks.toggleWorkspacePanel).not.toHaveBeenCalled();
-
-    act(() => continueExit?.());
-    expect(callbacks.closeArtifactPanel).toHaveBeenCalledOnce();
-    expect(callbacks.toggleWorkspacePanel).toHaveBeenCalledWith('knowledge');
+  it('opens an artifact from the list without requesting an exit', () => {
+    const { result, openArtifact, requestExit } = setup(false);
+    act(() => result.current.openArtifactPanel('artifact-b'));
+    expect(openArtifact).toHaveBeenCalledWith('artifact-b');
+    expect(requestExit).not.toHaveBeenCalled();
   });
 });

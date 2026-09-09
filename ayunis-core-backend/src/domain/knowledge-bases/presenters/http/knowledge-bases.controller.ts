@@ -343,7 +343,6 @@ export class KnowledgeBasesController {
   })
   @UseInterceptors(DocumentUploadInterceptor)
   async addDocument(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @UploadedFile() file?: UploadedDocument,
   ): Promise<KnowledgeBaseDocumentResponseDto> {
@@ -360,19 +359,13 @@ export class KnowledgeBasesController {
     );
     try {
       const canonicalMimeType = this.resolveDocumentMimeType(file);
-      return await this.processDocumentUpload(
-        userId,
-        id,
-        file,
-        canonicalMimeType,
-      );
+      return await this.processDocumentUpload(id, file, canonicalMimeType);
     } finally {
       await this.cleanupTempFile(file.path);
     }
   }
 
   private async processDocumentUpload(
-    userId: UUID,
     knowledgeBaseId: UUID,
     file: UploadedDocument,
     fileType: string,
@@ -381,10 +374,7 @@ export class KnowledgeBasesController {
     const source = await this.addDocumentUseCase.execute(
       new AddDocumentToKnowledgeBaseCommand({
         knowledgeBaseId,
-        userId,
-        fileData,
-        fileName: file.originalname,
-        fileType,
+        file: { data: fileData, name: file.originalname, type: fileType },
       }),
     );
     return this.knowledgeBaseDtoMapper.toDocumentDto(source);

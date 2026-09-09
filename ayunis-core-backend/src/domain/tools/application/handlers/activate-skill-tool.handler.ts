@@ -1,3 +1,4 @@
+import { ActivateWorkspaceSkillByNameUseCase } from 'src/domain/skills/application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
@@ -17,6 +18,7 @@ import {
   parseSkillSlug,
   SYSTEM_PREFIX,
   USER_PREFIX,
+  WORKSPACE_PREFIX,
 } from 'src/common/util/skill-slug';
 
 @Injectable()
@@ -28,6 +30,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly skillActivationService: SkillActivationService,
     private readonly findAlwaysOnTemplateByNameUseCase: FindAlwaysOnTemplateByNameUseCase,
+    private readonly activateWorkspaceSkillByName: ActivateWorkspaceSkillByNameUseCase,
   ) {
     super();
   }
@@ -45,20 +48,20 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
       const validatedInput = tool.validateParams(input);
       const fullSlug = validatedInput.skill_slug;
 
-      const originalName = tool.resolveOriginalName(fullSlug);
-      if (!originalName) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Could not resolve slug "${fullSlug}" to a skill name`,
-          exposeToLLM: true,
-        });
-      }
+      const originalName = this.resolveSkillName(tool, fullSlug);
 
       const { prefix } = parseSkillSlug(fullSlug);
 
       switch (prefix) {
         case SYSTEM_PREFIX:
           return await this.activateSystemTemplate(tool.name, originalName);
+        case WORKSPACE_PREFIX:
+          return (
+            await this.activateWorkspaceSkillByName.execute({
+              threadId,
+              name: originalName,
+            })
+          ).instructions;
         case USER_PREFIX:
           return await this.activateUserSkill(
             tool.name,
@@ -85,6 +88,18 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
         exposeToLLM: true,
       });
     }
+  }
+
+  private resolveSkillName(tool: ActivateSkillTool, slug: string): string {
+    const name = tool.resolveOriginalName(slug);
+    if (!name) {
+      throw new ToolExecutionFailedError({
+        toolName: tool.name,
+        message: `Could not resolve slug "${slug}" to a skill name`,
+        exposeToLLM: true,
+      });
+    }
+    return name;
   }
 
   private async activateSystemTemplate(

@@ -6,7 +6,7 @@ Route-level page modules handle authentication, chat conversations, agent manage
 
 The workspace page also includes the Erstellte Inhalte tab for project artifacts. Artifact rows open the corresponding chat editor through URL search parameters, while artifact lists load within the workspace tabs.
 
-The `workspace/` page slice also includes context tabs for Wissen, Skills and Anweisungen. Its route loader fetches workspace context and attachable skill/knowledge-base candidates, while `api/useWorkspaceContextActions.ts` owns context mutations and invalidates the workspace context queries after changes.
+The `workspace/` page slice also includes context tabs for Wissen, Skills and Anweisungen. Skills and knowledge bases are created as workspace-owned resources and open workspace-scoped detail routes after creation. Those detail pages edit resource properties, assign same-workspace knowledge bases to skills, and manage documents in workspace knowledge bases; `api/useWorkspaceContextActions.ts` owns overview mutations and cache invalidation.
 
 The `super-admin-settings/users/` page provides a searchable cross-organization user directory with account lock status, account recovery, password reset, organization navigation, deletion, and CSV export controls. Organization admins see the same lock status and recovery action in their user settings.
 

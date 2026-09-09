@@ -1,3 +1,4 @@
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -50,6 +51,16 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       providers: [
         AddKnowledgeBaseToThreadUseCase,
         FindAccessibleKnowledgeBaseUseCase,
+        {
+          provide: FindKnowledgeBaseForThreadUseCase,
+          useValue: {
+            execute: jest.fn(({ knowledgeBaseId }) =>
+              mockKnowledgeBaseAccessService.findAccessibleKnowledgeBase(
+                knowledgeBaseId,
+              ),
+            ),
+          },
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
           provide: KnowledgeBaseAccessService,

@@ -1,3 +1,4 @@
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { randomUUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -337,13 +338,13 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(codeExecutionCall[0].context).toEqual([readySource]);
   });
 
-  it('excludes project skills from activatable skills', async () => {
-    const projectSkill = new PersonalSkill({
+  it('advertises workspace skills without injecting their instructions or resources', async () => {
+    const projectSkill = new WorkspaceSkill({
       id: randomUUID(),
       name: 'Project Skill',
       shortDescription: 'Assigned to the project',
       instructions: 'Use project context',
-      userId: randomUUID(),
+      workspaceId: randomUUID(),
     });
     const activeSkill = new PersonalSkill({
       id: randomUUID(),
@@ -361,16 +362,14 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
     const result = await service.buildRunContext(
       createMockThread(),
-      [projectSkill, activeSkill],
+      [activeSkill],
       true,
       false,
       {
         instruction: null,
-        skills: [projectSkill],
+        skills: [{ skill: projectSkill, isActive: true, isPinned: false }],
         knowledgeBases: [],
-        runtimeSources: [],
         runtimeKnowledgeBases: [],
-        mcpIntegrationIds: [],
       },
     );
 
@@ -379,17 +378,29 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       expect.objectContaining({
         skills: [
           { slug: 'user__user-skill', description: 'Activated by the user' },
+          {
+            slug: 'workspace__project-skill',
+            description: 'Assigned to the project',
+          },
         ],
-        projectSkills: [projectSkill],
       }),
+    );
+
+    expect(systemPromptBuild.mock.calls[0][0]).not.toHaveProperty(
+      'projectSkills',
+    );
+    const activateSkillCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) =>
+        command.type === ToolType.ACTIVATE_SKILL,
+    );
+    expect(activateSkillCall?.[0].context.get('workspace__project-skill')).toBe(
+      'Project Skill',
     );
 
     const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
       ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
     );
-    expect(editSkillCall?.[0].context).toEqual(
-      expect.arrayContaining(['user__project-skill', 'user__user-skill']),
-    );
+    expect(editSkillCall?.[0].context).toEqual(['user__user-skill']);
   });
 
   it('makes active knowledge bases available without attaching them to the thread', async () => {
@@ -418,12 +429,12 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
   });
 
   it('does not apply project skills when the skills feature is disabled', async () => {
-    const projectSkill = new PersonalSkill({
+    const projectSkill = new WorkspaceSkill({
       id: randomUUID(),
       name: 'Project Skill',
       shortDescription: 'Assigned to the project',
       instructions: 'Use project context',
-      userId: randomUUID(),
+      workspaceId: randomUUID(),
     });
     const systemPromptBuild = jest.fn().mockReturnValue('prompt');
     const discoverMcpExecute = jest.fn();
@@ -435,16 +446,13 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
     await service.buildRunContext(createMockThread(), [], true, false, {
       instruction: null,
-      skills: [projectSkill],
+      skills: [{ skill: projectSkill, isActive: true, isPinned: false }],
       knowledgeBases: [],
-      sources: [],
-      runtimeSources: [],
       runtimeKnowledgeBases: [],
-      mcpIntegrationIds: [randomUUID()],
     });
 
     expect(systemPromptBuild).toHaveBeenCalledWith(
-      expect.objectContaining({ projectSkills: [] }),
+      expect.objectContaining({ skills: [] }),
     );
     expect(discoverMcpExecute).not.toHaveBeenCalled();
   });

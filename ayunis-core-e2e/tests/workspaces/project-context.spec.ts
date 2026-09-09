@@ -9,7 +9,7 @@ function uniqueSuffix(): string {
   return `${Date.now()}`;
 }
 
-test("keeps legacy personal attachments out of workspace-owned lists", async ({
+test("adds skills, knowledge bases, and instructions to a project", async ({
   page,
   api,
 }) => {
@@ -41,34 +41,95 @@ test("keeps legacy personal attachments out of workspace-owned lists", async ({
   await page.getByTestId("workspace-tab-artifacts").click();
   await expect(page.getByTestId("workspace-artifacts-search")).toHaveCount(0);
 
-  // Legacy attachment endpoints are removed in the next stack layer. They
-  // must not turn personal resources into workspace-owned list entries.
   await page.getByTestId("workspace-tab-skills").click();
   await expect(page.getByTestId("workspace-skills-search")).toHaveCount(0);
-  await page.getByTestId("workspace-skills-add").first().click();
-  await expect(page.getByTestId("workspace-add-dialog")).toBeVisible();
-  await expect(page.getByTestId("workspace-add-dialog-search")).toHaveCount(0);
-  await page
-    .getByTestId(`workspace-add-dialog-item-${fixture.skill.id}`)
+  await page.getByTestId("workspace-skill-create").first().click();
+  const createSkillDialog = page.getByRole("dialog");
+  await expect(createSkillDialog).toBeVisible();
+  await createSkillDialog.getByRole("textbox").nth(0).fill(fixture.skill.name);
+  await createSkillDialog
+    .getByRole("textbox")
+    .nth(1)
+    .fill("Prüft Bauanträge gegen lokale Vorgaben");
+  await createSkillDialog
+    .getByRole("textbox")
+    .nth(2)
+    .fill("Prüfe Bauanträge anhand der Projektvorgaben.");
+  await createSkillDialog
+    .getByRole("button", { name: "Fähigkeit erstellen" })
     .click();
-  await page.getByTestId("workspace-add-dialog-confirm").click();
+  await expect(page).toHaveURL(/\/workspaces\/[^/]+\/skills\/[^/]+$/);
   await expect(
-    page.getByTestId(`workspace-skill-${fixture.skill.id}`),
-  ).toHaveCount(0);
+    page.getByTestId("workspace-skill-detail-badge"),
+  ).toBeVisible();
+  await page.goto(`/workspaces/${fixture.workspace.id}`);
+  await page.getByTestId("workspace-tab-skills").click();
+  let createdSkillId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceSkills =
+        await generatedApi.workspaceContextControllerListSkills(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      createdSkillId = workspaceSkills.data.find(
+        ({ name }) => name === fixture.skill.name,
+      )?.id;
+      return createdSkillId;
+    })
+    .toBeTruthy();
+  const skillRow = page.getByTestId(`workspace-skill-${createdSkillId}`);
+  await expect(skillRow).toBeVisible();
+  await skillRow.click({ position: { x: 200, y: 20 } });
+  await expect(page).toHaveURL(
+    new RegExp(`/workspaces/${fixture.workspace.id}/skills/${createdSkillId}$`),
+  );
+  await page.goto(`/workspaces/${fixture.workspace.id}`);
 
   await page.getByTestId("workspace-tab-knowledge").click();
   await expect(page.getByTestId("workspace-knowledge-search")).toHaveCount(0);
   await expect(page.getByTestId("workspace-documents-search")).toHaveCount(0);
-  await page.getByTestId("workspace-knowledge-add").first().click();
-  await expect(page.getByTestId("workspace-add-dialog")).toBeVisible();
-  await expect(page.getByTestId("workspace-add-dialog-search")).toHaveCount(0);
-  await page
-    .getByTestId(`workspace-add-dialog-item-${fixture.knowledgeBase.id}`)
+  await page.getByTestId("workspace-knowledge-create").first().click();
+  const createKnowledgeBaseDialog = page.getByRole("dialog");
+  await expect(createKnowledgeBaseDialog).toBeVisible();
+  await createKnowledgeBaseDialog
+    .getByRole("textbox")
+    .nth(0)
+    .fill(fixture.knowledgeBase.name);
+  await createKnowledgeBaseDialog
+    .getByRole("textbox")
+    .nth(1)
+    .fill("Projektbezogene Bauordnung");
+  await createKnowledgeBaseDialog
+    .getByRole("button", { name: "Wissensdatenbank erstellen" })
     .click();
-  await page.getByTestId("workspace-add-dialog-confirm").click();
+  await expect(page).toHaveURL(
+    /\/workspaces\/[^/]+\/knowledge-bases\/[^/]+$/,
+  );
   await expect(
-    page.getByTestId(`workspace-knowledge-base-${fixture.knowledgeBase.id}`),
-  ).toHaveCount(0);
+    page.getByTestId("workspace-knowledge-base-detail-badge"),
+  ).toBeVisible();
+  await page.goto(`/workspaces/${fixture.workspace.id}`);
+  await page.getByTestId("workspace-tab-knowledge").click();
+  let createdKnowledgeBaseId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceKnowledgeBases =
+        await generatedApi.workspaceContextControllerListKnowledgeBases(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      createdKnowledgeBaseId = workspaceKnowledgeBases.data.find(
+        ({ name }) => name === fixture.knowledgeBase.name,
+      )?.id;
+      return createdKnowledgeBaseId;
+    })
+    .toBeTruthy();
+  await expect(
+    page.getByTestId(`workspace-knowledge-base-${createdKnowledgeBaseId}`),
+  ).toBeVisible();
 
   await page.getByTestId("workspace-tab-instructions").click();
   await page
@@ -129,28 +190,6 @@ test("resets project page state when switching projects", async ({
   await expect(page.getByTestId("workspace-instruction-input")).toHaveValue(
     secondFixture.instruction,
   );
-});
-
-test("shows project context in the chat side dock", async ({ page, api }) => {
-  const fixture = await createProjectContextFixture(api, uniqueSuffix(), {
-    attach: true,
-  });
-  const thread = await createProjectThread(api, fixture.workspace.id);
-
-  await page.goto(`/chats/${thread.id}`);
-  await expect(page.getByTestId("input")).toBeVisible();
-
-  await page.getByTestId("workspace-context-toggle-instructions").click();
-  await expect(page.getByTestId("workspace-context-side-panel")).toBeVisible();
-  await expect(
-    page.getByTestId("workspace-context-instruction-text"),
-  ).toContainText(fixture.instruction);
-
-  await page.getByTestId("workspace-context-toggle-skills").click();
-  await expect(page.getByTestId("workspace-context-panel-item")).toHaveCount(1);
-
-  await page.getByTestId("workspace-context-toggle-knowledge").click();
-  await expect(page.getByTestId("workspace-context-panel-item")).toHaveCount(1);
 });
 
 test("recovers from a missing artifact deep link", async ({ page, api }) => {

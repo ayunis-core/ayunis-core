@@ -1,3 +1,4 @@
+import { ActivateWorkspaceSkillByNameUseCase } from 'src/domain/skills/application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -20,6 +21,7 @@ describe('ActivateSkillToolHandler', () => {
   let mockSkillActivationService: jest.Mocked<SkillActivationService>;
   let mockFindAlwaysOnTemplateByName: jest.Mocked<FindAlwaysOnTemplateByNameUseCase>;
 
+  const activateWorkspace = jest.fn();
   const mockThreadId = randomUUID();
   const mockSkillId = randomUUID();
 
@@ -40,6 +42,10 @@ describe('ActivateSkillToolHandler', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ActivateSkillToolHandler,
+        {
+          provide: ActivateWorkspaceSkillByNameUseCase,
+          useValue: { execute: activateWorkspace },
+        },
         { provide: FindSkillByNameUseCase, useValue: mockFindSkillByName },
         { provide: FindThreadUseCase, useValue: mockFindThread },
         {
@@ -58,6 +64,28 @@ describe('ActivateSkillToolHandler', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('routes a workspace slug to the trusted thread without resolving a same-named personal skill', async () => {
+    activateWorkspace.mockResolvedValue({
+      instructions: 'Workspace instructions',
+    });
+    const result = await handler.execute({
+      tool: new ActivateSkillTool(
+        new Map([
+          ['workspace__budget-analysis', 'Budget Analysis'],
+          ['user__budget-analysis', 'Budget Analysis'],
+        ]),
+      ),
+      input: { skill_slug: 'workspace__budget-analysis' },
+      context: { threadId: mockThreadId, orgId: randomUUID() },
+    });
+    expect(result).toBe('Workspace instructions');
+    expect(activateWorkspace).toHaveBeenCalledWith({
+      threadId: mockThreadId,
+      name: 'Budget Analysis',
+    });
+    expect(mockFindSkillByName.execute).not.toHaveBeenCalled();
   });
 
   function createMockSkill(

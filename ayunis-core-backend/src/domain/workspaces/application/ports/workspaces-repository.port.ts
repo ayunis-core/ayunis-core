@@ -21,12 +21,12 @@ export interface WorkspaceKnowledgeBaseRef {
   name: string;
   description: string | null;
   documentCount: number;
+  isActive: boolean;
 }
 
 export interface WorkspaceContextRefs {
   skillIds: UUID[];
   knowledgeBases: WorkspaceKnowledgeBaseRef[];
-  sourceIds: UUID[];
 }
 
 export abstract class WorkspacesRepository {
@@ -46,18 +46,7 @@ export abstract class WorkspacesRepository {
   ): Promise<Map<UUID, WorkspaceThreadStats>>;
   abstract findById(userId: UUID, id: UUID): Promise<Workspace | null>;
   abstract save(workspace: Workspace): Promise<Workspace>;
-  abstract attachSkill(workspaceId: UUID, skillId: UUID): Promise<void>;
-  abstract detachSkill(workspaceId: UUID, skillId: UUID): Promise<void>;
-  abstract attachKnowledgeBase(
-    workspaceId: UUID,
-    knowledgeBaseId: UUID,
-  ): Promise<void>;
-  abstract detachKnowledgeBase(
-    workspaceId: UUID,
-    knowledgeBaseId: UUID,
-  ): Promise<void>;
-  abstract attachSource(workspaceId: UUID, sourceId: UUID): Promise<void>;
   abstract getContextRefs(workspaceId: UUID): Promise<WorkspaceContextRefs>;
   /** Throws `WorkspaceNotFoundError` when the user owns no such workspace. */
-  abstract delete(userId: UUID, id: UUID): Promise<UUID[]>;
+  abstract delete(userId: UUID, id: UUID): Promise<void>;
 }

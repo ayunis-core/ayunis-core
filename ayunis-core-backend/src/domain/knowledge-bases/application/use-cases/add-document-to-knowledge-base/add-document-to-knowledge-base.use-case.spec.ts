@@ -1,224 +1,241 @@
+import { randomUUID } from 'crypto';
+import type { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { Logger } from '@nestjs/common';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
-import { TransactionHost } from '@nestjs-cls/transactional';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import type { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
+import {
+  KnowledgeBaseNotFoundError,
+  KnowledgeBaseSourceLimitExceededError,
+  UnexpectedKnowledgeBaseError,
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
+import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import type { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
+import type { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
+import type { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
+import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { AddDocumentToKnowledgeBaseUseCase } from './add-document-to-knowledge-base.use-case';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
-import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 
-describe('AddDocumentToKnowledgeBaseUseCase', () => {
-  let useCase: AddDocumentToKnowledgeBaseUseCase;
-  let mockKbRepository: jest.Mocked<KnowledgeBaseRepository>;
-  let mockStartDocumentProcessingUseCase: jest.Mocked<StartDocumentProcessingUseCase>;
-  let mockTxHost: { withTransaction: jest.Mock };
-
-  const userId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
-  const knowledgeBaseId = '33333333-3333-3333-3333-333333333333' as UUID;
-
-  function buildProcessingSource(
-    overrides: Partial<{ name: string }> = {},
-  ): FileSource {
-    return new FileSource({
-      fileType: FileType.PDF,
-      name: overrides.name ?? 'Protokoll.pdf',
-      type: TextType.FILE,
-      status: SourceStatus.PROCESSING,
-      processingStartedAt: new Date(),
-    });
-  }
-
-  beforeEach(async () => {
-    mockKbRepository = {
-      findById: jest.fn(),
-      findAllByUserId: jest.fn(),
-      findAllOwnedByUserId: jest.fn(),
-      findAllByWorkspaceId: jest.fn(),
-      findByIds: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-      assignSourceToKnowledgeBase: jest.fn(),
-      findSourcesByKnowledgeBaseId: jest.fn(),
-      findSourcesByKnowledgeBaseIds: jest.fn(),
-      findSourceByIdAndKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseId: jest.fn(),
-      countSourcesByKnowledgeBaseIds: jest.fn(),
-      activate: jest.fn(),
-      deactivate: jest.fn(),
-      isActive: jest.fn(),
-      getActiveIds: jest.fn(),
-      activateForWorkspace: jest.fn(),
-      deactivateForWorkspace: jest.fn(),
-      getWorkspaceStates: jest.fn(),
-      findActiveAccessible: jest.fn(),
-      findPaginatedAccessible: jest.fn(),
-    };
-
-    mockStartDocumentProcessingUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<StartDocumentProcessingUseCase>;
-
-    mockTxHost = {
-      withTransaction: jest
-        .fn()
-        .mockImplementation(async (fn: () => Promise<unknown>) => fn()),
-    };
-
-    // Default: return a processing source
-    mockStartDocumentProcessingUseCase.execute.mockImplementation(async (cmd) =>
-      buildProcessingSource({ name: cmd.fileName }),
-    );
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AddDocumentToKnowledgeBaseUseCase,
-        { provide: KnowledgeBaseRepository, useValue: mockKbRepository },
-        {
-          provide: StartDocumentProcessingUseCase,
-          useValue: mockStartDocumentProcessingUseCase,
-        },
-        { provide: TransactionHost, useValue: mockTxHost },
-      ],
-    }).compile();
-
-    useCase = module.get(AddDocumentToKnowledgeBaseUseCase);
+function setup(scope: 'personal' | 'workspace' = 'personal') {
+  const userId = randomUUID(),
+    orgId = randomUUID();
+  const principal = { userId, orgId };
+  const context = {
+    get: (key: keyof typeof principal) => principal[key],
+  } as unknown as ContextService;
+  const knowledgeBase =
+    scope === 'personal'
+      ? new PersonalKnowledgeBase({ name: 'Permit regulations', userId, orgId })
+      : new WorkspaceKnowledgeBase({
+          name: 'Permit regulations',
+          workspaceId: randomUUID(),
+          orgId,
+        });
+  const repository = {
+    findById: jest.fn().mockResolvedValue(knowledgeBase),
+    countSourcesByKnowledgeBaseId: jest.fn().mockResolvedValue(0),
+    assignSourceToKnowledgeBase: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<KnowledgeBaseRepository>;
+  const workspaceAccess = {
+    execute: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<AssertWorkspaceWriteAccessUseCase>;
+  const source = new FileSource({
+    fileType: FileType.PDF,
+    name: 'regulations.pdf',
+    type: TextType.FILE,
+    status: SourceStatus.PROCESSING,
+    processingStartedAt: new Date(),
   });
-
-  it('should validate KB, start document processing, and assign source to KB', async () => {
-    const knowledgeBase = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Stadtratsprotokolle 2025',
-      orgId,
-      userId,
-    });
-    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
-
-    const command = new AddDocumentToKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      fileData: Buffer.from('fake pdf content'),
-      fileName: 'Protokoll_März_2025.pdf',
-      fileType: 'application/pdf',
-    });
-
-    const result = await useCase.execute(command);
-
-    // Source created with PROCESSING status
-    expect(result.status).toBe(SourceStatus.PROCESSING);
-    expect(result.name).toBe('Protokoll_März_2025.pdf');
-
-    // StartDocumentProcessingUseCase called with correct params
-    expect(mockStartDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        fileData: command.fileData,
-        fileName: 'Protokoll_März_2025.pdf',
-        fileType: 'application/pdf',
-      }),
-    );
-
-    // Assigned to KB
-    expect(mockKbRepository.assignSourceToKnowledgeBase).toHaveBeenCalledWith(
-      result.id,
-      knowledgeBaseId,
-    );
+  const processing = {
+    execute: jest.fn().mockResolvedValue(source),
+  } as unknown as jest.Mocked<StartDocumentProcessingUseCase>;
+  const deleteSource = {
+    execute: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<DeleteSourceUseCase>;
+  const command = new AddDocumentToKnowledgeBaseCommand({
+    knowledgeBaseId: knowledgeBase.id,
+    file: {
+      data: Buffer.from('PDF contents'),
+      name: source.name,
+      type: 'application/pdf',
+    },
   });
+  let transactionActive = false;
+  const txHost = {
+    withTransaction: jest.fn(async (callback: () => Promise<unknown>) => {
+      transactionActive = true;
+      try {
+        return await callback();
+      } finally {
+        transactionActive = false;
+      }
+    }),
+  };
+  const useCase = new AddDocumentToKnowledgeBaseUseCase(
+    repository,
+    new KnowledgeBaseWriteAccessService(context, workspaceAccess),
+    processing,
+    deleteSource,
+    txHost as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
+  );
+  return {
+    useCase,
+    command,
+    repository,
+    workspaceAccess,
+    processing,
+    deleteSource,
+    source,
+    knowledgeBase,
+    principal,
+    txHost,
+    isTransactionActive: () => transactionActive,
+  };
+}
 
-  it('should throw KnowledgeBaseNotFoundError when KB does not belong to user', async () => {
-    const otherUserId = '99999999-9999-9999-9999-999999999999' as UUID;
-    const knowledgeBase = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Anderer Benutzer KB',
-      orgId,
-      userId: otherUserId,
+describe(AddDocumentToKnowledgeBaseUseCase.name, () => {
+  describe.each(['personal', 'workspace'] as const)('%s ownership', (scope) => {
+    it('authorizes, processes and assigns the supplied file', async () => {
+      const {
+        useCase,
+        command,
+        repository,
+        processing,
+        source,
+        deleteSource,
+        txHost,
+        isTransactionActive,
+      } = setup(scope);
+      repository.countSourcesByKnowledgeBaseId.mockImplementation(() => {
+        expect(isTransactionActive()).toBe(true);
+        return Promise.resolve(0);
+      });
+      processing.execute.mockImplementation(() => {
+        expect(isTransactionActive()).toBe(false);
+        return Promise.resolve(source);
+      });
+      await expect(useCase.execute(command)).resolves.toBe(source);
+      expect(txHost.withTransaction).toHaveBeenCalledTimes(1);
+      expect(processing.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fileData: command.file.data,
+          fileName: command.file.name,
+          fileType: command.file.type,
+        }),
+      );
+      expect(repository.assignSourceToKnowledgeBase).toHaveBeenCalledWith(
+        source.id,
+        command.knowledgeBaseId,
+      );
+      expect(deleteSource.execute).not.toHaveBeenCalled();
     });
-    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
-
-    const command = new AddDocumentToKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      fileData: Buffer.from('fake pdf content'),
-      fileName: 'Protokoll.pdf',
-      fileType: 'application/pdf',
+    it('checks capacity before processing', async () => {
+      const { useCase, command, repository, processing } = setup(scope);
+      repository.countSourcesByKnowledgeBaseId.mockResolvedValue(
+        KnowledgeBasesConstants.MAX_SOURCES,
+      );
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        KnowledgeBaseSourceLimitExceededError,
+      );
+      expect(processing.execute).not.toHaveBeenCalled();
     });
-
-    await expect(useCase.execute(command)).rejects.toThrow(
+    it('cleans up a new source when assignment fails', async () => {
+      const {
+        useCase,
+        command,
+        repository,
+        deleteSource,
+        source,
+        knowledgeBase,
+      } = setup(scope);
+      repository.assignSourceToKnowledgeBase.mockRejectedValue(
+        new Error('Assignment failed'),
+      );
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        UnexpectedKnowledgeBaseError,
+      );
+      expect(deleteSource.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceId: source.id,
+          orgId: knowledgeBase.orgId,
+        }),
+      );
+    });
+    it('rejects another organization before processing', async () => {
+      const { useCase, command, principal, processing } = setup(scope);
+      principal.orgId = randomUUID();
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        KnowledgeBaseNotFoundError,
+      );
+      expect(processing.execute).not.toHaveBeenCalled();
+    });
+  });
+  it('rejects another personal owner before capacity lookup or processing', async () => {
+    const { useCase, command, principal, repository, processing } = setup();
+    principal.userId = randomUUID();
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
       KnowledgeBaseNotFoundError,
     );
-    expect(mockStartDocumentProcessingUseCase.execute).not.toHaveBeenCalled();
+    expect(repository.countSourcesByKnowledgeBaseId).not.toHaveBeenCalled();
+    expect(processing.execute).not.toHaveBeenCalled();
   });
-
-  it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
-    mockKbRepository.findById.mockResolvedValue(null);
-
-    const command = new AddDocumentToKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      fileData: Buffer.from('fake pdf content'),
-      fileName: 'Protokoll.pdf',
-      fileType: 'application/pdf',
-    });
-
-    await expect(useCase.execute(command)).rejects.toThrow(
+  it('does not process if workspace write authorization is rejected', async () => {
+    const { useCase, command, workspaceAccess, repository, processing } =
+      setup('workspace');
+    workspaceAccess.execute.mockRejectedValue(
+      new WorkspaceNotFoundError(randomUUID()),
+    );
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      WorkspaceNotFoundError,
+    );
+    expect(repository.countSourcesByKnowledgeBaseId).not.toHaveBeenCalled();
+    expect(processing.execute).not.toHaveBeenCalled();
+  });
+  it('rejects a missing knowledge base', async () => {
+    const { useCase, command, repository, processing } = setup();
+    repository.findById.mockResolvedValue(null);
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
       KnowledgeBaseNotFoundError,
     );
+    expect(processing.execute).not.toHaveBeenCalled();
   });
-
-  it('should propagate StartDocumentProcessingUseCase failure', async () => {
-    const knowledgeBase = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Stadtratsprotokolle 2025',
-      orgId,
-      userId,
-    });
-    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
-    mockStartDocumentProcessingUseCase.execute.mockRejectedValue(
-      new Error('MinIO connection refused'),
+  it('does not assign or delete when processing fails', async () => {
+    const { useCase, command, repository, processing, deleteSource } = setup();
+    processing.execute.mockRejectedValue(
+      new Error('Object storage unavailable'),
     );
-
-    const command = new AddDocumentToKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      fileData: Buffer.from('fake pdf content'),
-      fileName: 'Protokoll.pdf',
-      fileType: 'application/pdf',
-    });
-
-    await expect(useCase.execute(command)).rejects.toThrow();
-
-    // Source should NOT be assigned to KB
-    expect(mockKbRepository.assignSourceToKnowledgeBase).not.toHaveBeenCalled();
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      UnexpectedKnowledgeBaseError,
+    );
+    expect(repository.assignSourceToKnowledgeBase).not.toHaveBeenCalled();
+    expect(deleteSource.execute).not.toHaveBeenCalled();
   });
-
-  it('should leave orphaned source when KB assignment fails after processing starts', async () => {
-    const knowledgeBase = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Stadtratsprotokolle 2025',
-      orgId,
-      userId,
-    });
-    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
-    mockKbRepository.assignSourceToKnowledgeBase.mockRejectedValue(
-      new Error('DB constraint violation'),
+  it('logs cleanup failure without hiding the assignment error', async () => {
+    const { useCase, command, repository, deleteSource, source } = setup();
+    const assignmentError = new KnowledgeBaseNotFoundError(
+      command.knowledgeBaseId,
     );
-
-    const command = new AddDocumentToKnowledgeBaseCommand({
-      knowledgeBaseId,
-      userId,
-      fileData: Buffer.from('fake pdf content'),
-      fileName: 'Protokoll.pdf',
-      fileType: 'application/pdf',
-    });
-
-    // Should throw — orphaned source will be cleaned by stale processing cron
-    await expect(useCase.execute(command)).rejects.toThrow();
-
-    // Processing was started (source created)
-    expect(mockStartDocumentProcessingUseCase.execute).toHaveBeenCalledTimes(1);
+    const cleanupError = new Error('Cleanup failed');
+    repository.assignSourceToKnowledgeBase.mockRejectedValue(assignmentError);
+    deleteSource.execute.mockRejectedValue(cleanupError);
+    const log = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    try {
+      await expect(useCase.execute(command)).rejects.toBe(assignmentError);
+      expect(log).toHaveBeenCalledWith(
+        { sourceId: source.id, cleanupError },
+        'Failed to clean up unassigned source',
+      );
+    } finally {
+      log.mockRestore();
+    }
   });
 });

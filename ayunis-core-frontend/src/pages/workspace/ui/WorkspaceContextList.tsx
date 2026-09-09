@@ -110,13 +110,13 @@ export function WorkspaceContextItem({
   testId?: string;
 }>) {
   return (
-    <Item variant="outline" data-testid={testId}>
+    <Item variant="outline" className="relative" data-testid={testId}>
       <ItemMedia variant="icon">{icon}</ItemMedia>
       <ItemContent>
         <ItemTitle>{title}</ItemTitle>
         {description && <ItemDescription>{description}</ItemDescription>}
       </ItemContent>
-      <ItemActions>{action}</ItemActions>
+      <ItemActions className="relative">{action}</ItemActions>
     </Item>
   );
 }

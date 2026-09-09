@@ -15,6 +15,19 @@ describe('SystemPromptBuilderService', () => {
     service = new SystemPromptBuilderService();
   });
 
+  it('always includes workspace instructions independently of skill activation', () => {
+    const prompt = service.build({
+      tools: [],
+      currentTime: new Date(),
+      workspaceInstructions: 'Use <local> terminology.',
+      skills: [],
+    });
+    expect(prompt).toContain('<workspace_instructions>');
+    expect(prompt).toContain('Use &lt;local&gt; terminology.');
+    expect(prompt).toContain('</workspace_instructions>');
+    expect(prompt).not.toContain('<project_instructions>');
+  });
+
   describe('context preamble', () => {
     it('includes the date without time of day, keeping the prompt cache prefix stable', () => {
       const prompt = service.build({

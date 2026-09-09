@@ -3,7 +3,8 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { FindWorkspaceKnowledgeBasePageUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-workspace-knowledge-base-page/find-workspace-knowledge-base-page.use-case';
+import { CountKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/count-knowledge-base-documents/count-knowledge-base-documents.use-case';
 import type { WorkspaceKnowledgeBaseContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {
@@ -18,7 +19,8 @@ export class ListWorkspaceKnowledgeBasesUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
+    private readonly findKnowledgeBasePage: FindWorkspaceKnowledgeBasePageUseCase,
+    private readonly countDocuments: CountKnowledgeBaseDocumentsUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -39,26 +41,18 @@ export class ListWorkspaceKnowledgeBasesUseCase {
     );
     if (!workspace) throw new WorkspaceNotFoundError(query.workspaceId);
 
-    const page =
-      await this.knowledgeBaseAccessService.findAllAccessiblePaginated(
-        query.workspaceId,
-        {
-          search: query.search,
-          limit: query.limit,
-          offset: query.offset,
-        },
-      );
-    const counts =
-      await this.knowledgeBaseAccessService.countSourcesByKnowledgeBaseIds(
-        page.data.map(({ knowledgeBase }) => knowledgeBase.id),
-      );
+    const page = await this.findKnowledgeBasePage.execute(query);
+    const counts = await this.countDocuments.execute({
+      knowledgeBaseIds: page.data.map(({ knowledgeBase }) => knowledgeBase.id),
+    });
 
     return new Paginated({
-      data: page.data.map(({ knowledgeBase }) => ({
+      data: page.data.map(({ knowledgeBase, isActive }) => ({
         id: knowledgeBase.id,
         name: knowledgeBase.name,
         description: knowledgeBase.description,
         documentCount: counts.get(knowledgeBase.id) ?? 0,
+        isActive,
       })),
       limit: page.limit,
       offset: page.offset,

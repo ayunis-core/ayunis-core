@@ -4,7 +4,6 @@ import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { SkillListOptions } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillRecord } from './schema/skill.record';
-import { SkillActivationRecord } from './schema/skill-activation.record';
 
 @Injectable()
 export class LocalSkillAccessiblePageFinder {
@@ -36,20 +35,6 @@ export class LocalSkillAccessiblePageFinder {
           }),
         )
         .andWhere('skill.workspaceId IS NULL');
-    }
-
-    if (workspaceId) {
-      queryBuilder
-        .leftJoin(
-          SkillActivationRecord,
-          'workspaceActivation',
-          'workspaceActivation.skillId = skill.id AND workspaceActivation.workspaceId = :workspaceId',
-          { workspaceId },
-        )
-        .addSelect('workspaceActivation.isPinned', 'workspace_pinned')
-        .addSelect('workspaceActivation.id IS NOT NULL', 'workspace_active')
-        .orderBy('workspace_pinned', 'DESC', 'NULLS LAST')
-        .addOrderBy('workspace_active', 'DESC');
     }
 
     if (options.search) {

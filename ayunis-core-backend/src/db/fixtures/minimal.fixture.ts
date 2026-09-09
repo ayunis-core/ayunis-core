@@ -217,12 +217,6 @@ export const minimalFixture = {
           color: 'violet',
           skillNames: ['Bürgerfreundlich formulieren'],
           knowledgeBaseNames: ['Bürgerbüro Wissensbasis'],
-          documents: [
-            {
-              name: 'Projektbriefing Bürgeranfragen.txt',
-              text: 'Dieses Projekt bündelt Bürgeranfragen. Priorität haben verständliche Antworten, klare Zuständigkeiten und Hinweise auf digitale Services.',
-            },
-          ],
           pinned: true,
         },
         {
@@ -234,12 +228,6 @@ export const minimalFixture = {
           color: 'rose',
           skillNames: ['Einsatzlage strukturieren'],
           knowledgeBaseNames: ['Feuerwehr Einsatzwissen'],
-          documents: [
-            {
-              name: 'Projektbriefing Feuerwehr.txt',
-              text: 'Dieses Projekt unterstützt bei Einsatznachbereitung, Materiallisten und Kommunikation mit Verwaltung und Leitstelle.',
-            },
-          ],
           pinned: true,
         },
         {

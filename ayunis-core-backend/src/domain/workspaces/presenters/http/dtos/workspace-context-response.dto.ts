@@ -16,6 +16,21 @@ export class WorkspaceSkillResponseDto {
 
   @ApiProperty()
   shortDescription: string;
+
+  @ApiProperty()
+  instructions: string;
+
+  @ApiProperty({ type: [String] })
+  knowledgeBaseIds: string[];
+
+  @ApiProperty()
+  workspaceId: string;
+
+  @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty()
+  isPinned: boolean;
 }
 
 export class WorkspaceSkillCandidateResponseDto extends WorkspaceSkillResponseDto {
@@ -35,6 +50,9 @@ export class WorkspaceKnowledgeBaseResponseDto {
 
   @ApiProperty()
   documentCount: number;
+
+  @ApiProperty()
+  isActive: boolean;
 }
 
 export class WorkspaceKnowledgeBaseCandidateResponseDto extends WorkspaceKnowledgeBaseResponseDto {
@@ -83,9 +101,6 @@ export class WorkspaceContextResponseDto {
 
   @ApiProperty({ type: [WorkspaceKnowledgeBaseResponseDto] })
   knowledgeBases: WorkspaceKnowledgeBaseResponseDto[];
-
-  @ApiProperty({ type: [WorkspaceDocumentResponseDto] })
-  documents: WorkspaceDocumentResponseDto[];
 }
 
 export class WorkspaceSkillListResponseDto {
@@ -99,14 +114,6 @@ export class WorkspaceSkillListResponseDto {
 export class WorkspaceKnowledgeBaseListResponseDto {
   @ApiProperty({ type: [WorkspaceKnowledgeBaseResponseDto] })
   data: WorkspaceKnowledgeBaseResponseDto[];
-
-  @ApiProperty({ type: PaginationDto })
-  pagination: PaginationDto;
-}
-
-export class WorkspaceDocumentListResponseDto {
-  @ApiProperty({ type: [WorkspaceDocumentResponseDto] })
-  data: WorkspaceDocumentResponseDto[];
 
   @ApiProperty({ type: PaginationDto })
   pagination: PaginationDto;

@@ -16,7 +16,6 @@ import type { Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import {
   useArtifactsControllerFindByWorkspace,
-  useWorkspaceContextControllerListDocuments,
   useWorkspaceContextControllerListKnowledgeBases,
   useWorkspaceContextControllerListSkills,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -64,17 +63,11 @@ export default function WorkspacePage({
   );
   const { data: knowledgeBasesPage } =
     useWorkspaceContextControllerListKnowledgeBases(workspace.id, countParams);
-  const { data: documentsPage } = useWorkspaceContextControllerListDocuments(
-    workspace.id,
-    countParams,
-  );
   const { data: artifactCountPage } = useArtifactsControllerFindByWorkspace(
     workspace.id,
     countParams,
   );
-  const knowledgeCount =
-    (knowledgeBasesPage?.pagination.total ?? 0) +
-    (documentsPage?.pagination.total ?? 0);
+  const knowledgeCount = knowledgeBasesPage?.pagination.total ?? 0;
   const skillsCount = skillsPage?.pagination.total ?? 0;
   const artifactCount = artifactCountPage?.pagination.total ?? 0;
 

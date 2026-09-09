@@ -1,8 +1,7 @@
-import { randomUUID, type UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import type { EntityManager, Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import type { Source } from 'src/domain/sources/domain/source.entity';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -145,62 +144,5 @@ describe('LocalSourceRepository', () => {
     expect(txSourceRepository.save).toHaveBeenCalledWith(sourceRecord);
     expect(txDetailsRepository.save).toHaveBeenCalledWith(detailsRecord);
     expect(txChunkRepository.save).toHaveBeenCalledWith(chunks);
-  });
-
-  it('returns a database-paginated page of workspace sources', async () => {
-    const workspaceId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-    const records = [
-      { id: '223e4567-e89b-12d3-a456-426614174001', name: 'Budget.pdf' },
-    ] as unknown as SourceRecord[];
-    const queryBuilder = {
-      leftJoinAndSelect: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      addSelect: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      addOrderBy: jest.fn().mockReturnThis(),
-      skip: jest.fn().mockReturnThis(),
-      take: jest.fn().mockReturnThis(),
-      getManyAndCount: jest.fn().mockResolvedValue([records, 3]),
-    };
-    const sourceRepository = {
-      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
-    } as unknown as jest.Mocked<Repository<SourceRecord>>;
-    const mapper = {
-      toDomain: jest.fn((record: SourceRecord) => record as unknown as Source),
-    } as unknown as SourceMapper;
-    const repository = new LocalSourceRepository(
-      {} as Repository<SourceRecord>,
-      mapper,
-      {} as SourceContentChunkMapper,
-      {
-        tx: {
-          getRepository: jest.fn().mockReturnValue(sourceRepository),
-        },
-      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
-    );
-
-    const result = await repository.findPaginatedByWorkspaceId({
-      workspaceId,
-      search: 'budget',
-      limit: 1,
-      offset: 2,
-    });
-
-    expect(result.data).toEqual(records);
-    expect(result.total).toBe(3);
-    expect(result.limit).toBe(1);
-    expect(result.offset).toBe(2);
-    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
-      'LOWER(source.name)',
-      'lower_source_name',
-    );
-    expect(queryBuilder.orderBy).toHaveBeenCalledWith(
-      'lower_source_name',
-      'ASC',
-    );
-    expect(queryBuilder.skip).toHaveBeenCalledWith(2);
-    expect(queryBuilder.take).toHaveBeenCalledWith(1);
-    expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
   });
 });

@@ -128,7 +128,6 @@ export interface WorkspaceFixture {
   color: string;
   skillNames?: readonly string[];
   knowledgeBaseNames?: readonly string[];
-  documents?: readonly SeedDocumentFixture[];
   /**
    * Pinned workspaces get a favorites row for the org admin; their sidebar
    * order follows the fixture order of the pinned entries.

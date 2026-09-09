@@ -1,9 +1,11 @@
 export const SYSTEM_PREFIX = 'system';
 export const USER_PREFIX = 'user';
+export const WORKSPACE_PREFIX = 'workspace';
 
 const SLUG_SEPARATOR = '__';
 
-export type SkillPrefix = typeof SYSTEM_PREFIX | typeof USER_PREFIX;
+export type SkillPrefix =
+  typeof SYSTEM_PREFIX | typeof USER_PREFIX | typeof WORKSPACE_PREFIX;
 
 export interface SkillEntry {
   slug: string;
@@ -47,6 +49,7 @@ export interface ParsedSkillSlug {
 export function parseSkillSlug(slug: string): ParsedSkillSlug {
   const systemFull = `${SYSTEM_PREFIX}${SLUG_SEPARATOR}`;
   const userFull = `${USER_PREFIX}${SLUG_SEPARATOR}`;
+  const workspaceFull = `${WORKSPACE_PREFIX}${SLUG_SEPARATOR}`;
 
   let prefix: SkillPrefix | undefined;
   let remainder: string | undefined;
@@ -57,6 +60,9 @@ export function parseSkillSlug(slug: string): ParsedSkillSlug {
   } else if (slug.startsWith(userFull)) {
     prefix = USER_PREFIX;
     remainder = slug.slice(userFull.length);
+  } else if (slug.startsWith(workspaceFull)) {
+    prefix = WORKSPACE_PREFIX;
+    remainder = slug.slice(workspaceFull.length);
   }
 
   if (prefix === undefined || remainder === undefined) {

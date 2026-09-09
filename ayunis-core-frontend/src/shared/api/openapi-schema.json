@@ -6857,115 +6857,43 @@
         "tags": ["workspaces"]
       }
     },
-    "/workspaces/{id}/context/skill-candidates": {
-      "get": {
-        "operationId": "WorkspaceContextController_listSkillCandidates",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 0,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceSkillCandidateListResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/knowledge-base-candidates": {
-      "get": {
-        "operationId": "WorkspaceContextController_listKnowledgeBaseCandidates",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 0,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkspaceKnowledgeBaseCandidateListResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
     "/workspaces/{id}/context/skills": {
+      "post": {
+        "operationId": "WorkspaceContextController_createSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceSkillDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      },
       "get": {
         "operationId": "WorkspaceContextController_listSkills",
         "parameters": [
@@ -7019,7 +6947,328 @@
         "tags": ["workspaces"]
       }
     },
+    "/workspaces/{id}/context/skills/{skillId}": {
+      "get": {
+        "operationId": "WorkspaceContextController_findSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "patch": {
+        "operationId": "WorkspaceContextController_updateSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceSkillDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspaceContextController_deleteSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}/activation": {
+      "patch": {
+        "operationId": "WorkspaceContextController_setSkillActivation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceSkillActivationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}/pin": {
+      "patch": {
+        "operationId": "WorkspaceContextController_setSkillPin",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceSkillPinDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}/knowledge-bases/{knowledgeBaseId}": {
+      "post": {
+        "operationId": "WorkspaceContextController_assignSkillKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspaceContextController_unassignSkillKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
     "/workspaces/{id}/context/knowledge-bases": {
+      "post": {
+        "operationId": "WorkspaceContextController_createKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceKnowledgeBaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      },
       "get": {
         "operationId": "WorkspaceContextController_listKnowledgeBases",
         "parameters": [
@@ -7073,9 +7322,9 @@
         "tags": ["workspaces"]
       }
     },
-    "/workspaces/{id}/context/documents": {
+    "/workspaces/{id}/context/knowledge-bases/{knowledgeBaseId}": {
       "get": {
-        "operationId": "WorkspaceContextController_listDocuments",
+        "operationId": "WorkspaceContextController_findKnowledgeBase",
         "parameters": [
           {
             "name": "id",
@@ -7086,27 +7335,9 @@
             }
           },
           {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 0,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
             "schema": {
               "type": "string"
             }
@@ -7118,7 +7349,117 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WorkspaceDocumentListResponseDto"
+                  "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "patch": {
+        "operationId": "WorkspaceContextController_updateKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceKnowledgeBaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspaceContextController_deleteKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/knowledge-bases/{knowledgeBaseId}/documents": {
+      "get": {
+        "operationId": "WorkspaceContextController_listKnowledgeBaseDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceDocumentResponseDto"
+                  }
                 }
               }
             }
@@ -7127,10 +7468,18 @@
         "tags": ["workspaces"]
       },
       "post": {
-        "operationId": "WorkspaceContextController_addDocument",
+        "operationId": "WorkspaceContextController_addKnowledgeBaseDocument",
         "parameters": [
           {
             "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
             "required": true,
             "in": "path",
             "schema": {
@@ -7170,65 +7519,9 @@
         "tags": ["workspaces"]
       }
     },
-    "/workspaces/{id}/context/skills/{skillId}": {
-      "post": {
-        "operationId": "WorkspaceContextController_attachSkill",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "tags": ["workspaces"]
-      },
+    "/workspaces/{id}/context/knowledge-bases/{knowledgeBaseId}/documents/{documentId}": {
       "delete": {
-        "operationId": "WorkspaceContextController_detachSkill",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/knowledge-bases/{knowledgeBaseId}": {
-      "post": {
-        "operationId": "WorkspaceContextController_attachKnowledgeBase",
+        "operationId": "WorkspaceContextController_removeKnowledgeBaseDocument",
         "parameters": [
           {
             "name": "id",
@@ -7240,54 +7533,6 @@
           },
           {
             "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "tags": ["workspaces"]
-      },
-      "delete": {
-        "operationId": "WorkspaceContextController_detachKnowledgeBase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "tags": ["workspaces"]
-      }
-    },
-    "/workspaces/{id}/context/documents/{documentId}": {
-      "delete": {
-        "operationId": "WorkspaceContextController_removeDocument",
-        "parameters": [
-          {
-            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -7306,6 +7551,52 @@
         "responses": {
           "204": {
             "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/knowledge-bases/{knowledgeBaseId}/activation": {
+      "patch": {
+        "operationId": "WorkspaceContextController_setKnowledgeBaseActivation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceKnowledgeBaseActivationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
+                }
+              }
+            }
           }
         },
         "tags": ["workspaces"]
@@ -7344,6 +7635,137 @@
                 }
               }
             }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}/sources": {
+      "get": {
+        "operationId": "WorkspaceSkillSourcesController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillSourceResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}/sources/file": {
+      "post": {
+        "operationId": "WorkspaceSkillSourcesController_addFile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload (max 25 MB)"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}/sources/{sourceId}": {
+      "delete": {
+        "operationId": "WorkspaceSkillSourcesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
           }
         },
         "tags": ["workspaces"]
@@ -17251,9 +17673,36 @@
           },
           "shortDescription": {
             "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "knowledgeBaseIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isPinned": {
+            "type": "boolean"
           }
         },
-        "required": ["id", "name", "shortDescription"]
+        "required": [
+          "id",
+          "name",
+          "shortDescription",
+          "instructions",
+          "knowledgeBaseIds",
+          "workspaceId",
+          "isActive",
+          "isPinned"
+        ]
       },
       "WorkspaceKnowledgeBaseResponseDto": {
         "type": "object",
@@ -17270,9 +17719,94 @@
           },
           "documentCount": {
             "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
           }
         },
-        "required": ["id", "name", "description", "documentCount"]
+        "required": ["id", "name", "description", "documentCount", "isActive"]
+      },
+      "WorkspaceContextResponseDto": {
+        "type": "object",
+        "properties": {
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+            }
+          },
+          "knowledgeBases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
+            }
+          }
+        },
+        "required": ["instruction", "skills", "knowledgeBases"]
+      },
+      "CreateWorkspaceSkillDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "shortDescription", "instructions"]
+      },
+      "UpdateWorkspaceSkillActivationDto": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": ["isActive"]
+      },
+      "UpdateWorkspaceSkillPinDto": {
+        "type": "object",
+        "properties": {
+          "isPinned": {
+            "type": "boolean"
+          }
+        },
+        "required": ["isPinned"]
+      },
+      "WorkspaceSkillListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "CreateWorkspaceKnowledgeBaseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "description"]
       },
       "WorkspaceDocumentResponseDto": {
         "type": "object",
@@ -17324,118 +17858,14 @@
           "updatedAt"
         ]
       },
-      "WorkspaceContextResponseDto": {
+      "UpdateWorkspaceKnowledgeBaseActivationDto": {
         "type": "object",
         "properties": {
-          "instruction": {
-            "type": "string",
-            "nullable": true
-          },
-          "skills": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-            }
-          },
-          "knowledgeBases": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
-            }
-          },
-          "documents": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceDocumentResponseDto"
-            }
-          }
-        },
-        "required": ["instruction", "skills", "knowledgeBases", "documents"]
-      },
-      "WorkspaceSkillCandidateResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "shortDescription": {
-            "type": "string"
-          },
-          "isAttached": {
+          "isActive": {
             "type": "boolean"
           }
         },
-        "required": ["id", "name", "shortDescription", "isAttached"]
-      },
-      "WorkspaceSkillCandidateListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceSkillCandidateResponseDto"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationDto"
-          }
-        },
-        "required": ["data", "pagination"]
-      },
-      "WorkspaceKnowledgeBaseCandidateResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentCount": {
-            "type": "number"
-          },
-          "isAttached": {
-            "type": "boolean"
-          }
-        },
-        "required": ["id", "name", "description", "documentCount", "isAttached"]
-      },
-      "WorkspaceKnowledgeBaseCandidateListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceKnowledgeBaseCandidateResponseDto"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationDto"
-          }
-        },
-        "required": ["data", "pagination"]
-      },
-      "WorkspaceSkillListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationDto"
-          }
-        },
-        "required": ["data", "pagination"]
+        "required": ["isActive"]
       },
       "WorkspaceKnowledgeBaseListResponseDto": {
         "type": "object",
@@ -17444,21 +17874,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationDto"
-          }
-        },
-        "required": ["data", "pagination"]
-      },
-      "WorkspaceDocumentListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkspaceDocumentResponseDto"
             }
           },
           "pagination": {
