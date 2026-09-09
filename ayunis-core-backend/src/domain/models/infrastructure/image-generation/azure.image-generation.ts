@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APIError, AzureOpenAI, toFile } from 'openai';
-import type { ImageEditParams, ImagesResponse } from 'openai/resources/images';
+import type {
+  ImageEditParamsNonStreaming,
+  ImagesResponse,
+} from 'openai/resources/images';
 import { contentTypeToExtension } from 'src/common/util/content-type.util';
 import {
   ImageGenerationHandler,
@@ -143,7 +146,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
         ),
       ),
     );
-    const params: ImageEditParams = {
+    const params: ImageEditParamsNonStreaming = {
       model: input.model.name,
       prompt: input.prompt,
       image,
@@ -152,13 +155,9 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       n: 1,
     };
     // Without this, INPUT_FIDELITY_MODELS drop the fine detail (logos,
-    // scans) the references exist to preserve. The SDK's v4 typings predate
-    // the param but serialize every body key, so it reaches the API.
+    // scans) the references exist to preserve.
     if (INPUT_FIDELITY_MODELS.has(input.model.name)) {
-      return client.images.edit({
-        ...params,
-        input_fidelity: 'high',
-      } as ImageEditParams);
+      return client.images.edit({ ...params, input_fidelity: 'high' });
     }
     return client.images.edit(params);
   }

@@ -112,7 +112,7 @@ describe('AzureImageGenerationHandler', () => {
           },
         },
         'content policy violation',
-        {},
+        new Headers(),
       );
 
       mockImagesGenerate.mockRejectedValue(apiError);
@@ -130,7 +130,7 @@ describe('AzureImageGenerationHandler', () => {
         500,
         { error: { message: 'server error', code: 'server_error' } },
         'server error',
-        {},
+        new Headers(),
       );
 
       mockImagesGenerate.mockRejectedValue(apiError);

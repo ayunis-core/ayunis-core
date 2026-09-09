@@ -3,7 +3,7 @@ import type {
   ChatCompletionContentPart,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
-  ChatCompletionTool,
+  ChatCompletionFunctionTool,
   ChatCompletionToolChoiceOption,
   ChatCompletionUserMessageParam,
 } from 'openai/resources/chat/completions';
@@ -21,7 +21,7 @@ import { normalizeSchemaForOpenAI } from './normalize-schema';
 export const convertTool = (
   tool: ToolSchema,
   codec: ToolNameCodec,
-): ChatCompletionTool => ({
+): ChatCompletionFunctionTool => ({
   type: 'function',
   function: {
     name: codec.encode(tool.name),
