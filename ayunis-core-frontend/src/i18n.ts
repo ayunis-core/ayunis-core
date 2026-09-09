@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import * as z from 'zod';
 
 // Import translation files directly
 import enAuth from './shared/locales/en/auth.json';
@@ -193,11 +194,20 @@ const resources = {
 //   checkWhitelist: true,
 // };
 
+// Validators that carry no explicit message fall back to zod's built-in
+// copy, which is English unless a locale is configured. i18next emits
+// languageChanged during init, so the handler below covers the initial
+// language too.
+function applyZodLocale(lng: string): void {
+  z.config(lng.startsWith('en') ? z.locales.en() : z.locales.de());
+}
+
 // Keep <html lang> in sync with the active locale. A mismatched lang
 // (e.g. lang="en" on German content) triggers Chrome auto-translate,
 // which rewrites DOM text nodes and corrupts streamed assistant messages.
 i18n.on('languageChanged', (lng) => {
   document.documentElement.lang = lng;
+  applyZodLocale(lng);
 });
 
 void i18n

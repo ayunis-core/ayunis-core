@@ -21,7 +21,7 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
 
   const inviteAcceptFormSchema = z
     .object({
-      email: z.email(),
+      email: z.email({ message: t('inviteAccept.emailInvalid') }),
       name: z.string().min(1, {
         message: t('inviteAccept.nameRequired'),
       }),
