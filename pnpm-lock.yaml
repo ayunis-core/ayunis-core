@@ -198,7 +198,7 @@ importers:
         version: 0.6.3
       openai:
         specifier: ^7.12.1
-        version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@3.25.76)
+        version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@4.5.4)
       openid-client:
         specifier: ^6.8.7
         version: 6.8.7
@@ -962,8 +962,8 @@ importers:
         specifier: workspace:*
         version: link:../inference
       '@mistralai/mistralai':
-        specifier: ^2.4.1
-        version: 2.5.0(@opentelemetry/api@1.9.1)
+        specifier: ^2.6.4
+        version: 2.6.4(@opentelemetry/api@1.9.1)
     devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
@@ -2958,14 +2958,6 @@ packages:
 
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
-
-  '@mistralai/mistralai@2.5.0':
-    resolution: {integrity: sha512-S/r6tkiUHblaDJGsb84WS0ePTF2YHVta2EoTi1NJqHNt5mfRRS2uE4v7hCYV134+an+fk6WgG3+aFfinJbQBjQ==}
-    peerDependencies:
-      '@opentelemetry/api': ^1.9.0
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
 
   '@mistralai/mistralai@2.6.4':
     resolution: {integrity: sha512-PPt4GyJqs2hEsWrYCJZK5f0ORmT+L2MSm75LVGD7kBLf6ZKsoDpld/FRBQXr8xG6iFCBOFJFYzvGYhUb+UCkbw==}
@@ -15988,24 +15980,12 @@ snapshots:
 
   '@microsoft/tsdoc@0.16.0': {}
 
-  '@mistralai/mistralai@2.5.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/semantic-conventions': 1.41.1
-      ws: 8.21.0
-      zod: 4.5.4
-      zod-to-json-schema: 3.25.2(zod@4.5.4)
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.1
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@mistralai/mistralai@2.6.4(@opentelemetry/api@1.9.1)':
     dependencies:
       '@opentelemetry/semantic-conventions': 1.41.1
       ws: 8.21.3
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
+      zod: 4.5.4
+      zod-to-json-schema: 3.25.2(zod@4.5.4)
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
     transitivePeerDependencies:
@@ -26112,14 +26092,6 @@ snapshots:
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
 
-  openai@7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@3.25.76):
-    optionalDependencies:
-      '@aws-sdk/credential-provider-node': 3.972.46
-      '@smithy/signature-v4': 5.4.5
-      undici: 7.29.0
-      ws: 8.21.3
-      zod: 3.25.76
-
   openai@7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@4.5.4):
     optionalDependencies:
       '@aws-sdk/credential-provider-node': 3.972.46
@@ -29601,10 +29573,6 @@ snapshots:
       archiver-utils: 3.0.4
       compress-commons: 4.1.2
       readable-stream: 3.6.2
-
-  zod-to-json-schema@3.25.2(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
 
   zod-to-json-schema@3.25.2(zod@4.5.4):
     dependencies:
