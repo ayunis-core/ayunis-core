@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SendInvitationEmailCommand } from './send-invitation-email.command';
+import type { RenderedEmailContent } from 'src/common/email-templates/domain/rendered-email-content.entity';
+import type { EmailDeliveryReceipt } from 'src/common/emails/application/models/email-delivery-receipt';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +14,7 @@ import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { InviteEmailSendingFailedError } from 'src/iam/invites/application/invites.errors';
+import type { Invite } from 'src/iam/invites/domain/invite.entity';
 
 @Injectable()
 export class SendInvitationEmailUseCase {
@@ -25,121 +28,105 @@ export class SendInvitationEmailUseCase {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
   ) {}
 
-  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   async execute(command: SendInvitationEmailCommand): Promise<void> {
+    this.logPreparation(command.invite);
     try {
-      this.logger.log(
-        {
-          inviteId: command.invite.id,
-          email: command.invite.email,
-          orgId: command.invite.orgId,
-        },
-        'execute',
-      );
-
-      // Get organization information
-      this.logger.debug(
-        {
-          orgId: command.invite.orgId,
-        },
-        'Fetching organization information',
-      );
       const org = await this.findOrgByIdUseCase.execute(
         new FindOrgByIdQuery(command.invite.orgId),
       );
-
-      // Get inviting user information
-      this.logger.debug(
-        {
-          inviterId: command.invite.inviterId,
-        },
-        'Fetching inviting user information',
+      const invitingUserName = await this.findInvitingUserName(command.invite);
+      const content = this.renderInvitation(
+        command,
+        org.name,
+        invitingUserName,
       );
-      let invitingUserName: string | null = null;
-      if (command.invite.inviterId) {
-        const invitingUser = await this.findUserByIdUseCase.execute(
-          new FindUserByIdQuery(command.invite.inviterId),
-        );
-        invitingUserName = invitingUser.name;
-      }
-
-      // Build asset URLs (logo, banner, team photo) from frontend base URL.
-      const frontendBaseUrl = this.configService.get<string>(
-        'app.frontend.baseUrl',
-      );
-      const emailAssetsPath = this.configService.get<string>(
-        'app.frontend.emailAssetsPath',
-      );
-      const assetBase = `${frontendBaseUrl}${emailAssetsPath}`;
-
-      // Create invitation email template
-      this.logger.debug(
-        {
-          inviteId: command.invite.id,
-          name: org.name,
-        },
-        'Creating invitation email template',
-      );
-      const template = new InvitationTemplate({
-        invitationUrl: command.url,
-        userEmail: command.invite.email,
-        invitingCompanyName: org.name,
-        productName: 'Ayunis Core',
-        currentYear: new Date().getFullYear().toString(),
-        adminName: invitingUserName,
-        logoUrl: `${assetBase}/logo.png`,
-        teamUrl: `${assetBase}/team.png`,
-        bannerUrl: `${assetBase}/banner-welcome.png`,
-      });
-
-      // Render email content
-      const emailContent = this.renderTemplateUseCase.execute(
-        new RenderTemplateCommand(template),
-      );
-
-      // Send the invitation email
-      this.logger.debug(
-        {
-          inviteId: command.invite.id,
-          email: command.invite.email,
-        },
-        'Sending invitation email',
-      );
-      await this.sendEmailUseCase.execute(
+      const receipt = await this.sendEmailUseCase.execute(
         new SendEmailCommand({
           to: command.invite.email,
           subject: `Einladung zu ${org.name} – Ayunis Core`,
-          html: emailContent.html,
-          text: emailContent.text,
+          html: content.html,
+          text: content.text,
         }),
       );
-
-      this.logger.debug(
-        {
-          inviteId: command.invite.id,
-          email: command.invite.email,
-        },
-        'Invitation email sent successfully',
-      );
+      this.logDeliveryReceipt(command.invite, receipt);
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-          inviteId: command.invite.id,
-          email: command.invite.email,
-        },
-        'Error sending invitation email',
-      );
-      throw new InviteEmailSendingFailedError(
-        error instanceof Error ? error.message : 'Unknown error',
-        {
-          inviteId: command.invite.id,
-          email: command.invite.email,
-        },
-      );
+      this.handleFailure(command.invite, error);
     }
+  }
+
+  private async findInvitingUserName(invite: Invite): Promise<string | null> {
+    if (!invite.inviterId) return null;
+    const user = await this.findUserByIdUseCase.execute(
+      new FindUserByIdQuery(invite.inviterId),
+    );
+    return user.name;
+  }
+
+  private renderInvitation(
+    command: SendInvitationEmailCommand,
+    orgName: string,
+    invitingUserName: string | null,
+  ): RenderedEmailContent {
+    const baseUrl = this.configService.get<string>('app.frontend.baseUrl');
+    const path = this.configService.get<string>('app.frontend.emailAssetsPath');
+    const assetBase = `${baseUrl}${path}`;
+    const template = new InvitationTemplate({
+      invitationUrl: command.url,
+      userEmail: command.invite.email,
+      invitingCompanyName: orgName,
+      productName: 'Ayunis Core',
+      currentYear: new Date().getFullYear().toString(),
+      adminName: invitingUserName,
+      logoUrl: `${assetBase}/logo.png`,
+      teamUrl: `${assetBase}/team.png`,
+      bannerUrl: `${assetBase}/banner-welcome.png`,
+    });
+    return this.renderTemplateUseCase.execute(
+      new RenderTemplateCommand(template),
+    );
+  }
+
+  private logPreparation(invite: Invite): void {
+    this.logger.log(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+        orgId: invite.orgId,
+        inviterId: invite.inviterId,
+        role: invite.role,
+      },
+      'Preparing invitation email',
+    );
+  }
+
+  private logDeliveryReceipt(
+    invite: Invite,
+    receipt: EmailDeliveryReceipt,
+  ): void {
+    this.logger.log(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+        orgId: invite.orgId,
+        smtpMessageId: receipt.messageId,
+        smtpStatusCode: receipt.statusCode,
+        acceptedRecipientCount: receipt.acceptedRecipients.length,
+        rejectedRecipientCount: receipt.rejectedRecipients.length,
+        pendingRecipientCount: receipt.pendingRecipients.length,
+      },
+      'Invitation email handed to SMTP transport',
+    );
+  }
+
+  private handleFailure(invite: Invite, error: unknown): never {
+    if (error instanceof ApplicationError) throw error;
+    this.logger.error(
+      { err: error as Error, inviteId: invite.id, email: invite.email },
+      'Error sending invitation email',
+    );
+    throw new InviteEmailSendingFailedError(
+      error instanceof Error ? error.message : 'Unknown error',
+      { inviteId: invite.id, email: invite.email },
+    );
   }
 }
