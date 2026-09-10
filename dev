@@ -62,8 +62,9 @@ if [ -n "$SLOT" ]; then
 elif [ -f "$SLOT_FILE" ]; then
   SLOT="$(cat "$SLOT_FILE")"
 else
-  # No slot given and none saved — only help works without a slot
-  if [[ "$COMMAND" != "help" && "$COMMAND" != "--help" && "$COMMAND" != "-h" ]]; then
+  # Inventory and UI commands discover slots across worktrees.
+  if [[ "$COMMAND" != "help" && "$COMMAND" != "--help" && "$COMMAND" != "-h" \
+    && "$COMMAND" != "slots" && "$COMMAND" != "ui" ]]; then
     die "No slot specified and none previously saved. Run: ./dev up --slot N"
   fi
   SLOT=0  # dummy for help
@@ -760,8 +761,10 @@ case "$COMMAND" in
   down)   cmd_down ;;
   status) cmd_status ;;
   logs)   cmd_logs "$@" ;;
+  slots)  node "$REPO_DIR/scripts/dev-slots-ui.mjs" list ;;
+  ui)     node "$REPO_DIR/scripts/dev-slots-ui.mjs" serve "$@" ;;
   help|--help|-h)
-    echo "Usage: ./dev <up|down|status|logs> [--slot N] [logs options]"
+    echo "Usage: ./dev <up|down|status|logs|slots|ui> [options]"
     echo ""
     echo "Commands:"
     echo "  up     --slot N [--with-anonymisation] [--e2e]"
@@ -771,6 +774,8 @@ case "$COMMAND" in
     echo "  status [--slot N]                          Show what's running"
     echo "  logs   [--slot N] [--tail N] [backend|frontend|infra|all]"
     echo "                                             Print recent logs (default: all, 80 lines)"
+    echo "  slots                                     List slots across all worktrees as JSON"
+    echo "  ui     [--port N]                         Start the local slot control panel"
     echo ""
     echo "The --slot flag is required on first use (./dev up --slot N)."
     echo "After that, the slot is saved to .dev/slot and all commands work without --slot."

@@ -259,6 +259,12 @@ port, it exits with an actionable error instead of terminating that process.
 ./dev logs --slot 2 frontend
 ./dev logs --slot 2 infra
 
+# Inspect every worktree that has selected a slot.
+./dev slots
+
+# Open the local slot control panel URL printed by this command.
+./dev ui
+
 # Recover an unhealthy managed backend or frontend session.
 ./dev up --slot 2
 ```
@@ -268,6 +274,25 @@ lockfile, preserves an already-healthy stack, and replaces stale slot-owned
 backend or frontend sessions before waiting for both services to become ready.
 Do not kill a process reported as an unmanaged port owner; stop it from its
 own checkout or choose another slot.
+
+The control panel binds to `127.0.0.1` and exposes safe, checkout-owned stop
+operations. It blocks stopping duplicate slot claims because Docker
+infrastructure is shared by slot number. Stopped checkouts can release their
+slot selection without deleting the worktree or database data. A stopped,
+uncontested slot can separately delete its Compose containers, network, and
+Postgres/MinIO volumes after typing `DELETE SLOT N`; the worktree and slot claim
+remain. Once slot data is gone, a clean stopped linked worktree whose branch is
+published and has no unpushed commits can be removed after typing
+`REMOVE WORKTREE N`; its branch is preserved. The primary checkout and the
+checkout serving the dashboard cannot be removed there. Unmanaged process
+termination is intentionally not available from the UI. **Stop all safely**
+stops every eligible managed slot while
+skipping stopped, conflicting, or unmanaged entries. Unmanaged listeners include
+read-only ownership details:
+PID, command, working directory, and a conservative active-worktree, orphan,
+or unknown classification. Stopped checkouts can be started on their current
+slot or reassigned to a verified free slot; managed running checkouts can be
+restarted in standard, E2E-mock, or anonymisation mode.
 
 ### Git Hooks (Husky)
 
