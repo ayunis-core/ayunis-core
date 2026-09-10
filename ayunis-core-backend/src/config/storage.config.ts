@@ -4,13 +4,17 @@ export interface StorageConfig {
   provider: 'minio' | 'other';
   defaultBucket: string;
   minio: {
-    endPoint: string;
-    port: number;
-    useSSL: boolean;
+    internal: MinioConnectionConfig;
     accessKey: string;
     secretKey: string;
     bucket: string;
   };
+}
+
+interface MinioConnectionConfig {
+  endPoint: string;
+  port: number;
+  useSSL: boolean;
 }
 
 /**
@@ -39,9 +43,11 @@ export default registerAs('storage', (): StorageConfig => {
     provider: 'minio',
     defaultBucket,
     minio: {
-      endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-      port: parseInt(process.env.MINIO_PORT || '9000', 10),
-      useSSL: process.env.MINIO_USE_SSL === 'true',
+      internal: {
+        endPoint: process.env.MINIO_INTERNAL_ENDPOINT || 'localhost',
+        port: parseInt(process.env.MINIO_INTERNAL_PORT || '9000', 10),
+        useSSL: process.env.MINIO_INTERNAL_USE_SSL === 'true',
+      },
       accessKey,
       secretKey,
       bucket: process.env.MINIO_BUCKET || defaultBucket,

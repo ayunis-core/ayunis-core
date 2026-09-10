@@ -12,7 +12,7 @@
 const PORT_VARS = [
   'PORT',
   'POSTGRES_PORT',
-  'MINIO_PORT',
+  'MINIO_INTERNAL_PORT',
   'REDIS_PORT',
   'SMTP_PORT',
 ] as const;
