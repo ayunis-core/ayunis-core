@@ -212,6 +212,11 @@ services:
       ANONYMIZE_SERVICE_URL: http://anonymize:8000
       GOTENBERG_URL: http://gotenberg:3000
       REDIS_HOST: redis
+      # Server-side object operations must stay on this deployment's MinIO.
+      # Do not move these values into the shared application-secret env file.
+      MINIO_INTERNAL_ENDPOINT: minio
+      MINIO_INTERNAL_PORT: 9000
+      MINIO_INTERNAL_USE_SSL: "false"
     volumes:
       - app-uploads:/app/uploads
     networks:
