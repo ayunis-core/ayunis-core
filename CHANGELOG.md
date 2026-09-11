@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.40.0](https://github.com/ayunis-core/ayunis-core/compare/v2.39.0...v2.40.0) (2026-09-11)
+
+
+### Features
+
+* **dev:** add slot management dashboard (AYC-000) ([#1658](https://github.com/ayunis-core/ayunis-core/issues/1658)) ([6dbb8e9](https://github.com/ayunis-core/ayunis-core/commit/6dbb8e94bb0a29693d090d841a213ea391e069dc))
+
+
+### Bug Fixes
+
+* **ui:** close the mobile sidebar on link clicks (AYC-937) ([#1659](https://github.com/ayunis-core/ayunis-core/issues/1659)) ([86998a9](https://github.com/ayunis-core/ayunis-core/commit/86998a978301104de69138158851a4e723e773cb))
+* **workspace:** confirm a saved workspace instruction (AYC-954) ([#1662](https://github.com/ayunis-core/ayunis-core/issues/1662)) ([5536dac](https://github.com/ayunis-core/ayunis-core/commit/5536dac82fd671c69f42e8976a0ddaa9ea3aabcc))
+
+
+### CI/CD
+
+* **deps:** fail the build on a dedupable lockfile (AYC-000) ([#1656](https://github.com/ayunis-core/ayunis-core/issues/1656)) ([ea674b5](https://github.com/ayunis-core/ayunis-core/commit/ea674b511684c233dbf00e40d9f523d5a63ca388))
+
 ## [2.39.0](https://github.com/ayunis-core/ayunis-core/compare/v2.38.0...v2.39.0) (2026-09-09)
 
 
