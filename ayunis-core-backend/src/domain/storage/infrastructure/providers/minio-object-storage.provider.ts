@@ -20,6 +20,7 @@ import { ObjectNotFoundError } from 'src/domain/storage/application/storage.erro
  * back from HEAD-style calls, `NoSuchKey` from GETs.
  */
 const MISSING_OBJECT_CODES = new Set(['NoSuchKey', 'NotFound']);
+const MINIO_REGION = 'eu-central-1';
 
 function isMissingObjectError(error: unknown): boolean {
   const code = (error as { code?: string } | null)?.code;
@@ -33,7 +34,8 @@ export class MinioObjectStorageProvider
 {
   private readonly logger = new Logger(MinioObjectStorageProvider.name);
 
-  private client: Minio.Client;
+  private readonly internalClient: Minio.Client;
+  private readonly publicClient: Minio.Client;
   private defaultBucket: string;
 
   constructor(
@@ -42,10 +44,15 @@ export class MinioObjectStorageProvider
   ) {
     super();
     this.defaultBucket = this.config.minio.bucket;
-    this.client = new Minio.Client({
-      endPoint: this.config.minio.endPoint,
-      port: this.config.minio.port,
-      useSSL: this.config.minio.useSSL,
+    this.internalClient = new Minio.Client({
+      ...this.config.minio.internal,
+      region: MINIO_REGION,
+      accessKey: this.config.minio.accessKey,
+      secretKey: this.config.minio.secretKey,
+    });
+    this.publicClient = new Minio.Client({
+      ...this.config.minio.public,
+      region: MINIO_REGION,
       accessKey: this.config.minio.accessKey,
       secretKey: this.config.minio.secretKey,
     });
@@ -68,9 +75,14 @@ export class MinioObjectStorageProvider
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         this.logger.log({ attempt, maxRetries }, 'Connecting to MinIO');
-        const bucketExists = await this.client.bucketExists(this.defaultBucket);
+        const bucketExists = await this.internalClient.bucketExists(
+          this.defaultBucket,
+        );
         if (!bucketExists) {
-          await this.client.makeBucket(this.defaultBucket, 'eu-central-1');
+          await this.internalClient.makeBucket(
+            this.defaultBucket,
+            MINIO_REGION,
+          );
           this.logger.log(
             { bucket: this.defaultBucket },
             'Created MinIO bucket',
@@ -111,7 +123,7 @@ export class MinioObjectStorageProvider
       ? uploadObject.data.length
       : undefined;
 
-    const result = await this.client.putObject(
+    const result = await this.internalClient.putObject(
       bucketName,
       uploadObject.objectName,
       stream,
@@ -119,7 +131,7 @@ export class MinioObjectStorageProvider
       metaData,
     );
 
-    const stat = await this.client.statObject(
+    const stat = await this.internalClient.statObject(
       bucketName,
       uploadObject.objectName,
     );
@@ -137,7 +149,10 @@ export class MinioObjectStorageProvider
   async download(storageUrl: StorageUrl): Promise<NodeJS.ReadableStream> {
     const bucketName = storageUrl.bucket || this.defaultBucket;
     try {
-      return await this.client.getObject(bucketName, storageUrl.objectName);
+      return await this.internalClient.getObject(
+        bucketName,
+        storageUrl.objectName,
+      );
     } catch (error) {
       // Without this translation a missing object is indistinguishable from
       // storage being unreachable, and callers turn both into a 500.
@@ -155,7 +170,7 @@ export class MinioObjectStorageProvider
     const bucketName = storageUrl.bucket || this.defaultBucket;
 
     try {
-      const stat = await this.client.statObject(
+      const stat = await this.internalClient.statObject(
         bucketName,
         storageUrl.objectName,
       );
@@ -180,14 +195,14 @@ export class MinioObjectStorageProvider
 
   async delete(storageUrl: StorageUrl): Promise<void> {
     const bucketName = storageUrl.bucket || this.defaultBucket;
-    await this.client.removeObject(bucketName, storageUrl.objectName);
+    await this.internalClient.removeObject(bucketName, storageUrl.objectName);
   }
 
   async exists(storageUrl: StorageUrl): Promise<boolean> {
     const bucketName = storageUrl.bucket || this.defaultBucket;
 
     try {
-      await this.client.statObject(bucketName, storageUrl.objectName);
+      await this.internalClient.statObject(bucketName, storageUrl.objectName);
       return true;
     } catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
@@ -214,13 +229,13 @@ export class MinioObjectStorageProvider
     const hasOverrides = Object.keys(respHeaders).length > 0;
 
     const url = hasOverrides
-      ? await this.client.presignedGetObject(
+      ? await this.publicClient.presignedGetObject(
           bucketName,
           storageUrl.objectName,
           expiresIn,
           respHeaders,
         )
-      : await this.client.presignedGetObject(
+      : await this.publicClient.presignedGetObject(
           bucketName,
           storageUrl.objectName,
           expiresIn,
@@ -230,21 +245,21 @@ export class MinioObjectStorageProvider
   }
 
   async listBuckets(): Promise<StorageBucket[]> {
-    const buckets = await this.client.listBuckets();
+    const buckets = await this.internalClient.listBuckets();
     return buckets.map((bucket) => new StorageBucket(bucket.name));
   }
 
   async createBucket(name: string, region?: string): Promise<StorageBucket> {
-    await this.client.makeBucket(name, region);
+    await this.internalClient.makeBucket(name, region);
     return new StorageBucket(name);
   }
 
   async bucketExists(name: string): Promise<boolean> {
-    return this.client.bucketExists(name);
+    return this.internalClient.bucketExists(name);
   }
 
   async deleteBucket(name: string): Promise<void> {
-    await this.client.removeBucket(name);
+    await this.internalClient.removeBucket(name);
   }
 
   async listObjects(prefix?: string, bucket?: string): Promise<string[]> {
@@ -260,7 +275,7 @@ export class MinioObjectStorageProvider
     const objects: StorageObjectSummary[] = [];
 
     return new Promise((resolve, reject) => {
-      const stream = this.client.listObjects(bucketName, prefix, true);
+      const stream = this.internalClient.listObjects(bucketName, prefix, true);
 
       stream.on('data', (obj) => {
         if (obj.name) {

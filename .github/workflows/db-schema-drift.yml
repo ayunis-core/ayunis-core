@@ -61,9 +61,12 @@ jobs:
           COOKIE_SECURE=false
           COOKIE_DOMAIN=localhost
           COOKIE_SAME_SITE=lax
-          MINIO_ENDPOINT=localhost
-          MINIO_PORT=9000
-          MINIO_USE_SSL=false
+          MINIO_INTERNAL_ENDPOINT=localhost
+          MINIO_INTERNAL_PORT=9000
+          MINIO_INTERNAL_USE_SSL=false
+          MINIO_PUBLIC_ENDPOINT=localhost
+          MINIO_PUBLIC_PORT=9000
+          MINIO_PUBLIC_USE_SSL=false
           MINIO_ROOT_USER=ayunis-ci
           MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret
           MINIO_BUCKET=ayunis-test-uploads
