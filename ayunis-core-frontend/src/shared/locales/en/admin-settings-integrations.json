@@ -14,9 +14,13 @@
     },
     "updateIntegration": {
       "success": "Integration updated successfully",
+      "connectionFailed": "Integration saved, but the connection test failed: {{message}}",
+      "connectionFailedGeneric": "Integration saved, but the connection test failed.",
       "error": "Failed to update integration. Please try again.",
       "notFound": "Integration not found. It may have been deleted.",
-      "invalidServerUrl": "Invalid server URL. Please check the URL format."
+      "invalidServerUrl": "Invalid server URL. Please check the URL format.",
+      "invalidConfiguration": "The integration configuration is invalid. Check the field definitions and try again.",
+      "missingRequiredConfiguration": "A required integration value is missing. Complete all required organization fields and try again."
     },
     "deleteIntegration": {
       "success": "Integration deleted successfully",
@@ -154,6 +158,8 @@
     },
     "editDialog": {
       "title": "Edit Integration",
+      "customDescription": "Update the server URL and HTTP header configuration. Saving tests the updated connection.",
+      "authMethodDescription": "Authentication: {{method}}. To change the authentication method, recreate the integration.",
       "name": "Name",
       "namePlaceholder": "My Integration",
       "headerName": "Header Name",

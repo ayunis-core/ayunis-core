@@ -9,26 +9,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@ayunis/ui/components/form';
-import { Input } from '@ayunis/ui/components/input';
+import { Form } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
-import type { CreateCustomIntegrationFormData } from '../model/types';
-import { useCreateCustomIntegration } from '../api/useCreateCustomIntegration';
-import { buildCustomIntegrationPayload } from '../lib/build-custom-integration-payload';
+import type { CreateCustomIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
+import { useCreateCustomIntegration } from '@/pages/admin-settings/integrations-settings/api/useCreateCustomIntegration';
+import { buildCustomIntegrationPayload } from '@/pages/admin-settings/integrations-settings/lib/build-custom-integration-payload';
 import {
   findDuplicateHeaderIndexes,
   findOAuthAuthorizationHeaderIndexes,
-} from '../lib/custom-config-field-validation';
+} from '@/pages/admin-settings/integrations-settings/lib/custom-config-field-validation';
 import { CustomConfigFieldEditor } from './custom-config-field-editor';
 import { CustomOAuthFields } from './custom-oauth-fields';
+import { CustomIntegrationIdentityFields } from './custom-integration-identity-fields';
 
 interface CreateCustomDialogProps {
   open: boolean;
@@ -121,57 +113,9 @@ export function CreateCustomDialog({
             onSubmit={(event) => void form.handleSubmit(submit)(event)}
             className="space-y-4"
           >
-            <FormField
-              control={form.control}
-              name="name"
-              rules={{ required: true }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('integrations.createCustomDialog.name')}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t(
-                        'integrations.createCustomDialog.namePlaceholder',
-                      )}
-                      {...field}
-                      disabled={isCreating}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t('integrations.createCustomDialog.nameDescription')}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="serverUrl"
-              rules={{ required: true }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('integrations.createCustomDialog.serverUrl')}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="url"
-                      placeholder={t(
-                        'integrations.createCustomDialog.serverUrlPlaceholder',
-                      )}
-                      {...field}
-                      disabled={isCreating}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t('integrations.createCustomDialog.serverUrlDescription')}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <CustomIntegrationIdentityFields
+              form={form}
+              disabled={isCreating}
             />
 
             <CustomOAuthFields form={form} disabled={isCreating} />

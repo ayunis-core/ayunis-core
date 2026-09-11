@@ -1,11 +1,11 @@
 import type { UUID } from 'crypto';
 import { SchemaConfiguredMcpIntegration } from './schema-configured-mcp-integration.entity';
-import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
-import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
+import type { McpIntegrationAuth } from 'src/domain/mcp/domain/auth/mcp-integration-auth.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 export class CustomMcpIntegration extends SchemaConfiguredMcpIntegration {
-  private readonly _serverUrl: string;
+  private _serverUrl: string;
 
   constructor(params: {
     id?: UUID;
@@ -50,5 +50,10 @@ export class CustomMcpIntegration extends SchemaConfiguredMcpIntegration {
 
   get serverUrl(): string {
     return this._serverUrl;
+  }
+
+  updateServerUrl(serverUrl: string): void {
+    this._serverUrl = serverUrl;
+    this.touch();
   }
 }

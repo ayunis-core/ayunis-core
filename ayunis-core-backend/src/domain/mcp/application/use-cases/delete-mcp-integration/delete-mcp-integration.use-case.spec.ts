@@ -79,6 +79,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
           provide: McpIntegrationUserConfigRepositoryPort,
           useValue: {
             deleteByIntegrationId: jest.fn(),
+            removeKeysByIntegrationId: jest.fn(),
           },
         },
         {
