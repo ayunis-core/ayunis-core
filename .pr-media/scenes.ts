@@ -9,7 +9,7 @@ export default [
     viewports: ['desktop'],
     waitFor: async ({ page, expect }) => {
       const response = await page.request.post(
-        `${API_URL}/mcp-integrations/custom`,
+        `${API_URL}/api/mcp-integrations/custom`,
         {
           data: {
             name: 'AYC-941 Demo Integration',
@@ -19,7 +19,10 @@ export default [
           },
         },
       );
-      expect(response.ok()).toBe(true);
+      expect(
+        response.ok(),
+        `create failed: ${response.status()} ${await response.text()}`,
+      ).toBe(true);
       await page.reload();
       return page.getByRole('switch');
     },
