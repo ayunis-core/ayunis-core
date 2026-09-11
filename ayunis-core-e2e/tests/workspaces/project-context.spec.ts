@@ -262,6 +262,9 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
     .getByTestId("workspace-instruction-input")
     .fill(fixture.instruction);
   await page.getByTestId("workspace-instruction-save").click();
+  await expect(
+    page.locator('[data-sonner-toast][data-type="success"]'),
+  ).toBeVisible();
 
   await expect
     .poll(async () => {
