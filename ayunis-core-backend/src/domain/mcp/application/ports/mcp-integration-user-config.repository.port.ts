@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { McpIntegrationUserConfig } from '../../domain/mcp-integration-user-config.entity';
+import type { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
 
 /**
  * Repository port for MCP integration user-level configuration.
@@ -35,4 +35,9 @@ export abstract class McpIntegrationUserConfigRepositoryPort {
    * Used when an integration is deleted.
    */
   abstract deleteByIntegrationId(integrationId: UUID): Promise<void>;
+
+  abstract removeKeysByIntegrationId(
+    integrationId: UUID,
+    keys: string[],
+  ): Promise<void>;
 }

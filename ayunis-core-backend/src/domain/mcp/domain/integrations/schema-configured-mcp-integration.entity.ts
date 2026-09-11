@@ -1,18 +1,18 @@
 import type { UUID } from 'crypto';
-import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
-import { McpIntegration } from '../mcp-integration.entity';
+import type { McpIntegrationAuth } from 'src/domain/mcp/domain/auth/mcp-integration-auth.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import type {
   ConfigField,
   IntegrationConfigSchema,
-} from '../value-objects/integration-config-schema';
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 import {
   fieldRequiresInput,
   isConfigValuePresent,
   normalizeIntegrationConfigSchema,
-} from '../value-objects/integration-config-schema';
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 export abstract class SchemaConfiguredMcpIntegration extends McpIntegration {
-  public readonly configSchema: IntegrationConfigSchema;
+  private _configSchema: IntegrationConfigSchema;
   private _orgConfigValues: Record<string, string>;
 
   protected constructor(params: {
@@ -32,12 +32,21 @@ export abstract class SchemaConfiguredMcpIntegration extends McpIntegration {
     description?: string;
   }) {
     super(params);
-    this.configSchema = normalizeIntegrationConfigSchema(params.configSchema);
+    this._configSchema = normalizeIntegrationConfigSchema(params.configSchema);
     this._orgConfigValues = { ...params.orgConfigValues };
   }
 
   get orgConfigValues(): Record<string, string> {
     return { ...this._orgConfigValues };
+  }
+
+  get configSchema(): IntegrationConfigSchema {
+    return this._configSchema;
+  }
+
+  updateConfigSchema(schema: IntegrationConfigSchema): void {
+    this._configSchema = normalizeIntegrationConfigSchema(schema);
+    this.touch();
   }
 
   updateOrgConfigValues(values: Record<string, string>): void {

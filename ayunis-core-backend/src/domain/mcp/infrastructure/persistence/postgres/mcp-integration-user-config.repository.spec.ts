@@ -111,4 +111,45 @@ describe('McpIntegrationUserConfigRepository', () => {
       expect(mockTypeOrmRepo.delete).toHaveBeenCalledWith({ integrationId });
     });
   });
+
+  describe('removeKeysByIntegrationId', () => {
+    it('removes the keys from every config in one set-based update', async () => {
+      const execute = jest.fn().mockResolvedValue({ affected: 2 });
+      const setParameter = jest.fn().mockReturnValue({ execute });
+      const where = jest.fn().mockReturnValue({ setParameter });
+      const set = jest.fn().mockReturnValue({ where });
+      const update = jest.fn().mockReturnValue({ set });
+      mockTypeOrmRepo.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue({ update });
+
+      await repository.removeKeysByIntegrationId(integrationId, [
+        'personalToken',
+      ]);
+
+      expect(set).toHaveBeenCalledWith({
+        configValues: expect.any(Function),
+        updatedAt: expect.any(Function),
+      });
+      const values = set.mock.calls[0][0] as {
+        configValues: () => string;
+        updatedAt: () => string;
+      };
+      expect(values.configValues()).toBe('"config_values" - :keys::text[]');
+      expect(values.updatedAt()).toBe('CURRENT_TIMESTAMP');
+      expect(where).toHaveBeenCalledWith('"integration_id" = :integrationId', {
+        integrationId,
+      });
+      expect(setParameter).toHaveBeenCalledWith('keys', ['personalToken']);
+      expect(execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not issue an update when there are no keys', async () => {
+      mockTypeOrmRepo.createQueryBuilder = jest.fn();
+
+      await repository.removeKeysByIntegrationId(integrationId, []);
+
+      expect(mockTypeOrmRepo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+  });
 });

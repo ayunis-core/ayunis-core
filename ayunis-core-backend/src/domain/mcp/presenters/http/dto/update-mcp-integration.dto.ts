@@ -6,11 +6,15 @@ import {
   IsObject,
   Length,
   MinLength,
+  IsUrl,
 } from 'class-validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { McpOAuthClientDto } from './create-custom-integration.dto';
+import {
+  CustomMcpConfigSchemaDto,
+  McpOAuthClientDto,
+} from './create-custom-integration.dto';
 
 /**
  * DTO for updating an existing MCP integration.
@@ -36,6 +40,27 @@ export class UpdateMcpIntegrationDto {
   @IsString()
   @Length(1, 255)
   name?: string;
+
+  @ApiPropertyOptional({
+    description: 'Custom MCP server URL',
+    example: 'https://my-mcp-server.example.com/mcp',
+  })
+  @IsOptional()
+  @IsUrl({
+    protocols: ['http', 'https'],
+    require_protocol: true,
+    require_tld: false,
+  })
+  serverUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Header configuration for a custom MCP integration',
+    type: CustomMcpConfigSchemaDto,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CustomMcpConfigSchemaDto)
+  configSchema?: CustomMcpConfigSchemaDto;
 
   @ApiProperty({
     description:
