@@ -17,6 +17,7 @@ export interface OrgSsoConnectionParams {
   zitadelIdpId?: string | null;
   enabled?: boolean;
   jitProvisioningEnabled?: boolean;
+  localPasswordLoginEnabled?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -36,6 +37,7 @@ export class OrgSsoConnection {
   zitadelIdpId: string | null;
   enabled: boolean;
   jitProvisioningEnabled: boolean;
+  localPasswordLoginEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -53,6 +55,7 @@ export class OrgSsoConnection {
         : normalizeZitadelIdpId(params.zitadelIdpId);
     this.enabled = params.enabled ?? false;
     this.jitProvisioningEnabled = params.jitProvisioningEnabled ?? false;
+    this.localPasswordLoginEnabled = params.localPasswordLoginEnabled ?? true;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

@@ -307,6 +307,8 @@ function pendingTransaction(
 function connectionRepository(connection = anEnabledSsoConnection()) {
   return {
     findByOrgId: jest.fn().mockResolvedValue(connection),
+    findLocalPasswordLoginEnabledByOrgId: jest.fn(),
+    findLocalPasswordLoginEnabledByOrgIdForSessionIssuance: jest.fn(),
     findByOrgIdWithDomainState: jest.fn(),
     findByEmailDomain: jest.fn(),
     findOwnerOrgIdsByEmailDomains: jest.fn(),
@@ -314,6 +316,7 @@ function connectionRepository(connection = anEnabledSsoConnection()) {
     updateConfigurationIfDisabled: jest.fn(),
     setEnabled: jest.fn(),
     setJitProvisioningEnabledIfMappingMatches: jest.fn(),
+    setLocalPasswordLoginEnabledIfMappingMatches: jest.fn(),
     setZitadelIdpIdIfMappingMatches: jest.fn(),
   };
 }

@@ -4,6 +4,16 @@ import { OrgSsoConnectionMapper } from 'src/iam/sso/infrastructure/persistence/p
 describe(OrgSsoConnectionMapper.name, () => {
   const mapper = new OrgSsoConnectionMapper();
 
+  it('round-trips the local password login policy', () => {
+    const connection = anOrgSsoConnection({
+      localPasswordLoginEnabled: false,
+    });
+
+    const mapped = mapper.toDomain(mapper.toRecord(connection));
+
+    expect(mapped.localPasswordLoginEnabled).toBe(false);
+  });
+
   it('writes every verified domain while retaining the legacy primary domain', () => {
     const verifiedAt = new Date('2026-08-27T12:00:00.000Z');
     const connection = anOrgSsoConnection({

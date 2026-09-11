@@ -57,6 +57,35 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     return this.findOne({ orgId });
   }
 
+  async findLocalPasswordLoginEnabledByOrgId(
+    orgId: UUID,
+  ): Promise<boolean | null> {
+    return this.findLocalPasswordLoginEnabled(orgId);
+  }
+
+  async findLocalPasswordLoginEnabledByOrgIdForSessionIssuance(
+    orgId: UUID,
+  ): Promise<boolean | null> {
+    return this.findLocalPasswordLoginEnabled(orgId, true);
+  }
+
+  private async findLocalPasswordLoginEnabled(
+    orgId: UUID,
+    lockForSessionIssuance = false,
+  ): Promise<boolean | null> {
+    const options = {
+      where: { orgId },
+      select: { localPasswordLoginEnabled: true },
+    };
+    const record = lockForSessionIssuance
+      ? await this.records.findOne({
+          ...options,
+          lock: { mode: 'pessimistic_read' },
+        })
+      : await this.records.findOne(options);
+    return record?.localPasswordLoginEnabled ?? null;
+  }
+
   async findByOrgIdWithDomainState(
     orgId: UUID,
   ): Promise<OrgSsoConnectionDomainState | null> {
@@ -162,6 +191,23 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
       : null;
   }
 
+  async setLocalPasswordLoginEnabledIfMappingMatches(
+    expected: OrgSsoConnection,
+    enabled: boolean,
+  ): Promise<OrgSsoConnection | null> {
+    const updatedAt = new Date();
+    const result = await this.records.update(
+      { orgId: expected.orgId, updatedAt: expected.updatedAt },
+      { localPasswordLoginEnabled: enabled, updatedAt },
+    );
+    return result.affected
+      ? this.copyConnection(expected, {
+          localPasswordLoginEnabled: enabled,
+          updatedAt,
+        })
+      : null;
+  }
+
   async setZitadelIdpIdIfMappingMatches(
     expected: OrgSsoConnection,
     zitadelIdpId: string | null,
@@ -210,7 +256,11 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     changes: Partial<
       Pick<
         OrgSsoConnection,
-        'enabled' | 'jitProvisioningEnabled' | 'zitadelIdpId' | 'updatedAt'
+        | 'enabled'
+        | 'jitProvisioningEnabled'
+        | 'localPasswordLoginEnabled'
+        | 'zitadelIdpId'
+        | 'updatedAt'
       >
     >,
   ): OrgSsoConnection {
