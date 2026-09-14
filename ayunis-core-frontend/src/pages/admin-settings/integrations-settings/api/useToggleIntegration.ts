@@ -7,7 +7,7 @@ import {
   useMcpIntegrationsControllerDisable,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { McpIntegration } from '../model/types';
+import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
 import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useToggleIntegration() {
@@ -56,7 +56,7 @@ export function useToggleIntegration() {
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({
-          queryKey: ['useMcpIntegrationsControllerList'],
+          queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
         showSuccess(t('integrations.toggleIntegration.disableSuccess'));
       },
