@@ -25,12 +25,19 @@ Write them down as a checklist. Every one must end the run marked ✅/❌ with e
 
 ## 1. Worktree the branch
 
-Use the `worktree` skill. Base the worktree on the PR's branch (not a new one):
+**First, sweep leftovers from earlier QA runs.** A run that died mid-way leaves its slot and dev servers behind (this once ate 24 GB of RAM + swap). Only worktrees carrying the `.dev/qa` marker are touched, so the user's slots are safe:
+
+```bash
+cd "$REPO" && scripts/qa-teardown.sh
+```
+
+Then use the `worktree` skill. Base the worktree on the PR's branch (not a new one):
 
 ```bash
 git fetch origin
 # --detach: QA is read-only, and it avoids git's "already checked out" refusal when <branch> is the one you're currently on
 git worktree add --detach /Users/<you>/Developer/ayunis-core-wt-<slug> origin/<branch>
+mkdir -p "$WT/.dev" && touch "$WT/.dev/qa"   # marks it QA-owned — REQUIRED, or teardown will refuse to remove it
 # symlink secret envs + install
 ln -sf "$REPO/ayunis-core-backend/.env"  "$WT/ayunis-core-backend/.env"
 ln -sf "$REPO/ayunis-core-frontend/.env" "$WT/ayunis-core-frontend/.env"
@@ -72,8 +79,16 @@ Port formula: `port + slot×10` (slot 2 → backend 3020, frontend 3021, postgre
 
    Without these three the backend can't reach MinIO/Redis. (`MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD` map to `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`; `REDIS_PASSWORD` keeps its name.)
 4. `cd ayunis-core-backend && pnpm run migration:run:dev`
-5. Backend (from `ayunis-core-backend`): `pnpm run start:dev` (run_in_background). Poll `http://localhost:<BE>/api/health` until `{"status":"healthy"}`.
-6. Frontend — **must run from `ayunis-core-frontend`** (Vite is a frontend-only dep and won't resolve from the backend dir or repo root): `cd ../ayunis-core-frontend && VITE_API_BASE_URL=http://localhost:<BE>/api pnpm exec vite --port <FE>` (run_in_background).
+5. Backend and frontend — start them **detached with pid files in `./dev`'s state dir**, so `./dev down --slot <N>` (and therefore `qa-teardown.sh`) can kill the whole process tree. Do NOT use `run_in_background` + TaskStop for these: TaskStop kills the shell but orphans the `pnpm → nest → node` children.
+
+   ```bash
+   S="$WT/.dev/slot-<N>"; mkdir -p "$S"
+   (cd "$WT/ayunis-core-backend" && nohup pnpm run start:dev >> "$S/backend.log" 2>&1 & echo $! > "$S/backend.pid")
+   # Frontend must run from ayunis-core-frontend (Vite is a frontend-only dep and won't resolve elsewhere)
+   (cd "$WT/ayunis-core-frontend" && VITE_API_BASE_URL=http://localhost:<BE>/api nohup pnpm exec vite --port <FE> >> "$S/frontend.log" 2>&1 & echo $! > "$S/frontend.pid")
+   ```
+
+   Poll `http://localhost:<BE>/api/health` until `{"status":"healthy"}`; tail the logs in `$S` if it doesn't come up.
 
 ## 3. Seed
 
@@ -157,21 +172,19 @@ Present the acceptance-criteria checklist, each ✅/❌ with its evidence (asser
 
 ## 6. Tear down — leave the machine exactly as found
 
-Always, even on failure:
+Always, even on failure — one command, run from the main checkout (not from inside `$WT`, which is about to be removed):
 
 ```bash
-# stop the native processes YOU started (use TaskStop on the background task ids)
-cd "$WT" && ./dev down --slot <N>        # slot you brought up — NEVER a pre-existing one
-git -C "$WT" restore packages/*/dist     # build:deps rebuilds these; don't leave them dirty
-rm -f "$WT"/ayunis-core-backend/.env.dev
-cd "$REPO" && git worktree remove "$WT" --force
+cd "$REPO" && scripts/qa-teardown.sh "$WT"
 ```
 
-Verify: `docker ps --filter name=ayunis-dev` shows only the slots that were running **before** you started; the QA slot's ports are free; the main checkout is on its original branch.
+It runs `./dev down` for every slot the worktree used (kills the pid-file process trees, `compose down` without `-v`), terminates any stray server whose command line lives under the worktree's app dirs, and removes the worktree. It refuses worktrees without the `.dev/qa` marker.
+
+Verify: `docker ps --filter name=ayunis-dev` shows only the slots that were running **before** you started; `pgrep -fl "$WT"` is empty; `git worktree list` no longer shows `$WT`.
 
 ## Guardrails (from CLAUDE.md — non-negotiable)
 
-- **Never** `kill`/`pkill` a process you didn't start. Stop your own background tasks via TaskStop.
+- **Never** `kill`/`pkill` a process you didn't start. The only sanctioned process termination is `scripts/qa-teardown.sh`, which is scoped to `.dev/qa`-marked worktrees that a QA run created.
 - **Never** destructive Docker flags: no `down -v`, `volume rm`, `system prune`. Only `up`/`down`/`ps`/`logs`/`exec`.
 - **Never** touch a pre-existing slot or other infra. If a slot's volume is stale (migration `42P07`) or a container won't come up, **describe it and ask** — don't fix it. Just pick a different free slot, or use the native-start fallback against healthy infra.
 - If the environment is broken in a way the fallback can't route around, stop and report — don't escalate fixes.
