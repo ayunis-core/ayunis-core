@@ -13,6 +13,7 @@ export enum AuthenticationErrorCode {
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   REGISTRATION_DISABLED = 'REGISTRATION_DISABLED',
   PENDING_LOGIN_TOKEN_INVALID = 'MFA_PENDING_TOKEN_INVALID',
+  LOCAL_PASSWORD_LOGIN_DISABLED = 'LOCAL_PASSWORD_LOGIN_DISABLED',
 }
 
 /**
@@ -117,6 +118,17 @@ export class RegistrationDisabledError extends AuthenticationError {
     super(
       'Registration is disabled',
       AuthenticationErrorCode.REGISTRATION_DISABLED,
+      403,
+      metadata,
+    );
+  }
+}
+
+export class LocalPasswordLoginDisabledError extends AuthenticationError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      "Use your organization's SSO to sign in.",
+      AuthenticationErrorCode.LOCAL_PASSWORD_LOGIN_DISABLED,
       403,
       metadata,
     );

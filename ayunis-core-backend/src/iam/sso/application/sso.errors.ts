@@ -9,6 +9,7 @@ export enum SsoErrorCode {
   CONNECTION_CONFLICT = 'SSO_CONNECTION_CONFLICT',
   CONNECTION_NOT_FOUND = 'SSO_CONNECTION_NOT_FOUND',
   CONNECTION_MUST_BE_DISABLED = 'SSO_CONNECTION_MUST_BE_DISABLED',
+  MUST_REMAIN_ENABLED = 'SSO_MUST_REMAIN_ENABLED',
   CONNECTION_CHANGED = 'SSO_CONNECTION_CHANGED',
   BROKER_NOT_CONFIGURED = 'SSO_BROKER_NOT_CONFIGURED',
   BROKER_RESPONSE_INVALID = 'SSO_BROKER_RESPONSE_INVALID',
@@ -76,6 +77,17 @@ export class SsoConnectionMustBeDisabledError extends SsoError {
     super(
       `Disable SSO for organization '${orgId}' before changing its mapping`,
       SsoErrorCode.CONNECTION_MUST_BE_DISABLED,
+      409,
+      { orgId },
+    );
+  }
+}
+
+export class SsoMustRemainEnabledError extends SsoError {
+  constructor(orgId: UUID) {
+    super(
+      `SSO must remain enabled for organization '${orgId}' while local password login is disabled`,
+      SsoErrorCode.MUST_REMAIN_ENABLED,
       409,
       { orgId },
     );

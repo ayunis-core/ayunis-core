@@ -3,6 +3,7 @@ import { SYSTEM_ROLES_KEY } from 'src/iam/authorization/application/decorators/s
 import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
 import { GetOrgSsoConnectionQuery } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.query';
 import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
+import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
 import { SetOrgSsoJitProvisioningCommand } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.command';
 import {
   TEST_ORG_ID,
@@ -111,10 +112,14 @@ describe(SuperAdminSsoConnectionsController.name, () => {
     );
 
     expect(setEnabled.execute).toHaveBeenCalledWith(
-      new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
-        emailDomains: ['stadt.example', 'vhs.example'],
-        zitadelOrgId: 'zitadel-org-1',
-      }),
+      new SetOrgSsoEnabledCommand(
+        TEST_ORG_ID,
+        true,
+        new ReviewedSsoMapping(
+          ['stadt.example', 'vhs.example'],
+          'zitadel-org-1',
+        ),
+      ),
     );
     expect(result.connection).toMatchObject({ enabled: true });
     expect(logger.log).toHaveBeenCalledWith(

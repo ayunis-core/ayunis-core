@@ -1,7 +1,7 @@
 import type { UUID } from 'crypto';
 import type { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
 
-export class SetOrgSsoEnabledCommand {
+export class SetOrgLocalPasswordLoginEnabledCommand {
   constructor(
     public readonly orgId: UUID,
     public readonly enabled: boolean,
