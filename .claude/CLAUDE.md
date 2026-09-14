@@ -95,6 +95,21 @@ Validation-first does not mean running every available check for every change. U
 
 If a change matches more than one level, use the highest. If it is unclear whether an ordinary low-risk change qualifies for the Fast Path, use the Standard Path. If uncertainty involves security, data integrity, infrastructure, reversibility, or the boundary between Standard and High-Risk, use the High-Risk Path.
 
+#### Classification Checkpoint
+
+Classify the change **before implementation**, record the selected path and the trigger for it in the working notes, and carry that classification into the PR description. Do not infer the workflow level from diff size after the code is written. Scan every High-Risk trigger explicitly; any match selects the High-Risk Path.
+
+Before changing behavior, write a compact failure-mode matrix for the affected contract. Cover the states and transitions that could produce a materially different result, not only the happy path. At minimum, consider:
+
+- unchanged and no-op requests;
+- partial updates and omitted optional properties;
+- create, change, remove, and remove-then-recreate lifecycles;
+- validation failure and rollback or preservation of prior state;
+- authorization, authentication, tenant, and provider variants that take different code paths;
+- secrets or persisted values that must be preserved, cleared, masked, or invalidated.
+
+Trace each relevant transition across the full ownership path — UI, transport contract, application/domain logic, persistence, related per-user or organization data, and caches — and assign an observable check to every credible failure mode. If a layer does not participate, record that rather than silently omitting it.
+
 #### Fast Path
 
 Use only when all of these are true:
@@ -136,9 +151,12 @@ Use for authentication, authorization, sharing, tenant isolation, migrations or 
 Required:
 
 - Follow all applicable specialized skills and their safety checks.
+- Include the classification trigger, failure-mode matrix, ownership trace, and validation evidence in the PR description.
 - Validate configuration and integration behavior against the actual named environment.
 - Exercise affected behavior end-to-end when it has a user-facing or system-boundary path.
 - Run the full relevant validation suite, including distinct-principal tests for access control.
+- Run a full affected-package type-check after changing a port, interface, DTO, generated contract, or other shared type boundary; staged-file checks and transpile-only tests are not sufficient evidence.
+- Test destructive and omission-sensitive transitions at the system boundary, including removal followed by recreation when stale persisted data could reappear.
 - Report the exact environment and commands used as evidence.
 
 #### Pull Requests
