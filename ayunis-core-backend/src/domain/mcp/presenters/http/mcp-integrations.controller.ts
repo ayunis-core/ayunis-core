@@ -302,6 +302,8 @@ export class McpIntegrationsController {
     const command = new UpdateMcpIntegrationCommand({
       integrationId: id,
       name: dto.name,
+      serverUrl: dto.serverUrl,
+      configSchema: dto.configSchema,
       credentials: dto.credentials,
       authHeaderName: dto.authHeaderName,
       returnsPii: dto.returnsPii,

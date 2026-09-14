@@ -3170,6 +3170,10 @@ export interface UpdateMcpIntegrationDto {
      * @maxLength 255
      */
   name?: string;
+  /** Custom MCP server URL */
+  serverUrl?: string;
+  /** Header configuration for a custom MCP integration */
+  configSchema?: CustomMcpConfigSchemaDto;
   /** Authentication credentials (will be encrypted). Provide to rotate the stored secret/token. */
   credentials?: string;
   /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */

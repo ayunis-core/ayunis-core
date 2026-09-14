@@ -2,11 +2,13 @@ import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationNotConfigurableError,
+  InvalidServerUrlError,
   UnexpectedMcpError,
 } from 'src/domain/mcp/application/mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -22,6 +24,12 @@ import { ConnectionValidationService } from 'src/domain/mcp/application/services
 import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
 import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
 import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import {
+  type ConfigField,
+  normalizeScopes,
+  type IntegrationConfigSchema,
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
@@ -29,6 +37,7 @@ export class UpdateMcpIntegrationUseCase {
 
   constructor(
     private readonly repository: McpIntegrationsRepositoryPort,
+    private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly configService: McpConfigService,
@@ -50,9 +59,15 @@ export class UpdateMcpIntegrationUseCase {
       integration,
       command.oauthClient,
     );
+    this.validateConfigurationUpdate(integration, command);
+    const removedUserFieldKeys = this.removedUserFieldKeys(
+      integration,
+      command.configSchema,
+    );
 
     await this.applyUpdates(integration, command);
     const saved = await this.repository.save(integration);
+    await this.removeDeletedUserConfigValues(saved, removedUserFieldKeys);
 
     if (oauthIntegration && command.oauthClient) {
       await this.oauthClientConfiguration.initialize(
@@ -115,6 +130,8 @@ export class UpdateMcpIntegrationUseCase {
       integration.updateReturnsPii(command.returnsPii);
     }
 
+    this.updateServerUrl(integration, command.serverUrl);
+
     if (
       command.credentials !== undefined ||
       command.authHeaderName !== undefined
@@ -126,8 +143,11 @@ export class UpdateMcpIntegrationUseCase {
       );
     }
 
-    if (command.orgConfigValues !== undefined) {
-      await this.updateOrgConfigValues(integration, command.orgConfigValues);
+    if (
+      command.configSchema !== undefined ||
+      command.orgConfigValues !== undefined
+    ) {
+      await this.updateConfiguration(integration, command);
     }
   }
 
@@ -136,10 +156,10 @@ export class UpdateMcpIntegrationUseCase {
     command: UpdateMcpIntegrationCommand,
   ): Promise<McpIntegration> {
     if (
-      command.orgConfigValues !== undefined &&
+      this.hasConnectionChanges(command) &&
       !(
         integration instanceof SchemaConfiguredMcpIntegration &&
-        integration.configSchema.oauth
+        integration.requiresUserAuthorization
       )
     ) {
       return this.connectionValidationService.validateAndUpdateStatus(
@@ -150,21 +170,196 @@ export class UpdateMcpIntegrationUseCase {
     return integration;
   }
 
-  private async updateOrgConfigValues(
+  private hasConnectionChanges(command: UpdateMcpIntegrationCommand): boolean {
+    return [
+      command.serverUrl,
+      command.configSchema,
+      command.orgConfigValues,
+      command.credentials,
+      command.authHeaderName,
+    ].some((value) => value !== undefined);
+  }
+
+  private async updateConfiguration(
     integration: McpIntegration,
-    orgConfigValues: Record<string, string>,
+    command: UpdateMcpIntegrationCommand,
   ): Promise<void> {
     if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
       throw new McpIntegrationNotConfigurableError(integration.id);
     }
 
+    const targetSchema = command.configSchema
+      ? this.completeConfigSchema(
+          integration.configSchema,
+          command.configSchema,
+        )
+      : integration.configSchema;
     const mergedValues = await this.configService.mergeForUpdate(
       integration.orgConfigValues,
-      orgConfigValues,
-      integration.configSchema.orgFields,
+      command.orgConfigValues ?? {},
+      targetSchema.orgFields,
     );
 
+    if (command.configSchema !== undefined) {
+      integration.updateConfigSchema(targetSchema);
+    }
     integration.updateOrgConfigValues(mergedValues);
+  }
+
+  private validateConfigurationUpdate(
+    integration: McpIntegration,
+    command: UpdateMcpIntegrationCommand,
+  ): void {
+    if (command.configSchema === undefined) return;
+    if (!(integration instanceof CustomMcpIntegration)) {
+      throw new McpIntegrationNotConfigurableError(integration.id);
+    }
+
+    this.ensureAuthenticationConfigurationUnchanged(
+      integration.configSchema,
+      this.completeConfigSchema(integration.configSchema, command.configSchema),
+      integration,
+    );
+    const targetSchema = this.completeConfigSchema(
+      integration.configSchema,
+      command.configSchema,
+    );
+    this.ensureExistingFieldsStable(
+      integration.configSchema,
+      targetSchema,
+      integration,
+    );
+    this.configService.validateCustomSchema(
+      targetSchema,
+      command.orgConfigValues ?? {},
+      command.name ?? integration.name,
+    );
+  }
+
+  private completeConfigSchema(
+    current: IntegrationConfigSchema,
+    update: NonNullable<UpdateMcpIntegrationCommand['configSchema']>,
+  ): IntegrationConfigSchema {
+    return {
+      ...update,
+      authType: update.authType ?? current.authType,
+    };
+  }
+
+  private removedUserFieldKeys(
+    integration: McpIntegration,
+    update: UpdateMcpIntegrationCommand['configSchema'],
+  ): string[] {
+    if (!(integration instanceof SchemaConfiguredMcpIntegration) || !update) {
+      return [];
+    }
+    const nextKeys = new Set(update.userFields.map((field) => field.key));
+    return integration.configSchema.userFields
+      .map((field) => field.key)
+      .filter((key) => !nextKeys.has(key));
+  }
+
+  private async removeDeletedUserConfigValues(
+    integration: McpIntegration,
+    keys: string[],
+  ): Promise<void> {
+    if (keys.length === 0) return;
+    await this.userConfigRepository.removeKeysByIntegrationId(
+      integration.id,
+      keys,
+    );
+  }
+
+  private ensureExistingFieldsStable(
+    current: IntegrationConfigSchema,
+    next: IntegrationConfigSchema,
+    integration: CustomMcpIntegration,
+  ): void {
+    const nextFields = this.indexFieldsByKey(next);
+    for (const field of this.fieldsWithScope(current)) {
+      const nextField = nextFields.get(field.key);
+      if (!nextField) continue;
+      if (nextField.type !== field.type || nextField.scope !== field.scope) {
+        throw new McpValidationFailedError(
+          integration.id,
+          integration.name,
+          'Changing the scope or value type of an existing configuration field is not supported.',
+        );
+      }
+    }
+  }
+
+  private indexFieldsByKey(
+    schema: IntegrationConfigSchema,
+  ): Map<string, ConfigField & { scope: 'organization' | 'user' }> {
+    return new Map(
+      this.fieldsWithScope(schema).map((field) => [field.key, field]),
+    );
+  }
+
+  private fieldsWithScope(
+    schema: IntegrationConfigSchema,
+  ): (ConfigField & { scope: 'organization' | 'user' })[] {
+    return [
+      ...schema.orgFields.map((field) => ({
+        ...field,
+        scope: 'organization' as const,
+      })),
+      ...schema.userFields.map((field) => ({
+        ...field,
+        scope: 'user' as const,
+      })),
+    ];
+  }
+
+  private ensureAuthenticationConfigurationUnchanged(
+    current: IntegrationConfigSchema,
+    next: IntegrationConfigSchema,
+    integration: CustomMcpIntegration,
+  ): void {
+    const currentAuth = JSON.stringify(this.authenticationConfig(current));
+    const nextAuth = JSON.stringify(this.authenticationConfig(next));
+    if (currentAuth !== nextAuth) {
+      throw new McpValidationFailedError(
+        integration.id,
+        integration.name,
+        'Changing the authentication method is not supported.',
+      );
+    }
+  }
+
+  private authenticationConfig(schema: IntegrationConfigSchema): object {
+    return {
+      authType: schema.authType,
+      oauth: schema.oauth
+        ? {
+            clientRegistration: schema.oauth.clientRegistration,
+            scopes: normalizeScopes(schema.oauth.scopes),
+          }
+        : undefined,
+    };
+  }
+
+  private updateServerUrl(
+    integration: McpIntegration,
+    serverUrl?: string,
+  ): void {
+    if (serverUrl === undefined) return;
+    if (!(integration instanceof CustomMcpIntegration)) {
+      throw new McpIntegrationNotConfigurableError(integration.id);
+    }
+    if (!this.isValidServerUrl(serverUrl)) {
+      throw new InvalidServerUrlError(serverUrl);
+    }
+    integration.updateServerUrl(serverUrl);
+  }
+
+  private isValidServerUrl(serverUrl: string): boolean {
+    try {
+      return ['http:', 'https:'].includes(new URL(serverUrl).protocol);
+    } catch {
+      return false;
+    }
   }
 
   private async rotateCredentials(

@@ -14,9 +14,13 @@
     },
     "updateIntegration": {
       "success": "Integration erfolgreich aktualisiert",
+      "connectionFailed": "Integration gespeichert, aber der Verbindungstest ist fehlgeschlagen: {{message}}",
+      "connectionFailedGeneric": "Integration gespeichert, aber der Verbindungstest ist fehlgeschlagen.",
       "error": "Integration konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
       "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht.",
-      "invalidServerUrl": "Ungültige Server-URL. Bitte überprüfen Sie das URL-Format."
+      "invalidServerUrl": "Ungültige Server-URL. Bitte überprüfen Sie das URL-Format.",
+      "invalidConfiguration": "Die Integrationskonfiguration ist ungültig. Überprüfen Sie die Felddefinitionen und versuchen Sie es erneut.",
+      "missingRequiredConfiguration": "Ein erforderlicher Integrationswert fehlt. Füllen Sie alle erforderlichen Organisationsfelder aus und versuchen Sie es erneut."
     },
     "deleteIntegration": {
       "success": "Integration erfolgreich gelöscht",
@@ -155,6 +159,8 @@
     },
     "editDialog": {
       "title": "Integration bearbeiten",
+      "customDescription": "Aktualisieren Sie die Server-URL und die HTTP-Header-Konfiguration. Beim Speichern wird die aktualisierte Verbindung getestet.",
+      "authMethodDescription": "Authentifizierung: {{method}}. Um die Authentifizierungsmethode zu ändern, erstellen Sie die Integration neu.",
       "name": "Name",
       "namePlaceholder": "Meine Integration",
       "headerName": "Header-Name",

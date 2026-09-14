@@ -16366,6 +16366,19 @@
             "minLength": 1,
             "maxLength": 255
           },
+          "serverUrl": {
+            "type": "string",
+            "description": "Custom MCP server URL",
+            "example": "https://my-mcp-server.example.com/mcp"
+          },
+          "configSchema": {
+            "description": "Header configuration for a custom MCP integration",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomMcpConfigSchemaDto"
+              }
+            ]
+          },
           "credentials": {
             "type": "string",
             "description": "Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.",
