@@ -21,6 +21,7 @@ import { SetOrgLocalPasswordLoginEnabledUseCase } from 'src/iam/sso/application/
 import { createMockRefreshTokensRepository } from 'src/iam/sessions/application/testing/refresh-token.fixtures';
 import { RevokePasswordSessionsForOrgUseCase } from 'src/iam/sessions/application/use-cases/revoke-password-sessions-for-org/revoke-password-sessions-for-org.use-case';
 import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
+import type { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/application/use-cases/has-users-outside-org-with-email-domains/has-users-outside-org-with-email-domains.use-case';
 
 const REVIEWED_MAPPING = new ReviewedSsoMapping(
   ['stadt.example'],
@@ -32,14 +33,37 @@ describe(SetOrgLocalPasswordLoginEnabledUseCase.name, () => {
   let repository: ReturnType<typeof createMockOrgSsoConnectionsRepository>;
   let refreshTokens: ReturnType<typeof createMockRefreshTokensRepository>;
   let useCase: SetOrgLocalPasswordLoginEnabledUseCase;
+  const domainAccounts = { execute: jest.fn() };
 
   beforeEach(() => {
     repository = createMockOrgSsoConnectionsRepository();
     refreshTokens = createMockRefreshTokensRepository();
+    domainAccounts.execute.mockReset().mockResolvedValue(false);
     useCase = new SetOrgLocalPasswordLoginEnabledUseCase(
       repository,
       new RevokePasswordSessionsForOrgUseCase(refreshTokens),
+      domainAccounts as unknown as HasUsersOutsideOrgWithEmailDomainsUseCase,
     );
+  });
+
+  it('rejects SSO-only activation when a domain is used by an account in another organization', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ enabled: true }),
+    );
+    domainAccounts.execute.mockResolvedValue(true);
+    await expect(
+      useCase.execute(
+        new SetOrgLocalPasswordLoginEnabledCommand(
+          TEST_ORG_ID,
+          false,
+          REVIEWED_MAPPING,
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'SSO_DOMAIN_ACCOUNT_CONFLICT' });
+    expect(
+      repository.setLocalPasswordLoginEnabledIfMappingMatches,
+    ).not.toHaveBeenCalled();
+    expect(refreshTokens.revokePasswordSessionsForOrg).not.toHaveBeenCalled();
   });
 
   it('rejects an organization without an SSO connection', async () => {
@@ -108,6 +132,12 @@ describe(SetOrgLocalPasswordLoginEnabledUseCase.name, () => {
     expect(repository.setEnabled).not.toHaveBeenCalled();
     expect(refreshTokens.revokePasswordSessionsForOrg).toHaveBeenCalledWith(
       TEST_ORG_ID,
+    );
+    expect(
+      repository.setLocalPasswordLoginEnabledIfMappingMatches.mock
+        .invocationCallOrder[0],
+    ).toBeLessThan(
+      refreshTokens.revokePasswordSessionsForOrg.mock.invocationCallOrder[0],
     );
   });
 
@@ -190,12 +220,13 @@ describe(SetOrgLocalPasswordLoginEnabledUseCase.name, () => {
     expect(refreshTokens.revokePasswordSessionsForOrg).not.toHaveBeenCalled();
   });
 
-  it('does not write when the requested state is already set', async () => {
+  it('returns an already-enforced policy without rerunning the account preflight', async () => {
     const existing = anOrgSsoConnection({
       enabled: true,
       localPasswordLoginEnabled: false,
     });
     repository.findByOrgId.mockResolvedValue(existing);
+    domainAccounts.execute.mockResolvedValue(true);
 
     await expect(
       useCase.execute(
@@ -213,6 +244,7 @@ describe(SetOrgLocalPasswordLoginEnabledUseCase.name, () => {
       repository.setLocalPasswordLoginEnabledIfMappingMatches,
     ).not.toHaveBeenCalled();
     expect(refreshTokens.revokePasswordSessionsForOrg).not.toHaveBeenCalled();
+    expect(domainAccounts.execute).not.toHaveBeenCalled();
   });
 
   it('rejects a concurrent SSO mapping change', async () => {
@@ -232,5 +264,6 @@ describe(SetOrgLocalPasswordLoginEnabledUseCase.name, () => {
         ),
       ),
     ).rejects.toBeInstanceOf(SsoConnectionChangedError);
+    expect(refreshTokens.revokePasswordSessionsForOrg).not.toHaveBeenCalled();
   });
 });

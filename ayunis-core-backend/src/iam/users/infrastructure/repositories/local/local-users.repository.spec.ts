@@ -146,6 +146,71 @@ describe(LocalUsersRepository.name, () => {
       lockedAt: null,
     });
   });
+
+  it('verifies an email only for the matching user and normalized address', async () => {
+    const verified = aUser();
+    verified.emailVerified = false;
+    const record = UserMapper.toEntity(verified);
+    const records = {
+      findOne: jest.fn().mockResolvedValue(record),
+      save: jest.fn().mockImplementation(async (saved) => saved),
+    };
+    const repository = createRepository(records);
+
+    await expect(
+      repository.verifyEmailIfMatches(verified.id, '  STAFF@Stadt.Example  '),
+    ).resolves.toMatchObject({
+      changed: true,
+      user: { emailVerified: true },
+    });
+
+    const options = records.findOne.mock.calls[0][0] as {
+      lock: { mode: string };
+      where: {
+        id: typeof verified.id;
+        email: FindOperator<string>;
+      };
+    };
+    const where = options.where;
+    expect(where.id).toBe(verified.id);
+    expect(where.email.objectLiteralParameters).toEqual({
+      normalizedEmail: 'staff@stadt.example',
+    });
+    expect(options.lock.mode).toBe('pessimistic_write');
+    expect(records.save).toHaveBeenCalledWith(
+      expect.objectContaining({ emailVerified: true }),
+    );
+  });
+
+  it('reports an already verified matching email without writing', async () => {
+    const verified = aUser();
+    verified.emailVerified = true;
+    const records = {
+      findOne: jest.fn().mockResolvedValue(UserMapper.toEntity(verified)),
+      save: jest.fn(),
+    };
+    const repository = createRepository(records);
+
+    await expect(
+      repository.verifyEmailIfMatches(verified.id, verified.email),
+    ).resolves.toMatchObject({ changed: false, user: { id: verified.id } });
+    expect(records.save).not.toHaveBeenCalled();
+  });
+
+  it('checks for passwordless users with a single indexed organization query', async () => {
+    const records = { exists: jest.fn().mockResolvedValue(true) };
+    const repository = createRepository(records);
+    const orgId = randomUUID();
+
+    await expect(repository.hasPasswordlessUsers(orgId)).resolves.toBe(true);
+
+    const where = records.exists.mock.calls[0][0].where as {
+      orgId: typeof orgId;
+      passwordHash: FindOperator<string>;
+    };
+    expect(where.orgId).toBe(orgId);
+    expect(where.passwordHash.type).toBe('isNull');
+  });
 });
 
 function createRepository(records: object): LocalUsersRepository {

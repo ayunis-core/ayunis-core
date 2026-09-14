@@ -17,6 +17,7 @@ export class SsoConnectionUniqueConstraintError extends Error {
 }
 
 export abstract class OrgSsoConnectionsRepository {
+  abstract acquireMutationLock(orgId: UUID): Promise<boolean>;
   abstract findByOrgId(orgId: UUID): Promise<OrgSsoConnection | null>;
   abstract findLocalPasswordLoginEnabledByOrgId(
     orgId: UUID,
@@ -34,7 +35,7 @@ export abstract class OrgSsoConnectionsRepository {
     emailDomains: string[],
   ): Promise<UUID[]>;
   abstract save(connection: OrgSsoConnection): Promise<OrgSsoConnection>;
-  abstract updateConfigurationIfDisabled(
+  abstract updateConfigurationIfUnchanged(
     connection: OrgSsoConnection,
     expected: OrgSsoConnection,
   ): Promise<OrgSsoConnection | null>;
