@@ -25,15 +25,27 @@ Write them down as a checklist. Every one must end the run marked ✅/❌ with e
 
 ## 1. Worktree the branch
 
-Use the `worktree` skill. Base the worktree on the PR's branch (not a new one):
+**First, sweep leftovers from earlier QA runs.** A run that died mid-way leaves its slot and dev servers behind (this once ate 24 GB of RAM + swap). Only worktrees registered in the main checkout's `.dev/qa-worktrees` are touched, so the user's slots and worktrees are safe:
+
+```bash
+cd "$REPO" && scripts/qa-teardown.sh
+```
+
+A non-zero exit means a slot did not come down and its worktree was kept for a retry. Report that to the user (Guardrails: don't fix infra) and carry on with a different slot.
+
+Then use the `worktree` skill. Base the worktree on the PR's branch (not a new one):
 
 ```bash
 git fetch origin
 # --detach: QA is read-only, and it avoids git's "already checked out" refusal when <branch> is the one you're currently on
 git worktree add --detach /Users/<you>/Developer/ayunis-core-wt-<slug> origin/<branch>
+scripts/qa-teardown.sh --guard "$WT" || exit 1   # untrusted branch: refuse symlinked app dirs, drop any .dev/.env.dev it shipped. Run BEFORE writing anything into the worktree.
+mkdir -p "$REPO/.dev" && echo "$WT" >> "$REPO/.dev/qa-worktrees"   # registers it as QA-owned — REQUIRED, or teardown will refuse it. Lives in the MAIN checkout on purpose: the branch under test is untrusted and must not be able to opt worktrees in.
 # symlink secret envs + install
-ln -sf "$REPO/ayunis-core-backend/.env"  "$WT/ayunis-core-backend/.env"
-ln -sf "$REPO/ayunis-core-frontend/.env" "$WT/ayunis-core-frontend/.env"
+# -n: never dereference the destination. Without it, a .env the branch shipped as a
+# link to a directory would make ln write the new link *inside* that directory.
+ln -sfn "$REPO/ayunis-core-backend/.env"  "$WT/ayunis-core-backend/.env"
+ln -sfn "$REPO/ayunis-core-frontend/.env" "$WT/ayunis-core-frontend/.env"
 cd "$WT" && pnpm install && (cd ayunis-core-backend && pnpm run build:deps)
 ```
 
@@ -72,8 +84,16 @@ Port formula: `port + slot×10` (slot 2 → backend 3020, frontend 3021, postgre
 
    Without these three the backend can't reach MinIO/Redis. (`MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD` map to `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`; `REDIS_PASSWORD` keeps its name.)
 4. `cd ayunis-core-backend && pnpm run migration:run:dev`
-5. Backend (from `ayunis-core-backend`): `pnpm run start:dev` (run_in_background). Poll `http://localhost:<BE>/api/health` until `{"status":"healthy"}`.
-6. Frontend — **must run from `ayunis-core-frontend`** (Vite is a frontend-only dep and won't resolve from the backend dir or repo root): `cd ../ayunis-core-frontend && VITE_API_BASE_URL=http://localhost:<BE>/api pnpm exec vite --port <FE>` (run_in_background).
+5. Backend and frontend — start them **detached with pid files in `./dev`'s state dir**, so `./dev down --slot <N>` (and therefore `qa-teardown.sh`) can kill the whole process tree. Do NOT use `run_in_background` + TaskStop for these: TaskStop kills the shell but orphans the `pnpm → nest → node` children.
+
+   ```bash
+   S="$WT/.dev/slot-<N>"; mkdir -p "$S"
+   (cd "$WT/ayunis-core-backend" && nohup pnpm run start:dev >> "$S/backend.log" 2>&1 & echo $! > "$S/backend.pid")
+   # Frontend must run from ayunis-core-frontend (Vite is a frontend-only dep and won't resolve elsewhere)
+   (cd "$WT/ayunis-core-frontend" && VITE_API_BASE_URL=http://localhost:<BE>/api nohup pnpm exec vite --port <FE> >> "$S/frontend.log" 2>&1 & echo $! > "$S/frontend.pid")
+   ```
+
+   Poll `http://localhost:<BE>/api/health` until `{"status":"healthy"}`; tail the logs in `$S` if it doesn't come up.
 
 ## 3. Seed
 
@@ -157,21 +177,19 @@ Present the acceptance-criteria checklist, each ✅/❌ with its evidence (asser
 
 ## 6. Tear down — leave the machine exactly as found
 
-Always, even on failure:
+Always, even on failure — one command, run from the main checkout (not from inside `$WT`, which is about to be removed):
 
 ```bash
-# stop the native processes YOU started (use TaskStop on the background task ids)
-cd "$WT" && ./dev down --slot <N>        # slot you brought up — NEVER a pre-existing one
-git -C "$WT" restore packages/*/dist     # build:deps rebuilds these; don't leave them dirty
-rm -f "$WT"/ayunis-core-backend/.env.dev
-cd "$REPO" && git worktree remove "$WT" --force
+cd "$REPO" && scripts/qa-teardown.sh "$WT"
 ```
 
-Verify: `docker ps --filter name=ayunis-dev` shows only the slots that were running **before** you started; the QA slot's ports are free; the main checkout is on its original branch.
+It runs `./dev down` for every slot the worktree used (kills the pid-file process trees, `compose down` without `-v`), terminates any stray server whose command line lives under the worktree's app dirs, removes the worktree and drops it from `.dev/qa-worktrees`. It refuses worktrees that are not registered there, and worktrees whose `.dev` contains symlinks.
+
+Verify: `docker ps --filter name=ayunis-dev` shows only the slots that were running **before** you started; `pgrep -fl "$WT"` is empty; `git worktree list` no longer shows `$WT`.
 
 ## Guardrails (from CLAUDE.md — non-negotiable)
 
-- **Never** `kill`/`pkill` a process you didn't start. Stop your own background tasks via TaskStop.
+- **Never** `kill`/`pkill` a process you didn't start. The only sanctioned process termination is `scripts/qa-teardown.sh`, which is scoped to worktrees a QA run registered in the main checkout's `.dev/qa-worktrees`.
 - **Never** destructive Docker flags: no `down -v`, `volume rm`, `system prune`. Only `up`/`down`/`ps`/`logs`/`exec`.
 - **Never** touch a pre-existing slot or other infra. If a slot's volume is stale (migration `42P07`) or a container won't come up, **describe it and ask** — don't fix it. Just pick a different free slot, or use the native-start fallback against healthy infra.
 - If the environment is broken in a way the fallback can't route around, stop and report — don't escalate fixes.

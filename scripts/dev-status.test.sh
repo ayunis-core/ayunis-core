@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-TEST_DIR="$(mktemp -d "${TMPDIR:-/tmp}/ayunis-dev-status.XXXXXX")"
+TEST_DIR="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/ayunis-dev-status.XXXXXX")" && pwd)"   # normalised like dev's REPO_DIR
 
 cleanup() {
   rm -rf "$TEST_DIR"
@@ -19,6 +19,14 @@ cat > "$TEST_DIR/bin/docker" <<'EOF'
 #!/usr/bin/env bash
 if [[ -n "${FAKE_DOCKER_CALLS:-}" ]]; then
   printf '%s\n' "$*" >> "$FAKE_DOCKER_CALLS"
+fi
+if [[ -n "${FAKE_SLOT_OWNER:-}" && "$*" == "ps -q --filter label=com.docker.compose.project="* ]]; then
+  echo fakecontainer
+  exit 0
+fi
+if [[ -n "${FAKE_SLOT_OWNER:-}" && "$1" = "inspect" ]]; then
+  printf '%s\n' "$FAKE_SLOT_OWNER"
+  exit 0
 fi
 if [[ "${FAKE_INFRA_HEALTHY:-0}" = "1" && "$*" == *" config --services"* ]]; then
   printf '%s\n' postgres minio mailcatcher docker-socket-proxy code-execution anonymize redis gotenberg
@@ -57,6 +65,10 @@ EOF
 
 cat > "$TEST_DIR/bin/lsof" <<'EOF'
 #!/usr/bin/env bash
+if [[ "$*" == *"-d cwd"* ]]; then
+  [[ -n "${FAKE_PROC_CWD:-}" ]] && echo "n$FAKE_PROC_CWD"
+  exit 0
+fi
 if [[ -n "${FAKE_SURVIVING_LISTENER:-}" \
   && -f "$FAKE_SURVIVING_LISTENER" \
   && "$*" == *":3970"* ]]; then
@@ -224,6 +236,7 @@ output="$(
     FAKE_DOCKER_CALLS="$TEST_DIR/default-docker-calls" \
     FAKE_PNPM_CALLS="$TEST_DIR/pnpm-calls" \
     FAKE_TMUX_CALLS="$TEST_DIR/tmux-calls" \
+    FAKE_PROC_CWD="$UP_DIR" \
     "$UP_DIR/dev" up 2>&1
 )"
 status=$?
@@ -271,6 +284,7 @@ output="$(
     FAKE_BACKEND_SESSION=1 \
     FAKE_BACKEND_READY="$TEST_DIR/survivor-ready" \
     FAKE_SURVIVING_LISTENER="$TEST_DIR/surviving-listener" \
+    FAKE_PROC_CWD="$SURVIVOR_DIR" \
     "$SURVIVOR_DIR/dev" up 2>&1
 )"
 status=$?
@@ -290,6 +304,7 @@ output="$(
     FAKE_BACKEND_SESSION=1 \
     FAKE_BACKEND_READY="$TEST_DIR/backend-ready" \
     FAKE_LISTENER_PID=999997 \
+    FAKE_PROC_CWD="$UP_DIR" \
     "$UP_DIR/dev" up 2>&1
 )"
 status=$?
@@ -312,6 +327,7 @@ output="$(
     FAKE_BACKEND_SESSION=1 \
     FAKE_BACKEND_READY="$TEST_DIR/backend-ready" \
     FAKE_FRONTEND_READY="$TEST_DIR/frontend-ready" \
+    FAKE_PROC_CWD="$UP_DIR" \
     "$UP_DIR/dev" up 2>&1
 )"
 status=$?
@@ -420,11 +436,12 @@ cp "$REPO_DIR/dev" "$TREE_DIR/dev"
 chmod +x "$TREE_DIR/dev"
 printf '97\n' > "$TREE_DIR/.dev/slot"
 cp "$TEST_DIR/bin/docker" "$TREE_DIR/bin/docker"
-printf '#!/usr/bin/env bash\nexit 0\n' > "$TREE_DIR/bin/lsof"
+printf '#!/usr/bin/env bash\n[[ "$*" == *"-d cwd"* && -n "${FAKE_PROC_CWD:-}" ]] && echo "n$FAKE_PROC_CWD"\nexit 0\n' > "$TREE_DIR/bin/lsof"
 chmod +x "$TREE_DIR/bin/lsof"
 
 # The trailing `:` in each layer stops bash from exec-collapsing the level away.
-bash -c 'bash -c "sleep 300; :" ; :' &
+mkdir -p "$TREE_DIR/ayunis-core-backend"   # production shape: _start_detached cds into a package dir
+bash -c "cd '$TREE_DIR/ayunis-core-backend' && bash -c 'sleep 300; :' ; :" &
 tree_root=$!
 disown "$tree_root" 2>/dev/null || true
 printf '%s\n' "$tree_root" > "$TREE_DIR/.dev/slot-97/backend.pid"
@@ -555,6 +572,218 @@ fi
 if [[ $status -ne 0 || "$login_used_configured_domain" != true || "$output" != *"Secrets:      Infisical"* ]]; then
   printf 'Expected dev up to log in after an expired Infisical session and retry startup.\n%s\n' "$output" >&2
   failures=$((failures + 1))
+fi
+
+# Compose project names are global: `dev down` must not stop containers that
+# another checkout started under the same slot number.
+OWNER_DIR="$TEST_DIR/owner"
+mkdir -p "$OWNER_DIR/.dev/slot-97"
+cp "$REPO_DIR/dev" "$OWNER_DIR/dev"
+chmod +x "$OWNER_DIR/dev"
+printf '97\n' > "$OWNER_DIR/.dev/slot"
+: > "$TEST_DIR/owner-docker-calls"
+
+set +e
+output="$(
+  PATH="$TEST_DIR/bin:$PATH" \
+    FAKE_SLOT_OWNER=/elsewhere/checkout \
+    FAKE_DOCKER_CALLS="$TEST_DIR/owner-docker-calls" \
+    "$OWNER_DIR/dev" down 2>&1
+)"
+status=$?
+set -e
+
+if [[ $status -ne 0 || "$output" != *"started from /elsewhere/checkout"* ]] \
+  || grep -Eq '(^| )down( |$)' "$TEST_DIR/owner-docker-calls"; then
+  printf 'Expected dev down to leave containers started by another checkout running.\n%s\n' "$output" >&2
+  failures=$((failures + 1))
+fi
+
+# …but containers this checkout started are still stopped.
+: > "$TEST_DIR/owner-docker-calls"
+output="$(
+  PATH="$TEST_DIR/bin:$PATH" \
+    FAKE_SLOT_OWNER="$(cd "$OWNER_DIR" && pwd)" \
+    FAKE_DOCKER_CALLS="$TEST_DIR/owner-docker-calls" \
+    "$OWNER_DIR/dev" down 2>&1
+)"
+if ! grep -Eq '(^| )down( |$)' "$TEST_DIR/owner-docker-calls"; then
+  printf 'Expected dev down to stop containers this checkout started.\n%s\n' "$output" >&2
+  failures=$((failures + 1))
+fi
+
+# A slot value is used in arithmetic; a non-integer must die before it is evaluated.
+SLOT_DIR="$TEST_DIR/slot"
+mkdir -p "$SLOT_DIR"
+cp "$REPO_DIR/dev" "$SLOT_DIR/dev"
+chmod +x "$SLOT_DIR/dev"
+set +e
+output="$(PATH="$TEST_DIR/bin:$PATH" "$SLOT_DIR/dev" status --slot 'x[$(touch '"$TEST_DIR"'/pwned)]' 2>&1)"
+status=$?
+set -e
+if [[ $status -eq 0 || -e "$TEST_DIR/pwned" || "$output" != *"non-negative integer"* ]]; then
+  printf 'Expected dev to reject a non-integer slot before evaluating it.\n%s\n' "$output" >&2
+  failures=$((failures + 1))
+fi
+if [[ -e "$SLOT_DIR/.dev/slot" ]]; then
+  printf 'Expected a rejected --slot value not to be persisted (saved: %s).\n' \
+    "$(cat "$SLOT_DIR/.dev/slot")" >&2
+  failures=$((failures + 1))
+fi
+
+# A forged pid file (untrusted branch) must not get an unrelated process, or
+# process group 0, signalled.
+FORGE_DIR="$TEST_DIR/forge"
+mkdir -p "$FORGE_DIR/.dev/slot-97" "$FORGE_DIR/bin"
+cp "$REPO_DIR/dev" "$FORGE_DIR/dev"
+chmod +x "$FORGE_DIR/dev"
+printf '97\n' > "$FORGE_DIR/.dev/slot"
+cp "$TEST_DIR/bin/docker" "$FORGE_DIR/bin/docker"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$FORGE_DIR/bin/lsof"
+chmod +x "$FORGE_DIR/bin/lsof"
+(cd / && exec sleep 300) &
+bystander=$!
+disown "$bystander" 2>/dev/null || true
+for forged in "$bystander" 0; do
+  printf '%s\n' "$forged" > "$FORGE_DIR/.dev/slot-97/backend.pid"
+  set +e
+  output="$(PATH="$FORGE_DIR/bin:$PATH" "$FORGE_DIR/dev" down 2>&1)"
+  status=$?
+  set -e
+  if [[ $status -ne 0 || "$output" != *"not a process of this checkout"* ]]; then
+    printf 'Expected dev down to refuse forged pid %s and still finish.\n%s\n' "$forged" "$output" >&2
+    failures=$((failures + 1))
+  fi
+done
+# A sibling checkout whose path merely has this one as a prefix must not match.
+SIBLING="$FORGE_DIR-extra"
+mkdir -p "$SIBLING"
+bash -c "cd '$SIBLING'; sleep 300" &   # path stays in argv, so the cmdline fallback is exercised too
+neighbour=$!
+disown "$neighbour" 2>/dev/null || true
+printf '%s\n' "$neighbour" > "$FORGE_DIR/.dev/slot-97/backend.pid"
+set +e
+output="$(PATH="$FORGE_DIR/bin:$PATH" "$FORGE_DIR/dev" down 2>&1)"
+set -e
+if ! kill -0 "$neighbour" 2>/dev/null; then
+  printf 'Expected dev down to leave a sibling checkout (%s) alone.\n%s\n' "$SIBLING" "$output" >&2
+  failures=$((failures + 1))
+fi
+kill -9 "$neighbour" 2>/dev/null || true
+
+if ! kill -0 "$bystander" 2>/dev/null; then
+  printf 'Expected dev down to leave a process outside this checkout alone (forged pid file).\n' >&2
+  failures=$((failures + 1))
+fi
+kill -9 "$bystander" 2>/dev/null || true
+
+# A checked-out branch can replace a tracked directory with a symlink; writes
+# below it must not escape the checkout.
+LINK_DIR="$TEST_DIR/linkdir"
+mkdir -p "$LINK_DIR/.dev/slot-97" "$LINK_DIR/ayunis-core-frontend" "$TEST_DIR/outside"
+cp "$REPO_DIR/dev" "$LINK_DIR/dev"
+chmod +x "$LINK_DIR/dev"
+printf '97\n' > "$LINK_DIR/.dev/slot"
+printf 'REAL_SECRET\n' > "$TEST_DIR/outside/.env.dev"
+ln -s "$TEST_DIR/outside" "$LINK_DIR/ayunis-core-backend"
+set +e
+output="$(PATH="$TEST_DIR/bin:$PATH" FAKE_INFRA_HEALTHY=1 \
+  FAKE_BACKEND_READY="$TEST_DIR/linkdir-ready" "$LINK_DIR/dev" up 2>&1)"   # keep stub side effects inside TEST_DIR
+status=$?
+set -e
+if [[ $status -eq 0 || "$output" != *"outside this checkout"* ]] \
+  || ! grep -qx REAL_SECRET "$TEST_DIR/outside/.env.dev"; then
+  printf 'Expected dev up to refuse writing .env.dev through a symlinked app dir.\n%s\n' "$output" >&2
+  failures=$((failures + 1))
+fi
+
+# lsof reports physical paths: a checkout reached through a symlink must still
+# recognise its own processes, or `dev down` silently stops stopping them.
+LOGICAL="$TEST_DIR/logical-link"
+ln -s "$TREE_DIR" "$LOGICAL"
+mkdir -p "$TREE_DIR/.dev/slot-97"
+sleep 300 &
+phys_pid=$!
+disown "$phys_pid" 2>/dev/null || true
+printf '%s\n' "$phys_pid" > "$TREE_DIR/.dev/slot-97/backend.pid"
+set +e
+output="$(
+  PATH="$TREE_DIR/bin:$PATH" \
+    FAKE_PROC_CWD="$(cd "$TREE_DIR" && pwd -P)/ayunis-core-backend" \
+    "$LOGICAL/dev" down 2>&1
+)"
+set -e
+if [[ "$output" == *"not a process of this checkout"* ]] || kill -0 "$phys_pid" 2>/dev/null; then
+  printf 'Expected a symlink-reached checkout to still own (and stop) its own server.\n%s\n' "$output" >&2
+  failures=$((failures + 1))
+  kill -9 "$phys_pid" 2>/dev/null || true
+fi
+
+# Tearing the tmux session down before deciding ownership would leave the pane
+# process gone, the check unable to confirm anything, and the pnpm -> nest -> node
+# tree orphaned. The pane here really dies with the session, so the tree kill must
+# already have been authorised.
+PANE_DIR="$TEST_DIR/pane"
+mkdir -p "$PANE_DIR/.dev/slot-97" "$PANE_DIR/bin" "$PANE_DIR/ayunis-core-backend"
+cp "$REPO_DIR/dev" "$PANE_DIR/dev"
+chmod +x "$PANE_DIR/dev"
+printf '97\n' > "$PANE_DIR/.dev/slot"
+cp "$TEST_DIR/bin/docker" "$PANE_DIR/bin/docker"
+# Real lsof reports nothing for a dead pid; the stub must too, or a pane killed
+# before the ownership check would still look alive and the bug would hide.
+cat > "$PANE_DIR/bin/lsof" <<'LSOF'
+#!/usr/bin/env bash
+if [[ "$*" == *"-d cwd"* && -n "${FAKE_PROC_CWD:-}" ]]; then
+  probe=""
+  prev=""
+  for arg in "$@"; do [[ "$prev" == "-p" ]] && probe="$arg"; prev="$arg"; done
+  [[ -n "$probe" ]] && kill -0 "$probe" 2>/dev/null && echo "n$FAKE_PROC_CWD"
+fi
+exit 0
+LSOF
+chmod +x "$PANE_DIR/bin/lsof"
+
+# setpgrp: the chain gets its own process group, so the group-wide kill in
+# _terminate_process_tree reaches the leaf without touching this test runner.
+perl -e 'setpgrp(0,0); exec @ARGV' bash -c "cd '$PANE_DIR/ayunis-core-backend' && bash -c 'sleep 300; :' ; :" &
+pane_root=$!
+disown "$pane_root" 2>/dev/null || true
+printf '%s\n' "$pane_root" > "$PANE_DIR/.dev/slot-97/backend.pid"
+
+cat > "$PANE_DIR/bin/tmux" <<TMUX
+#!/usr/bin/env bash
+case "\$1" in
+  has-session)  [[ "\$*" == *backend* ]] || exit 1 ;;
+  list-panes)   [[ "\$*" == *backend* ]] && echo $pane_root ;;
+  kill-session) [[ "\$*" == *backend* ]] && { kill -9 $pane_root 2>/dev/null; sleep 0.3; } ;;   # the pane dies with the session
+esac
+exit 0
+TMUX
+chmod +x "$PANE_DIR/bin/tmux"
+
+pane_leaf=""
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  pane_mid="$(pgrep -P "$pane_root" 2>/dev/null | head -n 1 || true)"
+  if [[ -n "$pane_mid" ]]; then
+    pane_leaf="$(pgrep -P "$pane_mid" 2>/dev/null | head -n 1 || true)"
+    [[ -n "$pane_leaf" ]] && break
+  fi
+  sleep 0.2
+done
+
+if [[ -z "$pane_leaf" ]]; then
+  printf 'Test setup failed: could not build a pane process chain.\n' >&2
+  failures=$((failures + 1))
+else
+  PATH="$PANE_DIR/bin:$PATH" FAKE_PROC_CWD="$PANE_DIR/ayunis-core-backend" \
+    "$PANE_DIR/dev" down >/dev/null 2>&1 || true
+  sleep 0.5
+  if kill -0 "$pane_leaf" 2>/dev/null; then
+    printf 'Expected the tree kill to still run when the pane dies with its tmux session (PID %s survived).\n' \
+      "$pane_leaf" >&2
+    failures=$((failures + 1))
+    kill -9 "$pane_leaf" 2>/dev/null || true
+  fi
 fi
 
 if [[ $failures -ne 0 ]]; then
