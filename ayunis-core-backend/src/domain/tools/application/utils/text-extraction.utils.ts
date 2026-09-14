@@ -1,4 +1,4 @@
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 interface TextExtractionParams {
   toolName: string;
@@ -21,6 +21,29 @@ export interface TextExtractionResult {
   truncationReasons: TextExtractionTruncationReason[];
 }
 
+export type TextPaginationTruncationReason = 'max_lines' | 'max_chars';
+
+export interface TextPaginationResult {
+  totalLines: number;
+  actualStartLine: number;
+  actualEndLine: number;
+  extractedText: string;
+  truncated: boolean;
+  truncationReasons: TextPaginationTruncationReason[];
+  nextStartLine: number | null;
+}
+
+interface PaginationLine {
+  text: string;
+  startsPhysicalLine: boolean;
+}
+
+interface SelectedPaginationLines {
+  text: string;
+  count: number;
+  charLimited: boolean;
+}
+
 const EMPTY_RESULT: Readonly<TextExtractionResult> = Object.freeze({
   totalLines: 0,
   effectiveStartLine: 0,
@@ -30,6 +53,126 @@ const EMPTY_RESULT: Readonly<TextExtractionResult> = Object.freeze({
   truncated: false,
   truncationReasons: [],
 });
+
+const splitPaginationLines = (
+  text: string,
+  maxChars: number,
+): PaginationLine[] => {
+  if (text === '') return [];
+  return text.split('\n').flatMap((line) => {
+    if (line.length === 0) return [{ text: '', startsPhysicalLine: true }];
+    const segments: PaginationLine[] = [];
+    for (let offset = 0; offset < line.length; offset += maxChars) {
+      segments.push({
+        text: line.slice(offset, offset + maxChars),
+        startsPhysicalLine: offset === 0,
+      });
+    }
+    return segments;
+  });
+};
+
+const paginationRangeError = (params: {
+  toolName: string;
+  startLine: number;
+  numLines: number;
+  totalLines: number;
+  maxLines: number;
+}): ToolExecutionFailedError | null => {
+  if (params.startLine > params.totalLines) {
+    return new ToolExecutionFailedError({
+      toolName: params.toolName,
+      message: `Invalid pagination position: startLine (${params.startLine}) is greater than the content's total lines (${params.totalLines}).`,
+      exposeToLLM: true,
+    });
+  }
+  if (params.numLines > params.maxLines) {
+    return new ToolExecutionFailedError({
+      toolName: params.toolName,
+      message: `Requested page (${params.numLines} lines) exceeds maximum of ${params.maxLines} lines.`,
+      exposeToLLM: true,
+    });
+  }
+  return null;
+};
+
+const selectPaginationLines = (params: {
+  lines: PaginationLine[];
+  startLine: number;
+  numLines: number;
+  maxChars: number;
+}): SelectedPaginationLines => {
+  const selected: string[] = [];
+  let selectedChars = 0;
+  let charLimited = false;
+  for (
+    let index = params.startLine - 1;
+    index < params.lines.length && selected.length < params.numLines;
+    index += 1
+  ) {
+    const line = params.lines[index];
+    const separator =
+      selected.length > 0 && line.startsPhysicalLine ? '\n' : '';
+    const addedChars = separator.length + line.text.length;
+    if (selectedChars + addedChars > params.maxChars) {
+      charLimited = true;
+      break;
+    }
+    selected.push(`${separator}${line.text}`);
+    selectedChars += addedChars;
+  }
+  return { text: selected.join(''), count: selected.length, charLimited };
+};
+
+export function paginateText(params: {
+  toolName: string;
+  text: string;
+  startLine: number;
+  numLines: number;
+  maxLines: number;
+  maxChars: number;
+}): TextPaginationResult {
+  const maxChars = Math.max(1, params.maxChars);
+  const lines = splitPaginationLines(params.text, maxChars);
+  if (lines.length === 0) {
+    return {
+      totalLines: 0,
+      actualStartLine: 0,
+      actualEndLine: 0,
+      extractedText: '',
+      truncated: false,
+      truncationReasons: [],
+      nextStartLine: null,
+    };
+  }
+  const rangeError = paginationRangeError({
+    ...params,
+    totalLines: lines.length,
+  });
+  if (rangeError) throw rangeError;
+
+  const selected = selectPaginationLines({
+    lines,
+    startLine: params.startLine,
+    numLines: params.numLines,
+    maxChars,
+  });
+  const actualEndLine = params.startLine + selected.count - 1;
+  const truncated = actualEndLine < lines.length;
+  const truncationReasons: TextPaginationTruncationReason[] = [];
+  if (truncated) {
+    truncationReasons.push(selected.charLimited ? 'max_chars' : 'max_lines');
+  }
+  return {
+    totalLines: lines.length,
+    actualStartLine: params.startLine,
+    actualEndLine,
+    extractedText: selected.text,
+    truncated,
+    truncationReasons,
+    nextStartLine: truncated ? actualEndLine + 1 : null,
+  };
+}
 
 function clampLineRange(
   startLine: number,
