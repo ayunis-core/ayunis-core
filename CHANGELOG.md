@@ -1,5 +1,41 @@
 # Changelog
 
+## [2.40.0](https://github.com/ayunis-core/ayunis-core/compare/v2.39.0...v2.40.0) (2026-09-14)
+
+
+### Features
+
+* **auth:** enforce organization SSO-only sessions (AYC-868) ([#1575](https://github.com/ayunis-core/ayunis-core/issues/1575)) ([c7fcbcb](https://github.com/ayunis-core/ayunis-core/commit/c7fcbcb6533eee78cf752f13c87632932df8f0a0))
+* **dev:** add slot management dashboard (AYC-000) ([#1658](https://github.com/ayunis-core/ayunis-core/issues/1658)) ([6dbb8e9](https://github.com/ayunis-core/ayunis-core/commit/6dbb8e94bb0a29693d090d841a213ea391e069dc))
+* **sso:** expose SSO-only organization login (AYC-868) ([#1577](https://github.com/ayunis-core/ayunis-core/issues/1577)) ([2989937](https://github.com/ayunis-core/ayunis-core/commit/2989937bcd928de0b86dd600cba7db246b6af821))
+* **sso:** manage organization password policy (AYC-868) ([#1576](https://github.com/ayunis-core/ayunis-core/issues/1576)) ([4699cf5](https://github.com/ayunis-core/ayunis-core/commit/4699cf5b61c85076b5544e964497d1539565498f))
+* **sso:** persist local password login policy (AYC-868) ([#1574](https://github.com/ayunis-core/ayunis-core/issues/1574)) ([775f442](https://github.com/ayunis-core/ayunis-core/commit/775f442514273d5fd7a671f444af285ed44b9996))
+
+
+### Bug Fixes
+
+* **i18n:** persist the selected display language (AYC-000) ([#1676](https://github.com/ayunis-core/ayunis-core/issues/1676)) ([cbf2c3f](https://github.com/ayunis-core/ayunis-core/commit/cbf2c3f198d80a9a4be83c7d6f15bc2c321e2e68))
+* **integrations:** allow editing connection settings (AYC-942) ([#1664](https://github.com/ayunis-core/ayunis-core/issues/1664)) ([ae2020f](https://github.com/ayunis-core/ayunis-core/commit/ae2020f7988e7cbc4914794ceb26c84104e565a1))
+* **integrations:** refetch the list after disabling an integration (AYC-941) ([#1663](https://github.com/ayunis-core/ayunis-core/issues/1663)) ([1944f89](https://github.com/ayunis-core/ayunis-core/commit/1944f8903b6e20b0c6b85b87ac39d909a2dd420f))
+* **ui:** close the mobile sidebar on link clicks (AYC-937) ([#1659](https://github.com/ayunis-core/ayunis-core/issues/1659)) ([86998a9](https://github.com/ayunis-core/ayunis-core/commit/86998a978301104de69138158851a4e723e773cb))
+* **workspace:** confirm a saved workspace instruction (AYC-954) ([#1662](https://github.com/ayunis-core/ayunis-core/issues/1662)) ([5536dac](https://github.com/ayunis-core/ayunis-core/commit/5536dac82fd671c69f42e8976a0ddaa9ea3aabcc))
+
+
+### Documentation
+
+* **auth:** document authentication architecture (AYC-000) ([#1601](https://github.com/ayunis-core/ayunis-core/issues/1601)) ([43ef58d](https://github.com/ayunis-core/ayunis-core/commit/43ef58df4267cba3b9f34ea9f037c97cc80c15aa))
+* **workflow:** require upfront risk evidence (AYC-942) ([#1674](https://github.com/ayunis-core/ayunis-core/issues/1674)) ([646ca72](https://github.com/ayunis-core/ayunis-core/commit/646ca729775ab443101a9d1bed6fc510043cbc20))
+
+
+### Miscellaneous
+
+* **deps-sandbox:** bump numpy in /ayunis-core-code-execution/sandbox ([#1665](https://github.com/ayunis-core/ayunis-core/issues/1665)) ([76b88ec](https://github.com/ayunis-core/ayunis-core/commit/76b88ec71ae9bb90e7340336945f5a00425357a8))
+
+
+### CI/CD
+
+* **deps:** fail the build on a dedupable lockfile (AYC-000) ([#1656](https://github.com/ayunis-core/ayunis-core/issues/1656)) ([ea674b5](https://github.com/ayunis-core/ayunis-core/commit/ea674b511684c233dbf00e40d9f523d5a63ca388))
+
 ## [2.39.0](https://github.com/ayunis-core/ayunis-core/compare/v2.38.0...v2.39.0) (2026-09-09)
 
 
