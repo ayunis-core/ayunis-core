@@ -2,13 +2,25 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLogin } from '@/pages/auth/login/api/useLogin';
 
-const { forgetRememberedSsoOrgId, login, navigate } = vi.hoisted(() => ({
+const {
+  extractErrorData,
+  forgetRememberedSsoOrgId,
+  login,
+  navigate,
+  showError,
+} = vi.hoisted(() => ({
+  extractErrorData: vi.fn(),
   forgetRememberedSsoOrgId: vi.fn(),
   login: vi.fn(),
   navigate: vi.fn(),
+  showError: vi.fn(),
 }));
 
 vi.mock('@/features/sso', () => ({ forgetRememberedSsoOrgId }));
+vi.mock('@/shared/api/extract-error-data', () => ({
+  default: extractErrorData,
+}));
+vi.mock('@/shared/lib/toast', () => ({ showError }));
 
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   useAuthenticationControllerLogin: () => ({
@@ -55,5 +67,27 @@ describe(useLogin.name, () => {
       to: '/two-factor',
       search: { redirect: '/chat', enroll: undefined },
     });
+  });
+
+  it('shows the SSO action when a stale password form is rejected', () => {
+    const password = ['Valid', 'Password', '01!'].join('');
+    const { result } = renderHook(() => useLogin({}));
+    extractErrorData.mockReturnValue({
+      code: 'LOCAL_PASSWORD_LOGIN_DISABLED',
+      status: 403,
+    });
+
+    act(() => {
+      result.current.onSubmit({
+        email: 'staff@stadt.example',
+        password,
+      });
+    });
+    const options = login.mock.calls[0]?.[1] as {
+      onError: (error: unknown) => void;
+    };
+    act(() => options.onError(new Error('rejected')));
+
+    expect(showError).toHaveBeenCalledWith('login.error.ssoRequired');
   });
 });

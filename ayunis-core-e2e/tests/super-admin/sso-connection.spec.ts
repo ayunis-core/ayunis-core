@@ -1,42 +1,86 @@
 import {
+  confirmEmail,
   discoverSso,
+  getCurrentUser,
   login,
   markWelcomeVideoSeen,
-} from '../../src/clients/api/auth.client';
-import { createSuperAdminOrg } from '../../src/clients/api/super-admin-orgs.client';
-import { test, expect } from '../../src/fixtures/test';
+  refreshSession,
+  registerOrg,
+  submitLoginAttempt,
+} from "../../src/clients/api/auth.client";
+import { inviteUser } from "../../src/clients/api/invites.client";
+import { createApiContext } from "../../src/factories/api-context.factory";
+import { test, expect } from "../../src/fixtures/test";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test('configures multiple domains and updates the direct IdP independently', async ({
+const ACCOUNT_LOCKOUT_THRESHOLD = 10;
+
+test("configures SSO and enforces organization-only login independently", async ({
+  mail,
   page,
   publicApi,
 }) => {
-  await login(publicApi, 'admin@demo.local', 'admin');
-  await markWelcomeVideoSeen(publicApi);
-  await page.context().addCookies((await publicApi.storageState()).cookies);
   const key = Date.now();
-  const org = await createSuperAdminOrg(publicApi, `SSO E2E ${key}`);
-  const mappingPath = `/api/super-admin/orgs/${org.id}/sso`;
-  const idpPath = `${mappingPath}/idp`;
   const firstDomain = `sso-${key}.example`;
   const secondDomain = `sso-alt-${key}.example`;
+  const foreignDomain = `sso-foreign-${key}.example`;
+  const customerEmail = `admin@${firstDomain}`;
+  const customerPassword = `SSO-E2E-${key}-Aa1`;
+  await registerOrg(publicApi, {
+    email: customerEmail,
+    password: customerPassword,
+    orgName: `SSO E2E ${key}`,
+    userName: "SSO E2E Admin",
+  });
+  const confirmationToken = await mail.extractLinkToken(
+    customerEmail,
+    "/confirm-email",
+  );
+  await confirmEmail(publicApi, confirmationToken);
+  await login(publicApi, customerEmail, customerPassword);
+  await refreshSession(publicApi);
+  const orgId = (await getCurrentUser(publicApi)).orgId;
+  const customerStorage = await publicApi.storageState();
+  const inviteeEmail = `invitee@${firstDomain}`;
+  await inviteUser(publicApi, inviteeEmail);
+  const inviteToken = await mail.extractLinkToken(
+    inviteeEmail,
+    "/accept-invite",
+  );
+  const foreignApi = await createApiContext({ cookies: [], origins: [] });
+  try {
+    await registerOrg(foreignApi, {
+      email: `admin@${foreignDomain}`,
+      password: customerPassword,
+      orgName: `Other SSO E2E ${key}`,
+      userName: "Other Organization Admin",
+    });
+  } finally {
+    await foreignApi.dispose();
+  }
 
-  await page.goto(`/super-admin-settings/orgs/${org.id}?tab=sso`);
-  await page.getByTestId('sso-email-domain-0').fill(firstDomain);
-  await page.getByTestId('sso-add-email-domain').click();
-  await page.getByTestId('sso-email-domain-1').fill(secondDomain);
-  await page.getByTestId('sso-zitadel-org-id').fill(`zitadel-org-${key}`);
+  await login(publicApi, "admin@demo.local", "admin");
+  await markWelcomeVideoSeen(publicApi);
+  await page.context().addCookies((await publicApi.storageState()).cookies);
+  const mappingPath = `/api/super-admin/orgs/${orgId}/sso`;
+  const idpPath = `${mappingPath}/idp`;
+
+  await page.goto(`/super-admin-settings/orgs/${orgId}?tab=sso`);
+  await page.getByTestId("sso-email-domain-0").fill(firstDomain);
+  await page.getByTestId("sso-add-email-domain").click();
+  await page.getByTestId("sso-email-domain-1").fill(secondDomain);
+  await page.getByTestId("sso-zitadel-org-id").fill(`zitadel-org-${key}`);
   const initialIdp = `zitadel-idp-${key}`;
-  await page.getByTestId('sso-zitadel-idp-id').fill(initialIdp);
-  await page.getByTestId('sso-domain-verified').click();
+  await page.getByTestId("sso-zitadel-idp-id").fill(initialIdp);
+  await page.getByTestId("sso-domain-verified").click();
 
   const configured = page.waitForResponse(
     (response) =>
-      response.request().method() === 'PUT' &&
+      response.request().method() === "PUT" &&
       new URL(response.url()).pathname === mappingPath,
   );
-  await page.getByTestId('sso-connection-save').click();
+  await page.getByTestId("sso-connection-save").click();
   const configuredResponse = await configured;
   expect(configuredResponse.ok()).toBe(true);
   await expect(configuredResponse.json()).resolves.toMatchObject({
@@ -49,51 +93,205 @@ test('configures multiple domains and updates the direct IdP independently', asy
     },
   });
 
-  await page.getByTestId('sso-enable').click();
-  await page.getByTestId('sso-enable-reviewed').click();
+  await page.getByTestId("sso-enable").click();
+  await page.getByTestId("sso-enable-reviewed").click();
   const enabledConnectionLoaded = page.waitForResponse(
     (response) =>
-      response.request().method() === 'GET' &&
+      response.request().method() === "GET" &&
       new URL(response.url()).pathname === mappingPath,
   );
-  await page.getByTestId('sso-enable-confirm').click();
+  await page.getByTestId("sso-enable-confirm").click();
   expect((await enabledConnectionLoaded).ok()).toBe(true);
-  await expect(page.getByTestId('sso-email-domain-0')).toBeDisabled();
-  await expect(page.getByTestId('sso-email-domain-1')).toBeDisabled();
-  await expect(page.getByTestId('sso-zitadel-idp-id')).toBeEnabled();
-  await expect(page.getByTestId('sso-zitadel-idp-id')).toHaveValue(initialIdp);
-  await expect(page.getByTestId('sso-connection-save')).toBeEnabled();
+  await expect(page.getByTestId("sso-email-domain-0")).toBeDisabled();
+  await expect(page.getByTestId("sso-email-domain-1")).toBeDisabled();
+  await expect(page.getByTestId("sso-zitadel-idp-id")).toBeEnabled();
+  await expect(page.getByTestId("sso-zitadel-idp-id")).toHaveValue(initialIdp);
+  await expect(page.getByTestId("sso-connection-save")).toBeEnabled();
 
   let mappingWrites = 0;
-  page.on('request', (request) => {
-    if (request.method() === 'PUT' && new URL(request.url()).pathname === mappingPath) {
+  page.on("request", (request) => {
+    if (
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname === mappingPath
+    ) {
       mappingWrites += 1;
     }
   });
   const updatedIdp = `zitadel-idp-updated-${key}`;
   const idpUpdated = page.waitForResponse(
     (response) =>
-      response.request().method() === 'PATCH' &&
+      response.request().method() === "PATCH" &&
       new URL(response.url()).pathname === idpPath,
   );
-  await page.getByTestId('sso-zitadel-idp-id').fill(updatedIdp);
-  await page.getByTestId('sso-connection-save').click();
+  await page.getByTestId("sso-zitadel-idp-id").fill(updatedIdp);
+  await page.getByTestId("sso-connection-save").click();
   expect((await idpUpdated).ok()).toBe(true);
   expect(mappingWrites).toBe(0);
 
-  await expect(discoverSso(publicApi, `first@${firstDomain}`)).resolves.toEqual({
-    available: true,
-    orgId: org.id,
-    localPasswordLoginEnabled: true,
-  });
+  await expect(discoverSso(publicApi, `first@${firstDomain}`)).resolves.toEqual(
+    {
+      available: true,
+      orgId,
+      localPasswordLoginEnabled: true,
+    },
+  );
   await expect(
     discoverSso(publicApi, `second@${secondDomain}`),
   ).resolves.toEqual({
     available: true,
-    orgId: org.id,
+    orgId,
     localPasswordLoginEnabled: true,
   });
 
   await page.reload();
-  await expect(page.getByTestId('sso-zitadel-idp-id')).toHaveValue(updatedIdp);
+  await expect(page.getByTestId("sso-zitadel-idp-id")).toHaveValue(updatedIdp);
+
+  await page.context().clearCookies();
+  await page.goto("/login");
+  await page.getByTestId("email").fill(`first@${firstDomain}`);
+  await page.getByTestId("login-continue").click();
+  await expect(page.getByTestId("login-sso")).toBeVisible();
+  await expect(page.getByTestId("password")).toBeVisible();
+
+  await page.context().addCookies((await publicApi.storageState()).cookies);
+  await page.goto(`/super-admin-settings/orgs/${orgId}?tab=sso`);
+  await page.getByTestId("sso-required").click();
+  await page.getByTestId("sso-required-reviewed").click();
+  await page.getByTestId("sso-required-confirm").click();
+  await expect(page.getByTestId("sso-required")).toBeChecked();
+  await expect(page.getByTestId("sso-zitadel-idp-id")).toBeDisabled();
+
+  const thirdDomain = `sso-new-${key}.example`;
+  await page.getByTestId("sso-add-email-domain").click();
+  await page.getByTestId("sso-email-domain-2").fill(thirdDomain);
+  await expect(page.getByTestId("sso-remove-email-domain-0")).toBeDisabled();
+  await expect(page.getByTestId("sso-zitadel-org-id")).toBeDisabled();
+  await expect(page.getByTestId("sso-connection-save")).toBeDisabled();
+  await page.getByTestId("sso-domain-verified").click();
+  const domainAdded = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PUT" &&
+      new URL(response.url()).pathname === mappingPath,
+  );
+  await page.getByTestId("sso-connection-save").click();
+  const addition = await domainAdded;
+  expect(addition.ok()).toBe(true);
+  await expect(addition.json()).resolves.toMatchObject({
+    connection: {
+      enabled: true,
+      localPasswordLoginEnabled: false,
+      zitadelIdpId: updatedIdp,
+    },
+  });
+  await page.reload();
+  await expect(page.getByTestId("sso-email-domain-2")).toBeDisabled();
+  await expect(page.getByTestId("sso-required")).toBeChecked();
+  await expect(discoverSso(publicApi, `staff@${thirdDomain}`)).resolves.toEqual(
+    {
+      available: true,
+      orgId,
+      localPasswordLoginEnabled: false,
+    },
+  );
+
+  await page.getByTestId("sso-add-email-domain").click();
+  await page.getByTestId("sso-email-domain-3").fill(foreignDomain);
+  await page.getByTestId("sso-domain-verified").click();
+  const conflictingDomain = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PUT" &&
+      new URL(response.url()).pathname === mappingPath,
+  );
+  await page.getByTestId("sso-connection-save").click();
+  const conflict = await conflictingDomain;
+  expect(conflict.status()).toBe(409);
+  await expect(conflict.json()).resolves.toMatchObject({
+    code: "SSO_DOMAIN_ACCOUNT_CONFLICT",
+  });
+  await page.reload();
+  await expect(page.getByTestId("sso-email-domain-3")).toHaveCount(0);
+  await expect(page.getByTestId("sso-required")).toBeChecked();
+  await expect(page.getByTestId("sso-zitadel-idp-id")).toHaveValue(updatedIdp);
+
+  await expect(discoverSso(publicApi, `first@${firstDomain}`)).resolves.toEqual(
+    {
+      available: true,
+      orgId,
+      localPasswordLoginEnabled: false,
+    },
+  );
+
+  await page.context().clearCookies();
+  await page.goto("/login");
+  await page.getByTestId("email").fill(`first@${firstDomain}`);
+  await page.getByTestId("login-continue").click();
+  await expect(page.getByTestId("login-sso")).toBeVisible();
+  await expect(page.getByTestId("password")).toHaveCount(0);
+  await expect(page.getByTestId("submit")).toHaveCount(0);
+
+  await page.goto(`/accept-invite?token=${inviteToken}`);
+  await expect(page.getByTestId("invite-accept-sso")).toBeVisible();
+  await expect(page.getByTestId("invite-accept-password")).toHaveCount(0);
+  await expect(page.getByTestId("invite-accept-submit")).toHaveCount(0);
+  const inviteSsoPath = `/api/auth/sso/organizations/${orgId}/start`;
+  await page.route(`**${inviteSsoPath}`, (route) =>
+    route.fulfill({ status: 204 }),
+  );
+  const inviteSsoStart = page.waitForRequest(
+    (request) => new URL(request.url()).pathname === inviteSsoPath,
+  );
+  await page.getByTestId("invite-accept-sso").click();
+  expect(new URL((await inviteSsoStart).url()).pathname).toBe(inviteSsoPath);
+  await page.unroute(`**${inviteSsoPath}`);
+
+  const customerApi = await createApiContext(customerStorage);
+  try {
+    await expect(refreshSession(customerApi)).rejects.toThrow(
+      /HTTP 401.*Invalid refresh token/,
+    );
+    for (let attempt = 0; attempt < ACCOUNT_LOCKOUT_THRESHOLD; attempt += 1) {
+      const response = await submitLoginAttempt(
+        customerApi,
+        customerEmail,
+        "wrong-password",
+      );
+      expect(response.status()).toBe(401);
+      await expect(response.json()).resolves.not.toMatchObject({
+        code: "USER_ACCOUNT_LOCKED",
+      });
+    }
+    const retainedPasswordLogin = await submitLoginAttempt(
+      customerApi,
+      customerEmail,
+      customerPassword,
+    );
+    expect(retainedPasswordLogin.status()).toBe(401);
+    await expect(retainedPasswordLogin.json()).resolves.toMatchObject({
+      message: "Unauthorized",
+      statusCode: 401,
+    });
+
+    await page.context().addCookies((await publicApi.storageState()).cookies);
+    await page.goto(`/super-admin-settings/orgs/${orgId}?tab=sso`);
+    await page.getByTestId("sso-required").click();
+    await expect(page.getByTestId("sso-required")).not.toBeChecked();
+    await expect(page.getByTestId("sso-zitadel-idp-id")).toBeEnabled();
+    await expect(page.getByTestId("sso-jit")).not.toBeChecked();
+
+    await expect(
+      discoverSso(publicApi, `first@${firstDomain}`),
+    ).resolves.toEqual({
+      available: true,
+      orgId,
+      localPasswordLoginEnabled: true,
+    });
+    await page.goto(`/accept-invite?token=${inviteToken}`);
+    await expect(page.getByTestId("invite-accept-password")).toBeVisible();
+    await expect(page.getByTestId("invite-accept-submit")).toBeVisible();
+    await expect(page.getByTestId("invite-accept-sso")).toHaveCount(0);
+    await login(customerApi, customerEmail, customerPassword);
+    await expect(getCurrentUser(customerApi)).resolves.toMatchObject({ orgId });
+  } finally {
+    await customerApi.dispose();
+  }
 });

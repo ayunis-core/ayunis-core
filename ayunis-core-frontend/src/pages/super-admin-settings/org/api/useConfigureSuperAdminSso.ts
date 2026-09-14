@@ -28,7 +28,7 @@ export function useConfigureSuperAdminSso(
         return superAdminSsoConnectionsControllerConfigure(orgId, {
           emailDomains: values.emailDomains.map(({ value }) => value),
           zitadelOrgId: values.zitadelOrgId,
-          zitadelIdpId: values.zitadelIdpId,
+          zitadelIdpId: values.zitadelIdpId || null,
           domainVerified: values.domainVerified,
         });
       }
