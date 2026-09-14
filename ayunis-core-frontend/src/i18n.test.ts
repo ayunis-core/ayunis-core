@@ -26,3 +26,11 @@ describe('zod locale follows the active language', () => {
     );
   });
 });
+
+describe('language preference persistence', () => {
+  it('stores the selected language for the next page load', async () => {
+    await i18n.changeLanguage('en');
+
+    expect(window.localStorage.getItem('ayunis-language')).toBe('en');
+  });
+});
