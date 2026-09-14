@@ -92,6 +92,36 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
     });
   });
 
+  it('reads only the local password login policy for authentication checks', async () => {
+    connectionRecords.findOne.mockResolvedValue({
+      localPasswordLoginEnabled: false,
+    } as OrgSsoConnectionRecord);
+
+    await expect(
+      repository.findLocalPasswordLoginEnabledByOrgId(TEST_ORG_ID),
+    ).resolves.toBe(false);
+    expect(connectionRecords.findOne).toHaveBeenCalledWith({
+      where: { orgId: TEST_ORG_ID },
+      select: { localPasswordLoginEnabled: true },
+    });
+  });
+
+  it('takes a shared row lock while issuing a password session', async () => {
+    connectionRecords.findOne.mockResolvedValue({
+      localPasswordLoginEnabled: true,
+    } as OrgSsoConnectionRecord);
+
+    await repository.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance(
+      TEST_ORG_ID,
+    );
+
+    expect(connectionRecords.findOne).toHaveBeenCalledWith({
+      where: { orgId: TEST_ORG_ID },
+      select: { localPasswordLoginEnabled: true },
+      lock: { mode: 'pessimistic_read' },
+    });
+  });
+
   it('identifies a legacy fallback without canonical domain rows', async () => {
     const mapper = new OrgSsoConnectionMapper();
     const record = mapper.toRecord(anOrgSsoConnection());
@@ -132,6 +162,25 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
       { orgId: TEST_ORG_ID, updatedAt: connection.updatedAt },
       { enabled: true, updatedAt: expect.any(Date) },
     );
+  });
+
+  it('updates local password login without changing SSO enablement', async () => {
+    const connection = anOrgSsoConnection({ enabled: true });
+
+    const updated =
+      await repository.setLocalPasswordLoginEnabledIfMappingMatches(
+        connection,
+        false,
+      );
+
+    expect(connectionRecords.update).toHaveBeenCalledWith(
+      { orgId: TEST_ORG_ID, updatedAt: connection.updatedAt },
+      { localPasswordLoginEnabled: false, updatedAt: expect.any(Date) },
+    );
+    expect(updated).toMatchObject({
+      enabled: true,
+      localPasswordLoginEnabled: false,
+    });
   });
 
   it('returns the exact update without reloading concurrently changed state', async () => {
