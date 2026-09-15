@@ -4215,6 +4215,15 @@
             }
           },
           {
+            "name": "unfiled",
+            "required": false,
+            "in": "query",
+            "description": "Only threads that are not filed under any workspace. Omit for all threads.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",

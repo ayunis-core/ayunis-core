@@ -29,6 +29,8 @@
     "failedToLoadChats": "Chats konnten nicht geladen werden",
     "emptyChatsTitle": "Ihre Chats werden hier angezeigt.",
     "emptyChatsDescription": "Interagieren Sie mit Ayunis Core und stellen Sie Fragen.",
+    "workspaceChats": "Chats des Arbeitsbereichs anzeigen",
+    "emptyWorkspaceChats": "Noch keine Chats",
     "untitled": "Ohne Titel",
     "more": "Mehr",
     "deleteChat": "Chat löschen",

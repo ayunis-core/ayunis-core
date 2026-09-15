@@ -178,6 +178,10 @@ export class LocalThreadsRepository extends ThreadsRepository {
         workspaceId: filters.workspaceId,
       });
     }
+
+    if (filters?.unfiled) {
+      queryBuilder.andWhere('thread.workspaceId IS NULL');
+    }
   }
 
   private applyFindAllRelations(

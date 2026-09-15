@@ -13,6 +13,8 @@ export interface ThreadsFindAllOptions {
 export interface ThreadsFindAllFilters {
   search?: string;
   workspaceId?: UUID;
+  /** Restricts the result to threads that belong to no workspace. */
+  unfiled?: boolean;
 }
 
 export interface ThreadsPagination {

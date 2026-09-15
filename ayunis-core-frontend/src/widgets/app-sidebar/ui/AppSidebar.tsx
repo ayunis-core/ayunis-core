@@ -30,6 +30,7 @@ import {
 } from '@ayunis/ui/components/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
 import { FavoritesSidebarGroup } from './FavoritesSidebarGroup';
+import { WorkspacesSidebarGroup } from './WorkspacesSidebarGroup';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { useLogout } from '@/widgets/app-sidebar/api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
@@ -215,7 +216,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
 
-        {featureToggles.workspacesEnabled && <FavoritesSidebarGroup />}
+        {featureToggles.workspacesEnabled && (
+          <>
+            <FavoritesSidebarGroup />
+            <WorkspacesSidebarGroup />
+          </>
+        )}
         <ChatsSidebarGroup />
       </SidebarContent>
 

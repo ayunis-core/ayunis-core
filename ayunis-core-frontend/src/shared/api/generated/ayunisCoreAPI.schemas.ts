@@ -5421,6 +5421,10 @@ search?: string;
  */
 workspaceId?: string;
 /**
+ * Only threads that are not filed under any workspace. Omit for all threads.
+ */
+unfiled?: boolean;
+/**
  * Maximum number of threads to return (default: 50)
  */
 limit?: number;
