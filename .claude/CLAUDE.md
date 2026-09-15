@@ -65,9 +65,13 @@ Lead with the solution a senior engineer would reach for, not the first mechanis
 
 Watch for complexity creep. When a fix keeps growing — extra parameters, a watchdog, a budget, stall-reason plumbing — stop and name the tradeoff: *is the added complexity justified, or is a plainer approach enough?* Surface that question proactively rather than accreting machinery across iterations and waiting for the user to ask "is this worth it?". Often the right move is to challenge the constraint itself (e.g. "does a 300s ceiling even matter here?") instead of engineering around it.
 
-### 7. A Submitted PR Is Not Complete
+### 7. Implementation Delivery and PR Completion
 
-When work creates or updates a PR, submitting it is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
+Unless the user explicitly asks to keep changes local, a request to implement or fix code includes committing the validated change and creating or updating its PR through the repository's `git-workflow`. Follow that workflow's ticket-ID rules, including its `AYC-000` fallback for small unticketed maintenance work; never invent a product ticket ID.
+
+Before declaring implementation complete, apply the Proportional Workflow's runtime and review-evidence requirements. Use `e2e` for durable browser-journey and system-boundary regression coverage when lower-level tests are insufficient. Use `qa` for explicitly requested or PR-specific live verification, including behaviors, visuals, and edge cases that automated coverage does not prove. QA may supplement but does not replace required E2E coverage. For a visually meaningful frontend change, capture the required QA views and load `pr-media` when publishing them materially helps review. Do not create screenshots for backend-only or non-visual changes.
+
+Submitting a PR is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
 
 ### 8. Absolute Imports
 
@@ -161,7 +165,7 @@ Required:
 
 #### Pull Requests
 
-The workflow level controls local implementation and validation breadth. It does not weaken **A Submitted PR Is Not Complete**: once a PR is created or updated, CI and Cursor Bugbot must still be clean on the latest submitted revision.
+The workflow level controls local implementation and validation breadth. It does not weaken **Implementation Delivery and PR Completion**: once a PR is created or updated, CI and Cursor Bugbot must still be clean on the latest submitted revision.
 
 ### 11. Feature Flags Have Two Contracts
 

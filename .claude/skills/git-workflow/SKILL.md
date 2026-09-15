@@ -24,7 +24,7 @@ This project uses **Graphite** for stacked PRs. Always use `gt`, never raw `git 
 
 ### Rules
 
-1. **Ticket ID is required** — appended in parentheses at the end of the subject line. Always ask the user for the ticket ID if not provided. Never invent a ticket ID.
+1. **Ticket ID is required** — appended in parentheses at the end of the subject line. Use the provided ticket ID. For a small unticketed maintenance, tooling, documentation, or agent-workflow fix, use `AYC-000` without asking. Features, product bugs, customer work, and ambiguous changes require a real ticket ID; ask rather than inventing one.
 2. **Type** must be one of: `feat`, `fix`, `chore`, `refactor`, `ci`, `docs`, `test`, `perf`, `wip`.
 3. **Scope** — a short noun describing the area of the codebase (e.g., `auth`, `chat`, `api`). Required for `feat` and `fix`; optional for other types. For `chore` commits without a specific scope (e.g., release, tooling), use a generic scope: `chore(main): release 1.8.0`.
 4. **Subject** is lowercase, imperative mood, no period at end.

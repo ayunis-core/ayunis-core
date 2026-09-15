@@ -1,6 +1,6 @@
 ---
 name: pr-media
-description: Create temporary PR-specific screenshots and short GIF demos without committing scene code to the product branch. Use when the user requests PR media or when a visually meaningful frontend change materially benefits from visual review. It is not automatic for every frontend diff.
+description: Create temporary PR-specific screenshots and short GIF demos without committing scene code to the product branch. Use automatically when a visually meaningful frontend change materially benefits from visual review, and when the user requests PR media. Do not use for backend-only, non-visual, or already-sufficiently-proven changes.
 ---
 
 # PR Media
