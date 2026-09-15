@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { FavoritesModule } from 'src/domain/favorites/favorites.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
@@ -27,7 +26,6 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
 @Module({
   imports: [
     LocalWorkspacesRepositoryModule,
-    forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
     forwardRef(() => ThreadsModule),
