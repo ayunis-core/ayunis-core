@@ -81,7 +81,7 @@ export default function CreateSkillWidget({
     onError: (error) => {
       try {
         const { code } = extractErrorData(error);
-        if (code === 'SKILL_NAME_ALREADY_EXISTS') {
+        if (code === 'DUPLICATE_SKILL_NAME') {
           showError(t('chat.tools.create_skill.errorDuplicate'));
         } else {
           showError(t('chat.tools.create_skill.error'));
