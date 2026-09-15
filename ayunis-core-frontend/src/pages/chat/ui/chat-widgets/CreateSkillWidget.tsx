@@ -14,17 +14,24 @@ import {
   getSkillsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
-import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import {
+  personalSkillListParams,
+  workspaceSkillListParams,
+} from '@/shared/api/skill-scopes';
+import { useThreadWorkspaceId } from '@/pages/chat/api/useThreadWorkspaceId';
 
 export default function CreateSkillWidget({
   content,
   isStreaming = false,
+  threadId,
 }: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
+  threadId?: string;
 }>) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
+  const workspaceId = useThreadWorkspaceId(threadId);
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as {
@@ -68,14 +75,20 @@ export default function CreateSkillWidget({
         shortDescription,
         instructions,
         isActive,
-        ownerType: 'personal',
+        ...(workspaceId
+          ? { ownerType: 'workspace' as const, workspaceId }
+          : { ownerType: 'personal' as const }),
       });
     },
     onSuccess: () => {
       setCreated(true);
       showSuccess(t('chat.tools.create_skill.success'));
       void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
+        queryKey: getSkillsControllerFindAllQueryKey(
+          workspaceId
+            ? workspaceSkillListParams(workspaceId)
+            : personalSkillListParams,
+        ),
       });
     },
     onError: (error) => {

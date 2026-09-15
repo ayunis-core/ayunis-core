@@ -16,17 +16,24 @@ import {
   useSkillsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
-import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import {
+  personalSkillListParams,
+  workspaceSkillListParams,
+} from '@/shared/api/skill-scopes';
+import { useThreadWorkspaceId } from '@/pages/chat/api/useThreadWorkspaceId';
 
 export default function EditSkillWidget({
   content,
   isStreaming = false,
+  threadId,
 }: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
+  threadId?: string;
 }>) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
+  const workspaceId = useThreadWorkspaceId(threadId);
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as {
@@ -37,14 +44,18 @@ export default function EditSkillWidget({
     change_summary?: string;
   };
 
-  // Resolve skill_slug to existing skill via the skills list
-  const { data: skillsResponse } = useSkillsControllerFindAll(
-    personalSkillListParams,
-    { query: { staleTime: Infinity } },
-  );
-  const skills = skillsResponse?.data;
+  // Resolve skill_slug to existing skill via the skills list. The slug prefix
+  // carries the owner scope the backend built it from.
   const skillSlug = params.skill_slug ?? '';
-  const bareSlug = skillSlug.replace(/^(user|system)__/, '');
+  const listParams =
+    skillSlug.startsWith('workspace__') && workspaceId
+      ? workspaceSkillListParams(workspaceId)
+      : personalSkillListParams;
+  const { data: skillsResponse } = useSkillsControllerFindAll(listParams, {
+    query: { staleTime: Infinity },
+  });
+  const skills = skillsResponse?.data;
+  const bareSlug = skillSlug.replace(/^(user|system|workspace)__/, '');
   const existingSkill = skills?.find((s) => slugify(s.name) === bareSlug);
   const skillId = existingSkill?.id ?? '';
 
@@ -92,7 +103,7 @@ export default function EditSkillWidget({
       setUpdated(true);
       showSuccess(t('chat.tools.edit_skill.success'));
       void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
+        queryKey: getSkillsControllerFindAllQueryKey(listParams),
       });
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindOneQueryKey(skillId),
