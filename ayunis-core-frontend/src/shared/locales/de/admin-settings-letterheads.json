@@ -35,7 +35,8 @@
       "invalidPdf": "Diese PDF-Datei konnte nicht gelesen werden. Bitte laden Sie eine ungeschützte PDF-Datei hoch – Kennwort- oder Berechtigungsschutz verhindert die Verarbeitung.",
       "pdfNotSinglePage": "Diese Datei hat mehr als eine Seite. Bitte laden Sie eine einseitige PDF-Datei hoch und verwenden Sie für die Folgeseiten eine separate Datei.",
       "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
-      "pdfPreviewError": "PDF-Vorschau konnte nicht gerendert werden."
+      "pdfPreviewError": "PDF-Vorschau konnte nicht gerendert werden.",
+      "pdfPreviewLoading": "PDF-Vorschau wird geladen…"
     },
     "editDialog": {
       "title": "Briefpapier bearbeiten",
