@@ -1,6 +1,6 @@
 ---
 name: linear-implement
-description: Work a Linear ticket end-to-end — read it, mark In Progress, do the work, summarize, proactively suggest follow-up tickets, and mark Done.
+description: Work a Linear ticket end-to-end — read it, mark it started, implement and validate it, submit and finish its PR unless local-only was requested, summarize the outcome, proactively suggest follow-up tickets, and mark it Done.
 ---
 
 # Linear Implement
@@ -9,7 +9,7 @@ Take a Linear ticket and run with it. Generic entry point for "here's a ticket, 
 
 ## Input
 
-Daniel provides a Linear ticket ID (e.g. `AYC-123`) or URL. If one was mentioned earlier in the conversation, use that without asking again.
+The user provides a Linear ticket ID (e.g. `AYC-123`) or URL. If one was mentioned earlier in the conversation, use that without asking again.
 
 ## Process
 
@@ -33,7 +33,7 @@ Parse out:
 - **Scope & non-scope** — what's explicitly in or out
 - **Constraints** — referenced files, patterns, validation commands, acceptance criteria
 
-If anything material is unclear or the premise looks off, stop and ask Daniel before starting. Don't invent scope.
+If anything material is unclear or the premise looks off, stop and ask the user before starting. Don't invent scope.
 
 ### 3. Mark started
 
@@ -58,9 +58,21 @@ Do the work. This is deliberately open-ended — the ticket may ask for a code c
 - Use the right skills/tools for the job (e.g. `ayunis-core-backend`, `typeorm-migrations`, `code-review`, etc.)
 - Classify the work using the repository's Proportional Workflow and run the corresponding validation
 - Browser journey or system boundary changed without sufficient lower-level coverage? Load the `e2e` skill; done means the focused journey spec exists or is updated and runs green (`pnpm --filter ayunis-core-e2e test --grep "<feature>"`)
-- If execution surfaces a blocker, a wrong premise, or a decision that needs Daniel, stop and surface it — don't plow through
+- If execution surfaces a blocker, a wrong premise, or a decision that needs the user, stop and surface it — don't plow through
 
-### 5. Summarize
+### 5. Deliver code changes
+
+Unless the user explicitly asks to keep changes local, code implementation includes delivery:
+
+1. Load `git-workflow`, commit the validated logical change, and submit or update its Graphite PR. The ticket ID from this workflow is the commit's required ticket ID.
+2. Use `e2e` for required durable browser-journey or system-boundary regression coverage when lower-level tests are insufficient.
+3. Load `qa` when the user requests it or when PR-specific behaviors, visuals, or edge cases need live evidence beyond automated coverage. QA may supplement but does not replace required E2E coverage.
+4. For visually meaningful frontend changes, capture the required QA views and load `pr-media` when publishing them materially helps review.
+5. After the latest revision is submitted, load `finish-pr` and keep ownership until its completion gate passes.
+
+Do not create ceremonial screenshots for backend-only or non-visual changes. QA findings, CI failures, and actionable Bugbot findings remain part of the same logical change and PR.
+
+### 6. Summarize
 
 Present a compact summary:
 
@@ -75,9 +87,9 @@ Validation: <tests/build/manual result, or "none applicable">
 Deviations: <anything that differs from the original ask, or "none">
 ```
 
-### 6. Surface follow-ups proactively
+### 7. Surface follow-ups proactively
 
-If the work surfaced anything worth tracking separately, name it and propose a ticket for each. Always propose first — only create on Daniel's approval.
+If the work surfaced anything worth tracking separately, name it and propose a ticket for each. Always propose first — only create with the user's approval.
 
 Pick the right shape for each follow-up:
 
@@ -97,9 +109,9 @@ Examples of what qualifies as a follow-up:
 
 If nothing qualifies, say so explicitly — don't manufacture follow-ups.
 
-### 7. Close out
+### 8. Close out
 
-If validation passes, no blockers remain, and Daniel is satisfied with the summary:
+If validation and the applicable delivery steps pass and no blockers remain, move the ticket to Done. If the user explicitly requested review before closure, wait for that review first.
 
 ```bash
 linear issue update <ID> --state "Done"
@@ -120,7 +132,7 @@ The description (plus linked context) defines the scope. Don't silently expand �
 
 ### Propose before writing to Linear
 
-Creating, linking, or closing tickets is an external action. Propose first; execute on approval. The only routine state changes this workflow performs without asking are moving the current ticket to `In Progress` at the start and to `Done` at the end (once Daniel has seen the summary).
+Creating or linking follow-up tickets is an external action. Propose first; execute on approval. Moving the ticket being implemented to its started state and then to `Done` after the completion gate passes are routine parts of this workflow.
 
 ### Link what you create
 
@@ -128,7 +140,7 @@ When creating a follow-up, always add the right relation (`--parent`, `related`,
 
 ### Commit discipline
 
-If the work involves code changes, don't commit unless Daniel asks. Leave changes staged for review.
+A request to implement a ticket authorizes committing and submitting its validated code changes through `git-workflow`. Keep changes local only when the user explicitly requests that. Never include unrelated working-tree changes.
 
 ### Follow existing patterns
 

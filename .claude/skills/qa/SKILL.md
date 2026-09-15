@@ -1,6 +1,6 @@
 ---
 name: qa
-description: Behaviour QA of a PR/branch before merge in ayunis-core — spin up an isolated dev slot, seed, drive the changed flow end-to-end (API + headless browser), assert acceptance criteria with evidence, then tear everything down. Use when asked to "QA", "verify a PR/branch before merge", "check the behaviour works", or to confirm a change works in the real running app (not just tests).
+description: PR-specific live behavior QA in ayunis-core — run applicable focused E2E first, then use an isolated seeded stack to verify behaviors, visuals, or edge cases that automated coverage does not prove. Use when the user asks for QA or the repository workflow requires additional live evidence; this supplements rather than replaces required E2E coverage.
 ---
 
 # Pre-merge QA
