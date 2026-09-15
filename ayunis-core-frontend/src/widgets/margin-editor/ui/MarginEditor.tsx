@@ -3,7 +3,8 @@ import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
 import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { cn } from '@ayunis/ui/lib/cn';
 import type { PageMargins } from '@/shared/lib/letterhead-margins';
 
 // pdfjs-dist setup with Vite-compatible worker import
@@ -30,6 +31,12 @@ interface MarginEditorProps {
 }
 
 const CANVAS_MAX_WIDTH = 280;
+
+// pdf.js leaves its promise pending when the worker never starts up or the
+// PDF fetch stalls, so without a ceiling the preview stays blank forever.
+const RENDER_TIMEOUT_MS = 15_000;
+
+type PreviewStatus = 'loading' | 'ready' | 'error';
 
 /** Convert mm margins to canvas pixel offsets using actual PDF page dimensions. */
 function marginsToCanvasPixels(
@@ -97,6 +104,37 @@ async function loadPdfDocument(
   return pdfjsLib.getDocument({ url: source, withCredentials: true }).promise;
 }
 
+/** Covers the canvas while the preview is loading or has failed. */
+function PreviewOverlay({ status }: Readonly<{ status: PreviewStatus }>) {
+  const { t } = useTranslation('admin-settings-letterheads');
+  const isError = status === 'error';
+
+  return (
+    <div
+      role="status"
+      className={cn(
+        'absolute inset-0 flex items-center justify-center gap-2 rounded border p-4 text-sm',
+        isError
+          ? 'border-destructive/50 bg-destructive/10 text-destructive'
+          : 'bg-muted/50 text-muted-foreground',
+      )}
+    >
+      {isError ? (
+        <AlertCircle className="h-4 w-4 shrink-0" />
+      ) : (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+      )}
+      <span>
+        {t(
+          isError
+            ? 'letterheads.createDialog.pdfPreviewError'
+            : 'letterheads.createDialog.pdfPreviewLoading',
+        )}
+      </span>
+    </div>
+  );
+}
+
 export function MarginEditor({
   pdfSource,
   margins,
@@ -109,7 +147,16 @@ export function MarginEditor({
   const pdfPageRef = useRef<pdfjsLib.PDFPageProxy | null>(null);
   const pdfDocRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
   const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
-  const [pdfError, setPdfError] = useState(false);
+  const [status, setStatus] = useState<PreviewStatus>('loading');
+  const [loadedSource, setLoadedSource] = useState(pdfSource);
+
+  // Reset during render rather than in an effect: a new PDF must show the
+  // loading state, but a margin keystroke only redraws an already-loaded
+  // page and would otherwise flicker.
+  if (loadedSource !== pdfSource) {
+    setLoadedSource(pdfSource);
+    setStatus('loading');
+  }
 
   /** Render PDF preview onto the canvas. Throws on corrupt PDFs.
    *  @param isCurrent — returns false if this load has been superseded by a
@@ -117,11 +164,13 @@ export function MarginEditor({
    */
   const renderPreview = useCallback(
     async (isCurrent: () => boolean) => {
+      if (!pdfSource) return;
+
       const canvas = canvasRef.current;
-      if (!canvas || !pdfSource) return;
+      if (!canvas) throw new Error('Preview canvas is not mounted');
 
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) throw new Error('Preview canvas has no 2D context');
 
       // Load the PDF page if not cached
       if (!pdfPageRef.current) {
@@ -190,16 +239,23 @@ export function MarginEditor({
   useEffect(() => {
     let cancelled = false;
     const isCurrent = () => !cancelled;
+    const timer = setTimeout(() => {
+      if (!cancelled) setStatus('error');
+    }, RENDER_TIMEOUT_MS);
+
     renderPreview(isCurrent)
       .then(() => {
-        if (!cancelled) setPdfError(false);
+        if (!cancelled) setStatus('ready');
       })
       .catch((error: unknown) => {
         if (cancelled || isRenderCancelled(error)) return;
-        setPdfError(true);
-      });
+        setStatus('error');
+      })
+      .finally(() => clearTimeout(timer));
+
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [renderPreview]);
 
@@ -215,22 +271,15 @@ export function MarginEditor({
       <Label className="text-sm font-medium">{label}</Label>
       <div className="flex gap-4">
         {hasPdfSource && (
-          <div className="shrink-0">
-            {pdfError ? (
-              <div
-                className="flex items-center gap-2 rounded border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
-                style={{ maxWidth: CANVAS_MAX_WIDTH }}
-              >
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{t('letterheads.createDialog.pdfPreviewError')}</span>
-              </div>
-            ) : (
-              <canvas
-                ref={canvasRef}
-                className="rounded border"
-                style={{ maxWidth: CANVAS_MAX_WIDTH }}
-              />
-            )}
+          <div className="relative shrink-0">
+            {/* Stays mounted in every state: unmounting it drops the ref a
+                retry after an error needs to draw into. */}
+            <canvas
+              ref={canvasRef}
+              className="rounded border"
+              style={{ maxWidth: CANVAS_MAX_WIDTH }}
+            />
+            {status !== 'ready' && <PreviewOverlay status={status} />}
           </div>
         )}
         <div className="space-y-2">
