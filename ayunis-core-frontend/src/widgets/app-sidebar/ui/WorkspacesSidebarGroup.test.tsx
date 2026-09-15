@@ -4,6 +4,7 @@ import { SidebarProvider } from '@ayunis/ui/components/sidebar';
 import { WorkspacesSidebarGroup } from './WorkspacesSidebarGroup';
 
 const mocks = vi.hoisted(() => ({
+  favorites: [] as Array<{ referenceType: string; referenceId: string }>,
   workspaces: [
     {
       id: 'workspace-a',
@@ -35,7 +36,7 @@ vi.mock('@/widgets/workspace-settings-dialog', () => ({
 }));
 
 vi.mock('@/features/favorites', () => ({
-  useFavorites: () => ({ favorites: [] }),
+  useFavorites: () => ({ favorites: mocks.favorites }),
   useToggleFavorite: () => ({ toggle: vi.fn() }),
   isFavorite: () => false,
 }));
@@ -64,6 +65,7 @@ function renderGroup() {
 describe('WorkspacesSidebarGroup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.favorites = [];
     window.matchMedia = vi.fn().mockReturnValue({
       matches: false,
       addEventListener: vi.fn(),
@@ -121,6 +123,16 @@ describe('WorkspacesSidebarGroup', () => {
     expect(screen.getByText('actions.edit')).toBeTruthy();
     expect(screen.getByText('sidebar.pinWorkspace')).toBeTruthy();
     expect(screen.getByText('actions.delete')).toBeTruthy();
+  });
+
+  it('leaves a pinned workspace to the favorites group', () => {
+    mocks.favorites = [
+      { referenceType: 'workspace', referenceId: 'workspace-a' },
+    ];
+
+    renderGroup();
+
+    expect(screen.queryByTestId('sidebar-workspaces')).toBeNull();
   });
 
   it('renders nothing without workspaces', () => {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SidebarMenu } from '@ayunis/ui/components/sidebar';
+import { useFavorites } from '@/features/favorites';
 import { useWorkspaces, type Workspace } from '@/features/workspaces';
 import { WorkspaceSidebarItem } from './WorkspaceSidebarItem';
 import { WorkspaceSidebarDialogs } from './WorkspaceSidebarDialogs';
@@ -9,6 +10,15 @@ import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
 export function WorkspacesSidebarGroup() {
   const { t } = useTranslation('common');
   const { workspaces } = useWorkspaces();
+  const { favorites } = useFavorites();
+  const pinnedWorkspaceIds = new Set(
+    favorites
+      .filter((favorite) => favorite.referenceType === 'workspace')
+      .map((favorite) => favorite.referenceId),
+  );
+  const unpinnedWorkspaces = workspaces.filter(
+    (workspace) => !pinnedWorkspaceIds.has(workspace.id),
+  );
   const [settingsWorkspace, setSettingsWorkspace] = useState<Workspace | null>(
     null,
   );
@@ -16,7 +26,7 @@ export function WorkspacesSidebarGroup() {
     null,
   );
 
-  if (workspaces.length === 0) return null;
+  if (unpinnedWorkspaces.length === 0) return null;
 
   return (
     <>
@@ -26,7 +36,7 @@ export function WorkspacesSidebarGroup() {
         testId="sidebar-workspaces"
       >
         <SidebarMenu>
-          {workspaces.map((workspace) => (
+          {unpinnedWorkspaces.map((workspace) => (
             <WorkspaceSidebarItem
               key={workspace.id}
               workspace={workspace}
