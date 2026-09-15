@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.40.1](https://github.com/ayunis-core/ayunis-core/compare/v2.40.0...v2.40.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **chat:** show the duplicate-name error when creating or editing a skill (AYC-939) ([#1680](https://github.com/ayunis-core/ayunis-core/issues/1680)) ([5eed229](https://github.com/ayunis-core/ayunis-core/commit/5eed229595a5449b7927c53646294af15cc19164))
+* **tools:** paginate web and document results (AYC-848) ([#1677](https://github.com/ayunis-core/ayunis-core/issues/1677)) ([d5453cf](https://github.com/ayunis-core/ayunis-core/commit/d5453cfe42567ad983c49d6d88289d05a89a1507))
+
+
+### Documentation
+
+* **agent:** make implementation delivery autonomous (AYC-000) ([#1681](https://github.com/ayunis-core/ayunis-core/issues/1681)) ([de24437](https://github.com/ayunis-core/ayunis-core/commit/de24437c97fd0d85892159b5d3de3bcbf34a136c))
+
+
+### Miscellaneous
+
+* **qa:** script the QA teardown and sweep leftovers first (AYC-000) ([#1675](https://github.com/ayunis-core/ayunis-core/issues/1675)) ([7a8e3b8](https://github.com/ayunis-core/ayunis-core/commit/7a8e3b8457fcff44b549433b769266b13a5a149c))
+
 ## [2.40.0](https://github.com/ayunis-core/ayunis-core/compare/v2.39.0...v2.40.0) (2026-09-14)
 
 
