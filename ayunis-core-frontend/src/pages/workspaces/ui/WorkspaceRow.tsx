@@ -9,6 +9,10 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
+import {
+  useIsKnowledgeBasesEnabled,
+  useIsSkillsEnabled,
+} from '@/features/feature-toggles';
 import type { Workspace } from '@/features/workspaces';
 import { WorkspacePinButton } from './WorkspacePinButton';
 
@@ -18,6 +22,21 @@ interface WorkspaceRowProps {
 
 export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
   const { t } = useTranslation('workspaces');
+  const skillsEnabled = useIsSkillsEnabled();
+  const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
+  const counts = [
+    skillsEnabled
+      ? t('page.skillCount', { count: workspace.skillCount ?? 0 })
+      : null,
+    knowledgeBasesEnabled
+      ? t('page.knowledgeBaseCount', {
+          count: workspace.knowledgeBaseCount ?? 0,
+        })
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <Item
       variant="outline"
@@ -43,14 +62,9 @@ export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
             {workspace.name}
           </Link>
         </ItemTitle>
-        <ItemDescription className="line-clamp-1">
-          {[
-            t('page.chatCount', { count: workspace.chatCount ?? 0 }),
-            workspace.description,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </ItemDescription>
+        {counts && (
+          <ItemDescription className="line-clamp-1">{counts}</ItemDescription>
+        )}
       </ItemContent>
       <ItemActions className="relative">
         <WorkspacePinButton workspaceId={workspace.id} />

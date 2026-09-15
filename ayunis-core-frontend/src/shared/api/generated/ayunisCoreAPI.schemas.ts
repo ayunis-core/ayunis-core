@@ -3465,6 +3465,10 @@ export interface WorkspaceResponseDto {
   updatedAt: string;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
+  /** Number of skills owned by the workspace (list responses only) */
+  skillCount?: number;
+  /** Number of knowledge bases owned by the workspace (list responses only) */
+  knowledgeBaseCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */
   lastActivityAt?: string;
 }

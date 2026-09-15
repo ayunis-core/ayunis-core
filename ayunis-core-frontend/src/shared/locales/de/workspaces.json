@@ -4,8 +4,10 @@
     "addWorkspace": "Arbeitsbereich hinzufügen",
     "emptyTitle": "Noch keine Arbeitsbereiche",
     "emptyDescription": "Legen Sie einen Arbeitsbereich an, um Ihre Chats thematisch zu bündeln.",
-    "chatCount_one": "{{count}} Chat",
-    "chatCount_other": "{{count}} Chats"
+    "skillCount_one": "{{count}} Fähigkeit",
+    "skillCount_other": "{{count}} Fähigkeiten",
+    "knowledgeBaseCount_one": "{{count}} Wissenssammlung",
+    "knowledgeBaseCount_other": "{{count}} Wissenssammlungen"
   },
   "card": {
     "pin": "Zu Favoriten hinzufügen",
