@@ -8,6 +8,7 @@ import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
+import toolsConfig from 'src/config/tools.config';
 
 describe('ReadDocumentToolHandler', () => {
   let handler: ReadDocumentToolHandler;
@@ -29,6 +30,10 @@ describe('ReadDocumentToolHandler', () => {
         {
           provide: FindArtifactWithVersionsUseCase,
           useValue: mockFindArtifactUseCase,
+        },
+        {
+          provide: toolsConfig.KEY,
+          useValue: { sourceGetText: { maxLines: 200, maxChars: 5000 } },
         },
       ],
     }).compile();
@@ -79,9 +84,57 @@ describe('ReadDocumentToolHandler', () => {
       context: { threadId: mockThreadId, orgId: mockOrgId },
     });
 
-    expect(result).toContain('Municipal Budget Report 2026');
-    expect(result).toContain('version: 3');
-    expect(result).toContain('<h1>Budget Report</h1><p>Total: €5.2M</p>');
+    expect(JSON.parse(result)).toMatchObject({
+      artifactId: mockArtifactId,
+      title: 'Municipal Budget Report 2026',
+      version: 3,
+      content: '<h1>Budget Report</h1><p>Total: €5.2M</p>',
+      truncated: false,
+    });
+  });
+
+  it('should return consecutive pages without duplicated or missing lines', async () => {
+    const lines = Array.from(
+      { length: 205 },
+      (_, index) => `Budget line ${index + 1}`,
+    );
+    mockFindArtifactUseCase.execute.mockResolvedValue(
+      createMockArtifact(4, lines.join('\n')),
+    );
+    const tool = new ReadDocumentTool();
+
+    const firstPage = JSON.parse(
+      await handler.execute({
+        tool,
+        input: { artifact_id: mockArtifactId },
+        context: { threadId: mockThreadId, orgId: mockOrgId },
+      }),
+    );
+    const finalPage = JSON.parse(
+      await handler.execute({
+        tool,
+        input: { artifact_id: mockArtifactId, startLine: 201 },
+        context: { threadId: mockThreadId, orgId: mockOrgId },
+      }),
+    );
+
+    expect(firstPage).toMatchObject({
+      version: 4,
+      actualStartLine: 1,
+      actualEndLine: 200,
+      truncated: true,
+      truncationReasons: ['max_lines'],
+      nextPage: { startLine: 201, numLines: 200 },
+      paginationHint: expect.stringContaining('startLine 201'),
+    });
+    expect(finalPage).toMatchObject({
+      version: 4,
+      actualStartLine: 201,
+      actualEndLine: 205,
+      truncated: false,
+      nextPage: null,
+    });
+    expect(`${firstPage.content}\n${finalPage.content}`).toBe(lines.join('\n'));
   });
 
   it('should call FindArtifactWithVersionsUseCase with the correct artifact ID', async () => {

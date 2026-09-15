@@ -84,6 +84,14 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
       name: defaultResponseText,
       stream: (request) => {
         const lastUserText = lastProviderUserText(request);
+        const researchInput = parseResearchInput(lastUserText);
+        if (researchInput) {
+          return request.messages.some(
+            (message) => message.role === 'tool_result',
+          )
+            ? providerTextResponse(`research-complete::${defaultResponseText}`)
+            : researchToolCallResponse(researchInput);
+        }
         if (lastUserText === MALFORMED_TOOL_CALL_RETRY_PROMPT) {
           if (!malformedAttemptEmitted) {
             malformedAttemptEmitted = true;
@@ -100,6 +108,12 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
 const MOCK_CHUNK_DELAY_MS = 40;
 const MALFORMED_TOOL_CALL_RETRY_PROMPT =
   'E2E trigger malformed completed tool call';
+const PAGINATED_RESEARCH_PROMPT = 'E2E trigger paginated research: ';
+
+interface PaginatedResearchInput {
+  documentIds: string[];
+  urls: string[];
+}
 
 function firstTextContent(
   content: StreamInferenceInput['messages'][number]['content'] | undefined,
@@ -126,6 +140,32 @@ function buildResponseText(userText: string, model: Model): string {
   return requestedName
     ? `I'll name this chat ${requestedName}. You're talking to ${modelName}`
     : modelName;
+}
+
+function parseResearchInput(userText: string): PaginatedResearchInput | null {
+  if (!userText.startsWith(PAGINATED_RESEARCH_PROMPT)) return null;
+  try {
+    const parsed: unknown = JSON.parse(
+      userText.slice(PAGINATED_RESEARCH_PROMPT.length),
+    );
+    if (!isPaginatedResearchInput(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function isPaginatedResearchInput(
+  value: unknown,
+): value is PaginatedResearchInput {
+  if (typeof value !== 'object' || value === null) return false;
+  const input = value as Record<string, unknown>;
+  return (
+    Array.isArray(input.documentIds) &&
+    input.documentIds.every((id) => typeof id === 'string') &&
+    Array.isArray(input.urls) &&
+    input.urls.every((url) => typeof url === 'string')
+  );
 }
 
 async function* providerTextResponse(
@@ -155,6 +195,27 @@ async function* malformedProviderToolCallResponse(): AsyncIterable<ProviderChunk
   };
   await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
   yield { finishReason: 'stop' };
+}
+
+async function* researchToolCallResponse(
+  input: PaginatedResearchInput,
+): AsyncIterable<ProviderChunk> {
+  const documents = input.documentIds.map((artifactId, index) => ({
+    index,
+    id: `mock-research-document-${index}`,
+    name: 'read_document',
+    argumentsDelta: JSON.stringify({ artifact_id: artifactId }),
+  }));
+  const websites = input.urls.map((url, index) => ({
+    index: documents.length + index,
+    id: `mock-research-website-${index}`,
+    name: 'website_content',
+    argumentsDelta: JSON.stringify({ url }),
+  }));
+  await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+  yield { toolCallDeltas: [...documents, ...websites] };
+  await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+  yield { finishReason: 'tool_calls' };
 }
 
 function textResponse(
