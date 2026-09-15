@@ -30,7 +30,8 @@ describe('applyDevPortOffset', () => {
       DEV_PORT_OFFSET: '20',
       PORT: '3000',
       POSTGRES_PORT: '5432',
-      MINIO_PORT: '9000',
+      MINIO_INTERNAL_PORT: '9000',
+      MINIO_PUBLIC_PORT: '9000',
       REDIS_PORT: '6379',
       SMTP_PORT: '1025',
     };
@@ -39,7 +40,8 @@ describe('applyDevPortOffset', () => {
 
     expect(env.PORT).toBe('3020');
     expect(env.POSTGRES_PORT).toBe('5452');
-    expect(env.MINIO_PORT).toBe('9020');
+    expect(env.MINIO_INTERNAL_PORT).toBe('9020');
+    expect(env.MINIO_PUBLIC_PORT).toBe('9020');
     expect(env.REDIS_PORT).toBe('6399');
     expect(env.SMTP_PORT).toBe('1045');
   });
