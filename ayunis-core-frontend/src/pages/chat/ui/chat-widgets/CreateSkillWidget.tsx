@@ -7,24 +7,20 @@ import { Textarea } from '@ayunis/ui/components/textarea';
 import { Button } from '@ayunis/ui/components/button';
 import { Switch } from '@ayunis/ui/components/switch';
 import { cn } from '@ayunis/ui/lib/cn';
-import { showSuccess, showError } from '@/shared/lib/toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  skillsControllerCreate,
-  getSkillsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import extractErrorData from '@/shared/api/extract-error-data';
-import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import { useThreadWorkspaceId } from '@/pages/chat/api/useThreadWorkspaceId';
+import { useCreateSkillFromChat } from '@/pages/chat/api/useCreateSkillFromChat';
 
 export default function CreateSkillWidget({
   content,
   isStreaming = false,
+  threadId,
 }: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
+  threadId?: string;
 }>) {
   const { t } = useTranslation('chat');
-  const queryClient = useQueryClient();
+  const workspaceId = useThreadWorkspaceId(threadId);
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as {
@@ -43,6 +39,11 @@ export default function CreateSkillWidget({
   );
   const [isActive, setIsActive] = useState<boolean>(params.is_active !== false);
   const [created, setCreated] = useState(false);
+  const mutation = useCreateSkillFromChat({
+    threadId,
+    workspaceId,
+    onCreated: () => setCreated(true),
+  });
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
@@ -60,37 +61,6 @@ export default function CreateSkillWidget({
     params.is_active,
     content.id,
   ]);
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      return await skillsControllerCreate({
-        name,
-        shortDescription,
-        instructions,
-        isActive,
-        ownerType: 'personal',
-      });
-    },
-    onSuccess: () => {
-      setCreated(true);
-      showSuccess(t('chat.tools.create_skill.success'));
-      void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
-      });
-    },
-    onError: (error) => {
-      try {
-        const { code } = extractErrorData(error);
-        if (code === 'DUPLICATE_SKILL_NAME') {
-          showError(t('chat.tools.create_skill.errorDuplicate'));
-        } else {
-          showError(t('chat.tools.create_skill.error'));
-        }
-      } catch {
-        showError(t('chat.tools.create_skill.error'));
-      }
-    },
-  });
 
   const isValid = name.trim().length > 0 && instructions.trim().length > 0;
 
@@ -168,7 +138,9 @@ export default function CreateSkillWidget({
 
       <div className="w-full flex gap-2">
         <Button
-          onClick={() => mutation.mutate()}
+          onClick={() =>
+            mutation.mutate({ name, shortDescription, instructions, isActive })
+          }
           disabled={!isValid || mutation.isPending || created}
           className={cn(isStreaming && 'animate-pulse')}
         >

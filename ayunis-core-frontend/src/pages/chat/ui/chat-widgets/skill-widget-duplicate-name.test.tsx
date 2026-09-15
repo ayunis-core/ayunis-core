@@ -28,11 +28,29 @@ vi.mock('@/shared/lib/toast', () => ({
   showError,
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@/pages/chat/api/useThreadWorkspaceId', () => ({
+  useThreadWorkspaceId: () => null,
+}));
+
+vi.mock('@/shared/api', () => ({
   skillsControllerCreate: createSkill,
   skillsControllerUpdate: updateSkill,
   getSkillsControllerFindAllQueryKey: (params: unknown) => ['/skills', params],
   getSkillsControllerFindOneQueryKey: (skillId: string) => ['/skills', skillId],
+  getThreadAiContextControllerGetAiContextQueryKey: (id: string) => [
+    '/threads',
+    id,
+    'ai-context',
+  ],
+  getWorkspaceContextControllerFindContextQueryKey: (id: string) => [
+    '/workspaces',
+    id,
+    'context',
+  ],
+  useSkillsControllerFindOne: () => ({
+    data: undefined,
+    isFetched: false,
+  }),
   useSkillsControllerFindAll: () => ({
     data: {
       data: [
@@ -44,6 +62,7 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
         },
       ],
     },
+    isFetched: true,
   }),
 }));
 

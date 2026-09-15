@@ -6,39 +6,39 @@ import {
   HttpToolConfig,
   HttpTool,
 } from 'src/domain/tools/domain/tools/http-tool.entity';
-import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
-import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
-import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
-import { SourceGetTextTool } from '../domain/tools/source-get-text-tool.entity';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
+import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
+import { SourceGetTextTool } from 'src/domain/tools/domain/tools/source-get-text-tool.entity';
 import {
   ToolInvalidConfigError,
   ToolInvalidContextError,
   ToolInvalidTypeError,
 } from './tools.errors';
 import { Source } from 'src/domain/sources/domain/source.entity';
-import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
-import { CreateCalendarEventTool } from '../domain/tools/create-calendar-event-tool.entity';
-import { CodeExecutionTool } from '../domain/tools/code-execution-tool.entity';
-import { BarChartTool } from '../domain/tools/bar-chart-tool.entity';
-import { LineChartTool } from '../domain/tools/line-chart-tool.entity';
-import { PieChartTool } from '../domain/tools/pie-chart-tool.entity';
+import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
+import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
+import { CodeExecutionTool } from 'src/domain/tools/domain/tools/code-execution-tool.entity';
+import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
+import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
+import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
-import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
-import { EditSkillTool } from '../domain/tools/edit-skill-tool.entity';
-import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
-import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
+import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
+import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
-import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
-import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
-import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
-import { ReadDocumentTool } from '../domain/tools/read-document-tool.entity';
-import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
-import { CreateDiagramTool } from '../domain/tools/create-diagram-tool.entity';
-import { UpdateDiagramTool } from '../domain/tools/update-diagram-tool.entity';
-import { CreateSpreadsheetTool } from '../domain/tools/create-spreadsheet-tool.entity';
-import { UpdateSpreadsheetTool } from '../domain/tools/update-spreadsheet-tool.entity';
-import { MapTool } from '../domain/tools/map-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
+import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
+import { ReadDocumentTool } from 'src/domain/tools/domain/tools/read-document-tool.entity';
+import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
+import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
+import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
+import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
+import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -88,9 +88,7 @@ export class ToolFactory {
           requireMapContext(p.context, ToolType.ACTIVATE_SKILL),
         ),
       [ToolType.EDIT_SKILL]: (p) =>
-        new EditSkillTool(
-          requireStringArrayContext(p.context, ToolType.EDIT_SKILL),
-        ),
+        new EditSkillTool(requireMapContext(p.context, ToolType.EDIT_SKILL)),
       [ToolType.KNOWLEDGE_QUERY]: (p) =>
         new KnowledgeQueryTool(
           requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_QUERY),
@@ -191,22 +189,6 @@ function requireMapContext(
 ): Map<string, string> {
   if (context instanceof Map) {
     return context as Map<string, string>;
-  }
-  throw new ToolInvalidContextError({
-    toolType,
-    metadata: { contextType: contextTypeName(context) },
-  });
-}
-
-function requireStringArrayContext(
-  context: unknown,
-  toolType: ToolType,
-): string[] {
-  if (
-    context instanceof Array &&
-    context.every((item: unknown) => typeof item === 'string')
-  ) {
-    return context;
   }
   throw new ToolInvalidContextError({
     toolType,

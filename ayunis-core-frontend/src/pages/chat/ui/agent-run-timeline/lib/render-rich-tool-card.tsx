@@ -43,9 +43,21 @@ export function renderRichToolCard({
         />
       );
     case 'create_skill':
-      return <CreateSkillWidget content={toolUse} isStreaming={isStreaming} />;
+      return (
+        <CreateSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
     case 'edit_skill':
-      return <EditSkillWidget content={toolUse} isStreaming={isStreaming} />;
+      return (
+        <EditSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
     case 'bar_chart':
       return <BarChartWidget content={toolUse} isStreaming={isStreaming} />;
     case 'line_chart':

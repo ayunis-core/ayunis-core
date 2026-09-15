@@ -84,7 +84,7 @@ export class ToolAssemblyService {
           thread,
           skillContext.slugMap,
           skillContext.workspaceContext,
-          skillContext.editableSkillSlugs,
+          skillContext.editableSkillIds,
           activeKnowledgeBases,
         )
       : [];
@@ -121,7 +121,7 @@ export class ToolAssemblyService {
   ): Promise<{
     workspaceContext?: WorkspaceRunContext;
     slugMap: Map<string, string>;
-    editableSkillSlugs: Map<string, string>;
+    editableSkillIds: Map<string, string>;
     skillEntries: SkillEntry[];
   }> {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
@@ -133,15 +133,15 @@ export class ToolAssemblyService {
       this.mergeById(activeSkills, projectSkills),
       alwaysOnTemplates,
     );
-    const { slugMap: editableSkillSlugs } = this.buildSkillSlugs(
-      activeSkills,
-      alwaysOnTemplates,
+    const editableSkillIds = this.buildEditableSkillIds(
+      this.mergeById(activeSkills, projectSkills),
+      slugMap,
     );
 
     return {
       workspaceContext: effectiveWorkspaceContext,
       slugMap,
-      editableSkillSlugs,
+      editableSkillIds,
       skillEntries,
     };
   }
@@ -275,11 +275,40 @@ export class ToolAssemblyService {
     return { slugMap, skillEntries };
   }
 
+  private buildEditableSkillIds(
+    skills: Skill[],
+    advertisedSlugs: Map<string, string>,
+  ): Map<string, string> {
+    const skillIds = new Map<string, string>();
+    for (const skill of skills) {
+      try {
+        const prefix =
+          skill instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX;
+        const slug = buildSkillSlug(prefix, skill.name);
+        if (advertisedSlugs.get(slug) !== skill.name || skillIds.has(slug)) {
+          throw new SlugCollisionError(
+            slug,
+            advertisedSlugs.get(slug) ?? 'unknown',
+            skill.name,
+          );
+        }
+        skillIds.set(slug, skill.id);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(
+          { skillName: skill.name, error: detail },
+          'Failed to build editable skill slug, skipping',
+        );
+      }
+    }
+    return skillIds;
+  }
+
   async assembleTools(
     thread: Thread,
     slugMap: Map<string, string>,
     workspaceContext?: WorkspaceRunContext,
-    editableSkillSlugs: Map<string, string> = slugMap,
+    editableSkillIds: Map<string, string> = new Map(),
     activeKnowledgeBases: KnowledgeBaseSummary[] = [],
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
@@ -306,9 +335,7 @@ export class ToolAssemblyService {
       ...(await this.artifactToolAssembler.assembleArtifactTools(thread)),
     );
 
-    tools.push(
-      ...(await this.assembleSkillManagementTools(editableSkillSlugs)),
-    );
+    tools.push(...(await this.assembleSkillManagementTools(editableSkillIds)));
 
     tools.push(...(await this.assembleInternetTools()));
 
@@ -378,15 +405,12 @@ export class ToolAssemblyService {
       ),
     ];
 
-    const userSlugs = [...slugMap.keys()].filter((s) =>
-      s.startsWith(`${USER_PREFIX}__`),
-    );
-    if (userSlugs.length > 0) {
+    if (slugMap.size > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.EDIT_SKILL,
-            context: userSlugs,
+            context: slugMap,
           }),
         ),
       );
