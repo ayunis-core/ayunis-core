@@ -4,10 +4,6 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { SidebarMenu } from '@ayunis/ui/components/sidebar';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
-import {
-  WorkspaceDeleteDialog,
-  WorkspaceSettingsDialog,
-} from '@/widgets/workspace-settings-dialog';
 import { useDeleteThread } from '@/features/thread-run';
 import { useWorkspaces, type Workspace } from '@/features/workspaces';
 import { useFavorites, type Favorite } from '@/features/favorites';
@@ -15,6 +11,7 @@ import { moveById } from '@/shared/lib/move-by-id';
 import { useReorderFavorites } from '@/widgets/app-sidebar/api/useReorderFavorites';
 import { applyPendingOrder } from '@/widgets/app-sidebar/lib/applyPendingOrder';
 import { FavoriteSidebarItem } from './FavoriteSidebarItem';
+import { WorkspaceSidebarDialogs } from './WorkspaceSidebarDialogs';
 import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
 
 export function FavoritesSidebarGroup() {
@@ -126,29 +123,12 @@ export function FavoritesSidebarGroup() {
           ))}
         </SidebarMenu>
       </SidebarCollapsibleGroup>
-      {settingsWorkspace && (
-        <WorkspaceSettingsDialog
-          key={settingsWorkspace.id}
-          workspace={settingsWorkspace}
-          open
-          onOpenChange={(open) => {
-            if (!open) setSettingsWorkspace(null);
-          }}
-        />
-      )}
-      {workspaceToDelete && (
-        <WorkspaceDeleteDialog
-          workspace={workspaceToDelete}
-          open
-          onOpenChange={(open) => {
-            if (!open) setWorkspaceToDelete(null);
-          }}
-          onDeleted={() => {
-            if (params.workspaceId === workspaceToDelete.id)
-              void navigate({ to: '/chat' });
-          }}
-        />
-      )}
+      <WorkspaceSidebarDialogs
+        settingsWorkspace={settingsWorkspace}
+        workspaceToDelete={workspaceToDelete}
+        onCloseSettings={() => setSettingsWorkspace(null)}
+        onCloseDelete={() => setWorkspaceToDelete(null)}
+      />
       {threadToRename && (
         <RenameThreadDialog
           open

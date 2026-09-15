@@ -60,6 +60,7 @@
     "workspaceOptions": "Arbeitsbereichsoptionen",
     "moveUp": "Nach oben verschieben",
     "moveDown": "Nach unten verschieben",
+    "pinWorkspace": "Zu Favoriten hinzufügen",
     "unpinWorkspace": "Aus Favoriten entfernen",
     "deleteWorkspace": "Löschen",
     "dragWorkspace": "Arbeitsbereich verschieben",

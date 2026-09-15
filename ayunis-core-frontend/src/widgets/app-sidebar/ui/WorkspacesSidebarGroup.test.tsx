@@ -26,6 +26,25 @@ vi.mock('@/widgets/app-sidebar/api', () => ({
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
   useParams: () => ({}),
+  useNavigate: () => vi.fn(),
+}));
+
+vi.mock('@/widgets/workspace-settings-dialog', () => ({
+  WorkspaceSettingsDialog: () => null,
+  WorkspaceDeleteDialog: () => null,
+}));
+
+vi.mock('@/features/favorites', () => ({
+  useFavorites: () => ({ favorites: [] }),
+  useToggleFavorite: () => ({ toggle: vi.fn() }),
+  isFavorite: () => false,
+}));
+
+vi.mock('@/shared/hooks/useDropdownDialogTransition', () => ({
+  useDropdownDialogTransition: () => ({
+    requestDialogOpen: (open: () => void) => open(),
+    handleCloseAutoFocus: vi.fn(),
+  }),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -89,6 +108,19 @@ describe('WorkspacesSidebarGroup', () => {
       true,
     );
     expect(screen.getByText('Antrag prüfen')).toBeTruthy();
+  });
+
+  it('offers editing, pinning and deleting from the row menu', () => {
+    renderGroup();
+
+    fireEvent.pointerDown(
+      screen.getByTestId('sidebar-workspace-menu-workspace-a'),
+      { button: 0, ctrlKey: false, pointerType: 'mouse' },
+    );
+
+    expect(screen.getByText('actions.edit')).toBeTruthy();
+    expect(screen.getByText('sidebar.pinWorkspace')).toBeTruthy();
+    expect(screen.getByText('actions.delete')).toBeTruthy();
   });
 
   it('renders nothing without workspaces', () => {
