@@ -30,6 +30,8 @@ interface CreateEntityDialogProps {
   buttonClassName?: string;
   buttonTestId?: string;
   footerHint?: ReactNode;
+  /** Omit the built-in trigger when the dialog is opened from somewhere else. */
+  hideTrigger?: boolean;
   children: ReactNode;
 }
 
@@ -45,20 +47,23 @@ export default function CreateEntityDialog({
   buttonClassName = '',
   buttonTestId,
   footerHint,
+  hideTrigger = false,
   children,
 }: Readonly<CreateEntityDialogProps>) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          size="sm"
-          data-testid={buttonTestId}
-          className={`${showIcon ? 'inline-flex items-center gap-2' : ''} max-sm:max-w-full ${buttonClassName}`}
-        >
-          {showIcon && <Plus className="h-4 w-4" />}
-          {buttonText ?? translations.buttonText}
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button
+            size="sm"
+            data-testid={buttonTestId}
+            className={`${showIcon ? 'inline-flex items-center gap-2' : ''} max-sm:max-w-full ${buttonClassName}`}
+          >
+            {showIcon && <Plus className="h-4 w-4" />}
+            {buttonText ?? translations.buttonText}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>{translations.title}</DialogTitle>

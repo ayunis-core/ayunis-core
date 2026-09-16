@@ -89,5 +89,11 @@
     "success": "Fähigkeit erfolgreich gelöscht!",
     "error": "Fähigkeit konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
+  },
+  "createMenu": {
+    "guided": "Mit Ayunis Core erstellen",
+    "editor": "Selbst erstellen",
+    "marketplace": "Aus dem Marketplace hinzufügen",
+    "guidedPrompt": "Hilf mir, eine neue Fähigkeit anzulegen. Stelle mir nacheinander die Fragen, die du dafür brauchst — immer nur eine pro Nachricht: Wofür soll die Fähigkeit da sein? In welchen Situationen soll sie sich einschalten? Worauf soll sie achten, was soll sie vermeiden? Was du aus meinen Antworten schon ableiten kannst, schlägst du vor, statt danach zu fragen. Wenn das Bild steht, lege die Fähigkeit mit Name, Kurzbeschreibung und Anweisungen an."
   }
 }

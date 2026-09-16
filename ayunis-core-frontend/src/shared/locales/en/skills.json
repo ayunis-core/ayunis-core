@@ -89,5 +89,11 @@
     "success": "Skill deleted successfully!",
     "error": "Failed to delete skill. Please try again.",
     "notFound": "Skill not found. It may have been deleted."
+  },
+  "createMenu": {
+    "guided": "Create with Ayunis Core",
+    "editor": "Create it yourself",
+    "marketplace": "Add from the marketplace",
+    "guidedPrompt": "Help me create a new skill. Ask me the questions you need one at a time: What should the skill be for? In which situations should it kick in? What should it pay attention to, what should it avoid? Whatever you can already derive from my answers, propose it instead of asking. Once the picture is complete, create the skill with a name, a short description and instructions."
   }
 }

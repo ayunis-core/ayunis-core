@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import CreateSkillDialog from './CreateSkillDialog';
+import CreateSkillMenu from './CreateSkillMenu';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
 import type { Skill } from '@/pages/skills/model/openapi';
@@ -38,7 +38,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
 
   const createSkillAction = (
     <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
-      <CreateSkillDialog />
+      <CreateSkillMenu />
     </OnboardingTourTarget>
   );
 
@@ -94,9 +94,9 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
                   }
                   action={
                     canCreate ? (
-                      <CreateSkillDialog
+                      <CreateSkillMenu
                         buttonText={t('createDialog.buttonTextFirst')}
-                        showIcon={true}
+                        showIcon
                       />
                     ) : undefined
                   }

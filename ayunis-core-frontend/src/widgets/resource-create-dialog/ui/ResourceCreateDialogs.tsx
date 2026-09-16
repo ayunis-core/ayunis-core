@@ -27,6 +27,8 @@ export function SkillCreateDialog({
   buttonClassName,
   showIcon = false,
   footerHint,
+  open,
+  onOpenChange,
 }: Readonly<{
   onCreate: (data: CreateSkillFormData) => Promise<unknown>;
   buttonText?: string;
@@ -34,10 +36,19 @@ export function SkillCreateDialog({
   buttonClassName?: string;
   showIcon?: boolean;
   footerHint?: string;
+  /** Pass both to open the dialog from elsewhere; the trigger is dropped then. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>) {
   const { t } = useTranslation('skills');
   const translations = useCreateDialogTranslations('skills');
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const [isOwnOpen, setIsOwnOpen] = useState(false);
+  const isOpen = isControlled ? open : isOwnOpen;
+  const setIsOpen = (next: boolean) => {
+    if (isControlled) onOpenChange?.(next);
+    else setIsOwnOpen(next);
+  };
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<CreateSkillFormData>({
     resolver: zodResolver(
@@ -86,6 +97,7 @@ export function SkillCreateDialog({
       buttonClassName={buttonClassName}
       buttonTestId={buttonTestId}
       footerHint={footerHint}
+      hideTrigger={isControlled}
     >
       <Form {...form}>
         <div className="space-y-6">
