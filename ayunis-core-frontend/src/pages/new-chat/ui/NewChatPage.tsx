@@ -163,6 +163,9 @@ export default function NewChatPage({
 
   function handleWorkspaceChange(id: string | null) {
     setWorkspaceId(id);
+    if (selectedSkill?.workspaceId && selectedSkill.workspaceId !== id) {
+      setSelectedSkill(undefined);
+    }
   }
 
   function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
@@ -292,8 +295,10 @@ export default function NewChatPage({
               onModelChange={handleModelChange}
               onSend={handleSend}
               onCancel={handleCancel}
+              workspaceId={workspaceId}
               selectedSkillId={selectedSkill?.id}
               selectedSkillName={selectedSkill?.name}
+              onSkillSelect={setSelectedSkill}
               onSkillRemove={() => setSelectedSkill(undefined)}
               onFileUpload={handleFileUpload}
               onRemoveSource={handleRemoveSource}
