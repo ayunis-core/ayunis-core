@@ -17,7 +17,6 @@ interface SkillImproveButtonProps {
   instructions: string;
   onImproved: (text: string) => void;
   onPendingChange?: (isPending: boolean) => void;
-  disabled?: boolean;
 }
 
 export function SkillImproveButton({
@@ -27,7 +26,6 @@ export function SkillImproveButton({
   instructions,
   onImproved,
   onPendingChange,
-  disabled = false,
 }: Readonly<SkillImproveButtonProps>) {
   const { t } = useTranslation('skills');
   const improve = useImproveSkillText();
@@ -110,7 +108,7 @@ export function SkillImproveButton({
             variant="ghost"
             size="sm"
             className="text-brand hover:text-brand h-7 px-2 text-xs"
-            disabled={disabled || !hasEnoughToWorkWith || improve.isPending}
+            disabled={!hasEnoughToWorkWith || improve.isPending}
             onClick={() => run(ownText)}
             data-testid={`improve-skill-${field}`}
           >

@@ -150,19 +150,6 @@ body {
   }
 }
 
-.skill-improve-settled {
-  animation: skill-improve-settled 1.4s ease-out 1;
-}
-
-@keyframes skill-improve-settled {
-  from {
-    background-color: color-mix(in oklab, var(--brand) 14%, transparent);
-  }
-  to {
-    background-color: transparent;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .onboarding-aurora,
   .animate-onboarding-marquee,
@@ -170,8 +157,7 @@ body {
   .onboarding-fade,
   .onboarding-kenburns,
   .onboarding-shimmer,
-  .skill-improve-shimmer,
-  .skill-improve-settled {
+  .skill-improve-shimmer {
     animation: none;
   }
   .onboarding-shimmer {
