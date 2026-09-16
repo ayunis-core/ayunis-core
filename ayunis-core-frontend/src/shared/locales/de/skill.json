@@ -157,7 +157,7 @@
     "cancelText": "Abbrechen"
   },
   "fieldHints": {
-    "trigger": "Der Auslöser entscheidet, wann sich diese Fähigkeit von selbst einschaltet. Beschreiben Sie die Situation so konkret wie möglich: um welche Themen es geht, welche Wörter vorkommen, welche Fragen gestellt werden. Beispiel: „Wenn es um Fristen bei Bauanträgen geht oder nach einem Stichtag gefragt wird.\" Allgemeine Angaben wie „immer wenn es passt\" führen dazu, dass die Fähigkeit selten oder im falschen Moment greift.",
+    "trigger": "Der Auslöser entscheidet, wann sich diese Fähigkeit von selbst einschaltet. Beschreiben Sie die Situation so konkret wie möglich: um welche Themen es geht, welche Wörter vorkommen, welche Fragen gestellt werden. Beispiel: „Wenn es um Fristen bei Bauanträgen geht oder nach einem Stichtag gefragt wird.\"",
     "instructions": "Die Anweisung beschreibt, wie gearbeitet werden soll, sobald die Fähigkeit aktiv ist: Vorgehen, Tonfall, Aufbau der Antwort und das, was weggelassen werden soll. Beispiel: „Antworte sachlich und in ganzen Sätzen, nenne immer die Rechtsgrundlage und frage nach, wenn das Aktenzeichen fehlt.\""
   }
 }

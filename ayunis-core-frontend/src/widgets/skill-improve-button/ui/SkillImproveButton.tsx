@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Undo2 } from 'lucide-react';
+import { Check, RefreshCw, Sparkles, Undo2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
@@ -31,7 +31,7 @@ export function SkillImproveButton({
 }: Readonly<SkillImproveButtonProps>) {
   const { t } = useTranslation('skills');
   const improve = useImproveSkillText();
-  const [previousText, setPreviousText] = useState<string | null>(null);
+  const [originalText, setOriginalText] = useState<string | null>(null);
 
   useEffect(() => {
     onPendingChange?.(improve.isPending);
@@ -39,63 +39,91 @@ export function SkillImproveButton({
 
   const ownText = field === 'instructions' ? instructions : trigger;
   const hasEnoughToWorkWith = ownText.trim().length > 0;
+  const hasSuggestion = originalText !== null && !improve.isPending;
 
-  function handleImprove() {
-    const before = ownText;
+  function run(sourceText: string) {
     improve.mutate(
-      { field, name, trigger, instructions },
+      {
+        field,
+        name,
+        trigger: field === 'trigger' ? sourceText : trigger,
+        instructions: field === 'instructions' ? sourceText : instructions,
+      },
       {
         onSuccess: (text) => {
-          setPreviousText(before);
+          setOriginalText(sourceText);
           onImproved(text);
         },
       },
     );
   }
 
-  function handleUndo() {
-    if (previousText === null) return;
-    onImproved(previousText);
-    setPreviousText(null);
-  }
-
-  return (
-    <span className="flex items-center gap-1">
-      {previousText !== null && !improve.isPending && (
+  if (hasSuggestion) {
+    return (
+      <span className="flex items-center gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-brand hover:text-brand h-7 px-2 text-xs"
+          onClick={() => setOriginalText(null)}
+          data-testid={`improve-skill-${field}-accept`}
+        >
+          <Check className="size-3.5" />
+          {t('improve.accept')}
+        </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           className="h-7 px-2 text-xs"
-          onClick={handleUndo}
+          onClick={() => run(originalText)}
+          data-testid={`improve-skill-${field}-retry`}
+        >
+          <RefreshCw className="size-3.5" />
+          {t('improve.retry')}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs"
+          onClick={() => {
+            onImproved(originalText);
+            setOriginalText(null);
+          }}
+          data-testid={`improve-skill-${field}-undo`}
         >
           <Undo2 className="size-3.5" />
           {t('improve.undo')}
         </Button>
-      )}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-brand hover:text-brand h-7 px-2 text-xs"
-              disabled={disabled || !hasEnoughToWorkWith || improve.isPending}
-              onClick={handleImprove}
-              data-testid={`improve-skill-${field}`}
-            >
-              <Sparkles
-                className={`size-3.5 ${improve.isPending ? 'skill-improve-spark' : ''}`}
-              />
-              {improve.isPending ? t('improve.running') : t('improve.action')}
-            </Button>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>
-          {hasEnoughToWorkWith ? t('improve.tooltip') : t('improve.needsInput')}
-        </TooltipContent>
-      </Tooltip>
-    </span>
+      </span>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-brand hover:text-brand h-7 px-2 text-xs"
+            disabled={disabled || !hasEnoughToWorkWith || improve.isPending}
+            onClick={() => run(ownText)}
+            data-testid={`improve-skill-${field}`}
+          >
+            <Sparkles
+              className={`size-3.5 ${improve.isPending ? 'skill-improve-spark' : ''}`}
+            />
+            {improve.isPending ? t('improve.running') : t('improve.action')}
+          </Button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>
+        {hasEnoughToWorkWith ? t('improve.tooltip') : t('improve.needsInput')}
+      </TooltipContent>
+    </Tooltip>
   );
 }

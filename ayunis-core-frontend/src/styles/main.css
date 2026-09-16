@@ -141,17 +141,22 @@ body {
   }
 }
 
+/* Borrows the ambient mist of the new-chat backdrop: the same brand colour,
+   blurred and slowly breathing, scaled down to the size of a form control. */
 .skill-improve-busy {
-  animation: skill-improve-busy 1.6s ease-in-out infinite;
+  animation: skill-improve-busy 2.6s ease-in-out infinite alternate;
 }
 
 @keyframes skill-improve-busy {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand) 30%, transparent);
+  from {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--brand) 22%, transparent),
+      0 0 16px -2px color-mix(in oklab, var(--brand) 28%, transparent);
   }
-  50% {
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--brand) 14%, transparent);
+  to {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--brand) 45%, transparent),
+      0 0 34px 2px color-mix(in oklab, var(--brand) 48%, transparent);
   }
 }
 

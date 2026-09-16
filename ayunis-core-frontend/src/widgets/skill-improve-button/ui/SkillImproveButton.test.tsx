@@ -83,7 +83,7 @@ describe('SkillImproveButton', () => {
     ).toBe(true);
   });
 
-  it('offers to restore the previous text after an improvement', async () => {
+  it('offers keeping, retrying and reverting once a suggestion lands', async () => {
     mocks.mutate.mockImplementation((_params, options) => {
       options.onSuccess('Wenn eine Frist im Bauantrag genannt wird.');
     });
@@ -94,11 +94,51 @@ describe('SkillImproveButton', () => {
     expect(onImproved).toHaveBeenCalledWith(
       'Wenn eine Frist im Bauantrag genannt wird.',
     );
-    const undo = await screen.findByText('improve.undo');
+    expect(screen.getByTestId('improve-skill-trigger-accept')).toBeTruthy();
+    expect(screen.getByTestId('improve-skill-trigger-retry')).toBeTruthy();
+    expect(screen.getByTestId('improve-skill-trigger-undo')).toBeTruthy();
+  });
 
-    fireEvent.click(undo);
+  it('puts the original wording back when reverted', () => {
+    mocks.mutate.mockImplementation((_params, options) => {
+      options.onSuccess('Wenn eine Frist im Bauantrag genannt wird.');
+    });
+    const { onImproved } = renderButton();
+
+    fireEvent.click(screen.getByTestId('improve-skill-trigger'));
+    fireEvent.click(screen.getByTestId('improve-skill-trigger-undo'));
 
     expect(onImproved).toHaveBeenLastCalledWith('Immer wenn relevant');
+    expect(screen.getByTestId('improve-skill-trigger')).toBeTruthy();
+  });
+
+  it('retries from the original wording, not from the suggestion', () => {
+    mocks.mutate.mockImplementation((_params, options) => {
+      options.onSuccess('Wenn eine Frist im Bauantrag genannt wird.');
+    });
+    renderButton();
+
+    fireEvent.click(screen.getByTestId('improve-skill-trigger'));
+    mocks.mutate.mockClear();
+    fireEvent.click(screen.getByTestId('improve-skill-trigger-retry'));
+
+    expect(mocks.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ trigger: 'Immer wenn relevant' }),
+      expect.anything(),
+    );
+  });
+
+  it('returns to the plain action once the suggestion is kept', () => {
+    mocks.mutate.mockImplementation((_params, options) => {
+      options.onSuccess('Wenn eine Frist im Bauantrag genannt wird.');
+    });
+    renderButton();
+
+    fireEvent.click(screen.getByTestId('improve-skill-trigger'));
+    fireEvent.click(screen.getByTestId('improve-skill-trigger-accept'));
+
+    expect(screen.queryByTestId('improve-skill-trigger-undo')).toBeNull();
+    expect(screen.getByTestId('improve-skill-trigger')).toBeTruthy();
   });
 
   it('reports that it is working so the field can show it', async () => {
