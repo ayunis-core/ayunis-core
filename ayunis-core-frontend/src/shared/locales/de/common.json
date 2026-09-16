@@ -213,7 +213,7 @@
     "skillCount_other": "{{count}} Fähigkeiten",
     "knowledgeCount_one": "{{count}} Wissenssammlung",
     "knowledgeCount_other": "{{count}} Wissenssammlungen",
-    "skillsHint": "Fähigkeiten aktivieren sich von selbst, sobald Ihre Eingabe dazu passt. Sie müssen nichts auswählen.",
+    "skillsHint": "Fähigkeiten aktivieren sich von selbst, sobald Ihre Eingabe dazu passt — oder Sie wählen hier eine aus.",
     "knowledgeHint": "Wissenssammlungen werden durchsucht, sobald Ihre Frage dazu passt. Sie müssen nichts auswählen.",
     "sharedBadge": "Freigegeben",
     "skillsEmpty": "Für diesen Chat steht noch keine Fähigkeit bereit.",

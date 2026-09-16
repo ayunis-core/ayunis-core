@@ -1,4 +1,7 @@
-import { AvailableContextMenus } from './AvailableContextMenus';
+import {
+  AvailableContextMenus,
+  type AttachableSkill,
+} from './AvailableContextMenus';
 import { Lock } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import { Badge } from '@ayunis/ui/components/badge';
@@ -122,6 +125,7 @@ export default function NewChatPage({
     IntegrationSummary[]
   >([]);
   const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
+  const [selectedSkill, setSelectedSkill] = useState<AttachableSkill>();
 
   const handleMistExitComplete = useCallback(() => {
     setMistPhase('hidden');
@@ -149,6 +153,12 @@ export default function NewChatPage({
 
   function handleModelChange(modelId: string) {
     setModelId(modelId);
+  }
+
+  function handleSkillToggle(skill: AttachableSkill) {
+    setSelectedSkill((current) =>
+      current?.id === skill.id ? undefined : skill,
+    );
   }
 
   function handleWorkspaceChange(id: string | null) {
@@ -282,6 +292,9 @@ export default function NewChatPage({
               onModelChange={handleModelChange}
               onSend={handleSend}
               onCancel={handleCancel}
+              selectedSkillId={selectedSkill?.id}
+              selectedSkillName={selectedSkill?.name}
+              onSkillRemove={() => setSelectedSkill(undefined)}
               onFileUpload={handleFileUpload}
               onRemoveSource={handleRemoveSource}
               onAddKnowledgeBase={(kb) => {
@@ -316,7 +329,11 @@ export default function NewChatPage({
                   onWorkspaceChange={handleWorkspaceChange}
                 />
               )}
-              <AvailableContextMenus workspaceId={workspaceId} />
+              <AvailableContextMenus
+                workspaceId={workspaceId}
+                selectedSkillId={selectedSkill?.id}
+                onSkillSelect={handleSkillToggle}
+              />
             </div>
           </div>
         </>
