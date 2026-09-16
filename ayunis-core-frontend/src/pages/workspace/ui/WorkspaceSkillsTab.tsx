@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
-import { Pin, Sparkles, Trash2 } from 'lucide-react';
+import { Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { ItemGroup } from '@ayunis/ui/components/item';
 import { Switch } from '@ayunis/ui/components/switch';
@@ -35,13 +35,8 @@ export function WorkspaceSkillsTab({
     workspaceId,
     listParams,
   );
-  const {
-    createSkill,
-    deleteSkill,
-    setSkillActive,
-    setSkillPinned,
-    isChangingSkillState,
-  } = useWorkspaceContextActions(workspaceId);
+  const { createSkill, deleteSkill, setSkillActive, isChangingSkillState } =
+    useWorkspaceContextActions(workspaceId);
 
   const addButton = (
     <OnboardingTourTarget name={TOUR_TARGET.workspaceSkill}>
@@ -110,38 +105,6 @@ export function WorkspaceSkillsTab({
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  {skill.isActive ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          data-testid={`workspace-skill-pin-${skill.id}`}
-                          disabled={isChangingSkillState}
-                          aria-label={
-                            skill.isPinned
-                              ? t('context.skills.unpin')
-                              : t('context.skills.pin')
-                          }
-                          onClick={() =>
-                            setSkillPinned({
-                              skillId: skill.id,
-                              isPinned: !skill.isPinned,
-                            })
-                          }
-                        >
-                          <Pin
-                            className={skill.isPinned ? 'fill-current' : ''}
-                          />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {skill.isPinned
-                          ? t('context.skills.unpin')
-                          : t('context.skills.pin')}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : null}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button

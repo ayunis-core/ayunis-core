@@ -114,12 +114,6 @@
     "modelChangeDisabledTooltip": "Das Modell kann in einem bestehenden Chat nicht mehr gewechselt werden.",
     "deactivateSkillTooltip": "Fähigkeit deaktivieren"
   },
-  "pinnedSkills": {
-    "empty": "Keine angehefteten Fähigkeiten",
-    "activateTooltip": "Fähigkeit aktivieren",
-    "projectLoadError": "Angeheftete Fähigkeiten des Arbeitsbereichs konnten nicht geladen werden.",
-    "pinHint": "Fähigkeiten für schnellen Zugriff anheften"
-  },
   "common": {
     "loading": "Laden...",
     "helpLink": "Hilfe",

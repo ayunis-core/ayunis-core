@@ -114,12 +114,6 @@
     "modelChangeDisabledTooltip": "The model can't be changed in an existing chat.",
     "deactivateSkillTooltip": "Deactivate skill"
   },
-  "pinnedSkills": {
-    "empty": "No pinned skills",
-    "activateTooltip": "Activate skill",
-    "projectLoadError": "Could not load pinned workspace skills.",
-    "pinHint": "Pin skills for quick access"
-  },
   "common": {
     "loading": "Loading...",
     "helpLink": "Help",
