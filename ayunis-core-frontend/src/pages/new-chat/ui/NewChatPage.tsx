@@ -1,6 +1,7 @@
 import { AvailableContextMenus } from './AvailableContextMenus';
 import { Lock } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
+import { Badge } from '@ayunis/ui/components/badge';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import { cn } from '@ayunis/ui/lib/cn';
 import {
@@ -231,6 +232,22 @@ export default function NewChatPage({
       }
       compose={
         <>
+          <div
+            className={cn(
+              'new-chat-greeting-extras flex justify-center overflow-hidden',
+              isCreating && 'new-chat-greeting-extras--collapsed',
+            )}
+            aria-hidden={isCreating}
+          >
+            <Badge
+              variant="outline"
+              className="text-muted-foreground font-normal"
+            >
+              <Lock />
+              {t('newChat.privacyHint')}
+            </Badge>
+          </div>
+
           <h1
             className={cn(
               'new-chat-greeting text-center text-2xl font-bold',
@@ -300,19 +317,6 @@ export default function NewChatPage({
                 />
               )}
               <AvailableContextMenus workspaceId={workspaceId} />
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
-              isCreating && 'new-chat-dock-extras--collapsed',
-            )}
-            aria-hidden={isCreating}
-          >
-            <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3 shrink-0" />
-              <span>{t('newChat.privacyHint')}</span>
             </div>
           </div>
         </>

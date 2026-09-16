@@ -85,20 +85,17 @@
   transition-delay: var(--new-chat-settle-duration);
 }
 
-.new-chat-dock-extras {
+.new-chat-greeting-extras {
   transition:
     max-height var(--new-chat-greeting-exit-duration)
       var(--new-chat-greeting-exit-ease),
     opacity var(--new-chat-greeting-exit-duration)
-      var(--new-chat-greeting-exit-ease),
-    margin-top var(--new-chat-greeting-exit-duration)
       var(--new-chat-greeting-exit-ease);
   max-height: 24rem;
 }
 
-.new-chat-dock-extras--collapsed {
+.new-chat-greeting-extras--collapsed {
   max-height: 0;
-  margin-top: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -111,7 +108,7 @@
   .new-chat-compose--settling .new-chat-compose__content,
   .new-chat-greeting,
   .new-chat-disclaimer,
-  .new-chat-dock-extras {
+  .new-chat-greeting-extras {
     transition: none;
   }
 
