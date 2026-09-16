@@ -206,5 +206,18 @@
       "warning": "Bewahren Sie diese Wiederherstellungscodes sicher auf. Jeder Code funktioniert nur einmal und wird nicht erneut angezeigt.",
       "copyAll": "Alle Codes kopieren"
     }
+  },
+  "availableContext": {
+    "skillCount_one": "{{count}} Fähigkeit",
+    "skillCount_other": "{{count}} Fähigkeiten",
+    "knowledgeCount_one": "{{count}} Wissenssammlung",
+    "knowledgeCount_other": "{{count}} Wissenssammlungen",
+    "skillsHint": "Fähigkeiten aktivieren sich von selbst, sobald Ihre Eingabe dazu passt. Sie müssen nichts auswählen.",
+    "knowledgeHint": "Wissenssammlungen werden durchsucht, sobald Ihre Frage dazu passt. Sie müssen nichts auswählen.",
+    "sharedBadge": "Freigegeben",
+    "skillsEmpty": "Für diesen Chat steht noch keine Fähigkeit bereit.",
+    "knowledgeEmpty": "Für diesen Chat steht noch kein Wissen bereit.",
+    "manageSkills": "Fähigkeiten verwalten",
+    "manageKnowledge": "Wissen verwalten"
   }
 }
