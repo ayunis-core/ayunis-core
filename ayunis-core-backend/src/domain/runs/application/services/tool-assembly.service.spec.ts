@@ -400,7 +400,52 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
       ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
     );
-    expect(editSkillCall?.[0].context).toEqual(['user__user-skill']);
+    expect(editSkillCall?.[0].context).toEqual(
+      new Map([
+        ['user__user-skill', activeSkill.id],
+        ['workspace__project-skill', projectSkill.id],
+      ]),
+    );
+  });
+
+  it('keeps editable skill IDs aligned with the first advertised slug on collisions', async () => {
+    const workspaceId = randomUUID();
+    const firstSkill = new WorkspaceSkill({
+      id: randomUUID(),
+      name: 'Budget Review',
+      shortDescription: 'First skill',
+      instructions: 'Use the first skill',
+      workspaceId,
+    });
+    const collidingSkill = new WorkspaceSkill({
+      id: randomUUID(),
+      name: 'Budget-Review',
+      shortDescription: 'Colliding skill',
+      instructions: 'Use the colliding skill',
+      workspaceId,
+    });
+    const { service, assembleToolsUseCase } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(undefined),
+      skillsEnabled: true,
+    });
+
+    await service.buildRunContext(createMockThread(), [], true, false, {
+      instruction: null,
+      skills: [firstSkill, collidingSkill].map((skill) => ({
+        skill,
+        isActive: true,
+        isPinned: false,
+      })),
+      knowledgeBases: [],
+      runtimeKnowledgeBases: [],
+    });
+
+    const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
+    );
+    expect(editSkillCall?.[0].context).toEqual(
+      new Map([['workspace__budget-review', firstSkill.id]]),
+    );
   });
 
   it('makes active knowledge bases available without attaching them to the thread', async () => {

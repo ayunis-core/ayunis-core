@@ -1,53 +1,37 @@
 import { useState, useEffect } from 'react';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import { slugify } from '@/pages/chat/lib/slugify';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@ayunis/ui/components/label';
 import { Input } from '@ayunis/ui/components/input';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { Button } from '@ayunis/ui/components/button';
 import { cn } from '@ayunis/ui/lib/cn';
-import { showSuccess, showError } from '@/shared/lib/toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  skillsControllerUpdate,
-  getSkillsControllerFindAllQueryKey,
-  getSkillsControllerFindOneQueryKey,
-  useSkillsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import extractErrorData from '@/shared/api/extract-error-data';
-import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import { useThreadWorkspaceId } from '@/pages/chat/api/useThreadWorkspaceId';
+import { useEditSkillFromChat } from '@/pages/chat/api/useEditSkillFromChat';
 
 export default function EditSkillWidget({
   content,
   isStreaming = false,
+  threadId,
 }: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
+  threadId?: string;
 }>) {
   const { t } = useTranslation('chat');
-  const queryClient = useQueryClient();
+  const workspaceId = useThreadWorkspaceId(threadId);
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as {
     skill_slug?: string;
+    skill_id?: string;
     name?: string;
     short_description?: string;
     instructions?: string;
     change_summary?: string;
   };
 
-  // Resolve skill_slug to existing skill via the skills list
-  const { data: skillsResponse } = useSkillsControllerFindAll(
-    personalSkillListParams,
-    { query: { staleTime: Infinity } },
-  );
-  const skills = skillsResponse?.data;
   const skillSlug = params.skill_slug ?? '';
-  const bareSlug = skillSlug.replace(/^(user|system)__/, '');
-  const existingSkill = skills?.find((s) => slugify(s.name) === bareSlug);
-  const skillId = existingSkill?.id ?? '';
-
   const [name, setName] = useState<string>(params.name ?? '');
   const [shortDescription, setShortDescription] = useState<string>(
     params.short_description ?? '',
@@ -56,6 +40,19 @@ export default function EditSkillWidget({
     params.instructions ?? '',
   );
   const [updated, setUpdated] = useState(false);
+  const {
+    existingSkill,
+    targetIsValid,
+    targetLookupComplete,
+    updateSkill,
+    isPending,
+  } = useEditSkillFromChat({
+    skillId: params.skill_id,
+    skillSlug,
+    threadId,
+    workspaceId,
+    onUpdated: () => setUpdated(true),
+  });
 
   // Merge streaming params with existing skill data as fallback.
   // Empty-string params mean "unchanged" — fill from existing skill.
@@ -80,42 +77,11 @@ export default function EditSkillWidget({
     content.id,
   ]);
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      return await skillsControllerUpdate(skillId, {
-        name,
-        shortDescription,
-        instructions,
-      });
-    },
-    onSuccess: () => {
-      setUpdated(true);
-      showSuccess(t('chat.tools.edit_skill.success'));
-      void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: getSkillsControllerFindOneQueryKey(skillId),
-      });
-    },
-    onError: (error) => {
-      try {
-        const { code } = extractErrorData(error);
-        if (code === 'DUPLICATE_SKILL_NAME') {
-          showError(t('chat.tools.edit_skill.errorDuplicate'));
-        } else {
-          showError(t('chat.tools.edit_skill.error'));
-        }
-      } catch {
-        showError(t('chat.tools.edit_skill.error'));
-      }
-    },
-  });
-
-  const skillNotFound = !!skillSlug && !!skills && !existingSkill;
+  const skillNotFound =
+    !isStreaming && !!skillSlug && targetLookupComplete && !targetIsValid;
 
   const isValid =
-    !!skillId &&
+    targetIsValid &&
     name.trim().length > 0 &&
     shortDescription.trim().length > 0 &&
     instructions.trim().length > 0;
@@ -189,8 +155,8 @@ export default function EditSkillWidget({
 
       <div className="w-full flex gap-2">
         <Button
-          onClick={() => mutation.mutate()}
-          disabled={!isValid || mutation.isPending || updated}
+          onClick={() => updateSkill({ name, shortDescription, instructions })}
+          disabled={!isValid || isPending || updated}
           className={cn(isStreaming && 'animate-pulse')}
         >
           {updated

@@ -31,13 +31,19 @@ export function useAssignThreadToWorkspace() {
       await threadsControllerAssignWorkspace(threadId, { workspaceId });
     },
     onSuccess: (_data, { threadId, workspaceId }) => {
+      const threadQueryKey = getThreadsControllerFindOneQueryKey(threadId);
+      queryClient.setQueryData(threadQueryKey, (thread: unknown) =>
+        thread && typeof thread === 'object'
+          ? { ...thread, workspaceId }
+          : thread,
+      );
       void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindAllQueryKey(),
       });
       // The open chat route loads through findOne; without this the thread
       // keeps its old workspaceId until the cache expires.
       void queryClient.invalidateQueries({
-        queryKey: getThreadsControllerFindOneQueryKey(threadId),
+        queryKey: threadQueryKey,
       });
       void queryClient.invalidateQueries({
         queryKey: getThreadAiContextControllerGetAiContextQueryKey(threadId),
