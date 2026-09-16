@@ -108,10 +108,7 @@ export function FavoriteSidebarItem({
       </SidebarMenuButton>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuAction
-            showOnHover
-            className={isWorkspace ? 'right-7' : undefined}
-          >
+          <SidebarMenuAction showOnHover>
             <MoreHorizontal />
             <span className="sr-only">{t('sidebar.more')}</span>
           </SidebarMenuAction>

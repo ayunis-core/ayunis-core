@@ -76,7 +76,6 @@ export function WorkspaceSidebarItem({
           <DropdownMenuTrigger asChild>
             <SidebarMenuAction
               showOnHover
-              className="right-7"
               data-testid={`sidebar-workspace-menu-${workspace.id}`}
             >
               <MoreHorizontal />

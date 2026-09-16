@@ -16,6 +16,7 @@ export function WorkspaceChatsToggle({
     <CollapsibleTrigger asChild>
       <SidebarMenuAction
         showOnHover
+        className="right-7"
         data-testid={`sidebar-workspace-toggle-${workspaceId}`}
       >
         <ChevronRight className="transition-transform group-data-[state=open]/workspace:rotate-90" />
