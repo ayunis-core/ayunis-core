@@ -90,6 +90,7 @@ export function WorkspaceSidebarItem({
             className="rounded-lg"
             side="bottom"
             align="end"
+            collisionPadding={8}
             onCloseAutoFocus={handleCloseAutoFocus}
           >
             <DropdownMenuItem

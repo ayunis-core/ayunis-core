@@ -123,6 +123,7 @@ export function FavoriteSidebarItem({
           className="rounded-lg"
           side="bottom"
           align="end"
+          collisionPadding={8}
           onCloseAutoFocus={handleCloseAutoFocus}
         >
           {isWorkspace ? (
