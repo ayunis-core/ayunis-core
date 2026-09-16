@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Brain, Check, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Brain, Check, Sparkles } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
@@ -182,17 +182,9 @@ function ContextPopover({
           {t(hintKey)}
         </p>
         {entries.length === 0 ? (
-          <div className="px-3 py-4 text-center">
-            <p className="text-muted-foreground text-xs">{t(emptyKey)}</p>
-            <Button
-              variant="link"
-              size="sm"
-              asChild
-              className="mt-1 h-auto text-xs"
-            >
-              <Link to={manageTo}>{t(manageKey)}</Link>
-            </Button>
-          </div>
+          <p className="text-muted-foreground px-3 py-4 text-center text-xs">
+            {t(emptyKey)}
+          </p>
         ) : (
           <div className="max-h-72 overflow-y-auto p-1">
             {entries.map((entry) => (
@@ -206,6 +198,19 @@ function ContextPopover({
             ))}
           </div>
         )}
+        <div className="border-t p-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="text-muted-foreground w-full justify-start font-normal"
+          >
+            <Link to={manageTo} data-testid={`${testId}-manage`}>
+              {t(manageKey)}
+              <ArrowUpRight className="ml-auto" />
+            </Link>
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );
