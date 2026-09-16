@@ -95,5 +95,15 @@
     "editor": "Selbst erstellen",
     "marketplace": "Aus dem Marketplace hinzufügen",
     "guidedPrompt": "Hilf mir, eine neue Fähigkeit anzulegen. Stelle mir nacheinander die Fragen, die du dafür brauchst — immer nur eine pro Nachricht: Wofür soll die Fähigkeit da sein? In welchen Situationen soll sie sich einschalten? Worauf soll sie achten, was soll sie vermeiden? Was du aus meinen Antworten schon ableiten kannst, schlägst du vor, statt danach zu fragen. Wenn das Bild steht, lege die Fähigkeit mit Name, Kurzbeschreibung und Anweisungen an."
+  },
+  "improve": {
+    "action": "Verbessern",
+    "running": "Wird verbessert…",
+    "undo": "Zurücksetzen",
+    "tooltip": "Ayunis Core schreibt diesen Text schärfer — mit Blick auf das jeweils andere Feld.",
+    "needsInput": "Schreiben Sie zuerst ein paar Worte, dann kann Ayunis Core daran arbeiten.",
+    "error": "Der Text konnte nicht verbessert werden. Bitte versuchen Sie es erneut.",
+    "emptyAnswer": "Es kam kein Vorschlag zurück. Ihr Text ist unverändert.",
+    "noModel": "Für Ihre Organisation ist kein Modell freigegeben."
   }
 }

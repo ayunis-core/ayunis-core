@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
@@ -23,6 +23,7 @@ import {
 } from '@ayunis/ui/components/form';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { InstructionsField, NameField } from '@/widgets/entity-form-fields';
+import { SkillImproveButton } from '@/widgets/skill-improve-button';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
@@ -60,6 +61,14 @@ export function SkillPropertiesCard({
     ),
     defaultValues: skill,
   });
+
+  const [name, shortDescription, instructions] = useWatch({
+    control: form.control,
+    name: ['name', 'shortDescription', 'instructions'],
+  });
+  const [busyField, setBusyField] = useState<'trigger' | 'instructions' | null>(
+    null,
+  );
 
   const submit = async (data: SkillPropertiesData) => {
     setIsSaving(true);
@@ -101,15 +110,33 @@ export function SkillPropertiesCard({
               name="shortDescription"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {t('properties.form.shortDescriptionLabel')}
-                  </FormLabel>
+                  <div className="flex min-h-7 items-center justify-between gap-2">
+                    <FormLabel>
+                      {t('properties.form.shortDescriptionLabel')}
+                    </FormLabel>
+                    {!disabled && (
+                      <SkillImproveButton
+                        field="trigger"
+                        onPendingChange={(isPending) =>
+                          setBusyField(isPending ? 'trigger' : null)
+                        }
+                        name={name}
+                        trigger={shortDescription}
+                        instructions={instructions}
+                        onImproved={(text) =>
+                          form.setValue('shortDescription', text, {
+                            shouldDirty: true,
+                          })
+                        }
+                      />
+                    )}
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder={t(
                         'properties.form.shortDescriptionPlaceholder',
                       )}
-                      className="min-h-[80px] max-h-[200px]"
+                      className={`min-h-[80px] max-h-[200px] ${busyField === 'trigger' ? 'skill-improve-busy' : ''}`}
                       disabled={disabled}
                       {...field}
                     />
@@ -128,6 +155,25 @@ export function SkillPropertiesCard({
               translationPrefix="properties"
               disabled={disabled}
               className="min-h-[250px] max-h-[500px]"
+              isBusy={busyField === 'instructions'}
+              labelAction={
+                !disabled && (
+                  <SkillImproveButton
+                    field="instructions"
+                    onPendingChange={(isPending) =>
+                      setBusyField(isPending ? 'instructions' : null)
+                    }
+                    name={name}
+                    trigger={shortDescription}
+                    instructions={instructions}
+                    onImproved={(text) =>
+                      form.setValue('instructions', text, {
+                        shouldDirty: true,
+                      })
+                    }
+                  />
+                )
+              }
             />
             <Button type="submit" disabled={isSaving || disabled}>
               {isSaving

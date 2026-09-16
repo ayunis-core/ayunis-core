@@ -125,13 +125,59 @@ body {
   }
 }
 
+.skill-improve-spark {
+  animation: skill-improve-spark 1.1s ease-in-out infinite;
+}
+
+@keyframes skill-improve-spark {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.9) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(12deg);
+  }
+}
+
+.skill-improve-busy {
+  animation: skill-improve-busy 1.6s ease-in-out infinite;
+}
+
+@keyframes skill-improve-busy {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand) 30%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--brand) 14%, transparent);
+  }
+}
+
+.skill-improve-settled {
+  animation: skill-improve-settled 1.4s ease-out 1;
+}
+
+@keyframes skill-improve-settled {
+  from {
+    background-color: color-mix(in oklab, var(--brand) 14%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .onboarding-aurora,
   .animate-onboarding-marquee,
   .onboarding-rise,
   .onboarding-fade,
   .onboarding-kenburns,
-  .onboarding-shimmer {
+  .onboarding-shimmer,
+  .skill-improve-spark,
+  .skill-improve-busy,
+  .skill-improve-settled {
     animation: none;
   }
   .onboarding-shimmer {

@@ -9,6 +9,7 @@ import {
 import { Input } from '@ayunis/ui/components/input';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 
 interface ShortDescriptionFieldProps<TFieldValues extends FieldValues> {
@@ -18,6 +19,10 @@ interface ShortDescriptionFieldProps<TFieldValues extends FieldValues> {
   translationPrefix?: string;
   disabled?: boolean;
   multiline?: boolean;
+  /** Rendered next to the label, e.g. an action that rewrites the field. */
+  labelAction?: ReactNode;
+  /** Highlights the control while that action is running. */
+  isBusy?: boolean;
 }
 
 export default function ShortDescriptionField<
@@ -29,6 +34,8 @@ export default function ShortDescriptionField<
   translationPrefix = 'createDialog',
   disabled = false,
   multiline = false,
+  labelAction,
+  isBusy = false,
 }: Readonly<ShortDescriptionFieldProps<TFieldValues>>) {
   const { t } = useTranslation(translationNamespace);
   const hintKey = `${translationPrefix}.form.shortDescriptionHint`;
@@ -40,16 +47,19 @@ export default function ShortDescriptionField<
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>
-            {t(`${translationPrefix}.form.shortDescriptionLabel`)}
-          </FormLabel>
+          <div className="flex min-h-7 items-center justify-between gap-2">
+            <FormLabel>
+              {t(`${translationPrefix}.form.shortDescriptionLabel`)}
+            </FormLabel>
+            {labelAction}
+          </div>
           <FormControl>
             {multiline ? (
               <Textarea
                 placeholder={t(
                   `${translationPrefix}.form.shortDescriptionPlaceholder`,
                 )}
-                className="min-h-[80px] max-h-[200px]"
+                className={`min-h-[80px] max-h-[200px] ${isBusy ? 'skill-improve-busy' : ''}`}
                 disabled={disabled}
                 {...field}
               />
@@ -58,6 +68,7 @@ export default function ShortDescriptionField<
                 placeholder={t(
                   `${translationPrefix}.form.shortDescriptionPlaceholder`,
                 )}
+                className={isBusy ? 'skill-improve-busy' : undefined}
                 disabled={disabled}
                 {...field}
               />

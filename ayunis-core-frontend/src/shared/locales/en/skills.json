@@ -95,5 +95,15 @@
     "editor": "Create it yourself",
     "marketplace": "Add from the marketplace",
     "guidedPrompt": "Help me create a new skill. Ask me the questions you need one at a time: What should the skill be for? In which situations should it kick in? What should it pay attention to, what should it avoid? Whatever you can already derive from my answers, propose it instead of asking. Once the picture is complete, create the skill with a name, a short description and instructions."
+  },
+  "improve": {
+    "action": "Improve",
+    "running": "Improving…",
+    "undo": "Undo",
+    "tooltip": "Ayunis Core sharpens this text, taking the other field into account.",
+    "needsInput": "Write a few words first, then Ayunis Core has something to work with.",
+    "error": "The text could not be improved. Please try again.",
+    "emptyAnswer": "No suggestion came back. Your text is unchanged.",
+    "noModel": "No model is enabled for your organisation."
   }
 }

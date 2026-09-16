@@ -1,5 +1,6 @@
+import { SkillImproveButton } from '@/widgets/skill-improve-button';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
@@ -68,6 +69,14 @@ export function SkillCreateDialog({
     defaultValues: { name: '', shortDescription: '', instructions: '' },
   });
 
+  const [name, shortDescription, instructions] = useWatch({
+    control: form.control,
+    name: ['name', 'shortDescription', 'instructions'],
+  });
+  const [busyField, setBusyField] = useState<'trigger' | 'instructions' | null>(
+    null,
+  );
+
   const close = () => {
     form.reset();
     setIsOpen(false);
@@ -111,12 +120,44 @@ export function SkillCreateDialog({
               control={form.control}
               name="shortDescription"
               translationNamespace="skills"
+              isBusy={busyField === 'trigger'}
+              labelAction={
+                <SkillImproveButton
+                  field="trigger"
+                  onPendingChange={(isPending) =>
+                    setBusyField(isPending ? 'trigger' : null)
+                  }
+                  name={name}
+                  trigger={shortDescription}
+                  instructions={instructions}
+                  onImproved={(text) =>
+                    form.setValue('shortDescription', text, {
+                      shouldDirty: true,
+                    })
+                  }
+                />
+              }
             />
           </div>
           <InstructionsField
             control={form.control}
             name="instructions"
             translationNamespace="skills"
+            isBusy={busyField === 'instructions'}
+            labelAction={
+              <SkillImproveButton
+                field="instructions"
+                onPendingChange={(isPending) =>
+                  setBusyField(isPending ? 'instructions' : null)
+                }
+                name={name}
+                trigger={shortDescription}
+                instructions={instructions}
+                onImproved={(text) =>
+                  form.setValue('instructions', text, { shouldDirty: true })
+                }
+              />
+            }
           />
         </div>
       </Form>
