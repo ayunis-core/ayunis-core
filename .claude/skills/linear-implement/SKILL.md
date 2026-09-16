@@ -1,6 +1,6 @@
 ---
 name: linear-implement
-description: Work a Linear ticket end-to-end — read it, mark it started, implement and validate it, submit and finish its PR unless local-only was requested, summarize the outcome, proactively suggest follow-up tickets, and mark it Done.
+description: Work a Linear ticket end-to-end — read it, mark it started, implement and validate it, submit and finish its PR unless local-only was requested, summarize the outcome, proactively suggest follow-up tickets, and hand code work off for release.
 ---
 
 # Linear Implement
@@ -109,17 +109,17 @@ Examples of what qualifies as a follow-up:
 
 If nothing qualifies, say so explicitly — don't manufacture follow-ups.
 
-### 8. Close out
+### 8. Hand off for release
 
-If validation and the applicable delivery steps pass and no blockers remain, move the ticket to Done. If the user explicitly requested review before closure, wait for that review first.
+For code-backed tickets, validation, a green PR, and merge are not release. Do not move the ticket to `Done` during implementation. After merge, verify that the Git integration moved it to the team's merged or release-pending state. For AYC tickets, the expected state is `Merged`; update it manually only if the merge automation did not:
 
 ```bash
-linear issue update <ID> --state "Done"
+linear issue update <ID> --state "Merged"
 ```
 
-(`Done` is the standard closed-state name and currently shared across the AYC
-team — check `manage-linear`'s per-team state-names table if working in a team
-that diverges.)
+Only the release process may move a code-backed ticket to `Done`, after the production release that contains the change. If the ticket is unexpectedly `Done`, inspect its issue history and linked release before changing it: restore the release-pending state only when it was completed before the containing release. Leave it `Done` when release automation completed it after that release, even if the merge happened shortly beforehand.
+
+For a non-code ticket with no release artifact, use the team's normal completion state after its deliverable and validation are complete.
 
 If a blocker follow-up was created, leave the ticket in the started state and
 call that out instead.
@@ -132,7 +132,7 @@ The description (plus linked context) defines the scope. Don't silently expand �
 
 ### Propose before writing to Linear
 
-Creating or linking follow-up tickets is an external action. Propose first; execute on approval. Moving the ticket being implemented to its started state and then to `Done` after the completion gate passes are routine parts of this workflow.
+Creating or linking follow-up tickets is an external action. Propose first; execute on approval. Moving the ticket being implemented to its started state, and correcting a failed merge transition to its release-pending state after checking history, are routine parts of this workflow. `Done` remains owned by the release process for code-backed tickets.
 
 ### Link what you create
 

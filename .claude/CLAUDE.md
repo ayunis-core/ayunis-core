@@ -73,6 +73,8 @@ Before declaring implementation complete, apply the Proportional Workflow's runt
 
 Submitting a PR is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
 
+For code-backed Linear issues, PR completion or merge is not ticket completion. The merge integration should move the issue to the team's release-pending state (`Merged` for AYC); only the release process may move it to `Done` after a production release contains the change. Never set `Done` during implementation or reopen a completed issue without checking its state history first: restore the release-pending state only when `Done` occurred before the containing release.
+
 ### 8. Absolute Imports
 
 New code always uses the path aliases, never relative imports: `src/...` in the backend, `@/...` in the frontend. Both are configured in the respective `tsconfig.json`. Same-directory `./sibling` imports are fine; parent traversal (`../`) is not.
