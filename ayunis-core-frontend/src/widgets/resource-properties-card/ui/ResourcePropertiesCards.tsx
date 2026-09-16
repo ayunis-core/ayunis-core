@@ -24,6 +24,7 @@ import {
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { InstructionsField, NameField } from '@/widgets/entity-form-fields';
 import { SkillImproveButton } from '@/widgets/skill-improve-button';
+import { InfoHint } from '@/shared/ui/info-hint';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
@@ -111,8 +112,14 @@ export function SkillPropertiesCard({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex min-h-7 items-center justify-between gap-2">
-                    <FormLabel>
+                    <FormLabel className="flex items-center gap-1">
                       {t('properties.form.shortDescriptionLabel')}
+                      <InfoHint
+                        label={t('properties.form.shortDescriptionLabel')}
+                        hint={t('fieldHints.trigger')}
+                        testId="skill-trigger-hint"
+                        showLabel={false}
+                      />
                     </FormLabel>
                     {!disabled && (
                       <SkillImproveButton
@@ -156,6 +163,14 @@ export function SkillPropertiesCard({
               disabled={disabled}
               className="min-h-[250px] max-h-[500px]"
               isBusy={busyField === 'instructions'}
+              labelHint={
+                <InfoHint
+                  label={t('properties.form.instructionsLabel')}
+                  hint={t('fieldHints.instructions')}
+                  testId="skill-instructions-hint"
+                  showLabel={false}
+                />
+              }
               labelAction={
                 !disabled && (
                   <SkillImproveButton

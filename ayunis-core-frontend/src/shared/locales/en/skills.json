@@ -100,10 +100,14 @@
     "action": "Improve",
     "running": "Improving…",
     "undo": "Undo",
-    "tooltip": "Ayunis Core sharpens this text, taking the other field into account.",
+    "tooltip": "Improve this text with Ayunis Core",
     "needsInput": "Write a few words first, then Ayunis Core has something to work with.",
     "error": "The text could not be improved. Please try again.",
     "emptyAnswer": "No suggestion came back. Your text is unchanged.",
     "noModel": "No model is enabled for your organisation."
+  },
+  "fieldHints": {
+    "trigger": "The trigger decides when this skill switches itself on. Describe the situation as concretely as you can: which topics are involved, which words come up, which questions get asked. Example: \"When a building application deadline comes up or someone asks for a cut-off date.\" Broad phrases such as \"whenever it fits\" make the skill fire rarely or at the wrong moment.",
+    "instructions": "The instructions describe how to work once the skill is active: the approach, the tone, how the answer is structured and what to leave out. Example: \"Answer factually in full sentences, always name the legal basis, and ask back when the file number is missing.\""
   }
 }

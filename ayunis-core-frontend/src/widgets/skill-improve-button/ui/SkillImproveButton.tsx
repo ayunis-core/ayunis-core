@@ -80,7 +80,7 @@ export function SkillImproveButton({
               type="button"
               variant="ghost"
               size="sm"
-              className="skill-improve-trigger h-7 px-2 text-xs"
+              className="text-brand hover:text-brand h-7 px-2 text-xs"
               disabled={disabled || !hasEnoughToWorkWith || improve.isPending}
               onClick={handleImprove}
               data-testid={`improve-skill-${field}`}

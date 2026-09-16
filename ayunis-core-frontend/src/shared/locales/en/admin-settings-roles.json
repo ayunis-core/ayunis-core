@@ -25,7 +25,6 @@
     "manage_knowledge_bases": "Create, edit and delete knowledge bases and the documents inside them.",
     "share_knowledge_bases": "Make a knowledge base available to a team or to the whole organisation."
   },
-  "hintTriggerLabel": "More information about {{label}}",
   "permissions": {
     "manage_teams": "Manage teams",
     "assign_users_to_teams": "Assign users to teams",

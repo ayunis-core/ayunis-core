@@ -1,4 +1,5 @@
 import { SkillImproveButton } from '@/widgets/skill-improve-button';
+import { InfoHint } from '@/shared/ui/info-hint';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -121,6 +122,14 @@ export function SkillCreateDialog({
               name="shortDescription"
               translationNamespace="skills"
               isBusy={busyField === 'trigger'}
+              labelHint={
+                <InfoHint
+                  label={t('createDialog.form.shortDescriptionLabel')}
+                  hint={t('fieldHints.trigger')}
+                  testId="skill-trigger-hint"
+                  showLabel={false}
+                />
+              }
               labelAction={
                 <SkillImproveButton
                   field="trigger"
@@ -144,6 +153,14 @@ export function SkillCreateDialog({
             name="instructions"
             translationNamespace="skills"
             isBusy={busyField === 'instructions'}
+            labelHint={
+              <InfoHint
+                label={t('createDialog.form.instructionsLabel')}
+                hint={t('fieldHints.instructions')}
+                testId="skill-instructions-hint"
+                showLabel={false}
+              />
+            }
             labelAction={
               <SkillImproveButton
                 field="instructions"

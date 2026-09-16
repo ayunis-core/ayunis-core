@@ -19,6 +19,8 @@ interface ShortDescriptionFieldProps<TFieldValues extends FieldValues> {
   translationPrefix?: string;
   disabled?: boolean;
   multiline?: boolean;
+  /** Rendered right after the label text, e.g. an explanation. */
+  labelHint?: ReactNode;
   /** Rendered next to the label, e.g. an action that rewrites the field. */
   labelAction?: ReactNode;
   /** Highlights the control while that action is running. */
@@ -34,6 +36,7 @@ export default function ShortDescriptionField<
   translationPrefix = 'createDialog',
   disabled = false,
   multiline = false,
+  labelHint,
   labelAction,
   isBusy = false,
 }: Readonly<ShortDescriptionFieldProps<TFieldValues>>) {
@@ -48,8 +51,9 @@ export default function ShortDescriptionField<
       render={({ field }) => (
         <FormItem>
           <div className="flex min-h-7 items-center justify-between gap-2">
-            <FormLabel>
+            <FormLabel className="flex items-center gap-1">
               {t(`${translationPrefix}.form.shortDescriptionLabel`)}
+              {labelHint}
             </FormLabel>
             {labelAction}
           </div>

@@ -17,6 +17,8 @@ interface InstructionsFieldProps<TFieldValues extends FieldValues> {
   translationPrefix?: string;
   disabled?: boolean;
   className?: string;
+  /** Rendered right after the label text, e.g. an explanation. */
+  labelHint?: ReactNode;
   /** Rendered next to the label, e.g. an action that rewrites the field. */
   labelAction?: ReactNode;
   /** Highlights the control while that action is running. */
@@ -30,6 +32,7 @@ export default function InstructionsField<TFieldValues extends FieldValues>({
   translationPrefix = 'createDialog',
   disabled = false,
   className = 'min-h-[150px] max-h-[200px]',
+  labelHint,
   labelAction,
   isBusy = false,
 }: Readonly<InstructionsFieldProps<TFieldValues>>) {
@@ -42,8 +45,9 @@ export default function InstructionsField<TFieldValues extends FieldValues>({
       render={({ field }) => (
         <FormItem>
           <div className="flex min-h-7 items-center justify-between gap-2">
-            <FormLabel>
+            <FormLabel className="flex items-center gap-1">
               {t(`${translationPrefix}.form.instructionsLabel`)}
+              {labelHint}
             </FormLabel>
             {labelAction}
           </div>

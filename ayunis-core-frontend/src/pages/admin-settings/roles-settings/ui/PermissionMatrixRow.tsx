@@ -4,7 +4,7 @@ import type {
   EditableRole,
   Permission,
 } from '@/pages/admin-settings/roles-settings/model/types';
-import { InfoHint } from './InfoHint';
+import { InfoHint } from '@/shared/ui/info-hint';
 
 interface PermissionMatrixRowProps {
   permission: Permission;
