@@ -132,6 +132,29 @@ describe('AvailableContextMenus', () => {
     );
   });
 
+  it('hands the clicked skill over to the chat', () => {
+    const onSkillSelect = vi.fn();
+    render(
+      <AvailableContextMenus
+        workspaceId={null}
+        onSkillSelect={onSkillSelect}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('available-skills-menu'));
+    fireEvent.click(screen.getByTestId('available-skills-a'));
+
+    expect(onSkillSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'a', name: 'Fristenprüfung' }),
+    );
+  });
+
+  it('leaves knowledge bases as a read-only list', () => {
+    render(<AvailableContextMenus workspaceId={null} />);
+    fireEvent.click(screen.getByTestId('available-knowledge-menu'));
+
+    expect(screen.getByTestId('available-knowledge-kb').tagName).toBe('DIV');
+  });
+
   it('says that skills switch themselves on', () => {
     render(<AvailableContextMenus workspaceId={null} />);
     fireEvent.click(screen.getByTestId('available-skills-menu'));

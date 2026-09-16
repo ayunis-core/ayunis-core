@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Brain, ChevronDown, Sparkles } from 'lucide-react';
+import { Brain, Check, Sparkles } from 'lucide-react';
+import { cn } from '@ayunis/ui/lib/cn';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -20,15 +21,23 @@ import {
   useIsKnowledgeBasesEnabled,
   useIsSkillsEnabled,
 } from '@/features/feature-toggles';
+export interface AttachableSkill {
+  id: string;
+  name: string;
+  workspaceId?: string;
+}
 
 interface AvailableContextMenusProps {
   workspaceId?: string | null;
+  selectedSkillId?: string;
+  onSkillSelect?: (skill: AttachableSkill) => void;
 }
 
 interface ContextEntry {
   id: string;
   name: string;
   isShared: boolean;
+  workspaceId?: string;
 }
 
 function mergeEntries(...lists: ContextEntry[][]): ContextEntry[] {
@@ -41,6 +50,8 @@ function mergeEntries(...lists: ContextEntry[][]): ContextEntry[] {
 
 export function AvailableContextMenus({
   workspaceId,
+  selectedSkillId,
+  onSkillSelect,
 }: Readonly<AvailableContextMenusProps>) {
   const skillsEnabled = useIsSkillsEnabled();
   const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
@@ -70,7 +81,12 @@ export function AvailableContextMenus({
     : [];
 
   const skillEntries = mergeEntries(
-    workspaceSkills.map((s) => ({ id: s.id, name: s.name, isShared: true })),
+    workspaceSkills.map((s) => ({
+      id: s.id,
+      name: s.name,
+      isShared: true,
+      workspaceId: workspaceId ?? undefined,
+    })),
     (skillsResponse?.data ?? [])
       .filter((s) => s.isActive)
       .map((s) => ({ id: s.id, name: s.name, isShared: s.isShared })),
@@ -89,7 +105,7 @@ export function AvailableContextMenus({
     <>
       {skillsEnabled && (
         <ContextPopover
-          icon={<Sparkles className="size-3.5" />}
+          icon={<Sparkles />}
           countKey="availableContext.skillCount"
           hintKey="availableContext.skillsHint"
           emptyKey="availableContext.skillsEmpty"
@@ -97,11 +113,13 @@ export function AvailableContextMenus({
           manageTo="/skills"
           testId="available-skills"
           entries={skillEntries}
+          selectedId={selectedSkillId}
+          onSelect={onSkillSelect}
         />
       )}
       {knowledgeBasesEnabled && (
         <ContextPopover
-          icon={<Brain className="size-3.5" />}
+          icon={<Brain />}
           countKey="availableContext.knowledgeCount"
           hintKey="availableContext.knowledgeHint"
           emptyKey="availableContext.knowledgeEmpty"
@@ -124,6 +142,8 @@ function ContextPopover({
   manageTo,
   testId,
   entries,
+  selectedId,
+  onSelect,
 }: Readonly<{
   icon: ReactNode;
   countKey: string;
@@ -133,21 +153,28 @@ function ContextPopover({
   manageTo: string;
   testId: string;
   entries: ContextEntry[];
+  selectedId?: string;
+  onSelect?: (entry: ContextEntry) => void;
 }>) {
   const { t } = useTranslation('common');
+  const [isOpen, setIsOpen] = useState(false);
+
+  function handleSelect(entry: ContextEntry) {
+    onSelect?.(entry);
+    setIsOpen(false);
+  }
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground h-7 px-2 text-xs"
+          className="text-muted-foreground"
           data-testid={`${testId}-menu`}
         >
           {icon}
           {t(countKey, { count: entries.length })}
-          <ChevronDown className="size-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" collisionPadding={8} className="w-72 p-0">
@@ -169,22 +196,69 @@ function ContextPopover({
         ) : (
           <div className="max-h-72 overflow-y-auto p-1">
             {entries.map((entry) => (
-              <div
+              <EntryRow
                 key={entry.id}
-                className="flex items-center gap-2 px-2 py-1"
-                data-testid={`${testId}-${entry.id}`}
-              >
-                <span className="truncate text-sm">{entry.name}</span>
-                {entry.isShared && (
-                  <Badge variant="secondary" className="shrink-0 font-normal">
-                    {t('availableContext.sharedBadge')}
-                  </Badge>
-                )}
-              </div>
+                entry={entry}
+                isSelected={entry.id === selectedId}
+                onSelect={onSelect && handleSelect}
+                testId={testId}
+              />
             ))}
           </div>
         )}
       </PopoverContent>
     </Popover>
+  );
+}
+
+function EntryRow({
+  entry,
+  isSelected,
+  onSelect,
+  testId,
+}: Readonly<{
+  entry: ContextEntry;
+  isSelected: boolean;
+  onSelect?: (entry: ContextEntry) => void;
+  testId: string;
+}>) {
+  const { t } = useTranslation('common');
+  const content = (
+    <>
+      <span className="truncate">{entry.name}</span>
+      {entry.isShared && (
+        <Badge variant="secondary" className="shrink-0 font-normal">
+          {t('availableContext.sharedBadge')}
+        </Badge>
+      )}
+      {onSelect && (
+        <Check
+          className={cn('ml-auto size-4 shrink-0', !isSelected && 'invisible')}
+        />
+      )}
+    </>
+  );
+
+  if (!onSelect) {
+    return (
+      <div
+        className="flex items-center gap-2 px-2 py-1 text-sm"
+        data-testid={`${testId}-${entry.id}`}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(entry)}
+      aria-pressed={isSelected}
+      className="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm"
+      data-testid={`${testId}-${entry.id}`}
+    >
+      {content}
+    </button>
   );
 }
