@@ -25,6 +25,7 @@ import { Textarea } from '@ayunis/ui/components/textarea';
 import { InstructionsField, NameField } from '@/widgets/entity-form-fields';
 import { SkillImproveButton } from '@/widgets/skill-improve-button';
 import { InfoHint } from '@/shared/ui/info-hint';
+import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
@@ -70,6 +71,14 @@ export function SkillPropertiesCard({
   const [busyField, setBusyField] = useState<'trigger' | 'instructions' | null>(
     null,
   );
+  const handlePending =
+    (field: 'trigger' | 'instructions') => (isPending: boolean) => {
+      if (isPending) {
+        setBusyField(field);
+        return;
+      }
+      setBusyField((current) => (current === field ? null : current));
+    };
 
   const submit = async (data: SkillPropertiesData) => {
     setIsSaving(true);
@@ -124,9 +133,7 @@ export function SkillPropertiesCard({
                     {!disabled && (
                       <SkillImproveButton
                         field="trigger"
-                        onPendingChange={(isPending) =>
-                          setBusyField(isPending ? 'trigger' : null)
-                        }
+                        onPendingChange={handlePending('trigger')}
                         name={name}
                         trigger={shortDescription}
                         instructions={instructions}
@@ -138,16 +145,18 @@ export function SkillPropertiesCard({
                       />
                     )}
                   </div>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t(
-                        'properties.form.shortDescriptionPlaceholder',
-                      )}
-                      className={`min-h-[80px] max-h-[200px] ${busyField === 'trigger' ? 'skill-improve-busy' : ''}`}
-                      disabled={disabled}
-                      {...field}
-                    />
-                  </FormControl>
+                  <ProcessingGlow isActive={busyField === 'trigger'}>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t(
+                          'properties.form.shortDescriptionPlaceholder',
+                        )}
+                        className="min-h-[80px] max-h-[200px]"
+                        disabled={disabled}
+                        {...field}
+                      />
+                    </FormControl>
+                  </ProcessingGlow>
                   <FormDescription>
                     {t('properties.form.shortDescriptionHint')}
                   </FormDescription>
@@ -175,9 +184,7 @@ export function SkillPropertiesCard({
                 !disabled && (
                   <SkillImproveButton
                     field="instructions"
-                    onPendingChange={(isPending) =>
-                      setBusyField(isPending ? 'instructions' : null)
-                    }
+                    onPendingChange={handlePending('instructions')}
                     name={name}
                     trigger={shortDescription}
                     instructions={instructions}

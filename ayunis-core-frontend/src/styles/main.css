@@ -125,38 +125,28 @@ body {
   }
 }
 
-.skill-improve-spark {
-  animation: skill-improve-spark 1.1s ease-in-out infinite;
+.skill-improve-shimmer {
+  --skill-improve-brand-rgb: 96, 85, 166;
+  background: linear-gradient(
+    100deg,
+    rgba(var(--skill-improve-brand-rgb), 0.45) 30%,
+    rgba(var(--skill-improve-brand-rgb), 1) 50%,
+    rgba(var(--skill-improve-brand-rgb), 0.45) 70%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: skill-improve-shimmer 1.8s linear infinite;
 }
 
-@keyframes skill-improve-spark {
-  0%,
-  100% {
-    opacity: 0.55;
-    transform: scale(0.9) rotate(0deg);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15) rotate(12deg);
-  }
-}
-
-/* Borrows the ambient mist of the new-chat backdrop: the same brand colour,
-   blurred and slowly breathing, scaled down to the size of a form control. */
-.skill-improve-busy {
-  animation: skill-improve-busy 2.6s ease-in-out infinite alternate;
-}
-
-@keyframes skill-improve-busy {
+@keyframes skill-improve-shimmer {
   from {
-    box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--brand) 22%, transparent),
-      0 0 16px -2px color-mix(in oklab, var(--brand) 28%, transparent);
+    background-position: 200% 0;
   }
   to {
-    box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--brand) 45%, transparent),
-      0 0 34px 2px color-mix(in oklab, var(--brand) 48%, transparent);
+    background-position: -200% 0;
   }
 }
 
@@ -180,8 +170,7 @@ body {
   .onboarding-fade,
   .onboarding-kenburns,
   .onboarding-shimmer,
-  .skill-improve-spark,
-  .skill-improve-busy,
+  .skill-improve-shimmer,
   .skill-improve-settled {
     animation: none;
   }

@@ -7,6 +7,7 @@ import {
   FormMessage,
 } from '@ayunis/ui/components/form';
 import { Input } from '@ayunis/ui/components/input';
+import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
@@ -57,27 +58,28 @@ export default function ShortDescriptionField<
             </FormLabel>
             {labelAction}
           </div>
-          <FormControl>
-            {multiline ? (
-              <Textarea
-                placeholder={t(
-                  `${translationPrefix}.form.shortDescriptionPlaceholder`,
-                )}
-                className={`min-h-[80px] max-h-[200px] ${isBusy ? 'skill-improve-busy' : ''}`}
-                disabled={disabled}
-                {...field}
-              />
-            ) : (
-              <Input
-                placeholder={t(
-                  `${translationPrefix}.form.shortDescriptionPlaceholder`,
-                )}
-                className={isBusy ? 'skill-improve-busy' : undefined}
-                disabled={disabled}
-                {...field}
-              />
-            )}
-          </FormControl>
+          <ProcessingGlow isActive={isBusy}>
+            <FormControl>
+              {multiline ? (
+                <Textarea
+                  placeholder={t(
+                    `${translationPrefix}.form.shortDescriptionPlaceholder`,
+                  )}
+                  className="min-h-[80px] max-h-[200px]"
+                  disabled={disabled}
+                  {...field}
+                />
+              ) : (
+                <Input
+                  placeholder={t(
+                    `${translationPrefix}.form.shortDescriptionPlaceholder`,
+                  )}
+                  disabled={disabled}
+                  {...field}
+                />
+              )}
+            </FormControl>
+          </ProcessingGlow>
           {hint && <FormDescription>{hint}</FormDescription>}
           <FormMessage />
         </FormItem>

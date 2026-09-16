@@ -65,12 +65,15 @@ export function SkillImproveButton({
           type="button"
           variant="ghost"
           size="sm"
-          className="text-brand hover:text-brand h-7 px-2 text-xs"
-          onClick={() => setOriginalText(null)}
-          data-testid={`improve-skill-${field}-accept`}
+          className="h-7 px-2 text-xs"
+          onClick={() => {
+            onImproved(originalText);
+            setOriginalText(null);
+          }}
+          data-testid={`improve-skill-${field}-undo`}
         >
-          <Check className="size-3.5" />
-          {t('improve.accept')}
+          <Undo2 className="size-3.5" />
+          {t('improve.undo')}
         </Button>
         <Button
           type="button"
@@ -87,15 +90,12 @@ export function SkillImproveButton({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-xs"
-          onClick={() => {
-            onImproved(originalText);
-            setOriginalText(null);
-          }}
-          data-testid={`improve-skill-${field}-undo`}
+          className="text-brand hover:text-brand h-7 px-2 text-xs"
+          onClick={() => setOriginalText(null)}
+          data-testid={`improve-skill-${field}-accept`}
         >
-          <Undo2 className="size-3.5" />
-          {t('improve.undo')}
+          <Check className="size-3.5" />
+          {t('improve.accept')}
         </Button>
       </span>
     );
@@ -114,10 +114,14 @@ export function SkillImproveButton({
             onClick={() => run(ownText)}
             data-testid={`improve-skill-${field}`}
           >
-            <Sparkles
-              className={`size-3.5 ${improve.isPending ? 'skill-improve-spark' : ''}`}
-            />
-            {improve.isPending ? t('improve.running') : t('improve.action')}
+            <Sparkles className="size-3.5" />
+            {improve.isPending ? (
+              <span className="skill-improve-shimmer">
+                {t('improve.running')}
+              </span>
+            ) : (
+              t('improve.action')
+            )}
           </Button>
         </span>
       </TooltipTrigger>

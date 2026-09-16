@@ -6,6 +6,7 @@ import {
   FormMessage,
 } from '@ayunis/ui/components/form';
 import { Textarea } from '@ayunis/ui/components/textarea';
+import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
@@ -51,16 +52,18 @@ export default function InstructionsField<TFieldValues extends FieldValues>({
             </FormLabel>
             {labelAction}
           </div>
-          <FormControl>
-            <Textarea
-              placeholder={t(
-                `${translationPrefix}.form.instructionsPlaceholder`,
-              )}
-              className={`${className} ${isBusy ? 'skill-improve-busy' : ''}`}
-              disabled={disabled}
-              {...field}
-            />
-          </FormControl>
+          <ProcessingGlow isActive={isBusy}>
+            <FormControl>
+              <Textarea
+                placeholder={t(
+                  `${translationPrefix}.form.instructionsPlaceholder`,
+                )}
+                className={className}
+                disabled={disabled}
+                {...field}
+              />
+            </FormControl>
+          </ProcessingGlow>
           <FormMessage />
         </FormItem>
       )}

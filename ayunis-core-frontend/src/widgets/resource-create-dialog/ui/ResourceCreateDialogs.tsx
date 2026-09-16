@@ -77,6 +77,14 @@ export function SkillCreateDialog({
   const [busyField, setBusyField] = useState<'trigger' | 'instructions' | null>(
     null,
   );
+  const handlePending =
+    (field: 'trigger' | 'instructions') => (isPending: boolean) => {
+      if (isPending) {
+        setBusyField(field);
+        return;
+      }
+      setBusyField((current) => (current === field ? null : current));
+    };
 
   const close = () => {
     form.reset();
@@ -121,6 +129,7 @@ export function SkillCreateDialog({
               control={form.control}
               name="shortDescription"
               translationNamespace="skills"
+              multiline
               isBusy={busyField === 'trigger'}
               labelHint={
                 <InfoHint
@@ -133,9 +142,7 @@ export function SkillCreateDialog({
               labelAction={
                 <SkillImproveButton
                   field="trigger"
-                  onPendingChange={(isPending) =>
-                    setBusyField(isPending ? 'trigger' : null)
-                  }
+                  onPendingChange={handlePending('trigger')}
                   name={name}
                   trigger={shortDescription}
                   instructions={instructions}
@@ -164,9 +171,7 @@ export function SkillCreateDialog({
             labelAction={
               <SkillImproveButton
                 field="instructions"
-                onPendingChange={(isPending) =>
-                  setBusyField(isPending ? 'instructions' : null)
-                }
+                onPendingChange={handlePending('instructions')}
                 name={name}
                 trigger={shortDescription}
                 instructions={instructions}

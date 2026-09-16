@@ -7,11 +7,11 @@ const TRIGGER_GUIDANCE = `You are rewriting the TRIGGER of a skill. The trigger 
 - Derive the situations from the instructions when the trigger itself is thin.
 - One or two sentences, no bullet points, no marketing.`;
 
-const INSTRUCTIONS_GUIDANCE = `You are rewriting the INSTRUCTIONS of a skill. They tell the assistant how to behave once the skill is active.
-- Keep every rule, exception and piece of domain knowledge the author wrote down. Never invent new ones.
-- Make implicit expectations explicit: output format, tone, what to ask back, what to leave out.
-- Structure with short paragraphs or bullets when that makes the steps clearer.
-- Stay within what the trigger and the author's text already cover.`;
+const INSTRUCTIONS_GUIDANCE = `You are rewriting the INSTRUCTIONS of a skill. They tell the assistant how to behave once the skill is active, and they are the substantial part of a skill: a usable set runs roughly 150 to 400 words, far longer than the trigger.
+- Keep every rule, exception and piece of domain knowledge the author wrote down.
+- Spell out what the author left implicit: the role to take, how to work through the task, the tone to use, how the answer should be laid out, what to ask back when something is missing, and what to leave out.
+- Group it into short labelled sections or bullets so it stays scannable later.
+- When the author was brief, expand on how to work — never on what is true. Do not add rules, legal facts, deadlines or figures the author did not write.`;
 
 export function buildImproveSkillTextPrompt(
   command: ImproveSkillTextCommand,
