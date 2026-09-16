@@ -5,6 +5,7 @@ import { WorkspacesSidebarGroup } from './WorkspacesSidebarGroup';
 
 const mocks = vi.hoisted(() => ({
   favorites: [] as Array<{ referenceType: string; referenceId: string }>,
+  areFavoritesLoading: false,
   workspaces: [
     {
       id: 'workspace-a',
@@ -36,7 +37,10 @@ vi.mock('@/widgets/workspace-settings-dialog', () => ({
 }));
 
 vi.mock('@/features/favorites', () => ({
-  useFavorites: () => ({ favorites: mocks.favorites }),
+  useFavorites: () => ({
+    favorites: mocks.favorites,
+    isLoading: mocks.areFavoritesLoading,
+  }),
   useToggleFavorite: () => ({ toggle: vi.fn() }),
   isFavorite: () => false,
 }));
@@ -66,6 +70,7 @@ describe('WorkspacesSidebarGroup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.favorites = [];
+    mocks.areFavoritesLoading = false;
     window.matchMedia = vi.fn().mockReturnValue({
       matches: false,
       addEventListener: vi.fn(),
@@ -129,6 +134,14 @@ describe('WorkspacesSidebarGroup', () => {
     mocks.favorites = [
       { referenceType: 'workspace', referenceId: 'workspace-a' },
     ];
+
+    renderGroup();
+
+    expect(screen.queryByTestId('sidebar-workspaces')).toBeNull();
+  });
+
+  it('waits for the favorites before deciding what is pinned', () => {
+    mocks.areFavoritesLoading = true;
 
     renderGroup();
 

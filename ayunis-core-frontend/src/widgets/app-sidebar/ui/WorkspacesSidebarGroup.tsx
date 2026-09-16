@@ -10,7 +10,7 @@ import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
 export function WorkspacesSidebarGroup() {
   const { t } = useTranslation('common');
   const { workspaces } = useWorkspaces();
-  const { favorites } = useFavorites();
+  const { favorites, isLoading: areFavoritesLoading } = useFavorites();
   const pinnedWorkspaceIds = new Set(
     favorites
       .filter((favorite) => favorite.referenceType === 'workspace')
@@ -26,7 +26,7 @@ export function WorkspacesSidebarGroup() {
     null,
   );
 
-  if (unpinnedWorkspaces.length === 0) return null;
+  if (areFavoritesLoading || unpinnedWorkspaces.length === 0) return null;
 
   return (
     <>
