@@ -26,7 +26,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { Trash2, Pin } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
@@ -39,10 +39,7 @@ import {
   getSkillsControllerFindAllQueryKey,
   getSkillsControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import {
-  useSetSkillActivation,
-  useSetSkillPin,
-} from '@/features/skill-actions';
+import { useSetSkillActivation } from '@/features/skill-actions';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export function SkillPage({
@@ -68,7 +65,6 @@ export function SkillPage({
   const { t: tSkills } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const setActivation = useSetSkillActivation();
-  const setPin = useSetSkillPin();
   const { confirm } = useConfirmation();
 
   const sourcesHook = useSkillSources({
@@ -153,37 +149,6 @@ export function SkillPage({
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                {skill.isActive && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          setPin.mutate({
-                            id: skill.id,
-                            isPinned: !skill.isPinned,
-                          })
-                        }
-                        disabled={setPin.isPending}
-                        aria-label={
-                          skill.isPinned
-                            ? tSkills('card.unpinLabel')
-                            : tSkills('card.pinLabel')
-                        }
-                      >
-                        <Pin
-                          className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {skill.isPinned
-                        ? tSkills('card.unpinLabel')
-                        : tSkills('card.pinLabel')}
-                    </TooltipContent>
-                  </Tooltip>
-                )}
                 {!isReadOnly && canManageSkills && (
                   <Tooltip>
                     <TooltipTrigger asChild>

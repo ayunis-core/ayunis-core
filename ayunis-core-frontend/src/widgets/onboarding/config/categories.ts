@@ -119,24 +119,6 @@ export const ONBOARDING_CATEGORIES = [
           spotlight: TOUR_TARGET.createSkill,
         },
       },
-      {
-        id: 'useSkillInChat',
-        translationKey: 'useSkillInChat',
-        action: {
-          type: ACTION_TYPE.link,
-          to: '/skills',
-          spotlight: TOUR_TARGET.pinSkill,
-        },
-      },
-      {
-        id: 'activateSkillInChat',
-        translationKey: 'activateSkillInChat',
-        action: {
-          type: ACTION_TYPE.link,
-          to: '/chat',
-          spotlight: TOUR_TARGET.pinnedSkills,
-        },
-      },
     ],
   },
   {

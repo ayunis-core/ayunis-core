@@ -10,7 +10,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -29,7 +28,6 @@ import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { PinnedSkills } from './PinnedSkills';
 import { PersonalizationCard } from './PersonalizationCard';
 import { useUserSystemPromptStatus } from '@/pages/new-chat/api/useUserSystemPromptStatus';
 import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalization';
@@ -121,13 +119,6 @@ export default function NewChatPage({
   const [selectedIntegrations, setSelectedIntegrations] = useState<
     IntegrationSummary[]
   >([]);
-  const [selectedSkill, setSelectedSkill] = useState<{
-    id: string;
-    name: string;
-    workspaceId?: string;
-  }>();
-  const selectedSkillId = selectedSkill?.id;
-  const selectedSkillName = selectedSkill?.name;
   const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
 
   const handleMistExitComplete = useCallback(() => {
@@ -158,26 +149,7 @@ export default function NewChatPage({
     setModelId(modelId);
   }
 
-  function handleSkillSelect(
-    id: string,
-    name: string,
-    skillWorkspaceId?: string,
-  ) {
-    setSelectedSkill(
-      selectedSkillId === id
-        ? undefined
-        : { id, name, workspaceId: skillWorkspaceId },
-    );
-  }
-
-  function handleSkillRemove() {
-    setSelectedSkill(undefined);
-  }
-
   function handleWorkspaceChange(id: string | null) {
-    if (selectedSkill?.workspaceId && selectedSkill.workspaceId !== id) {
-      setSelectedSkill(undefined);
-    }
     setWorkspaceId(id);
   }
 
@@ -317,9 +289,6 @@ export default function NewChatPage({
               onAnonymousChange={setIsAnonymous}
               isAnonymousEnforced={isAnonymousEnforced}
               isVisionEnabled={isVisionEnabled}
-              selectedSkillId={selectedSkillId}
-              selectedSkillName={selectedSkillName}
-              onSkillRemove={handleSkillRemove}
             />
 
             {isWorkspacesEnabled && (
@@ -339,16 +308,6 @@ export default function NewChatPage({
             )}
             aria-hidden={isCreating}
           >
-            <OnboardingTourTarget
-              name={TOUR_TARGET.pinnedSkills}
-              settleMs={900}
-            >
-              <PinnedSkills
-                workspaceId={workspaceId}
-                onSkillSelect={handleSkillSelect}
-                selectedSkillId={selectedSkillId}
-              />
-            </OnboardingTourTarget>
             <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3 shrink-0" />
               <span>{t('newChat.privacyHint')}</span>
