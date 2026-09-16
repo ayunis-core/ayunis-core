@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.40.2](https://github.com/ayunis-core/ayunis-core/compare/v2.40.1...v2.40.2) (2026-09-16)
+
+
+### Bug Fixes
+
+* **letterheads:** surface loading and timeout states in the margin preview (AYC-711) ([#1682](https://github.com/ayunis-core/ayunis-core/issues/1682)) ([74e6322](https://github.com/ayunis-core/ayunis-core/commit/74e632276559407fa3492df347cec2a58902a333))
+* **sources:** start PDF timeout after queue pickup (AYC-975) ([#1685](https://github.com/ayunis-core/ayunis-core/issues/1685)) ([472fee1](https://github.com/ayunis-core/ayunis-core/commit/472fee1c7c866cfc52cc0852a43014bbd67c5236))
+
 ## [2.40.1](https://github.com/ayunis-core/ayunis-core/compare/v2.40.0...v2.40.1) (2026-09-15)
 
 
