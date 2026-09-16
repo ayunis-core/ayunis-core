@@ -207,5 +207,18 @@
       "warning": "Store these recovery codes somewhere safe. Each code works once, and they will not be shown again.",
       "copyAll": "Copy all codes"
     }
+  },
+  "availableContext": {
+    "skillCount_one": "{{count}} skill",
+    "skillCount_other": "{{count}} skills",
+    "knowledgeCount_one": "{{count}} knowledge base",
+    "knowledgeCount_other": "{{count}} knowledge bases",
+    "skillsHint": "Skills switch themselves on as soon as your message fits. There is nothing to pick.",
+    "knowledgeHint": "Knowledge bases are searched as soon as your question fits. There is nothing to pick.",
+    "sharedBadge": "Shared",
+    "skillsEmpty": "No skill is available for this chat yet.",
+    "knowledgeEmpty": "No knowledge is available for this chat yet.",
+    "manageSkills": "Manage skills",
+    "manageKnowledge": "Manage knowledge"
   }
 }

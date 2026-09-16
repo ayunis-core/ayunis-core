@@ -1,3 +1,4 @@
+import { AvailableContextMenus } from './AvailableContextMenus';
 import { Lock } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
@@ -291,14 +292,15 @@ export default function NewChatPage({
               isVisionEnabled={isVisionEnabled}
             />
 
-            {isWorkspacesEnabled && (
-              <div className="mt-1.5 flex justify-start">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {isWorkspacesEnabled && (
                 <WorkspacePicker
                   workspaceId={workspaceId}
                   onWorkspaceChange={handleWorkspaceChange}
                 />
-              </div>
-            )}
+              )}
+              <AvailableContextMenus workspaceId={workspaceId} />
+            </div>
           </div>
 
           <div
