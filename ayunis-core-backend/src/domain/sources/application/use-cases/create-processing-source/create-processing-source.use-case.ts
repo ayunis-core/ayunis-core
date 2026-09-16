@@ -8,7 +8,7 @@ import {
   UnsupportedSourceFileTypeError,
   UnexpectedSourceError,
 } from 'src/domain/sources/application/sources.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CreateProcessingSourceCommand } from './create-processing-source.command';
 
 @Injectable()
@@ -17,6 +17,7 @@ export class CreateProcessingSourceUseCase {
 
   constructor(private readonly sourceRepository: SourceRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(command: CreateProcessingSourceCommand): Promise<FileSource> {
     this.logger.debug(
       {
@@ -25,28 +26,14 @@ export class CreateProcessingSourceUseCase {
       'Creating processing source',
     );
 
-    try {
-      const source = new FileSource({
-        fileType: this.getFileType(command.fileType),
-        name: command.fileName,
-        type: TextType.FILE,
-        status: SourceStatus.PROCESSING,
-        processingStartedAt: new Date(),
-      });
+    const source = new FileSource({
+      fileType: this.getFileType(command.fileType),
+      name: command.fileName,
+      type: TextType.FILE,
+      status: SourceStatus.PROCESSING,
+    });
 
-      return (await this.sourceRepository.save(source)) as FileSource;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error creating processing source',
-      );
-      throw new UnexpectedSourceError('Error creating processing source', {
-        error: error as Error,
-      });
-    }
+    return (await this.sourceRepository.save(source)) as FileSource;
   }
 
   private getFileType(mimeType: string): FileType {

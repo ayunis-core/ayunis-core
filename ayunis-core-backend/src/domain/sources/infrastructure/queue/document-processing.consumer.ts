@@ -118,8 +118,11 @@ export class DocumentProcessingConsumer extends WorkerHost {
     minioPath: string,
   ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
-    if (!source) {
-      this.logger.warn({ sourceId }, 'Source not found, skipping');
+    if (source?.status !== SourceStatus.PROCESSING) {
+      this.logger.warn(
+        { sourceId, found: !!source },
+        'Source missing or no longer processing, skipping',
+      );
       await this.cleanupMinioFile(minioPath);
       return null;
     }
@@ -128,10 +131,15 @@ export class DocumentProcessingConsumer extends WorkerHost {
       throw new Error(`Source ${sourceId} is not a TextSource`);
     }
 
-    // Reset processingStartedAt on every attempt so the stale-cleanup
-    // cron doesn't race with BullMQ retries on long-running jobs.
-    source.processingStartedAt = new Date();
-    await this.sourceRepository.save(source);
+    const processingStartedAt = new Date();
+    const alive =
+      await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
+    if (!alive) {
+      this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
+      await this.cleanupMinioFile(minioPath);
+      return null;
+    }
+    source.processingStartedAt = processingStartedAt;
 
     return source;
   }
