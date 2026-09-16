@@ -83,14 +83,7 @@ export function FavoriteSidebarItem({
             : params.threadId === item.referenceId
         }
       >
-        <Link
-          to={isWorkspace ? '/workspaces/$workspaceId' : '/chats/$threadId'}
-          params={
-            isWorkspace
-              ? { workspaceId: item.referenceId }
-              : { threadId: item.referenceId }
-          }
-        >
+        <div className="relative">
           {isWorkspace ? (
             <WorkspaceIcon
               icon={item.icon}
@@ -103,8 +96,21 @@ export function FavoriteSidebarItem({
           ) : (
             <MessageCircle />
           )}
-          <span className="truncate">{title}</span>
-        </Link>
+          <Link
+            to={isWorkspace ? '/workspaces/$workspaceId' : '/chats/$threadId'}
+            params={
+              isWorkspace
+                ? { workspaceId: item.referenceId }
+                : { threadId: item.referenceId }
+            }
+            className="truncate after:absolute after:inset-0"
+          >
+            {title}
+          </Link>
+          {isWorkspace && (
+            <WorkspaceChatsToggle workspaceId={item.referenceId} />
+          )}
+        </div>
       </SidebarMenuButton>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -213,7 +219,6 @@ export function FavoriteSidebarItem({
       </DropdownMenu>
       {isWorkspace && (
         <>
-          <WorkspaceChatsToggle workspaceId={item.referenceId} />
           <WorkspaceChatsSubMenu
             workspaceId={item.referenceId}
             isOpen={areChatsOpen}

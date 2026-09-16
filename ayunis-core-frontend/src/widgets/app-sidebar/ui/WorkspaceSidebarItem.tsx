@@ -59,18 +59,22 @@ export function WorkspaceSidebarItem({
           asChild
           isActive={params.workspaceId === workspace.id}
         >
-          <Link
-            to="/workspaces/$workspaceId"
-            params={{ workspaceId: workspace.id }}
-          >
+          <div className="relative">
             <WorkspaceIcon
               icon={workspace.icon}
               color={workspace.color}
               variant="plain"
               className="size-4"
             />
-            <span className="truncate">{workspace.name}</span>
-          </Link>
+            <Link
+              to="/workspaces/$workspaceId"
+              params={{ workspaceId: workspace.id }}
+              className="truncate after:absolute after:inset-0"
+            >
+              {workspace.name}
+            </Link>
+            <WorkspaceChatsToggle workspaceId={workspace.id} />
+          </div>
         </SidebarMenuButton>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -112,7 +116,6 @@ export function WorkspaceSidebarItem({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <WorkspaceChatsToggle workspaceId={workspace.id} />
         <WorkspaceChatsSubMenu
           workspaceId={workspace.id}
           isOpen={areChatsOpen}
