@@ -1612,6 +1612,45 @@
         "tags": ["subscriptions"]
       }
     },
+    "/super-admin/subscriptions/{orgId}/history": {
+      "get": {
+        "description": "Return every subscription belonging to the organization, newest first, with lifecycle status. Super admins only. Does not change or constrain existing subscriptions.",
+        "operationId": "SuperAdminSubscriptionsController_getSubscriptionHistory",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to list subscriptions for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved subscription history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSubscriptionsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List an organization's subscription history",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
     "/super-admin/subscriptions/{orgId}": {
       "get": {
         "description": "Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.",
@@ -13058,6 +13097,140 @@
       "UpdateMonthlyCreditsDto": {
         "type": "object",
         "properties": {}
+      },
+      "OrgSubscriptionHistoryItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the subscription",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription was created",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription was last updated",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "cancelledAt": {
+            "type": "object",
+            "description": "Date when the subscription was cancelled (if applicable)",
+            "example": "2023-12-15T10:00:00Z"
+          },
+          "startsAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription becomes active",
+            "example": "2026-07-01T00:00:00Z"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID associated with the subscription",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "description": "Subscription type",
+            "enum": ["SEAT_BASED", "USAGE_BASED"],
+            "example": "SEAT_BASED"
+          },
+          "noOfSeats": {
+            "type": "number",
+            "description": "Number of seats in the subscription (seat-based only)",
+            "example": 10
+          },
+          "pricePerSeat": {
+            "type": "number",
+            "description": "Price per seat in the subscription (seat-based only)",
+            "example": 29.99
+          },
+          "renewalCycle": {
+            "type": "string",
+            "description": "Renewal cycle of the subscription (seat-based only)",
+            "enum": ["monthly", "yearly"],
+            "example": "monthly"
+          },
+          "renewalCycleAnchor": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date that serves as the anchor for renewal cycles (seat-based only)",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget (usage-based only)",
+            "example": 1000
+          },
+          "availableSeats": {
+            "type": "number",
+            "description": "Number of available seats (total seats minus invites, seat-based only)",
+            "example": 3,
+            "nullable": true
+          },
+          "nextRenewalDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date of the next renewal",
+            "example": "2024-01-01T10:00:00Z"
+          },
+          "billingInfo": {
+            "description": "Billing information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionBillingInfoResponseDto"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of this subscription record",
+            "enum": ["ACTIVE", "SCHEDULED", "CANCELLED", "HISTORICAL"],
+            "example": "ACTIVE"
+          },
+          "isLatest": {
+            "type": "boolean",
+            "description": "Whether this is the newest subscription for the organization",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "startsAt",
+          "orgId",
+          "type",
+          "nextRenewalDate",
+          "billingInfo",
+          "status",
+          "isLatest"
+        ]
+      },
+      "OrgSubscriptionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "subscriptions": {
+            "description": "All subscriptions belonging to the organization, newest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrgSubscriptionHistoryItemDto"
+            }
+          },
+          "activeCount": {
+            "type": "number",
+            "description": "How many subscriptions are currently serving access (including cancelled seat-based records still inside their paid period)",
+            "example": 1
+          }
+        },
+        "required": ["subscriptions", "activeCount"]
       },
       "UpdateSeatsDto": {
         "type": "object",

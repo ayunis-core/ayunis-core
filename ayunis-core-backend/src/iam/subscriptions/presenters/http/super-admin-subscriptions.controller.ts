@@ -64,7 +64,10 @@ import { SystemRoles } from 'src/iam/authorization/application/decorators/system
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import { UpdateStartDateDto } from './dto/update-start-date.dto';
-import { OrgSubscriptionsResponseDto } from './dto/org-subscriptions-response.dto';
+import {
+  OrgSubscriptionHistoryItemDto,
+  OrgSubscriptionsResponseDto,
+} from './dto/org-subscriptions-response.dto';
 
 const UNAUTHORIZED_DESCRIPTION =
   'User not authenticated or not authorized as super admin';
@@ -82,6 +85,7 @@ const INTERNAL_ERROR_DESCRIPTION = 'Internal server error';
   UpdateBillingInfoDto,
   UpdateStartDateDto,
   UpdateMonthlyCreditsDto,
+  OrgSubscriptionHistoryItemDto,
   OrgSubscriptionsResponseDto,
 )
 export class SuperAdminSubscriptionsController {
