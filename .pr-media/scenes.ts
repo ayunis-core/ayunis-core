@@ -16,6 +16,7 @@ export default [
       await page.getByTestId('login-continue').click();
       await page.getByTestId('password').fill('admin');
       await page.getByTestId('submit').click();
+      await expect(page).toHaveURL(/\/chat$/);
 
       const usersResponse = await page.request.get('/api/users?limit=100');
       expect(usersResponse.ok()).toBeTruthy();
