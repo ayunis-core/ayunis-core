@@ -28,6 +28,11 @@ import {
 } from './infrastructure/persistence/local/schema/credit-limit.record';
 import { CreditLimitsController } from './presenters/http/credit-limits.controller';
 import { CreditLimitDtoMapper } from './presenters/http/mappers/credit-limit-dto.mapper';
+import { PersonalCreditReservationRepository } from './application/ports/personal-credit-reservation.repository';
+import { ReservePersonalCreditsUseCase } from './application/use-cases/reserve-personal-credits/reserve-personal-credits.use-case';
+import { ReleasePersonalCreditReservationUseCase } from './application/use-cases/release-personal-credit-reservation/release-personal-credit-reservation.use-case';
+import { LocalPersonalCreditReservationRepository } from './infrastructure/persistence/local/local-personal-credit-reservation.repository';
+import { PersonalCreditReservationRecord } from './infrastructure/persistence/local/schema/personal-credit-reservation.record';
 
 const apiKeyCreditLimitUseCases = [
   SetApiKeyCreditLimitUseCase,
@@ -43,6 +48,7 @@ const apiKeyCreditLimitUseCases = [
       UserCreditLimitRecord,
       TeamCreditLimitRecord,
       ApiKeyCreditLimitRecord,
+      PersonalCreditReservationRecord,
     ]),
     ApiKeysModule,
     TeamsModule,
@@ -55,6 +61,10 @@ const apiKeyCreditLimitUseCases = [
       provide: CreditLimitRepository,
       useClass: LocalCreditLimitRepository,
     },
+    {
+      provide: PersonalCreditReservationRepository,
+      useClass: LocalPersonalCreditReservationRepository,
+    },
     CreditLimitMapper,
     CreditLimitDtoMapper,
     SetUserCreditLimitUseCase,
@@ -66,6 +76,8 @@ const apiKeyCreditLimitUseCases = [
     GetTeamCreditLimitsOverviewUseCase,
     RemoveOrgCreditLimitsUseCase,
     SubscriptionCancelledListener,
+    ReservePersonalCreditsUseCase,
+    ReleasePersonalCreditReservationUseCase,
     ...apiKeyCreditLimitUseCases,
   ],
   exports: [
@@ -76,6 +88,8 @@ const apiKeyCreditLimitUseCases = [
     ResolveCreditLimitsForUserUseCase,
     GetUserCreditLimitsOverviewUseCase,
     GetTeamCreditLimitsOverviewUseCase,
+    ReservePersonalCreditsUseCase,
+    ReleasePersonalCreditReservationUseCase,
     ...apiKeyCreditLimitUseCases,
   ],
 })
