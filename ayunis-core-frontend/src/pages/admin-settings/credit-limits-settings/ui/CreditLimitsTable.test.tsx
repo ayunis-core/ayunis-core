@@ -85,6 +85,26 @@ describe('CreditLimitsTable', () => {
     ).toBe('0');
   });
 
+  it('rounds fractional usage up to whole credits', () => {
+    render(
+      <CreditLimitsTable
+        rows={[
+          {
+            id: 'christian',
+            name: 'Christian Caspers',
+            limit: { monthlyCredits: 400_000, creditsUsed: 928_832.001 },
+          },
+        ]}
+        filters={filters}
+        isPending={false}
+        isError={false}
+      />,
+    );
+
+    expect(screen.getByText('928,833')).toBeTruthy();
+    expect(screen.queryByText('928,832.001')).toBeNull();
+  });
+
   it.each([
     { isPending: true, isError: false, text: 'states.loading' },
     { isPending: false, isError: true, text: 'states.error' },

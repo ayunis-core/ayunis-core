@@ -57,4 +57,55 @@ describe('CollectUsageAsyncService run telemetry', () => {
       new RunUsageCollectionEvent('agent_runtime', 'error'),
     );
   });
+
+  it('can wait until agent-runtime usage has been persisted', async () => {
+    collectUsageUseCase.execute.mockResolvedValue({} as never);
+
+    await service.collectAndWait(
+      model,
+      250_000,
+      500,
+      undefined,
+      'agent_runtime',
+    );
+
+    expect(collectUsageUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      RunUsageCollectionEvent.EVENT_NAME,
+      new RunUsageCollectionEvent('agent_runtime', 'success'),
+    );
+  });
+
+  it('does not wait for post-persistence listeners', async () => {
+    collectUsageUseCase.execute.mockResolvedValue({} as never);
+    eventEmitter.emitAsync.mockReturnValue(new Promise(() => undefined));
+
+    await service.collectAndWait(
+      model,
+      250_000,
+      500,
+      undefined,
+      'agent_runtime',
+    );
+
+    expect(collectUsageUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      RunUsageCollectionEvent.EVENT_NAME,
+      new RunUsageCollectionEvent('agent_runtime', 'success'),
+    );
+  });
+
+  it('rejects awaited collection when persistence fails', async () => {
+    const error = new Error('Usage database unavailable');
+    collectUsageUseCase.execute.mockRejectedValue(error);
+
+    await expect(
+      service.collectAndWait(model, 120, 35, undefined, 'agent_runtime'),
+    ).rejects.toBe(error);
+
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      RunUsageCollectionEvent.EVENT_NAME,
+      new RunUsageCollectionEvent('agent_runtime', 'error'),
+    );
+  });
 });

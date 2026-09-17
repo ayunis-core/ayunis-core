@@ -53,6 +53,8 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { PlatformConfigModule } from 'src/iam/platform-config/platform-config.module';
+import { PersonalCreditCallBudgetService } from './application/services/personal-credit-call-budget.service';
 
 @Module({
   imports: [
@@ -77,6 +79,7 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
     TokenCounterModule,
     WorkspacesModule,
     KnowledgeBasesModule,
+    PlatformConfigModule,
   ],
   controllers: [RunsController, ThreadAiContextController],
   providers: [
@@ -110,6 +113,7 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
     RunTelemetryService,
     EffectiveRunModelResolverService,
     UnmaskedTermsService,
+    PersonalCreditCallBudgetService,
   ],
   exports: [
     ExecuteRunUseCase,

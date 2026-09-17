@@ -124,4 +124,50 @@ describe('CreditLimitGuardService', () => {
     ).resolves.toBeUndefined();
     expect(getUserUsage.execute).not.toHaveBeenCalled();
   });
+
+  describe('prepareUserModelCall', () => {
+    it('does not reserve a leftover personal limit for a non-usage-based org', async () => {
+      getLimits.execute.mockResolvedValue({
+        personalCreditLimit: 0,
+        teamCreditLimits: [],
+      });
+      isUsageBased.execute.mockResolvedValue(false);
+
+      await expect(
+        service.prepareUserModelCall(orgId, userId),
+      ).resolves.toEqual({ reservePersonalCredits: false });
+      expect(getUserUsage.execute).not.toHaveBeenCalled();
+      expect(getTeamUsage.execute).not.toHaveBeenCalled();
+    });
+
+    it('requests a reservation when a usage-based org has a personal limit', async () => {
+      getLimits.execute.mockResolvedValue({
+        personalCreditLimit: 1000,
+        teamCreditLimits: [],
+      });
+
+      await expect(
+        service.prepareUserModelCall(orgId, userId),
+      ).resolves.toEqual({ reservePersonalCredits: true });
+    });
+
+    it('skips the subscription read when no limits are configured', async () => {
+      await expect(
+        service.prepareUserModelCall(orgId, userId),
+      ).resolves.toEqual({ reservePersonalCredits: false });
+      expect(isUsageBased.execute).not.toHaveBeenCalled();
+    });
+
+    it('blocks when a team is exhausted', async () => {
+      getLimits.execute.mockResolvedValue({
+        personalCreditLimit: null,
+        teamCreditLimits: [{ teamId, monthlyCredits: 5000 }],
+      });
+      getTeamUsage.execute.mockResolvedValue({ creditsUsed: 5000 });
+
+      await expect(service.prepareUserModelCall(orgId, userId)).rejects.toThrow(
+        TeamCreditLimitExceededError,
+      );
+    });
+  });
 });

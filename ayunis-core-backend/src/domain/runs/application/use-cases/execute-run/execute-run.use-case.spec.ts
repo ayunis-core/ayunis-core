@@ -71,6 +71,10 @@ import {
 } from 'src/domain/runs/domain/run-input.entity';
 import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
+import {
+  UnexpectedCreditLimitError,
+  UserCreditLimitExceededError,
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 import { ExecuteRunUseCase } from './execute-run.use-case';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -83,6 +87,9 @@ interface Harness {
   findThread: jest.Mock;
   save: jest.Mock;
   collectUsage: jest.Mock;
+  authorizeModelCall: jest.Mock;
+  releaseCreditReservation: jest.Mock;
+  ensureCreditsAvailable: jest.Mock;
   cleanup: jest.Mock;
   createToolResult: jest.Mock;
   createSeedToolResult: jest.Mock;
@@ -115,6 +122,7 @@ interface HarnessOptions {
   workspaceId?: UUID;
   workspaceSkills?: BackendSkill[];
   effectiveAnonymousOnly?: boolean;
+  consumesCredits?: boolean;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -123,6 +131,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     provider: 'anthropic',
     canVision: false,
     canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
+    consumesCredits: overrides.consumesCredits ?? false,
   } as unknown as LanguageModel;
   const permitted = {
     model,
@@ -178,7 +187,10 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   } as unknown as EffectiveRunModelResolverService;
   const inferenceUsageGuard = {
     preflight: jest.fn().mockResolvedValue(undefined),
-    collectUsage: jest.fn(),
+    authorizeModelCall: jest.fn().mockResolvedValue(null),
+    releaseCreditReservation: jest.fn().mockResolvedValue(undefined),
+    ensureCreditsAvailable: jest.fn().mockResolvedValue(undefined),
+    collectUsageAndWait: jest.fn().mockResolvedValue(undefined),
   } as unknown as jest.Mocked<InferenceUsageGuard>;
   const initialRunContext = {
     tools: overrides.backendTools ?? [],
@@ -321,7 +333,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     { execute: flushToolResult } as never,
     addMessageToThreadUseCase,
   );
-  const collectUsage = inferenceUsageGuard.collectUsage as jest.Mock;
+  const collectUsage = inferenceUsageGuard.collectUsageAndWait as jest.Mock;
+  const authorizeModelCall =
+    inferenceUsageGuard.authorizeModelCall as jest.Mock;
+  const releaseCreditReservation =
+    inferenceUsageGuard.releaseCreditReservation as jest.Mock;
+  const ensureCreditsAvailable =
+    inferenceUsageGuard.ensureCreditsAvailable as jest.Mock;
   const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
   const toolUsageHookFactory = new ToolUsageHookFactory(eventEmitter);
   const toolResultCollector = overrides.toolResultCollector ?? {
@@ -369,6 +387,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     findThread,
     save,
     collectUsage,
+    authorizeModelCall,
+    releaseCreditReservation,
+    ensureCreditsAvailable,
     cleanup,
     createToolResult: flushToolResult,
     createSeedToolResult: createToolResult,
@@ -1234,6 +1255,222 @@ describe('ExecuteRunUseCase', () => {
 
     await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow();
     expect(cleanup).toHaveBeenCalledWith(threadId);
+  });
+
+  it('preserves a complete billed tool turn when the next call hits the credit limit', async () => {
+    const echo = {
+      name: 'echo',
+      description: 'echo',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('echoed'),
+    };
+    const { useCase, authorizeModelCall, cleanup, provider } = buildHarness({
+      runtimeTools: [echo],
+      turns: [
+        toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
+        textTurn('Done'),
+      ],
+    });
+    authorizeModelCall.mockResolvedValueOnce(null).mockRejectedValueOnce(
+      new UserCreditLimitExceededError({
+        limit: 400_000,
+        consumed: 410_000,
+      }),
+    );
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(UserCreditLimitExceededError);
+
+    expect(provider.requests).toHaveLength(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('cleans up the user message when the first call hits the credit limit', async () => {
+    const { useCase, authorizeModelCall, cleanup, provider } = buildHarness();
+    authorizeModelCall.mockRejectedValueOnce(
+      new UserCreditLimitExceededError({
+        limit: 400_000,
+        consumed: 400_000,
+      }),
+    );
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(UserCreditLimitExceededError);
+
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).toHaveBeenCalledWith(threadId);
+  });
+
+  it('preserves a billed text turn when reservation release fails', async () => {
+    const {
+      useCase,
+      authorizeModelCall,
+      releaseCreditReservation,
+      collectUsage,
+      cleanup,
+      provider,
+      save,
+    } = buildHarness({ consumesCredits: true });
+    const reservationId = randomUUID();
+    authorizeModelCall.mockResolvedValue({
+      reservationId,
+      maxOutputTokens: 1_000,
+    });
+    releaseCreditReservation
+      .mockRejectedValueOnce(new Error('reservation release failed'))
+      .mockResolvedValueOnce(undefined);
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(1);
+    expect(collectUsage).toHaveBeenCalledTimes(1);
+    expect(releaseCreditReservation).toHaveBeenCalledTimes(2);
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.any(AssistantMessage) }),
+    );
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves a complete billed tool turn when the next call omits usage', async () => {
+    const echo = {
+      name: 'echo',
+      description: 'echo',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('echoed'),
+    };
+    const { useCase, cleanup, provider } = buildHarness({
+      consumesCredits: true,
+      runtimeTools: [echo],
+      turns: [
+        toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
+        textTurn('Done', {}),
+      ],
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_FAILED' });
+
+    expect(provider.requests).toHaveLength(2);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves a complete billed tool turn when later usage persistence fails', async () => {
+    const echo = {
+      name: 'echo',
+      description: 'echo',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('echoed'),
+    };
+    const { useCase, collectUsage, cleanup, provider } = buildHarness({
+      runtimeTools: [echo],
+      turns: [
+        toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
+        textTurn('Done'),
+      ],
+    });
+    collectUsage
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('usage database unavailable'));
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_FAILED' });
+
+    expect(provider.requests).toHaveLength(2);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves a complete billed tool turn when a later credit check fails', async () => {
+    const echo = {
+      name: 'echo',
+      description: 'echo',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('echoed'),
+    };
+    const { useCase, authorizeModelCall, cleanup, provider } = buildHarness({
+      runtimeTools: [echo],
+      turns: [
+        toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
+        textTurn('Done'),
+      ],
+    });
+    authorizeModelCall
+      .mockResolvedValueOnce(null)
+      .mockRejectedValueOnce(new Error('credit usage query unavailable'));
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_FAILED' });
+
+    expect(provider.requests).toHaveLength(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves a complete billed tool turn for an unexpected credit-check application error', async () => {
+    const echo = {
+      name: 'echo',
+      description: 'echo',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('echoed'),
+    };
+    const { useCase, authorizeModelCall, cleanup, provider } = buildHarness({
+      runtimeTools: [echo],
+      turns: [
+        toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
+        textTurn('Done'),
+      ],
+    });
+    authorizeModelCall
+      .mockResolvedValueOnce(null)
+      .mockRejectedValueOnce(
+        new UnexpectedCreditLimitError(new Error('usage query unavailable')),
+      );
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_FAILED' });
+
+    expect(provider.requests).toHaveLength(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves a seeded tool transcript when usage is unavailable', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collector = {
+      collectToolResults: jest.fn().mockResolvedValue({
+        contents: [
+          new ToolResultMessageContent(
+            'chart-1',
+            'bar_chart',
+            'Chart displayed',
+          ),
+        ],
+        piiMasks: null,
+      }),
+    } as unknown as ToolResultCollectorService;
+    const { useCase, cleanup } = buildHarness({
+      consumesCredits: true,
+      lastMessage,
+      toolResultCollector: collector,
+      turns: [textTurn('Done', {})],
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
+    });
+
+    await expect(drain(await useCase.execute(command))).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_FAILED',
+    });
+
+    expect(cleanup).not.toHaveBeenCalled();
   });
 
   it('rejects a tool-result input with no pending tool call', async () => {

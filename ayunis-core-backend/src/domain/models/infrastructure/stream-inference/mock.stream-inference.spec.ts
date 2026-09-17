@@ -54,11 +54,18 @@ describe('MockStreamInferenceHandler runtime provider', () => {
           },
         ],
       },
-      { finishReason: 'stop' },
+      {
+        finishReason: 'stop',
+        usage: { inputTokens: 10, outputTokens: 5 },
+      },
     ]);
     expect(recovered.map((chunk) => chunk.textDelta).join('')).toBe(
       'recovered::bedrock::claude-sonnet-4-6',
     );
+    expect(recovered.at(-1)?.usage).toEqual({
+      inputTokens: 10,
+      outputTokens: 5,
+    });
   });
 
   it('echoes a requested chat name in the runtime response', async () => {
@@ -123,6 +130,10 @@ describe('MockStreamInferenceHandler runtime provider', () => {
       'website_content',
     ]);
     expect(response.at(-1)?.finishReason).toBe('tool_calls');
+    expect(response.at(-1)?.usage).toEqual({
+      inputTokens: 10,
+      outputTokens: 5,
+    });
   });
 
   it('completes the paginated research scenario after tool results return', async () => {
@@ -158,5 +169,9 @@ describe('MockStreamInferenceHandler runtime provider', () => {
     expect(response.map((chunk) => chunk.textDelta).join('')).toBe(
       'research-complete::bedrock::claude-sonnet-4-6',
     );
+    expect(response.at(-1)?.usage).toEqual({
+      inputTokens: 10,
+      outputTokens: 5,
+    });
   });
 });

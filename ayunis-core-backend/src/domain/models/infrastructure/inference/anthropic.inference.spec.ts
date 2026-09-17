@@ -1,9 +1,9 @@
 import type { ConfigService } from '@nestjs/config';
 import type { ModelProvider } from '@ayunis/inference';
 import { AnthropicInferenceHandler } from './anthropic.inference';
-import { CLAUDE_MAX_OUTPUT_TOKENS } from '../runtime/inference-config';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import type { Model } from '../../domain/model.entity';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { ModelProvider as CatalogModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 const anthropicMock = jest.fn<ModelProvider, [unknown]>();
 
@@ -39,14 +39,16 @@ describe('AnthropicInferenceHandler', () => {
   it('raises the output-token budget above the conservative default (AYC-674)', () => {
     const { createProvider } = buildHandler();
 
-    createProvider({ name: 'claude-opus-5' } as Model);
+    createProvider({
+      name: 'claude-opus-5',
+      provider: CatalogModelProvider.ANTHROPIC,
+    } as Model);
 
     expect(anthropicMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'claude-opus-5',
-        maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+        maxTokens: 32_000,
       }),
     );
-    expect(CLAUDE_MAX_OUTPUT_TOKENS).toBeGreaterThan(16_384);
   });
 });
