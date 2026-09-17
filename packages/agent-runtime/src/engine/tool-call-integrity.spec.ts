@@ -84,6 +84,38 @@ describe('tool-call argument integrity', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
+  it('does not spend malformed recovery attempts on transport retries', async () => {
+    const malformedTurn = malformedDocumentTurn();
+    let providerAttempts = 0;
+    const provider: ModelProvider = {
+      name: 'transport-then-malformed-provider',
+      prepareRetry: async ({ attempt }) => attempt === 1,
+      async *stream() {
+        providerAttempts++;
+        if (providerAttempts === 1) {
+          throw new Error('temporary outage');
+        }
+        if (providerAttempts <= 4) {
+          for (const chunk of malformedTurn) yield chunk;
+          return;
+        }
+        yield { textDelta: 'Fallback answer' };
+        yield { finishReason: 'stop' };
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool()] }),
+    );
+
+    expect(providerAttempts).toBe(5);
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
   it('retries a malformed tool-only turn before anything visible is emitted', async () => {
     const execute = vi.fn(() => 'created');
     const provider = new MockProvider([
@@ -144,6 +176,7 @@ describe('tool-call argument integrity', () => {
 
   it('falls back to a tool-disabled answer after malformed retries are exhausted', async () => {
     const execute = vi.fn(() => 'created');
+    const beforeProviderCall = vi.fn();
     const malformedTurn = malformedDocumentTurn({
       usage: { inputTokens: 2, outputTokens: 1 },
     });
@@ -161,7 +194,10 @@ describe('tool-call argument integrity', () => {
     ]);
 
     const events = await collectEvents(
-      baseInput(provider, { tools: [documentTool(execute)] }),
+      baseInput(provider, {
+        tools: [documentTool(execute)],
+        hooks: [{ name: 'request-observer', beforeProviderCall }],
+      }),
     );
 
     expect(events.find((event) => event.type === 'error')).toBeUndefined();
@@ -175,6 +211,13 @@ describe('tool-call argument integrity', () => {
       instructions: expect.stringContaining('Do not call tools'),
     });
     expect(provider.requests[3].toolChoice).toBeUndefined();
+    expect(beforeProviderCall).toHaveBeenNthCalledWith(
+      4,
+      expect.objectContaining({
+        tools: [],
+        instructions: expect.stringContaining('Do not call tools'),
+      }),
+    );
     expect(execute).not.toHaveBeenCalled();
   });
 

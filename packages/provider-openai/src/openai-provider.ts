@@ -162,6 +162,9 @@ const buildParams = (
     ...(hasTools && request.toolChoice !== undefined
       ? { tool_choice: convertToolChoice(request.toolChoice, codec) }
       : {}),
+    ...(request.maxOutputTokens !== undefined
+      ? { max_completion_tokens: request.maxOutputTokens }
+      : {}),
     stream: true,
     stream_options: { include_usage: true },
   };

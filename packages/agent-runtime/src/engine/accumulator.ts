@@ -125,6 +125,18 @@ export class ChunkAccumulator {
     return { role: 'assistant', content };
   }
 
+  reportedUsage(): Usage {
+    return { ...this.usage };
+  }
+
+  hasProviderOutput(): boolean {
+    return (
+      this.thinking.length > 0 ||
+      this.text.length > 0 ||
+      this.toolCalls.size > 0
+    );
+  }
+
   private finalizeThinking(): ThinkingContent | null {
     if (!this.thinking) {
       return null;

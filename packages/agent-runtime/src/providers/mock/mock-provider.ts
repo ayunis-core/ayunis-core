@@ -36,6 +36,9 @@ const snapshotRequest = (request: ProviderRequest): ProviderRequest => {
     ...(request.toolChoice !== undefined
       ? { toolChoice: request.toolChoice }
       : {}),
+    ...(request.maxOutputTokens !== undefined
+      ? { maxOutputTokens: request.maxOutputTokens }
+      : {}),
   };
 };
 

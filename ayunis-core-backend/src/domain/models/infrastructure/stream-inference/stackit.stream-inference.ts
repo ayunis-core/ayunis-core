@@ -5,7 +5,7 @@ import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { ThinkingTagStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/thinking-tag-stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { STREAM_INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class StackitStreamInferenceHandler extends ThinkingTagStreamInferenceHandler {
@@ -21,7 +21,7 @@ export class StackitStreamInferenceHandler extends ThinkingTagStreamInferenceHan
       apiKey: this.configService.get<string>('models.stackit.apiKey') ?? '',
       baseUrl: this.configService.get<string>('models.stackit.baseURL'),
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: STREAM_INFERENCE_MAX_RETRIES,
     });
   }
 }

@@ -1,8 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { mistral } from './mistral-provider';
+import { ToolNameCodec, type ProviderRequest } from '@ayunis/inference';
+import { buildParams, mistral } from './mistral-provider';
 
 describe('mistral', () => {
+  it('maps the per-call output-token ceiling', () => {
+    const request: ProviderRequest = {
+      instructions: '',
+      messages: [],
+      tools: [],
+      maxOutputTokens: 750,
+    };
+
+    expect(
+      buildParams('mistral-large-latest', request, new ToolNameCodec([]))
+        .maxTokens,
+    ).toBe(750);
+  });
+
   it('names the provider mistral:<model> and exposes a stream function', () => {
     const provider = mistral({
       apiKey: 'sk-test',

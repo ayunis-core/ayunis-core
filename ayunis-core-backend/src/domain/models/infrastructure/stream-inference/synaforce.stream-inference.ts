@@ -5,7 +5,7 @@ import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { ThinkingTagStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/thinking-tag-stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { STREAM_INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class SynaforceStreamInferenceHandler extends ThinkingTagStreamInferenceHandler {
@@ -20,7 +20,7 @@ export class SynaforceStreamInferenceHandler extends ThinkingTagStreamInferenceH
     return ollama({
       baseUrl: this.configService.get<string>('models.synaforce.baseURL') ?? '',
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: STREAM_INFERENCE_MAX_RETRIES,
     });
   }
 }

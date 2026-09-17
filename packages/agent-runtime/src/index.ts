@@ -30,6 +30,7 @@ export type {
   AfterModelCallContext,
   AfterToolCallContext,
   BeforeModelCallContext,
+  BeforeProviderCallContext,
   BeforeToolCallContext,
   Hook,
   HookApi,

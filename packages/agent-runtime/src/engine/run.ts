@@ -178,6 +178,7 @@ const createRunState = (input: RunInput, context: RunContext): RunState => {
     messages: [...input.messages],
     tools: [...(input.tools ?? [])],
     instructions: input.instructions,
+    maxOutputTokens: undefined,
     toolChoice: input.toolChoice,
     signal: input.signal,
     maxIterations: input.maxIterations ?? DEFAULT_MAX_ITERATIONS,

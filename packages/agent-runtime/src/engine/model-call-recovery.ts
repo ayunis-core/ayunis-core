@@ -18,6 +18,12 @@ export interface ModelCallRecoveryOptions {
   recordUsage: (usage: Usage) => void;
   applyPendingMutations: () => void;
   isAborted: () => boolean;
+  isHookAborted: () => boolean;
+  prepareProviderRetry?: (input: {
+    error: unknown;
+    attempt: number;
+    hasVisibleOutput: boolean;
+  }) => Promise<boolean>;
 }
 
 /**
@@ -31,23 +37,28 @@ export async function* callModelWithRecovery(
   let malformedAttempts = 0;
   let mode: ModelCallMode = 'normal';
   let fallbackError: MalformedToolCallError | undefined;
-
-  for (
-    let totalAttempt = 1;
-    totalAttempt <= MAX_TOTAL_ATTEMPTS;
-    totalAttempt++
-  ) {
-    const outcome: ModelAttemptOutcome = yield* runAttempt(
-      options.call(mode),
-      mode,
-    );
+  let providerFailureAttempt = 0;
+  let recoveryAttempt = 0;
+  while (recoveryAttempt < MAX_TOTAL_ATTEMPTS) {
+    const outcome = yield* runAttempt(options.call(mode), mode);
     if (outcome.type === 'failed') {
+      if (options.isHookAborted()) throw new RunAbortedError();
+      const nextProviderFailureAttempt = providerFailureAttempt + 1;
+      if (
+        await shouldRetryProvider(options, outcome, nextProviderFailureAttempt)
+      ) {
+        providerFailureAttempt = nextProviderFailureAttempt;
+        options.applyPendingMutations();
+        continue;
+      }
+      providerFailureAttempt = 0;
+      recoveryAttempt++;
       const retry: FailedAttemptRetry = yield* recoverFailedAttempt({
         outcome,
         mode,
         fallbackError,
         malformedAttempts,
-        totalAttempt,
+        totalAttempt: recoveryAttempt,
         options,
       });
       malformedAttempts = retry.malformedAttempts;
@@ -55,18 +66,29 @@ export async function* callModelWithRecovery(
       fallbackError = retry.fallbackError;
       continue;
     }
-
+    providerFailureAttempt = 0;
+    recoveryAttempt++;
     const { result } = outcome;
     await processCompletedAttempt(options, mode, fallbackError, result);
     if (result.message.content.length > 0) return result;
-
     emptyAttempts++;
     if (options.isAborted()) throw new RunAbortedError();
-    if (shouldStopEmptyRecovery(emptyAttempts, totalAttempt)) return result;
+    if (shouldStopEmptyRecovery(emptyAttempts, recoveryAttempt)) return result;
     options.applyPendingMutations();
   }
-
   throw new Error('Model-call recovery exhausted without an outcome');
+}
+
+function shouldRetryProvider(
+  options: ModelCallRecoveryOptions,
+  outcome: FailedOutcome,
+  attempt: number,
+): Promise<boolean> | undefined {
+  return options.prepareProviderRetry?.({
+    error: outcome.error,
+    attempt,
+    hasVisibleOutput: outcome.state.emittedVisibleContent,
+  });
 }
 
 async function processCompletedAttempt(
@@ -177,7 +199,6 @@ function failedAttemptAction(params: FailedAttemptParams): FailedAttemptAction {
   const malformedAttempts = recordMalformedAttempt(
     params.outcome.error,
     params.malformedAttempts,
-    params.options.recordUsage,
   );
   if (
     params.outcome.error instanceof RunAbortedError ||
@@ -273,10 +294,8 @@ function* forwardAttemptEvent(
 function recordMalformedAttempt(
   error: unknown,
   previousAttempts: number,
-  recordUsage: (usage: Usage) => void,
 ): number {
   if (!(error instanceof MalformedToolCallError)) return previousAttempts;
-  if (error.usage) recordUsage(error.usage);
   return previousAttempts + 1;
 }
 

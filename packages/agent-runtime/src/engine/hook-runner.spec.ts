@@ -21,6 +21,9 @@ describe('hook lifecycle', () => {
       beforeModelCall: (ctx) => {
         phases.push(`beforeModelCall:${ctx.iteration}`);
       },
+      beforeProviderCall: (ctx) => {
+        phases.push(`beforeProviderCall:${ctx.iteration}`);
+      },
       afterModelCall: (ctx) => {
         phases.push(`afterModelCall:${ctx.iteration}`);
       },
@@ -45,10 +48,12 @@ describe('hook lifecycle', () => {
     expect(phases).toEqual([
       'runStart',
       'beforeModelCall:0',
+      'beforeProviderCall:0',
       'afterModelCall:0',
       'beforeToolCall',
       'afterToolCall',
       'beforeModelCall:1',
+      'beforeProviderCall:1',
       'afterModelCall:1',
       'runEnd:completed',
     ]);
@@ -126,6 +131,110 @@ describe('hook lifecycle', () => {
       status: 'aborted',
     });
     expect(model.requests).toHaveLength(0);
+  });
+
+  it('does not open a provider stream when beforeProviderCall aborts', async () => {
+    const guard: Hook = {
+      name: 'guard',
+      beforeProviderCall: (ctx) => ctx.abort('provider call denied'),
+    };
+    const model = new MockProvider([textTurn('never')]);
+
+    const events = await collectEvents(baseInput(model, { hooks: [guard] }));
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
+    });
+    expect(model.requests).toHaveLength(0);
+  });
+
+  it('re-enters beforeProviderCall for each provider retry attempt', async () => {
+    const phases: string[] = [];
+    let providerAttempts = 0;
+    const model: ModelProvider = {
+      name: 'retrying-provider',
+      prepareRetry: async ({ attempt }) => attempt === 1,
+      async *stream() {
+        providerAttempts++;
+        if (providerAttempts === 1) throw new Error('temporary outage');
+        yield {
+          textDelta: 'Recovered answer',
+          usage: { inputTokens: 8, outputTokens: 3 },
+        };
+      },
+    };
+    const recorder: Hook = {
+      name: 'recorder',
+      beforeProviderCall: () => {
+        phases.push('beforeProviderCall');
+      },
+    };
+
+    const events = await collectEvents(baseInput(model, { hooks: [recorder] }));
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+    expect(phases).toEqual(['beforeProviderCall', 'beforeProviderCall']);
+    expect(providerAttempts).toBe(2);
+  });
+
+  it('includes failed-attempt usage when a transport retry succeeds', async () => {
+    let providerAttempts = 0;
+    const model: ModelProvider = {
+      name: 'metered-retry-provider',
+      prepareRetry: async ({ attempt }) => attempt === 1,
+      async *stream() {
+        providerAttempts++;
+        if (providerAttempts === 1) {
+          yield { usage: { inputTokens: 11, outputTokens: 2 } };
+          throw new Error('temporary outage');
+        }
+        yield { textDelta: 'Recovered answer' };
+      },
+    };
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+      usage: { inputTokens: 11, outputTokens: 2 },
+    });
+  });
+
+  it('does not retry when an interruption hook aborts the run', async () => {
+    let providerAttempts = 0;
+    let retryChecks = 0;
+    const model: ModelProvider = {
+      name: 'retrying-provider',
+      prepareRetry: async () => {
+        retryChecks++;
+        return true;
+      },
+      async *stream() {
+        providerAttempts++;
+        yield {};
+        throw new Error('temporary outage');
+      },
+    };
+    const abortingHook: Hook = {
+      name: 'abort-on-interruption',
+      modelCallInterrupted: (ctx) => ctx.abort('stop retry'),
+    };
+
+    const events = await collectEvents(
+      baseInput(model, { hooks: [abortingHook] }),
+    );
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
+    });
+    expect(providerAttempts).toBe(1);
+    expect(retryChecks).toBe(0);
   });
 
   it('fails the run with hook attribution when a hook throws', async () => {
@@ -294,6 +403,7 @@ describe('hook lifecycle', () => {
         interruptions.push({
           iteration: ctx.iteration,
           message: ctx.message,
+          usage: ctx.usage,
           reason: ctx.reason,
         });
       },
@@ -304,6 +414,7 @@ describe('hook lifecycle', () => {
         yield {
           thinkingDelta: 'Working',
           textDelta: 'Partial answer',
+          usage: { inputTokens: 20, outputTokens: 4 },
           toolCallDeltas: [
             {
               index: 0,
@@ -323,6 +434,7 @@ describe('hook lifecycle', () => {
       {
         iteration: 0,
         reason: 'error',
+        usage: { inputTokens: 20, outputTokens: 4 },
         message: {
           role: 'assistant',
           content: [
@@ -366,6 +478,35 @@ describe('hook lifecycle', () => {
 
     expect(events.find((event) => event.type === 'error')).toMatchObject({
       code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+    });
+  });
+
+  it('surfaces a critical interruption hook failure over a provider failure', async () => {
+    const criticalAccounting: Hook = {
+      name: 'accounting',
+      modelCallInterruptedFailureMode: 'critical',
+      modelCallInterrupted: () => {
+        throw new Error('database unavailable');
+      },
+    };
+    const model: ModelProvider = {
+      name: 'classified-failure',
+      async *stream() {
+        yield { textDelta: 'Partial answer' };
+        throw new AgentRuntimeError(
+          'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+          'Provider anthropic request timed out',
+        );
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(model, { hooks: [criticalAccounting] }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'HOOK_FAILED',
+      details: { hookName: 'accounting', phase: 'modelCallInterrupted' },
     });
   });
 
