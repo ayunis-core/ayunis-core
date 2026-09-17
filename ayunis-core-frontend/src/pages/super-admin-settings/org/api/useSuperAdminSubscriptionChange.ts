@@ -1,8 +1,6 @@
 import type { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@/shared/api';
-import {
-  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-  useSuperAdminSubscriptionsControllerChangeSubscription,
-} from '@/shared/api';
+import { useSuperAdminSubscriptionsControllerChangeSubscription } from '@/shared/api';
+import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -58,13 +56,7 @@ export default function useSuperAdminSubscriptionChange({
           }
         },
         onSettled: () => {
-          void queryClient.invalidateQueries({
-            queryKey:
-              getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
-                orgId,
-              ),
-          });
-          void router.invalidate();
+          invalidateOrgSubscriptionQueries(queryClient, router, orgId);
         },
       },
     });
