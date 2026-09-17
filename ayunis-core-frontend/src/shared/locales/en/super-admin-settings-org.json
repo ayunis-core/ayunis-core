@@ -85,6 +85,36 @@
     "changeErrorTooManyUsedSeats": "Too many users are already in this organization. Choose more seats for the new subscription.",
     "changeErrorUnexpected": "An unexpected error occurred"
   },
+  "subscriptionHistory": {
+    "title": "Subscription history",
+    "description": "Every subscription belonging to this organization, including older and cancelled records.",
+    "latest": "Latest",
+    "notCancelled": "—",
+    "multipleActive": "{{count}} subscriptions are currently serving this organization. This view lists all of them instead of picking one.",
+    "status": {
+      "ACTIVE": "Active",
+      "SCHEDULED": "Scheduled",
+      "CANCELLED": "Cancelled",
+      "HISTORICAL": "Historical"
+    },
+    "types": {
+      "SEAT_BASED": "Seat-based",
+      "USAGE_BASED": "Usage-based"
+    },
+    "columns": {
+      "type": "Type",
+      "status": "Status",
+      "createdAt": "Created",
+      "startsAt": "Starts",
+      "cancelledAt": "Cancelled",
+      "details": "Details"
+    },
+    "details": {
+      "seats": "{{count}} seats",
+      "credits": "{{count}} monthly credits",
+      "none": "—"
+    }
+  },
   "licenseSeats": {
     "title": "License Seats",
     "usedSeats": "Used Seats",

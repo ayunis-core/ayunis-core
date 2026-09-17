@@ -85,6 +85,36 @@
     "changeErrorTooManyUsedSeats": "Zu viele Nutzer sind bereits in dieser Organisation. Wählen Sie mehr Plätze für das neue Abonnement.",
     "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
   },
+  "subscriptionHistory": {
+    "title": "Abo-Verlauf",
+    "description": "Alle Abonnements dieser Organisation, einschließlich älterer und gekündigter Einträge.",
+    "latest": "Aktuell",
+    "notCancelled": "—",
+    "multipleActive": "{{count}} Abonnements sind derzeit für diese Organisation wirksam. Diese Ansicht zeigt alle, statt eines stillschweigend auszuwählen.",
+    "status": {
+      "ACTIVE": "Aktiv",
+      "SCHEDULED": "Geplant",
+      "CANCELLED": "Gekündigt",
+      "HISTORICAL": "Historisch"
+    },
+    "types": {
+      "SEAT_BASED": "Platzbasiert",
+      "USAGE_BASED": "Nutzungsbasiert"
+    },
+    "columns": {
+      "type": "Typ",
+      "status": "Status",
+      "createdAt": "Erstellt",
+      "startsAt": "Start",
+      "cancelledAt": "Gekündigt",
+      "details": "Details"
+    },
+    "details": {
+      "seats": "{{count}} Plätze",
+      "credits": "{{count}} monatliche Credits",
+      "none": "—"
+    }
+  },
   "licenseSeats": {
     "title": "Lizenzplätze",
     "usedSeats": "Verwendete Plätze",

@@ -26,6 +26,8 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { GetLatestSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
 import { GetLatestSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-latest-subscription/get-latest-subscription.query';
+import { ListOrgSubscriptionsUseCase } from 'src/iam/subscriptions/application/use-cases/list-org-subscriptions/list-org-subscriptions.use-case';
+import { ListOrgSubscriptionsQuery } from 'src/iam/subscriptions/application/use-cases/list-org-subscriptions/list-org-subscriptions.query';
 import { CreateSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/create-subscription/create-subscription.use-case';
 import { ChangeSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/change-subscription/change-subscription.use-case';
 import { CancelSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/cancel-subscription/cancel-subscription.use-case';
@@ -62,6 +64,7 @@ import { SystemRoles } from 'src/iam/authorization/application/decorators/system
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import { UpdateStartDateDto } from './dto/update-start-date.dto';
+import { OrgSubscriptionsResponseDto } from './dto/org-subscriptions-response.dto';
 
 const UNAUTHORIZED_DESCRIPTION =
   'User not authenticated or not authorized as super admin';
@@ -79,12 +82,14 @@ const INTERNAL_ERROR_DESCRIPTION = 'Internal server error';
   UpdateBillingInfoDto,
   UpdateStartDateDto,
   UpdateMonthlyCreditsDto,
+  OrgSubscriptionsResponseDto,
 )
 export class SuperAdminSubscriptionsController {
   private readonly logger = new Logger(SuperAdminSubscriptionsController.name);
 
   constructor(
     private readonly getLatestSubscriptionUseCase: GetLatestSubscriptionUseCase,
+    private readonly listOrgSubscriptionsUseCase: ListOrgSubscriptionsUseCase,
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
     private readonly changeSubscriptionUseCase: ChangeSubscriptionUseCase,
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
@@ -95,6 +100,31 @@ export class SuperAdminSubscriptionsController {
     private readonly updateStartDateUseCase: UpdateStartDateUseCase,
     private readonly updateMonthlyCreditsUseCase: UpdateMonthlyCreditsUseCase,
   ) {}
+
+  @Get(':orgId/history')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "List an organization's subscription history",
+    description:
+      'Return every subscription belonging to the organization, newest first, with lifecycle status. Super admins only. Does not change or constrain existing subscriptions.',
+  })
+  @OrgIdParam('Organization ID to list subscriptions for')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully retrieved subscription history',
+    type: OrgSubscriptionsResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
+  async getSubscriptionHistory(
+    @Param('orgId') orgId: UUID,
+  ): Promise<OrgSubscriptionsResponseDto> {
+    this.logger.log({ orgId }, 'Listing subscription history as super admin');
+    const result = await this.listOrgSubscriptionsUseCase.execute(
+      new ListOrgSubscriptionsQuery(orgId),
+    );
+    return this.subscriptionResponseMapper.toHistoryResponse(result);
+  }
 
   @Get(':orgId')
   @HttpCode(HttpStatus.OK)
