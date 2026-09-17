@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.40.3](https://github.com/ayunis-core/ayunis-core/compare/v2.40.2...v2.40.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **auth:** restore browser credential autofill on the auth forms (AYC-982) ([#1692](https://github.com/ayunis-core/ayunis-core/issues/1692)) ([4af03ec](https://github.com/ayunis-core/ayunis-core/commit/4af03ec96b0b7591ae3f9898a2f80a3a91e0d2d0))
+* **chat:** create skills in the thread workspace (AYC-939) ([#1679](https://github.com/ayunis-core/ayunis-core/issues/1679)) ([99eb2c2](https://github.com/ayunis-core/ayunis-core/commit/99eb2c2f8c7dcbb80d730c49077d880c09f9ea99))
+
+
+### Documentation
+
+* **agent:** preserve Linear release lifecycle (AYC-000) ([#1689](https://github.com/ayunis-core/ayunis-core/issues/1689)) ([65280ef](https://github.com/ayunis-core/ayunis-core/commit/65280ef20702cf4d3e738431f79bdc654e06b540))
+
+
+### CI/CD
+
+* **build-images:** stop sourcemap upload failures from blocking staging deploys (AYC-000) ([#1688](https://github.com/ayunis-core/ayunis-core/issues/1688)) ([dcc2323](https://github.com/ayunis-core/ayunis-core/commit/dcc2323aa9cdabd810680c53bacf06b2ac00c2b6))
+
 ## [2.40.2](https://github.com/ayunis-core/ayunis-core/compare/v2.40.1...v2.40.2) (2026-09-16)
 
 
