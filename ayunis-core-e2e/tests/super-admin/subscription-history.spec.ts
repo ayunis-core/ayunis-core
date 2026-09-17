@@ -58,8 +58,8 @@ test('super admin sees every subscription after changing with cancel', async ({
 
   await changeSuperAdminSubscription(publicApi, org.id, {
     ...e2eSubscriptionBilling,
-    type: 'SEAT_BASED',
-    noOfSeats: 5,
+    type: 'USAGE_BASED',
+    monthlyCredits: 1500,
     oldSubscriptionDisposition: 'CANCEL',
   });
 
