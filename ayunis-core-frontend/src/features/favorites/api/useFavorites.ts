@@ -37,3 +37,15 @@ export function isFavorite(
     ) ?? false
   );
 }
+
+export function sortFavoritesFirst<T extends { id: string }>(
+  items: T[],
+  favorites: Favorite[] | undefined,
+  referenceType: FavoriteReferenceType,
+): T[] {
+  return [...items].sort(
+    (a, b) =>
+      Number(isFavorite(favorites, b.id, referenceType)) -
+      Number(isFavorite(favorites, a.id, referenceType)),
+  );
+}
