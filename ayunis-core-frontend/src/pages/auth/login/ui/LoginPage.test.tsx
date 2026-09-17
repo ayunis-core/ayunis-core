@@ -295,4 +295,23 @@ describe(LoginPage.name, () => {
       );
     });
   });
+
+  it('keeps the email field fillable by password managers across both steps', async () => {
+    discover.mockResolvedValue({ available: false });
+    render(<LoginPage />);
+
+    const email = screen.getByTestId('email');
+    expect(email.getAttribute('autocomplete')).toBe('username');
+
+    fireEvent.change(email, { target: { value: 'local@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'login.continue' }));
+
+    expect(
+      (await screen.findByTestId('password')).getAttribute('autocomplete'),
+    ).toBe('current-password');
+    // A disabled field is dropped from form parsing, so the manager cannot pair
+    // the username with the password it is offered to save.
+    expect(screen.getByTestId('email').hasAttribute('disabled')).toBe(false);
+    expect(screen.getByTestId('email').hasAttribute('readonly')).toBe(true);
+  });
 });

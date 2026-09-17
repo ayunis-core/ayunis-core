@@ -89,7 +89,9 @@ function PasswordInviteAcceptForm({
                   <Input
                     placeholder={t('inviteAccept.emailPlaceholder')}
                     type="email"
-                    disabled
+                    autoComplete="username"
+                    className="bg-muted"
+                    readOnly
                     {...field}
                   />
                 </FormControl>
@@ -106,6 +108,7 @@ function PasswordInviteAcceptForm({
                 <FormControl>
                   <Input
                     data-testid="invite-accept-name"
+                    autoComplete="name"
                     placeholder={t('inviteAccept.namePlaceholder')}
                     {...field}
                   />
@@ -123,6 +126,7 @@ function PasswordInviteAcceptForm({
                 <FormControl>
                   <PasswordInput
                     data-testid="invite-accept-password"
+                    autoComplete="new-password"
                     placeholder={t('inviteAccept.passwordPlaceholder')}
                     {...field}
                   />

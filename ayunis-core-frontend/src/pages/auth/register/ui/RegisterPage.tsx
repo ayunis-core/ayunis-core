@@ -110,6 +110,7 @@ export function RegisterPage({
                     data-testid="register-email"
                     placeholder={t('register.emailPlaceholder')}
                     type="email"
+                    autoComplete="username"
                     {...field}
                   />
                 </FormControl>
@@ -127,6 +128,7 @@ export function RegisterPage({
                   <Input
                     required
                     data-testid="register-user-name"
+                    autoComplete="name"
                     placeholder={t('register.userNamePlaceholder')}
                     {...field}
                   />
@@ -170,6 +172,7 @@ export function RegisterPage({
                   <PasswordInput
                     required
                     data-testid="register-password"
+                    autoComplete="new-password"
                     placeholder={t('register.passwordPlaceholder')}
                     {...field}
                   />

@@ -125,7 +125,11 @@ export function LoginPage({
             }}
             className="space-y-4"
           >
-            <EmailField form={form} disabled={showMethods || isDiscovering} />
+            <EmailField
+              form={form}
+              readOnly={showMethods}
+              disabled={isDiscovering}
+            />
             {showMethods ? (
               <LoginMethods
                 form={form}
@@ -188,8 +192,13 @@ function RememberedSsoLogin({
 
 function EmailField({
   form,
+  readOnly,
   disabled,
-}: Readonly<{ form: UseFormReturn<LoginFormFields>; disabled: boolean }>) {
+}: Readonly<{
+  form: UseFormReturn<LoginFormFields>;
+  readOnly: boolean;
+  disabled: boolean;
+}>) {
   const { t } = useTranslation('auth');
   return (
     <FormField
@@ -202,7 +211,10 @@ function EmailField({
             <Input
               placeholder={t('login.emailPlaceholder')}
               type="email"
+              autoComplete="username"
               data-testid="email"
+              className={readOnly ? 'bg-muted' : undefined}
+              readOnly={readOnly}
               disabled={disabled}
               {...field}
             />
@@ -293,6 +305,7 @@ function PasswordField({
           <FormControl>
             <PasswordInput
               placeholder={t('login.passwordPlaceholder')}
+              autoComplete="current-password"
               data-testid="password"
               {...field}
             />
