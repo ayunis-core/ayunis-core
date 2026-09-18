@@ -226,4 +226,32 @@ describe('ListOrgSubscriptionsUseCase', () => {
       )?.status,
     ).toBe(SubscriptionLifecycleStatus.ACTIVE);
   });
+
+  it('lists a seat-based subscription cancelled before start after that start date has passed', async () => {
+    jest.setSystemTime(new Date('2026-06-15T12:00:00.000Z'));
+    const startsAt = new Date('2026-01-01T00:00:00.000Z');
+    const neverStarted = createSeatBased(orgId, {
+      createdAt: new Date('2025-08-01T00:00:00.000Z'),
+      startsAt,
+      renewalCycleAnchor: startsAt,
+      cancelledAt: new Date('2025-09-18T11:00:00.000Z'),
+    });
+    const replacement = createUsageBased(orgId, {
+      createdAt: new Date('2025-09-18T11:05:00.000Z'),
+    });
+    subscriptionRepository.findByOrgId.mockResolvedValue([
+      neverStarted,
+      replacement,
+    ]);
+
+    const result = await useCase.execute(createQuery());
+
+    const historical = result.subscriptions.find(
+      (item) => item.subscription.id === neverStarted.id,
+    );
+    expect(result.subscriptions).toHaveLength(2);
+    expect(historical?.status).toBe(SubscriptionLifecycleStatus.HISTORICAL);
+    expect(historical?.nextRenewalDate).toEqual(startsAt);
+    expect(result.activeCount).toBe(1);
+  });
 });
