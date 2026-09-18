@@ -236,6 +236,13 @@ jobs:
           TERMS_OF_SERVICE_VERSION=e2e-terms-v1
           PRIVACY_POLICY_VERSION=e2e-privacy-v1
 
+          # Seat-based subscriptions. Creating one reads the YEARLY value (the
+          # factory always builds seat-based subscriptions on a yearly cycle);
+          # without it every seat-based create fails with "Price per seat not
+          # configured". MONTHLY backs GET /subscriptions/price.
+          SUBSCRIPTIONS_PRICE_PER_SEAT_MONTHLY=20
+          SUBSCRIPTIONS_PRICE_PER_SEAT_YEARLY=18
+
           # Deterministic model availability. MOCK_INFERENCE handles requests,
           # but the app still hides providers without configured credentials.
           AWS_BEDROCK_REGION=eu-central-1
