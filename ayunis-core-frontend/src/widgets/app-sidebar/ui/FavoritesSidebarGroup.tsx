@@ -1,18 +1,9 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-} from '@ayunis/ui/components/sidebar';
+import { SidebarMenu } from '@ayunis/ui/components/sidebar';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
-import {
-  WorkspaceDeleteDialog,
-  WorkspaceSettingsDialog,
-} from '@/widgets/workspace-settings-dialog';
 import { useDeleteThread } from '@/features/thread-run';
 import { useWorkspaces, type Workspace } from '@/features/workspaces';
 import { useFavorites, type Favorite } from '@/features/favorites';
@@ -20,6 +11,8 @@ import { moveById } from '@/shared/lib/move-by-id';
 import { useReorderFavorites } from '@/widgets/app-sidebar/api/useReorderFavorites';
 import { applyPendingOrder } from '@/widgets/app-sidebar/lib/applyPendingOrder';
 import { FavoriteSidebarItem } from './FavoriteSidebarItem';
+import { WorkspaceSidebarDialogs } from './WorkspaceSidebarDialogs';
+import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
 
 export function FavoritesSidebarGroup() {
   const { t } = useTranslation('common');
@@ -109,49 +102,33 @@ export function FavoritesSidebarGroup() {
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupLabel>{t('sidebar.pinnedChats')}</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {items.map((item, index) => (
-              <FavoriteSidebarItem
-                key={item.id}
-                item={item}
-                workspace={workspaceById.get(item.referenceId)}
-                canMoveUp={index > 0}
-                canMoveDown={index < items.length - 1}
-                onMove={handleMove}
-                onRename={(id, title) => setThreadToRename({ id, title })}
-                onDelete={handleDelete}
-                onOpenWorkspaceSettings={setSettingsWorkspace}
-              />
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      {settingsWorkspace && (
-        <WorkspaceSettingsDialog
-          key={settingsWorkspace.id}
-          workspace={settingsWorkspace}
-          open
-          onOpenChange={(open) => {
-            if (!open) setSettingsWorkspace(null);
-          }}
-        />
-      )}
-      {workspaceToDelete && (
-        <WorkspaceDeleteDialog
-          workspace={workspaceToDelete}
-          open
-          onOpenChange={(open) => {
-            if (!open) setWorkspaceToDelete(null);
-          }}
-          onDeleted={() => {
-            if (params.workspaceId === workspaceToDelete.id)
-              void navigate({ to: '/chat' });
-          }}
-        />
-      )}
+      <SidebarCollapsibleGroup
+        label={t('sidebar.pinnedChats')}
+        storageKey="sidebar_favorites_open"
+        testId="sidebar-favorites"
+      >
+        <SidebarMenu>
+          {items.map((item, index) => (
+            <FavoriteSidebarItem
+              key={item.id}
+              item={item}
+              workspace={workspaceById.get(item.referenceId)}
+              canMoveUp={index > 0}
+              canMoveDown={index < items.length - 1}
+              onMove={handleMove}
+              onRename={(id, title) => setThreadToRename({ id, title })}
+              onDelete={handleDelete}
+              onOpenWorkspaceSettings={setSettingsWorkspace}
+            />
+          ))}
+        </SidebarMenu>
+      </SidebarCollapsibleGroup>
+      <WorkspaceSidebarDialogs
+        settingsWorkspace={settingsWorkspace}
+        workspaceToDelete={workspaceToDelete}
+        onCloseSettings={() => setSettingsWorkspace(null)}
+        onCloseDelete={() => setWorkspaceToDelete(null)}
+      />
       {threadToRename && (
         <RenameThreadDialog
           open

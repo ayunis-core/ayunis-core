@@ -4,9 +4,10 @@ import type { UUID } from 'crypto';
 import {
   WorkspacesRepository,
   type WorkspaceContextRefs,
+  type WorkspaceResourceCounts,
   type WorkspaceThreadStats,
 } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import { In, Repository, SelectQueryBuilder } from 'typeorm';
+import { In, ObjectLiteral, Repository, SelectQueryBuilder } from 'typeorm';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
@@ -157,6 +158,50 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
         { chatCount: row.chatCount, lastActivityAt: row.lastActivityAt },
       ]),
     );
+  }
+
+  async getResourceCounts(
+    workspaceIds: UUID[],
+  ): Promise<Map<UUID, WorkspaceResourceCounts>> {
+    if (workspaceIds.length === 0) {
+      return new Map();
+    }
+    const [skillCounts, knowledgeBaseCounts] = await Promise.all([
+      this.countByWorkspace(this.skillsRepo, 'skill', workspaceIds),
+      this.countByWorkspace(
+        this.knowledgeBasesRepo,
+        'knowledgeBase',
+        workspaceIds,
+      ),
+    ]);
+
+    const counts = new Map<UUID, WorkspaceResourceCounts>();
+    const touched = new Set([
+      ...skillCounts.keys(),
+      ...knowledgeBaseCounts.keys(),
+    ]);
+    for (const workspaceId of touched) {
+      counts.set(workspaceId, {
+        skillCount: skillCounts.get(workspaceId) ?? 0,
+        knowledgeBaseCount: knowledgeBaseCounts.get(workspaceId) ?? 0,
+      });
+    }
+    return counts;
+  }
+
+  private async countByWorkspace<T extends ObjectLiteral>(
+    repo: Repository<T>,
+    alias: string,
+    workspaceIds: UUID[],
+  ): Promise<Map<UUID, number>> {
+    const rows: Array<{ workspaceId: UUID; count: string }> = await repo
+      .createQueryBuilder(alias)
+      .select(`${alias}.workspaceId`, 'workspaceId')
+      .addSelect('COUNT(*)', 'count')
+      .where(`${alias}.workspaceId IN (:...workspaceIds)`, { workspaceIds })
+      .groupBy(`${alias}.workspaceId`)
+      .getRawMany();
+    return new Map(rows.map((row) => [row.workspaceId, Number(row.count)]));
   }
 
   async findById(userId: UUID, id: UUID): Promise<Workspace | null> {

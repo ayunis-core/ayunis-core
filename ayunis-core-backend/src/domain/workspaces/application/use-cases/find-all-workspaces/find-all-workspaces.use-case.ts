@@ -12,6 +12,8 @@ import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
 export interface WorkspaceListItem {
   workspace: Workspace;
   chatCount: number;
+  skillCount: number;
+  knowledgeBaseCount: number;
   /** Later of the workspace's own edit and its most recent chat activity. */
   lastActivityAt: Date;
 }
@@ -35,16 +37,21 @@ export class FindAllWorkspacesUseCase {
       this.resolveUserId(),
       query,
     );
-    const stats = await this.workspacesRepository.getThreadStats(
-      workspaces.data.map((workspace) => workspace.id),
-    );
+    const workspaceIds = workspaces.data.map((workspace) => workspace.id);
+    const [stats, resourceCounts] = await Promise.all([
+      this.workspacesRepository.getThreadStats(workspaceIds),
+      this.workspacesRepository.getResourceCounts(workspaceIds),
+    ]);
 
     const data = workspaces.data.map((workspace) => {
       const threadStats = stats.get(workspace.id);
       const chatActivity = threadStats?.lastActivityAt;
+      const resources = resourceCounts.get(workspace.id);
       return {
         workspace,
         chatCount: threadStats?.chatCount ?? 0,
+        skillCount: resources?.skillCount ?? 0,
+        knowledgeBaseCount: resources?.knowledgeBaseCount ?? 0,
         lastActivityAt:
           chatActivity && chatActivity > workspace.updatedAt
             ? chatActivity

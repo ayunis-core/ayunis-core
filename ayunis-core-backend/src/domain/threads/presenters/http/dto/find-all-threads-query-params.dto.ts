@@ -1,7 +1,14 @@
 import type { UUID } from 'crypto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 export class FindAllThreadsQueryParamsDto {
   @ApiPropertyOptional({ description: 'Search threads by title' })
@@ -17,6 +24,16 @@ export class FindAllThreadsQueryParamsDto {
   @IsOptional()
   @IsUUID()
   workspaceId?: UUID;
+
+  @ApiPropertyOptional({
+    description:
+      'Only threads that are not filed under any workspace. Omit for all threads.',
+    type: 'boolean',
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  unfiled?: boolean;
 
   @ApiPropertyOptional({ description: 'Maximum number of threads to return' })
   @IsOptional()

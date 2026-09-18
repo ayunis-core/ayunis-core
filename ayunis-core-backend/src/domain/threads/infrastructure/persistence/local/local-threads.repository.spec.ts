@@ -120,4 +120,58 @@ describe('LocalThreadsRepository', () => {
       { userId },
     );
   });
+  it('restricts the list to threads outside any workspace when unfiled is set', async () => {
+    const userId = randomUUID();
+    const queryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+    };
+    const threadRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as jest.Mocked<Repository<ThreadRecord>>;
+    const repository = new LocalThreadsRepository(
+      threadRepository,
+      {} as ThreadMapper,
+      {} as LocalThreadAssignmentsRepository,
+    );
+
+    await repository.findAll(userId, undefined, { unfiled: true });
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'thread.workspaceId IS NULL',
+    );
+  });
+
+  it('leaves the list unfiltered when unfiled is not set', async () => {
+    const queryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+    };
+    const threadRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as jest.Mocked<Repository<ThreadRecord>>;
+    const repository = new LocalThreadsRepository(
+      threadRepository,
+      {} as ThreadMapper,
+      {} as LocalThreadAssignmentsRepository,
+    );
+
+    await repository.findAll(randomUUID());
+
+    expect(queryBuilder.andWhere).not.toHaveBeenCalledWith(
+      'thread.workspaceId IS NULL',
+    );
+  });
 });

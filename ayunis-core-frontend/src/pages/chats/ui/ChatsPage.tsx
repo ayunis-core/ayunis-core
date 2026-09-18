@@ -10,6 +10,7 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import type { ChatListItem } from '@/pages/chats/model/types';
+import { sortFavoritesFirst, useFavorites } from '@/features/favorites';
 
 interface ChatsPageProps {
   chats: ChatListItem[];
@@ -27,6 +28,8 @@ export default function ChatsPage({
   currentPage,
 }: Readonly<ChatsPageProps>) {
   const { t } = useTranslation('chats');
+  const { favorites } = useFavorites();
+  const sortedChats = sortFavoritesFirst(chats, favorites, 'thread');
 
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 20;
@@ -69,7 +72,7 @@ export default function ChatsPage({
               <ChatsEmptyState hasFilters={hasFilters} />
             ) : (
               <div className="space-y-3">
-                {chats.map((chat) => (
+                {sortedChats.map((chat) => (
                   <ChatCard key={chat.id} chat={chat} />
                 ))}
               </div>

@@ -1,8 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { AddFavoriteUseCase } from 'src/domain/favorites/application/use-cases/add-favorite/add-favorite.use-case';
-import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
 import {
   InvalidWorkspaceAppearanceError,
   InvalidWorkspaceDescriptionError,
@@ -25,16 +23,13 @@ import { CreateWorkspaceUseCase } from './create-workspace.use-case';
 describe('CreateWorkspaceUseCase', () => {
   let useCase: CreateWorkspaceUseCase;
   let repository: jest.Mocked<WorkspacesRepository>;
-  let addFavoriteUseCase: { execute: jest.Mock };
 
   async function setup(contextService = createMockContextService()) {
     repository = createMockWorkspacesRepository();
-    addFavoriteUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
     const module = await Test.createTestingModule({
       providers: [
         CreateWorkspaceUseCase,
         { provide: WorkspacesRepository, useValue: repository },
-        { provide: AddFavoriteUseCase, useValue: addFavoriteUseCase },
         { provide: ContextService, useValue: contextService },
       ],
     }).compile();
@@ -58,20 +53,6 @@ describe('CreateWorkspaceUseCase', () => {
     expect(workspace.orgId).toBe(TEST_ORG_ID);
     expect(workspace.name).toBe('Bürgeranfragen');
     expect(repository.save).toHaveBeenCalledWith(workspace);
-  });
-
-  it('favorites a newly created workspace', async () => {
-    const workspace = await useCase.execute(
-      new CreateWorkspaceCommand({ name: 'Gebühren' }),
-    );
-
-    expect(addFavoriteUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userId: TEST_USER_ID,
-        referenceType: FavoriteReferenceType.Workspace,
-        referenceId: workspace.id,
-      }),
-    );
   });
 
   it('applies the requested appearance', async () => {
