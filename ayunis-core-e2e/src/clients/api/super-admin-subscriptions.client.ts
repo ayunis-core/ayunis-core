@@ -2,6 +2,7 @@ import type { APIRequestContext, APIResponse } from '@playwright/test';
 import type {
   ChangeSubscriptionRequestDto,
   CreateSubscriptionRequestDto,
+  UpdateMonthlyCreditsDto,
 } from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
@@ -53,4 +54,26 @@ export function requestSuperAdminSubscriptionHistory(
   orgId: string,
 ): Promise<APIResponse> {
   return api.get(`/api/super-admin/subscriptions/${orgId}/history`);
+}
+
+export function cancelSuperAdminSubscription(
+  api: APIRequestContext,
+  orgId: string,
+) {
+  return generatedApi.superAdminSubscriptionsControllerCancelSubscription(
+    orgId,
+    { api },
+  );
+}
+
+export function updateSuperAdminMonthlyCredits(
+  api: APIRequestContext,
+  orgId: string,
+  data: UpdateMonthlyCreditsDto,
+) {
+  return generatedApi.superAdminSubscriptionsControllerUpdateMonthlyCredits(
+    orgId,
+    data,
+    { api },
+  );
 }

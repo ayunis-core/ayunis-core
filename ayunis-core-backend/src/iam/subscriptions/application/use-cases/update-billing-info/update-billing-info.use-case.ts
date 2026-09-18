@@ -1,11 +1,7 @@
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
-import {
-  SubscriptionNotFoundError,
-  UnexpectedSubscriptionError,
-} from 'src/iam/subscriptions/application/subscription.errors';
-import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
-import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
+import { findManageableSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
 import { UpdateBillingInfoCommand } from './update-billing-info.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
@@ -21,7 +17,6 @@ export class UpdateBillingInfoUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
@@ -33,36 +28,24 @@ export class UpdateBillingInfoUseCase {
         command.requestingUserId,
         command.orgId,
       );
-      const subscription = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-        }),
+      const subscription = await findManageableSubscription(
+        this.subscriptionRepository,
+        command.orgId,
       );
 
-      // Cross-module runtime boundaries are guarded even when their types are non-null.
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!subscription) {
-        throw new SubscriptionNotFoundError(command.orgId);
-      }
-
       const billingInfo = new SubscriptionBillingInfo({
-        ...subscription.subscription.billingInfo,
+        ...subscription.billingInfo,
         ...command.billingInfo,
       });
 
       await this.subscriptionRepository.updateBillingInfo(
-        subscription.subscription.id,
+        subscription.id,
         billingInfo,
       );
 
-      subscription.subscription.billingInfo = billingInfo;
+      subscription.billingInfo = billingInfo;
 
-      this.emitBillingInfoUpdated(
-        command,
-        subscription.subscription.id,
-        billingInfo,
-      );
+      this.emitBillingInfoUpdated(command, subscription.id, billingInfo);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error({ err: error as Error });

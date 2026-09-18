@@ -84,6 +84,11 @@ export class UpdateSeatsUseCase {
     }
   }
 
+  // Must resolve the *serving* subscription, not the newest one: the org-admin
+  // invite flow reads noOfSeats from the active subscription and calls this with
+  // that count + 1. Retargeting it at a scheduled subscription would bump the
+  // future contract instead, leaving the serving seat count full while invites
+  // keep succeeding.
   private async findSubscription(
     command: UpdateSeatsCommand,
   ): Promise<SeatBasedSubscription> {
