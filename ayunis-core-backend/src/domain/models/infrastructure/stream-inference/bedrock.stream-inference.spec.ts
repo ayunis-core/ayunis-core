@@ -1,12 +1,10 @@
 import type { ConfigService } from '@nestjs/config';
 import type { ModelProvider } from '@ayunis/inference';
 import { BedrockStreamInferenceHandler } from './bedrock.stream-inference';
-import {
-  CLAUDE_MAX_OUTPUT_TOKENS,
-  STREAM_INFERENCE_MAX_RETRIES,
-} from 'src/domain/models/infrastructure/runtime/inference-config';
+import { STREAM_INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import type { Model } from 'src/domain/models/domain/model.entity';
+import { ModelProvider as CatalogModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 const bedrockMock = jest.fn<ModelProvider, [unknown]>();
 
@@ -39,16 +37,18 @@ describe('BedrockStreamInferenceHandler', () => {
   it('raises the output-token budget above the conservative default (AYC-674)', () => {
     const { createProvider } = buildHandler();
 
-    createProvider({ name: 'eu.anthropic.claude-opus-5' } as Model);
+    createProvider({
+      name: 'eu.anthropic.claude-opus-5',
+      provider: CatalogModelProvider.BEDROCK,
+    } as Model);
 
     expect(bedrockMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'eu.anthropic.claude-opus-5',
-        maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+        maxTokens: 32_000,
         maxRetries: STREAM_INFERENCE_MAX_RETRIES,
       }),
     );
-    expect(CLAUDE_MAX_OUTPUT_TOKENS).toBeGreaterThan(16_384);
     expect(STREAM_INFERENCE_MAX_RETRIES).toBe(0);
   });
 });

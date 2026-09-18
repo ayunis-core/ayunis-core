@@ -66,6 +66,31 @@ export class CreditLimitGuardService {
     }
   }
 
+  async prepareUserModelCall(
+    orgId: UUID,
+    userId: UUID,
+  ): Promise<{ reservePersonalCredits: boolean }> {
+    const { personalCreditLimit, teamCreditLimits } =
+      await this.resolveCreditLimitsForUserUseCase.execute(
+        new ResolveCreditLimitsForUserQuery(orgId, userId),
+      );
+    if (personalCreditLimit === null && teamCreditLimits.length === 0) {
+      return { reservePersonalCredits: false };
+    }
+    const isUsageBased = await this.isUsageBasedSubscriptionUseCase.execute(
+      new IsUsageBasedSubscriptionQuery(orgId),
+    );
+    if (!isUsageBased) return { reservePersonalCredits: false };
+    for (const limit of teamCreditLimits) {
+      await this.ensureTeamLimitNotExceeded(
+        orgId,
+        limit.teamId,
+        limit.monthlyCredits,
+      );
+    }
+    return { reservePersonalCredits: personalCreditLimit !== null };
+  }
+
   private async ensurePersonalLimitNotExceeded(
     orgId: UUID,
     userId: UUID,

@@ -1,9 +1,9 @@
 import type { ConfigService } from '@nestjs/config';
 import type { ModelProvider } from '@ayunis/inference';
 import { BedrockInferenceHandler } from './bedrock.inference';
-import { CLAUDE_MAX_OUTPUT_TOKENS } from '../runtime/inference-config';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import type { Model } from '../../domain/model.entity';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { ModelProvider as CatalogModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 const bedrockMock = jest.fn<ModelProvider, [unknown]>();
 
@@ -36,14 +36,16 @@ describe('BedrockInferenceHandler', () => {
   it('raises the output-token budget above the conservative default (AYC-674)', () => {
     const { createProvider } = buildHandler();
 
-    createProvider({ name: 'eu.anthropic.claude-opus-5' } as Model);
+    createProvider({
+      name: 'eu.anthropic.claude-opus-5',
+      provider: CatalogModelProvider.BEDROCK,
+    } as Model);
 
     expect(bedrockMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'eu.anthropic.claude-opus-5',
-        maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+        maxTokens: 32_000,
       }),
     );
-    expect(CLAUDE_MAX_OUTPUT_TOKENS).toBeGreaterThan(16_384);
   });
 });

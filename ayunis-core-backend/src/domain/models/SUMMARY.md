@@ -25,6 +25,7 @@ The models module is the central registry for AI model configuration. The abstra
 
 ## Domain Value Objects
 
+- **Model output-token limit** (`domain/model-output-token-limit.ts`): Resolves the code-configured maximum output for a catalog model. Provider construction and personal-credit reservation use this single source so the preauthorized ceiling cannot drift from the provider ceiling. Persisted, administrator-managed model capabilities are tracked separately.
 - **ToolSchema** (`domain/value-objects/tool-schema.ts`): Schema-shaped view of a tool (`{ name, description, parameters }`) decoupled from the executable `Tool` entity. Inference ports and provider converters accept `ToolSchema` so callers without server-executable tools — e.g. the `openai-compat` surface, where the client owns execution — can advertise tools to the LLM without constructing a full `Tool`. `Tool` is structurally assignable to `ToolSchema`.
 
 ## Use Cases

@@ -27,8 +27,12 @@ import {
   RunToolRepeatedlyFailingError,
   type RunExecutionFailedError,
 } from 'src/domain/runs/application/runs.errors';
-import { adaptRunEventsToStream } from './run-event-stream.adapter';
+import {
+  adaptRunEventsToStream,
+  TranscriptPreservingRunError,
+} from './run-event-stream.adapter';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
+import type { UserCreditLimitExceededError } from 'src/iam/credit-limits/application/credit-limits.errors';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -53,9 +57,12 @@ async function* eventsFrom(
 async function collect(
   events: AsyncIterable<RunEvent>,
   logger = createLoggerMock(),
+  hasInitialToolTranscript = false,
 ): Promise<RunStreamItem[]> {
   const items: RunStreamItem[] = [];
-  for await (const item of adaptRunEventsToStream(events, threadId, logger)) {
+  for await (const item of adaptRunEventsToStream(events, threadId, logger, {
+    hasInitialToolTranscript,
+  })) {
     items.push(item);
   }
   return items;
@@ -359,6 +366,38 @@ describe('adaptRunEventsToStream', () => {
     );
   });
 
+  it('preserves a billed transcript when finalization overrides a credit error', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'USER_CREDIT_LIMIT_EXCEEDED',
+          message: 'Personal credit limit reached',
+          details: { limit: 400_000, consumed: 410_000 },
+        },
+        {
+          type: 'finalization_error',
+          hookName: 'ayunis-usage',
+          message: 'reservation release failed',
+          critical: true,
+          outcome: 'error',
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      createLoggerMock(),
+      true,
+    );
+
+    const error: unknown = await result.catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(TranscriptPreservingRunError);
+    expect(
+      (error as TranscriptPreservingRunError).applicationError,
+    ).toMatchObject({
+      code: 'RUN_EXECUTION_FAILED',
+      metadata: { hookName: 'ayunis-usage', phase: 'runEnd' },
+    });
+  });
+
   it('preserves the max outcome for a best-effort finalization failure', async () => {
     await expect(
       collect(
@@ -644,5 +683,27 @@ describe('adaptRunEventsToStream', () => {
         ]),
       ),
     ).rejects.toBeInstanceOf(RunContextBudgetExceededError);
+  });
+
+  it('preserves a personal credit-limit error raised by a runtime hook', async () => {
+    const details = { limit: 400_000, consumed: 410_000 };
+
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'USER_CREDIT_LIMIT_EXCEEDED',
+            message: 'Your monthly credit limit has been reached',
+            details,
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ),
+    ).rejects.toMatchObject<Partial<UserCreditLimitExceededError>>({
+      code: 'USER_CREDIT_LIMIT_EXCEEDED',
+      statusCode: 429,
+      metadata: details,
+    });
   });
 });

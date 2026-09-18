@@ -3,12 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { anthropic } from '@ayunis/provider-anthropic';
 import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { RuntimeInferenceHandler } from '../runtime/runtime-inference.handler';
-import type { Model } from '../../domain/model.entity';
-import {
-  CLAUDE_MAX_OUTPUT_TOKENS,
-  INFERENCE_MAX_RETRIES,
-} from '../runtime/inference-config';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { resolveModelMaxOutputTokens } from 'src/domain/models/domain/model-output-token-limit';
+import { RuntimeInferenceHandler } from 'src/domain/models/infrastructure/runtime/runtime-inference.handler';
+import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class AnthropicInferenceHandler extends RuntimeInferenceHandler {
@@ -24,7 +22,7 @@ export class AnthropicInferenceHandler extends RuntimeInferenceHandler {
       apiKey: this.configService.get<string>('models.anthropic.apiKey') ?? '',
       model: model.name,
       maxRetries: INFERENCE_MAX_RETRIES,
-      maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+      maxTokens: resolveModelMaxOutputTokens(model),
     });
   }
 }

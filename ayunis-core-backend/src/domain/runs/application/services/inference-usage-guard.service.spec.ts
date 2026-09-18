@@ -4,6 +4,7 @@ import type { ApiKeyCreditLimitGuardService } from './api-key-credit-limit-guard
 import type { CreditBudgetGuardService } from './credit-budget-guard.service';
 import type { CreditLimitGuardService } from './credit-limit-guard.service';
 import type { CollectUsageAsyncService } from './collect-usage-async.service';
+import type { PersonalCreditCallBudgetService } from './personal-credit-call-budget.service';
 import { InferenceUsageGuard } from './inference-usage-guard.service';
 import {
   ApiKeyCreditLimitExceededError,
@@ -23,6 +24,7 @@ describe('InferenceUsageGuard', () => {
   let creditLimitGuardService: jest.Mocked<CreditLimitGuardService>;
   let apiKeyCreditLimitGuardService: jest.Mocked<ApiKeyCreditLimitGuardService>;
   let collectUsageAsyncService: jest.Mocked<CollectUsageAsyncService>;
+  let personalCreditCallBudgetService: jest.Mocked<PersonalCreditCallBudgetService>;
 
   const userId = randomUUID();
   const apiKeyId = randomUUID();
@@ -62,13 +64,21 @@ describe('InferenceUsageGuard', () => {
     } as unknown as jest.Mocked<CreditBudgetGuardService>;
     creditLimitGuardService = {
       ensureWithinLimits: jest.fn().mockResolvedValue(undefined),
+      prepareUserModelCall: jest
+        .fn()
+        .mockResolvedValue({ reservePersonalCredits: true }),
     } as unknown as jest.Mocked<CreditLimitGuardService>;
     apiKeyCreditLimitGuardService = {
       ensureWithinLimit: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ApiKeyCreditLimitGuardService>;
     collectUsageAsyncService = {
       collect: jest.fn(),
+      collectAndWait: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<CollectUsageAsyncService>;
+    personalCreditCallBudgetService = {
+      reserve: jest.fn().mockResolvedValue(null),
+      release: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<PersonalCreditCallBudgetService>;
 
     guard = new InferenceUsageGuard(
       checkQuotaUseCase,
@@ -76,6 +86,7 @@ describe('InferenceUsageGuard', () => {
       creditLimitGuardService,
       apiKeyCreditLimitGuardService,
       collectUsageAsyncService,
+      personalCreditCallBudgetService,
     );
   });
 
@@ -248,6 +259,95 @@ describe('InferenceUsageGuard', () => {
         requestId,
         'agent_runtime',
       );
+    });
+
+    it('waits for durable agent-runtime usage collection', async () => {
+      const model = makeModel(ModelTier.LOW);
+      const requestId = randomUUID();
+
+      await guard.collectUsageAndWait(
+        model,
+        { inputTokens: 250_000, outputTokens: 500 },
+        requestId,
+        'agent_runtime',
+      );
+
+      expect(collectUsageAsyncService.collectAndWait).toHaveBeenCalledWith(
+        model,
+        250_000,
+        500,
+        requestId,
+        'agent_runtime',
+      );
+    });
+  });
+
+  describe('authorizeModelCall', () => {
+    const request = { instructions: '', messages: [], tools: [] };
+
+    it('atomically reserves personal credits for every paid user call', async () => {
+      const authorization = {
+        reservationId: randomUUID(),
+        maxOutputTokens: 750,
+      };
+      personalCreditCallBudgetService.reserve.mockResolvedValue(authorization);
+      const model = makeModel(ModelTier.MEDIUM);
+
+      await expect(
+        guard.authorizeModelCall({ userId, orgId }, model, request),
+      ).resolves.toEqual(authorization);
+
+      expect(creditLimitGuardService.prepareUserModelCall).toHaveBeenCalledWith(
+        orgId,
+        userId,
+      );
+      expect(personalCreditCallBudgetService.reserve).toHaveBeenCalledWith(
+        model,
+        request,
+      );
+    });
+
+    it('does not reserve when personal limits do not apply', async () => {
+      creditLimitGuardService.prepareUserModelCall.mockResolvedValue({
+        reservePersonalCredits: false,
+      });
+
+      await expect(
+        guard.authorizeModelCall(
+          { userId, orgId },
+          makeModel(ModelTier.MEDIUM),
+          request,
+        ),
+      ).resolves.toBeNull();
+
+      expect(personalCreditCallBudgetService.reserve).not.toHaveBeenCalled();
+    });
+
+    it('does not reserve credits for a free model', async () => {
+      await expect(
+        guard.authorizeModelCall(
+          { userId, orgId },
+          makeFreeModel(ModelTier.MEDIUM),
+          request,
+        ),
+      ).resolves.toBeNull();
+
+      expect(personalCreditCallBudgetService.reserve).not.toHaveBeenCalled();
+    });
+
+    it('keeps API-key calls on their existing limit guard', async () => {
+      await expect(
+        guard.authorizeModelCall(
+          { apiKeyId, orgId },
+          makeModel(ModelTier.MEDIUM),
+          request,
+        ),
+      ).resolves.toBeNull();
+
+      expect(
+        apiKeyCreditLimitGuardService.ensureWithinLimit,
+      ).toHaveBeenCalledWith(orgId, apiKeyId);
+      expect(personalCreditCallBudgetService.reserve).not.toHaveBeenCalled();
     });
   });
 });

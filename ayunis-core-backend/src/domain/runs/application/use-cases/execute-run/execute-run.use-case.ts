@@ -55,7 +55,10 @@ import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hook
 import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
-import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
+import {
+  adaptRunEventsToStream,
+  TranscriptPreservingRunError,
+} from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 import { RuntimeModelProviderDecorator } from 'src/domain/runs/application/agent-runtime/runtime-model-provider.decorator';
 import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
@@ -67,7 +70,6 @@ import { MAX_CONTEXT_TOKENS } from 'src/common/token-counter/application/context
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
-
 const MAX_ITERATIONS = 50;
 
 interface SeededInput {
@@ -239,26 +241,25 @@ export class ExecuteRunUseCase {
         cleanupRequired = false;
         return 'aborted';
       }
-      // Masks first, so the client can resolve {{pii:…}} tokens in the message.
       if (seeded.masks) {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
       yield seeded.message;
+      const hasInitialToolTranscript = input instanceof RunToolResultInput;
       const outcome = yield* adaptRunEventsToStream(
         await this.startRun(prepared, signal),
         prepared.thread.id,
         this.runEventStreamLogger,
-        prepared.toolIntegrations,
+        { integrations: prepared.toolIntegrations, hasInitialToolTranscript },
       );
       cleanupRequired = outcome === 'aborted';
       return outcome;
     } catch (error) {
-      // Both errors leave a complete, already-streamed tool transcript;
-      // rolling it back would re-arm the turn's pending tool calls.
-      if (
-        error instanceof RunMaxIterationsReachedError ||
-        error instanceof RunToolRepeatedlyFailingError
-      ) {
+      if (error instanceof TranscriptPreservingRunError) {
+        cleanupRequired = false;
+        throw error.applicationError;
+      }
+      if (preservesCompletedTranscript(error)) {
         cleanupRequired = false;
       }
       if (error instanceof ApplicationError) throw error;
@@ -334,7 +335,10 @@ export class ExecuteRunUseCase {
 
   private buildHooks(prepared: PreparedRun): Hook[] {
     return [
-      this.usageHookFactory.create({ model: prepared.model }),
+      this.usageHookFactory.create({
+        model: prepared.model,
+        principal: { userId: prepared.userId, orgId: prepared.orgId },
+      }),
       this.persistenceHookFactory.create({
         thread: prepared.thread,
         integrations: prepared.toolIntegrations,
@@ -487,4 +491,10 @@ export class ExecuteRunUseCase {
       masks: anonymized.masks,
     };
   }
+}
+function preservesCompletedTranscript(error: unknown): boolean {
+  return (
+    error instanceof RunMaxIterationsReachedError ||
+    error instanceof RunToolRepeatedlyFailingError
+  );
 }

@@ -14,8 +14,9 @@ import {
 } from 'src/domain/usage/application/events/run-usage-collection.event';
 
 /**
- * Collects usage data asynchronously (fire-and-forget).
- * Errors are logged but don't block the main flow.
+ * Collects usage either in the background or with an awaitable durability
+ * boundary. Background errors are logged and swallowed; awaited errors reject
+ * so callers that enforce spending limits can fail closed.
  */
 @Injectable()
 export class CollectUsageAsyncService {
@@ -34,6 +35,22 @@ export class CollectUsageAsyncService {
     messageId?: UUID,
     executionPath?: RunUsageExecutionPath,
   ): void {
+    void this.collectAndWait(
+      model,
+      inputTokens,
+      outputTokens,
+      messageId,
+      executionPath,
+    ).catch(() => undefined);
+  }
+
+  async collectAndWait(
+    model: LanguageModel | ImageGenerationModel,
+    inputTokens: number,
+    outputTokens: number,
+    messageId?: UUID,
+    executionPath?: RunUsageExecutionPath,
+  ): Promise<void> {
     this.logger.debug(
       {
         modelId: model.id,
@@ -65,27 +82,26 @@ export class CollectUsageAsyncService {
       outputTokens,
       requestId: messageId,
     });
-    this.persist(command, event, executionPath);
+    await this.persist(command, event, executionPath);
   }
 
-  private persist(
+  private async persist(
     command: CollectUsageCommand,
     event: TokensConsumedEvent,
     executionPath?: RunUsageExecutionPath,
-  ): void {
-    this.collectUsageUseCase
-      .execute(command)
-      .then(async () => {
-        await this.emitTokensConsumed(event);
-        this.emitRunUsageCollection(executionPath, 'success');
-      })
-      .catch((error) => {
-        this.logger.warn(
-          { err: error as Error, execution_path: executionPath },
-          'Usage collection failed',
-        );
-        this.emitRunUsageCollection(executionPath, 'error');
-      });
+  ): Promise<void> {
+    try {
+      await this.collectUsageUseCase.execute(command);
+    } catch (error) {
+      this.logger.warn(
+        { err: error as Error, execution_path: executionPath },
+        'Usage collection failed',
+      );
+      this.emitRunUsageCollection(executionPath, 'error');
+      throw error;
+    }
+    void this.emitTokensConsumed(event);
+    this.emitRunUsageCollection(executionPath, 'success');
   }
 
   private emitRunUsageCollection(

@@ -29,6 +29,13 @@ import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.
 import { reconstructRuntimeModelError } from './runtime-model-error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import {
+  ApiKeyCreditLimitExceededError,
+  CreditLimitError,
+  TeamCreditLimitExceededError,
+  UserCreditLimitExceededError,
+} from 'src/iam/credit-limits/application/credit-limits.errors';
+import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
 
 /** Accumulates one assistant turn's streamed text/thinking for live display. */
 interface StreamingTurn {
@@ -37,6 +44,19 @@ interface StreamingTurn {
   thinking: string;
   toolCalls: Map<number, ToolCallSnapshot>;
 }
+
+interface AdaptRunEventsOptions {
+  integrations?: RuntimeToolIntegrationRegistry;
+  hasInitialToolTranscript?: boolean;
+}
+
+export class TranscriptPreservingRunError extends Error {
+  constructor(readonly applicationError: ApplicationError) {
+    super(applicationError.message);
+  }
+}
+
+type PendingRunError = ApplicationError | TranscriptPreservingRunError;
 
 /**
  * Folds the runtime's fine-grained `RunEvent` stream into the coarse
@@ -57,11 +77,13 @@ export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
   logger: Logger,
-  integrations?: RuntimeToolIntegrationRegistry,
+  options: AdaptRunEventsOptions = {},
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
+  const { integrations, hasInitialToolTranscript = false } = options;
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
-  let pendingError: ApplicationError | null = null;
+  let pendingError: PendingRunError | null = null;
   let outcome: RunExecutionOutcome | undefined;
+  let hasCompletedToolTranscript = hasInitialToolTranscript;
 
   for await (const event of events) {
     outcome = readOutcome(event) ?? outcome;
@@ -75,23 +97,44 @@ export async function* adaptRunEventsToStream(
       threadId,
       assistant.lastCompletedIteration(),
       logger,
+      hasCompletedToolTranscript,
     );
-    if (side instanceof ApplicationError) {
-      pendingError = side;
+    hasCompletedToolTranscript ||= event.type === 'tool_result_message';
+    if (
+      side instanceof ApplicationError ||
+      side instanceof TranscriptPreservingRunError
+    ) {
+      pendingError = nextPendingError(pendingError, side);
     } else if (side) {
       yield side;
     }
   }
 
-  if (pendingError) {
-    throw pendingError;
+  return requireOutcome(outcome, pendingError);
+}
+
+function nextPendingError(
+  previous: PendingRunError | null,
+  next: PendingRunError,
+): PendingRunError {
+  if (
+    previous instanceof TranscriptPreservingRunError &&
+    next instanceof ApplicationError
+  ) {
+    return new TranscriptPreservingRunError(next);
   }
-  if (!outcome) {
-    throw new RunExecutionFailedError(
-      'Agent runtime ended without a terminal outcome',
-    );
-  }
-  return outcome;
+  return next;
+}
+
+function requireOutcome(
+  outcome: RunExecutionOutcome | undefined,
+  pendingError: PendingRunError | null,
+): RunExecutionOutcome {
+  if (pendingError) throw pendingError;
+  if (outcome) return outcome;
+  throw new RunExecutionFailedError(
+    'Agent runtime ended without a terminal outcome',
+  );
 }
 
 function readOutcome(event: RunEvent): RunExecutionOutcome | undefined {
@@ -170,7 +213,8 @@ function toSideStreamItem(
   threadId: UUID,
   iteration: number,
   logger: Logger,
-): RunStreamItem | ApplicationError | null {
+  hasCompletedToolTranscript: boolean,
+): RunStreamItem | ApplicationError | TranscriptPreservingRunError | null {
   if (event.type === 'tool_result_message') {
     return toBackendToolResultMessage(
       event.message,
@@ -184,7 +228,7 @@ function toSideStreamItem(
       : null;
   }
   if (event.type === 'error') {
-    return mapRunError(event, logger);
+    return mapRunError(event, logger, hasCompletedToolTranscript);
   }
   if (event.type === 'finalization_error') {
     return mapFinalizationError(event, logger);
@@ -302,9 +346,29 @@ const RUN_ERROR_MAPPERS = new Map<
     },
   ],
   ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
+  [
+    'USER_CREDIT_LIMIT_EXCEEDED',
+    (event) => new UserCreditLimitExceededError(event.details),
+  ],
+  [
+    'TEAM_CREDIT_LIMIT_EXCEEDED',
+    (event) => new TeamCreditLimitExceededError(event.details),
+  ],
+  [
+    'API_KEY_CREDIT_LIMIT_EXCEEDED',
+    (event) => new ApiKeyCreditLimitExceededError(event.details),
+  ],
+  [
+    'CREDIT_BUDGET_EXCEEDED',
+    (event) => new CreditBudgetExceededError(event.details),
+  ],
 ]);
 
-function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
+function mapRunError(
+  event: RunErrorEvent,
+  logger: Logger,
+  hasCompletedToolTranscript: boolean,
+): ApplicationError | TranscriptPreservingRunError {
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
     // Checked before the generic reconstruction: the run error keeps the
     // user-facing code and localized message, while the classified provider
@@ -317,11 +381,22 @@ function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
   }
   const runtimeModelError = reconstructRuntimeModelError(event.details);
   if (runtimeModelError instanceof ApplicationError) {
-    return runtimeModelError;
+    return hasCompletedToolTranscript &&
+      isCreditAccountingError(runtimeModelError)
+      ? wrapTranscriptPreserving(runtimeModelError)
+      : runtimeModelError;
+  }
+  if (hasCompletedToolTranscript && isUsageAccountingFailure(event)) {
+    return new TranscriptPreservingRunError(
+      new RunExecutionFailedError('Agent runtime failed'),
+    );
   }
   const mapper = RUN_ERROR_MAPPERS.get(event.code);
   if (mapper) {
-    return mapper(event);
+    const mapped = mapper(event);
+    return hasCompletedToolTranscript && isCreditAccountingError(mapped)
+      ? wrapTranscriptPreserving(mapped)
+      : mapped;
   }
   logger.error(
     {
@@ -332,4 +407,29 @@ function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
     'Agent runtime failed',
   );
   return new RunExecutionFailedError('Agent runtime failed');
+}
+
+function wrapTranscriptPreserving(
+  error: ApplicationError,
+): TranscriptPreservingRunError {
+  return new TranscriptPreservingRunError(error);
+}
+
+function isCreditAccountingError(error: ApplicationError): boolean {
+  return (
+    error instanceof CreditLimitError ||
+    error instanceof CreditBudgetExceededError
+  );
+}
+
+function isUsageAccountingFailure(event: RunErrorEvent): boolean {
+  if (event.code === 'USAGE_UNAVAILABLE') return true;
+  return (
+    event.code === 'HOOK_FAILED' &&
+    event.details?.hookName === 'ayunis-usage' &&
+    (event.details.phase === 'beforeModelCall' ||
+      event.details.phase === 'beforeProviderCall' ||
+      event.details.phase === 'afterModelCall' ||
+      event.details.phase === 'modelCallInterrupted')
+  );
 }

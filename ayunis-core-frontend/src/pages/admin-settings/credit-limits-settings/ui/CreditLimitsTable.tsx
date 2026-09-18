@@ -112,7 +112,7 @@ function CreditLimitTableRow({
       </TableCell>
       <TableCell>
         {limit
-          ? limit.creditsUsed.toLocaleString(i18n.language)
+          ? Math.ceil(limit.creditsUsed).toLocaleString(i18n.language)
           : t('table.usageUnavailable')}
       </TableCell>
       <TableCell className="text-right">
