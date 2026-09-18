@@ -122,9 +122,19 @@ export class EnvironmentVariables {
   @Min(0)
   POSTGRES_IDLE_TX_TIMEOUT_MS?: number;
 
-  // Storage (MinIO) — production requires credentials (see production rules).
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) MINIO_PORT?: number;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_USE_SSL?: string;
+  // Storage (MinIO) — production requires both endpoints and credentials.
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  MINIO_INTERNAL_PORT?: number;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_INTERNAL_USE_SSL?: string;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  MINIO_PUBLIC_PORT?: number;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_PUBLIC_USE_SSL?: string;
 
   // Redis — production requires REDIS_PASSWORD (see production rules).
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) REDIS_PORT?: number;
@@ -245,6 +255,12 @@ function validateProductionRules(env: Record<string, unknown>): string[] {
     messages.push(
       'MINIO_SECRET_KEY (or MINIO_ROOT_PASSWORD) is required in production',
     );
+  }
+  if (!env.MINIO_INTERNAL_ENDPOINT) {
+    messages.push('MINIO_INTERNAL_ENDPOINT is required in production');
+  }
+  if (!env.MINIO_PUBLIC_ENDPOINT) {
+    messages.push('MINIO_PUBLIC_ENDPOINT is required in production');
   }
   if (!env.REDIS_PASSWORD) {
     messages.push(
