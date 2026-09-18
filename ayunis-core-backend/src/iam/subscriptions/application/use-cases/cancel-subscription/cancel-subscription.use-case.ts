@@ -6,14 +6,13 @@ import {
   SubscriptionAlreadyCancelledError,
   UnexpectedSubscriptionError,
 } from 'src/iam/subscriptions/application/subscription.errors';
-import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
-import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { findManageableSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
 
 @Injectable()
 export class CancelSubscriptionUseCase {
@@ -21,7 +20,6 @@ export class CancelSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
@@ -57,13 +55,10 @@ export class CancelSubscriptionUseCase {
     command: CancelSubscriptionCommand,
   ): Promise<Subscription> {
     this.logger.debug('Finding subscription');
-    const result = await this.getActiveSubscriptionUseCase.execute(
-      new GetActiveSubscriptionQuery({
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-      }),
+    return findManageableSubscription(
+      this.subscriptionRepository,
+      command.orgId,
     );
-    return result.subscription;
   }
 
   private async cancelSubscription(
