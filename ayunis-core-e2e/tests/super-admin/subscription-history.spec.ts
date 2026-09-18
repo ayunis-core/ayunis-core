@@ -77,3 +77,50 @@ test('super admin sees every subscription after changing with cancel', async ({
   ).toBeVisible();
   await expect(page.getByTestId('subscription-history-latest')).toBeVisible();
 });
+
+test('super admin sees every currently serving subscription and is warned', async ({
+  page,
+  publicApi,
+}) => {
+  await login(publicApi, 'admin@demo.local', 'admin');
+  await markWelcomeVideoSeen(publicApi);
+  await page.context().addCookies((await publicApi.storageState()).cookies);
+
+  const org = await createSuperAdminOrg(
+    publicApi,
+    `History multi-active E2E ${Date.now()}`,
+  );
+  await createSuperAdminSubscription(publicApi, org.id, {
+    ...e2eSubscriptionBilling,
+    type: 'SEAT_BASED',
+    noOfSeats: 5,
+  });
+  // A cancelled seat-based subscription keeps serving until the end of its
+  // paid period, so the organization legitimately has two active records.
+  await changeSuperAdminSubscription(publicApi, org.id, {
+    ...e2eSubscriptionBilling,
+    type: 'USAGE_BASED',
+    monthlyCredits: 900,
+    oldSubscriptionDisposition: 'CANCEL',
+  });
+
+  const history = await getSuperAdminSubscriptionHistory(publicApi, org.id);
+  expect(history.activeCount).toBe(2);
+  expect(history.subscriptions).toHaveLength(2);
+  expect(history.subscriptions[0]?.status).toBe('ACTIVE');
+  expect(history.subscriptions[0]?.isLatest).toBe(true);
+  expect(history.subscriptions[1]?.status).toBe('CANCELLED');
+
+  await page.goto(`/super-admin-settings/orgs/${org.id}?tab=subscriptions`);
+  await expect(
+    page.getByTestId('subscription-multiple-active-alert'),
+  ).toBeVisible();
+  for (const subscription of history.subscriptions) {
+    await expect(
+      page.getByTestId(`subscription-history-row-${subscription.id}`),
+    ).toBeVisible();
+  }
+  await expect(
+    page.getByTestId(`subscription-history-status-${history.subscriptions[1]?.id}`),
+  ).toHaveText(/gekündigt/i);
+});
