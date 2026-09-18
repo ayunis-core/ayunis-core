@@ -75,17 +75,27 @@ const openStream = (
         model,
         contents: convertMessages(request.messages, codec),
         config: {
-          ...buildConfig({
-            instructions: request.instructions,
-            tools: request.tools,
-            toolChoice: request.toolChoice,
-            codec,
-          }),
+          ...buildGenerationConfig(request, codec),
           ...(request.signal ? { abortSignal: request.signal } : {}),
         },
       }),
     maxRetries,
   );
+
+export const buildGenerationConfig = (
+  request: ProviderRequest,
+  codec = new ToolNameCodec(request.tools),
+) => ({
+  ...buildConfig({
+    instructions: request.instructions,
+    tools: request.tools,
+    toolChoice: request.toolChoice,
+    codec,
+  }),
+  ...(request.maxOutputTokens !== undefined
+    ? { maxOutputTokens: request.maxOutputTokens }
+    : {}),
+});
 
 const withRetry = async <T>(
   fn: () => Promise<T>,

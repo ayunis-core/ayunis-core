@@ -1,8 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { ollama } from './ollama-provider';
+import { ToolNameCodec, type ProviderRequest } from '@ayunis/inference';
+import { buildParams, ollama } from './ollama-provider';
 
 describe('ollama', () => {
+  it('maps the per-call output-token ceiling', () => {
+    const request: ProviderRequest = {
+      instructions: '',
+      messages: [],
+      tools: [],
+      maxOutputTokens: 750,
+    };
+
+    expect(
+      buildParams(
+        { baseUrl: 'http://localhost:11434', model: 'llama3.1' },
+        request,
+        new ToolNameCodec([]),
+      ).options,
+    ).toMatchObject({ num_predict: 750 });
+  });
+
   it('names the provider ollama:<model> and exposes a stream function', () => {
     const provider = ollama({
       baseUrl: 'http://localhost:11434',

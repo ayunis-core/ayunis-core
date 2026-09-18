@@ -112,7 +112,7 @@ async function* streamChat(
   }
 }
 
-const buildParams = (
+export const buildParams = (
   model: string,
   request: ProviderRequest,
   codec: ToolNameCodec,
@@ -126,6 +126,9 @@ const buildParams = (
       : {}),
     ...(hasTools && request.toolChoice !== undefined
       ? { toolChoice: convertToolChoice(request.toolChoice, codec) }
+      : {}),
+    ...(request.maxOutputTokens !== undefined
+      ? { maxTokens: request.maxOutputTokens }
       : {}),
     stream: true,
   };

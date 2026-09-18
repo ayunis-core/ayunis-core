@@ -8,6 +8,7 @@ export type {
   ModelProvider,
   ProviderChunk,
   ProviderRequest,
+  ProviderRetryContext,
   ToolCallDelta,
   ToolChoice,
   Usage,

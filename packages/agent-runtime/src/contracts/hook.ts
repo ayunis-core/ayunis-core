@@ -23,6 +23,8 @@ export interface HookApi {
   addInstructions(text: string): void;
   /** Full-replace escape hatch for a rebuilt system prompt. */
   setInstructions(text: string): void;
+  /** Sets or clears the output-token ceiling for the imminent provider call. */
+  setMaxOutputTokens(value: number | undefined): void;
   /** Ends the run with status 'aborted' before the next loop step. */
   abort(reason?: string): void;
   /** Emits a `custom` RunEvent into the run's event stream. */
@@ -41,6 +43,13 @@ export interface BeforeModelCallContext extends HookApi {
   readonly tools: readonly Tool[];
 }
 
+export interface BeforeProviderCallContext extends HookApi {
+  readonly iteration: number;
+  readonly messages: readonly Message[];
+  readonly instructions: string;
+  readonly tools: readonly Tool[];
+}
+
 export interface AfterModelCallContext extends HookApi {
   readonly iteration: number;
   readonly message: AssistantMessage;
@@ -53,8 +62,12 @@ export type ModelCallInterruptionReason =
 
 export interface ModelCallInterruptedContext extends HookApi {
   readonly iteration: number;
+  /** Whether the provider emitted text, thinking, or tool-call output. */
+  readonly hasProviderOutput: boolean;
   /** Partial display content only; unexecuted tool calls are excluded. */
   readonly message: AssistantMessage;
+  /** Usage reported before the call was interrupted or rejected. */
+  readonly usage: Usage;
   readonly reason: ModelCallInterruptionReason;
 }
 
@@ -97,10 +110,13 @@ export interface RunEndContext extends HookApi {
  */
 export interface Hook {
   readonly name: string;
+  /** Defaults to `best_effort`; applies only when `modelCallInterrupted` throws. */
+  readonly modelCallInterruptedFailureMode?: 'critical' | 'best_effort';
   /** Defaults to `critical`; applies only when `runEnd` throws. */
   readonly runEndFailureMode?: 'critical' | 'best_effort';
   runStart?(ctx: RunStartContext): void | Promise<void>;
   beforeModelCall?(ctx: BeforeModelCallContext): void | Promise<void>;
+  beforeProviderCall?(ctx: BeforeProviderCallContext): void | Promise<void>;
   afterModelCall?(ctx: AfterModelCallContext): void | Promise<void>;
   modelCallInterrupted?(ctx: ModelCallInterruptedContext): void | Promise<void>;
   beforeToolCall?(ctx: BeforeToolCallContext): void | Promise<void>;

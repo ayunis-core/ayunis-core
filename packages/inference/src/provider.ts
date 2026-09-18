@@ -50,7 +50,16 @@ export interface ProviderRequest {
   messages: readonly Message[];
   tools: readonly ToolSchema[];
   toolChoice?: ToolChoice;
+  /** Per-call output ceiling, used by hosts that preauthorize usage. */
+  maxOutputTokens?: number;
   signal?: AbortSignal;
+}
+
+export interface ProviderRetryContext {
+  readonly error: unknown;
+  readonly attempt: number;
+  readonly hasVisibleOutput: boolean;
+  readonly signal?: AbortSignal;
 }
 
 /**
@@ -63,4 +72,6 @@ export interface ModelProvider {
   /** Identifying name, e.g. 'anthropic:claude-sonnet-4-5'. */
   readonly name: string;
   stream(request: ProviderRequest): AsyncIterable<ProviderChunk>;
+  /** Waits as needed and returns true when the runtime should open a new attempt. */
+  prepareRetry?(context: ProviderRetryContext): Promise<boolean>;
 }

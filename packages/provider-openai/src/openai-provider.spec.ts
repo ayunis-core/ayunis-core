@@ -71,6 +71,21 @@ describe('azure', () => {
 });
 
 describe('streamChat', () => {
+  it('forwards the per-call output-token ceiling', async () => {
+    createMock.mockReturnValue(fakeStream([], () => {}));
+    const provider = openai({ apiKey: 'sk-test', model: 'gpt-5' });
+
+    await provider
+      .stream({ ...makeRequest(), maxOutputTokens: 750 })
+      [Symbol.asyncIterator]()
+      .next();
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ max_completion_tokens: 750 }),
+      undefined,
+    );
+  });
+
   it('stops reading after finish_reason + usage and never consumes the trailing terminator', async () => {
     const content = {
       choices: [{ index: 0, delta: { content: 'hi' }, finish_reason: null }],

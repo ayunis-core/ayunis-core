@@ -77,7 +77,7 @@ async function* streamChat(
   }
 }
 
-const buildParams = (
+export const buildParams = (
   options: OllamaProviderOptions,
   request: ProviderRequest,
   codec: ToolNameCodec,
@@ -88,7 +88,12 @@ const buildParams = (
     messages: convertMessages(request.instructions, request.messages, codec),
     tools: tools.length > 0 ? tools : undefined,
     stream: true,
-    options: { num_ctx: options.numCtx ?? DEFAULT_NUM_CTX },
+    options: {
+      num_ctx: options.numCtx ?? DEFAULT_NUM_CTX,
+      ...(request.maxOutputTokens !== undefined
+        ? { num_predict: request.maxOutputTokens }
+        : {}),
+    },
   };
 };
 

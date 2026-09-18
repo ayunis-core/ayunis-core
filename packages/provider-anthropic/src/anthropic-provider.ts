@@ -93,7 +93,12 @@ async function* streamMessages(
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
-  const params = buildParams(model, maxTokens, request, codec);
+  const params = buildParams(
+    model,
+    request.maxOutputTokens ?? maxTokens,
+    request,
+    codec,
+  );
   const stream = await client.messages.create(
     params,
     request.signal ? { signal: request.signal } : undefined,

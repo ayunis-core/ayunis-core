@@ -1,7 +1,15 @@
 import type { RunEventPayload } from '../contracts/event';
 import type { Message, ToolUseContent } from '../contracts/message';
-import type { ProviderRequest, Usage } from '../contracts/provider';
-import { ProviderError, RepeatedToolFailureError } from '../contracts/errors';
+import type {
+  ProviderRequest,
+  ProviderRetryContext,
+  Usage,
+} from '../contracts/provider';
+import {
+  ProviderError,
+  RepeatedToolFailureError,
+  RunAbortedError,
+} from '../contracts/errors';
 import type { ModelCallResult } from './accumulator';
 import { drainEmits } from './event-queue';
 import {
@@ -87,7 +95,17 @@ function callModelRecovering(
     recordUsage: (usage) => addUsage(state, usage),
     applyPendingMutations: () => applyPendingMutations(state),
     isAborted: () => isAborted(state),
+    isHookAborted: () => isHookAborted(state),
+    prepareProviderRetry: (input) => prepareProviderRetry(state, input),
   });
+}
+
+function prepareProviderRetry(
+  state: RunState,
+  input: Omit<ProviderRetryContext, 'signal'>,
+): Promise<boolean> {
+  if (!state.model.prepareRetry) return Promise.resolve(false);
+  return state.model.prepareRetry({ ...input, signal: state.signal });
 }
 
 function runAfterModelCall(
@@ -110,26 +128,45 @@ function runRejectedModelCall(
 ): Promise<void> {
   return state.hookRunner.modelCallInterrupted({
     iteration,
+    hasProviderOutput: result.message.content.length > 0,
     message: {
       ...result.message,
       content: result.message.content.filter(
         (content) => content.type === 'text' || content.type === 'thinking',
       ),
     },
+    usage: result.usage,
     reason: 'error',
   });
 }
 
-function callModel(
+async function* callModel(
   state: RunState,
   iteration: number,
   mode: ModelCallMode,
 ): AsyncGenerator<RunEventPayload, ModelCallResult> {
-  return streamModelCall({
+  applyPendingMutations(state);
+  const request = assembleRequest(state, mode);
+  await state.hookRunner.beforeProviderCall({
+    iteration,
+    messages: request.messages,
+    instructions: request.instructions,
+    tools: mode === 'normal' ? state.tools : [],
+  });
+  if (isAborted(state)) {
+    throw new RunAbortedError('Run aborted before model call');
+  }
+  applyPendingMutations(state);
+  return yield* streamModelCall({
     model: state.model,
     request: assembleRequest(state, mode),
-    onInterrupted: (interruption) =>
-      state.hookRunner.modelCallInterrupted({ iteration, ...interruption }),
+    onInterrupted: async (interruption) => {
+      addUsage(state, interruption.usage);
+      await state.hookRunner.modelCallInterrupted({
+        iteration,
+        ...interruption,
+      });
+    },
   });
 }
 
@@ -194,10 +231,12 @@ const applyPendingMutations = (state: RunState): void => {
     messages: state.messages,
     tools: state.tools,
     instructions: state.instructions,
+    maxOutputTokens: state.maxOutputTokens,
   });
   state.messages = applied.messages;
   state.tools = applied.tools;
   state.instructions = applied.instructions;
+  state.maxOutputTokens = applied.maxOutputTokens;
 };
 
 const TOOL_DISABLED_FALLBACK_INSTRUCTION =
@@ -228,6 +267,9 @@ const assembleRequest = (
       ? { toolChoice: state.toolChoice }
       : {}),
     ...(state.signal ? { signal: state.signal } : {}),
+    ...(state.maxOutputTokens !== undefined
+      ? { maxOutputTokens: state.maxOutputTokens }
+      : {}),
   };
 };
 

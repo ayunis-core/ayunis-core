@@ -54,6 +54,18 @@ describe('hook mutations', () => {
     });
   });
 
+  it('applies a beforeProviderCall output-token cap to the imminent request', async () => {
+    const creditGuard: Hook = {
+      name: 'credit-guard',
+      beforeProviderCall: (ctx) => ctx.setMaxOutputTokens(750),
+    };
+    const model = new MockProvider([textTurn('Hello')]);
+
+    await collectEvents(baseInput(model, { hooks: [creditGuard] }));
+
+    expect(model.requests[0].maxOutputTokens).toBe(750);
+  });
+
   it('applies afterToolCall tool injection to the next iteration only', async () => {
     const injected = echoTool({ name: 'injected_tool' });
     const injector: Hook = {

@@ -51,6 +51,7 @@ export class HookRunner {
       setTools: (tools) => mutations.setTools(tools),
       addInstructions: (text) => mutations.addInstructions(text),
       setInstructions: (text) => mutations.setInstructions(text),
+      setMaxOutputTokens: (value) => mutations.setMaxOutputTokens(value),
       abort: (reason) => abortState.abort(reason),
       emit: (event) => emits.push(event),
     };
@@ -80,6 +81,20 @@ export class HookRunner {
     }
   }
 
+  async beforeProviderCall(info: {
+    iteration: number;
+    messages: readonly Message[];
+    instructions: string;
+    tools: readonly Tool[];
+  }): Promise<void> {
+    const ctx = { ...this.api(), ...info };
+    for (const hook of this.deps.hooks) {
+      await this.invoke(hook, 'beforeProviderCall', () =>
+        hook.beforeProviderCall?.(ctx),
+      );
+    }
+  }
+
   async afterModelCall(info: {
     iteration: number;
     message: AssistantMessage;
@@ -96,14 +111,20 @@ export class HookRunner {
 
   async modelCallInterrupted(info: {
     iteration: number;
+    hasProviderOutput: boolean;
     message: AssistantMessage;
+    usage: Usage;
     reason: ModelCallInterruptionReason;
   }): Promise<void> {
     const ctx: ModelCallInterruptedContext = { ...this.api(), ...info };
     for (const hook of this.deps.hooks) {
-      await this.invoke(hook, 'modelCallInterrupted', () =>
-        hook.modelCallInterrupted?.(ctx),
-      );
+      try {
+        await this.invoke(hook, 'modelCallInterrupted', () =>
+          hook.modelCallInterrupted?.(ctx),
+        );
+      } catch (error) {
+        if (hook.modelCallInterruptedFailureMode === 'critical') throw error;
+      }
     }
   }
 

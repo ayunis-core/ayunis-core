@@ -11,6 +11,7 @@ import type {
   ModelProvider,
   ProviderChunk,
   ProviderRequest,
+  Usage,
 } from '../contracts/provider';
 import type { ModelCallResult } from './accumulator';
 import { ChunkAccumulator } from './accumulator';
@@ -24,7 +25,9 @@ interface ModelCallParams {
   model: ModelProvider;
   request: ProviderRequest;
   onInterrupted: (interruption: {
+    hasProviderOutput: boolean;
     message: AssistantMessage;
+    usage: Usage;
     reason: ModelCallInterruptionReason;
   }) => Promise<void>;
 }
@@ -35,7 +38,6 @@ export async function* streamModelCall(
   const accumulator = new ChunkAccumulator();
   let completed = false;
   let result: ModelCallResult | null = null;
-  let interruptionError: AgentRuntimeError | undefined;
   let interruptionReason: ModelCallInterruptionReason = 'consumer_abandoned';
   try {
     result = yield* collectModelCall(params, accumulator);
@@ -43,17 +45,10 @@ export async function* streamModelCall(
     completed = true;
   } catch (error) {
     const interruption = classifyInterruption(error, params.request.signal);
-    interruptionError = interruption.error;
     interruptionReason = interruption.reason;
     throw interruption.error;
   } finally {
-    await notifyInterruptedPreservingOutcome(
-      params,
-      accumulator,
-      completed,
-      interruptionReason,
-      interruptionError,
-    );
+    await notifyInterrupted(params, accumulator, completed, interruptionReason);
   }
   return result;
 }
@@ -136,26 +131,14 @@ const notifyInterrupted = async (
 ): Promise<void> => {
   if (completed) return;
   await params.onInterrupted({
+    hasProviderOutput: accumulator.hasProviderOutput(),
     message: accumulator.partialMessage(),
+    usage: accumulator.reportedUsage(),
     reason:
       reason === 'consumer_abandoned' && params.request.signal?.aborted
         ? 'aborted'
         : reason,
   });
-};
-
-const notifyInterruptedPreservingOutcome = async (
-  params: Parameters<typeof streamModelCall>[0],
-  accumulator: ChunkAccumulator,
-  completed: boolean,
-  reason: ModelCallInterruptionReason,
-  interruptionError: AgentRuntimeError | undefined,
-): Promise<void> => {
-  try {
-    await notifyInterrupted(params, accumulator, completed, reason);
-  } catch (error) {
-    if (!interruptionError) throw error;
-  }
 };
 
 const openStream = (

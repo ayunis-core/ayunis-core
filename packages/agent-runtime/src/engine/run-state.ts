@@ -37,6 +37,7 @@ export interface RunState {
   messages: Message[];
   tools: Tool[];
   instructions: string;
+  maxOutputTokens?: number;
   readonly toolChoice?: ToolChoice;
   readonly signal?: AbortSignal;
   readonly maxIterations: number;

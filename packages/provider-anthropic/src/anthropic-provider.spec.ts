@@ -28,6 +28,27 @@ const drain = async (stream: AsyncIterable<unknown>): Promise<unknown[]> => {
 };
 
 describe('createMessagesProvider prompt caching', () => {
+  it('uses the per-call output-token ceiling instead of the provider default', async () => {
+    const captured: MessageCreateParamsStreaming[] = [];
+    const provider = createMessagesProvider(
+      captureClient(captured),
+      'test:model-x',
+      'model-x',
+      32_000,
+    );
+
+    await drain(
+      provider.stream({
+        instructions: '',
+        messages: [],
+        tools: [],
+        maxOutputTokens: 750,
+      }),
+    );
+
+    expect(captured[0].max_tokens).toBe(750);
+  });
+
   it('sends the system prompt as a cached text block', async () => {
     const captured: MessageCreateParamsStreaming[] = [];
     const provider = createMessagesProvider(

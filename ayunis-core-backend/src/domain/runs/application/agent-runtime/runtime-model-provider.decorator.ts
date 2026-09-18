@@ -5,6 +5,7 @@ import type {
   ModelProvider,
   ProviderChunk,
   ProviderRequest,
+  ProviderRetryContext,
   ToolSchema,
 } from '@ayunis/inference';
 import { Injectable, Logger } from '@nestjs/common';
@@ -71,7 +72,8 @@ export class RuntimeModelProviderDecorator {
   ): ModelProvider {
     return {
       name: provider.name,
-      stream: (request) => this.streamWithRetry(provider, request, context),
+      stream: (request) => this.stream(provider, request, context),
+      prepareRetry: (retryContext) => this.prepareRetry(retryContext, context),
     };
   }
 
@@ -84,34 +86,27 @@ export class RuntimeModelProviderDecorator {
    * stalled streams (AYC-652) and transient transport failures raised before
    * the first chunk (AYC-653) — the latter get a short backoff first.
    */
-  private async *streamWithRetry(
-    provider: ModelProvider,
-    request: ProviderRequest,
+  private async prepareRetry(
+    retryContext: ProviderRetryContext,
     context: RuntimeModelCallContext,
-  ): AsyncIterable<ProviderChunk> {
-    for (let attempt = 1; ; attempt++) {
-      let streamedContent = false;
-      try {
-        for await (const chunk of this.stream(provider, request, context)) {
-          streamedContent ||= isContentChunk(chunk);
-          yield chunk;
-        }
-        return;
-      } catch (error) {
-        const decision = retryDecision(
-          error,
-          streamedContent,
-          request.signal,
-          attempt,
-        );
-        if (!decision) throw error;
-        await waitBeforeRetry(decision.delayMs, request.signal, error);
-        this.logger.warn(
-          { model: context.model.name, ...decision, attempt },
-          'Provider stream failed before producing output; retrying',
-        );
-      }
-    }
+  ): Promise<boolean> {
+    const decision = retryDecision(
+      retryContext.error,
+      retryContext.hasVisibleOutput,
+      retryContext.signal,
+      retryContext.attempt,
+    );
+    if (!decision) return false;
+    await waitBeforeRetry(
+      decision.delayMs,
+      retryContext.signal,
+      retryContext.error,
+    );
+    this.logger.warn(
+      { model: context.model.name, ...decision, attempt: retryContext.attempt },
+      'Provider stream failed before producing output; retrying',
+    );
+    return true;
   }
 
   private async *stream(
@@ -336,14 +331,6 @@ function isAbortError(error: unknown): boolean {
   return (
     (error instanceof Error || error instanceof DOMException) &&
     error.name === 'AbortError'
-  );
-}
-
-function isContentChunk(chunk: ProviderChunk): boolean {
-  return Boolean(
-    chunk.textDelta ||
-    chunk.thinkingDelta ||
-    (chunk.toolCallDeltas && chunk.toolCallDeltas.length > 0),
   );
 }
 

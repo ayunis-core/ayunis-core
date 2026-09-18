@@ -1,7 +1,10 @@
 import type { ConfigService } from '@nestjs/config';
 import type { ModelProvider } from '@ayunis/inference';
 import { BedrockStreamInferenceHandler } from './bedrock.stream-inference';
-import { CLAUDE_MAX_OUTPUT_TOKENS } from 'src/domain/models/infrastructure/runtime/inference-config';
+import {
+  CLAUDE_MAX_OUTPUT_TOKENS,
+  STREAM_INFERENCE_MAX_RETRIES,
+} from 'src/domain/models/infrastructure/runtime/inference-config';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import type { Model } from 'src/domain/models/domain/model.entity';
 
@@ -42,8 +45,10 @@ describe('BedrockStreamInferenceHandler', () => {
       expect.objectContaining({
         model: 'eu.anthropic.claude-opus-5',
         maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+        maxRetries: STREAM_INFERENCE_MAX_RETRIES,
       }),
     );
     expect(CLAUDE_MAX_OUTPUT_TOKENS).toBeGreaterThan(16_384);
+    expect(STREAM_INFERENCE_MAX_RETRIES).toBe(0);
   });
 });

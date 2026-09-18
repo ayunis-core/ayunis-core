@@ -69,6 +69,35 @@ async function collect(
   return chunks;
 }
 
+async function collectWithRetries(
+  provider: ModelProvider,
+  providerRequest: ProviderRequest = request,
+): Promise<ProviderChunk[]> {
+  const chunks: ProviderChunk[] = [];
+  for (let attempt = 1; ; attempt++) {
+    let hasVisibleOutput = false;
+    try {
+      for await (const chunk of provider.stream(providerRequest)) {
+        chunks.push(chunk);
+        hasVisibleOutput ||= Boolean(
+          chunk.textDelta ||
+          chunk.thinkingDelta ||
+          (chunk.toolCallDeltas && chunk.toolCallDeltas.length > 0),
+        );
+      }
+      return chunks;
+    } catch (error) {
+      const shouldRetry = await provider.prepareRetry?.({
+        error,
+        attempt,
+        hasVisibleOutput,
+        signal: providerRequest.signal,
+      });
+      if (!shouldRetry) throw error;
+    }
+  }
+}
+
 function throwingProvider(error: Error): ModelProvider {
   return {
     name: 'test:throwing',
@@ -244,7 +273,7 @@ describe('RuntimeModelProviderDecorator', () => {
       jest.useFakeTimers();
       const { decorate, emitAsync } = buildHarness();
 
-      const collected = collect(decorate(throwingProvider(error)));
+      const collected = collectWithRetries(decorate(throwingProvider(error)));
       const failure = expect(collected).rejects.toEqual(
         expect.objectContaining({
           code,
@@ -287,7 +316,7 @@ describe('RuntimeModelProviderDecorator', () => {
     } as LanguageModel;
     const { decorate } = buildHarness(bedrockModel);
 
-    const collected = collect(decorate(provider));
+    const collected = collectWithRetries(decorate(provider));
     await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS * 3);
 
     await expect(collected).resolves.toEqual([
@@ -413,7 +442,7 @@ describe('RuntimeModelProviderDecorator', () => {
     } as LanguageModel;
     const { decorate, logger } = buildHarness(azureModel);
 
-    const collected = collect(decorate(provider));
+    const collected = collectWithRetries(decorate(provider));
     await jest.advanceTimersByTimeAsync(1_999);
     expect(calls).toBe(1);
     await jest.advanceTimersByTimeAsync(1);
@@ -537,17 +566,14 @@ describe('RuntimeModelProviderDecorator', () => {
       },
     };
     const { decorate, emitAsync } = buildHarness();
-    const iterator = decorate(provider).stream(request)[Symbol.asyncIterator]();
-
-    await expect(iterator.next()).resolves.toMatchObject({
-      value: { usage: { inputTokens: 2048 } },
-    });
-    const nextChunk = iterator.next();
+    const collected = collectWithRetries(decorate(provider));
+    await Promise.resolve();
     await jest.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS);
-    await expect(nextChunk).resolves.toMatchObject({
-      value: { textDelta: 'Die Antwort nach dem zweiten Anlauf.' },
-    });
-    await expect(iterator.next()).resolves.toMatchObject({ done: true });
+
+    await expect(collected).resolves.toEqual([
+      { usage: { inputTokens: 2048 } },
+      { textDelta: 'Die Antwort nach dem zweiten Anlauf.' },
+    ]);
 
     expect(calls).toBe(2);
     // Each provider attempt emits its own completion event.
@@ -608,7 +634,7 @@ describe('RuntimeModelProviderDecorator', () => {
     };
     const { decorate } = buildHarness();
 
-    const collected = collect(decorate(provider));
+    const collected = collectWithRetries(decorate(provider));
     await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
 
     await expect(collected).resolves.toEqual([{ textDelta: 'Recovered' }]);

@@ -15,6 +15,7 @@ export interface MutableRunConfig {
   messages: Message[];
   tools: Tool[];
   instructions: string;
+  maxOutputTokens: number | undefined;
 }
 
 /**
@@ -25,6 +26,8 @@ export class PendingMutations {
   private messageTransforms: MessageTransform[] = [];
   private toolOps: ToolOp[] = [];
   private instructionOps: InstructionOp[] = [];
+  private maxOutputTokens: number | undefined;
+  private hasMaxOutputTokensMutation = false;
 
   transformMessages(fn: MessageTransform): void {
     this.messageTransforms.push(fn);
@@ -50,6 +53,11 @@ export class PendingMutations {
     this.instructionOps.push({ kind: 'set', text });
   }
 
+  setMaxOutputTokens(value: number | undefined): void {
+    this.maxOutputTokens = value;
+    this.hasMaxOutputTokensMutation = true;
+  }
+
   apply(config: MutableRunConfig): MutableRunConfig {
     let messages = config.messages;
     for (const transform of this.messageTransforms) {
@@ -66,7 +74,12 @@ export class PendingMutations {
     this.messageTransforms = [];
     this.toolOps = [];
     this.instructionOps = [];
-    return { messages, tools, instructions };
+    const maxOutputTokens = this.hasMaxOutputTokensMutation
+      ? this.maxOutputTokens
+      : config.maxOutputTokens;
+    this.maxOutputTokens = undefined;
+    this.hasMaxOutputTokensMutation = false;
+    return { messages, tools, instructions, maxOutputTokens };
   }
 }
 
