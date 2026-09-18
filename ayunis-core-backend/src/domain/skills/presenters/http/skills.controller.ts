@@ -29,6 +29,8 @@ import { DeleteSkillCommand } from 'src/domain/skills/application/use-cases/dele
 import { DeleteSkillUseCase } from 'src/domain/skills/application/use-cases/delete-skill/delete-skill.use-case';
 import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
 import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
+import { ImproveSkillTextCommand } from 'src/domain/skills/application/use-cases/improve-skill-text/improve-skill-text.command';
+import { ImproveSkillTextUseCase } from 'src/domain/skills/application/use-cases/improve-skill-text/improve-skill-text.use-case';
 import { InstallSkillFromMarketplaceCommand } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.command';
 import { InstallSkillFromMarketplaceUseCase } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 import { ListAccessibleSkillsQuery } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.query';
@@ -40,6 +42,10 @@ import { UpdateSkillUseCase } from 'src/domain/skills/application/use-cases/upda
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { CreateSkillDto } from './dto/create-skill.dto';
+import {
+  ImproveSkillTextDto,
+  ImprovedSkillTextResponseDto,
+} from './dto/improve-skill-text.dto';
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { ListSkillsQueryDto } from './dto/list-skills-query.dto';
 import { toSkillOwner } from './dto/skill-owner.dto';
@@ -62,6 +68,7 @@ export class SkillsController {
 
   constructor(
     private readonly installUseCase: InstallSkillFromMarketplaceUseCase,
+    private readonly improveSkillText: ImproveSkillTextUseCase,
     private readonly createSkill: CreateSkillUseCase,
     private readonly updateSkill: UpdateSkillUseCase,
     private readonly deleteSkill: DeleteSkillUseCase,
@@ -88,6 +95,29 @@ export class SkillsController {
       isShared: false,
       isPinned: false,
     });
+  }
+
+  @RequirePermission(Permission.MANAGE_SKILLS)
+  @Post('improve-text')
+  @ApiOperation({
+    summary: 'Rewrite a skill trigger or its instructions',
+  })
+  @ApiBody({ type: ImproveSkillTextDto })
+  @ApiResponse({ status: 200, type: ImprovedSkillTextResponseDto })
+  @HttpCode(HttpStatus.OK)
+  async improveText(
+    @Body() dto: ImproveSkillTextDto,
+  ): Promise<ImprovedSkillTextResponseDto> {
+    this.logger.log({ field: dto.field }, 'improveText');
+    const text = await this.improveSkillText.execute(
+      new ImproveSkillTextCommand({
+        field: dto.field,
+        name: dto.name,
+        trigger: dto.trigger,
+        instructions: dto.instructions,
+      }),
+    );
+    return { text };
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)

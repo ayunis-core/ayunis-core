@@ -125,13 +125,39 @@ body {
   }
 }
 
+.skill-improve-shimmer {
+  --skill-improve-brand-rgb: 96, 85, 166;
+  background: linear-gradient(
+    100deg,
+    rgba(var(--skill-improve-brand-rgb), 0.45) 30%,
+    rgba(var(--skill-improve-brand-rgb), 1) 50%,
+    rgba(var(--skill-improve-brand-rgb), 0.45) 70%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: skill-improve-shimmer 1.8s linear infinite;
+}
+
+@keyframes skill-improve-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .onboarding-aurora,
   .animate-onboarding-marquee,
   .onboarding-rise,
   .onboarding-fade,
   .onboarding-kenburns,
-  .onboarding-shimmer {
+  .onboarding-shimmer,
+  .skill-improve-shimmer {
     animation: none;
   }
   .onboarding-shimmer {

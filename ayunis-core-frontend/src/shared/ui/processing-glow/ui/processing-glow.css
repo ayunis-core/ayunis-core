@@ -1,0 +1,56 @@
+/* The travelling brand light the chat input shows while a run is in flight.
+   The chat rotates a circular element behind its card, which only reads on a
+   box roughly as tall as it is wide. Painting the gradient onto the ring
+   itself works at any shape, down to a one-line input. */
+@property --processing-glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.processing-glow {
+  --processing-glow-brand-rgb: 96, 85, 166;
+  --processing-glow-brand-light-rgb: 125, 115, 184;
+  --processing-glow-ring: 3px;
+  position: relative;
+  border-radius: 0.625rem;
+  padding: var(--processing-glow-ring);
+  box-sizing: border-box;
+}
+
+.processing-glow--active {
+  background: conic-gradient(
+    from var(--processing-glow-angle),
+    rgba(var(--processing-glow-brand-rgb), 0.9) 0deg,
+    rgba(var(--processing-glow-brand-light-rgb), 0.55) 24deg,
+    rgba(var(--processing-glow-brand-light-rgb), 0.15) 48deg,
+    rgba(var(--processing-glow-brand-rgb), 0.12) 300deg,
+    rgba(var(--processing-glow-brand-rgb), 0.9) 360deg
+  );
+  animation: processing-glow-spin 3s linear infinite;
+}
+
+.processing-glow__card {
+  position: relative;
+  z-index: 1;
+  border-radius: calc(0.625rem - var(--processing-glow-ring));
+  background-color: var(--background);
+}
+
+/* The control's own border would sit inside the lit ring and mute it. The chat
+   input does the same: while it runs, the ring is the border. */
+.processing-glow--active .processing-glow__card :is(input, textarea) {
+  border-color: transparent;
+}
+
+@keyframes processing-glow-spin {
+  to {
+    --processing-glow-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .processing-glow--active {
+    animation: none;
+  }
+}

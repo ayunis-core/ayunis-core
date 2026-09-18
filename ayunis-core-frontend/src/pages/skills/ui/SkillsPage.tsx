@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import CreateSkillDialog from './CreateSkillDialog';
+import CreateSkillMenu from './CreateSkillMenu';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
 import type { Skill } from '@/pages/skills/model/openapi';
@@ -36,28 +36,16 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     .filter((skill) => skill.isShared)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // The "pin a skill" tour step anchors on the first active personal skill.
-  // With nothing pinnable (no skills yet, or none active) it falls back to the
-  // create-skill action so the step always has a visible target.
-  const pinTargetSkillId = personalSkills.find((skill) => skill.isActive)?.id;
-  const hasPinnableSkill = pinTargetSkillId !== undefined;
-
   const createSkillAction = (
     <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
-      <CreateSkillDialog />
+      <CreateSkillMenu />
     </OnboardingTourTarget>
   );
 
   const headerAction = (
     <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="skills/" />
-      {hasPinnableSkill ? (
-        createSkillAction
-      ) : (
-        <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-          {createSkillAction}
-        </OnboardingTourTarget>
-      )}
+      {createSkillAction}
     </div>
   );
 
@@ -106,9 +94,9 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
                   }
                   action={
                     canCreate ? (
-                      <CreateSkillDialog
+                      <CreateSkillMenu
                         buttonText={t('createDialog.buttonTextFirst')}
-                        showIcon={true}
+                        showIcon
                       />
                     ) : undefined
                   }
@@ -116,11 +104,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
               ) : (
                 <div className="space-y-3">
                   {personalSkills.map((skill) => (
-                    <SkillCard
-                      key={skill.id}
-                      skill={skill}
-                      pinTourTarget={skill.id === pinTargetSkillId}
-                    />
+                    <SkillCard key={skill.id} skill={skill} />
                   ))}
                 </div>
               )}

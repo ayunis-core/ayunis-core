@@ -71,9 +71,7 @@
       "delete": "Delete workspace skill",
       "active": "Active",
       "inactive": "Inactive",
-      "activeTooltip": "Active skills are available for the assistant to activate when needed in workspace chats. Instructions and resources are loaded only on activation. Inactive skills cannot be activated.",
-      "pin": "Pin in workspace chats",
-      "unpin": "Unpin from workspace chats"
+      "activeTooltip": "Active skills are available for the assistant to activate when needed in workspace chats. Instructions and resources are loaded only on activation. Inactive skills cannot be activated."
     },
     "knowledge": {
       "title": "Knowledge bases",

@@ -6,7 +6,9 @@ import {
   FormMessage,
 } from '@ayunis/ui/components/form';
 import { Textarea } from '@ayunis/ui/components/textarea';
+import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 
 interface InstructionsFieldProps<TFieldValues extends FieldValues> {
@@ -16,6 +18,12 @@ interface InstructionsFieldProps<TFieldValues extends FieldValues> {
   translationPrefix?: string;
   disabled?: boolean;
   className?: string;
+  /** Rendered right after the label text, e.g. an explanation. */
+  labelHint?: ReactNode;
+  /** Rendered next to the label, e.g. an action that rewrites the field. */
+  labelAction?: ReactNode;
+  /** Highlights the control while that action is running. */
+  isBusy?: boolean;
 }
 
 export default function InstructionsField<TFieldValues extends FieldValues>({
@@ -25,6 +33,9 @@ export default function InstructionsField<TFieldValues extends FieldValues>({
   translationPrefix = 'createDialog',
   disabled = false,
   className = 'min-h-[150px] max-h-[200px]',
+  labelHint,
+  labelAction,
+  isBusy = false,
 }: Readonly<InstructionsFieldProps<TFieldValues>>) {
   const { t } = useTranslation(translationNamespace);
 
@@ -34,19 +45,25 @@ export default function InstructionsField<TFieldValues extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>
-            {t(`${translationPrefix}.form.instructionsLabel`)}
-          </FormLabel>
-          <FormControl>
-            <Textarea
-              placeholder={t(
-                `${translationPrefix}.form.instructionsPlaceholder`,
-              )}
-              className={className}
-              disabled={disabled}
-              {...field}
-            />
-          </FormControl>
+          <div className="flex min-h-7 items-center justify-between gap-2">
+            <FormLabel className="flex items-center gap-1">
+              {t(`${translationPrefix}.form.instructionsLabel`)}
+              {labelHint}
+            </FormLabel>
+            {labelAction}
+          </div>
+          <ProcessingGlow isActive={isBusy}>
+            <FormControl>
+              <Textarea
+                placeholder={t(
+                  `${translationPrefix}.form.instructionsPlaceholder`,
+                )}
+                className={className}
+                disabled={disabled}
+                {...field}
+              />
+            </FormControl>
+          </ProcessingGlow>
           <FormMessage />
         </FormItem>
       )}

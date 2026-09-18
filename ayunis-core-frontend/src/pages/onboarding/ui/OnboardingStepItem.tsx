@@ -20,12 +20,8 @@ import {
   SECONDARY_ACTION_TYPE,
   type OnboardingStep,
 } from '@/widgets/onboarding';
-import {
-  useKnowledgeBasesControllerFindAll,
-  useSkillsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
-import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 interface OnboardingStepItemProps {
   step: OnboardingStep;
@@ -53,14 +49,6 @@ export default function OnboardingStepItem({
     { query: { enabled: isAddDocumentsStep && !locked } },
   );
   const firstKnowledgeBase = kbResponse?.data[0];
-
-  const isPinSkillStep = step.id === 'useSkillInChat';
-  const { data: skillsResponse } = useSkillsControllerFindAll(
-    personalSkillListParams,
-    { query: { enabled: isPinSkillStep && !locked } },
-  );
-  const hasPersonalSkill =
-    skillsResponse?.data.some((skill) => !skill.isShared) ?? false;
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt
@@ -108,13 +96,6 @@ export default function OnboardingStepItem({
         to,
         spotlight: TOUR_TARGET.createKnowledgeBase,
         translationKey: 'createKnowledgeBase',
-      };
-    }
-    if (isPinSkillStep && !hasPersonalSkill) {
-      return {
-        to,
-        spotlight: TOUR_TARGET.createSkill,
-        translationKey: 'createSkill',
       };
     }
     return { to, spotlight, translationKey: step.translationKey };

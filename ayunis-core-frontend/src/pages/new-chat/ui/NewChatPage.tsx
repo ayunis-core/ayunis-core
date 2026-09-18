@@ -1,5 +1,10 @@
+import {
+  AvailableContextMenus,
+  type AttachableSkill,
+} from './AvailableContextMenus';
 import { Lock } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
+import { Badge } from '@ayunis/ui/components/badge';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import { cn } from '@ayunis/ui/lib/cn';
 import {
@@ -10,7 +15,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -29,7 +33,6 @@ import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { PinnedSkills } from './PinnedSkills';
 import { PersonalizationCard } from './PersonalizationCard';
 import { useUserSystemPromptStatus } from '@/pages/new-chat/api/useUserSystemPromptStatus';
 import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalization';
@@ -121,14 +124,8 @@ export default function NewChatPage({
   const [selectedIntegrations, setSelectedIntegrations] = useState<
     IntegrationSummary[]
   >([]);
-  const [selectedSkill, setSelectedSkill] = useState<{
-    id: string;
-    name: string;
-    workspaceId?: string;
-  }>();
-  const selectedSkillId = selectedSkill?.id;
-  const selectedSkillName = selectedSkill?.name;
   const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
+  const [selectedSkill, setSelectedSkill] = useState<AttachableSkill>();
 
   const handleMistExitComplete = useCallback(() => {
     setMistPhase('hidden');
@@ -158,26 +155,13 @@ export default function NewChatPage({
     setModelId(modelId);
   }
 
-  function handleSkillSelect(
-    id: string,
-    name: string,
-    skillWorkspaceId?: string,
-  ) {
-    setSelectedSkill(
-      selectedSkillId === id
-        ? undefined
-        : { id, name, workspaceId: skillWorkspaceId },
+  function handleSkillToggle(skill: AttachableSkill) {
+    setSelectedSkill((current) =>
+      current?.id === skill.id ? undefined : skill,
     );
   }
 
-  function handleSkillRemove() {
-    setSelectedSkill(undefined);
-  }
-
   function handleWorkspaceChange(id: string | null) {
-    if (selectedSkill?.workspaceId && selectedSkill.workspaceId !== id) {
-      setSelectedSkill(undefined);
-    }
     setWorkspaceId(id);
   }
 
@@ -258,6 +242,22 @@ export default function NewChatPage({
       }
       compose={
         <>
+          <div
+            className={cn(
+              'new-chat-greeting-extras flex justify-center overflow-hidden',
+              isCreating && 'new-chat-greeting-extras--collapsed',
+            )}
+            aria-hidden={isCreating}
+          >
+            <Badge
+              variant="outline"
+              className="text-muted-foreground font-normal"
+            >
+              <Lock />
+              {t('newChat.privacyHint')}
+            </Badge>
+          </div>
+
           <h1
             className={cn(
               'new-chat-greeting text-center text-2xl font-bold',
@@ -292,6 +292,9 @@ export default function NewChatPage({
               onModelChange={handleModelChange}
               onSend={handleSend}
               onCancel={handleCancel}
+              selectedSkillId={selectedSkill?.id}
+              selectedSkillName={selectedSkill?.name}
+              onSkillRemove={() => setSelectedSkill(undefined)}
               onFileUpload={handleFileUpload}
               onRemoveSource={handleRemoveSource}
               onAddKnowledgeBase={(kb) => {
@@ -317,41 +320,20 @@ export default function NewChatPage({
               onAnonymousChange={setIsAnonymous}
               isAnonymousEnforced={isAnonymousEnforced}
               isVisionEnabled={isVisionEnabled}
-              selectedSkillId={selectedSkillId}
-              selectedSkillName={selectedSkillName}
-              onSkillRemove={handleSkillRemove}
             />
 
-            {isWorkspacesEnabled && (
-              <div className="mt-1.5 flex justify-start">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {isWorkspacesEnabled && (
                 <WorkspacePicker
                   workspaceId={workspaceId}
                   onWorkspaceChange={handleWorkspaceChange}
                 />
-              </div>
-            )}
-          </div>
-
-          <div
-            className={cn(
-              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
-              isCreating && 'new-chat-dock-extras--collapsed',
-            )}
-            aria-hidden={isCreating}
-          >
-            <OnboardingTourTarget
-              name={TOUR_TARGET.pinnedSkills}
-              settleMs={900}
-            >
-              <PinnedSkills
+              )}
+              <AvailableContextMenus
                 workspaceId={workspaceId}
-                onSkillSelect={handleSkillSelect}
-                selectedSkillId={selectedSkillId}
+                selectedSkillId={selectedSkill?.id}
+                onSkillSelect={handleSkillToggle}
               />
-            </OnboardingTourTarget>
-            <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3 shrink-0" />
-              <span>{t('newChat.privacyHint')}</span>
             </div>
           </div>
         </>

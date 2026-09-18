@@ -4,7 +4,7 @@ import { useInvalidateWorkspaceResources } from '@/pages/workspace/api/useInvali
 import { showError } from '@/shared/lib/toast';
 import { WorkspaceSkillKnowledgeBases } from './WorkspaceSkillKnowledgeBases';
 import { useTranslation } from 'react-i18next';
-import { Pin, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { Switch } from '@ayunis/ui/components/switch';
 import {
@@ -48,7 +48,7 @@ export function WorkspaceSkillDetailPage({
   const navigate = useNavigate();
   const { confirm } = useConfirmation();
   const [isAssigning, setIsAssigning] = useState(false);
-  const { deleteSkill, setSkillActive, setSkillPinned, isChangingSkillState } =
+  const { deleteSkill, setSkillActive, isChangingSkillState } =
     useWorkspaceContextActions(workspace.id);
   const sourcesHook = useWorkspaceSkillSources({ skillId: skill.id });
 
@@ -120,35 +120,6 @@ export function WorkspaceSkillDetailPage({
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                {skill.isActive ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled={isChangingSkillState}
-                        aria-label={
-                          skill.isPinned
-                            ? t('context.skills.unpin')
-                            : t('context.skills.pin')
-                        }
-                        onClick={() =>
-                          setSkillPinned({
-                            skillId: skill.id,
-                            isPinned: !skill.isPinned,
-                          })
-                        }
-                      >
-                        <Pin className={skill.isPinned ? 'fill-current' : ''} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {skill.isPinned
-                        ? t('context.skills.unpin')
-                        : t('context.skills.pin')}
-                    </TooltipContent>
-                  </Tooltip>
-                ) : null}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button

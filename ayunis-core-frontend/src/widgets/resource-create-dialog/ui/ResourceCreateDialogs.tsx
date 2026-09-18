@@ -1,5 +1,7 @@
+import { SkillImproveButton } from '@/widgets/skill-improve-button';
+import { InfoHint } from '@/shared/ui/info-hint';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
@@ -27,6 +29,8 @@ export function SkillCreateDialog({
   buttonClassName,
   showIcon = false,
   footerHint,
+  open,
+  onOpenChange,
 }: Readonly<{
   onCreate: (data: CreateSkillFormData) => Promise<unknown>;
   buttonText?: string;
@@ -34,10 +38,19 @@ export function SkillCreateDialog({
   buttonClassName?: string;
   showIcon?: boolean;
   footerHint?: string;
+  /** Pass both to open the dialog from elsewhere; the trigger is dropped then. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>) {
   const { t } = useTranslation('skills');
   const translations = useCreateDialogTranslations('skills');
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const [isOwnOpen, setIsOwnOpen] = useState(false);
+  const isOpen = isControlled ? open : isOwnOpen;
+  const setIsOpen = (next: boolean) => {
+    if (isControlled) onOpenChange?.(next);
+    else setIsOwnOpen(next);
+  };
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<CreateSkillFormData>({
     resolver: zodResolver(
@@ -56,6 +69,22 @@ export function SkillCreateDialog({
     ),
     defaultValues: { name: '', shortDescription: '', instructions: '' },
   });
+
+  const [name, shortDescription, instructions] = useWatch({
+    control: form.control,
+    name: ['name', 'shortDescription', 'instructions'],
+  });
+  const [busyField, setBusyField] = useState<'trigger' | 'instructions' | null>(
+    null,
+  );
+  const handlePending =
+    (field: 'trigger' | 'instructions') => (isPending: boolean) => {
+      if (isPending) {
+        setBusyField(field);
+        return;
+      }
+      setBusyField((current) => (current === field ? null : current));
+    };
 
   const close = () => {
     form.reset();
@@ -86,6 +115,7 @@ export function SkillCreateDialog({
       buttonClassName={buttonClassName}
       buttonTestId={buttonTestId}
       footerHint={footerHint}
+      hideTrigger={isControlled}
     >
       <Form {...form}>
         <div className="space-y-6">
@@ -99,12 +129,57 @@ export function SkillCreateDialog({
               control={form.control}
               name="shortDescription"
               translationNamespace="skills"
+              multiline
+              isBusy={busyField === 'trigger'}
+              labelHint={
+                <InfoHint
+                  label={t('createDialog.form.shortDescriptionLabel')}
+                  hint={t('fieldHints.trigger')}
+                  testId="skill-trigger-hint"
+                  showLabel={false}
+                />
+              }
+              labelAction={
+                <SkillImproveButton
+                  field="trigger"
+                  onPendingChange={handlePending('trigger')}
+                  name={name}
+                  trigger={shortDescription}
+                  instructions={instructions}
+                  onImproved={(text) =>
+                    form.setValue('shortDescription', text, {
+                      shouldDirty: true,
+                    })
+                  }
+                />
+              }
             />
           </div>
           <InstructionsField
             control={form.control}
             name="instructions"
             translationNamespace="skills"
+            isBusy={busyField === 'instructions'}
+            labelHint={
+              <InfoHint
+                label={t('createDialog.form.instructionsLabel')}
+                hint={t('fieldHints.instructions')}
+                testId="skill-instructions-hint"
+                showLabel={false}
+              />
+            }
+            labelAction={
+              <SkillImproveButton
+                field="instructions"
+                onPendingChange={handlePending('instructions')}
+                name={name}
+                trigger={shortDescription}
+                instructions={instructions}
+                onImproved={(text) =>
+                  form.setValue('instructions', text, { shouldDirty: true })
+                }
+              />
+            }
           />
         </div>
       </Form>
