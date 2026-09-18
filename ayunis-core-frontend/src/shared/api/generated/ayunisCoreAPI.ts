@@ -143,6 +143,7 @@ import type {
   OrgChatSettingsResponseDto,
   OrgMfaRequirementResponseDto,
   OrgSsoConnectionResourceDto,
+  OrgSubscriptionsResponseDto,
   OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedOrgCertificateStatusesResponseDto,
@@ -3686,6 +3687,100 @@ export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<Return
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSubscriptionsControllerGetCurrentPriceQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return every subscription belonging to the organization, newest first, with lifecycle status. Super admins only. Does not change or constrain existing subscriptions.
+ * @summary List an organization's subscription history
+ */
+export const superAdminSubscriptionsControllerGetSubscriptionHistory = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OrgSubscriptionsResponseDto>(
+      {url: `/super-admin/subscriptions/${orgId}/history`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/subscriptions/${orgId}/history`
+    ] as const;
+    }
+
+
+export const getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>> = ({ signal }) => superAdminSubscriptionsControllerGetSubscriptionHistory(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>>
+export type SuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryError = void
+
+
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List an organization's subscription history
+ */
+
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryOptions(orgId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
