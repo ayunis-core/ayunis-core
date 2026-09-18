@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.40.4](https://github.com/ayunis-core/ayunis-core/compare/v2.40.3...v2.40.4) (2026-09-18)
+
+
+### CI/CD
+
+* **e2e:** configure seat-based subscription prices (AYC-000) ([#1696](https://github.com/ayunis-core/ayunis-core/issues/1696)) ([0cec120](https://github.com/ayunis-core/ayunis-core/commit/0cec1209f2609cd70f057299a42b29e92559ca68))
+
 ## [2.40.3](https://github.com/ayunis-core/ayunis-core/compare/v2.40.2...v2.40.3) (2026-09-17)
 
 
