@@ -8,6 +8,7 @@ import { ReorderFavoritesCommand } from './reorder-favorites.command';
 import { ReorderFavoritesUseCase } from './reorder-favorites.use-case';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
+const ORG_ID = '44444444-4444-4444-8444-444444444444' as UUID;
 const FIRST_FAVORITE_ID = '22222222-2222-4222-8222-222222222222' as UUID;
 const SECOND_FAVORITE_ID = '33333333-3333-4333-8333-333333333333' as UUID;
 
@@ -61,6 +62,6 @@ function createRepository(
 
 function createContextService(): jest.Mocked<ContextService> {
   return {
-    get: jest.fn((key: string) => (key === 'userId' ? USER_ID : undefined)),
+    get: jest.fn((key: string) => ({ userId: USER_ID, orgId: ORG_ID })[key]),
   } as unknown as jest.Mocked<ContextService>;
 }

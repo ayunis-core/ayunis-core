@@ -16,6 +16,7 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { SetKnowledgeBaseActivationCommand } from './set-knowledge-base-activation.command';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class SetKnowledgeBaseActivationUseCase {
@@ -90,8 +91,7 @@ export class SetKnowledgeBaseActivationUseCase {
     isActive: boolean,
   ): Promise<void> {
     await this.readAccess.requireRead(knowledgeBase);
-    const userId = this.context.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.context);
     if (isActive) {
       await this.repository.activate(knowledgeBase.id, userId);
     } else {

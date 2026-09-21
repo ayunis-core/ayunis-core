@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   ThreadsRepository,
   type ThreadContextRefs,
@@ -11,6 +10,7 @@ import {
   UnexpecteThreadError,
 } from 'src/domain/threads/application/threads.errors';
 import { FindThreadContextRefsQuery } from './find-thread-context-refs.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindThreadContextRefsUseCase {
@@ -27,8 +27,7 @@ export class FindThreadContextRefsUseCase {
       { threadId: query.threadId },
       'Finding thread context refs',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.contextService);
 
     const refs = await this.threadsRepository.findContextRefs(
       query.threadId,

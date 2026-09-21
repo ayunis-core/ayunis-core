@@ -3,7 +3,7 @@ import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.
 import { RemoveKnowledgeBaseFromThreadCommand } from './remove-knowledge-base-from-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class RemoveKnowledgeBaseFromThreadUseCase {
@@ -26,10 +26,7 @@ export class RemoveKnowledgeBaseFromThreadUseCase {
       'execute',
     );
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     const thread = await this.threadsRepository.findOne(
       command.threadId,

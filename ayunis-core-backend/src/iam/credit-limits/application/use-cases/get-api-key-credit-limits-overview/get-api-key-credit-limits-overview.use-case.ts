@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { GetMonthlyCreditUsageForApiKeysQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-api-keys/get-monthly-credit-usage-for-api-keys.query';
 import { GetMonthlyCreditUsageForApiKeysUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-api-keys/get-monthly-credit-usage-for-api-keys.use-case';
 import { ListApiKeysByOrgUseCase } from 'src/iam/api-keys/application/use-cases/list-api-keys-by-org/list-api-keys-by-org.use-case';
@@ -11,6 +10,7 @@ import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/c
 import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import type { ApiKeyCreditLimitOverviewItem } from './api-key-credit-limit.view';
 import { GetApiKeyCreditLimitsOverviewQuery } from './get-api-key-credit-limits-overview.query';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class GetApiKeyCreditLimitsOverviewUseCase {
@@ -29,10 +29,7 @@ export class GetApiKeyCreditLimitsOverviewUseCase {
   async execute(
     query: GetApiKeyCreditLimitsOverviewQuery = new GetApiKeyCreditLimitsOverviewQuery(),
   ): Promise<ApiKeyCreditLimitOverviewItem[]> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     this.logger.log({ orgId }, 'Listing API key credit limits');
     const limits = await this.creditLimitRepository.findApiKeyLimits(orgId);

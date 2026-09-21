@@ -15,8 +15,8 @@ import {
   SkillMcpIntegrationWrongOrganizationError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class AssignMcpIntegrationToSkillUseCase {
@@ -43,11 +43,7 @@ export class AssignMcpIntegrationToSkillUseCase {
       'Assigning MCP integration to skill',
     );
 
-    const userId = this.contextService.get('userId');
-    const orgId = this.contextService.get('orgId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
     const skill = await this.skillRepository.findOne(command.skillId, userId);
     if (!skill) {
@@ -70,7 +66,7 @@ export class AssignMcpIntegrationToSkillUseCase {
 
   private async assertIntegrationCanBeAssigned(
     integrationId: UUID,
-    orgId: UUID | undefined,
+    orgId: UUID,
   ): Promise<void> {
     const integration =
       await this.mcpIntegrationsRepository.findById(integrationId);

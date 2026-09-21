@@ -4,7 +4,7 @@ import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { UnexpectedApiKeyError } from 'src/iam/api-keys/application/api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class ListApiKeysByOrgUseCase {
@@ -16,11 +16,7 @@ export class ListApiKeysByOrgUseCase {
   ) {}
 
   async execute(): Promise<ApiKey[]> {
-    const orgId = this.contextService.get('orgId');
-
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     this.logger.log({ orgId }, 'execute');
 

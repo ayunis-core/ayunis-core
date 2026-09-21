@@ -17,6 +17,7 @@ import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-case
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { ListAccessibleSkillsQuery } from './list-accessible-skills.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class ListAccessibleSkillsUseCase {
@@ -182,8 +183,7 @@ export class ListAccessibleSkillsUseCase {
   }
 
   private requireUserId(): UUID {
-    const userId = this.context.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.context);
     return userId;
   }
 }

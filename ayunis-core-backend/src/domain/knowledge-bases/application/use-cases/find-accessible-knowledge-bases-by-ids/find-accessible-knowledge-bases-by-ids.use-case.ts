@@ -5,7 +5,7 @@ import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/applica
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindAccessibleKnowledgeBasesByIdsUseCase {
@@ -29,9 +29,7 @@ export class FindAccessibleKnowledgeBasesByIdsUseCase {
     );
     if (knowledgeBaseIds.length === 0) return [];
 
-    const userId = this.contextService.get('userId');
-    const orgId = this.contextService.get('orgId');
-    if (!userId || !orgId) throw new UnauthorizedAccessError();
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
     const accessibleKnowledgeBases = await this.repository.findAccessibleByIds(
       knowledgeBaseIds,

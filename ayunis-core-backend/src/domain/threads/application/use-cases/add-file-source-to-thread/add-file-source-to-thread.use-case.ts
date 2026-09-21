@@ -3,7 +3,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   detectFileType,
   getCanonicalMimeType,
@@ -34,6 +33,7 @@ import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-t
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddFileSourceToThreadCommand } from './add-file-source-to-thread.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class AddFileSourceToThreadUseCase {
@@ -143,8 +143,7 @@ export class AddFileSourceToThreadUseCase {
       await this.attachSources(thread, sources);
     } catch (error) {
       try {
-        const orgId = this.contextService.get('orgId');
-        if (!orgId) throw new UnauthorizedAccessError();
+        const orgId = getRequiredOrgId(this.contextService);
         await this.deleteSourcesUseCase.execute(
           new DeleteSourcesCommand(
             sources.map((source) => source.id),

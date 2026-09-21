@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
@@ -10,6 +9,7 @@ import {
   UnexpectedLetterheadError,
 } from 'src/domain/letterheads/application/letterheads.errors';
 import { DeleteLetterheadCommand } from './delete-letterhead.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteLetterheadUseCase {
@@ -30,10 +30,7 @@ export class DeleteLetterheadUseCase {
     );
 
     try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
+      const orgId = getRequiredOrgId(this.contextService);
 
       const letterhead = await this.letterheadsRepository.findById(
         orgId,

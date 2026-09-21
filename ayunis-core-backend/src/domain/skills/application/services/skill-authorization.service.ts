@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
@@ -13,6 +12,7 @@ import { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/app
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class SkillAuthorizationService {
@@ -80,9 +80,7 @@ export class SkillAuthorizationService {
   }
 
   private requirePrincipal(): UUID {
-    const userId = this.context.get('userId');
-    const orgId = this.context.get('orgId');
-    if (!userId || !orgId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.context);
     return userId;
   }
 

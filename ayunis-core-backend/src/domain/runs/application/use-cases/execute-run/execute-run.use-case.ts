@@ -4,7 +4,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
@@ -67,6 +66,7 @@ import { MAX_CONTEXT_TOKENS } from 'src/common/token-counter/application/context
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 const MAX_ITERATIONS = 50;
 
@@ -133,11 +133,7 @@ export class ExecuteRunUseCase {
   }
 
   private async prepareRun(command: ExecuteRunCommand): Promise<PreparedRun> {
-    const userId = this.contextService.get('userId');
-    const orgId = this.contextService.get('orgId');
-    if (!userId || !orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
     this.runTelemetryService.recordAttempt(userId, orgId);
 
     const found = await this.findThreadUseCase.execute(

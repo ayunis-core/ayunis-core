@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OrgSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/org-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteOrgSystemPromptUseCase {
@@ -15,10 +15,7 @@ export class DeleteOrgSystemPromptUseCase {
   ) {}
 
   async execute(): Promise<void> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
     this.logger.log({ orgId }, 'execute');
 
     try {

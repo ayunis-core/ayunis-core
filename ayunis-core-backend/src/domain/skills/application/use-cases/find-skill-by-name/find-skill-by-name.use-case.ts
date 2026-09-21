@@ -5,7 +5,6 @@ import { SkillRepository } from 'src/domain/skills/application/ports/skill.repos
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
 
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
@@ -14,6 +13,7 @@ import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-case
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindSkillByNameUseCase {
@@ -29,10 +29,7 @@ export class FindSkillByNameUseCase {
   async execute(query: FindSkillByNameQuery): Promise<PersonalSkill> {
     this.logger.log({ name: query.name }, 'Finding skill by name');
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     // Owned skills take priority
     const ownedSkill = await this.skillRepository.findByNameAndOwner(

@@ -2,12 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 export interface WorkspaceListItem {
   workspace: Workspace;
@@ -61,10 +61,7 @@ export class FindAllWorkspacesUseCase {
   }
 
   private resolveUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
     return userId;
   }
 }
