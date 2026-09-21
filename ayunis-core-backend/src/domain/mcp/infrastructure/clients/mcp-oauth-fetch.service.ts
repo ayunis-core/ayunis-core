@@ -3,8 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import type { LookupOptions } from 'node:dns';
 import { lookup } from 'node:dns/promises';
 import { BlockList, isIP, type LookupFunction } from 'node:net';
+// This Agent only works as a `dispatcher` for globalThis.fetch while the
+// undici major matches the one Node embeds — undici 8 dropped the legacy
+// handler API. Bump this dep and the node image together, never apart.
 import { Agent, type Dispatcher } from 'undici';
-import { McpOAuthFetchPort } from '../../application/ports/mcp-oauth-fetch.port';
+import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fetch.port';
 
 const MAX_REDIRECTS = 5;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
