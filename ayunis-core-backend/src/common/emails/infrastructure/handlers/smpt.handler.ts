@@ -34,7 +34,6 @@ export class SmptHandler implements EmailHandlerPort {
       messageId: receipt.messageId,
       acceptedRecipients: receipt.accepted.map(recipientAddress),
       rejectedRecipients: receipt.rejected.map(recipientAddress),
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Nodemailer omits pending for non-pooled SMTP responses.
       pendingRecipients: (receipt.pending ?? []).map(recipientAddress),
       statusCode: smtpStatusCode(receipt.response),
     };
@@ -45,7 +44,7 @@ function recipientAddress(recipient: string | { address: string }): string {
   return typeof recipient === 'string' ? recipient : recipient.address;
 }
 
-function smtpStatusCode(response: string): number | null {
-  const match = /^(\d{3})(?:\s|$)/.exec(response);
+function smtpStatusCode(response: string | undefined): number | null {
+  const match = /^(\d{3})(?:\s|$)/.exec(response ?? '');
   return match ? Number(match[1]) : null;
 }
