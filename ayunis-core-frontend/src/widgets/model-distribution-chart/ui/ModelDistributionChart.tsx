@@ -16,7 +16,7 @@ import {
   CardDescription,
   CardContent,
 } from '@ayunis/ui/components/card';
-import { Pie, PieChart, Cell } from 'recharts';
+import { Pie, PieChart } from 'recharts';
 
 interface ChartDataItem {
   name: string;
@@ -103,15 +103,18 @@ export function ModelDistributionChart({
                 </defs>
                 <ChartTooltip
                   content={<ChartTooltipContent />}
-                  formatter={(value: number, name, payload) => [
-                    `${value.toFixed(1)}% `,
+                  formatter={(value, name, item) => [
+                    `${Number(value).toFixed(1)}% `,
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    (payload.payload?.name as string | undefined) ?? name,
+                    (item.payload?.name as string | undefined) ?? name,
                   ]}
                 />
 
                 <Pie
-                  data={chartData}
+                  data={chartData.map((entry, idx) => ({
+                    ...entry,
+                    fill: `url(#md-fill-${idx})`,
+                  }))}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -119,15 +122,8 @@ export function ModelDistributionChart({
                   innerRadius={innerRadius}
                   outerRadius="80%"
                   paddingAngle={2}
-                >
-                  {chartData.map((_, idx) => (
-                    <Cell
-                      key={`cell-${idx}`}
-                      fill={`url(#md-fill-${idx})`}
-                      stroke="none"
-                    />
-                  ))}
-                </Pie>
+                  stroke="none"
+                />
               </PieChart>
             </ChartContainer>
           </div>

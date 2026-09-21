@@ -89,7 +89,10 @@ export default function BarChartWidget({
         <YAxis className="text-xs" />
         <ChartTooltip content={<ChartTooltipContent />} />
         {yAxisSeries.length > 1 && (
-          <ChartLegend content={<ChartLegendContent />} verticalAlign="top" />
+          <ChartLegend
+            content={<ChartLegendContent className="pt-0 pb-3" />}
+            position="top"
+          />
         )}
         {yAxisSeries.map((series, index) => {
           const slugifiedKey = slugifyForCssVar(series.label);
