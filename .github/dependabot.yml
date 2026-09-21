@@ -14,6 +14,15 @@ updates:
     labels:
       - "dependencies"
     open-pull-requests-limit: 10
+    ignore:
+      # The undici major MUST match the one Node embeds: undici 8 dropped the
+      # legacy dispatcher handler API, so McpOAuthFetchService's Agent only
+      # works as a `dispatcher` for globalThis.fetch when the majors agree.
+      # node:24 embeds undici 7, node:26 embeds undici 8.10.2 — so this pin
+      # moves in lockstep with the node image, in either direction. See the
+      # docker `node` ignore below.
+      - dependency-name: "undici"
+        update-types: ["version-update:semver-major"]
     groups:
       nest:
         patterns:
@@ -128,6 +137,9 @@ updates:
     ignore:
       # node:26 caused severe request slowness (connection stalls); runtime is
       # pinned to 24.16.0-alpine. Do not remove without re-validating — see AYC-423.
+      # Moving to node:26 also requires bumping undici to 8 in the same change
+      # (node:26 embeds undici 8.10.2); leaving undici on 7 breaks every MCP
+      # OAuth request with "invalid onRequestStart method".
       - dependency-name: "node"
         update-types: ["version-update:semver-major"]
     groups:
