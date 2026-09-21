@@ -3465,6 +3465,10 @@ export interface WorkspaceResponseDto {
   updatedAt: string;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
+  /** Number of skills owned by the workspace (list responses only) */
+  skillCount?: number;
+  /** Number of knowledge bases owned by the workspace (list responses only) */
+  knowledgeBaseCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */
   lastActivityAt?: string;
 }
@@ -5416,6 +5420,10 @@ search?: string;
  * Only threads filed under this workspace. Omit for all threads.
  */
 workspaceId?: string;
+/**
+ * Only threads that are not filed under any workspace. Omit for all threads.
+ */
+unfiled?: boolean;
 /**
  * Maximum number of threads to return (default: 50)
  */

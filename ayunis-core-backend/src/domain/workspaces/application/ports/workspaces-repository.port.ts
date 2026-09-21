@@ -16,6 +16,11 @@ export interface WorkspaceThreadStats {
   lastActivityAt: Date | null;
 }
 
+export interface WorkspaceResourceCounts {
+  skillCount: number;
+  knowledgeBaseCount: number;
+}
+
 export interface WorkspaceKnowledgeBaseRef {
   id: UUID;
   name: string;
@@ -44,6 +49,14 @@ export abstract class WorkspacesRepository {
   abstract getThreadStats(
     workspaceIds: UUID[],
   ): Promise<Map<UUID, WorkspaceThreadStats>>;
+
+  /**
+   * Skill and knowledge-base counts per workspace, for the list page.
+   * Missing entries mean "no resources".
+   */
+  abstract getResourceCounts(
+    workspaceIds: UUID[],
+  ): Promise<Map<UUID, WorkspaceResourceCounts>>;
   abstract findById(userId: UUID, id: UUID): Promise<Workspace | null>;
   abstract save(workspace: Workspace): Promise<Workspace>;
   abstract getContextRefs(workspaceId: UUID): Promise<WorkspaceContextRefs>;

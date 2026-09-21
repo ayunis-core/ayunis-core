@@ -30,6 +30,7 @@ import {
 } from '@ayunis/ui/components/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
 import { FavoritesSidebarGroup } from './FavoritesSidebarGroup';
+import { WorkspacesSidebarGroup } from './WorkspacesSidebarGroup';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { useLogout } from '@/widgets/app-sidebar/api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
@@ -87,6 +88,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t('sidebar.newChat'),
       url: '/chat',
       icon: Plus,
+      exact: true,
       // Starting a conversation is a write, so it is blocked without a
       // certificate. Existing chats stay reachable.
       disabled: isAcademyGated,
@@ -97,6 +99,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: t('sidebar.workspaces'),
             url: '/workspaces',
             icon: FolderOpen,
+            exact: true,
           },
         ]
       : []),
@@ -152,8 +155,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuButton
                   asChild
                   isActive={
-                    item.url === '/chat'
-                      ? location.pathname === '/chat'
+                    item.exact
+                      ? location.pathname === item.url
                       : location.pathname.startsWith(item.url)
                   }
                 >
@@ -215,7 +218,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
 
-        {featureToggles.workspacesEnabled && <FavoritesSidebarGroup />}
+        {featureToggles.workspacesEnabled && (
+          <>
+            <FavoritesSidebarGroup />
+            <WorkspacesSidebarGroup />
+          </>
+        )}
         <ChatsSidebarGroup />
       </SidebarContent>
 

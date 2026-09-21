@@ -21,6 +21,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
+import { Collapsible } from '@ayunis/ui/components/collapsible';
 import {
   SidebarMenuAction,
   SidebarMenuButton,
@@ -33,6 +34,8 @@ import { useToggleFavorite, type Favorite } from '@/features/favorites';
 import { useWorkspaces, type Workspace } from '@/features/workspaces';
 import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
+import { WorkspaceChatsSubMenu } from './WorkspaceChatsSubMenu';
+import { WorkspaceChatsToggle } from './WorkspaceChatsToggle';
 
 interface FavoriteSidebarItemProps {
   item: Favorite;
@@ -62,6 +65,7 @@ export function FavoriteSidebarItem({
   const { workspaces } = useWorkspaces();
   const { mutate: assignToWorkspace } = useAssignThreadToWorkspace();
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
+  const [areChatsOpen, setAreChatsOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
   const isWorkspace = item.referenceType === 'workspace';
@@ -69,17 +73,29 @@ export function FavoriteSidebarItem({
     item.referenceType === 'thread' ? item.workspaceId : undefined;
   const title = item.name ?? t('sidebar.untitled');
 
-  return (
-    <>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          asChild
-          isActive={
-            isWorkspace
-              ? params.workspaceId === item.referenceId
-              : params.threadId === item.referenceId
-          }
-        >
+  const row = (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={
+          isWorkspace
+            ? params.workspaceId === item.referenceId
+            : params.threadId === item.referenceId
+        }
+      >
+        <div className="relative">
+          {isWorkspace ? (
+            <WorkspaceIcon
+              icon={item.icon}
+              color={item.color}
+              variant="plain"
+              // Collapse the icon's box to the glyph so workspace rows line up
+              // with the chat rows' bare 16px lucide icon.
+              className="size-4"
+            />
+          ) : (
+            <MessageCircle />
+          )}
           <Link
             to={isWorkspace ? '/workspaces/$workspaceId' : '/chats/$threadId'}
             params={
@@ -87,128 +103,146 @@ export function FavoriteSidebarItem({
                 ? { workspaceId: item.referenceId }
                 : { threadId: item.referenceId }
             }
+            className="truncate after:absolute after:inset-0"
           >
-            {isWorkspace ? (
-              <WorkspaceIcon
-                icon={item.icon}
-                color={item.color}
-                variant="plain"
-                // Collapse the icon's box to the glyph so workspace rows line up
-                // with the chat rows' bare 16px lucide icon.
-                className="size-4"
-              />
-            ) : (
-              <MessageCircle />
-            )}
-            <span className="truncate">{title}</span>
+            {title}
           </Link>
-        </SidebarMenuButton>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuAction showOnHover>
-              <MoreHorizontal />
-              <span className="sr-only">{t('sidebar.more')}</span>
-            </SidebarMenuAction>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="rounded-lg"
-            side="bottom"
-            align="end"
-            onCloseAutoFocus={handleCloseAutoFocus}
-          >
-            {isWorkspace ? (
-              <DropdownMenuItem
-                disabled={!workspace}
-                onClick={() => {
-                  if (workspace) {
-                    requestDialogOpen(() => onOpenWorkspaceSettings(workspace));
-                  }
-                }}
-              >
-                <Pencil />
-                <span>{tWorkspaces('actions.edit')}</span>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                onClick={() =>
-                  requestDialogOpen(() => onRename(item.referenceId, item.name))
+          {isWorkspace && (
+            <WorkspaceChatsToggle workspaceId={item.referenceId} />
+          )}
+        </div>
+      </SidebarMenuButton>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuAction showOnHover>
+            <MoreHorizontal />
+            <span className="sr-only">{t('sidebar.more')}</span>
+          </SidebarMenuAction>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="rounded-lg"
+          side="bottom"
+          align="end"
+          collisionPadding={8}
+          onCloseAutoFocus={handleCloseAutoFocus}
+        >
+          {isWorkspace ? (
+            <DropdownMenuItem
+              disabled={!workspace}
+              onClick={() => {
+                if (workspace) {
+                  requestDialogOpen(() => onOpenWorkspaceSettings(workspace));
                 }
-              >
-                <Pencil />
-                <span>{t('sidebar.renameChat')}</span>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={!canMoveUp}
-              onClick={() => onMove(item.id, 'up')}
+              }}
             >
-              <ArrowUp />
-              <span>{t('sidebar.moveUp')}</span>
+              <Pencil />
+              <span>{tWorkspaces('actions.edit')}</span>
             </DropdownMenuItem>
+          ) : (
             <DropdownMenuItem
-              disabled={!canMoveDown}
-              onClick={() => onMove(item.id, 'down')}
+              onClick={() =>
+                requestDialogOpen(() => onRename(item.referenceId, item.name))
+              }
             >
-              <ArrowDown />
-              <span>{t('sidebar.moveDown')}</span>
+              <Pencil />
+              <span>{t('sidebar.renameChat')}</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => toggle(item.referenceType, item.referenceId)}
-            >
-              <StarOff />
-              <span>
-                {isWorkspace
-                  ? t('sidebar.unpinWorkspace')
-                  : t('sidebar.unpinChat')}
-              </span>
-            </DropdownMenuItem>
-            {!isWorkspace && (
-              <>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <FolderOpen />
-                    <span>{t('sidebar.addToWorkspace')}</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <WorkspacePickerMenuWithCreate
-                      workspaces={workspaces}
-                      selectedWorkspaceId={threadWorkspaceId}
-                      onClear={() =>
-                        assignToWorkspace({
-                          threadId: item.referenceId,
-                          workspaceId: null,
-                        })
-                      }
-                      onSelect={(target) =>
-                        assignToWorkspace({
-                          threadId: item.referenceId,
-                          workspaceId: target.id,
-                        })
-                      }
-                      onCreateNew={() =>
-                        requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
-                      }
-                    />
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              </>
-            )}
-            <DropdownMenuItem
-              onClick={() => requestDialogOpen(() => onDelete(item))}
-              variant="destructive"
-            >
-              <Trash />
-              <span>
-                {isWorkspace
-                  ? tWorkspaces('actions.delete')
-                  : t('sidebar.deleteChat')}
-              </span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            disabled={!canMoveUp}
+            onClick={() => onMove(item.id, 'up')}
+          >
+            <ArrowUp />
+            <span>{t('sidebar.moveUp')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!canMoveDown}
+            onClick={() => onMove(item.id, 'down')}
+          >
+            <ArrowDown />
+            <span>{t('sidebar.moveDown')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => toggle(item.referenceType, item.referenceId)}
+          >
+            <StarOff />
+            <span>
+              {isWorkspace
+                ? t('sidebar.unpinWorkspace')
+                : t('sidebar.unpinChat')}
+            </span>
+          </DropdownMenuItem>
+          {!isWorkspace && (
+            <>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <FolderOpen />
+                  <span>{t('sidebar.addToWorkspace')}</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <WorkspacePickerMenuWithCreate
+                    workspaces={workspaces}
+                    selectedWorkspaceId={threadWorkspaceId}
+                    onClear={() =>
+                      assignToWorkspace({
+                        threadId: item.referenceId,
+                        workspaceId: null,
+                      })
+                    }
+                    onSelect={(target) =>
+                      assignToWorkspace({
+                        threadId: item.referenceId,
+                        workspaceId: target.id,
+                      })
+                    }
+                    onCreateNew={() =>
+                      requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
+                    }
+                  />
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </>
+          )}
+          <DropdownMenuItem
+            onClick={() => requestDialogOpen(() => onDelete(item))}
+            variant="destructive"
+          >
+            <Trash />
+            <span>
+              {isWorkspace
+                ? tWorkspaces('actions.delete')
+                : t('sidebar.deleteChat')}
+            </span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {isWorkspace && (
+        <>
+          <WorkspaceChatsSubMenu
+            workspaceId={item.referenceId}
+            isOpen={areChatsOpen}
+          />
+        </>
+      )}
+    </SidebarMenuItem>
+  );
+
+  return (
+    <>
+      {isWorkspace ? (
+        <Collapsible
+          open={areChatsOpen}
+          onOpenChange={setAreChatsOpen}
+          className="group/workspace"
+          asChild
+        >
+          {row}
+        </Collapsible>
+      ) : (
+        row
+      )}
       {isCreateWorkspaceOpen && (
         <CreateWorkspaceDialog
           open={isCreateWorkspaceOpen}

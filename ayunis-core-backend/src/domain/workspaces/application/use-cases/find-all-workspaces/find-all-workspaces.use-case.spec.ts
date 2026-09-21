@@ -36,7 +36,7 @@ describe('FindAllWorkspacesUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('returns the caller’s workspaces with their chat stats', async () => {
+  it('returns the caller’s workspaces with their chat and resource stats', async () => {
     const workspace = aWorkspace();
     repository.findAllByUserId.mockResolvedValue(
       new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
@@ -44,11 +44,20 @@ describe('FindAllWorkspacesUseCase', () => {
     repository.getThreadStats.mockResolvedValue(
       new Map([[workspace.id, { chatCount: 3, lastActivityAt: null }]]),
     );
+    repository.getResourceCounts.mockResolvedValue(
+      new Map([[workspace.id, { skillCount: 2, knowledgeBaseCount: 5 }]]),
+    );
 
     await expect(useCase.execute()).resolves.toEqual(
       new Paginated({
         data: [
-          { workspace, chatCount: 3, lastActivityAt: workspace.updatedAt },
+          {
+            workspace,
+            chatCount: 3,
+            skillCount: 2,
+            knowledgeBaseCount: 5,
+            lastActivityAt: workspace.updatedAt,
+          },
         ],
         limit: 20,
         offset: 0,
@@ -72,6 +81,20 @@ describe('FindAllWorkspacesUseCase', () => {
 
     expect(item.chatCount).toBe(0);
     expect(item.lastActivityAt).toEqual(workspace.updatedAt);
+  });
+
+  it('reports zero skills and knowledge bases for a workspace without resources', async () => {
+    const workspace = aWorkspace();
+    repository.findAllByUserId.mockResolvedValue(
+      new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
+    );
+
+    const { data } = await useCase.execute();
+    const [item] = data;
+
+    expect(item.skillCount).toBe(0);
+    expect(item.knowledgeBaseCount).toBe(0);
+    expect(repository.getResourceCounts).toHaveBeenCalledWith([workspace.id]);
   });
 
   it('surfaces chat activity newer than the last edit', async () => {

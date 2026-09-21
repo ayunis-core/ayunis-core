@@ -6,9 +6,6 @@ import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/applicat
 import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 
-jest.mock('src/domain/favorites/favorites.module', () => ({
-  FavoritesModule: class FavoritesModule {},
-}));
 jest.mock('src/domain/knowledge-bases/knowledge-bases.module', () => ({
   KnowledgeBasesModule: class KnowledgeBasesModule {},
 }));

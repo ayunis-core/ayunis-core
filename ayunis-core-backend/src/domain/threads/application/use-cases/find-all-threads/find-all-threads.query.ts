@@ -14,6 +14,7 @@ export class FindAllThreadsQuery extends PaginatedQuery {
     public readonly filters?: {
       search?: string;
       workspaceId?: UUID;
+      unfiled?: boolean;
     },
     pagination?: { limit?: number; offset?: number },
   ) {

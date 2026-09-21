@@ -90,9 +90,14 @@ export class ThreadsController {
    * list filter). Treat the parameter like a gated route: while the flag is
    * off it does not exist, mirroring FeatureGuard's 404.
    */
-  private assertWorkspaceParamAllowed(workspaceId: string | undefined): void {
+  private assertWorkspaceParamsAllowed(params: {
+    workspaceId?: string;
+    unfiled?: boolean;
+  }): void {
+    if (params.workspaceId === undefined && params.unfiled === undefined) {
+      return;
+    }
     if (
-      workspaceId !== undefined &&
       !this.configService.get<boolean>(`features.${FeatureFlag.Workspaces}`)
     ) {
       throw new NotFoundException();
@@ -118,7 +123,9 @@ export class ThreadsController {
       },
       'create',
     );
-    this.assertWorkspaceParamAllowed(createThreadDto.workspaceId);
+    this.assertWorkspaceParamsAllowed({
+      workspaceId: createThreadDto.workspaceId,
+    });
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
@@ -161,21 +168,18 @@ export class ThreadsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Query() queryParams: FindAllThreadsQueryParamsDto,
   ): Promise<GetThreadsResponseDto> {
-    const { search: text, ...safeQueryParams } = queryParams;
-    this.logger.log({ ...safeQueryParams, text }, 'findAll');
-    this.assertWorkspaceParamAllowed(queryParams.workspaceId);
+    const { search, workspaceId, unfiled, limit, offset } = queryParams;
+    this.logger.log(
+      { workspaceId, unfiled, limit, offset, text: search },
+      'findAll',
+    );
+    this.assertWorkspaceParamsAllowed(queryParams);
     const threads = await this.findAllThreadsUseCase.execute(
       new FindAllThreadsQuery(
         userId,
         undefined,
-        {
-          search: queryParams.search,
-          workspaceId: queryParams.workspaceId,
-        },
-        {
-          limit: queryParams.limit,
-          offset: queryParams.offset,
-        },
+        { search, workspaceId, unfiled },
+        { limit, offset },
       ),
     );
     return this.getThreadsDtoMapper.toPaginatedDto(threads);

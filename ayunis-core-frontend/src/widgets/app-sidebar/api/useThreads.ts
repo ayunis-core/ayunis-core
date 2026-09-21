@@ -2,6 +2,7 @@ import {
   useThreadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 
 export interface SidebarThread {
   id: string;
@@ -13,14 +14,17 @@ export interface SidebarThread {
 const SIDEBAR_THREADS_LIMIT = 20;
 
 export function useThreads() {
+  const workspacesEnabled = useIsWorkspacesEnabled();
+  const params = {
+    limit: SIDEBAR_THREADS_LIMIT,
+    offset: 0,
+    ...(workspacesEnabled ? { unfiled: true } : {}),
+  };
   const { data, isLoading, error, refetch } = useThreadsControllerFindAll(
-    { limit: SIDEBAR_THREADS_LIMIT, offset: 0 },
+    params,
     {
       query: {
-        queryKey: getThreadsControllerFindAllQueryKey({
-          limit: SIDEBAR_THREADS_LIMIT,
-          offset: 0,
-        }),
+        queryKey: getThreadsControllerFindAllQueryKey(params),
       },
     },
   );
