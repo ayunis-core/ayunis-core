@@ -3,4 +3,4 @@
 # (pip, /ayunis-core-code-execution/sandbox) bumps them weekly.
 numpy==2.5.3
 pandas==3.0.5
-matplotlib==3.11.1
+matplotlib==3.11.2
