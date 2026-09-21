@@ -15,7 +15,7 @@ catalog:
   react-dom: ^19.2.7
   react-hook-form: ^7.86.0
   sonner: ^2.0.8
-  recharts: ^2.15.4
+  recharts: ^3.10.1
   lucide-react: ^0.476.0
   tailwindcss: ^4.3.3
   '@tailwindcss/vite': ^4.3.3
