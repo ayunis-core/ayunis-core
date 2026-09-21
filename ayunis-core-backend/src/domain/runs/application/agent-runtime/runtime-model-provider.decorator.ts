@@ -38,11 +38,17 @@ import { extractInferenceErrorInfo } from 'src/domain/runs/application/helpers/e
 import { buildProviderRequestDiagnostics } from './provider-request-diagnostics.helper';
 import { serializeRuntimeModelError } from './runtime-model-error';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
+import type { RunContext } from '@ayunis/agent-runtime';
+import {
+  modelRequestOutcome,
+  ModelRequestTelemetryService,
+} from './model-request-telemetry.service';
 
 interface RuntimeModelCallContext {
   readonly userId: UUID;
   readonly orgId: UUID;
   readonly model: LanguageModel;
+  readonly runContext: RunContext;
   readonly toolIntegrations?: RuntimeToolIntegrationRegistry;
 }
 
@@ -63,7 +69,10 @@ function backoff(ms: number): Promise<void> {
 export class RuntimeModelProviderDecorator {
   private readonly logger = new Logger(RuntimeModelProviderDecorator.name);
 
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    private readonly modelRequestTelemetry: ModelRequestTelemetryService,
+  ) {}
 
   decorate(
     provider: ModelProvider,
@@ -92,7 +101,12 @@ export class RuntimeModelProviderDecorator {
     for (let attempt = 1; ; attempt++) {
       let streamedContent = false;
       try {
-        for await (const chunk of this.stream(provider, request, context)) {
+        for await (const chunk of this.stream(
+          provider,
+          request,
+          context,
+          attempt,
+        )) {
           streamedContent ||= isContentChunk(chunk);
           yield chunk;
         }
@@ -118,19 +132,25 @@ export class RuntimeModelProviderDecorator {
     provider: ModelProvider,
     request: ProviderRequest,
     context: RuntimeModelCallContext,
+    attempt: number,
   ): AsyncIterable<ProviderChunk> {
     const startedAt = Date.now();
+    const telemetry = this.modelRequestTelemetry.start(
+      context,
+      attempt,
+      startedAt,
+    );
     const state = createCallState(request.signal);
     let mappedError: ApplicationError | undefined;
+    let completed = false;
     try {
-      const sanitizedRequest = sanitizeReplayedToolInputs(request);
-      for await (const chunk of provider.stream({
-        ...sanitizedRequest,
-        signal: state.controller.signal,
-      })) {
+      const providerRequest = withSignal(request, state.controller.signal);
+      for await (const chunk of provider.stream(providerRequest)) {
+        this.modelRequestTelemetry.observe(telemetry, chunk);
         state.watchdog.notifyChunk();
         yield chunk;
       }
+      completed = true;
     } catch (error) {
       mappedError = mapProviderError(error, request, state.controller, context);
       this.logProviderInferenceFailed(error, request, context, mappedError);
@@ -147,6 +167,13 @@ export class RuntimeModelProviderDecorator {
       if (!mappedError && request.signal?.aborted) {
         mappedError = new InferenceAbortedError();
       }
+      this.modelRequestTelemetry.complete(
+        context,
+        telemetry,
+        attempt,
+        modelRequestOutcome(completed, mappedError),
+        mappedError?.code,
+      );
       this.emitCompletion(context, startedAt, mappedError);
     }
   }
@@ -222,6 +249,13 @@ export class RuntimeModelProviderDecorator {
         );
       });
   }
+}
+
+function withSignal(
+  request: ProviderRequest,
+  signal: AbortSignal,
+): ProviderRequest {
+  return { ...sanitizeReplayedToolInputs(request), signal };
 }
 
 function sanitizeReplayedToolInputs(request: ProviderRequest): ProviderRequest {

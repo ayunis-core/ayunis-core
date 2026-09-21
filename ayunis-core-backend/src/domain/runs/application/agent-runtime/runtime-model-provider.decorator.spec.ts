@@ -1,5 +1,9 @@
 import { createLoggerMock } from 'src/common/testing/logger.mock';
-import { RunAbortedError, type AgentRuntimeError } from '@ayunis/agent-runtime';
+import {
+  RunAbortedError,
+  RunContext,
+  type AgentRuntimeError,
+} from '@ayunis/agent-runtime';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -16,6 +20,8 @@ import type { LanguageModel } from 'src/domain/models/domain/models/language.mod
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
 import { RuntimeModelProviderDecorator } from './runtime-model-provider.decorator';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
+import { ModelRequestTelemetryService } from './model-request-telemetry.service';
+import { setRunTelemetryStartedAt } from './run-telemetry-context';
 
 const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const orgId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -34,6 +40,7 @@ interface Harness {
   decorate: (provider: ModelProvider) => ModelProvider;
   emitAsync: jest.Mock;
   logger: ReturnType<typeof createLoggerMock>;
+  runId: string;
 }
 
 function buildHarness(
@@ -42,19 +49,25 @@ function buildHarness(
 ): Harness {
   const emitAsync = jest.fn().mockResolvedValue([]);
   const logger = createLoggerMock();
-  const decorator = new RuntimeModelProviderDecorator({
-    emitAsync,
-  } as unknown as EventEmitter2);
+  const decorator = new RuntimeModelProviderDecorator(
+    { emitAsync } as unknown as EventEmitter2,
+    new ModelRequestTelemetryService(),
+  );
+  const runContext = RunContext.create();
+  setRunTelemetryStartedAt(runContext, Date.now());
+  runContext.set('agentTelemetryIteration', 2);
+  const context = {
+    userId,
+    orgId,
+    model: runtimeModel,
+    runContext,
+    ...(toolIntegrations ? { toolIntegrations } : {}),
+  };
   return {
-    decorate: (provider) =>
-      decorator.decorate(provider, {
-        userId,
-        orgId,
-        model: runtimeModel,
-        ...(toolIntegrations ? { toolIntegrations } : {}),
-      }),
+    decorate: (provider) => decorator.decorate(provider, context),
     emitAsync,
     logger,
+    runId: runContext.runId,
   };
 }
 
@@ -125,6 +138,89 @@ describe('RuntimeModelProviderDecorator', () => {
         durationMs: expect.any(Number),
         error: undefined,
       }),
+    );
+  });
+
+  it('logs correlated request latency milestones and separate token usage', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-09-21T12:00:00.000Z'));
+    const provider: ModelProvider = {
+      name: 'test:timed',
+      async *stream() {
+        jest.setSystemTime(new Date('2026-09-21T12:00:00.100Z'));
+        yield { thinkingDelta: 'Checking sources' };
+        jest.setSystemTime(new Date('2026-09-21T12:00:00.350Z'));
+        yield { textDelta: 'The permit is valid.' };
+        jest.setSystemTime(new Date('2026-09-21T12:00:00.600Z'));
+        yield {
+          usage: {
+            inputTokens: 120,
+            outputTokens: 35,
+            cacheReadInputTokens: 80,
+            cacheWriteInputTokens: 5,
+            thinkingTokens: 12,
+          },
+        };
+      },
+    };
+    const { decorate, logger, runId } = buildHarness();
+
+    await collect(decorate(provider));
+
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        run_id: runId,
+        request_id: expect.any(String),
+        model: model.name,
+        provider: model.provider,
+        environment: expect.any(String),
+        iteration: 2,
+        request_started_at: '2026-09-21T12:00:00.000Z',
+        first_provider_chunk_at: '2026-09-21T12:00:00.100Z',
+        first_visible_text_at: '2026-09-21T12:00:00.350Z',
+        completed_at: '2026-09-21T12:00:00.600Z',
+        time_to_first_provider_chunk_ms: 100,
+        time_to_first_visible_text_ms: 350,
+        run_elapsed_to_first_provider_chunk_ms: 100,
+        run_elapsed_to_first_visible_text_ms: 350,
+        duration_ms: 600,
+        outcome: 'success',
+        input_tokens: 120,
+        output_tokens: 35,
+        cache_read_input_tokens: 80,
+        cache_write_input_tokens: 5,
+        thinking_tokens: 12,
+      }),
+      'Agent model request completed',
+    );
+    expect(JSON.stringify(logger.log.mock.calls)).not.toContain(
+      request.instructions,
+    );
+    jest.useRealTimers();
+  });
+
+  it('does not invent visible-text timing for a tool-only response', async () => {
+    const provider: ModelProvider = {
+      name: 'test:tool-only',
+      async *stream() {
+        yield {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'tool-call-1',
+              name: 'municipal_search',
+              argumentsDelta: '{}',
+            },
+          ],
+        };
+      },
+    };
+    const { decorate, logger } = buildHarness();
+
+    await collect(decorate(provider));
+
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.not.objectContaining({ first_visible_text_at: expect.anything() }),
+      'Agent model request completed',
     );
   });
 

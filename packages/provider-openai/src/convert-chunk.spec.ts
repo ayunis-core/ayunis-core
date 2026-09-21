@@ -96,6 +96,48 @@ describe('convertChunk', () => {
     ).toEqual({ usage: { inputTokens: 11, outputTokens: 22 } });
   });
 
+  it('preserves separately reported reasoning-token usage', () => {
+    expect(
+      convertChunk(
+        chunk({
+          choices: [],
+          usage: {
+            prompt_tokens: 11,
+            completion_tokens: 22,
+            completion_tokens_details: { reasoning_tokens: 7 },
+          },
+        }),
+      ),
+    ).toEqual({
+      usage: { inputTokens: 11, outputTokens: 22, thinkingTokens: 7 },
+    });
+  });
+
+  it('normalizes overlapping cache-write tokens into disjoint input usage', () => {
+    expect(
+      convertChunk(
+        chunk({
+          choices: [],
+          usage: {
+            prompt_tokens: 100,
+            completion_tokens: 22,
+            prompt_tokens_details: {
+              cached_tokens: 70,
+              cache_write_tokens: 90,
+            },
+          },
+        }),
+      ),
+    ).toEqual({
+      usage: {
+        inputTokens: 10,
+        outputTokens: 22,
+        cacheReadInputTokens: 70,
+        cacheWriteInputTokens: 20,
+      },
+    });
+  });
+
   it('returns null for an empty delta chunk', () => {
     expect(
       convertChunk(chunk({ choices: [{ index: 0, delta: {} }] })),

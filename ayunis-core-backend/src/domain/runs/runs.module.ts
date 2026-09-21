@@ -20,6 +20,7 @@ import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usa
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
 import { RuntimeModelProviderDecorator } from './application/agent-runtime/runtime-model-provider.decorator';
+import { ModelRequestTelemetryService } from './application/agent-runtime/model-request-telemetry.service';
 import { CompleteTurnSelector } from './application/agent-runtime/complete-turn-selector';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
@@ -91,6 +92,7 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
     CompleteTurnSelector,
     RuntimeHistoryMaterializer,
     RuntimeModelProviderDecorator,
+    ModelRequestTelemetryService,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,

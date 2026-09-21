@@ -149,6 +149,46 @@ describe('convertChunk', () => {
     ).toEqual({ usage: { inputTokens: 11, outputTokens: 22 } });
   });
 
+  it('preserves separately reported reasoning-token usage', () => {
+    expect(
+      convertChunk(
+        event({
+          choices: [],
+          usage: {
+            promptTokens: 11,
+            completionTokens: 22,
+            totalTokens: 33,
+            completion_tokens_details: { reasoning_tokens: 7 },
+          },
+        }),
+      ),
+    ).toEqual({
+      usage: { inputTokens: 11, outputTokens: 22, thinkingTokens: 7 },
+    });
+  });
+
+  it('separates cached prompt tokens from uncached input', () => {
+    expect(
+      convertChunk(
+        event({
+          choices: [],
+          usage: {
+            promptTokens: 100,
+            completionTokens: 22,
+            totalTokens: 122,
+            num_cached_tokens: 70,
+          },
+        }),
+      ),
+    ).toEqual({
+      usage: {
+        inputTokens: 30,
+        outputTokens: 22,
+        cacheReadInputTokens: 70,
+      },
+    });
+  });
+
   it('returns null for an empty delta chunk', () => {
     expect(
       convertChunk(event({ choices: [{ index: 0, delta: {} }] })),

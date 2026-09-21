@@ -6,7 +6,6 @@ import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { Message } from 'src/domain/messages/domain/message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
@@ -61,24 +60,20 @@ import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-ru
 import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
-import type { PreparedRun, PreparedTools } from './execute-run.types';
+import type {
+  PreparedRun,
+  PreparedToolResultInput,
+  PreparedTools,
+  SeededInput,
+} from './execute-run.types';
 import { MAX_CONTEXT_TOKENS } from 'src/common/token-counter/application/context-budget.constants';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { setRunTelemetryModel } from 'src/domain/runs/application/agent-runtime/run-telemetry-context';
 
 const MAX_ITERATIONS = 50;
-
-interface SeededInput {
-  message: Message;
-  masks: ThreadPiiMask[] | null;
-}
-
-interface PreparedToolResultInput {
-  input: RunToolResultInput;
-  masks: ThreadPiiMask[] | null;
-}
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -118,8 +113,11 @@ export class ExecuteRunUseCase {
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>> {
     this.logger.log({ threadId: command.threadId }, 'executeRun');
-    return this.runTelemetryService.track('agent_runtime', () =>
-      this.createRunStream(command),
+    const runContext = RunContext.create();
+    return this.runTelemetryService.track(
+      'agent_runtime',
+      () => this.createRunStream(command, runContext),
+      runContext,
     );
   }
 
@@ -127,12 +125,16 @@ export class ExecuteRunUseCase {
   @HandleUnexpectedErrors(UnexpectedRunError)
   private async createRunStream(
     command: ExecuteRunCommand,
+    runContext: RunContext,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>> {
-    const prepared = await this.prepareRun(command);
-    return this.streamRun(prepared, command.input, command.signal);
+    const prepared = await this.prepareRun(command, runContext);
+    return this.streamRun(prepared, command.input, runContext, command.signal);
   }
 
-  private async prepareRun(command: ExecuteRunCommand): Promise<PreparedRun> {
+  private async prepareRun(
+    command: ExecuteRunCommand,
+    runContext: RunContext,
+  ): Promise<PreparedRun> {
     const { userId, orgId } = getRequiredUserContext(this.contextService);
     this.runTelemetryService.recordAttempt(userId, orgId);
 
@@ -149,6 +151,7 @@ export class ExecuteRunUseCase {
       orgId,
     });
     const model = permittedModel.model;
+    setRunTelemetryModel(runContext, model.name, model.provider);
     await this.inferenceUsageGuard.preflight({ userId, orgId }, model);
     const anonymous = found.thread.isAnonymous || permittedModel.anonymousOnly;
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
@@ -226,6 +229,7 @@ export class ExecuteRunUseCase {
   private async *streamRun(
     prepared: PreparedRun,
     input: RunInput,
+    runContext: RunContext,
     signal?: AbortSignal,
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
     let cleanupRequired = true;
@@ -241,7 +245,7 @@ export class ExecuteRunUseCase {
       }
       yield seeded.message;
       const outcome = yield* adaptRunEventsToStream(
-        await this.startRun(prepared, signal),
+        await this.startRun(prepared, runContext, signal),
         prepared.thread.id,
         this.runEventStreamLogger,
         prepared.toolIntegrations,
@@ -285,7 +289,11 @@ export class ExecuteRunUseCase {
     throw new RunInvalidInputError('Invalid run input');
   }
 
-  private async startRun(prepared: PreparedRun, signal?: AbortSignal) {
+  private async startRun(
+    prepared: PreparedRun,
+    context: RunContext,
+    signal?: AbortSignal,
+  ) {
     const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
       prepared.thread.messages,
       prepared.thread.id,
@@ -306,15 +314,14 @@ export class ExecuteRunUseCase {
         userId: prepared.userId,
         orgId: prepared.orgId,
         model: prepared.model,
+        runContext: context,
         toolIntegrations: prepared.toolIntegrations,
       },
     );
-    const context = RunContext.create({
-      orgId: prepared.orgId,
-      userId: prepared.userId,
-      threadId: prepared.thread.id,
-      isAnonymous: prepared.isAnonymous,
-    });
+    context.set('orgId', prepared.orgId);
+    context.set('userId', prepared.userId);
+    context.set('threadId', prepared.thread.id);
+    context.set('isAnonymous', prepared.isAnonymous);
     return run({
       instructions: prepared.instructions,
       model: guardedProvider,
@@ -331,13 +338,15 @@ export class ExecuteRunUseCase {
   private buildHooks(prepared: PreparedRun): Hook[] {
     return [
       this.usageHookFactory.create({ model: prepared.model }),
-      this.persistenceHookFactory.create({
-        thread: prepared.thread,
-        integrations: prepared.toolIntegrations,
-      }),
       this.toolUsageHookFactory.create({
         userId: prepared.userId,
         orgId: prepared.orgId,
+        integrations: prepared.toolIntegrations,
+        model: prepared.model.name,
+        provider: prepared.model.provider,
+      }),
+      this.persistenceHookFactory.create({
+        thread: prepared.thread,
         integrations: prepared.toolIntegrations,
       }),
       this.skillActivationHookFactory.create({

@@ -78,16 +78,45 @@ const finishFacet = (reason: GeminiFinishReason | undefined): ProviderChunk => {
 
 const usageFacet = (
   usage:
-    { promptTokenCount?: number; candidatesTokenCount?: number } | undefined,
+    | {
+        promptTokenCount?: number;
+        candidatesTokenCount?: number;
+        thoughtsTokenCount?: number;
+        cachedContentTokenCount?: number;
+      }
+    | undefined,
 ): ProviderChunk =>
   usage
     ? {
         usage: {
-          inputTokens: usage.promptTokenCount,
-          outputTokens: usage.candidatesTokenCount,
+          inputTokens:
+            usage.promptTokenCount === undefined
+              ? undefined
+              : Math.max(
+                  0,
+                  usage.promptTokenCount - (usage.cachedContentTokenCount ?? 0),
+                ),
+          outputTokens: totalOutputTokens(
+            usage.candidatesTokenCount,
+            usage.thoughtsTokenCount,
+          ),
+          ...(typeof usage.cachedContentTokenCount === 'number'
+            ? { cacheReadInputTokens: usage.cachedContentTokenCount }
+            : {}),
+          ...(typeof usage.thoughtsTokenCount === 'number'
+            ? { thinkingTokens: usage.thoughtsTokenCount }
+            : {}),
         },
       }
     : {};
+
+const totalOutputTokens = (
+  candidateTokens: number | undefined,
+  thinkingTokens: number | undefined,
+): number | undefined =>
+  candidateTokens === undefined && thinkingTokens === undefined
+    ? undefined
+    : (candidateTokens ?? 0) + (thinkingTokens ?? 0);
 
 const toToolCallDelta = (
   part: Part,

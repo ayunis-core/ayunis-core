@@ -9,6 +9,12 @@ import {
 } from 'src/domain/runs/application/events/run-terminal.event';
 import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import type { RunContext } from '@ayunis/agent-runtime';
+import {
+  getRunTelemetryModel,
+  getTelemetryEnvironment,
+  setRunTelemetryStartedAt,
+} from 'src/domain/runs/application/agent-runtime/run-telemetry-context';
 
 @Injectable()
 export class RunTelemetryService {
@@ -33,17 +39,20 @@ export class RunTelemetryService {
   async track<TItem, TReturn extends RunExecutionOutcome | void>(
     executionPath: RunExecutionPath,
     createStream: () => Promise<AsyncGenerator<TItem, TReturn, void>>,
+    context?: RunContext,
   ): Promise<AsyncGenerator<TItem, TReturn, void>> {
     const startedAt = Date.now();
+    if (context) setRunTelemetryStartedAt(context, startedAt);
     try {
       const stream = await createStream();
-      return this.trackStream(stream, executionPath, startedAt);
+      return this.trackStream(stream, executionPath, startedAt, context);
     } catch (error) {
       this.recordTerminal(
         executionPath,
         this.outcomeFor(error),
         startedAt,
         this.errorCode(error),
+        context,
       );
       throw error;
     }
@@ -53,12 +62,19 @@ export class RunTelemetryService {
     stream: AsyncGenerator<TItem, TReturn, void>,
     executionPath: RunExecutionPath,
     startedAt: number,
+    context?: RunContext,
   ): AsyncGenerator<TItem, TReturn, void> {
     let recorded = false;
     const recordOnce = (outcome: RunTerminalOutcome, errorCode?: string) => {
       if (recorded) return;
       recorded = true;
-      this.recordTerminal(executionPath, outcome, startedAt, errorCode);
+      this.recordTerminal(
+        executionPath,
+        outcome,
+        startedAt,
+        errorCode,
+        context,
+      );
     };
     const tracked = this.observeStream(stream, recordOnce);
     this.wrapEarlyTermination(tracked, recordOnce);
@@ -122,12 +138,28 @@ export class RunTelemetryService {
     outcome: RunTerminalOutcome,
     startedAt: number,
     errorCode?: string,
+    context?: RunContext,
   ): void {
-    const durationMs = Date.now() - startedAt;
+    const completedAt = Date.now();
+    const durationMs = completedAt - startedAt;
+    const model = context
+      ? getRunTelemetryModel(context)
+      : { model: 'unknown', provider: 'unknown' };
     this.logger.log(
       {
         execution_path: executionPath,
+        ...(context
+          ? {
+              run_id: context.runId,
+              request_id: context.runId,
+              iteration: null,
+            }
+          : {}),
+        ...model,
+        environment: getTelemetryEnvironment(),
         outcome,
+        started_at: new Date(startedAt).toISOString(),
+        completed_at: new Date(completedAt).toISOString(),
         duration_ms: durationMs,
         error_code: errorCode,
       },

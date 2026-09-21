@@ -41,14 +41,49 @@ export const convertChunk = (
   }
 
   if (event.data.usage) {
-    result.usage = {
-      inputTokens: event.data.usage.promptTokens,
-      outputTokens: event.data.usage.completionTokens,
-    };
+    result.usage = convertUsage(event.data.usage);
     carriesSomething = true;
   }
 
   return carriesSomething ? result : null;
+};
+
+const convertUsage = (
+  usage: NonNullable<CompletionEvent['data']['usage']>,
+): NonNullable<ProviderChunk['usage']> => {
+  const thinkingTokens = readThinkingTokens(usage);
+  const cacheReadInputTokens =
+    readNumber(usage, 'numCachedTokens') ??
+    readNumber(usage, 'num_cached_tokens');
+  return {
+    inputTokens:
+      usage.promptTokens === undefined
+        ? undefined
+        : Math.max(0, usage.promptTokens - (cacheReadInputTokens ?? 0)),
+    outputTokens: usage.completionTokens,
+    ...(cacheReadInputTokens !== undefined ? { cacheReadInputTokens } : {}),
+    ...(thinkingTokens !== undefined ? { thinkingTokens } : {}),
+  };
+};
+
+const readThinkingTokens = (usage: unknown): number | undefined => {
+  const details =
+    readValue(usage, 'completionTokensDetails') ??
+    readValue(usage, 'completion_tokens_details');
+  return (
+    readNumber(details, 'reasoningTokens') ??
+    readNumber(details, 'reasoning_tokens')
+  );
+};
+
+const readNumber = (value: unknown, key: string): number | undefined => {
+  const result = readValue(value, key);
+  return typeof result === 'number' ? result : undefined;
+};
+
+const readValue = (value: unknown, key: string): unknown => {
+  if (!value || typeof value !== 'object') return undefined;
+  return (value as Record<string, unknown>)[key];
 };
 
 const extractTextDelta = (

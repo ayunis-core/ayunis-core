@@ -416,6 +416,7 @@ describe('ExecuteRunUseCase', () => {
     expect(trackRun).toHaveBeenCalledWith(
       'agent_runtime',
       expect.any(Function),
+      expect.objectContaining({ runId: expect.any(String) }),
     );
   });
 

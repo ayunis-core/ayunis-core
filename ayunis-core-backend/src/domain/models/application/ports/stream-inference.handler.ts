@@ -1,10 +1,10 @@
 import type { ModelProvider } from '@ayunis/inference';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
-import type { Model } from '../../domain/model.entity';
+import type { Model } from 'src/domain/models/domain/model.entity';
 import type { Observable } from 'rxjs';
 import type { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
-import type { ToolSchema } from '../../domain/value-objects/tool-schema';
+import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
 
 export class StreamInferenceInput {
   public readonly model: Model;
@@ -70,6 +70,8 @@ export class StreamInferenceResponseChunk {
     cacheReadInputTokens?: number;
     /** Prompt tokens written to the provider's prompt cache. */
     cacheWriteInputTokens?: number;
+    /** Internal reasoning/thinking tokens, when reported separately. */
+    thinkingTokens?: number;
   };
 
   constructor(params: {
@@ -85,6 +87,7 @@ export class StreamInferenceResponseChunk {
       outputTokens?: number;
       cacheReadInputTokens?: number;
       cacheWriteInputTokens?: number;
+      thinkingTokens?: number;
     };
   }) {
     this.thinkingDelta = params.thinkingDelta;

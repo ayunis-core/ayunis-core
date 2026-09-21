@@ -17,6 +17,8 @@ export interface Usage {
   cacheReadInputTokens?: number;
   /** Prompt tokens written to the provider's prompt cache. */
   cacheWriteInputTokens?: number;
+  /** Internal reasoning/thinking tokens, when reported separately. */
+  thinkingTokens?: number;
 }
 
 export interface ToolCallDelta {

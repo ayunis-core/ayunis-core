@@ -1,5 +1,7 @@
 import type { EventEmitter2 } from '@nestjs/event-emitter';
+import { RunContext } from '@ayunis/agent-runtime';
 import { randomUUID } from 'crypto';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { RunMaxIterationsReachedError } from 'src/domain/runs/application/runs.errors';
 import { RunTerminalEvent } from 'src/domain/runs/application/events/run-terminal.event';
 import { RunExecutedEvent } from 'src/domain/runs/application/events/run-executed.event';
@@ -48,6 +50,41 @@ describe('RunTelemetryService', () => {
       RunTerminalEvent.EVENT_NAME,
       expect.objectContaining({ executionPath: path, outcome: 'completed' }),
     );
+  });
+
+  it('logs the correlated end-to-end run duration', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-09-21T12:00:00.000Z'));
+    const logger = createLoggerMock();
+    const context = RunContext.create();
+    context.set('agentTelemetryModel', 'claude-sonnet-4-5');
+    context.set('agentTelemetryProvider', 'anthropic');
+    const stream = await service.track(
+      'agent_runtime',
+      async () =>
+        (async function* () {
+          jest.setSystemTime(new Date('2026-09-21T12:00:02.000Z'));
+          yield* [] as never[];
+          return 'completed' as const;
+        })(),
+      context,
+    );
+
+    await drain(stream);
+
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        run_id: context.runId,
+        model: 'claude-sonnet-4-5',
+        provider: 'anthropic',
+        environment: expect.any(String),
+        started_at: '2026-09-21T12:00:00.000Z',
+        completed_at: '2026-09-21T12:00:02.000Z',
+        duration_ms: 2_000,
+        outcome: 'completed',
+      }),
+      'Run reached terminal outcome',
+    );
+    jest.useRealTimers();
   });
 
   it.each(paths)('records an aborted run for the %s path', async (path) => {

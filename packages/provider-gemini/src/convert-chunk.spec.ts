@@ -116,6 +116,44 @@ describe('convertChunk', () => {
     ).toEqual({ usage: { inputTokens: 11, outputTokens: 22 } });
   });
 
+  it('preserves separately reported thinking-token usage', () => {
+    expect(
+      convertChunk(
+        chunk({
+          candidates: [],
+          usageMetadata: {
+            promptTokenCount: 11,
+            candidatesTokenCount: 22,
+            thoughtsTokenCount: 7,
+          },
+        }),
+      ),
+    ).toEqual({
+      usage: { inputTokens: 11, outputTokens: 29, thinkingTokens: 7 },
+    });
+  });
+
+  it('separates cached prompt tokens from uncached input', () => {
+    expect(
+      convertChunk(
+        chunk({
+          candidates: [],
+          usageMetadata: {
+            promptTokenCount: 100,
+            cachedContentTokenCount: 70,
+            candidatesTokenCount: 22,
+          },
+        }),
+      ),
+    ).toEqual({
+      usage: {
+        inputTokens: 30,
+        outputTokens: 22,
+        cacheReadInputTokens: 70,
+      },
+    });
+  });
+
   it('returns null for an empty chunk', () => {
     expect(
       convertChunk(chunk({ candidates: [{ content: { parts: [] } }] })),

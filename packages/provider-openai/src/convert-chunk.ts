@@ -49,15 +49,57 @@ export const convertChunk = (
   }
 
   if (chunk.usage) {
-    result.usage = {
-      inputTokens: chunk.usage.prompt_tokens,
-      outputTokens: chunk.usage.completion_tokens,
-    };
+    result.usage = convertUsage(chunk.usage);
     carriesSomething = true;
   }
 
   return carriesSomething ? result : null;
 };
+
+const convertUsage = (
+  usage: NonNullable<ChatCompletionChunk['usage']>,
+): NonNullable<ProviderChunk['usage']> => {
+  const cacheReadInputTokens = usage.prompt_tokens_details?.cached_tokens;
+  const cacheWriteInputTokens = normalizedCacheWriteInputTokens(
+    usage.prompt_tokens,
+    cacheReadInputTokens,
+    usage.prompt_tokens_details?.cache_write_tokens,
+  );
+  const thinkingTokens = usage.completion_tokens_details?.reasoning_tokens;
+  return {
+    inputTokens: uncachedInputTokens(
+      usage.prompt_tokens,
+      cacheReadInputTokens,
+      cacheWriteInputTokens,
+    ),
+    outputTokens: usage.completion_tokens,
+    ...(typeof cacheReadInputTokens === 'number'
+      ? { cacheReadInputTokens }
+      : {}),
+    ...(typeof cacheWriteInputTokens === 'number'
+      ? { cacheWriteInputTokens }
+      : {}),
+    ...(typeof thinkingTokens === 'number' ? { thinkingTokens } : {}),
+  };
+};
+
+const uncachedInputTokens = (
+  total: number,
+  cacheRead = 0,
+  cacheWrite = 0,
+): number => Math.max(0, total - cacheRead - cacheWrite);
+
+const normalizedCacheWriteInputTokens = (
+  total: number,
+  cacheRead = 0,
+  unadjustedCacheWrite: number | undefined,
+): number | undefined =>
+  unadjustedCacheWrite === undefined
+    ? undefined
+    : Math.min(
+        Math.max(0, unadjustedCacheWrite - cacheRead),
+        Math.max(0, total - cacheRead),
+      );
 
 const mapFinishReason = (
   reason: NonNullable<ChatCompletionChunk.Choice['finish_reason']>,
