@@ -15,6 +15,7 @@ import {
   OrgShareScope,
   TeamShareScope,
 } from 'src/domain/shares/domain/share-scope.entity';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteShareUseCase {
@@ -29,10 +30,7 @@ export class DeleteShareUseCase {
   @Transactional()
   async execute(id: UUID): Promise<void> {
     try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+      const { userId, orgId } = getRequiredUserContext(this.contextService);
 
       const share = await this.repository.findById(id);
       if (!share) {
@@ -53,11 +51,6 @@ export class DeleteShareUseCase {
       const remainingScopes = remainingShares.map((s) =>
         this.toRemainingScope(s),
       );
-
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
 
       this.eventEmitter
         .emitAsync(

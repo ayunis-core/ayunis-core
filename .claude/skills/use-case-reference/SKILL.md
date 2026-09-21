@@ -127,9 +127,15 @@ Auth handling is a project-level convention. Common patterns:
 - **`ContextService` / async-local-storage**: read the current user from a request-scoped context service
 
   ```typescript
-  const userId = this.contextService.get('userId');
-  if (!userId) throw new UnauthorizedAccessError();
+  const { userId, orgId } = getRequiredUserContext(this.contextService);
   ```
+
+  Ayunis Core centralizes this in `src/common/context/required-context.ts`:
+  `getRequiredUserContext(context)` for user-only operations and
+  `getRequiredOrgId(context)` for operations that also accept API-key
+  principals. Both throw `UnauthorizedAccessError` on missing context — do not
+  hand-roll a `get(...)` + `if (!x) throw` pair. Plain optional `get(...)`
+  stays correct where missing context is a supported state.
 
 - **Command parameter**: the controller (or a guard) injects `userId` into the command before calling the use case
 - **Guard + decorator**: an auth guard runs before the controller and rejects unauthenticated requests; use cases assume auth has already passed

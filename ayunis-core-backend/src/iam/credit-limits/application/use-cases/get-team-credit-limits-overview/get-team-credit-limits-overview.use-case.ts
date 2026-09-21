@@ -3,7 +3,6 @@ import type { TeamCreditLimitOverviewItem } from './team-credit-limit.view';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { GetMonthlyCreditUsageForTeamQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.query';
@@ -12,6 +11,7 @@ import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-l
 import { selectTeamCreditLimits } from 'src/iam/credit-limits/application/utils/select-team-credit-limits';
 import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { GetTeamCreditLimitsOverviewQuery } from './get-team-credit-limits-overview.query';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class GetTeamCreditLimitsOverviewUseCase {
@@ -28,10 +28,7 @@ export class GetTeamCreditLimitsOverviewUseCase {
   async execute(
     query: GetTeamCreditLimitsOverviewQuery = new GetTeamCreditLimitsOverviewQuery(),
   ): Promise<TeamCreditLimitOverviewItem[]> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     this.logger.log({ orgId }, 'Listing team credit limits');
 

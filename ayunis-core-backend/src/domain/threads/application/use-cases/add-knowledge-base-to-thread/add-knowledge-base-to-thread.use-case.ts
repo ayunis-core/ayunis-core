@@ -8,9 +8,9 @@ import {
   ThreadNotFoundError,
   UnexpecteThreadError,
 } from 'src/domain/threads/application/threads.errors';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindAccessibleKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class AddKnowledgeBaseToThreadUseCase {
@@ -34,11 +34,7 @@ export class AddKnowledgeBaseToThreadUseCase {
       'execute',
     );
 
-    const userId = this.contextService.get('userId');
-    const orgId = this.contextService.get('orgId');
-    if (!userId || !orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
     const thread = await this.threadsRepository.findOne(
       command.threadId,

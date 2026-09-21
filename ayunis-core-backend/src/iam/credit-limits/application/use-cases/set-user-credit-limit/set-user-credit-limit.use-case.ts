@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
@@ -13,6 +12,7 @@ import { isNonNegativeFinite } from 'src/common/util/number.util';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
 import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class SetUserCreditLimitUseCase {
@@ -25,10 +25,7 @@ export class SetUserCreditLimitUseCase {
   ) {}
 
   async execute(command: SetUserCreditLimitCommand): Promise<UserCreditLimit> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
     if (!isNonNegativeFinite(command.monthlyCredits)) {
       throw new InvalidCreditLimitError(
         'monthlyCredits must be a number greater than or equal to 0',

@@ -24,7 +24,7 @@ import {
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from 'src/domain/artifacts/application/artifacts.errors';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class CreateArtifactUseCase {
@@ -72,10 +72,7 @@ export class CreateArtifactUseCase {
   }
 
   private resolveUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
     return userId;
   }
 

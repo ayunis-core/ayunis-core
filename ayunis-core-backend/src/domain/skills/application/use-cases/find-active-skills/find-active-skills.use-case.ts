@@ -5,13 +5,13 @@ import { SkillRepository } from 'src/domain/skills/application/ports/skill.repos
 import { FindActiveSkillsQuery } from './find-active-skills.query';
 
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindActiveSkillsUseCase {
@@ -27,10 +27,7 @@ export class FindActiveSkillsUseCase {
   async execute(query: FindActiveSkillsQuery): Promise<PersonalSkill[]> {
     this.logger.log(query, 'Finding active skills');
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     // 1. Fetch owned active skills
     const ownedActiveSkills =

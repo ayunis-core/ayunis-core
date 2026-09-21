@@ -3,7 +3,6 @@ import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
@@ -14,6 +13,7 @@ import {
 } from 'src/domain/skills/application/skills.errors';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { RemoveSourceFromSkillCommand } from './remove-source-from-skill.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class RemoveSourceFromSkillUseCase {
@@ -53,8 +53,7 @@ export class RemoveSourceFromSkillUseCase {
   }
 
   private requireOrgId(): UUID {
-    const orgId = this.context.get('orgId');
-    if (!orgId) throw new UnauthorizedAccessError();
+    const orgId = getRequiredOrgId(this.context);
     return orgId;
   }
 }

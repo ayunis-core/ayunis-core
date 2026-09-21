@@ -19,10 +19,10 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 import { prepareContentForWrite } from 'src/domain/artifacts/application/helpers/prepare-content-for-write';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { addVersionWithRetry } from 'src/domain/artifacts/application/helpers/add-version-with-retry';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -69,10 +69,7 @@ export class UpdateArtifactUseCase {
   }
 
   private resolveUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
     return userId;
   }
 

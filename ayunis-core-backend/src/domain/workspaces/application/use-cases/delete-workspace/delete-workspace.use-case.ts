@@ -3,7 +3,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
@@ -12,6 +11,7 @@ import {
   WorkspaceNotFoundError,
 } from 'src/domain/workspaces/application/workspaces.errors';
 import { DeleteWorkspaceCommand } from './delete-workspace.command';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteWorkspaceUseCase {
@@ -58,10 +58,7 @@ export class DeleteWorkspaceUseCase {
   }
 
   private resolveUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
     return userId;
   }
 }

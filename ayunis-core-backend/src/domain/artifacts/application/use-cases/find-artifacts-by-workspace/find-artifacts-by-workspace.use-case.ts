@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { UnexpectedArtifactError } from 'src/domain/artifacts/application/artifacts.errors';
 import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { FindArtifactsByWorkspaceQuery } from './find-artifacts-by-workspace.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindArtifactsByWorkspaceUseCase {
@@ -23,10 +23,7 @@ export class FindArtifactsByWorkspaceUseCase {
   async execute(
     query: FindArtifactsByWorkspaceQuery,
   ): Promise<Paginated<Artifact>> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     this.logger.log(
       { workspaceId: query.workspaceId },
