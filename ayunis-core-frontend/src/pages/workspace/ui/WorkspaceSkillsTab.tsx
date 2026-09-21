@@ -19,6 +19,7 @@ import {
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
 import { SkillCreateDialog } from '@/widgets/resource-create-dialog';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 export function WorkspaceSkillsTab({
   workspaceId,
@@ -43,17 +44,19 @@ export function WorkspaceSkillsTab({
   } = useWorkspaceContextActions(workspaceId);
 
   const addButton = (
-    <SkillCreateDialog
-      buttonText={t('context.skills.create')}
-      buttonTestId="workspace-skill-create"
-      onCreate={async (data) => {
-        const skill = await createSkill(data);
-        await navigate({
-          to: '/workspaces/$workspaceId/skills/$skillId',
-          params: { workspaceId, skillId: skill.id },
-        });
-      }}
-    />
+    <OnboardingTourTarget name={TOUR_TARGET.workspaceSkill}>
+      <SkillCreateDialog
+        buttonText={t('context.skills.create')}
+        buttonTestId="workspace-skill-create"
+        onCreate={async (data) => {
+          const skill = await createSkill(data);
+          await navigate({
+            to: '/workspaces/$workspaceId/skills/$skillId',
+            params: { workspaceId, skillId: skill.id },
+          });
+        }}
+      />
+    </OnboardingTourTarget>
   );
 
   return (

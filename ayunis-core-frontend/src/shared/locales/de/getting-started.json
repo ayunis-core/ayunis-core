@@ -38,6 +38,10 @@
       "title": "Wissensmanagement",
       "description": "Erstellen Sie Wissenssammlungen mit eigenen Dokumenten und URLs — Ayunis Core nutzt dieses Wissen automatisch für präzisere Antworten."
     },
+    "workspaces": {
+      "title": "Arbeitsbereiche",
+      "description": "Ein Arbeitsbereich bündelt Ihre Chats zu einem Thema und kann eine eigene Anweisung, eigenes Wissen und eigene Fähigkeiten haben. Diese wirken in jedem Chat des Arbeitsbereichs automatisch, zusätzlich zu dem, was Sie persönlich eingerichtet haben. Je mehr Kontext ein Arbeitsbereich enthält, desto genauer antwortet Ayunis Core darin."
+    },
     "advanced": {
       "title": "Fortgeschrittene Funktionen",
       "description": "Entdecken Sie weitere Funktionen, die Ihren Arbeitsalltag noch effizienter machen."
@@ -154,6 +158,62 @@
       "action": "Wissenssammlung hinzufügen",
       "spotlightTitle": "Wissenssammlung hinzufügen",
       "spotlightDescription": "Über das Plus-Icon können Sie Wissenssammlungen zu Ihrem Chat hinzufügen. Ayunis Core nutzt dann Ihr eigenes Wissen für präzisere Antworten."
+    },
+    "createWorkspace": {
+      "title": "Arbeitsbereich erstellen",
+      "description": "Legen Sie einen Arbeitsbereich für ein Thema an, an dem Sie regelmäßig arbeiten. Mit einem passenden Symbol und einer Farbe erkennen Sie den Arbeitsbereich später in der Übersicht auf einen Blick.",
+      "action": "Arbeitsbereich erstellen",
+      "spotlightTitle": "Arbeitsbereich erstellen",
+      "spotlightDescription": "Klicken Sie hier, um einen neuen Arbeitsbereich anzulegen. Name, Beschreibung, Symbol und Farbe legen Sie direkt im Dialog fest."
+    },
+    "selectWorkspaceInChat": {
+      "title": "Arbeitsbereich vor dem Senden wählen",
+      "description": "Wählen Sie unter dem Eingabefeld den passenden Arbeitsbereich aus, bevor Sie Ihre Nachricht senden. So sammeln sich alle Gespräche zu einem Thema an einer Stelle.",
+      "action": "Arbeitsbereich auswählen",
+      "spotlightTitle": "Arbeitsbereich auswählen",
+      "spotlightDescription": "Wählen Sie hier den Arbeitsbereich, zu dem der neue Chat gehören soll."
+    },
+    "startWorkspaceChat": {
+      "title": "Alternativ: Chat im Arbeitsbereich starten",
+      "description": "Statt den Arbeitsbereich beim Schreiben zu wählen, können Sie den Chat auch direkt im Arbeitsbereich beginnen. Das Eingabefeld dafür steht oben auf der Seite.",
+      "action": "Chat starten",
+      "spotlightTitle": "Chat im Arbeitsbereich starten",
+      "spotlightDescription": "Schreiben Sie Ihre Nachricht direkt hier. Der Chat wird im Arbeitsbereich abgelegt."
+    },
+    "assignChatToWorkspace": {
+      "title": "Bestehenden Chat zuordnen",
+      "description": "Auch ältere Chats lassen sich nachträglich einsortieren. Öffnen Sie dazu das Menü am Chat in der Seitenleiste und wählen Sie den passenden Arbeitsbereich aus.",
+      "action": "Chat zuordnen",
+      "spotlightTitle": "Chat zuordnen",
+      "spotlightDescription": "Öffnen Sie dieses Menü und wählen Sie „Zu Arbeitsbereich hinzufügen“."
+    },
+    "workspaceInstruction": {
+      "title": "Anweisung für den Arbeitsbereich hinterlegen",
+      "description": "Halten Sie einmal fest, was hier immer gelten soll — etwa Tonfall, Zielgruppe oder Formvorgaben. Ayunis Core folgt der Anweisung danach in jedem Chat des Arbeitsbereichs, ohne dass Sie sie wiederholen müssen.",
+      "action": "Anweisung hinterlegen",
+      "spotlightTitle": "Anweisung hinterlegen",
+      "spotlightDescription": "Schreiben Sie hier, was in jedem Chat dieses Arbeitsbereichs gelten soll, und speichern Sie anschließend."
+    },
+    "workspaceKnowledge": {
+      "title": "Wissenssammlung im Arbeitsbereich erstellen",
+      "description": "Legen Sie Wissenssammlungen direkt im Arbeitsbereich an. Ayunis Core nutzt sie dort in jedem Chat automatisch. Ihre persönlichen Wissenssammlungen bleiben unverändert verfügbar.",
+      "action": "Wissenssammlung erstellen",
+      "spotlightTitle": "Wissenssammlung erstellen",
+      "spotlightDescription": "Klicken Sie hier, um eine Wissenssammlung anzulegen, die zu diesem Arbeitsbereich gehört. Anschließend laden Sie Ihre Dokumente hoch."
+    },
+    "workspaceSkill": {
+      "title": "Fähigkeit im Arbeitsbereich erstellen",
+      "description": "Legen Sie Fähigkeiten direkt im Arbeitsbereich an. Ayunis Core aktiviert sie dort automatisch, wenn sie zu Ihrer Frage passen. Ihre persönlichen Fähigkeiten bleiben unverändert aktiv.",
+      "action": "Fähigkeit erstellen",
+      "spotlightTitle": "Fähigkeit erstellen",
+      "spotlightDescription": "Klicken Sie hier, um eine Fähigkeit anzulegen, die zu diesem Arbeitsbereich gehört."
+    },
+    "favoriteWorkspace": {
+      "title": "Arbeitsbereich zu Favoriten hinzufügen",
+      "description": "Sie können jeden Arbeitsbereich als Favorit markieren. Favoriten erscheinen mit ihrem Symbol in der Seitenleiste, sodass Sie von jeder Seite aus mit einem Klick dorthin gelangen.",
+      "action": "Zu Favoriten hinzufügen",
+      "spotlightTitle": "Zu Favoriten hinzufügen",
+      "spotlightDescription": "Klicken Sie auf den Stern, um den Arbeitsbereich zu Ihren Favoriten hinzuzufügen. Er erscheint anschließend in der Seitenleiste."
     },
     "customInstructions": {
       "title": "Eigene Anweisungen festlegen",

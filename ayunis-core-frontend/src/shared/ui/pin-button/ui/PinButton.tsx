@@ -12,6 +12,7 @@ interface PinButtonProps {
   pinLabel: string;
   unpinLabel: string;
   onToggle: () => void;
+  tourTarget?: string;
 }
 
 export function PinButton({
@@ -19,6 +20,7 @@ export function PinButton({
   pinLabel,
   unpinLabel,
   onToggle,
+  tourTarget,
 }: Readonly<PinButtonProps>) {
   const label = isPinned ? unpinLabel : pinLabel;
   return (
@@ -30,6 +32,7 @@ export function PinButton({
             size="icon"
             aria-label={label}
             onClick={onToggle}
+            data-tour={tourTarget}
           >
             <Star className={cn(isPinned && 'fill-brand text-brand')} />
           </Button>

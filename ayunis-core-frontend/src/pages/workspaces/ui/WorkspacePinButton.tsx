@@ -5,13 +5,16 @@ import {
   useFavorites,
   useToggleFavorite,
 } from '@/features/favorites';
+import type { TourTargetName } from '@/widgets/onboarding';
 
 interface WorkspacePinButtonProps {
   workspaceId: string;
+  tourTarget?: TourTargetName;
 }
 
 export function WorkspacePinButton({
   workspaceId,
+  tourTarget,
 }: Readonly<WorkspacePinButtonProps>) {
   const { t } = useTranslation('workspaces');
   const { favorites } = useFavorites();
@@ -24,6 +27,7 @@ export function WorkspacePinButton({
       pinLabel={t('card.pin')}
       unpinLabel={t('card.unpin')}
       onToggle={() => togglePinned('workspace', workspaceId)}
+      tourTarget={tourTarget}
     />
   );
 }

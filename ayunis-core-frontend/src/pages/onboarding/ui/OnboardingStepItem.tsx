@@ -19,6 +19,7 @@ import {
   ACTION_TYPE,
   SECONDARY_ACTION_TYPE,
   type OnboardingStep,
+  type OnboardingStepId,
 } from '@/widgets/onboarding';
 import {
   useKnowledgeBasesControllerFindAll,
@@ -26,6 +27,35 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import { findUnfavoritedWorkspace, useWorkspaces } from '@/features/workspaces';
+import { useFavorites } from '@/features/favorites';
+
+type WorkspaceDetailTab = 'skills' | 'knowledge' | 'instructions';
+
+const WORKSPACE_DETAIL_STEP_TABS: Partial<
+  Record<OnboardingStepId, WorkspaceDetailTab>
+> = {
+  workspaceInstruction: 'instructions',
+  workspaceKnowledge: 'knowledge',
+  workspaceSkill: 'skills',
+};
+
+const WORKSPACE_DETAIL_STEP_IDS = new Set<string>([
+  'startWorkspaceChat',
+  ...Object.keys(WORKSPACE_DETAIL_STEP_TABS),
+]);
+
+function isSidebarSpotlightMissing(spotlight: TourTargetName): boolean {
+  if (spotlight !== TOUR_TARGET.assignChatToWorkspace) return false;
+  return document.querySelector(`[data-tour="${spotlight}"]`) === null;
+}
+
+const WORKSPACE_STEP_IDS = new Set<string>([
+  'favoriteWorkspace',
+  'selectWorkspaceInChat',
+  'assignChatToWorkspace',
+  ...WORKSPACE_DETAIL_STEP_IDS,
+]);
 
 interface OnboardingStepItemProps {
   step: OnboardingStep;
@@ -61,6 +91,18 @@ export default function OnboardingStepItem({
   );
   const hasPersonalSkill =
     skillsResponse?.data.some((skill) => !skill.isShared) ?? false;
+
+  const needsWorkspace = WORKSPACE_STEP_IDS.has(step.id);
+  const {
+    workspaces,
+    isLoading: areWorkspacesLoading,
+    error: workspacesError,
+  } = useWorkspaces();
+  const { favorites, isLoading: areFavoritesLoading } = useFavorites();
+  const firstWorkspace = workspaces.at(0);
+  const hasUnfavoritedWorkspace =
+    !areFavoritesLoading &&
+    findUnfavoritedWorkspace(workspaces, favorites) !== undefined;
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt
@@ -120,6 +162,45 @@ export default function OnboardingStepItem({
     return { to, spotlight, translationKey: step.translationKey };
   };
 
+  const handleWorkspaceAction = (to: string, spotlight?: TourTargetName) => {
+    armReturn();
+
+    if (!firstWorkspace) {
+      void navigate({ to: '/workspaces' }).then(() => {
+        if (areWorkspacesLoading || workspacesError) return;
+        triggerSpotlight(TOUR_TARGET.createWorkspace, {
+          translationKey: 'createWorkspace',
+        });
+      });
+      return;
+    }
+
+    const hasNoTarget =
+      (spotlight === TOUR_TARGET.assignChatToWorkspace &&
+        isSidebarSpotlightMissing(spotlight)) ||
+      (spotlight === TOUR_TARGET.favoriteWorkspace && !hasUnfavoritedWorkspace);
+
+    if (hasNoTarget) {
+      void navigate({ to });
+      return;
+    }
+
+    const spotlightAfterNavigation = () => {
+      if (spotlight) triggerSpotlight(spotlight);
+    };
+
+    if (!WORKSPACE_DETAIL_STEP_IDS.has(step.id)) {
+      void navigate({ to }).then(spotlightAfterNavigation);
+      return;
+    }
+
+    void navigate({
+      to: '/workspaces/$workspaceId',
+      params: { workspaceId: firstWorkspace.id },
+      search: { tab: WORKSPACE_DETAIL_STEP_TABS[step.id] },
+    }).then(spotlightAfterNavigation);
+  };
+
   const handleAction = () => {
     const action = step.action;
     if (!action) return;
@@ -153,6 +234,11 @@ export default function OnboardingStepItem({
       }).then(() => {
         if (action.spotlight) triggerSpotlight(action.spotlight);
       });
+      return;
+    }
+
+    if (needsWorkspace) {
+      handleWorkspaceAction(action.to, action.spotlight);
       return;
     }
 
