@@ -1,5 +1,8 @@
 import { randomUUID } from 'crypto';
+import type { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { Repository } from 'typeorm';
+import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { LocalWorkspacesRepository } from './local-workspaces.repository';
 import type { WorkspaceMapper } from './mappers/workspace.mapper';
 import type { WorkspaceRecord } from './schema/workspace.record';
@@ -8,6 +11,36 @@ import type { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastruct
 import type { KnowledgeBaseActivationRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base-activation.record';
 
 describe('LocalWorkspacesRepository', () => {
+  it('reads and saves workspaces through the active transaction', async () => {
+    const workspace = { id: randomUUID() };
+    const transactionRepository = {
+      save: jest.fn().mockResolvedValue(workspace),
+      findOne: jest.fn().mockResolvedValue(workspace),
+    };
+    const defaultRepository = { save: jest.fn(), findOne: jest.fn() };
+    const mapper = {
+      toRecord: jest.fn().mockReturnValue(workspace),
+      toDomain: jest.fn().mockReturnValue(workspace),
+    };
+    const repository = new LocalWorkspacesRepository(
+      defaultRepository as unknown as Repository<WorkspaceRecord>,
+      {} as Repository<SkillRecord>,
+      {} as Repository<KnowledgeBaseRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      mapper,
+      {
+        tx: { getRepository: () => transactionRepository },
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+    await expect(repository.findById(randomUUID(), workspace.id)).resolves.toBe(
+      workspace,
+    );
+    await expect(repository.save(workspace as Workspace)).resolves.toBe(
+      workspace,
+    );
+    expect(defaultRepository.save).not.toHaveBeenCalled();
+    expect(defaultRepository.findOne).not.toHaveBeenCalled();
+  });
   it('uses a PostgreSQL-safe activity alias for paginated ordering', async () => {
     const countQuery = {
       where: jest.fn().mockReturnThis(),
@@ -41,6 +74,9 @@ describe('LocalWorkspacesRepository', () => {
       {} as Repository<KnowledgeBaseRecord>,
       {} as Repository<KnowledgeBaseActivationRecord>,
       mapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await repository.findAllByUserId(randomUUID(), {
@@ -84,6 +120,9 @@ describe('LocalWorkspacesRepository', () => {
       knowledgeBaseRepository,
       activationRepository,
       {} as WorkspaceMapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await expect(repository.getContextRefs(workspaceId)).resolves.toEqual({

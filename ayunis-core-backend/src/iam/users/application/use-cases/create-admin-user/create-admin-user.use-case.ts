@@ -31,6 +31,9 @@ export class CreateAdminUserUseCase {
       department: command.department,
     });
 
-    return this.createUserUseCase.execute(createUserCommand);
+    // Only RegisterUserUseCase calls this, inside its transaction; it publishes
+    // UserCreatedEvent itself after commit so listeners never see an
+    // uncommitted user.
+    return this.createUserUseCase.createWithoutPublishing(createUserCommand);
   }
 }

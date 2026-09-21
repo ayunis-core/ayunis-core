@@ -26,6 +26,7 @@ import { CreateTrialCommand } from 'src/iam/trials/application/use-cases/create-
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
+import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
 import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
 import type { User } from 'src/iam/users/domain/user.entity';
@@ -43,6 +44,7 @@ export class RegisterUserUseCase {
     private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
     private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly configService: ConfigService,
+    private readonly publishUserCreated: UserCreatedEventPublisher,
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
@@ -52,6 +54,9 @@ export class RegisterUserUseCase {
     );
     try {
       const { user, shouldConfirmEmail } = await this.register(command);
+      // After commit, like accept-invite and SSO provisioning: listeners open
+      // their own transactions and must be able to see the new user.
+      this.publishUserCreated.publish(user);
       if (shouldConfirmEmail) {
         await this.trySendConfirmationEmail(user);
       }

@@ -55,6 +55,8 @@ File source creation authorizes the skill before external processing starts, enf
 
 `GetWorkspaceSkillsUseCase`, `ActivateWorkspaceSkillByNameUseCase`, `GetWorkspaceAiContextUseCase`, and `BuildWorkspaceRunContextUseCase` remain. Workspace skills are activation candidates; trusted activation derives workspace scope from the persisted thread. `FindActivatableSkillUseCase` resolves personal or workspace activation access, while `SkillActivationService` attaches sources, knowledge bases, and MCP integrations.
 
+`CreateSkillUseCase` and `AssignKnowledgeBaseToSkillUseCase` are exported for workspace tutorial provisioning; they retain the same workspace authorization and ambient transaction behavior as the HTTP paths.
+
 ## Main structure
 
 - `domain/`: `PersonalSkill`, `WorkspaceSkill`, shared `AbstractSkill`, and the `Skill` union.

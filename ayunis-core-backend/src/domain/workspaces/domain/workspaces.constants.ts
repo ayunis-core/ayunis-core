@@ -15,3 +15,7 @@ export const WORKSPACE_MAX_LIST_LIMIT = 100;
  */
 export const WORKSPACE_ICON_PATTERN = /^[a-z][a-z0-9-]{0,63}$/;
 export const WORKSPACE_COLOR_PATTERN = /^(?:[a-z]{1,31}|#[0-9a-fA-F]{6})$/;
+
+export const WORKSPACE_TUTORIAL_NAME = "So geht's | Arbeitsbereiche";
+export const WORKSPACE_TUTORIAL_HELP_ARTICLE_URL =
+  'https://help.ayunis.com/de/workspaces/';
