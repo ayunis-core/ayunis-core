@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
@@ -36,6 +36,7 @@ export class ListOrgSubscriptionsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSubscriptionError)
   async execute(
     query: ListOrgSubscriptionsQuery,
   ): Promise<ListOrgSubscriptionsResult> {
@@ -44,22 +45,11 @@ export class ListOrgSubscriptionsUseCase {
       'Listing organization subscriptions',
     );
 
-    try {
-      this.assertSuperAdmin(query.orgId);
-      const subscriptions = await this.subscriptionRepository.findByOrgId(
-        query.orgId,
-      );
-      return this.toResult(subscriptions);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        { err: error as Error, orgId: query.orgId },
-        'Failed to list organization subscriptions',
-      );
-      throw new UnexpectedSubscriptionError(
-        'Failed to list organization subscriptions',
-      );
-    }
+    this.assertSuperAdmin(query.orgId);
+    const subscriptions = await this.subscriptionRepository.findByOrgId(
+      query.orgId,
+    );
+    return this.toResult(subscriptions);
   }
 
   private assertSuperAdmin(orgId: UUID): void {

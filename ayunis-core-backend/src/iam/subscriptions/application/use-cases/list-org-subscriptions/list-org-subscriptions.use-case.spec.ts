@@ -13,7 +13,10 @@ import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal
 import { SubscriptionLifecycleStatus } from 'src/iam/subscriptions/domain/value-objects/subscription-lifecycle-status.enum';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UnauthorizedSubscriptionAccessError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  UnauthorizedSubscriptionAccessError,
+  UnexpectedSubscriptionError,
+} from 'src/iam/subscriptions/application/subscription.errors';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
@@ -129,6 +132,19 @@ describe('ListOrgSubscriptionsUseCase', () => {
       UnauthorizedSubscriptionAccessError,
     );
     expect(subscriptionRepository.findByOrgId).not.toHaveBeenCalled();
+  });
+
+  it('wraps an unexpected repository failure in UnexpectedSubscriptionError', async () => {
+    subscriptionRepository.findByOrgId.mockRejectedValue(
+      new Error('connection reset'),
+    );
+
+    await expect(useCase.execute(createQuery())).rejects.toThrow(
+      UnexpectedSubscriptionError,
+    );
+    await expect(useCase.execute(createQuery())).rejects.toThrow(
+      /connection reset/,
+    );
   });
 
   it('returns an empty list when the organization has no subscriptions', async () => {
