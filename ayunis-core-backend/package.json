@@ -103,7 +103,7 @@
     "nestjs-cls": "^6.2.2",
     "nestjs-pino": "^4.6.1",
     "node-html-parser": "^7.1.0",
-    "nodemailer": "^7.0.5",
+    "nodemailer": "^10.0.10",
     "ollama": "catalog:",
     "openai": "catalog:",
     "openid-client": "^6.8.7",
