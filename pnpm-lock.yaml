@@ -372,9 +372,6 @@ importers:
       '@types/node':
         specifier: ^24.12.2
         version: 24.13.3
-      '@types/nodemailer':
-        specifier: ^6.4.17
-        version: 6.4.23
       '@types/papaparse':
         specifier: ^5.5.2
         version: 5.5.2
@@ -6246,9 +6243,6 @@ packages:
 
   '@types/node@25.9.1':
     resolution: {integrity: sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg==}
-
-  '@types/nodemailer@6.4.23':
-    resolution: {integrity: sha512-aFV3/NsYFLSx9mbb5gtirBSXJnAlrusoKNuPbxsASWc7vrKLmIrTQRpdcxNcSFL3VW2A2XpeLEavwb2qMi6nlQ==}
 
   '@types/papaparse@5.5.2':
     resolution: {integrity: sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==}
@@ -18709,10 +18703,6 @@ snapshots:
   '@types/node@25.9.1':
     dependencies:
       undici-types: 7.24.6
-
-  '@types/nodemailer@6.4.23':
-    dependencies:
-      '@types/node': 24.13.3
 
   '@types/papaparse@5.5.2':
     dependencies:

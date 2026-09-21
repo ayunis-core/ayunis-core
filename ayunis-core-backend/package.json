@@ -153,7 +153,6 @@
     "@types/ms": "^2.1.0",
     "@types/multer": "^2.2.0",
     "@types/node": "^24.12.2",
-    "@types/nodemailer": "^6.4.17",
     "@types/papaparse": "^5.5.2",
     "@types/passport-http-bearer": "^1.0.42",
     "@types/passport-jwt": "^4.0.1",
