@@ -282,6 +282,9 @@ services:
     image: gotenberg/gotenberg:8
     container_name: ayunis-gotenberg-prod
     restart: unless-stopped
+    environment:
+      # Match the backend converter timeout so large Office files can finish.
+      API_TIMEOUT: 10m
     networks:
       - ayunis-network
     healthcheck:
