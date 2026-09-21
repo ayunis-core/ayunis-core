@@ -296,6 +296,11 @@ test("resets project page state when switching projects", async ({
     attach: true,
   });
 
+  await generatedApi.favoritesControllerToggle(
+    { referenceType: "workspace", referenceId: secondFixture.workspace.id },
+    { api },
+  );
+
   await page.goto(`/workspaces/${firstFixture.workspace.id}`);
   await expect(page.getByTestId("workspace-page")).toBeVisible();
   await page.getByTestId("workspace-tab-instructions").click();
