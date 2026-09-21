@@ -146,6 +146,9 @@ services:
   gotenberg:
     image: gotenberg/gotenberg:8
     restart: unless-stopped
+    environment:
+      # Match the backend converter timeout so large Office files can finish.
+      API_TIMEOUT: 10m
     ports:
       - '${GOTENBERG_HOST_PORT:-3100}:3000'
     healthcheck:
