@@ -4,12 +4,15 @@ import {
   getSuperAdminOrgsControllerGetOrgByIdQueryKey,
   superAdminSubscriptionsControllerGetSubscription,
   getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
+  superAdminSubscriptionsControllerGetSubscriptionHistory,
+  getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey,
   superAdminUsersControllerGetUsersByOrgId,
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
   superAdminTrialsControllerGetTrialByOrgId,
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
 } from '@/shared/api';
 import SuperAdminSettingsOrgPage from '@/pages/super-admin-settings/org';
+import { toSubscriptionHistoryItem } from '@/pages/super-admin-settings/org/lib/subscription-history';
 import { z } from 'zod';
 
 const USERS_PER_PAGE = 25;
@@ -66,6 +69,12 @@ export const Route = createFileRoute(
       queryKey: getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(id),
       queryFn: () => superAdminSubscriptionsControllerGetSubscription(id),
     });
+    const subscriptionHistoryResult = await queryClient.fetchQuery({
+      queryKey:
+        getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey(id),
+      queryFn: () =>
+        superAdminSubscriptionsControllerGetSubscriptionHistory(id),
+    });
     const trialResult = await queryClient.fetchQuery({
       queryKey: getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(id),
       queryFn: () => superAdminTrialsControllerGetTrialByOrgId(id),
@@ -74,6 +83,7 @@ export const Route = createFileRoute(
       org,
       usersResponse,
       subscriptionResult,
+      subscriptionHistoryResult,
       trialResult,
       usersSearch,
       usersPage,
@@ -92,6 +102,10 @@ function RouteComponent() {
       usersSearch={data.usersSearch}
       usersCurrentPage={data.usersPage}
       subscription={data.subscriptionResult.subscription ?? null}
+      subscriptionHistory={data.subscriptionHistoryResult.subscriptions.map(
+        toSubscriptionHistoryItem,
+      )}
+      activeSubscriptionCount={data.subscriptionHistoryResult.activeCount}
       trial={data.trialResult.trial ?? null}
       initialTab={tab}
     />

@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum SubscriptionErrorCode {
   SUBSCRIPTION_NOT_FOUND = 'SUBSCRIPTION_NOT_FOUND',
@@ -212,9 +212,12 @@ export class InvalidSubscriptionDataError extends SubscriptionError {
  * Error thrown when an unexpected error occurs
  */
 export class UnexpectedSubscriptionError extends SubscriptionError {
-  constructor(reason?: string, metadata?: ErrorMetadata) {
+  // Accepts an Error so it can be used as the @HandleUnexpectedErrors boundary,
+  // which hands the decorator the raw cause.
+  constructor(reason?: string | Error, metadata?: ErrorMetadata) {
+    const detail = reason instanceof Error ? reason.message : reason;
     super(
-      reason ? `Unexpected error: ${reason}` : 'Unexpected error',
+      detail ? `Unexpected error: ${detail}` : 'Unexpected error',
       SubscriptionErrorCode.UNEXPECTED_ERROR,
       500,
       metadata,

@@ -835,6 +835,93 @@ export interface UpdateStartDateDto {
 
 export interface UpdateMonthlyCreditsDto { [key: string]: unknown }
 
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type OrgSubscriptionHistoryItemDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Subscription type
+ */
+export type OrgSubscriptionHistoryItemDtoType = typeof OrgSubscriptionHistoryItemDtoType[keyof typeof OrgSubscriptionHistoryItemDtoType];
+
+
+export const OrgSubscriptionHistoryItemDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * Renewal cycle of the subscription (seat-based only)
+ */
+export type OrgSubscriptionHistoryItemDtoRenewalCycle = typeof OrgSubscriptionHistoryItemDtoRenewalCycle[keyof typeof OrgSubscriptionHistoryItemDtoRenewalCycle];
+
+
+export const OrgSubscriptionHistoryItemDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+/**
+ * Lifecycle status of this subscription record
+ */
+export type OrgSubscriptionHistoryItemDtoStatus = typeof OrgSubscriptionHistoryItemDtoStatus[keyof typeof OrgSubscriptionHistoryItemDtoStatus];
+
+
+export const OrgSubscriptionHistoryItemDtoStatus = {
+  ACTIVE: 'ACTIVE',
+  SCHEDULED: 'SCHEDULED',
+  CANCELLED: 'CANCELLED',
+  HISTORICAL: 'HISTORICAL',
+} as const;
+
+export interface OrgSubscriptionHistoryItemDto {
+  /** Unique identifier of the subscription */
+  id: string;
+  /** Date when the subscription was created */
+  createdAt: string;
+  /** Date when the subscription was last updated */
+  updatedAt: string;
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: OrgSubscriptionHistoryItemDtoCancelledAt;
+  /** Date when the subscription becomes active */
+  startsAt: string;
+  /** Organization ID associated with the subscription */
+  orgId: string;
+  /** Subscription type */
+  type: OrgSubscriptionHistoryItemDtoType;
+  /** Number of seats in the subscription (seat-based only) */
+  noOfSeats?: number;
+  /** Price per seat in the subscription (seat-based only) */
+  pricePerSeat?: number;
+  /** Renewal cycle of the subscription (seat-based only) */
+  renewalCycle?: OrgSubscriptionHistoryItemDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles (seat-based only) */
+  renewalCycleAnchor?: string;
+  /** Monthly credit budget (usage-based only) */
+  monthlyCredits?: number;
+  /**
+     * Number of available seats (total seats minus invites, seat-based only)
+     * @nullable
+     */
+  availableSeats?: number | null;
+  /** Date of the next renewal */
+  nextRenewalDate: string;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
+  /** Lifecycle status of this subscription record */
+  status: OrgSubscriptionHistoryItemDtoStatus;
+  /** Whether this is the newest subscription for the organization */
+  isLatest: boolean;
+}
+
+export interface OrgSubscriptionsResponseDto {
+  /** All subscriptions belonging to the organization, newest first */
+  subscriptions: OrgSubscriptionHistoryItemDto[];
+  /** How many subscriptions are currently serving access (including cancelled seat-based records still inside their paid period) */
+  activeCount: number;
+}
+
 export interface UpdateSeatsDto { [key: string]: unknown }
 
 /**
