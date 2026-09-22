@@ -41,7 +41,7 @@ export class FindThreadUseCase {
       new CountMessagesTokensCommand(thread.messages),
     );
     const warningThreshold = getLongChatWarningThresholdTokens(
-      thread.model?.model.name,
+      thread.model?.model.contextWindowSize,
     );
     const isLongChat = tokenCount > warningThreshold;
 

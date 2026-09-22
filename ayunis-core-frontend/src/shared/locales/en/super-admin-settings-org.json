@@ -578,6 +578,8 @@
         "provider": "Provider",
         "providerPlaceholder": "Select a provider",
         "displayName": "Display name",
+        "contextWindowSize": "Context window size",
+        "contextWindowSizePlaceholder": "e.g. 128000",
         "archived": "Archived",
         "providerFault": "Known upstream/provider fault",
         "cancel": "Cancel",
@@ -602,6 +604,14 @@
         "embeddingDisplayNamePlaceholder": "e.g. Text Embedding 3 Small",
         "imageGenerationNamePlaceholder": "e.g. gpt-image-1",
         "imageGenerationDisplayNamePlaceholder": "e.g. GPT Image 1"
+      },
+      "validation": {
+        "contextWindowSize": {
+          "isInt": "Context window size must be a whole number",
+          "min": "Context window size must be at least 1",
+          "invalid": "Enter a valid context window size"
+        },
+        "invalid": "Review the entered model details"
       }
     }
   }

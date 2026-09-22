@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
+import { MAX_CONTEXT_WINDOW_SIZE } from 'src/domain/models/domain/models/language.model';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { BasePermittedModelResponseDto } from './base-permitted-model-response.dto';
@@ -35,6 +36,16 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
     description: 'Whether the model supports vision (image processing)',
   })
   canVision: boolean;
+
+  @ApiProperty({
+    type: 'integer',
+    required: false,
+    nullable: true,
+    minimum: 1,
+    maximum: MAX_CONTEXT_WINDOW_SIZE,
+    description: 'Maximum context window size in tokens',
+  })
+  contextWindowSize?: number;
 
   @ApiProperty({
     type: 'boolean',

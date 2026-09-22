@@ -9,6 +9,7 @@ import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
 import { LanguageModelTierField } from './LanguageModelTierField';
 import { LanguageModelDescriptionField } from './LanguageModelDescriptionField';
+import { LanguageModelContextWindowSizeField } from './LanguageModelContextWindowSizeField';
 import { ModelPricingFields } from './ModelPricingFields';
 import { ModelCheckboxField } from './ModelCheckboxField';
 
@@ -30,6 +31,7 @@ export function CreateLanguageModelDialog({
       canStream: false,
       canUseTools: false,
       canVision: false,
+      contextWindowSize: undefined,
       isReasoning: false,
       isArchived: false,
       hasProviderFault: false,
@@ -38,10 +40,13 @@ export function CreateLanguageModelDialog({
     },
   });
 
-  const { createLanguageModel, isCreating } = useCreateLanguageModel(() => {
-    onOpenChange(false);
-    form.reset();
-  });
+  const { createLanguageModel, isCreating } = useCreateLanguageModel(
+    form,
+    () => {
+      onOpenChange(false);
+      form.reset();
+    },
+  );
 
   const handleSubmit = (data: LanguageModelFormData) => {
     createLanguageModel(normalizeLanguageModelFormData(data));
@@ -64,6 +69,7 @@ export function CreateLanguageModelDialog({
     >
       <LanguageModelTierField form={form} disabled={isCreating} />
       <LanguageModelDescriptionField form={form} disabled={isCreating} />
+      <LanguageModelContextWindowSizeField form={form} disabled={isCreating} />
       <ModelCheckboxField
         control={form.control}
         name="hasProviderFault"

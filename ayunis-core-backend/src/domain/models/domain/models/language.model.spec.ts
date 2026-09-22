@@ -41,6 +41,48 @@ describe('LanguageModel', () => {
     });
   });
 
+  describe('context window size', () => {
+    it('preserves a provided context window size', () => {
+      const model = new LanguageModel({
+        name: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        displayName: 'GPT-4o',
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: true,
+        contextWindowSize: 128_000,
+        isArchived: false,
+      });
+
+      expect(model).toHaveProperty('contextWindowSize', 128_000);
+    });
+
+    it('is undefined when omitted', () => {
+      expect(makeModel({})).toHaveProperty('contextWindowSize', undefined);
+    });
+
+    it.each([0, -1, 1.5, 2_147_483_648])(
+      'rejects an invalid context window size of %p',
+      (contextWindowSize) => {
+        expect(
+          () =>
+            new LanguageModel({
+              name: 'gpt-4o',
+              provider: ModelProvider.OPENAI,
+              displayName: 'GPT-4o',
+              canStream: true,
+              canUseTools: true,
+              isReasoning: false,
+              canVision: true,
+              contextWindowSize,
+              isArchived: false,
+            }),
+        ).toThrow(RangeError);
+      },
+    );
+  });
+
   describe('consumesCredits', () => {
     it('is false when both token costs are undefined (free open-source model)', () => {
       expect(makeModel({}).consumesCredits).toBe(false);

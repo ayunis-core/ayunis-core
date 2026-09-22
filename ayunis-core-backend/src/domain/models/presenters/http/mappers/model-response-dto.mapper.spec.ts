@@ -48,6 +48,30 @@ describe('ModelResponseDtoMapper', () => {
     });
   });
 
+  it('maps the context window size for permitted language models', () => {
+    const model = new LanguageModel({
+      id: '123e4567-e89b-12d3-a456-426614174333',
+      name: 'gpt-4o',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT-4o',
+      canStream: true,
+      canUseTools: true,
+      isReasoning: false,
+      canVision: true,
+      contextWindowSize: 128_000,
+      isArchived: false,
+    });
+    const permittedModel = new PermittedLanguageModel({
+      id: '123e4567-e89b-12d3-a456-426614174444',
+      model,
+      orgId: '123e4567-e89b-12d3-a456-426614174555',
+    });
+
+    const dto = mapper.toLanguageModelDto(permittedModel);
+
+    expect(dto).toHaveProperty('contextWindowSize', 128_000);
+  });
+
   it('maps permitted language models to DTOs including the usage tier', () => {
     const model = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174333',

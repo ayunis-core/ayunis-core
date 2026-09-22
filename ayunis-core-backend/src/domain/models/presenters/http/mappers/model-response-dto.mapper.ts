@@ -36,6 +36,7 @@ export class ModelResponseDtoMapper {
       canStream: permittedModel.model.canStream,
       isReasoning: permittedModel.model.isReasoning,
       canVision: permittedModel.model.canVision,
+      contextWindowSize: permittedModel.model.contextWindowSize,
       hasProviderFault: permittedModel.model.hasProviderFault,
       isDefault: permittedModel.isDefault,
       anonymousOnly: permittedModel.anonymousOnly,

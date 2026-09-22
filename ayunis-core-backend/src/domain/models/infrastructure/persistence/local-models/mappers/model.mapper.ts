@@ -38,27 +38,31 @@ export class ModelMapper {
     return undefined;
   }
 
+  private toLanguageDomain(record: LanguageModelRecord): LanguageModel {
+    return new LanguageModel({
+      id: record.id,
+      name: record.name,
+      provider: record.provider,
+      displayName: record.displayName,
+      canStream: record.canStream,
+      canUseTools: record.canUseTools,
+      isReasoning: record.isReasoning,
+      canVision: record.canVision,
+      contextWindowSize: record.contextWindowSize ?? undefined,
+      isArchived: record.isArchived,
+      hasProviderFault: record.hasProviderFault,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      inputTokenCost: record.inputTokenCost,
+      outputTokenCost: record.outputTokenCost,
+      tier: this.parseTier(record.tier, record.id, record.name),
+      description: record.description ?? undefined,
+    });
+  }
+
   toDomain(record: ModelRecord): Model {
-    // TypeORM will provide the concrete record type based on the discriminator
     if (record instanceof LanguageModelRecord) {
-      return new LanguageModel({
-        id: record.id,
-        name: record.name,
-        provider: record.provider,
-        displayName: record.displayName,
-        canStream: record.canStream,
-        canUseTools: record.canUseTools,
-        isReasoning: record.isReasoning,
-        canVision: record.canVision,
-        isArchived: record.isArchived,
-        hasProviderFault: record.hasProviderFault,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        inputTokenCost: record.inputTokenCost,
-        outputTokenCost: record.outputTokenCost,
-        tier: this.parseTier(record.tier, record.id, record.name),
-        description: record.description ?? undefined,
-      });
+      return this.toLanguageDomain(record);
     }
 
     if (record instanceof EmbeddingModelRecord) {
@@ -93,26 +97,31 @@ export class ModelMapper {
     throw new Error(`Unknown model record type: ${record.constructor.name}`);
   }
 
+  private toLanguageRecord(domain: LanguageModel): LanguageModelRecord {
+    const record = new LanguageModelRecord();
+    record.id = domain.id;
+    record.name = domain.name;
+    record.provider = domain.provider;
+    record.displayName = domain.displayName;
+    record.canStream = domain.canStream;
+    record.canUseTools = domain.canUseTools;
+    record.isReasoning = domain.isReasoning;
+    record.canVision = domain.canVision;
+    record.contextWindowSize = domain.contextWindowSize ?? null;
+    record.hasProviderFault = domain.hasProviderFault;
+    record.isArchived = domain.isArchived;
+    record.createdAt = domain.createdAt;
+    record.updatedAt = domain.updatedAt;
+    record.inputTokenCost = domain.inputTokenCost;
+    record.outputTokenCost = domain.outputTokenCost;
+    record.tier = domain.tier ?? null;
+    record.description = domain.description ?? null;
+    return record;
+  }
+
   toRecord(domain: Model): ModelRecord {
     if (domain instanceof LanguageModel) {
-      const record = new LanguageModelRecord();
-      record.id = domain.id;
-      record.name = domain.name;
-      record.provider = domain.provider;
-      record.displayName = domain.displayName;
-      record.canStream = domain.canStream;
-      record.canUseTools = domain.canUseTools;
-      record.isReasoning = domain.isReasoning;
-      record.canVision = domain.canVision;
-      record.hasProviderFault = domain.hasProviderFault;
-      record.isArchived = domain.isArchived;
-      record.createdAt = domain.createdAt;
-      record.updatedAt = domain.updatedAt;
-      record.inputTokenCost = domain.inputTokenCost;
-      record.outputTokenCost = domain.outputTokenCost;
-      record.tier = domain.tier ?? null;
-      record.description = domain.description ?? null;
-      return record;
+      return this.toLanguageRecord(domain);
     }
 
     if (domain instanceof EmbeddingModel) {

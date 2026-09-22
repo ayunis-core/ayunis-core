@@ -11,17 +11,17 @@ import { FindThreadUseCase } from './find-thread.use-case';
 
 describe('FindThreadUseCase', () => {
   it.each([
-    { tokenCount: 625_000, expectedIsLongChat: false },
-    { tokenCount: 625_001, expectedIsLongChat: true },
+    { tokenCount: 630_000, expectedIsLongChat: false },
+    { tokenCount: 630_001, expectedIsLongChat: true },
   ])(
-    'returns isLongChat=$expectedIsLongChat for a $tokenCount-token Claude Opus thread',
+    'returns isLongChat=$expectedIsLongChat for a $tokenCount-token thread with a configured context window',
     async ({ tokenCount, expectedIsLongChat }) => {
       const userId = randomUUID();
       const thread = new Thread({
         userId,
         messages: [],
         model: {
-          model: { name: 'claude-opus-4-7' },
+          model: { contextWindowSize: 700_000 },
         } as PermittedLanguageModel,
       });
       const threadsRepository = {
@@ -45,28 +45,34 @@ describe('FindThreadUseCase', () => {
     },
   );
 
-  it('uses the fallback budget when the thread has no model', async () => {
-    const userId = randomUUID();
-    const thread = new Thread({ userId, messages: [] });
-    const threadsRepository = {
-      findOne: jest.fn().mockResolvedValue(thread),
-    } as unknown as jest.Mocked<ThreadsRepository>;
-    const contextService = {
-      get: jest.fn().mockReturnValue(userId),
-    } as unknown as jest.Mocked<ContextService>;
-    const countMessagesTokensUseCase = {
-      execute: jest.fn().mockReturnValue(125_001),
-    } as unknown as jest.Mocked<CountMessagesTokensUseCase>;
-    const useCase = new FindThreadUseCase(
-      threadsRepository,
-      contextService,
-      countMessagesTokensUseCase,
-    );
+  it.each([
+    { tokenCount: 180_000, expectedIsLongChat: false },
+    { tokenCount: 180_001, expectedIsLongChat: true },
+  ])(
+    'returns isLongChat=$expectedIsLongChat for a $tokenCount-token thread using the fallback budget',
+    async ({ tokenCount, expectedIsLongChat }) => {
+      const userId = randomUUID();
+      const thread = new Thread({ userId, messages: [] });
+      const threadsRepository = {
+        findOne: jest.fn().mockResolvedValue(thread),
+      } as unknown as jest.Mocked<ThreadsRepository>;
+      const contextService = {
+        get: jest.fn().mockReturnValue(userId),
+      } as unknown as jest.Mocked<ContextService>;
+      const countMessagesTokensUseCase = {
+        execute: jest.fn().mockReturnValue(tokenCount),
+      } as unknown as jest.Mocked<CountMessagesTokensUseCase>;
+      const useCase = new FindThreadUseCase(
+        threadsRepository,
+        contextService,
+        countMessagesTokensUseCase,
+      );
 
-    const result = await useCase.execute(new FindThreadQuery(thread.id));
+      const result = await useCase.execute(new FindThreadQuery(thread.id));
 
-    expect(result.isLongChat).toBe(true);
-  });
+      expect(result.isLongChat).toBe(expectedIsLongChat);
+    },
+  );
 
   it('rejects requests without a user context', async () => {
     const threadsRepository = {

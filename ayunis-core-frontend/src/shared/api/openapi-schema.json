@@ -13295,6 +13295,12 @@
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)"
           },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
           "isPermitted": {
             "type": "boolean",
             "description": "Whether the model is permitted to be used"
@@ -13460,6 +13466,13 @@
           "canVision": {
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)"
+          },
+          "contextWindowSize": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647,
+            "description": "Maximum context window size in tokens"
           },
           "hasProviderFault": {
             "type": "boolean",
@@ -13787,6 +13800,13 @@
             "description": "Whether the model supports vision (image processing)",
             "example": false
           },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens",
+            "example": 128000,
+            "minimum": 1,
+            "maximum": 2147483647
+          },
           "hasProviderFault": {
             "type": "boolean",
             "description": "Whether the upstream provider currently has a known fault for this model",
@@ -14046,6 +14066,14 @@
             "description": "Whether the model supports vision (image processing)",
             "example": false
           },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens",
+            "example": 128000,
+            "minimum": 1,
+            "maximum": 2147483647,
+            "nullable": true
+          },
           "isArchived": {
             "type": "boolean",
             "description": "Whether the model is archived",
@@ -14144,6 +14172,14 @@
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)",
             "example": false
+          },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens",
+            "example": 128000,
+            "minimum": 1,
+            "maximum": 2147483647,
+            "nullable": true
           },
           "isArchived": {
             "type": "boolean",

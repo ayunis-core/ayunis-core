@@ -23,6 +23,7 @@ export class CatalogModelResponseDtoMapper {
       canUseTools: model.canUseTools,
       isReasoning: model.isReasoning,
       canVision: model.canVision,
+      contextWindowSize: model.contextWindowSize,
       hasProviderFault: model.hasProviderFault,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
