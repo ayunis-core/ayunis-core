@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.41.0](https://github.com/ayunis-core/ayunis-core/compare/v2.40.3...v2.41.0) (2026-09-22)
+
+
+### Features
+
+* **admin:** show organisation subscription history to super admins (AYC-977) ([#1695](https://github.com/ayunis-core/ayunis-core/issues/1695)) ([6a4b6b6](https://github.com/ayunis-core/ayunis-core/commit/6a4b6b65a583b9833a8aeb475af80b1097f09db1))
+* **anonymization:** raise whitelist pattern limit to 1000 characters (AYC-951) ([#1730](https://github.com/ayunis-core/ayunis-core/issues/1730)) ([246ebde](https://github.com/ayunis-core/ayunis-core/commit/246ebdedf3b9e941e73f02768d434412d250b38a))
+* **workspaces:** add help links to workspace views (AYC-000) ([#1733](https://github.com/ayunis-core/ayunis-core/issues/1733)) ([33f2e83](https://github.com/ayunis-core/ayunis-core/commit/33f2e83a5db79d2a581b82ac3195c2e133af239c))
+
+
+### Bug Fixes
+
+* **admin-settings:** render credit budget usage link as outline button (AYC-915) ([#1628](https://github.com/ayunis-core/ayunis-core/issues/1628)) ([756fc62](https://github.com/ayunis-core/ayunis-core/commit/756fc62485c492991a38846c33e18084524c8a4d))
+* **auth:** direct existing customers to their own administrator on the closed registration screen (AYC-967) ([#1728](https://github.com/ayunis-core/ayunis-core/issues/1728)) ([3bfaec8](https://github.com/ayunis-core/ayunis-core/commit/3bfaec89884f22c2f470a84ab4dad14f70bd2518))
+* **chat:** accept audio and markdown files on drag-and-drop (AYC-742) ([#1729](https://github.com/ayunis-core/ayunis-core/issues/1729)) ([0e8b783](https://github.com/ayunis-core/ayunis-core/commit/0e8b783fa98a5bde986ef32ef68f14e525fc5656))
+* **chat:** derive context budget from selected model (AYC-1023) ([#1722](https://github.com/ayunis-core/ayunis-core/issues/1722)) ([9237d37](https://github.com/ayunis-core/ayunis-core/commit/9237d37b7fba1256ec225662a0c8cf2782fcd4de))
+* **chat:** keep streamed responses in their originating chat (AYC-978) ([#1726](https://github.com/ayunis-core/ayunis-core/issues/1726)) ([6e7900a](https://github.com/ayunis-core/ayunis-core/commit/6e7900af71791227907c55e1d7dc4fa1cfca1d0d))
+* **inference:** preserve unsupported MCP tool schemas (AYC-911) ([#1724](https://github.com/ayunis-core/ayunis-core/issues/1724)) ([88e9491](https://github.com/ayunis-core/ayunis-core/commit/88e9491d6a2ef63d7792b202b699033cdc139ca2))
+* **models:** make context windows configurable (AYC-1023) ([#1727](https://github.com/ayunis-core/ayunis-core/issues/1727)) ([6a5da49](https://github.com/ayunis-core/ayunis-core/commit/6a5da49cab65388fbd44dd9d65dd3412de2c04a8))
+* **rag:** align crawled chunk text coordinates (AYC-541) ([#1725](https://github.com/ayunis-core/ayunis-core/issues/1725)) ([d6459e6](https://github.com/ayunis-core/ayunis-core/commit/d6459e665175862d2e509a86fdc5745dc3e7e38b))
+* **rag:** allow long document conversions (AYC-993) ([#1705](https://github.com/ayunis-core/ayunis-core/issues/1705)) ([73dc027](https://github.com/ayunis-core/ayunis-core/commit/73dc02758ef12ac3c8bd5a6f0ac96ace6c4aa6fa))
+* **subscriptions:** manage the newest subscription, not the active one (AYC-995) ([#1707](https://github.com/ayunis-core/ayunis-core/issues/1707)) ([af4c17f](https://github.com/ayunis-core/ayunis-core/commit/af4c17f9eac367fb30d55ece7ceb48eedaa46085))
+* **workspaces:** align German knowledge terminology (AYC-1020) ([#1720](https://github.com/ayunis-core/ayunis-core/issues/1720)) ([6c8c0c7](https://github.com/ayunis-core/ayunis-core/commit/6c8c0c7e742bc4fabef7dbad517c58b75bf1fb09))
+* **workspaces:** keep favorites an explicit user choice (AYC-1016) ([#1718](https://github.com/ayunis-core/ayunis-core/issues/1718)) ([c575427](https://github.com/ayunis-core/ayunis-core/commit/c575427bfd4c2bf27829e9a702df4cc81a821955))
+
+
+### Code Refactoring
+
+* **context:** centralize required user context access (AYC-992) ([#1706](https://github.com/ayunis-core/ayunis-core/issues/1706)) ([f0c00e8](https://github.com/ayunis-core/ayunis-core/commit/f0c00e8bf6288ecf8bb15e2b1aea20eee7f046bf))
+
+
+### Miscellaneous
+
+* **deps-sandbox:** bump matplotlib ([#1700](https://github.com/ayunis-core/ayunis-core/issues/1700)) ([61c9d81](https://github.com/ayunis-core/ayunis-core/commit/61c9d815fbf2a68e6e63bbb91579cd97d8b05a72))
+* **deps-sandbox:** bump pandas in /ayunis-core-code-execution/sandbox ([#1699](https://github.com/ayunis-core/ayunis-core/issues/1699)) ([490200f](https://github.com/ayunis-core/ayunis-core/commit/490200f412dc373f2caad82d5a0e3ca0ab41c5c1))
+* **deps:** bump nodemailer from 7.0.13 to 10.0.10 ([#1702](https://github.com/ayunis-core/ayunis-core/issues/1702)) ([dfe4697](https://github.com/ayunis-core/ayunis-core/commit/dfe46972a6f62c676c3f6aa3d039ce016828f16b))
+* **deps:** bump recharts from 2.15.4 to 3.10.1 ([#1703](https://github.com/ayunis-core/ayunis-core/issues/1703)) ([ffa133d](https://github.com/ayunis-core/ayunis-core/commit/ffa133d241acc71cd6dc1c4d112f592c4b9c179c))
+* **deps:** hold undici on the major node embeds (AYC-000) ([#1710](https://github.com/ayunis-core/ayunis-core/issues/1710)) ([87d6824](https://github.com/ayunis-core/ayunis-core/commit/87d68245883050eb260a436039943774288ce101))
+
+
+### CI/CD
+
+* **e2e:** configure seat-based subscription prices (AYC-000) ([#1696](https://github.com/ayunis-core/ayunis-core/issues/1696)) ([0cec120](https://github.com/ayunis-core/ayunis-core/commit/0cec1209f2609cd70f057299a42b29e92559ca68))
+
 ## [2.40.3](https://github.com/ayunis-core/ayunis-core/compare/v2.40.2...v2.40.3) (2026-09-17)
 
 
