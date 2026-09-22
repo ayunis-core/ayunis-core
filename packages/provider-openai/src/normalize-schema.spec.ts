@@ -464,6 +464,34 @@ describe('normalizeSchemaForOpenAI', () => {
     });
   });
 
+  it('removes propertyNames from Linear MCP object parameters', () => {
+    expect(
+      normalizeSchemaForOpenAI({
+        type: 'object',
+        properties: {
+          anchor: {
+            type: 'object',
+            propertyNames: { type: 'string' },
+            additionalProperties: {},
+          },
+        },
+        additionalProperties: false,
+      }),
+    ).toEqual({
+      type: 'object',
+      properties: {
+        anchor: {
+          type: ['object', 'null'],
+          properties: {},
+          required: [],
+          additionalProperties: false,
+        },
+      },
+      required: ['anchor'],
+      additionalProperties: false,
+    });
+  });
+
   it('recurses into array items', () => {
     expect(
       normalizeSchemaForOpenAI({

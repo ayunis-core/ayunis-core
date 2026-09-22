@@ -58,6 +58,181 @@ describe('convertTool', () => {
     expect(params.required).toEqual(['url']);
     expect(tool.function.strict).toBe(true);
   });
+
+  it('preserves free-form object maps by using non-strict mode', () => {
+    const parameters = {
+      type: 'object',
+      properties: {
+        properties: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+        },
+      },
+      required: ['properties'],
+      additionalProperties: false,
+    };
+
+    const tool = convertTool({
+      name: 'hubspot-batch-create-objects',
+      description: 'Creates HubSpot objects',
+      parameters,
+    });
+
+    expect(tool.function.parameters).toEqual(parameters);
+    expect(tool.function.strict).toBe(false);
+  });
+
+  it('uses non-strict mode for unconstrained values and arrays', () => {
+    const parameters = {
+      type: 'object',
+      properties: {
+        value: { description: 'Any filter value' },
+        values: { type: 'array' },
+      },
+      additionalProperties: false,
+    };
+
+    const tool = convertTool({
+      name: 'hubspot-search-objects',
+      description: 'Searches HubSpot objects',
+      parameters,
+    });
+
+    expect(tool.function.parameters).toEqual(parameters);
+    expect(tool.function.strict).toBe(false);
+  });
+
+  it('preserves propertyNames maps by using non-strict mode', () => {
+    const parameters = {
+      type: 'object',
+      properties: {
+        anchor: {
+          type: 'object',
+          propertyNames: { type: 'string' },
+          additionalProperties: {},
+        },
+      },
+      additionalProperties: false,
+    };
+
+    const tool = convertTool({
+      name: 'save_diff_comment',
+      description: 'Saves a diff comment',
+      parameters,
+    });
+
+    expect(tool.function.parameters).toEqual(parameters);
+    expect(tool.function.strict).toBe(false);
+  });
+
+  it('keeps tuple arrays in strict mode after normalization', () => {
+    const tool = convertTool({
+      name: 'tuple-tool',
+      description: 'Accepts a tuple',
+      parameters: {
+        type: 'object',
+        properties: {
+          values: {
+            type: 'array',
+            items: [{ type: 'string' }, { type: 'number' }],
+          },
+        },
+      },
+    });
+
+    expect(tool.function.parameters).toMatchObject({
+      properties: {
+        values: {
+          items: { anyOf: [{ type: 'string' }, { type: 'number' }] },
+        },
+      },
+    });
+    expect(tool.function.strict).toBe(true);
+  });
+
+  it('normalizes tuple arrays without closing maps in non-strict mode', () => {
+    const tool = convertTool({
+      name: 'mixed-schema-tool',
+      description: 'Accepts a map and a tuple',
+      parameters: {
+        type: 'object',
+        properties: {
+          metadata: { type: 'object', additionalProperties: true },
+          values: {
+            type: 'array',
+            items: [{ type: 'string' }, { type: 'number' }],
+          },
+        },
+      },
+    });
+
+    expect(tool.function.parameters).toEqual({
+      type: 'object',
+      properties: {
+        metadata: { type: 'object', additionalProperties: true },
+        values: {
+          type: 'array',
+          items: { anyOf: [{ type: 'string' }, { type: 'number' }] },
+        },
+      },
+    });
+    expect(tool.function.strict).toBe(false);
+  });
+
+  it('uses non-strict mode for allOf schemas', () => {
+    const parameters = {
+      type: 'object',
+      properties: {
+        values: {
+          type: 'array',
+          items: { allOf: [{ type: 'string' }] },
+        },
+      },
+    };
+
+    const tool = convertTool({
+      name: 'all-of-tool',
+      description: 'Accepts an intersected value',
+      parameters,
+    });
+
+    expect(tool.function.parameters).toEqual(parameters);
+    expect(tool.function.strict).toBe(false);
+  });
+
+  it('uses non-strict mode for unsupported conditional keywords', () => {
+    const parameters = {
+      type: 'object',
+      properties: { value: { type: 'string' } },
+      if: { properties: { value: { const: 'special' } } },
+      then: { required: ['value'] },
+    };
+
+    const tool = convertTool({
+      name: 'conditional-tool',
+      description: 'Accepts conditional input',
+      parameters,
+    });
+
+    expect(tool.function.parameters).toEqual(parameters);
+    expect(tool.function.strict).toBe(false);
+  });
+
+  it('uses non-strict mode for boolean property schemas', () => {
+    const parameters = {
+      type: 'object',
+      properties: { value: true },
+    };
+
+    const tool = convertTool({
+      name: 'boolean-schema-tool',
+      description: 'Accepts any value',
+      parameters,
+    });
+
+    expect(tool.function.parameters).toEqual(parameters);
+    expect(tool.function.strict).toBe(false);
+  });
 });
 
 describe('convertToolChoice', () => {

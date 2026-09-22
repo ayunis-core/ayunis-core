@@ -16,23 +16,29 @@ import type {
   ToolNameCodec,
 } from '@ayunis/inference';
 
-import { normalizeSchemaForOpenAI } from './normalize-schema';
+import {
+  canNormalizeSchemaForOpenAIStrictMode,
+  normalizeSchemaForOpenAI,
+  normalizeSchemaForOpenAINonStrictMode,
+} from './normalize-schema';
 
 export const convertTool = (
   tool: ToolSchema,
   codec: ToolNameCodec,
-): ChatCompletionFunctionTool => ({
-  type: 'function',
-  function: {
-    name: codec.encode(tool.name),
-    description: tool.description,
-    // OpenAI requires strict-mode-compatible schemas (unsupported `format`
-    // values stripped, all properties required, additionalProperties false);
-    // strict tool calling is this provider's default.
-    parameters: normalizeSchemaForOpenAI(tool.parameters),
-    strict: true,
-  },
-});
+): ChatCompletionFunctionTool => {
+  const strict = canNormalizeSchemaForOpenAIStrictMode(tool.parameters);
+  return {
+    type: 'function',
+    function: {
+      name: codec.encode(tool.name),
+      description: tool.description,
+      parameters: strict
+        ? normalizeSchemaForOpenAI(tool.parameters)
+        : normalizeSchemaForOpenAINonStrictMode(tool.parameters),
+      strict,
+    },
+  };
+};
 
 // OpenAI's tool_choice is inherently a string ('auto'/'required') or a named
 // tool object, so this function's return type is necessarily mixed.
