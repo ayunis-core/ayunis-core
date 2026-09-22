@@ -1,10 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_TIMEOUT_MS,
-  mistral,
-} from './mistral-provider';
+import { DEFAULT_TIMEOUT_MS, mistral } from './mistral-provider';
 
 const mistralCtor = vi.hoisted(() => vi.fn());
 
@@ -37,7 +33,7 @@ describe('mistral client construction', () => {
 });
 
 describe('request deadline', () => {
-  const streamCall = async (
+  const streamOptions = async (
     request: Partial<Parameters<ReturnType<typeof mistral>['stream']>[0]>,
   ) => {
     const stream = vi.fn().mockResolvedValue([]);
@@ -57,20 +53,11 @@ describe('request deadline', () => {
       [Symbol.asyncIterator]()
       .next();
 
-    return {
-      params: stream.mock.calls[0][0] as { maxTokens?: number },
-      options: stream.mock.calls[0][1] as { signal: AbortSignal },
-    };
+    return stream.mock.calls[0][1] as { signal: AbortSignal };
   };
 
-  it('enforces the default output-token limit', async () => {
-    const { params } = await streamCall({});
-
-    expect(params.maxTokens).toBe(DEFAULT_MAX_TOKENS);
-  });
-
   it('arms the deadline even when the host supplies no signal', async () => {
-    const { signal } = (await streamCall({})).options;
+    const { signal } = await streamOptions({});
 
     expect(signal).toBeInstanceOf(AbortSignal);
     expect(signal.aborted).toBe(false);
@@ -80,8 +67,7 @@ describe('request deadline', () => {
   // composing them a cancellable request would have no deadline at all.
   it('keeps the deadline when the host supplies a signal', async () => {
     const hostController = new AbortController();
-    const { signal } = (await streamCall({ signal: hostController.signal }))
-      .options;
+    const { signal } = await streamOptions({ signal: hostController.signal });
 
     expect(signal).not.toBe(hostController.signal);
     expect(signal.aborted).toBe(false);
@@ -89,8 +75,7 @@ describe('request deadline', () => {
 
   it('still aborts when the host cancels', async () => {
     const hostController = new AbortController();
-    const { signal } = (await streamCall({ signal: hostController.signal }))
-      .options;
+    const { signal } = await streamOptions({ signal: hostController.signal });
 
     hostController.abort();
 

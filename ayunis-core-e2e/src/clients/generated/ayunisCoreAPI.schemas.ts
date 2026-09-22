@@ -994,6 +994,12 @@ export interface ModelWithConfigResponseDto {
   canUseTools: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.
+     * @minimum 1
+     * @maximum 2147483647
+     */
+  contextWindowSize?: number;
   /** Whether the model is permitted to be used */
   isPermitted: boolean;
   /** Whether the model is the default model */
@@ -1133,6 +1139,13 @@ export interface PermittedLanguageModelResponseDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     * @nullable
+     */
+  contextWindowSize?: number | null;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** Whether this is the default model */
@@ -1360,6 +1373,12 @@ export interface LanguageModelResponseDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     */
+  contextWindowSize?: number;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** The date the model was created */
@@ -1536,6 +1555,13 @@ export interface CreateLanguageModelRequestDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     * @nullable
+     */
+  contextWindowSize?: number | null;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
@@ -1608,6 +1634,13 @@ export interface UpdateLanguageModelRequestDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     * @nullable
+     */
+  contextWindowSize?: number | null;
   /** Whether the model is archived */
   isArchived: boolean;
   /**

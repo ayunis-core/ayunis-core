@@ -4,14 +4,17 @@ import {
   IsNotEmpty,
   IsEnum,
   IsBoolean,
+  IsInt,
   IsNumber,
   IsOptional,
+  Max,
   MaxLength,
   Min,
   ValidateIf,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { MAX_CONTEXT_WINDOW_SIZE } from 'src/domain/models/domain/models/language.model';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { nullToUndefined } from 'src/common/util/null-to-undefined';
 
@@ -78,6 +81,21 @@ export abstract class BaseLanguageModelRequestDto {
   })
   @IsBoolean()
   canVision: boolean;
+
+  @ApiPropertyOptional({
+    type: 'integer',
+    description: 'Maximum context window size in tokens',
+    example: 128000,
+    minimum: 1,
+    maximum: MAX_CONTEXT_WINDOW_SIZE,
+    nullable: true,
+  })
+  @Transform(nullToUndefined)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(MAX_CONTEXT_WINDOW_SIZE)
+  contextWindowSize?: number;
 
   @ApiProperty({
     description: 'Whether the model is archived',

@@ -77,6 +77,7 @@ export class UpdateLanguageModelUseCase {
       canUseTools: command.canUseTools,
       isReasoning: command.isReasoning,
       canVision: command.canVision,
+      contextWindowSize: command.contextWindowSize,
       hasProviderFault,
       inputTokenCost: command.inputTokenCost,
       outputTokenCost: command.outputTokenCost,

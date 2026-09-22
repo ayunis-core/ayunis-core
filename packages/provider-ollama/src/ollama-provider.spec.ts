@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_NUM_CTX, DEFAULT_NUM_PREDICT, ollama } from './index';
+import { ollama } from './ollama-provider';
 
 describe('ollama', () => {
-  it('exports the default context window used by requests', () => {
-    expect(DEFAULT_NUM_CTX).toBe(30_000);
-  });
-
-  it('exports the default output-token limit used by requests', () => {
-    expect(DEFAULT_NUM_PREDICT).toBe(8_192);
-  });
-
   it('names the provider ollama:<model> and exposes a stream function', () => {
     const provider = ollama({
       baseUrl: 'http://localhost:11434',

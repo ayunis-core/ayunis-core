@@ -9,7 +9,7 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { getHistoryBudgetTokens } from 'src/common/token-counter/application/context-budget.constants';
+import { MAX_CONTEXT_TOKENS } from 'src/common/token-counter/application/context-budget.constants';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -78,7 +78,7 @@ const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 const integrationId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
-const CLAUDE_OPUS_HISTORY_BUDGET = getHistoryBudgetTokens('claude-opus-4-7');
+const CONFIGURED_CONTEXT_WINDOW_SIZE = 750_000;
 
 interface Harness {
   useCase: ExecuteRunUseCase;
@@ -118,13 +118,14 @@ interface HarnessOptions {
   workspaceId?: UUID;
   workspaceSkills?: BackendSkill[];
   effectiveAnonymousOnly?: boolean;
-  modelName?: string;
+  contextWindowSize?: number;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
   const model = {
-    name: overrides.modelName ?? 'claude',
+    name: 'claude',
     provider: 'anthropic',
+    contextWindowSize: overrides.contextWindowSize,
     canVision: false,
     canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
   } as unknown as LanguageModel;
@@ -1218,22 +1219,32 @@ describe('ExecuteRunUseCase', () => {
     expect(countTokens).toHaveBeenCalledTimes(4);
   });
 
-  it('uses the selected model history budget when materializing persisted history', async () => {
+  it('uses the selected model context window when materializing persisted history', async () => {
     const { useCase, materializeHistory } = buildHarness({
-      modelName: 'claude-opus-4-7',
+      contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
     });
 
     await drain(await useCase.execute(userCommand()));
 
     expect(materializeHistory).toHaveBeenCalledWith(
-      expect.objectContaining({ maxTokens: CLAUDE_OPUS_HISTORY_BUDGET }),
+      expect.objectContaining({ maxTokens: CONFIGURED_CONTEXT_WINDOW_SIZE }),
     );
   });
 
-  it('accepts a latest turn at the selected model history budget', async () => {
+  it('uses the fallback context window when the model has none configured', async () => {
+    const { useCase, materializeHistory } = buildHarness();
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(materializeHistory).toHaveBeenCalledWith(
+      expect.objectContaining({ maxTokens: MAX_CONTEXT_TOKENS }),
+    );
+  });
+
+  it('accepts a latest turn at the selected model context window', async () => {
     const { useCase, provider } = buildHarness({
-      modelName: 'claude-opus-4-7',
-      tokensPerMessage: CLAUDE_OPUS_HISTORY_BUDGET,
+      contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
+      tokensPerMessage: CONFIGURED_CONTEXT_WINDOW_SIZE,
     });
 
     await drain(await useCase.execute(userCommand()));
@@ -1241,10 +1252,10 @@ describe('ExecuteRunUseCase', () => {
     expect(provider.requests).toHaveLength(1);
   });
 
-  it('does not call the provider when the latest turn exceeds the budget', async () => {
+  it('does not call the provider when the latest turn exceeds the context window', async () => {
     const { useCase, provider } = buildHarness({
-      modelName: 'claude-opus-4-7',
-      tokensPerMessage: CLAUDE_OPUS_HISTORY_BUDGET + 1,
+      contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
+      tokensPerMessage: CONFIGURED_CONTEXT_WINDOW_SIZE + 1,
     });
 
     await expect(

@@ -6,46 +6,47 @@ import {
   ModelAlreadyExistsError,
   UnexpectedModelError,
 } from 'src/domain/models/application/models.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { Injectable } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class CreateLanguageModelUseCase {
+  private readonly logger = new Logger(CreateLanguageModelUseCase.name);
+
   constructor(private readonly modelsRepository: ModelsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: CreateLanguageModelCommand): Promise<LanguageModel> {
-    try {
-      const existingModel = await this.modelsRepository.findOne({
-        name: command.name,
-        provider: command.provider,
-      });
+    this.logger.log(
+      { modelName: command.name, provider: command.provider },
+      'Creating language model',
+    );
 
-      if (existingModel) {
-        throw new ModelAlreadyExistsError(command.name, command.provider);
-      }
-
-      const model = new LanguageModel({
-        name: command.name,
-        provider: command.provider,
-        displayName: command.displayName,
-        canStream: command.canStream,
-        canUseTools: command.canUseTools,
-        isReasoning: command.isReasoning,
-        canVision: command.canVision,
-        isArchived: command.isArchived,
-        hasProviderFault: command.hasProviderFault,
-        inputTokenCost: command.inputTokenCost,
-        outputTokenCost: command.outputTokenCost,
-        tier: command.tier,
-        description: command.description,
-      });
-      await this.modelsRepository.save(model);
-      return model;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      throw new UnexpectedModelError(error as Error);
+    const existingModel = await this.modelsRepository.findOne({
+      name: command.name,
+      provider: command.provider,
+    });
+    if (existingModel) {
+      throw new ModelAlreadyExistsError(command.name, command.provider);
     }
+
+    const model = new LanguageModel({
+      name: command.name,
+      provider: command.provider,
+      displayName: command.displayName,
+      canStream: command.canStream,
+      canUseTools: command.canUseTools,
+      isReasoning: command.isReasoning,
+      canVision: command.canVision,
+      contextWindowSize: command.contextWindowSize,
+      isArchived: command.isArchived,
+      hasProviderFault: command.hasProviderFault,
+      inputTokenCost: command.inputTokenCost,
+      outputTokenCost: command.outputTokenCost,
+      tier: command.tier,
+      description: command.description,
+    });
+    await this.modelsRepository.save(model);
+    return model;
   }
 }

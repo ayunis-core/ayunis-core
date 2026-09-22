@@ -26,6 +26,25 @@ describe('CatalogModelResponseDtoMapper', () => {
     expect(dto.hasProviderFault).toBe(true);
   });
 
+  it('maps the context window size for language catalog models', () => {
+    const model = new LanguageModel({
+      id: '123e4567-e89b-12d3-a456-426614174333',
+      name: 'gpt-4o',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT-4o',
+      canStream: true,
+      canUseTools: true,
+      isReasoning: false,
+      canVision: true,
+      contextWindowSize: 128_000,
+      isArchived: false,
+    });
+
+    const dto = mapper.toLanguageModelDto(model);
+
+    expect(dto).toHaveProperty('contextWindowSize', 128_000);
+  });
+
   it('maps image-generation catalog models to DTOs', () => {
     const model = new ImageGenerationModel({
       id: '123e4567-e89b-12d3-a456-426614174000',

@@ -69,6 +69,12 @@ export class LanguageModelRecord extends ModelRecord {
   canVision: boolean;
 
   @Column({
+    type: 'integer',
+    nullable: true,
+  })
+  contextWindowSize?: number | null;
+
+  @Column({
     type: 'boolean',
     default: false,
   })

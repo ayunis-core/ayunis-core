@@ -22,8 +22,6 @@ import {
 // default timeout). Applied via `boundedSignal`; see there for why this
 // provider arms the deadline itself rather than letting the SDK do it.
 export const DEFAULT_TIMEOUT_MS = 300_000;
-/** Explicit generated-output ceiling for each request. */
-export const DEFAULT_MAX_TOKENS = 8_192;
 
 export interface MistralProviderOptions {
   apiKey: string;
@@ -122,7 +120,6 @@ const buildParams = (
   const hasTools = request.tools.length > 0;
   return {
     model,
-    maxTokens: DEFAULT_MAX_TOKENS,
     messages: convertMessages(request.instructions, request.messages, codec),
     ...(hasTools
       ? { tools: request.tools.map((tool) => convertTool(tool, codec)) }

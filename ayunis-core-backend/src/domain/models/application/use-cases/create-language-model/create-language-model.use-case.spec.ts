@@ -41,6 +41,7 @@ describe('CreateLanguageModelUseCase', () => {
   const createCommand = (
     tier?: ModelTier,
     hasProviderFault?: boolean,
+    contextWindowSize?: number,
   ): CreateLanguageModelCommand => {
     return new CreateLanguageModelCommand({
       name: 'gpt-4',
@@ -51,6 +52,7 @@ describe('CreateLanguageModelUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize,
       tier,
       hasProviderFault,
     });
@@ -109,6 +111,29 @@ describe('CreateLanguageModelUseCase', () => {
       const result = await useCase.execute(createCommand(undefined, true));
 
       expect(result.hasProviderFault).toBe(true);
+    });
+
+    it('persists a provided context window size', async () => {
+      modelsRepository.findOne.mockResolvedValue(undefined);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(
+        createCommand(undefined, undefined, 128_000),
+      );
+
+      expect(result).toHaveProperty('contextWindowSize', 128_000);
+      expect(modelsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ contextWindowSize: 128_000 }),
+      );
+    });
+
+    it('leaves the context window size undefined when omitted', async () => {
+      modelsRepository.findOne.mockResolvedValue(undefined);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(createCommand());
+
+      expect(result).toHaveProperty('contextWindowSize', undefined);
     });
   });
 });

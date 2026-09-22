@@ -21,4 +21,4 @@ export const INFERENCE_MAX_RETRIES = 3;
  * reservation — an accepted trade-off, because a budget that actually
  * completes the document is worth more than avoiding a rare throttle.
  */
-export { CLAUDE_MAX_OUTPUT_TOKENS } from 'src/common/token-counter/application/context-budget.constants';
+export const CLAUDE_MAX_OUTPUT_TOKENS = 32_000;

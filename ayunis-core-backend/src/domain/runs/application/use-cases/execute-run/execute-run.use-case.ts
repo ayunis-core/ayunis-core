@@ -62,7 +62,7 @@ import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/ap
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import type { PreparedRun, PreparedTools } from './execute-run.types';
-import { getHistoryBudgetTokens } from 'src/common/token-counter/application/context-budget.constants';
+import { getContextWindowTokens } from 'src/common/token-counter/application/context-budget.constants';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
@@ -286,7 +286,7 @@ export class ExecuteRunUseCase {
   }
 
   private async startRun(prepared: PreparedRun, signal?: AbortSignal) {
-    const maxTokens = getHistoryBudgetTokens(prepared.model.name);
+    const maxTokens = getContextWindowTokens(prepared.model.contextWindowSize);
     const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
       prepared.thread.messages,
       prepared.thread.id,

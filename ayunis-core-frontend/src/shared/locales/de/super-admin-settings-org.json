@@ -578,6 +578,8 @@
         "provider": "Anbieter",
         "providerPlaceholder": "Anbieter auswählen",
         "displayName": "Anzeigename",
+        "contextWindowSize": "Kontextfenstergröße",
+        "contextWindowSizePlaceholder": "z. B. 128000",
         "archived": "Archiviert",
         "providerFault": "Bekannte Störung beim Upstream-Provider",
         "cancel": "Abbrechen",
@@ -602,6 +604,14 @@
         "embeddingDisplayNamePlaceholder": "z. B. Text Embedding 3 Small",
         "imageGenerationNamePlaceholder": "z. B. gpt-image-1",
         "imageGenerationDisplayNamePlaceholder": "z. B. GPT Image 1"
+      },
+      "validation": {
+        "contextWindowSize": {
+          "isInt": "Die Kontextfenstergröße muss eine ganze Zahl sein",
+          "min": "Die Kontextfenstergröße muss mindestens 1 betragen",
+          "invalid": "Geben Sie eine gültige Kontextfenstergröße ein"
+        },
+        "invalid": "Überprüfen Sie die eingegebenen Modelldaten"
       }
     }
   }
