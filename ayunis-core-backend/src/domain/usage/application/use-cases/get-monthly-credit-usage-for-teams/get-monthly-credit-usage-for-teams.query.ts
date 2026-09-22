@@ -1,9 +1,9 @@
 import type { UUID } from 'crypto';
 
-export class GetMonthlyCreditUsageForTeamQuery {
+export class GetMonthlyCreditUsageForTeamsQuery {
   constructor(
     public readonly organizationId: UUID,
-    public readonly teamId: UUID,
+    public readonly teamIds: UUID[],
     public readonly since?: Date,
   ) {}
 }

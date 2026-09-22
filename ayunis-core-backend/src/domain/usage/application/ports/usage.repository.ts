@@ -91,12 +91,6 @@ export abstract class UsageRepository {
     monthStart: Date,
   ): Promise<number>;
 
-  abstract getTotalMonthlyCreditUsageForUsers(
-    organizationId: UUID,
-    userIds: UUID[],
-    monthStart: Date,
-  ): Promise<number>;
-
   abstract getMonthlyCreditUsagePerUser(
     organizationId: UUID,
     userIds: UUID[],

@@ -13,6 +13,13 @@ export async function createEmptyThread(
   );
 }
 
+export function getThread(
+  api: APIRequestContext,
+  threadId: string,
+): Promise<GetThreadResponseDto> {
+  return generatedApi.threadsControllerFindOne(threadId, { api });
+}
+
 export function sendThreadMessage(
   api: APIRequestContext,
   threadId: string,

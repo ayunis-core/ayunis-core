@@ -398,6 +398,8 @@ const baseOutcome = (
   message: result.message,
   usage: result.usage,
   finishReason: result.finishReason,
+  providerConsumptionStarted: result.providerConsumptionStarted,
+  producedOutput: result.producedOutput,
   visibleOutput,
   durationMs: Date.now() - startedAt,
 });

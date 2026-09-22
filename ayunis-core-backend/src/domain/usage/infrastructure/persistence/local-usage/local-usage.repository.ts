@@ -310,26 +310,6 @@ export class LocalUsageRepository extends UsageRepository {
     return parseFloat(result?.total ?? '0') || 0;
   }
 
-  async getTotalMonthlyCreditUsageForUsers(
-    organizationId: UUID,
-    userIds: UUID[],
-    monthStart: Date,
-  ): Promise<number> {
-    if (userIds.length === 0) {
-      return 0;
-    }
-
-    const result = await this.usageRepository
-      .createQueryBuilder('usage')
-      .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
-      .where('usage.organizationId = :organizationId', { organizationId })
-      .andWhere('usage.userId IN (:...userIds)', { userIds })
-      .andWhere('usage.createdAt >= :monthStart', { monthStart })
-      .getRawOne<{ total: string }>();
-
-    return parseFloat(result?.total ?? '0') || 0;
-  }
-
   async getMonthlyCreditUsagePerUser(
     organizationId: UUID,
     userIds: UUID[],

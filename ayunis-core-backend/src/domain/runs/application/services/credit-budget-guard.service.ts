@@ -15,6 +15,10 @@ import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/sub
  * needs this cross-domain decision — neither subscriptions nor usage
  * should depend on each other.
  */
+export interface CreditBudgetAvailability {
+  monetaryLimitsApply: boolean;
+}
+
 @Injectable()
 export class CreditBudgetGuardService {
   private readonly logger = new Logger(CreditBudgetGuardService.name);
@@ -24,14 +28,14 @@ export class CreditBudgetGuardService {
     private readonly getMonthlyCreditUsageUseCase: GetMonthlyCreditUsageUseCase,
   ) {}
 
-  async ensureBudgetAvailable(orgId: UUID): Promise<void> {
+  async ensureBudgetAvailable(orgId: UUID): Promise<CreditBudgetAvailability> {
     const { monthlyCredits, startsAt } =
       await this.getMonthlyCreditLimitUseCase.execute(
         new GetMonthlyCreditLimitQuery(orgId),
       );
 
     if (monthlyCredits === null) {
-      return;
+      return { monetaryLimitsApply: false };
     }
 
     const { creditsUsed } = await this.getMonthlyCreditUsageUseCase.execute(
@@ -53,5 +57,6 @@ export class CreditBudgetGuardService {
         monthlyCredits,
       });
     }
+    return { monetaryLimitsApply: true };
   }
 }

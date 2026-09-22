@@ -48,7 +48,9 @@ describe('CreditBudgetGuardService', () => {
       monthlyCredits: null,
     });
 
-    await expect(service.ensureBudgetAvailable(orgId)).resolves.toBeUndefined();
+    await expect(service.ensureBudgetAvailable(orgId)).resolves.toEqual({
+      monetaryLimitsApply: false,
+    });
     expect(mockGetMonthlyCreditUsage.execute).not.toHaveBeenCalled();
   });
 
@@ -58,7 +60,9 @@ describe('CreditBudgetGuardService', () => {
     });
     mockGetMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed: 500 });
 
-    await expect(service.ensureBudgetAvailable(orgId)).resolves.toBeUndefined();
+    await expect(service.ensureBudgetAvailable(orgId)).resolves.toEqual({
+      monetaryLimitsApply: true,
+    });
   });
 
   it('should throw CreditBudgetExceededError when credits are exactly exhausted', async () => {

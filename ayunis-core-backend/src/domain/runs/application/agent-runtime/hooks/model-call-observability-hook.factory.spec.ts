@@ -150,6 +150,8 @@ describe('ModelCallObservabilityHookFactory', () => {
         usage: {},
         finishReason: 'stop',
         outputState: 'final',
+        providerConsumptionStarted: true,
+        producedOutput: false,
         visibleOutput: false,
         durationMs: 25,
       },

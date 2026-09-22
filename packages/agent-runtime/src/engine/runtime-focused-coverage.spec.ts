@@ -252,7 +252,14 @@ describe('focused runtime contract coverage', () => {
 
   it('reports invalid_fallback explicitly when a fallback calls a tool', async () => {
     const outcomes: Array<
-      Pick<ModelCallOutcome, 'type' | 'trigger'> & { reason?: string }
+      Pick<
+        ModelCallOutcome,
+        | 'type'
+        | 'trigger'
+        | 'providerConsumptionStarted'
+        | 'producedOutput'
+        | 'visibleOutput'
+      > & { reason?: string }
     > = [];
     const model = new MockProvider([
       [
@@ -276,6 +283,9 @@ describe('focused runtime contract coverage', () => {
         outcomes.push({
           type: ctx.outcome.type,
           trigger: ctx.outcome.trigger,
+          providerConsumptionStarted: ctx.outcome.providerConsumptionStarted,
+          producedOutput: ctx.outcome.producedOutput,
+          visibleOutput: ctx.outcome.visibleOutput,
           ...(ctx.outcome.type === 'rejected'
             ? { reason: ctx.outcome.reason }
             : {}),
@@ -292,8 +302,22 @@ describe('focused runtime contract coverage', () => {
     );
 
     expect(outcomes).toEqual([
-      { type: 'rejected', trigger: 'initial', reason: 'malformed' },
-      { type: 'rejected', trigger: 'fallback', reason: 'invalid_fallback' },
+      {
+        type: 'rejected',
+        trigger: 'initial',
+        reason: 'malformed',
+        providerConsumptionStarted: true,
+        producedOutput: true,
+        visibleOutput: false,
+      },
+      {
+        type: 'rejected',
+        trigger: 'fallback',
+        reason: 'invalid_fallback',
+        providerConsumptionStarted: true,
+        producedOutput: true,
+        visibleOutput: false,
+      },
     ]);
     expect(model.requests[1].tools).toEqual([]);
     expect(events.find((event) => event.type === 'error')).toMatchObject({

@@ -22,7 +22,6 @@ export function createMockUsageRepository(): jest.Mocked<UsageRepository> {
     getUsageCount: jest.fn().mockResolvedValue(0),
     getMonthlyCreditUsage: jest.fn().mockResolvedValue(0),
     getTotalMonthlyCreditUsageForUser: jest.fn().mockResolvedValue(0),
-    getTotalMonthlyCreditUsageForUsers: jest.fn().mockResolvedValue(0),
     getMonthlyCreditUsagePerUser: jest.fn().mockResolvedValue(new Map()),
     getTotalMonthlyCreditUsageForApiKey: jest.fn().mockResolvedValue(0),
     getMonthlyCreditUsagePerApiKey: jest.fn().mockResolvedValue(new Map()),

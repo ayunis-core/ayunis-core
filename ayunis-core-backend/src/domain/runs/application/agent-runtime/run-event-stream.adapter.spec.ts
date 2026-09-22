@@ -41,6 +41,12 @@ import { adaptRunEventsToStream } from './run-event-stream.adapter';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { RuntimeModelRegistry } from './runtime-model.registry';
 import { ModelCallObservabilityHookFactory } from './hooks/model-call-observability-hook.factory';
+import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  ApiKeyCreditLimitExceededError,
+  TeamCreditLimitExceededError,
+  UserCreditLimitExceededError,
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -360,6 +366,38 @@ describe('adaptRunEventsToStream', () => {
     expect(seen).toEqual(['after-error', 'after-run-end']);
   });
 
+  it('maps the usage hook through the specialized accounting error', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message: 'usage persistence failed',
+          details: {
+            hookName: 'ayunis-usage',
+            phase: 'afterModelCall',
+          },
+          modelCall: {
+            modelCallId: 'call-2',
+            runId: 'run-1',
+            turn: 2,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+    );
+
+    await expect(result).rejects.toMatchObject<
+      Partial<RunExecutionFailedError>
+    >({
+      message: 'Run execution failed: Agent runtime failed',
+      metadata: { modelTurn: 2 },
+    });
+  });
+
   it('surfaces a critical hook failure with its execution path', async () => {
     const logger = createLoggerMock();
     const result = collect(
@@ -456,6 +494,33 @@ describe('adaptRunEventsToStream', () => {
         ]),
       ),
     ).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
+  });
+
+  it.each([
+    ['CREDIT_BUDGET_EXCEEDED', CreditBudgetExceededError],
+    ['USER_CREDIT_LIMIT_EXCEEDED', UserCreditLimitExceededError],
+    ['TEAM_CREDIT_LIMIT_EXCEEDED', TeamCreditLimitExceededError],
+    ['API_KEY_CREDIT_LIMIT_EXCEEDED', ApiKeyCreditLimitExceededError],
+  ])('preserves %s through the runtime boundary', async (code, ErrorType) => {
+    const metadata = { creditsUsed: 105, limit: 100, modelTurn: 2 };
+
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code,
+            message: 'Monthly credit limit reached',
+            details: metadata,
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ),
+    ).rejects.toMatchObject({
+      code,
+      metadata,
+      constructor: ErrorType,
+    });
   });
 
   it('maps other error events to a client-safe run error', async () => {

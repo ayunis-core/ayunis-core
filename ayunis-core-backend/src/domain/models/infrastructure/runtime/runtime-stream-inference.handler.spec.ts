@@ -1,7 +1,10 @@
 import { ModelProviderError, type ModelProvider } from '@ayunis/inference';
 import { Logger } from '@nestjs/common';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import type { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import type {
+  StreamInferenceAttemptLifecycle,
+  StreamInferenceInput,
+} from 'src/domain/models/application/ports/stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
@@ -67,7 +70,9 @@ class TestHandler extends RuntimeStreamInferenceHandler {
   }
 }
 
-function makeInput(): StreamInferenceInput {
+function makeInput(
+  attemptLifecycle?: StreamInferenceAttemptLifecycle,
+): StreamInferenceInput {
   return {
     model: {
       id: '00000000-0000-4000-8000-000000000001',
@@ -79,6 +84,7 @@ function makeInput(): StreamInferenceInput {
     systemPrompt: '',
     tools: [],
     orgId: 'org-1',
+    attemptLifecycle,
   } as unknown as StreamInferenceInput;
 }
 
@@ -141,6 +147,36 @@ describe('RuntimeStreamInferenceHandler', () => {
     jest.advanceTimersByTime(STREAM_IDLE_TIMEOUT_MS);
 
     await expect(failure).resolves.toBeInstanceOf(InferenceStreamStalledError);
+  });
+
+  it('does not replace a terminal accounting failure with the stall reason', async () => {
+    const accountingError = new Error('usage persistence failed');
+    let terminalCalls = 0;
+    const provider: ModelProvider = {
+      name: 'test:stalled-accounting',
+      async *stream(request) {
+        yield { usage: { inputTokens: 7, outputTokens: 3 } };
+        await whenAborted(request.signal);
+      },
+    };
+    const failed = new Promise<unknown>((resolve) => {
+      new TestHandler(provider)
+        .answer(
+          makeInput({
+            onAttemptStart: () => undefined,
+            onAttemptTerminal: () => {
+              terminalCalls += 1;
+              return Promise.reject(accountingError);
+            },
+          }),
+        )
+        .subscribe({ error: resolve });
+    });
+
+    await jest.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS);
+
+    await expect(failed).resolves.toBe(accountingError);
+    expect(terminalCalls).toBe(1);
   });
 
   it('leaves a stream alone while it keeps producing just inside the budget', async () => {
@@ -477,5 +513,357 @@ describe('RuntimeStreamInferenceHandler', () => {
     });
 
     expect(deltas).toEqual(['hello', ' world']);
+  });
+
+  it('gates each provider attempt after the prior attempt usage is persisted', async () => {
+    const order: string[] = [];
+    let calls = 0;
+    let releasePersistence!: () => void;
+    const persistence = new Promise<void>((resolve) => {
+      releasePersistence = resolve;
+    });
+    const provider: ModelProvider = {
+      name: 'test:accounted-retry',
+      async *stream() {
+        calls += 1;
+        order.push(`provider:${calls}`);
+        if (calls === 1) {
+          yield { usage: { inputTokens: 4, outputTokens: 1 } };
+          throw Object.assign(new Error('service unavailable'), {
+            status: 503,
+          });
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+    const lifecycle: StreamInferenceAttemptLifecycle = {
+      onAttemptStart: async () => {
+        order.push(`gate:${calls + 1}`);
+      },
+      onAttemptTerminal: async ({ usage }) => {
+        order.push(`account:${calls}:${usage?.inputTokens}`);
+        if (calls === 1) await persistence;
+      },
+    };
+
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput(lifecycle)).subscribe({
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+    expect(calls).toBe(1);
+
+    releasePersistence();
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+    await completed;
+
+    expect(order).toEqual([
+      'gate:1',
+      'provider:1',
+      'account:1:4',
+      'gate:2',
+      'provider:2',
+      'account:2:undefined',
+    ]);
+  });
+
+  it('assigns a distinct correlation ID to every direct stream attempt', async () => {
+    const requestIds: string[] = [];
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:distinct-attempt-ids',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          throw Object.assign(new Error('service unavailable'), {
+            status: 503,
+          });
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+    const lifecycle: StreamInferenceAttemptLifecycle = {
+      onAttemptStart: ({ requestId }) => {
+        requestIds.push(requestId);
+      },
+      onAttemptTerminal: () => undefined,
+    };
+
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput(lifecycle)).subscribe({
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+    await completed;
+
+    expect(requestIds).toHaveLength(2);
+    expect(requestIds[0]).not.toBe(requestIds[1]);
+    expect(requestIds).toEqual([
+      expect.stringMatching(/^[0-9a-f-]{36}$/),
+      expect.stringMatching(/^[0-9a-f-]{36}$/),
+    ]);
+  });
+
+  it('folds cache usage into input tokens exactly once at attempt termination', async () => {
+    const terminal = jest.fn();
+    const provider: ModelProvider = {
+      name: 'test:cached-usage',
+      async *stream() {
+        yield {
+          usage: {
+            inputTokens: 3,
+            outputTokens: 2,
+            cacheReadInputTokens: 11,
+            cacheWriteInputTokens: 5,
+          },
+        };
+      },
+    };
+
+    await new Promise<void>((resolve, reject) => {
+      new TestHandler(provider)
+        .answer(
+          makeInput({
+            onAttemptStart: () => undefined,
+            onAttemptTerminal: terminal,
+          }),
+        )
+        .subscribe({ complete: resolve, error: reject });
+    });
+
+    expect(terminal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: 'completed',
+        usage: { inputTokens: 19, outputTokens: 2 },
+      }),
+    );
+  });
+
+  it('uses the latest value of each cumulative usage dimension across frames', async () => {
+    const terminal = jest.fn();
+    const provider: ModelProvider = {
+      name: 'test:cumulative-usage',
+      async *stream() {
+        yield {
+          usage: {
+            inputTokens: 3,
+            outputTokens: 1,
+            cacheReadInputTokens: 10,
+            cacheWriteInputTokens: 2,
+          },
+        };
+        yield {
+          usage: {
+            inputTokens: 5,
+            outputTokens: 4,
+            cacheReadInputTokens: 12,
+            cacheWriteInputTokens: 3,
+          },
+        };
+      },
+    };
+
+    await new Promise<void>((resolve, reject) => {
+      new TestHandler(provider)
+        .answer(
+          makeInput({
+            onAttemptStart: () => undefined,
+            onAttemptTerminal: terminal,
+          }),
+        )
+        .subscribe({ complete: resolve, error: reject });
+    });
+
+    expect(terminal).toHaveBeenCalledTimes(1);
+    expect(terminal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        usage: { inputTokens: 20, outputTokens: 4 },
+      }),
+    );
+  });
+
+  it.each([
+    ['failed', new Error('invalid request')],
+    ['aborted', Object.assign(new Error('aborted'), { name: 'AbortError' })],
+  ] as const)('accounts usage for a %s attempt', async (outcome, error) => {
+    const terminal = jest.fn();
+    const provider: ModelProvider = {
+      name: `test:${outcome}-usage`,
+      async *stream() {
+        yield { usage: { inputTokens: 7, outputTokens: 3 } };
+        throw error;
+      },
+    };
+
+    const failed = new Promise<unknown>((resolve) => {
+      new TestHandler(provider)
+        .answer(
+          makeInput({
+            onAttemptStart: () => undefined,
+            onAttemptTerminal: terminal,
+          }),
+        )
+        .subscribe({ error: resolve });
+    });
+
+    await expect(failed).resolves.toBe(error);
+    expect(terminal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome,
+        usage: { inputTokens: 7, outputTokens: 3 },
+      }),
+    );
+  });
+
+  it('does not classify finish-only metadata as emitted output', async () => {
+    const terminal = jest.fn();
+    const provider: ModelProvider = {
+      name: 'test:finish-only',
+      async *stream() {
+        yield { finishReason: 'stop' };
+      },
+    };
+
+    await new Promise<void>((resolve, reject) => {
+      new TestHandler(provider)
+        .answer(
+          makeInput({
+            onAttemptStart: () => undefined,
+            onAttemptTerminal: terminal,
+          }),
+        )
+        .subscribe({ complete: resolve, error: reject });
+    });
+
+    expect(terminal).toHaveBeenCalledWith({
+      requestId: expect.any(String),
+      outcome: 'completed',
+      usage: undefined,
+      outputEmitted: false,
+    });
+  });
+
+  it('preserves emitted output but fails before completion when terminal accounting rejects', async () => {
+    const accountingError = new Error('provider usage missing');
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:missing-usage',
+      async *stream() {
+        calls += 1;
+        yield { textDelta: 'visible answer' };
+      },
+    };
+    const events: string[] = [];
+    const failed = new Promise<unknown>((resolve) => {
+      new TestHandler(provider)
+        .answer(
+          makeInput({
+            onAttemptStart: () => undefined,
+            onAttemptTerminal: () => Promise.reject(accountingError),
+          }),
+        )
+        .subscribe({
+          next: () => events.push('output'),
+          complete: () => events.push('complete'),
+          error: (error) => {
+            events.push('error');
+            resolve(error);
+          },
+        });
+    });
+
+    await expect(failed).resolves.toBe(accountingError);
+    expect(events).toEqual(['output', 'error']);
+    expect(calls).toBe(1);
+  });
+
+  it('surfaces critical persistence failure without retrying the provider', async () => {
+    const persistenceError = new Error('usage persistence failed');
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:persistence-failure',
+      async *stream() {
+        calls += 1;
+        yield { usage: { inputTokens: 6, outputTokens: 0 } };
+        throw Object.assign(new Error('service unavailable'), { status: 503 });
+      },
+    };
+    const failed = new Promise<unknown>((resolve) => {
+      new TestHandler(provider)
+        .answer(
+          makeInput({
+            onAttemptStart: () => undefined,
+            onAttemptTerminal: () => Promise.reject(persistenceError),
+          }),
+        )
+        .subscribe({ error: resolve });
+    });
+
+    await expect(failed).resolves.toBe(persistenceError);
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+    expect(calls).toBe(1);
+  });
+
+  it('awaits terminal accounting internally after the subscriber cancels', async () => {
+    let accountingFinished = false;
+    let releaseAccounting!: () => void;
+    const accounting = new Promise<void>((resolve) => {
+      releaseAccounting = () => {
+        accountingFinished = true;
+        resolve();
+      };
+    });
+    let terminalStarted!: () => void;
+    const started = new Promise<void>((resolve) => (terminalStarted = resolve));
+    const provider: ModelProvider = {
+      name: 'test:cancelled-accounting',
+      async *stream(request) {
+        yield { usage: { inputTokens: 8, outputTokens: 2 } };
+        await whenAborted(request.signal);
+      },
+    };
+    const subscription = new TestHandler(provider)
+      .answer(
+        makeInput({
+          onAttemptStart: () => undefined,
+          onAttemptTerminal: async ({ outcome }) => {
+            expect(outcome).toBe('aborted');
+            terminalStarted();
+            await accounting;
+          },
+        }),
+      )
+      .subscribe();
+    await jest.advanceTimersByTimeAsync(0);
+
+    subscription.unsubscribe();
+    await started;
+    expect(accountingFinished).toBe(false);
+
+    releaseAccounting();
+    await accounting;
+    expect(accountingFinished).toBe(true);
+  });
+
+  it('keeps the legacy no-callback stream behavior', async () => {
+    const provider: ModelProvider = {
+      name: 'test:legacy-no-callback',
+      async *stream() {
+        yield { textDelta: 'legacy answer' };
+      },
+    };
+
+    const result = await new Promise<string | null>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: (chunk) => resolve(chunk.textContentDelta),
+        error: reject,
+      });
+    });
+
+    expect(result).toBe('legacy answer');
   });
 });

@@ -16,6 +16,7 @@ import { SendMessageRequestValidator } from './presenters/http/validation/send-m
 import { BackendToolAdapter } from './application/agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from './application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
+import { CreditGateHookFactory } from './application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
@@ -91,6 +92,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     GetThreadSourceCitationUseCase,
     BackendToolAdapter,
     PersistenceHookFactory,
+    CreditGateHookFactory,
     UsageHookFactory,
     ToolUsageHookFactory,
     SkillActivationHookFactory,
