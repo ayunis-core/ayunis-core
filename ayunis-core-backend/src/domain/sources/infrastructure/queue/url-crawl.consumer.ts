@@ -18,6 +18,8 @@ import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-c
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
+const PAGE_SEPARATOR = '\n\n';
+
 @Processor(URL_CRAWL_QUEUE, { concurrency: 2 })
 export class UrlCrawlConsumer extends WorkerHost {
   private readonly logger = new Logger(UrlCrawlConsumer.name);
@@ -127,20 +129,35 @@ export class UrlCrawlConsumer extends WorkerHost {
 
     const chunks: TextSourceContentChunk[] = [];
     const texts: string[] = [];
+    let lineOffset = 0;
+    let charOffset = 0;
     for (const page of crawl.pages) {
+      if (texts.length > 0) {
+        lineOffset += this.countNewlines(PAGE_SEPARATOR);
+        charOffset += PAGE_SEPARATOR.length;
+      }
       texts.push(page.content);
-      chunks.push(...this.chunkPage(page.url, page.content));
+      chunks.push(
+        ...this.chunkPage(page.url, page.content, lineOffset, charOffset),
+      );
+      lineOffset += this.countNewlines(page.content);
+      charOffset += page.content.length;
     }
 
     return {
-      text: texts.join('\n\n'),
+      text: texts.join(PAGE_SEPARATOR),
       chunks,
       title: crawl.rootPage.websiteTitle,
       pageCount: crawl.pages.length,
     };
   }
 
-  private chunkPage(url: string, content: string): TextSourceContentChunk[] {
+  private chunkPage(
+    url: string,
+    content: string,
+    lineOffset: number,
+    charOffset: number,
+  ): TextSourceContentChunk[] {
     const split = this.splitTextUseCase.execute(
       new SplitTextCommand(content, SplitterType.RECURSIVE, {
         chunkSize: 2000,
@@ -151,9 +168,44 @@ export class UrlCrawlConsumer extends WorkerHost {
       (chunk) =>
         new TextSourceContentChunk({
           content: chunk.text,
-          meta: { url, ...chunk.metadata },
+          meta: {
+            url,
+            ...chunk.metadata,
+            ...this.offsetMetadata(chunk.metadata, lineOffset, charOffset),
+          },
         }),
     );
+  }
+
+  private offsetMetadata(
+    metadata: Record<string, unknown>,
+    lineOffset: number,
+    charOffset: number,
+  ): Record<string, number> {
+    const shifted: Record<string, number> = {};
+    this.shiftNumber(metadata, shifted, 'startLine', lineOffset);
+    this.shiftNumber(metadata, shifted, 'endLine', lineOffset);
+    this.shiftNumber(metadata, shifted, 'startCharOffset', charOffset);
+    this.shiftNumber(metadata, shifted, 'endCharOffset', charOffset);
+    return shifted;
+  }
+
+  private shiftNumber(
+    source: Record<string, unknown>,
+    target: Record<string, number>,
+    key: string,
+    offset: number,
+  ): void {
+    const value = source[key];
+    if (typeof value === 'number') target[key] = value + offset;
+  }
+
+  private countNewlines(text: string): number {
+    let count = 0;
+    for (let index = 0; index < text.length; index++) {
+      if (text.charCodeAt(index) === 10) count++;
+    }
+    return count;
   }
 
   private async isSourceStillProcessing(sourceId: UUID): Promise<boolean> {
