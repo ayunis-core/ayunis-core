@@ -13,7 +13,8 @@ import type {
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
-  AddGlobalPiiWhitelistWordRequestDto,
+  AddGlobalPiiWhitelistWordsRequestDto,
+  AddGlobalPiiWhitelistWordsResponseDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
   AddonStatusResponseDto,
@@ -2829,15 +2830,16 @@ const superAdminAnonymizationWhitelistControllerList = (
     }
 
 /**
- * @summary Add a word to the global anonymization whitelist
+ * Words already on the whitelist for the category are skipped and returned as duplicates.
+ * @summary Add words to the global anonymization whitelist
  */
 const superAdminAnonymizationWhitelistControllerAdd = (
-    addGlobalPiiWhitelistWordRequestDto: AddGlobalPiiWhitelistWordRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<GlobalPiiWhitelistWordDto>>,) => {
-      return playwrightApiClient<GlobalPiiWhitelistWordDto>(
+    addGlobalPiiWhitelistWordsRequestDto: AddGlobalPiiWhitelistWordsRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<AddGlobalPiiWhitelistWordsResponseDto>>,) => {
+      return playwrightApiClient<AddGlobalPiiWhitelistWordsResponseDto>(
       {url: `/super-admin/anonymization-whitelist`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: addGlobalPiiWhitelistWordRequestDto
+      data: addGlobalPiiWhitelistWordsRequestDto
     },
       options);
     }
