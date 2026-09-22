@@ -1,9 +1,9 @@
 import type { UUID } from 'crypto';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import type { ToolAssemblyService } from '../../services/tool-assembly.service';
+import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
-import type { BackendToolAdapter } from '../backend-tool.adapter';
-import { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import type { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 import { SkillActivationHookFactory } from './skill-activation-hook.factory';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -61,6 +61,12 @@ function toolCtx(name: string, isError = false) {
 }
 
 describe('SkillActivationHookFactory', () => {
+  it('does not inherit root thread state into child runs', () => {
+    const { hook } = buildHook();
+
+    expect(hook.inheritToChildRuns).toBe(false);
+  });
+
   it('rebuilds and swaps in the tool set after activate_skill', async () => {
     const { hook, buildRunContext } = buildHook();
     const ctx = toolCtx('activate_skill');

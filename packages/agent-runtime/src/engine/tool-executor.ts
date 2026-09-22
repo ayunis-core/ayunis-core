@@ -17,6 +17,7 @@ const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 interface ToolOutcome {
   result: string;
   isError: boolean;
+  aborted?: true;
   fatalError?: AgentRuntimeError;
 }
 
@@ -106,9 +107,14 @@ async function* resolveToolCall(
   return {
     toolCall,
     outcome,
-    hookOutcome: outcome.isError ? 'error' : 'success',
+    hookOutcome: toolCallOutcome(outcome),
   };
 }
+
+const toolCallOutcome = (outcome: ToolOutcome): ToolCallOutcome => {
+  if (outcome.aborted) return 'aborted';
+  return outcome.isError ? 'error' : 'success';
+};
 
 interface FinalizeToolCallParams {
   state: RunState;
@@ -174,14 +180,12 @@ const runTool = async (
       isError: false,
     };
   }
+  const context = buildToolContext(state, call.id);
   try {
-    const value = await tool.execute(
-      call.input,
-      buildToolContext(state, call.id),
-    );
+    const value = await tool.execute(call.input, context);
     return normalizeToolOutput(value);
   } catch (error) {
-    return failedOutcome(error);
+    return failedOutcome(error, context.signal);
   }
 };
 
@@ -206,14 +210,29 @@ const normalizeToolOutput = (output: ToolExecutionOutput): ToolOutcome => {
   return { result: clampResult(output.result), isError: output.isError };
 };
 
-const failedOutcome = (error: unknown): ToolOutcome => {
+const failedOutcome = (error: unknown, signal?: AbortSignal): ToolOutcome => {
+  const message =
+    error instanceof Error ? error.message : 'Tool execution failed';
+  if (signalCausedFailure(error, signal)) {
+    return { result: message, isError: true, aborted: true };
+  }
   if (error instanceof AgentRuntimeError) {
     return { result: error.message, isError: true, fatalError: error };
   }
-  const message =
-    error instanceof Error ? error.message : 'Tool execution failed';
   return { result: message, isError: true };
 };
+
+const signalCausedFailure = (
+  error: unknown,
+  signal: AbortSignal | undefined,
+): boolean =>
+  Boolean(
+    signal?.aborted &&
+    (error === signal.reason ||
+      (typeof error === 'object' &&
+        error !== null &&
+        (error as { name?: unknown }).name === 'AbortError')),
+  );
 
 const buildToolContext = (
   state: RunState,
@@ -223,11 +242,16 @@ const buildToolContext = (
     context: state.context,
     toolCallId,
     toolNames: state.tools.map(({ name }) => name),
-    signal: state.signal,
+    signal: toolSignal(state),
     emit: (event) => state.emits.push(event),
     runChild: state.runChild,
   };
 };
+
+const toolSignal = (state: RunState): AbortSignal =>
+  state.signal
+    ? AbortSignal.any([state.signal, state.consumerSignal])
+    : state.consumerSignal;
 
 const clampResult = (result: string): string => {
   if (result.length <= MAX_TOOL_RESULT_LENGTH) {

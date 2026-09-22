@@ -1,8 +1,9 @@
 import {
   RunAbortedError,
-  type AfterModelCallContext,
+  type AfterModelTurnContext,
   type AssistantMessage as RuntimeAssistantMessage,
   type Hook,
+  type ReadonlySnapshot,
   type RunContext,
 } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
@@ -32,13 +33,12 @@ interface PendingToolResults {
 }
 
 /**
- * Builds the persistence hook for a run. Assistant turns are saved as the model
- * call completes (`afterModelCall`); tool results are accumulated per iteration
- * and flushed as one grouped message before the next model call (and at run
- * end) — providers require every tool result for an assistant turn in a single
- * message. Persistence runs inside the loop so a disconnected SSE client can't
- * drop messages. The assistant id is derived deterministically so the persisted
- * copy matches the streamed one.
+ * Builds the persistence hook for a run. Assistant turns are saved once the
+ * logical model turn reaches its terminal outcome, so retries and recovery do
+ * not persist superseded calls. Tool results are accumulated per iteration and
+ * flushed as one grouped message before the next model turn (and at run end).
+ * The assistant id is derived deterministically so the persisted copy matches
+ * the streamed one.
  */
 @Injectable()
 export class PersistenceHookFactory {
@@ -54,21 +54,14 @@ export class PersistenceHookFactory {
   }): Hook {
     return {
       name: 'ayunis-persistence',
-      runEndFailureMode: 'critical',
-      afterModelCall: (ctx) =>
+      inheritToChildRuns: false,
+      terminalFailureMode: 'critical',
+      afterModelTurn: (ctx) =>
         this.persistAssistantMessageOrAbort(
           ctx,
           params.thread,
           params.integrations,
         ),
-      modelCallInterrupted: async (ctx) => {
-        await this.persistAssistantMessage(
-          ctx.message,
-          params.thread,
-          assistantMessageId(ctx.context.runId, ctx.iteration),
-          params.integrations,
-        );
-      },
       afterToolCall: async (ctx) => {
         const pending = ctx.context.get<PendingToolResults>(
           PENDING_TOOL_RESULTS,
@@ -86,19 +79,21 @@ export class PersistenceHookFactory {
           await this.flushToolResults(ctx.context, params.thread);
         }
       },
-      beforeModelCall: (ctx) =>
+      beforeModelTurn: (ctx) =>
         this.flushToolResults(ctx.context, params.thread),
       runEnd: (ctx) => this.flushToolResults(ctx.context, params.thread),
     };
   }
 
   private async persistAssistantMessageOrAbort(
-    ctx: AfterModelCallContext,
+    ctx: AfterModelTurnContext,
     thread: Thread,
     integrations: RuntimeToolIntegrationRegistry,
   ): Promise<void> {
+    const message = assistantMessageForTurn(ctx);
+    if (!message) return;
     const persisted = await this.persistAssistantMessage(
-      ctx.message,
+      message,
       thread,
       assistantMessageId(ctx.context.runId, ctx.iteration),
       integrations,
@@ -163,4 +158,37 @@ export class PersistenceHookFactory {
       new AddMessageCommand(thread, saved),
     );
   }
+}
+
+function assistantMessageForTurn(
+  ctx: AfterModelTurnContext,
+): RuntimeAssistantMessage | undefined {
+  const call = 'call' in ctx.outcome ? ctx.outcome.call : undefined;
+  if (!call) return undefined;
+  if (ctx.outcome.type === 'accepted' && call.type === 'accepted') {
+    return cloneAssistantMessage(call.message);
+  }
+  if (
+    call.type === 'rejected' ||
+    !call.visibleOutput ||
+    call.message.content.length === 0
+  ) {
+    return undefined;
+  }
+  return cloneAssistantMessage(
+    call.message,
+    call.message.content.filter(
+      (content) => content.type === 'text' || content.type === 'thinking',
+    ),
+  );
+}
+
+function cloneAssistantMessage(
+  message: ReadonlySnapshot<RuntimeAssistantMessage>,
+  content: ReadonlySnapshot<RuntimeAssistantMessage>['content'] = message.content,
+): RuntimeAssistantMessage {
+  return {
+    role: 'assistant',
+    content: content.map((item) => structuredClone(item)),
+  };
 }

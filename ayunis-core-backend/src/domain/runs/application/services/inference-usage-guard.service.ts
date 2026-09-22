@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
@@ -8,7 +9,6 @@ import { ApiKeyCreditLimitGuardService } from './api-key-credit-limit-guard.serv
 import { CreditBudgetGuardService } from './credit-budget-guard.service';
 import { CreditLimitGuardService } from './credit-limit-guard.service';
 import { CollectUsageAsyncService } from './collect-usage-async.service';
-import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 
 /**
  * Flat principal shape passed to the guard. Either `userId` or `apiKeyId`
@@ -84,6 +84,21 @@ export class InferenceUsageGuard {
     executionPath?: RunExecutionPath,
   ): void {
     this.collectUsageAsyncService.collect(
+      model,
+      usage.inputTokens,
+      usage.outputTokens,
+      requestId,
+      executionPath,
+    );
+  }
+
+  collectUsageCritical(
+    model: LanguageModel,
+    usage: { inputTokens: number; outputTokens: number },
+    requestId?: UUID,
+    executionPath?: RunExecutionPath,
+  ): Promise<void> {
+    return this.collectUsageAsyncService.collectCritical(
       model,
       usage.inputTokens,
       usage.outputTokens,

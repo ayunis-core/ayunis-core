@@ -1,323 +1,250 @@
-import { MalformedToolCallError, RunAbortedError } from '../contracts/errors';
+import {
+  MalformedToolCallError,
+  ProviderError,
+  RunAbortedError,
+} from '../contracts/errors';
+import type { AgentRuntimeError } from '../contracts/errors';
 import type { RunEventPayload } from '../contracts/event';
-import type { Usage } from '../contracts/provider';
-import type { ModelCallResult } from './accumulator';
+import type { ModelCallOutcome, ModelCallTrigger } from '../contracts/hook';
+import type { ModelCallMode } from './request-snapshot';
 
-const MAX_MALFORMED_ATTEMPTS = 3;
-const MAX_EMPTY_ATTEMPTS = 2;
-const MAX_TOTAL_ATTEMPTS = MAX_MALFORMED_ATTEMPTS + MAX_EMPTY_ATTEMPTS - 1;
-
-export type ModelCallMode = 'normal' | 'tool_disabled_fallback';
+export class TerminalModelCallError extends Error {
+  constructor(
+    readonly runtimeError: AgentRuntimeError,
+    readonly call: ModelCallOutcome,
+  ) {
+    super(runtimeError.message, { cause: runtimeError });
+  }
+}
 
 export interface ModelCallRecoveryOptions {
+  maxRetries: number;
   call: (
+    trigger: ModelCallTrigger,
     mode: ModelCallMode,
-  ) => AsyncGenerator<RunEventPayload, ModelCallResult, void>;
-  afterCompleted: (result: ModelCallResult) => Promise<void>;
-  onRejectedCompleted: (result: ModelCallResult) => Promise<void>;
-  recordUsage: (usage: Usage) => void;
-  applyPendingMutations: () => void;
+  ) => AsyncGenerator<RunEventPayload, ModelCallOutcome>;
+  providerRetryDelay: (
+    outcome: ModelCallOutcome,
+    retryNumber: number,
+  ) => number | undefined;
+  waitForProviderRetry: (delayMs: number) => Promise<void>;
   isAborted: () => boolean;
+  isHookAborted: () => boolean;
 }
 
-/**
- * Applies bounded recovery to one logical model turn. Empty and malformed
- * responses share one total-attempt budget, so their retries cannot multiply.
- */
+interface RecoveryState {
+  readonly trigger: ModelCallTrigger;
+  readonly mode: ModelCallMode;
+  readonly retriesUsed: number;
+  readonly malformedError?: MalformedToolCallError;
+}
+
+type RecoveryDecision =
+  | { readonly type: 'accepted'; readonly outcome: ModelCallOutcome }
+  | { readonly type: 'abort' }
+  | { readonly type: 'terminal'; readonly error: TerminalModelCallError }
+  | {
+      readonly type: 'retry';
+      readonly state: RecoveryState;
+      readonly delayMs: number;
+    };
+
 export async function* callModelWithRecovery(
   options: ModelCallRecoveryOptions,
-): AsyncGenerator<RunEventPayload, ModelCallResult, void> {
-  let emptyAttempts = 0;
-  let malformedAttempts = 0;
-  let mode: ModelCallMode = 'normal';
-  let fallbackError: MalformedToolCallError | undefined;
-
-  for (
-    let totalAttempt = 1;
-    totalAttempt <= MAX_TOTAL_ATTEMPTS;
-    totalAttempt++
-  ) {
-    const outcome: ModelAttemptOutcome = yield* runAttempt(
-      options.call(mode),
-      mode,
-    );
-    if (outcome.type === 'failed') {
-      const retry: FailedAttemptRetry = yield* recoverFailedAttempt({
-        outcome,
-        mode,
-        fallbackError,
-        malformedAttempts,
-        totalAttempt,
-        options,
-      });
-      malformedAttempts = retry.malformedAttempts;
-      mode = retry.mode;
-      fallbackError = retry.fallbackError;
-      continue;
+): AsyncGenerator<RunEventPayload, ModelCallOutcome> {
+  let state: RecoveryState = {
+    trigger: 'initial',
+    mode: 'normal',
+    retriesUsed: 0,
+  };
+  for (;;) {
+    const outcome = yield* options.call(state.trigger, state.mode);
+    const decision = decideRecovery(options, state, outcome);
+    if (decision.type === 'accepted') return decision.outcome;
+    if (decision.type === 'abort') throw new RunAbortedError();
+    if (decision.type === 'terminal') throw decision.error;
+    state = decision.state;
+    if (decision.delayMs > 0) {
+      await options.waitForProviderRetry(decision.delayMs);
     }
-
-    const { result } = outcome;
-    await processCompletedAttempt(options, mode, fallbackError, result);
-    if (result.message.content.length > 0) return result;
-
-    emptyAttempts++;
-    if (options.isAborted()) throw new RunAbortedError();
-    if (shouldStopEmptyRecovery(emptyAttempts, totalAttempt)) return result;
-    options.applyPendingMutations();
   }
-
-  throw new Error('Model-call recovery exhausted without an outcome');
 }
 
-async function processCompletedAttempt(
+const decideRecovery = (
   options: ModelCallRecoveryOptions,
-  mode: ModelCallMode,
-  fallbackError: MalformedToolCallError | undefined,
-  result: ModelCallResult,
-): Promise<void> {
-  options.recordUsage(result.usage);
-  const rejectedFallback = fallbackToolCallError(mode, fallbackError, result);
-  if (rejectedFallback) {
-    await options.onRejectedCompleted(result);
-    throw rejectedFallback;
+  state: RecoveryState,
+  outcome: ModelCallOutcome,
+): RecoveryDecision => {
+  if (options.isHookAborted()) return { type: 'abort' };
+  if (outcome.type === 'accepted') return { type: 'accepted', outcome };
+  if (isAbortedOutcome(outcome)) return { type: 'abort' };
+  if (options.isAborted()) return { type: 'abort' };
+  if (outcome.visibleOutput || state.retriesUsed >= options.maxRetries) {
+    return terminalDecision(outcome, state.malformedError);
   }
-  await options.afterCompleted(result);
-  if (
-    mode === 'tool_disabled_fallback' &&
-    fallbackError &&
-    result.message.content.length === 0
-  ) {
-    throw fallbackError;
-  }
-}
+  return retryDecision(options, state, outcome);
+};
 
-function fallbackToolCallError(
-  mode: ModelCallMode,
-  fallbackError: MalformedToolCallError | undefined,
-  result: ModelCallResult,
-): MalformedToolCallError | undefined {
-  if (mode !== 'tool_disabled_fallback' || !fallbackError) return undefined;
-  return result.message.content.some((content) => content.type === 'tool_use')
-    ? fallbackError
-    : undefined;
-}
+const isAbortedOutcome = (
+  outcome: ModelCallOutcome,
+): outcome is Extract<
+  ModelCallOutcome,
+  { type: 'aborted' | 'consumer_abandoned' }
+> => outcome.type === 'aborted' || outcome.type === 'consumer_abandoned';
 
-type ToolSnapshotEvent = Extract<
-  RunEventPayload,
-  { type: 'tool_call_snapshot' }
->;
-
-interface ModelAttemptState {
-  readonly bufferedToolSnapshots: ToolSnapshotEvent[];
-  emittedVisibleContent: boolean;
-}
-
-type ModelAttemptOutcome =
-  | { type: 'completed'; result: ModelCallResult }
-  | { type: 'failed'; error: unknown; state: ModelAttemptState };
-
-type FailedOutcome = Extract<ModelAttemptOutcome, { type: 'failed' }>;
-
-type FailedAttemptAction =
-  | { type: 'retry'; malformedAttempts: number }
-  | {
-      type: 'fallback';
-      error: MalformedToolCallError;
-      malformedAttempts: number;
-    }
-  | { type: 'abort'; malformedAttempts: number }
-  | {
-      type: 'fail';
-      error: unknown;
-      bufferedToolSnapshots: readonly ToolSnapshotEvent[];
-      malformedAttempts: number;
-    };
-
-interface FailedAttemptParams {
-  readonly outcome: FailedOutcome;
-  readonly mode: ModelCallMode;
-  readonly fallbackError: MalformedToolCallError | undefined;
-  readonly malformedAttempts: number;
-  readonly totalAttempt: number;
-  readonly options: ModelCallRecoveryOptions;
-}
-
-interface FailedAttemptRetry {
-  readonly malformedAttempts: number;
-  readonly mode: ModelCallMode;
-  readonly fallbackError: MalformedToolCallError | undefined;
-}
-
-function* recoverFailedAttempt(
-  params: FailedAttemptParams,
-): Generator<RunEventPayload, FailedAttemptRetry, void> {
-  const action = failedAttemptAction(params);
-  switch (action.type) {
-    case 'retry':
-      return {
-        malformedAttempts: action.malformedAttempts,
-        mode: params.mode,
-        fallbackError: params.fallbackError,
-      };
-    case 'fallback':
-      return {
-        malformedAttempts: action.malformedAttempts,
-        mode: 'tool_disabled_fallback',
-        fallbackError: action.error,
-      };
-    case 'abort':
-      throw new RunAbortedError();
-    case 'fail':
-      yield* action.bufferedToolSnapshots;
-      throw action.error;
-  }
-}
-
-function failedAttemptAction(params: FailedAttemptParams): FailedAttemptAction {
-  const malformedAttempts = recordMalformedAttempt(
-    params.outcome.error,
-    params.malformedAttempts,
-    params.options.recordUsage,
+const retryDecision = (
+  options: ModelCallRecoveryOptions,
+  state: RecoveryState,
+  outcome: Exclude<
+    ModelCallOutcome,
+    { type: 'accepted' | 'aborted' | 'consumer_abandoned' }
+  >,
+): RecoveryDecision => {
+  const next = nextAttempt(
+    outcome,
+    state.mode,
+    state.malformedError,
+    options.maxRetries - state.retriesUsed,
   );
-  if (
-    params.outcome.error instanceof RunAbortedError ||
-    isAbortedMalformed(params.outcome.error, params.options)
-  ) {
-    return { type: 'abort', malformedAttempts };
-  }
-  if (params.mode === 'tool_disabled_fallback' && params.fallbackError) {
-    return {
-      type: 'fail',
-      error: params.fallbackError,
-      bufferedToolSnapshots: [],
-      malformedAttempts,
-    };
-  }
-  if (
-    canRetryMalformed(params.outcome, malformedAttempts, params.totalAttempt)
-  ) {
-    return { type: 'retry', malformedAttempts };
-  }
-  if (canUseToolDisabledFallback(params.outcome, params.totalAttempt)) {
-    return {
-      type: 'fallback',
-      error: params.outcome.error,
-      malformedAttempts,
-    };
+  if (!next.retry) return terminalDecision(outcome, next.malformedError);
+  const delayMs = retryDelay(options, outcome, state.retriesUsed + 1);
+  if (delayMs === undefined) {
+    return terminalDecision(outcome, next.malformedError);
   }
   return {
-    type: 'fail',
-    error: params.outcome.error,
-    bufferedToolSnapshots: params.outcome.state.bufferedToolSnapshots,
-    malformedAttempts,
+    type: 'retry',
+    delayMs,
+    state: {
+      trigger: next.trigger,
+      mode: next.mode,
+      retriesUsed: state.retriesUsed + 1,
+      ...(next.malformedError ? { malformedError: next.malformedError } : {}),
+    },
   };
-}
+};
 
-async function* runAttempt(
-  generator: AsyncGenerator<RunEventPayload, ModelCallResult, void>,
-  mode: ModelCallMode,
-): AsyncGenerator<RunEventPayload, ModelAttemptOutcome, void> {
-  const state: ModelAttemptState = {
-    bufferedToolSnapshots: [],
-    emittedVisibleContent: false,
-  };
-  const iterator: AsyncIterator<RunEventPayload, ModelCallResult> = generator;
-  let completed = false;
-  try {
-    const result = yield* forwardAttempt(iterator, state, mode === 'normal');
-    completed = true;
-    return { type: 'completed', result };
-  } catch (error) {
-    return { type: 'failed', error, state };
-  } finally {
-    if (!completed) await iterator.return?.();
-  }
-}
-
-async function* forwardAttempt(
-  iterator: AsyncIterator<RunEventPayload, ModelCallResult>,
-  state: ModelAttemptState,
-  exposeToolSnapshots: boolean,
-): AsyncGenerator<RunEventPayload, ModelCallResult, void> {
-  for (;;) {
-    const next = await iterator.next();
-    if (next.done) {
-      if (exposeToolSnapshots) yield* state.bufferedToolSnapshots;
-      state.bufferedToolSnapshots.length = 0;
-      return next.value;
-    }
-    yield* forwardAttemptEvent(next.value, state, exposeToolSnapshots);
-  }
-}
-
-function* forwardAttemptEvent(
-  event: RunEventPayload,
-  state: ModelAttemptState,
-  exposeToolSnapshots: boolean,
-): Generator<RunEventPayload> {
-  if (event.type === 'tool_call_snapshot') {
-    if (!exposeToolSnapshots) return;
-    if (!state.emittedVisibleContent) {
-      state.bufferedToolSnapshots.push(event);
-      return;
-    }
-  }
-  if (!state.emittedVisibleContent) {
-    state.emittedVisibleContent = true;
-    yield* state.bufferedToolSnapshots;
-    state.bufferedToolSnapshots.length = 0;
-  }
-  yield event;
-}
-
-function recordMalformedAttempt(
-  error: unknown,
-  previousAttempts: number,
-  recordUsage: (usage: Usage) => void,
-): number {
-  if (!(error instanceof MalformedToolCallError)) return previousAttempts;
-  if (error.usage) recordUsage(error.usage);
-  return previousAttempts + 1;
-}
-
-function isAbortedMalformed(
-  error: unknown,
+const retryDelay = (
   options: ModelCallRecoveryOptions,
-): boolean {
-  return error instanceof MalformedToolCallError && options.isAborted();
+  outcome: ModelCallOutcome,
+  retryNumber: number,
+): number | undefined =>
+  outcome.type === 'provider_failure'
+    ? options.providerRetryDelay(outcome, retryNumber)
+    : 0;
+
+interface NextAttempt {
+  readonly retry: boolean;
+  readonly trigger: ModelCallTrigger;
+  readonly mode: ModelCallMode;
+  readonly malformedError?: MalformedToolCallError;
 }
 
-function canRetryMalformed(
-  outcome: Extract<ModelAttemptOutcome, { type: 'failed' }>,
-  malformedAttempts: number,
-  totalAttempt: number,
-): boolean {
-  return (
-    outcome.error instanceof MalformedToolCallError &&
-    !outcome.state.emittedVisibleContent &&
-    malformedAttempts < MAX_MALFORMED_ATTEMPTS &&
-    totalAttempt < MAX_TOTAL_ATTEMPTS
-  );
-}
+const nextAttempt = (
+  outcome: Extract<ModelCallOutcome, { type: 'provider_failure' | 'rejected' }>,
+  mode: ModelCallMode,
+  previousMalformed: MalformedToolCallError | undefined,
+  retriesRemaining: number,
+): NextAttempt => {
+  if (outcome.type === 'provider_failure') {
+    return providerRetry(mode, previousMalformed, retriesRemaining);
+  }
+  return rejectedRetry(outcome, mode, previousMalformed, retriesRemaining);
+};
 
-function canUseToolDisabledFallback(
-  outcome: Extract<ModelAttemptOutcome, { type: 'failed' }>,
-  totalAttempt: number,
-): outcome is Extract<ModelAttemptOutcome, { type: 'failed' }> & {
-  error: MalformedToolCallError;
-} {
-  return (
-    outcome.error instanceof MalformedToolCallError &&
-    !outcome.state.emittedVisibleContent &&
-    totalAttempt < MAX_TOTAL_ATTEMPTS
-  );
-}
+const rejectedRetry = (
+  outcome: Extract<ModelCallOutcome, { type: 'rejected' }>,
+  mode: ModelCallMode,
+  previousMalformed: MalformedToolCallError | undefined,
+  retriesRemaining: number,
+): NextAttempt => {
+  switch (outcome.reason) {
+    case 'empty':
+      return mode === 'tool_disabled_fallback' && previousMalformed
+        ? noRetry(mode, previousMalformed)
+        : semanticRetry('empty_recovery', mode, previousMalformed);
+    case 'invalid_fallback':
+      return noRetry(mode, previousMalformed);
+    case 'malformed':
+      return malformedRetry(outcome, mode, previousMalformed, retriesRemaining);
+  }
+};
 
-function shouldStopEmptyRecovery(
-  emptyAttempts: number,
-  totalAttempt: number,
-): boolean {
-  return (
-    emptyAttempts >= MAX_EMPTY_ATTEMPTS || totalAttempt >= MAX_TOTAL_ATTEMPTS
+const malformedRetry = (
+  outcome: Extract<ModelCallOutcome, { type: 'rejected' }>,
+  mode: ModelCallMode,
+  previousMalformed: MalformedToolCallError | undefined,
+  retriesRemaining: number,
+): NextAttempt => {
+  const malformed =
+    outcome.error instanceof MalformedToolCallError
+      ? outcome.error
+      : previousMalformed;
+  if (!malformed) return noRetry(mode, previousMalformed);
+  if (mode === 'tool_disabled_fallback') return noRetry(mode, malformed);
+  return retriesRemaining === 1
+    ? semanticRetry('fallback', 'tool_disabled_fallback', malformed)
+    : semanticRetry('malformed_recovery', 'normal', malformed);
+};
+
+const providerRetry = (
+  mode: ModelCallMode,
+  malformedError: MalformedToolCallError | undefined,
+  retriesRemaining: number,
+): NextAttempt =>
+  retriesRemaining < 1
+    ? noRetry(mode, malformedError)
+    : {
+        retry: true,
+        trigger: 'provider_retry',
+        mode,
+        malformedError,
+      };
+
+const semanticRetry = (
+  trigger: ModelCallTrigger,
+  mode: ModelCallMode,
+  malformedError: MalformedToolCallError | undefined,
+): NextAttempt => ({ retry: true, trigger, mode, malformedError });
+
+const noRetry = (
+  mode: ModelCallMode,
+  malformedError: MalformedToolCallError | undefined,
+): NextAttempt => ({
+  retry: false,
+  trigger: 'initial',
+  mode,
+  malformedError,
+});
+
+const terminalDecision = (
+  outcome: Exclude<ModelCallOutcome, { type: 'accepted' }>,
+  malformedError: MalformedToolCallError | undefined,
+): RecoveryDecision => ({
+  type: 'terminal',
+  error: terminalError(outcome, malformedError),
+});
+
+const terminalError = (
+  outcome: Exclude<ModelCallOutcome, { type: 'accepted' }>,
+  malformedError: MalformedToolCallError | undefined,
+): TerminalModelCallError => {
+  if (outcome.type === 'provider_failure') {
+    return new TerminalModelCallError(outcome.error, outcome);
+  }
+  if (outcome.type === 'rejected') {
+    const error = rejectedError(outcome, malformedError);
+    return new TerminalModelCallError(error, outcome);
+  }
+  return new TerminalModelCallError(
+    new ProviderError('Model call did not complete'),
+    outcome,
   );
-}
+};
+
+const rejectedError = (
+  outcome: Extract<ModelCallOutcome, { type: 'rejected' }>,
+  malformedError: MalformedToolCallError | undefined,
+): AgentRuntimeError => {
+  if (malformedError) return malformedError;
+  return outcome.error;
+};

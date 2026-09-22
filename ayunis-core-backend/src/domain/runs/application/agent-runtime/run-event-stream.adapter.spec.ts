@@ -1,7 +1,18 @@
 import { createLoggerMock } from 'src/common/testing/logger.mock';
-import type { RunEvent, RunEventPayload } from '@ayunis/agent-runtime';
+import {
+  DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS,
+  ModelProviderError,
+  RunContext,
+  run,
+  type ModelProvider,
+  type ProviderFailureFacts,
+  type RunEvent,
+  type RunEventPayload,
+} from '@ayunis/agent-runtime';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -14,7 +25,6 @@ import {
 import {
   InferenceFailedError,
   InferenceImageTooLargeError,
-  InferenceStreamStalledError,
 } from 'src/domain/models/application/models.errors';
 import {
   RunPiiMasksUpdate,
@@ -29,6 +39,8 @@ import {
 } from 'src/domain/runs/application/runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
+import { RuntimeModelRegistry } from './runtime-model.registry';
+import { ModelCallObservabilityHookFactory } from './hooks/model-call-observability-hook.factory';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -53,12 +65,38 @@ async function* eventsFrom(
 async function collect(
   events: AsyncIterable<RunEvent>,
   logger = createLoggerMock(),
+  models?: RuntimeModelRegistry,
 ): Promise<RunStreamItem[]> {
   const items: RunStreamItem[] = [];
-  for await (const item of adaptRunEventsToStream(events, threadId, logger)) {
+  for await (const item of adaptRunEventsToStream(
+    events,
+    threadId,
+    logger,
+    undefined,
+    models,
+  )) {
     items.push(item);
   }
   return items;
+}
+
+function runtimeModels(
+  runtimeProviderName = 'anthropic:claude-sonnet-4-5',
+): RuntimeModelRegistry {
+  const registry = new RuntimeModelRegistry();
+  registry.register(
+    {
+      name: runtimeProviderName,
+      stream: () => {
+        throw new Error('Runtime provider is not called by adapter tests');
+      },
+    },
+    {
+      name: 'claude-sonnet-4-5',
+      provider: 'anthropic',
+    } as LanguageModel,
+  );
+  return registry;
 }
 
 async function collectWithOutcome(events: AsyncIterable<RunEvent>) {
@@ -322,6 +360,44 @@ describe('adaptRunEventsToStream', () => {
     expect(seen).toEqual(['after-error', 'after-run-end']);
   });
 
+  it('surfaces a critical hook failure with its execution path', async () => {
+    const logger = createLoggerMock();
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message:
+            "Hook 'ayunis-persistence' failed in afterModelTurn: database unavailable",
+          details: {
+            hookName: 'ayunis-persistence',
+            phase: 'afterModelTurn',
+            originalOutcome: 'accepted',
+            underlyingError: { code: 'USAGE_PERSISTENCE_FAILED' },
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      logger,
+    );
+
+    await expect(result).rejects.toMatchObject<
+      Partial<RunExecutionFailedError>
+    >({
+      code: 'RUN_EXECUTION_FAILED',
+      metadata: {
+        hookName: 'ayunis-persistence',
+        phase: 'afterModelTurn',
+        originalOutcome: 'accepted',
+        underlyingErrorCode: 'USAGE_PERSISTENCE_FAILED',
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ execution_path: 'agent_runtime' }),
+      'Critical agent runtime hook failed',
+    );
+  });
+
   it('surfaces a critical finalization failure with its execution path', async () => {
     const logger = createLoggerMock();
     const result = collect(
@@ -413,6 +489,219 @@ describe('adaptRunEventsToStream', () => {
 
   it.each([
     [
+      'connection',
+      {
+        kind: 'connection' as const,
+        stage: 'stream_establishment' as const,
+        transportCode: 'ECONNREFUSED',
+        host: 'api.anthropic.com',
+      },
+      ProviderConnectionError,
+      'PROVIDER_UNAVAILABLE_CONNECTION_ANTHROPIC',
+    ],
+    [
+      'provider timeout',
+      {
+        kind: 'timeout' as const,
+        stage: 'stream_consumption' as const,
+        timeoutSource: 'whole_stream' as const,
+      },
+      ProviderTimeoutError,
+      'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+    ],
+    [
+      'server failure',
+      {
+        kind: 'server' as const,
+        stage: 'stream_establishment' as const,
+        upstreamStatus: 503,
+        upstreamRequestId: 'req_anthropic_503',
+      },
+      ProviderServerError,
+      'PROVIDER_UNAVAILABLE_SERVER_ANTHROPIC',
+    ],
+    [
+      'rate limit',
+      {
+        kind: 'rate_limit' as const,
+        stage: 'stream_establishment' as const,
+        upstreamStatus: 429,
+        upstreamRequestId: 'req_anthropic_429',
+        retryAfterMs: 12_000,
+      },
+      ProviderRequestRejectedError,
+      'PROVIDER_UNAVAILABLE_REJECTED_ANTHROPIC',
+    ],
+  ])(
+    'maps a portable %s using actual backend model metadata',
+    async (_label, providerFailure, ErrorType, code) => {
+      const facts: ProviderFailureFacts = providerFailure;
+      const models = runtimeModels();
+      const result = collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'PROVIDER_FAILED',
+            message: 'Model provider request failed',
+            modelCall: {
+              modelCallId: 'call-1',
+              runId: 'run-1',
+              turn: 1,
+              callSequence: 1,
+              trigger: 'initial',
+              provider: 'anthropic:claude-sonnet-4-5',
+            },
+            providerFailure: facts,
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        createLoggerMock(),
+        models,
+      );
+
+      const error: unknown = await result.catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(ErrorType);
+      expect(error).toMatchObject({
+        code,
+        metadata: expect.objectContaining({
+          provider: 'anthropic',
+          modelId: 'claude-sonnet-4-5',
+          failureStage: facts.stage,
+          ...(facts.upstreamStatus !== undefined && {
+            upstreamStatus: facts.upstreamStatus,
+          }),
+          ...(facts.upstreamRequestId && {
+            upstreamRequestId: facts.upstreamRequestId,
+          }),
+          ...(facts.retryAfterMs !== undefined && {
+            retryAfterMs: facts.retryAfterMs,
+          }),
+        }),
+      });
+    },
+  );
+
+  it('preserves a runtime-owned idle stall as InferenceStreamStalledError', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'PROVIDER_FAILED',
+          message: `Model provider stream was idle for ${DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS}ms`,
+          modelCall: {
+            modelCallId: 'call-stalled',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          },
+          providerFailure: {
+            kind: 'timeout',
+            stage: 'stream_consumption',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      createLoggerMock(),
+      runtimeModels(),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+    });
+  });
+
+  it('maps an oversized-image runtime outcome recorded by observability', async () => {
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream() {
+        yield await Promise.reject(
+          new ModelProviderError({
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            cause: new Error('image exceeds 5 MB maximum'),
+          }),
+        );
+      },
+    };
+    const context = RunContext.create();
+    const models = RuntimeModelRegistry.attach(context);
+    models.register(provider, {
+      name: 'claude-sonnet-4-5',
+      provider: 'anthropic',
+    } as LanguageModel);
+    const observability = new ModelCallObservabilityHookFactory({
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as EventEmitter2).create({
+      userId: '223e4567-e89b-12d3-a456-426614174000',
+      orgId: '323e4567-e89b-12d3-a456-426614174000',
+      models,
+    });
+    const result = collect(
+      run({
+        instructions: 'Inspect the submitted image.',
+        model: provider,
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'Inspect this image.' }],
+          },
+        ],
+        context,
+        hooks: [observability],
+        retry: { maxRetries: 0 },
+      }),
+      createLoggerMock(),
+      models,
+    );
+
+    await expect(result).rejects.toBeInstanceOf(InferenceImageTooLargeError);
+  });
+
+  it('keeps an ordinary portable rejection in the inference-failed incident family', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'PROVIDER_FAILED',
+          message: 'Model provider request failed',
+          modelCall: {
+            modelCallId: 'call-rejected',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          },
+          providerFailure: {
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            upstreamRequestId: 'req_anthropic_400',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      createLoggerMock(),
+      runtimeModels(),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_FAILED',
+      metadata: expect.objectContaining({
+        provider: 'anthropic',
+        modelId: 'claude-sonnet-4-5',
+        status: 400,
+        upstreamRequestId: 'req_anthropic_400',
+      }),
+    });
+  });
+
+  it.each([
+    [
       'provider connection error',
       'PROVIDER_UNAVAILABLE_CONNECTION_ANTHROPIC',
       {
@@ -494,39 +783,6 @@ describe('adaptRunEventsToStream', () => {
         upstreamStatus: 429,
         retryAfterMs: 30_000,
       },
-    ],
-    [
-      'oversized image error',
-      'INFERENCE_IMAGE_TOO_LARGE',
-      {
-        type: 'inference_image_too_large',
-        context: { status: 400 },
-      },
-      InferenceImageTooLargeError,
-      400,
-      { status: 400 },
-    ],
-    [
-      'stalled stream error',
-      'INFERENCE_TIMEOUT',
-      {
-        type: 'inference_stream_stalled',
-        context: { idleMs: 45_000 },
-      },
-      InferenceStreamStalledError,
-      504,
-      undefined,
-    ],
-    [
-      'generic inference error',
-      'INFERENCE_FAILED',
-      {
-        type: 'inference_failed',
-        context: { reason: 'Provider inference failed', status: 429 },
-      },
-      InferenceFailedError,
-      500,
-      { status: 429 },
     ],
   ])(
     'reconstructs a classified %s',

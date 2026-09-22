@@ -19,8 +19,8 @@ export interface ToolExecutionContext {
   /** Emits a `custom` RunEvent into the run's event stream. */
   emit(event: CustomEventInput): void;
   /**
-   * Reserved subagent seam: re-enters the loop with a derived child
-   * context; parent hooks are inherited unless overridden in the input.
+   * Reserved subagent seam: re-enters the loop with a derived child context;
+   * eligible parent hooks are inherited unless overridden in the input.
    */
   runChild(input: ChildRunInput): AsyncIterable<RunEvent>;
 }

@@ -837,12 +837,12 @@ describe('the agent loop', () => {
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'aborted' });
   });
 
-  it('rejects repeated provider responses without assistant content', async () => {
-    const model = new MockProvider([[], []]);
+  it('rejects provider responses without assistant content after the shared retry budget', async () => {
+    const model = new MockProvider([[], [], [], []]);
 
     const events = await collectEvents(baseInput(model));
 
-    expect(model.requests).toHaveLength(2);
+    expect(model.requests).toHaveLength(4);
     expect(eventTypes(events)).toEqual(['run_start', 'error', 'run_end']);
     expect(events.find((event) => event.type === 'error')).toMatchObject({
       code: 'PROVIDER_FAILED',
@@ -906,7 +906,7 @@ describe('the agent loop', () => {
       }),
     );
 
-    expect(afterModelCall).toHaveBeenCalledTimes(2);
+    expect(afterModelCall).toHaveBeenCalledTimes(4);
     expect(afterModelCall).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),

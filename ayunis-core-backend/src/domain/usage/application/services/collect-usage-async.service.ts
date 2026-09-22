@@ -4,18 +4,24 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run-usage-collection.event';
+import type {
+  RunUsageCollectionOutcome,
+  RunUsageExecutionPath,
+} from 'src/domain/usage/application/events/run-usage-collection.event';
+import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
-import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
-import {
-  RunUsageCollectionEvent,
-  type RunUsageCollectionOutcome,
-  type RunUsageExecutionPath,
-} from 'src/domain/usage/application/events/run-usage-collection.event';
+
+interface UsageCollection {
+  command: CollectUsageCommand;
+  event: TokensConsumedEvent;
+  executionPath?: RunUsageExecutionPath;
+}
 
 /**
- * Collects usage data asynchronously (fire-and-forget).
- * Errors are logged but don't block the main flow.
+ * Collects usage fire-and-forget by default. Critical callers may await
+ * persistence while event delivery remains best-effort.
  */
 @Injectable()
 export class CollectUsageAsyncService {
@@ -34,6 +40,42 @@ export class CollectUsageAsyncService {
     messageId?: UUID,
     executionPath?: RunUsageExecutionPath,
   ): void {
+    void this.persist(
+      this.prepareCollection(
+        model,
+        inputTokens,
+        outputTokens,
+        messageId,
+        executionPath,
+      ),
+    ).catch(() => undefined);
+  }
+
+  collectCritical(
+    model: LanguageModel | ImageGenerationModel,
+    inputTokens: number,
+    outputTokens: number,
+    messageId?: UUID,
+    executionPath?: RunUsageExecutionPath,
+  ): Promise<void> {
+    return this.persist(
+      this.prepareCollection(
+        model,
+        inputTokens,
+        outputTokens,
+        messageId,
+        executionPath,
+      ),
+    );
+  }
+
+  private prepareCollection(
+    model: LanguageModel | ImageGenerationModel,
+    inputTokens: number,
+    outputTokens: number,
+    messageId?: UUID,
+    executionPath?: RunUsageExecutionPath,
+  ): UsageCollection {
     this.logger.debug(
       {
         modelId: model.id,
@@ -45,47 +87,45 @@ export class CollectUsageAsyncService {
       'Collecting usage',
     );
 
-    const userId = this.contextService.get('userId');
-    const apiKeyId = this.contextService.get('apiKeyId');
-    const orgId = this.contextService.get('orgId');
-
     const event = new TokensConsumedEvent(
-      userId,
-      apiKeyId,
-      orgId,
+      this.contextService.get('userId'),
+      this.contextService.get('apiKeyId'),
+      this.contextService.get('orgId'),
       model.name,
       model.provider,
       inputTokens,
       outputTokens,
     );
-
     const command = new CollectUsageCommand({
       model,
       inputTokens,
       outputTokens,
       requestId: messageId,
     });
-    this.persist(command, event, executionPath);
+    return { command, event, executionPath };
   }
 
-  private persist(
-    command: CollectUsageCommand,
-    event: TokensConsumedEvent,
+  private async persist(collection: UsageCollection): Promise<void> {
+    try {
+      await this.collectUsageUseCase.execute(collection.command);
+    } catch (error) {
+      this.handlePersistenceFailure(error, collection.executionPath);
+      throw error;
+    }
+
+    await this.emitTokensConsumed(collection.event);
+    this.emitRunUsageCollection(collection.executionPath, 'success');
+  }
+
+  private handlePersistenceFailure(
+    error: unknown,
     executionPath?: RunUsageExecutionPath,
   ): void {
-    this.collectUsageUseCase
-      .execute(command)
-      .then(async () => {
-        await this.emitTokensConsumed(event);
-        this.emitRunUsageCollection(executionPath, 'success');
-      })
-      .catch((error) => {
-        this.logger.warn(
-          { err: error as Error, execution_path: executionPath },
-          'Usage collection failed',
-        );
-        this.emitRunUsageCollection(executionPath, 'error');
-      });
+    this.logger.warn(
+      { err: error as Error, execution_path: executionPath },
+      'Usage collection failed',
+    );
+    this.emitRunUsageCollection(executionPath, 'error');
   }
 
   private emitRunUsageCollection(
@@ -93,27 +133,31 @@ export class CollectUsageAsyncService {
     outcome: RunUsageCollectionOutcome,
   ): void {
     if (!executionPath) return;
-    this.eventEmitter
-      .emitAsync(
-        RunUsageCollectionEvent.EVENT_NAME,
-        new RunUsageCollectionEvent(executionPath, outcome),
-      )
-      .catch((error: unknown) => {
-        this.logger.error(
-          { error: error instanceof Error ? error.message : 'Unknown error' },
-          'Failed to emit RunUsageCollectionEvent',
-        );
-      });
+    try {
+      void this.eventEmitter
+        .emitAsync(
+          RunUsageCollectionEvent.EVENT_NAME,
+          new RunUsageCollectionEvent(executionPath, outcome),
+        )
+        .catch((error: unknown) => this.logRunUsageEventFailure(error));
+    } catch (error) {
+      this.logRunUsageEventFailure(error);
+    }
+  }
+
+  private logRunUsageEventFailure(error: unknown): void {
+    this.logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to emit RunUsageCollectionEvent',
+    );
   }
 
   private async emitTokensConsumed(event: TokensConsumedEvent): Promise<void> {
     try {
       await this.eventEmitter.emitAsync(TokensConsumedEvent.EVENT_NAME, event);
-    } catch (err) {
+    } catch (error) {
       this.logger.error(
-        {
-          error: err instanceof Error ? err.message : 'Unknown error',
-        },
+        { error: error instanceof Error ? error.message : 'Unknown error' },
         'Failed to emit TokensConsumedEvent',
       );
     }

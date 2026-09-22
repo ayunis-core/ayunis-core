@@ -1,32 +1,46 @@
 import type { RunContext } from '../context/run-context';
 import type { AgentRuntimeError } from './errors';
-import type { CustomEventInput, RunStatus, ToolCallSummary } from './event';
+import type {
+  CustomEventInput,
+  ModelCallTrigger,
+  RunStatus,
+  ToolCallSummary,
+} from './event';
 import type { AssistantMessage, Message } from './message';
-import type { FinishReason, Usage } from './provider';
+import type {
+  FinishReason,
+  ModelProvider,
+  ProviderFailureFacts,
+  ProviderRequest,
+  Usage,
+} from './provider';
 import type { Tool } from './tool';
 
-/**
- * The mutation API available to every hook phase. Tool/instruction/message
- * mutations are buffered and applied at the next provider-request assembly
- * (which happens after `beforeModelCall` fires): mutations made in
- * `runStart`/`beforeModelCall` affect the imminent model call; mutations
- * made in `afterModelCall`/`afterToolCall` affect the next iteration.
- * `abort` and `emit` take effect immediately.
- */
-export interface HookApi {
+export type ReadonlySnapshot<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends AbortSignal
+    ? T
+    : T extends readonly (infer Item)[]
+      ? readonly ReadonlySnapshot<Item>[]
+      : T extends object
+        ? { readonly [Key in keyof T]: ReadonlySnapshot<T[Key]> }
+        : T;
+
+/** Controls whose effects are immediate in every hook phase. */
+export interface HookControlApi {
   readonly context: RunContext;
+  abort(reason?: string): void;
+  emit(event: CustomEventInput): void;
+}
+
+/** Mutations persist in run, turn, and tool phases; before-call mutations are call-local. */
+export interface HookApi extends HookControlApi {
   transformMessages(fn: (messages: readonly Message[]) => Message[]): void;
   addTools(...tools: Tool[]): void;
   removeTools(...names: string[]): void;
-  /** Full-replace escape hatch (e.g. re-assembling the whole tool set). */
   setTools(tools: Tool[]): void;
   addInstructions(text: string): void;
-  /** Full-replace escape hatch for a rebuilt system prompt. */
   setInstructions(text: string): void;
-  /** Ends the run with status 'aborted' before the next loop step. */
-  abort(reason?: string): void;
-  /** Emits a `custom` RunEvent into the run's event stream. */
-  emit(event: CustomEventInput): void;
 }
 
 export interface RunStartContext extends HookApi {
@@ -35,25 +49,137 @@ export interface RunStartContext extends HookApi {
   readonly tools: readonly Tool[];
 }
 
-export interface BeforeModelCallContext extends HookApi {
+export interface BeforeModelTurnContext extends HookApi {
   readonly iteration: number;
+  readonly turn: number;
+  readonly model: ModelProvider;
   readonly messages: readonly Message[];
+  readonly instructions: string;
   readonly tools: readonly Tool[];
 }
 
-export interface AfterModelCallContext extends HookApi {
+export type { ModelCallTrigger } from './event';
+
+export interface ModelCallIdentity {
+  readonly modelCallId: string;
+  readonly runId: string;
+  /** One-based logical turn number. */
+  readonly turn: number;
+  /** One-based sequence within the logical turn. */
+  readonly callSequence: number;
+  readonly trigger: ModelCallTrigger;
+  /** The actual provider used by this call, including in child runs. */
+  readonly model: ModelProvider;
+}
+
+interface ModelCallOutcomeBase<
+  MessageType,
+  UsageType,
+> extends ModelCallIdentity {
+  readonly message: MessageType;
+  readonly usage: UsageType;
+  readonly finishReason: FinishReason;
+  readonly outputState: 'partial' | 'final';
+  readonly visibleOutput: boolean;
+  readonly durationMs: number;
+}
+
+export type ModelCallRejectedReason =
+  'empty' | 'malformed' | 'invalid_fallback';
+
+type ModelCallOutcomeOf<MessageType, UsageType, ErrorType, FailureType> =
+  | (ModelCallOutcomeBase<MessageType, UsageType> & {
+      readonly type: 'accepted';
+    })
+  | (ModelCallOutcomeBase<MessageType, UsageType> & {
+      readonly type: 'rejected';
+      readonly reason: ModelCallRejectedReason;
+      readonly error: ErrorType;
+    })
+  | (ModelCallOutcomeBase<MessageType, UsageType> & {
+      readonly type: 'provider_failure';
+      readonly error: ErrorType;
+      readonly providerFailure: FailureType;
+    })
+  | (ModelCallOutcomeBase<MessageType, UsageType> & {
+      readonly type: 'aborted';
+      readonly error: ErrorType;
+    })
+  | (ModelCallOutcomeBase<MessageType, UsageType> & {
+      readonly type: 'consumer_abandoned';
+    });
+
+export type ModelCallOutcome = ModelCallOutcomeOf<
+  AssistantMessage,
+  Usage,
+  AgentRuntimeError,
+  ProviderFailureFacts
+>;
+
+export type ModelCallOutcomeSnapshot = ModelCallOutcomeOf<
+  ReadonlySnapshot<AssistantMessage>,
+  ReadonlySnapshot<Usage>,
+  ReadonlySnapshot<AgentRuntimeError>,
+  ReadonlySnapshot<ProviderFailureFacts>
+>;
+
+export interface BeforeModelCallContext extends HookApi, ModelCallIdentity {
+  /** Zero-based alias retained for compatibility. */
   readonly iteration: number;
-  readonly message: AssistantMessage;
-  readonly usage: Usage;
+  /** Immutable request state as transformed by preceding call hooks. */
+  readonly request: ReadonlySnapshot<ProviderRequest>;
+  readonly messages: readonly ReadonlySnapshot<Message>[];
+  readonly tools: readonly ReadonlySnapshot<Tool>[];
+}
+
+export interface AfterModelCallContext
+  extends HookControlApi, ModelCallIdentity {
+  readonly iteration: number;
+  readonly outcome: ModelCallOutcomeSnapshot;
+  /** Compatibility projections; use `outcome` for new integrations. */
+  readonly message: ReadonlySnapshot<AssistantMessage>;
+  readonly usage: ReadonlySnapshot<Usage>;
   readonly finishReason: FinishReason;
 }
 
+type ModelTurnOutcomeOf<CallType, ErrorType> =
+  | { readonly type: 'accepted'; readonly call: CallType }
+  | {
+      readonly type: 'error';
+      readonly error: ErrorType;
+      readonly call?: CallType;
+    }
+  | { readonly type: 'aborted'; readonly call?: CallType }
+  | {
+      readonly type: 'consumer_abandoned';
+      readonly call?: CallType;
+    };
+
+export type ModelTurnOutcome = ModelTurnOutcomeOf<
+  ModelCallOutcome,
+  AgentRuntimeError
+>;
+
+export type ModelTurnOutcomeSnapshot = ModelTurnOutcomeOf<
+  ModelCallOutcomeSnapshot,
+  ReadonlySnapshot<AgentRuntimeError>
+>;
+
+export interface AfterModelTurnContext extends HookApi {
+  readonly iteration: number;
+  readonly turn: number;
+  readonly model: ModelProvider;
+  readonly outcome: ModelTurnOutcomeSnapshot;
+  readonly messages: readonly ReadonlySnapshot<Message>[];
+}
+
+/** Deprecated compatibility type; use `afterModelCall` outcomes. */
 export type ModelCallInterruptionReason =
   'aborted' | 'error' | 'consumer_abandoned';
 
+/** Deprecated compatibility type; use `AfterModelCallContext`. */
 export interface ModelCallInterruptedContext extends HookApi {
   readonly iteration: number;
-  /** Partial display content only; unexecuted tool calls are excluded. */
   readonly message: AssistantMessage;
   readonly reason: ModelCallInterruptionReason;
 }
@@ -61,12 +187,7 @@ export interface ModelCallInterruptedContext extends HookApi {
 export interface BeforeToolCallContext extends HookApi {
   readonly iteration: number;
   readonly toolCall: ToolCallSummary;
-  /**
-   * The definition matching toolCall.name, including rewrites by earlier
-   * hooks. Undefined when that name is not in the tool set.
-   */
   readonly tool: Tool | undefined;
-  /** Rewrites THIS tool call before execution (same-phase mutation). */
   rewriteToolCall(patch: {
     name?: string;
     input?: Record<string, unknown>;
@@ -84,24 +205,31 @@ export interface AfterToolCallContext extends HookApi {
   readonly isLastToolCall: boolean;
 }
 
-export interface RunEndContext extends HookApi {
-  readonly messages: readonly Message[];
+export interface RunEndContext extends HookControlApi {
+  readonly messages: readonly ReadonlySnapshot<Message>[];
   readonly status: RunStatus;
-  readonly error?: AgentRuntimeError;
+  readonly error?: ReadonlySnapshot<AgentRuntimeError>;
 }
 
-/**
- * The single extension mechanism. Hooks fire in registration order and are
- * awaited sequentially. Hooks inherit downward to child (subagent) runs by
- * default.
- */
+export type TerminalHookFailureMode = 'critical' | 'best_effort';
+
+/** Hooks run sequentially in registration order and inherit into child runs by default. */
 export interface Hook {
   readonly name: string;
-  /** Defaults to `critical`; applies only when `runEnd` throws. */
-  readonly runEndFailureMode?: 'critical' | 'best_effort';
+  /** Set false when this hook owns root-run-only state or side effects. Defaults to true. */
+  readonly inheritToChildRuns?: boolean;
+  /** Default for terminal phases when a phase-specific mode is omitted. */
+  readonly terminalFailureMode?: TerminalHookFailureMode;
+  readonly afterModelCallFailureMode?: TerminalHookFailureMode;
+  readonly afterModelTurnFailureMode?: TerminalHookFailureMode;
+  /** Deprecated phase-specific alias for `terminalFailureMode`. */
+  readonly runEndFailureMode?: TerminalHookFailureMode;
   runStart?(ctx: RunStartContext): void | Promise<void>;
+  beforeModelTurn?(ctx: BeforeModelTurnContext): void | Promise<void>;
   beforeModelCall?(ctx: BeforeModelCallContext): void | Promise<void>;
   afterModelCall?(ctx: AfterModelCallContext): void | Promise<void>;
+  afterModelTurn?(ctx: AfterModelTurnContext): void | Promise<void>;
+  /** Deprecated and no longer invoked; use `afterModelCall`. */
   modelCallInterrupted?(ctx: ModelCallInterruptedContext): void | Promise<void>;
   beforeToolCall?(ctx: BeforeToolCallContext): void | Promise<void>;
   afterToolCall?(ctx: AfterToolCallContext): void | Promise<void>;

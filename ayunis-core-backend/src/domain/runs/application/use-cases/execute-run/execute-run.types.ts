@@ -5,7 +5,20 @@ import type { LanguageModel } from 'src/domain/models/domain/models/language.mod
 
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import type { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
 import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+
+export interface SeededInput {
+  message: Message;
+  masks: ThreadPiiMask[] | null;
+}
+
+export interface PreparedToolResultInput {
+  input: RunToolResultInput;
+  masks: ThreadPiiMask[] | null;
+}
 
 export interface PreparedTools {
   tools: RuntimeTool[];

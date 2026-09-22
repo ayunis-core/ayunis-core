@@ -44,6 +44,7 @@ export class SkillActivationHookFactory {
     const activateSkill = ToolType.ACTIVATE_SKILL as string;
     return {
       name: 'ayunis-skill-activation',
+      inheritToChildRuns: false,
       afterToolCall: async (ctx) => {
         if (ctx.isError || ctx.toolCall.name !== activateSkill) {
           return;
