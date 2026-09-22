@@ -2,10 +2,12 @@ import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
 import { CreditBudgetDisplay } from '@/widgets/credit-budget-display';
 import { useCreditLimitBudget } from '@/features/credit-limits/api/useCreditLimitQueries';
 
@@ -18,6 +20,11 @@ export function CreditLimitBudget() {
     <Card>
       <CardHeader>
         <CardTitle>{t('budget.title')}</CardTitle>
+        <CardAction>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/admin-settings/usage">{t('budget.manage')}</Link>
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-4">
         <CreditBudgetDisplay
@@ -40,9 +47,6 @@ export function CreditLimitBudget() {
             usageProgress: t('budget.progress'),
           }}
         />
-        <Link to="/admin-settings/usage" className="text-sm underline">
-          {t('budget.manage')}
-        </Link>
       </CardContent>
     </Card>
   );
