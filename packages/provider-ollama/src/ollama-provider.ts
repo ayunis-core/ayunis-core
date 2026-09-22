@@ -12,7 +12,9 @@ import { convertChunk } from './convert-chunk';
 import { convertMessages, convertTool } from './convert-request';
 
 /** Context window preserved from the pre-runtime Ollama handlers. */
-const DEFAULT_NUM_CTX = 30000;
+export const DEFAULT_NUM_CTX = 30_000;
+/** Explicit generated-output ceiling for each request. */
+export const DEFAULT_NUM_PREDICT = 8_192;
 /** Base backoff for the initial-request retry, doubled per attempt. */
 const RETRY_BASE_DELAY_MS = 1000;
 
@@ -88,7 +90,10 @@ const buildParams = (
     messages: convertMessages(request.instructions, request.messages, codec),
     tools: tools.length > 0 ? tools : undefined,
     stream: true,
-    options: { num_ctx: options.numCtx ?? DEFAULT_NUM_CTX },
+    options: {
+      num_ctx: options.numCtx ?? DEFAULT_NUM_CTX,
+      num_predict: DEFAULT_NUM_PREDICT,
+    },
   };
 };
 
