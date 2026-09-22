@@ -25,6 +25,7 @@ import { useNavigate } from '@tanstack/react-router';
 import {
   separateFilesByType,
   createFileListFromFiles,
+  ACCEPTED_FILE_PICKER_TYPES,
 } from '@/widgets/chat-input/utils/fileHandlers';
 import type {
   IntegrationSummary,
@@ -198,7 +199,7 @@ export default function PlusButton({
         type="file"
         hidden
         multiple
-        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.odt,.odp,.txt,.md,.eml,.mp3,.m4a,.wav,.webm"
+        accept={ACCEPTED_FILE_PICKER_TYPES}
         onChange={(e) => handleFileChange(e.target.files)}
         ref={fileInputRef}
       />

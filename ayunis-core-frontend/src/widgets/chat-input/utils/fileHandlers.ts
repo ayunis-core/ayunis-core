@@ -1,5 +1,6 @@
-// Document extensions accepted by the chat input (drag-drop + file picker).
-// Images are handled separately; tabular/audio types are covered elsewhere.
+// Non-image extensions accepted by the chat input. Mirrors the backend's
+// FILE_EXTENSIONS in src/common/util/file-type.ts; images are routed by MIME
+// type instead of extension.
 export const ACCEPTED_DOCUMENT_EXTENSIONS = [
   '.pdf',
   '.csv',
@@ -10,8 +11,20 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
   '.odt',
   '.odp',
   '.txt',
+  '.md',
   '.eml',
+  '.mp3',
+  '.m4a',
+  '.wav',
+  '.webm',
 ];
+
+// `accept` value for the chat input's file picker, so the picker and drag-drop
+// validation cannot drift apart.
+export const ACCEPTED_FILE_PICKER_TYPES = [
+  'image/*',
+  ...ACCEPTED_DOCUMENT_EXTENSIONS,
+].join(',');
 
 export function separateFilesByType(files: FileList): {
   images: File[];
