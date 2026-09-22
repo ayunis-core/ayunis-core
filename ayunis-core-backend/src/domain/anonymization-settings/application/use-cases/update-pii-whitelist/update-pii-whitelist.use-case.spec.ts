@@ -88,11 +88,26 @@ describe('UpdatePiiWhitelistUseCase', () => {
     expect(replaceForOrg).not.toHaveBeenCalled();
   });
 
+  it('persists a pattern at the length limit unchanged', async () => {
+    const pattern = 'a'.repeat(1000);
+
+    const result = await useCase.execute(
+      new UpdatePiiWhitelistCommand(orgId, [
+        { category: PiiCategory.LOCATION, pattern },
+      ]),
+    );
+
+    expect(result[0]).toMatchObject({
+      category: PiiCategory.LOCATION,
+      pattern,
+    });
+  });
+
   it('rejects a pattern exceeding the length limit', async () => {
     await expect(
       useCase.execute(
         new UpdatePiiWhitelistCommand(orgId, [
-          { category: PiiCategory.LOCATION, pattern: 'a'.repeat(201) },
+          { category: PiiCategory.LOCATION, pattern: 'a'.repeat(1001) },
         ]),
       ),
     ).rejects.toThrow(InvalidPatternError);

@@ -3670,7 +3670,7 @@ export interface PiiWhitelistEntryDto {
   category: PiiCategory;
   /**
      * Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.
-     * @maxLength 200
+     * @maxLength 1000
      * @nullable
      */
   pattern: string | null;
