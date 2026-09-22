@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { PinButton } from '@/shared/ui/pin-button';
 import {
   isFavorite,
@@ -34,6 +35,7 @@ export function WorkspaceHeaderActions({
 
   return (
     <div className="flex items-center gap-1">
+      <HelpLink path="workspaces/" />
       <PinButton
         isPinned={isPinned}
         pinLabel={t('page.pin')}
