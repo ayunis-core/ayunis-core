@@ -8,6 +8,7 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import type { Workspace } from '@/features/workspaces';
 import { PaginationWidget } from '@/widgets/pagination';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { WorkspacesContent } from './WorkspacesContent';
 import { WorkspacesEmptyState } from './WorkspacesEmptyState';
 
@@ -31,6 +32,13 @@ export default function WorkspacesPage({
     </Button>
   );
 
+  const headerAction = (
+    <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
+      <HelpLink path="workspaces/" />
+      {createButton}
+    </div>
+  );
+
   const createDialog = (
     <CreateWorkspaceDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
   );
@@ -42,7 +50,7 @@ export default function WorkspacesPage({
           header={
             <ContentAreaHeader
               breadcrumbs={[{ label: t('page.title') }]}
-              action={createButton}
+              action={headerAction}
             />
           }
         >
@@ -59,7 +67,7 @@ export default function WorkspacesPage({
         contentHeader={
           <ContentAreaHeader
             breadcrumbs={[{ label: t('page.title') }]}
-            action={createButton}
+            action={headerAction}
           />
         }
         contentArea={
