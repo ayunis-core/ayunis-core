@@ -1,6 +1,6 @@
 import safeRegex from 'safe-regex2';
 
-export const MAX_PATTERN_LENGTH = 200;
+export const MAX_PATTERN_LENGTH = 1000;
 
 export type PatternValidationError =
   'empty' | 'too_long' | 'invalid_syntax' | 'unsafe';

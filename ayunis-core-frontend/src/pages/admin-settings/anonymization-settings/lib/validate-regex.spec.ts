@@ -10,10 +10,13 @@ describe('validateRegexPattern', () => {
     expect(validateRegexPattern('')).toBeNull();
   });
 
+  it('accepts a pattern at the length limit', () => {
+    expect(MAX_PATTERN_LENGTH).toBe(1000);
+    expect(validateRegexPattern('a'.repeat(1000))).toBeNull();
+  });
+
   it('rejects a pattern exceeding the length limit', () => {
-    expect(validateRegexPattern('a'.repeat(MAX_PATTERN_LENGTH + 1))).toBe(
-      'too_long',
-    );
+    expect(validateRegexPattern('a'.repeat(1001))).toBe('too_long');
   });
 
   it('rejects invalid regex syntax', () => {
