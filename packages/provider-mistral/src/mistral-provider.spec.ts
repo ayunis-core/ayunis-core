@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { mistral } from './mistral-provider';
+import { DEFAULT_MAX_TOKENS, mistral } from './mistral-provider';
 
 describe('mistral', () => {
+  it('exports the default output-token limit used by requests', () => {
+    expect(DEFAULT_MAX_TOKENS).toBe(8_192);
+  });
+
   it('names the provider mistral:<model> and exposes a stream function', () => {
     const provider = mistral({
       apiKey: 'sk-test',

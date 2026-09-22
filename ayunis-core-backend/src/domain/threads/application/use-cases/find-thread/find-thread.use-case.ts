@@ -9,7 +9,7 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 import { CountMessagesTokensUseCase } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.use-case';
 import { CountMessagesTokensCommand } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.command';
-import { LONG_CHAT_WARNING_THRESHOLD_TOKENS } from 'src/common/token-counter/application/context-budget.constants';
+import { getLongChatWarningThresholdTokens } from 'src/common/token-counter/application/context-budget.constants';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -40,7 +40,10 @@ export class FindThreadUseCase {
     const tokenCount = this.countMessagesTokensUseCase.execute(
       new CountMessagesTokensCommand(thread.messages),
     );
-    const isLongChat = tokenCount > LONG_CHAT_WARNING_THRESHOLD_TOKENS;
+    const warningThreshold = getLongChatWarningThresholdTokens(
+      thread.model?.model.name,
+    );
+    const isLongChat = tokenCount > warningThreshold;
 
     return { thread, isLongChat };
   }

@@ -9,6 +9,7 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
+import { getHistoryBudgetTokens } from 'src/common/token-counter/application/context-budget.constants';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -77,6 +78,7 @@ const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 const integrationId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
+const CLAUDE_OPUS_HISTORY_BUDGET = getHistoryBudgetTokens('claude-opus-4-7');
 
 interface Harness {
   useCase: ExecuteRunUseCase;
@@ -97,6 +99,7 @@ interface Harness {
   trackRun: jest.Mock;
   trackedError: () => unknown;
   resolveModelAccess: jest.Mock;
+  materializeHistory: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -115,11 +118,12 @@ interface HarnessOptions {
   workspaceId?: UUID;
   workspaceSkills?: BackendSkill[];
   effectiveAnonymousOnly?: boolean;
+  modelName?: string;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
   const model = {
-    name: 'claude',
+    name: overrides.modelName ?? 'claude',
     provider: 'anthropic',
     canVision: false,
     canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
@@ -266,12 +270,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     contextService,
     eventEmitter,
   );
+  const materializeHistory = jest
+    .fn()
+    .mockResolvedValue([
+      { role: 'user', content: [{ type: 'text', text: 'hi' }] },
+    ]);
   const runtimeHistoryMaterializer = {
-    materialize: jest
-      .fn()
-      .mockResolvedValue([
-        { role: 'user', content: [{ type: 'text', text: 'hi' }] },
-      ]),
+    materialize: materializeHistory,
   } as unknown as RuntimeHistoryMaterializer;
   const countTokens = jest
     .fn()
@@ -383,6 +388,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     trackRun,
     trackedError: () => telemetryError,
     resolveModelAccess,
+    materializeHistory,
   };
 }
 
@@ -1212,8 +1218,23 @@ describe('ExecuteRunUseCase', () => {
     expect(countTokens).toHaveBeenCalledTimes(4);
   });
 
-  it('accepts a latest turn at the 200k context budget', async () => {
-    const { useCase, provider } = buildHarness({ tokensPerMessage: 200_000 });
+  it('uses the selected model history budget when materializing persisted history', async () => {
+    const { useCase, materializeHistory } = buildHarness({
+      modelName: 'claude-opus-4-7',
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(materializeHistory).toHaveBeenCalledWith(
+      expect.objectContaining({ maxTokens: CLAUDE_OPUS_HISTORY_BUDGET }),
+    );
+  });
+
+  it('accepts a latest turn at the selected model history budget', async () => {
+    const { useCase, provider } = buildHarness({
+      modelName: 'claude-opus-4-7',
+      tokensPerMessage: CLAUDE_OPUS_HISTORY_BUDGET,
+    });
 
     await drain(await useCase.execute(userCommand()));
 
@@ -1221,7 +1242,10 @@ describe('ExecuteRunUseCase', () => {
   });
 
   it('does not call the provider when the latest turn exceeds the budget', async () => {
-    const { useCase, provider } = buildHarness({ tokensPerMessage: 200_001 });
+    const { useCase, provider } = buildHarness({
+      modelName: 'claude-opus-4-7',
+      tokensPerMessage: CLAUDE_OPUS_HISTORY_BUDGET + 1,
+    });
 
     await expect(
       drain(await useCase.execute(userCommand())),

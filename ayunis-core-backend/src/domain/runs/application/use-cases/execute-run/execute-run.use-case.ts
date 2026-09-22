@@ -62,7 +62,7 @@ import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/ap
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import type { PreparedRun, PreparedTools } from './execute-run.types';
-import { MAX_CONTEXT_TOKENS } from 'src/common/token-counter/application/context-budget.constants';
+import { getHistoryBudgetTokens } from 'src/common/token-counter/application/context-budget.constants';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
@@ -286,6 +286,7 @@ export class ExecuteRunUseCase {
   }
 
   private async startRun(prepared: PreparedRun, signal?: AbortSignal) {
+    const maxTokens = getHistoryBudgetTokens(prepared.model.name);
     const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
       prepared.thread.messages,
       prepared.thread.id,
@@ -295,7 +296,7 @@ export class ExecuteRunUseCase {
       messages: historyMessages,
       orgId: prepared.orgId,
       tools: prepared.backendTools,
-      maxTokens: MAX_CONTEXT_TOKENS,
+      maxTokens,
     });
     const provider = await this.resolveModelProviderUseCase.execute(
       new ResolveModelProviderQuery(prepared.model),
@@ -321,14 +322,14 @@ export class ExecuteRunUseCase {
       messages,
       tools: prepared.tools,
       ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
-      hooks: this.buildHooks(prepared),
+      hooks: this.buildHooks(prepared, maxTokens),
       context,
       maxIterations: MAX_ITERATIONS,
       ...(signal ? { signal } : {}),
     });
   }
 
-  private buildHooks(prepared: PreparedRun): Hook[] {
+  private buildHooks(prepared: PreparedRun, maxTokens: number): Hook[] {
     return [
       this.usageHookFactory.create({ model: prepared.model }),
       this.persistenceHookFactory.create({
@@ -349,7 +350,7 @@ export class ExecuteRunUseCase {
         activatedSkillName: prepared.activatedSkillName,
       }),
       this.contextBudgetHookFactory.create({
-        maxTokens: MAX_CONTEXT_TOKENS,
+        maxTokens,
       }),
     ];
   }
