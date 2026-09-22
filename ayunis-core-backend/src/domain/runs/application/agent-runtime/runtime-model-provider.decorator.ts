@@ -1,11 +1,12 @@
 import { AgentRuntimeError, RunAbortedError } from '@ayunis/agent-runtime';
-import type {
-  Message,
-  MessageContent,
-  ModelProvider,
-  ProviderChunk,
-  ProviderRequest,
-  ToolSchema,
+import {
+  ModelProviderError,
+  type Message,
+  type MessageContent,
+  type ModelProvider,
+  type ProviderChunk,
+  type ProviderRequest,
+  type ToolSchema,
 } from '@ayunis/inference';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -309,7 +310,8 @@ function mapUnclassifiedProviderError(
 ): ApplicationError {
   const diagnostics = extractProviderErrorDiagnostics(error);
   const status = diagnostics.upstreamStatus;
-  const message = error instanceof Error ? error.message : String(error);
+  const cause = error instanceof ModelProviderError ? error.cause : error;
+  const message = cause instanceof Error ? cause.message : String(cause);
   if (/image exceeds .* maximum/i.test(message)) {
     return new InferenceImageTooLargeError({ status });
   }
@@ -333,6 +335,7 @@ function toRuntimeError(
 }
 
 function isAbortError(error: unknown): boolean {
+  if (error instanceof ModelProviderError) return error.kind === 'abort';
   return (
     (error instanceof Error || error instanceof DOMException) &&
     error.name === 'AbortError'

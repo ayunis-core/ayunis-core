@@ -1,3 +1,5 @@
+import { setTimeout as delay } from 'node:timers/promises';
+
 import { Ollama } from 'ollama';
 import type { ChatRequest } from 'ollama';
 
@@ -6,7 +8,11 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
-import { ToolNameCodec } from '@ayunis/inference';
+import {
+  ToolNameCodec,
+  normalizeProviderError,
+  normalizeProviderStreamErrors,
+} from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
 import { convertMessages, convertTool } from './convert-request';
@@ -23,7 +29,10 @@ export interface OllamaProviderOptions {
   model: string;
   /** Extra request headers, e.g. Bearer auth for the Ayunis-hosted variant. */
   headers?: Record<string, string>;
-  /** Initial-request retry budget for transient failures. Default: 0. */
+  /**
+   * Initial-request retry budget only for direct non-streaming adapter
+   * instances. Streaming callers must pass 0. Default: 0.
+   */
   maxRetries?: number;
   /** Context window. Default 30000. */
   numCtx?: number;
@@ -53,27 +62,54 @@ async function* streamChat(
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
   const params = buildParams(options, request, codec);
-  const iterator = await retry(
-    () => client.chat(params),
+  const response = await openChat(
+    client,
+    params,
     options.maxRetries ?? 0,
+    request.signal,
   );
-  if (request.signal) {
-    if (request.signal.aborted) {
-      iterator.abort();
-    } else {
-      request.signal.addEventListener('abort', () => iterator.abort(), {
-        once: true,
-      });
-    }
+  const abort = () => response.abort();
+  if (request.signal?.aborted) {
+    abort();
+  } else {
+    request.signal?.addEventListener('abort', abort, { once: true });
   }
-  for await (const chunk of iterator) {
-    const converted = convertChunk(chunk, codec);
-    if (converted) {
-      yield converted;
+
+  try {
+    const stream = normalizeProviderStreamErrors(response, {
+      stage: 'stream_consumption',
+      signal: request.signal,
+    });
+    for await (const chunk of stream) {
+      const converted = convertChunk(chunk, codec);
+      if (converted) {
+        yield converted;
+      }
+      if (chunk.done) break;
     }
-    if (chunk.done) {
-      break;
-    }
+  } finally {
+    request.signal?.removeEventListener('abort', abort);
+  }
+}
+
+async function openChat(
+  client: Ollama,
+  params: ChatRequest & { stream: true },
+  maxRetries: number,
+  signal: AbortSignal | undefined,
+) {
+  try {
+    signal?.throwIfAborted();
+    // ollama-js 0.6.3 cannot cancel an in-flight client.chat setup call yet
+    // (https://github.com/ollama/ollama-js/pull/288; AYC-1018). ollama, ayunis,
+    // and synaforce share this adapter; pre-call, backoff, and active-stream
+    // aborts work.
+    return await retry(() => client.chat(params), maxRetries, signal);
+  } catch (error) {
+    throw normalizeProviderError(error, {
+      stage: 'stream_establishment',
+      signal,
+    });
   }
 }
 
@@ -97,20 +133,22 @@ const buildParams = (
  * mirroring the pre-runtime handlers' retry behavior. Mid-stream failures are
  * not retried.
  */
-async function retry<T>(fn: () => Promise<T>, maxRetries: number): Promise<T> {
+async function retry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number,
+  signal?: AbortSignal,
+): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    signal?.throwIfAborted();
     try {
       return await fn();
     } catch (error) {
       lastError = error;
       if (attempt < maxRetries) {
-        await delay(RETRY_BASE_DELAY_MS * 2 ** attempt);
+        await delay(RETRY_BASE_DELAY_MS * 2 ** attempt, undefined, { signal });
       }
     }
   }
   throw lastError;
 }
-
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));

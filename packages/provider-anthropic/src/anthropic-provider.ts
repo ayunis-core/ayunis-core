@@ -6,7 +6,11 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
-import { ToolNameCodec } from '@ayunis/inference';
+import {
+  normalizeProviderError,
+  normalizeProviderStreamErrors,
+  ToolNameCodec,
+} from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
 import {
@@ -44,7 +48,7 @@ export interface AnthropicProviderOptions {
   model: string;
   maxTokens?: number;
   baseUrl?: string;
-  /** SDK-level retry count for transient failures. Default: 2. */
+  /** SDK retries are for direct non-streaming calls only. Streaming hosts must pass 0. */
   maxRetries?: number;
   /** Per-attempt timeout in ms until the response starts. Default: 120s. */
   timeoutMs?: number;
@@ -94,17 +98,35 @@ async function* streamMessages(
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
   const params = buildParams(model, maxTokens, request, codec);
-  const stream = await client.messages.create(
-    params,
-    request.signal ? { signal: request.signal } : undefined,
-  );
-  for await (const event of stream) {
+  const stream = await createMessageStream(client, params, request.signal);
+  const normalizedStream = normalizeProviderStreamErrors(stream, {
+    stage: 'stream_consumption',
+    signal: request.signal,
+  });
+  for await (const event of normalizedStream) {
     const chunk = convertChunk(event, codec);
-    if (chunk) {
-      yield chunk;
-    }
+    if (chunk) yield chunk;
   }
 }
+
+const createMessageStream = async (
+  client: AnthropicCompatibleClient,
+  params: MessageCreateParamsStreaming,
+  signal?: AbortSignal,
+) => {
+  try {
+    return await client.messages.create(
+      params,
+      signal ? { signal } : undefined,
+    );
+  } catch (error) {
+    throw normalizeProviderError(error, {
+      stage: 'stream_establishment',
+      signal,
+      timeoutSource: 'response_start',
+    });
+  }
+};
 
 const buildParams = (
   model: string,

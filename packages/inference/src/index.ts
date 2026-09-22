@@ -36,3 +36,12 @@ export type {
   ToolChoice,
   Usage,
 } from './provider';
+export { ModelProviderError, normalizeProviderError } from './provider-error';
+export { normalizeProviderStreamErrors } from './provider-stream-error';
+export type {
+  ModelProviderErrorDetails,
+  NormalizeProviderErrorOptions,
+  ProviderFailureKind,
+  ProviderFailureStage,
+  ProviderTimeoutSource,
+} from './provider-error';

@@ -1,7 +1,11 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { ApplicationError } from './base.error';
 import { extractProviderErrorDiagnostics } from './extract-provider-error-diagnostics.helper';
 import { classifyTransportError } from './provider-transport-error.classifier';
-import type { ProviderUnavailableError } from './provider.errors';
+import type {
+  ProviderErrorContext,
+  ProviderUnavailableError,
+} from './provider.errors';
 import {
   ProviderConnectionError,
   ProviderFailureClass,
@@ -31,6 +35,9 @@ export function wrapProviderFailure(
   source: ProviderFailureSource,
 ): ProviderUnavailableError | undefined {
   if (error instanceof ApplicationError) return undefined;
+  if (error instanceof ModelProviderError) {
+    return wrapPortableFailure(error, source);
+  }
 
   const transport = classifyTransportError(error);
   if (transport) {
@@ -45,6 +52,48 @@ export function wrapProviderFailure(
   }
 
   return wrapByUpstreamStatus(error, source);
+}
+
+function wrapPortableFailure(
+  error: ModelProviderError,
+  source: ProviderFailureSource,
+): ProviderUnavailableError | undefined {
+  const context = portableProviderContext(error, source);
+  if (error.kind === 'connection') {
+    return new ProviderConnectionError(context);
+  }
+  if (error.kind === 'timeout') {
+    return new ProviderTimeoutError(context);
+  }
+  if (error.kind === 'server') {
+    return new ProviderServerError(context);
+  }
+  if (error.kind === 'rate_limit') {
+    return new ProviderRequestRejectedError(context);
+  }
+  return undefined;
+}
+
+function portableProviderContext(
+  error: ModelProviderError,
+  source: ProviderFailureSource,
+): ProviderErrorContext {
+  return {
+    ...source,
+    failureStage: error.stage,
+    ...(error.timeoutSource && { timeoutSource: error.timeoutSource }),
+    ...(error.upstreamStatus !== undefined && {
+      upstreamStatus: error.upstreamStatus,
+    }),
+    ...(error.upstreamRequestId && {
+      upstreamRequestId: error.upstreamRequestId,
+    }),
+    ...(error.retryAfterMs !== undefined && {
+      retryAfterMs: error.retryAfterMs,
+    }),
+    ...(error.transportCode && { underlyingCode: error.transportCode }),
+    ...(error.host && { host: error.host }),
+  };
 }
 
 function wrapByUpstreamStatus(

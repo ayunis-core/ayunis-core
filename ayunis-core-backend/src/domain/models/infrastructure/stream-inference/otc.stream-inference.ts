@@ -5,7 +5,7 @@ import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { ThinkingTagStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/thinking-tag-stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { STREAMING_PROVIDER_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class OtcStreamInferenceHandler extends ThinkingTagStreamInferenceHandler {
@@ -21,7 +21,7 @@ export class OtcStreamInferenceHandler extends ThinkingTagStreamInferenceHandler
       apiKey: this.configService.get<string>('models.otc.apiKey') ?? '',
       baseUrl: this.configService.get<string>('models.otc.baseURL'),
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: STREAMING_PROVIDER_MAX_RETRIES,
     });
   }
 }

@@ -430,7 +430,6 @@ describe('adaptRunEventsToStream', () => {
         provider: 'anthropic',
         modelId: 'claude-3-7-sonnet',
         underlyingCode: 'ECONNREFUSED',
-        causeMessage: 'connect ECONNREFUSED',
       },
     ],
     [
@@ -442,6 +441,8 @@ describe('adaptRunEventsToStream', () => {
           provider: 'anthropic',
           modelId: 'claude-3-7-sonnet',
           underlyingCode: 'ETIMEDOUT',
+          failureStage: 'stream_establishment',
+          timeoutSource: 'response_start',
         },
       },
       ProviderTimeoutError,
@@ -450,6 +451,8 @@ describe('adaptRunEventsToStream', () => {
         provider: 'anthropic',
         modelId: 'claude-3-7-sonnet',
         underlyingCode: 'ETIMEDOUT',
+        failureStage: 'stream_establishment',
+        timeoutSource: 'response_start',
       },
     ],
     [

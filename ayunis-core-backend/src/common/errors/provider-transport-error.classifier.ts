@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { extractProviderErrorDiagnostics } from './extract-provider-error-diagnostics.helper';
 import { extractUpstreamStatus } from './extract-upstream-status.helper';
 import { ProviderFailureClass } from './provider.errors';
@@ -71,6 +72,19 @@ const MAX_CHAIN_NODES = 8;
 export function classifyTransportError(
   error: unknown,
 ): TransportFailure | undefined {
+  if (error instanceof ModelProviderError) {
+    if (error.kind !== 'connection' && error.kind !== 'timeout') {
+      return undefined;
+    }
+    return {
+      failureClass:
+        error.kind === 'timeout'
+          ? ProviderFailureClass.TIMEOUT
+          : ProviderFailureClass.CONNECTION,
+      code: error.transportCode,
+      host: error.host,
+    };
+  }
   const chain = collectChain(error);
   const match = classifyByCode(chain) ?? classifyByName(chain);
   if (!match) return undefined;
@@ -128,6 +142,7 @@ export function isRetryableProviderTimeoutFailure(error: unknown): boolean {
 
 /** Upstream 5xx responses safe to retry before any response content exists. */
 export function isRetryableProviderServerFailure(error: unknown): boolean {
+  if (error instanceof ModelProviderError) return error.kind === 'server';
   const status = extractUpstreamStatus(error);
   return (
     status !== undefined && status >= 500 && status <= 599 && status !== 504
@@ -147,6 +162,7 @@ const RATE_LIMIT_BACKOFF_MS = 1_000;
 
 /** Upstream 429 responses: recoverable before any output has been streamed. */
 export function isRetryableProviderRateLimitFailure(error: unknown): boolean {
+  if (error instanceof ModelProviderError) return error.kind === 'rate_limit';
   return extractUpstreamStatus(error) === 429;
 }
 

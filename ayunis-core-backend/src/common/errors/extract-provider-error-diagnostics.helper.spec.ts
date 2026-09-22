@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import {
   extractProviderErrorDiagnostics,
   ProviderErrorReason,
@@ -88,6 +89,34 @@ describe('extractProviderErrorDiagnostics', () => {
       upstreamStatus: 400,
       upstreamRequestId: 'aws-bedrock-request-123',
       upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
+    });
+  });
+
+  it('combines portable facts with safe rejection diagnostics from the cause', () => {
+    const cause = Object.assign(
+      new Error("Invalid tool schema containing resident prompt 'classified'"),
+      {
+        status: 400,
+        code: 'invalid_function_parameters',
+        type: 'invalid_request_error',
+        param: 'tools[4].function.parameters',
+      },
+    );
+    const error = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      upstreamRequestId: 'req_portable_456',
+      cause,
+    });
+
+    expect(extractProviderErrorDiagnostics(error)).toEqual({
+      upstreamStatus: 400,
+      upstreamCode: 'invalid_function_parameters',
+      upstreamType: 'invalid_request_error',
+      upstreamParam: 'tools[4].function.parameters',
+      upstreamRequestId: 'req_portable_456',
+      upstreamReason: ProviderErrorReason.INVALID_TOOL_SCHEMA,
     });
   });
 });
