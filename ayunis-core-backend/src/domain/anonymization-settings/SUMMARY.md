@@ -28,7 +28,7 @@ anonymization-settings/
 │       ├── get-pii-whitelist/            # org entries for one org
 │       ├── update-pii-whitelist/         # full replacement of an org's entries
 │       ├── get-global-pii-whitelist/     # all global words (exported for consumers outside the module)
-│       ├── add-global-pii-whitelist-word/    # trim, reject empty + case-insensitive duplicates, record author
+│       ├── add-global-pii-whitelist-words/   # bulk add: trim + dedupe input, skip words already whitelisted, record author
 │       ├── delete-global-pii-whitelist-word/
 │       └── anonymize-text-for-org/       # whitelist → common AnonymizeTextUseCase
 ├── infrastructure/
@@ -47,7 +47,7 @@ anonymization-settings/
 
 - **Applying exceptions** — Detection runs in the `ayunis-core-anonymize` service; the common `AnonymizeTextUseCase` drops detections the whitelist exempts (union semantics: a detection is exempt when any entry of its category matches). Global words become literal, regex-escaped patterns via `domain/global-word-whitelist-entry.ts`. There is no caching — every anonymization call reads the DB, so whitelist changes take effect immediately.
 - **Org settings screen** — `GET/PUT /anonymization-settings/pii-whitelist` back the org admin page (`/admin-settings/anonymization`).
-- **Global list management** — `GET/POST/DELETE /super-admin/anonymization-whitelist` back the super-admin screen; each word records who added it and when (`createdByUserId`, SET NULL on user deletion).
+- **Global list management** — `GET/POST/DELETE /super-admin/anonymization-whitelist` back the super-admin screen; each word records who added it and when (`createdByUserId`, SET NULL on user deletion). `POST` takes a batch of words (the UI splits a comma-separated input) and inserts them with `ON CONFLICT DO NOTHING`, so words already on the list come back as `duplicates` instead of failing the request.
 
 ## Consumers
 

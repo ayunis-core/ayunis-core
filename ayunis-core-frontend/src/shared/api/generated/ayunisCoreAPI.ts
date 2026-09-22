@@ -32,7 +32,8 @@ import type {
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
-  AddGlobalPiiWhitelistWordRequestDto,
+  AddGlobalPiiWhitelistWordsRequestDto,
+  AddGlobalPiiWhitelistWordsResponseDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
   AddonStatusResponseDto,
@@ -14973,18 +14974,19 @@ export function useSuperAdminAnonymizationWhitelistControllerList<TData = Awaite
 
 
 /**
- * @summary Add a word to the global anonymization whitelist
+ * Words already on the whitelist for the category are skipped and returned as duplicates.
+ * @summary Add words to the global anonymization whitelist
  */
 export const superAdminAnonymizationWhitelistControllerAdd = (
-    addGlobalPiiWhitelistWordRequestDto: AddGlobalPiiWhitelistWordRequestDto,
+    addGlobalPiiWhitelistWordsRequestDto: AddGlobalPiiWhitelistWordsRequestDto,
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<GlobalPiiWhitelistWordDto>(
+      return customAxiosInstance<AddGlobalPiiWhitelistWordsResponseDto>(
       {url: `/super-admin/anonymization-whitelist`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: addGlobalPiiWhitelistWordRequestDto, signal
+      data: addGlobalPiiWhitelistWordsRequestDto, signal
     },
       );
     }
@@ -15022,12 +15024,12 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SuperAdminAnonymizationWhitelistControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>>
-    export type SuperAdminAnonymizationWhitelistControllerAddMutationBody = AddGlobalPiiWhitelistWordRequestDto
+    export type SuperAdminAnonymizationWhitelistControllerAddMutationBody = AddGlobalPiiWhitelistWordsRequestDto
     export type SuperAdminAnonymizationWhitelistControllerAddMutationError = void
-    export type SuperAdminAnonymizationWhitelistControllerAddMutationVariables = {data: AddGlobalPiiWhitelistWordRequestDto}
+    export type SuperAdminAnonymizationWhitelistControllerAddMutationVariables = {data: AddGlobalPiiWhitelistWordsRequestDto}
 
     /**
- * @summary Add a word to the global anonymization whitelist
+ * @summary Add words to the global anonymization whitelist
  */
 export const useSuperAdminAnonymizationWhitelistControllerAdd = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>, TError,SuperAdminAnonymizationWhitelistControllerAddMutationVariables, TContext>, }

@@ -8,8 +8,7 @@ import { GetGlobalPiiWhitelistUseCase } from './get-global-pii-whitelist.use-cas
 describe('GetGlobalPiiWhitelistUseCase', () => {
   const repository: jest.Mocked<GlobalAnonymizationWhitelistRepository> = {
     findAll: jest.fn(),
-    findByCategoryAndWord: jest.fn(),
-    create: jest.fn(),
+    createMany: jest.fn(),
     delete: jest.fn(),
   };
 

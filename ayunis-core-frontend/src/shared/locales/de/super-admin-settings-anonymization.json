@@ -5,12 +5,16 @@
   "loadError": "Die globalen Ausnahmen von der Anonymisierung konnten nicht geladen werden.",
   "retry": "Erneut versuchen",
   "add": {
-    "placeholder": "Wort hinzufügen, z. B. Mitarbeitende",
+    "placeholder": "Wörter hinzufügen, durch Komma getrennt, z. B. Mitarbeitende, Bürgeramt",
     "button": "Hinzufügen",
-    "success": "Wort gespeichert.",
-    "duplicate": "Dieses Wort steht für diesen Datentyp bereits auf der Liste.",
+    "success_one": "{{count}} Wort gespeichert.",
+    "success_other": "{{count}} Wörter gespeichert.",
+    "successWithDuplicates_one": "{{count}} Wort gespeichert, {{duplicates}} stand bereits auf der Liste.",
+    "successWithDuplicates_other": "{{count}} Wörter gespeichert, {{duplicates}} standen bereits auf der Liste.",
+    "allDuplicates_one": "Dieses Wort steht für diesen Datentyp bereits auf der Liste.",
+    "allDuplicates_other": "Alle {{count}} Wörter stehen für diesen Datentyp bereits auf der Liste.",
     "empty": "Bitte ein Wort eingeben.",
-    "error": "Das Wort konnte nicht gespeichert werden."
+    "error": "Die Wörter konnten nicht gespeichert werden."
   },
   "delete": {
     "success": "Wort entfernt.",

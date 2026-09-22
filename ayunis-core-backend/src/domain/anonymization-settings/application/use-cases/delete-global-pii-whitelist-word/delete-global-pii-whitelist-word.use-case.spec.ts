@@ -7,8 +7,7 @@ import { DeleteGlobalPiiWhitelistWordUseCase } from './delete-global-pii-whiteli
 describe('DeleteGlobalPiiWhitelistWordUseCase', () => {
   const repository: jest.Mocked<GlobalAnonymizationWhitelistRepository> = {
     findAll: jest.fn(),
-    findByCategoryAndWord: jest.fn(),
-    create: jest.fn(),
+    createMany: jest.fn(),
     delete: jest.fn(),
   };
 

@@ -7156,6 +7156,7 @@
         "tags": ["Super Admin Anonymization Whitelist"]
       },
       "post": {
+        "description": "Words already on the whitelist for the category are skipped and returned as duplicates.",
         "operationId": "SuperAdminAnonymizationWhitelistController_add",
         "parameters": [],
         "requestBody": {
@@ -7163,7 +7164,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddGlobalPiiWhitelistWordRequestDto"
+                "$ref": "#/components/schemas/AddGlobalPiiWhitelistWordsRequestDto"
               }
             }
           }
@@ -7174,22 +7175,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GlobalPiiWhitelistWordDto"
+                  "$ref": "#/components/schemas/AddGlobalPiiWhitelistWordsResponseDto"
                 }
               }
             }
           },
           "400": {
-            "description": "Empty or invalid word"
+            "description": "Empty or invalid words"
           },
           "401": {
             "description": "Not authorized as super admin"
-          },
-          "409": {
-            "description": "Word already on the whitelist for this category"
           }
         },
-        "summary": "Add a word to the global anonymization whitelist",
+        "summary": "Add words to the global anonymization whitelist",
         "tags": ["Super Admin Anonymization Whitelist"]
       }
     },
@@ -17447,7 +17445,7 @@
         },
         "required": ["id", "category", "word", "createdByEmail", "createdAt"]
       },
-      "AddGlobalPiiWhitelistWordRequestDto": {
+      "AddGlobalPiiWhitelistWordsRequestDto": {
         "type": "object",
         "properties": {
           "category": {
@@ -17457,13 +17455,36 @@
               }
             ]
           },
-          "word": {
-            "type": "string",
-            "description": "Plain word to exempt from anonymization (no patterns)",
-            "maxLength": 200
+          "words": {
+            "description": "Plain words to exempt from anonymization (no patterns)",
+            "maxItems": 1000,
+            "example": ["Mitarbeitende", "Bürgeramt"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
-        "required": ["category", "word"]
+        "required": ["category", "words"]
+      },
+      "AddGlobalPiiWhitelistWordsResponseDto": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlobalPiiWhitelistWordDto"
+            }
+          },
+          "duplicates": {
+            "description": "Submitted words that were already on the whitelist",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["added", "duplicates"]
       },
       "CreateSkillTemplateDto": {
         "type": "object",
