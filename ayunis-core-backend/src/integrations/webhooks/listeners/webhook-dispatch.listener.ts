@@ -46,6 +46,7 @@ import { SkillUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-
 import { SkillInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/skill-installed.webhook-event';
 import { IntegrationUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-used.webhook-event';
 import { IntegrationInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-installed.webhook-event';
+import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -61,6 +62,7 @@ export class WebhookDispatchListener {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly configService: ConfigService,
+    private readonly webhookDeliverySequencer: WebhookDeliverySequencer,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
@@ -104,7 +106,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionCreated(
     event: SubscriptionCreatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionCreatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -115,7 +118,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionCancelled(
     event: SubscriptionCancelledEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionCancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -126,7 +130,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionUncancelled(
     event: SubscriptionUncancelledEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionUncancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -137,7 +142,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionSeatsUpdated(
     event: SubscriptionSeatsUpdatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionSeatsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -148,7 +154,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionBillingInfoUpdated(
     event: SubscriptionBillingInfoUpdatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionBillingInfoUpdatedWebhookEvent(
         mapBillingInfoToWebhookPayload(event.payload),
       ),
@@ -321,6 +328,15 @@ export class WebhookDispatchListener {
       );
       return undefined;
     }
+  }
+
+  private dispatchSubscription(
+    orgId: UUID,
+    webhookEvent: WebhookEvent,
+  ): Promise<void> {
+    return this.webhookDeliverySequencer.enqueue(orgId, () =>
+      this.dispatch(webhookEvent),
+    );
   }
 
   private async dispatch(webhookEvent: WebhookEvent): Promise<void> {

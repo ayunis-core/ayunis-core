@@ -6,6 +6,7 @@ import { SendWebhookUseCase } from './application/use-cases/send-webhook/send-we
 import { WebhookHandler } from './application/ports/webhook.handler';
 import { HttpWebhookHandler } from './infrastructure/http/http-webhook.handler';
 import { WebhookDispatchListener } from './listeners/webhook-dispatch.listener';
+import { WebhookDeliverySequencer } from './infrastructure/services/webhook-delivery-sequencer.service';
 
 @Module({
   imports: [UsersModule, OrgsModule],
@@ -15,6 +16,7 @@ import { WebhookDispatchListener } from './listeners/webhook-dispatch.listener';
       useClass: HttpWebhookHandler,
     },
     SendWebhookUseCase,
+    WebhookDeliverySequencer,
     WebhookDispatchListener,
   ],
 })

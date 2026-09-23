@@ -32,6 +32,7 @@ import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
+import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
@@ -104,6 +105,7 @@ describe('WebhookDispatchListener', () => {
       findUserByIdUseCase,
       findOrgByIdUseCase,
       configService,
+      new WebhookDeliverySequencer(),
     );
   });
 
@@ -232,6 +234,46 @@ describe('WebhookDispatchListener', () => {
       expect(command.event.eventType).toBe(
         WebhookEventType.SUBSCRIPTION_CANCELLED,
       );
+    });
+  });
+
+  describe('subscription lifecycle ordering', () => {
+    it('waits for cancellation delivery before dispatching replacement creation', async () => {
+      let finishCancellation = (): void => undefined;
+      const cancellationDelivery = new Promise<void>((resolve) => {
+        finishCancellation = resolve;
+      });
+      sendWebhookUseCase.execute.mockImplementation((command) =>
+        command.event.eventType === WebhookEventType.SUBSCRIPTION_CANCELLED
+          ? cancellationDelivery
+          : Promise.resolve(),
+      );
+
+      const cancellation = listener.handleSubscriptionCancelled(
+        new SubscriptionCancelledEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+      const creation = listener.handleSubscriptionCreated(
+        new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(
+        sendWebhookUseCase.execute.mock.calls.map(
+          ([command]) => command.event.eventType,
+        ),
+      ).toEqual([WebhookEventType.SUBSCRIPTION_CANCELLED]);
+
+      finishCancellation();
+      await Promise.all([cancellation, creation]);
+
+      expect(
+        sendWebhookUseCase.execute.mock.calls.map(
+          ([command]) => command.event.eventType,
+        ),
+      ).toEqual([
+        WebhookEventType.SUBSCRIPTION_CANCELLED,
+        WebhookEventType.SUBSCRIPTION_CREATED,
+      ]);
     });
   });
 
