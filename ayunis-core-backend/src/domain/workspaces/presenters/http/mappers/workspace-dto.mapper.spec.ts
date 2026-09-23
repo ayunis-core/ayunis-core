@@ -14,7 +14,15 @@ describe('WorkspaceDtoMapper', () => {
 
     const result = mapper.toPaginatedDto(
       new Paginated({
-        data: [{ workspace, chatCount: 4, lastActivityAt }],
+        data: [
+          {
+            workspace,
+            chatCount: 4,
+            skillCount: 2,
+            knowledgeBaseCount: 3,
+            lastActivityAt,
+          },
+        ],
         limit: 20,
         offset: 0,
         total: 1,
@@ -33,6 +41,8 @@ describe('WorkspaceDtoMapper', () => {
           createdAt: workspace.createdAt.toISOString(),
           updatedAt: workspace.updatedAt.toISOString(),
           chatCount: 4,
+          skillCount: 2,
+          knowledgeBaseCount: 3,
           lastActivityAt: lastActivityAt.toISOString(),
         },
       ],

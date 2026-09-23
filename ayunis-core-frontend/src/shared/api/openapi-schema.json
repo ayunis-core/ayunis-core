@@ -17294,6 +17294,16 @@
             "description": "Number of chats filed under the workspace (list responses only)",
             "example": 3
           },
+          "skillCount": {
+            "type": "number",
+            "description": "Number of skills owned by the workspace (list responses only)",
+            "example": 2
+          },
+          "knowledgeBaseCount": {
+            "type": "number",
+            "description": "Number of knowledge bases owned by the workspace (list responses only)",
+            "example": 4
+          },
           "lastActivityAt": {
             "type": "string",
             "description": "Later of the last edit and the most recent chat activity (list responses only)",

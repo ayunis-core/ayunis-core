@@ -4,7 +4,7 @@ import type { UUID } from 'crypto';
 import {
   WorkspacesRepository,
   type WorkspaceContextRefs,
-  type WorkspaceThreadStats,
+  type WorkspaceListStats,
 } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -132,30 +132,29 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
   // Read-only seam onto the threads table by name. Importing the threads
   // module here would reverse the threads → workspaces dependency and close a
   // cycle, so this aggregate query stays raw SQL instead.
-  async getThreadStats(
+  async getListStats(
     workspaceIds: UUID[],
-  ): Promise<Map<UUID, WorkspaceThreadStats>> {
+  ): Promise<Map<UUID, WorkspaceListStats>> {
     if (workspaceIds.length === 0) {
       return new Map();
     }
-    const rows: Array<{
-      workspaceId: UUID;
-      chatCount: number;
-      lastActivityAt: Date | null;
-    }> = await this.repo.manager.query(
-      `SELECT "workspaceId",
-              COUNT(*)::int AS "chatCount",
-              MAX(COALESCE("lastActivityAt", "createdAt")) AS "lastActivityAt"
-       FROM threads
-       WHERE "workspaceId" = ANY($1)
-       GROUP BY "workspaceId"`,
-      [workspaceIds],
-    );
+    const rows: Array<WorkspaceListStats & { workspaceId: UUID }> =
+      await this.repo.manager.query(
+        `SELECT w."id" AS "workspaceId",
+                (SELECT COUNT(*)::int FROM threads t
+                  WHERE t."workspaceId" = w."id") AS "chatCount",
+                (SELECT MAX(COALESCE(t."lastActivityAt", t."createdAt")) FROM threads t
+                  WHERE t."workspaceId" = w."id") AS "lastActivityAt",
+                (SELECT COUNT(*)::int FROM skills s
+                  WHERE s."workspaceId" = w."id") AS "skillCount",
+                (SELECT COUNT(*)::int FROM knowledge_bases k
+                  WHERE k."workspaceId" = w."id") AS "knowledgeBaseCount"
+         FROM workspaces w
+         WHERE w."id" = ANY($1)`,
+        [workspaceIds],
+      );
     return new Map(
-      rows.map((row) => [
-        row.workspaceId,
-        { chatCount: row.chatCount, lastActivityAt: row.lastActivityAt },
-      ]),
+      rows.map(({ workspaceId, ...stats }) => [workspaceId, stats]),
     );
   }
 

@@ -1,29 +1,62 @@
-import { Loader2, ChevronDown, Search } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 
 import {
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarGroupContent,
 } from '@ayunis/ui/components/sidebar';
 import { useThreads } from '@/widgets/app-sidebar/api';
 import { useDeleteThread } from '@/features/thread-run';
-import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
 import { useFavorites } from '@/features/favorites';
 import { Button } from '@ayunis/ui/components/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@ayunis/ui/components/collapsible';
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { ChatSidebarItem } from './ChatSidebarItem';
+import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
+
+function ChatsSearchLink() {
+  return (
+    <Link to="/chats" className="text-muted-foreground">
+      <Search className="size-4" />
+    </Link>
+  );
+}
+
+function LoadingChats() {
+  const { t } = useTranslation('common');
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton className="text-sidebar-foreground/70">
+          <Loader2 className="size-4 animate-spin" />
+          <span>{t('sidebar.loadingChats')}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+function EmptyChats() {
+  const { t } = useTranslation('common');
+  return (
+    <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6">
+      <div className="text-center space-y-2">
+        <div className="text-sm text-foreground">
+          {t('sidebar.emptyChatsTitle')}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {t('sidebar.emptyChatsDescription')}
+        </div>
+        <Button asChild className="mt-2">
+          <Link to="/chat">{t('sidebar.newChat')}</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
@@ -33,8 +66,8 @@ export function ChatsSidebarGroup() {
   const params = useParams({ strict: false });
   const navigate = useNavigate();
 
-  const [isOpen, setOpen] = useChatsSidebarOpen();
   const { favorites, isLoading: areFavoritesLoading } = useFavorites();
+  const isPending = isLoading || areFavoritesLoading;
   const pinnedThreadIds = new Set(
     favorites
       .filter((item) => item.referenceType === 'thread')
@@ -49,10 +82,6 @@ export function ChatsSidebarGroup() {
     title: string | null;
   } | null>(null);
 
-  const handleRenameClick = (threadId: string, currentTitle: string | null) => {
-    setThreadToRename({ id: threadId, title: currentTitle });
-  };
-
   const handleDeleteClick = (threadId: string) => {
     confirm({
       title: t('sidebar.deleteChatTitle'),
@@ -61,13 +90,8 @@ export function ChatsSidebarGroup() {
       cancelText: t('sidebar.deleteChatCancel'),
       variant: 'destructive',
       onConfirm: () => {
-        // Check if the user is currently viewing the chat being deleted
-        const currentThreadId = params.threadId;
-        const isCurrentChat = currentThreadId === threadId;
-
+        const isCurrentChat = params.threadId === threadId;
         deleteChat(threadId);
-
-        // If the user is on the chat being deleted, redirect to /chat
         if (isCurrentChat) {
           void navigate({ to: '/chat' });
         }
@@ -75,133 +99,41 @@ export function ChatsSidebarGroup() {
     });
   };
 
-  if (isLoading || areFavoritesLoading) {
-    return (
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setOpen}
-        className="group/collapsible"
-      >
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="flex items-center w-full">
-              {t('sidebar.chats')}
-              <Link
-                to="/chats"
-                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Search className="size-4" />
-              </Link>
-              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="text-sidebar-foreground/70">
-                    <Loader2 className="size-4 animate-spin" />
-                    <span>{t('sidebar.loadingChats')}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    );
-  }
-
-  if (threads.length === 0) {
-    return (
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setOpen}
-        className="group/collapsible"
-      >
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="flex items-center w-full">
-              {t('sidebar.chats')}
-              <Link
-                to="/chats"
-                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Search className="size-4" />
-              </Link>
-              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6">
-                <div className="text-center space-y-2">
-                  <div className="text-sm text-foreground">
-                    {t('sidebar.emptyChatsTitle')}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {t('sidebar.emptyChatsDescription')}
-                  </div>
-                  <Button asChild className="mt-2">
-                    <Link to="/chat">{t('sidebar.newChat')}</Link>
-                  </Button>
-                </div>
-              </div>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    );
-  }
-
   return (
     <>
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setOpen}
-        className="group/collapsible"
+      <SidebarCollapsibleGroup
+        label={t('sidebar.chats')}
+        storageKey="sidebar_chats_open"
+        action={<ChatsSearchLink />}
+        testId="sidebar-chats"
       >
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="flex items-center justify-between w-full">
-              {t('sidebar.chats')}
-              <Link
-                to="/chats"
-                className="text-muted-foreground"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Search className="size-4" />
-              </Link>
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {otherThreads.map((thread) => (
-                  <ChatSidebarItem
-                    key={thread.id}
-                    thread={thread}
-                    isPinned={pinnedThreadIds.has(thread.id)}
-                    onRename={handleRenameClick}
-                    onDelete={handleDeleteClick}
-                  />
-                ))}
-                {hasMore && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link to="/chats" className="text-muted-foreground">
-                        <span>{t('sidebar.showMore')}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
+        {isPending ? <LoadingChats /> : null}
+        {!isPending && threads.length === 0 ? <EmptyChats /> : null}
+        {!isPending && threads.length > 0 ? (
+          <SidebarMenu>
+            {otherThreads.map((thread) => (
+              <ChatSidebarItem
+                key={thread.id}
+                thread={thread}
+                isPinned={pinnedThreadIds.has(thread.id)}
+                onRename={(threadId, title) =>
+                  setThreadToRename({ id: threadId, title })
+                }
+                onDelete={handleDeleteClick}
+              />
+            ))}
+            {hasMore && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/chats" className="text-muted-foreground">
+                    <span>{t('sidebar.showMore')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+        ) : null}
+      </SidebarCollapsibleGroup>
 
       {threadToRename && (
         <RenameThreadDialog
