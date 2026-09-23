@@ -187,7 +187,11 @@
       "action": "Chat zuordnen",
       "spotlightTitle": "Chat zuordnen",
       "spotlightDescription": "Öffnen Sie dieses Menü und wählen Sie „Zu Arbeitsbereich hinzufügen“.",
-      "unavailable": "Öffnen Sie zuerst einen Chat, damit sein Menü in der Seitenleiste angezeigt werden kann."
+      "unavailable": "Klappen Sie die Seitenleiste aus, um Ihre Chats zu sehen."
+    },
+    "firstChatForWorkspace": {
+      "spotlightTitle": "Erst ein Chat, dann der Arbeitsbereich",
+      "spotlightDescription": "Starten Sie hier einen ersten Chat. Danach können Sie ihn über sein Menü in der Seitenleiste in einen Arbeitsbereich verschieben."
     },
     "workspaceInstruction": {
       "title": "Anweisung für den Arbeitsbereich hinterlegen",

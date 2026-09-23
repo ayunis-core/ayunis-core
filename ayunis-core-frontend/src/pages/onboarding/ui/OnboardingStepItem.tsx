@@ -31,6 +31,7 @@ import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-sco
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import { useWorkspaces } from '@/features/workspaces';
 import { useFavorites } from '@/features/favorites';
+import { useThreads } from '@/widgets/app-sidebar/api';
 import { showInfo } from '@/shared/lib/toast';
 
 type WorkspaceDetailTab = 'skills' | 'knowledge' | 'instructions';
@@ -104,13 +105,18 @@ export default function OnboardingStepItem({
     error: workspacesError,
   } = useWorkspaces();
   const { favorites, isLoading: areFavoritesLoading } = useFavorites();
+  // The assign step's target is a sidebar chat row, which only exists once
+  // the sidebar has loaded its threads.
+  const { threads, isLoading: areThreadsLoading } = useThreads();
+  const hasChat = threads.length > 0;
   const firstWorkspace = workspaces.at(0);
   const hasUnfavoritedWorkspace =
     findPinTourWorkspace(workspaces, favorites) !== undefined;
   // The action stays disabled until the data it decides on has arrived, so a
   // click never acts on a still-loading list.
   const isResolvingWorkspaceState =
-    needsWorkspace && (areWorkspacesLoading || areFavoritesLoading);
+    needsWorkspace &&
+    (areWorkspacesLoading || areFavoritesLoading || areThreadsLoading);
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt
@@ -183,6 +189,17 @@ export default function OnboardingStepItem({
           translationKey: 'createWorkspace',
         });
       });
+      return;
+    }
+
+    if (spotlight === TOUR_TARGET.assignChatToWorkspace && !hasChat) {
+      // Nothing to move yet: point at the composer so the user gets a first
+      // chat, then the step can be tried again.
+      void navigate({ to: '/chat' }).then(() =>
+        triggerSpotlight(TOUR_TARGET.chatComposer, {
+          translationKey: 'firstChatForWorkspace',
+        }),
+      );
       return;
     }
 

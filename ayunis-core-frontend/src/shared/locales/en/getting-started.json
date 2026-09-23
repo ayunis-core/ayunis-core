@@ -187,7 +187,11 @@
       "action": "Move chat",
       "spotlightTitle": "Move chat",
       "spotlightDescription": "Open this menu and choose “Add to workspace”.",
-      "unavailable": "Open a chat first so its menu can be shown in the sidebar."
+      "unavailable": "Expand the sidebar to see your chats."
+    },
+    "firstChatForWorkspace": {
+      "spotlightTitle": "A chat first, then the workspace",
+      "spotlightDescription": "Start a first chat here. Afterwards you can move it into a workspace from its menu in the sidebar."
     },
     "workspaceInstruction": {
       "title": "Add an instruction for the workspace",

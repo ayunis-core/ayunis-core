@@ -15,7 +15,16 @@ const mocks = vi.hoisted(() => ({
   workspacesError: null as Error | null,
   favoriteWorkspaceIds: [] as string[],
   areFavoritesLoading: false,
+  areThreadsLoading: false,
+  threads: [] as { id: string }[],
   showInfo: vi.fn(),
+}));
+
+vi.mock('@/widgets/app-sidebar/api', () => ({
+  useThreads: () => ({
+    threads: mocks.threads,
+    isLoading: mocks.areThreadsLoading,
+  }),
 }));
 
 vi.mock('@/shared/lib/toast', () => ({ showInfo: mocks.showInfo }));
@@ -122,6 +131,8 @@ describe('OnboardingStepItem workspace steps', () => {
     mocks.workspacesError = null;
     mocks.favoriteWorkspaceIds = [];
     mocks.areFavoritesLoading = false;
+    mocks.areThreadsLoading = false;
+    mocks.threads = [{ id: 'thread-1' }];
   });
 
   afterEach(() => {
@@ -185,7 +196,22 @@ describe('OnboardingStepItem workspace steps', () => {
     );
   });
 
-  it('explains and skips the assign spotlight when the sidebar holds no chat row', async () => {
+  it('spotlights the composer when the user has no chat to move yet', async () => {
+    mocks.threads = [];
+
+    await clickAction('assignChatToWorkspace');
+
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/chat' });
+    expect(mocks.launchTour).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: 'chat-composer',
+        title: 'steps.firstChatForWorkspace.spotlightTitle',
+      }),
+    );
+    expect(mocks.showInfo).not.toHaveBeenCalled();
+  });
+
+  it('explains and skips the assign spotlight when the chat row is not visible', async () => {
     await clickAction('assignChatToWorkspace');
 
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/chat' });
@@ -193,6 +219,16 @@ describe('OnboardingStepItem workspace steps', () => {
     expect(mocks.showInfo).toHaveBeenCalledWith(
       'steps.assignChatToWorkspace.unavailable',
     );
+  });
+
+  it('disables the assign action while the sidebar is still loading its chats', async () => {
+    mocks.areThreadsLoading = true;
+
+    await clickAction('assignChatToWorkspace');
+
+    expect(actionButton('assignChatToWorkspace').disabled).toBe(true);
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.showInfo).not.toHaveBeenCalled();
   });
 
   it('treats a chat row hidden by a collapsed sidebar as missing', async () => {
