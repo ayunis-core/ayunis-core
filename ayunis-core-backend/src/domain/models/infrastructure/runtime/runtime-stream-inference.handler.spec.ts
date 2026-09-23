@@ -1,6 +1,7 @@
 import type { ModelProvider } from '@ayunis/inference';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import type { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import type { Model } from 'src/domain/models/domain/model.entity';
 import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
@@ -45,6 +46,17 @@ function stallingProvider(): {
   return { provider, signal: () => captured };
 }
 
+class CacheTestHandler extends RuntimeStreamInferenceHandler {
+  readonly createProvider = jest.fn((): ModelProvider => ({
+    name: 'test:cached',
+    stream: jest.fn(),
+  }));
+
+  constructor() {
+    super({} as ImageContentService);
+  }
+}
+
 class TestHandler extends RuntimeStreamInferenceHandler {
   constructor(private readonly provider: ModelProvider) {
     super({} as ImageContentService);
@@ -56,7 +68,12 @@ class TestHandler extends RuntimeStreamInferenceHandler {
 
 function makeInput(): StreamInferenceInput {
   return {
-    model: { name: 'test-model', provider: 'test' },
+    model: {
+      id: '00000000-0000-4000-8000-000000000001',
+      name: 'test-model',
+      provider: 'test',
+      updatedAt: new Date('2026-01-01T00:00:00Z'),
+    },
     messages: [],
     systemPrompt: '',
     tools: [],
@@ -86,6 +103,31 @@ function firstChunkOf(handler: TestHandler): {
 describe('RuntimeStreamInferenceHandler', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
+
+  it('rebuilds a cached provider when the model configuration changes', () => {
+    const handler = new CacheTestHandler();
+    const model = {
+      id: '00000000-0000-4000-8000-000000000001',
+      name: 'test-model',
+      updatedAt: new Date('2026-01-01T00:00:00Z'),
+    } as unknown as Model;
+
+    handler.resolveProvider(model);
+    handler.resolveProvider(model);
+    handler.resolveProvider({
+      ...model,
+      updatedAt: new Date('2026-01-02T00:00:00Z'),
+    });
+
+    expect(handler.createProvider).toHaveBeenCalledTimes(2);
+    expect(
+      (
+        handler as unknown as {
+          providerCache: Map<string, ModelProvider>;
+        }
+      ).providerCache,
+    ).toHaveProperty('size', 1);
+  });
 
   it('fails a stalled stream with InferenceStreamStalledError rather than a generic abort', async () => {
     const { provider } = stallingProvider();

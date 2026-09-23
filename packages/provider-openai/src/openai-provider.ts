@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import type { ChatCompletionCreateParamsStreaming } from 'openai/resources/chat/completions';
+import type { ResponseCreateParamsStreaming } from 'openai/resources/responses/responses';
 
 import type {
   ModelProvider,
@@ -9,6 +10,15 @@ import type {
 import { ToolNameCodec } from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
+import {
+  convertResponseEvent,
+  createResponseConversionState,
+} from './convert-response-event';
+import {
+  convertResponseInput,
+  convertResponseTool,
+  convertResponseToolChoice,
+} from './convert-response-request';
 import {
   convertMessages,
   convertTool,
@@ -39,6 +49,7 @@ export interface AzureProviderOptions {
   endpoint: string;
   /** Azure deployment name, passed through as the model id. */
   model: string;
+  reasoningEffort?: 'low' | 'medium' | 'high' | 'xhigh';
   /** SDK-level retry count for transient failures. Default: 2. */
   maxRetries?: number;
   /** Per-attempt timeout in ms until the response starts. Default: 120s. */
@@ -91,8 +102,8 @@ const buildAzureV1BaseUrl = (endpoint: string): string => {
 };
 
 /**
- * Azure OpenAI ModelProvider using the versionless v1 Chat Completions API.
- * `model` is the Azure deployment name.
+ * Azure OpenAI ModelProvider using the versionless v1 Responses API.
+ * Responses are never stored; conversation state remains host-managed.
  */
 export const azure = (options: AzureProviderOptions): ModelProvider => {
   const client = new OpenAI({
@@ -103,8 +114,17 @@ export const azure = (options: AzureProviderOptions): ModelProvider => {
       ? { maxRetries: options.maxRetries }
       : {}),
   });
-  return createProvider(client, `azure:${options.model}`, options.model);
+  return createResponsesProvider(client, options);
 };
+
+const createResponsesProvider = (
+  client: OpenAI,
+  options: AzureProviderOptions,
+): ModelProvider => ({
+  name: `azure:${options.model}`,
+  stream: (request) =>
+    streamResponses(client, options.model, options.reasoningEffort, request),
+});
 
 const createProvider = (
   client: OpenAI,
@@ -146,6 +166,61 @@ async function* streamChat(
     if (sawFinishReason && converted.usage) break;
   }
 }
+
+async function* streamResponses(
+  client: OpenAI,
+  model: string,
+  reasoningEffort: AzureProviderOptions['reasoningEffort'],
+  request: ProviderRequest,
+): AsyncIterable<ProviderChunk> {
+  const codec = new ToolNameCodec(request.tools);
+  const params = buildResponseParams(model, reasoningEffort, request, codec);
+  const stream = await client.responses.create(
+    params,
+    request.signal ? { signal: request.signal } : undefined,
+  );
+  const conversionState = createResponseConversionState();
+  for await (const event of stream) {
+    const converted = convertResponseEvent(event, codec, conversionState);
+    if (converted) yield converted;
+    if (
+      event.type === 'response.completed' ||
+      event.type === 'response.incomplete'
+    ) {
+      break;
+    }
+  }
+}
+
+const buildResponseParams = (
+  model: string,
+  reasoningEffort: AzureProviderOptions['reasoningEffort'],
+  request: ProviderRequest,
+  codec: ToolNameCodec,
+): ResponseCreateParamsStreaming => {
+  const hasTools = request.tools.length > 0;
+  return {
+    model,
+    instructions: request.instructions,
+    input: convertResponseInput(request.messages, codec),
+    ...(hasTools
+      ? { tools: request.tools.map((tool) => convertResponseTool(tool, codec)) }
+      : {}),
+    ...(hasTools && request.toolChoice !== undefined
+      ? {
+          tool_choice: convertResponseToolChoice(request.toolChoice, codec),
+        }
+      : {}),
+    ...(reasoningEffort
+      ? {
+          reasoning: { effort: reasoningEffort },
+          include: ['reasoning.encrypted_content' as const],
+        }
+      : {}),
+    store: false,
+    stream: true,
+  };
+};
 
 const buildParams = (
   model: string,
