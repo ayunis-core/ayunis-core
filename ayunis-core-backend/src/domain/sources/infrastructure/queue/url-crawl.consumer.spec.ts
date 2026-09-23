@@ -28,6 +28,7 @@ import { UrlCrawlConsumer } from './url-crawl.consumer';
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 const USER_ID = '00000000-0000-0000-0000-000000000020' as UUID;
+const KNOWLEDGE_BASE_ID = '00000000-0000-0000-0000-000000000030' as UUID;
 
 function makeJobData(): UrlCrawlJobData {
   return {
@@ -90,6 +91,7 @@ const splitTextUseCase = {
 const sourceRepository = {
   findById: jest.fn(),
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
+  refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
   saveTextSource: jest
     .fn()
     .mockImplementation((s: unknown) => Promise.resolve(s)),
@@ -216,6 +218,45 @@ describe('UrlCrawlConsumer', () => {
       SourceStatus.READY,
       { processingError: null },
     );
+  });
+
+  it('refreshes the heartbeat with a targeted update instead of saving the loaded record', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.refreshProcessingHeartbeat).toHaveBeenCalledWith(
+      SOURCE_ID,
+    );
+    expect(sourceRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('writes content against the freshly loaded source so a collection assigned after the load is kept', async () => {
+    const assigned = makeSource();
+    assigned.knowledgeBaseId = KNOWLEDGE_BASE_ID;
+    // AddUrlToKnowledgeBase assigns the collection right after enqueueing, so
+    // the worker's first read may predate it.
+    sourceRepository.findById
+      .mockResolvedValueOnce(makeSource())
+      .mockResolvedValueOnce(assigned);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    expect(savedSource.knowledgeBaseId).toBe(KNOWLEDGE_BASE_ID);
+    expect(savedSource.name).toBe('Acme Home');
+  });
+
+  it('skips the crawl when the heartbeat finds the source gone or no longer processing', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValueOnce(false);
+
+    await consumer.process(makeJob());
+
+    expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
+    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
   });
 
   it('skips writing content when the source is deleted mid-crawl', async () => {
