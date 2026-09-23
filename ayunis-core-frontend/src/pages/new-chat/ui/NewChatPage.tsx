@@ -285,7 +285,7 @@ export default function NewChatPage({
       onMistExitComplete={handleMistExitComplete}
       header={
         <ContentAreaHeader
-          breadcrumbs={isEmbedded ? [] : [{ label: t('newChat.newChat') }]}
+          breadcrumbs={[{ label: t('newChat.newChat') }]}
           action={isEmbedded ? <RecentChatsButton /> : <HelpLink path="" />}
         />
       }
@@ -320,7 +320,7 @@ export default function NewChatPage({
                   handleSend(buildComposeReplyPrompt(originalText))
                 }
               >
-                Antwort entwerfen
+                Antwort vorbereiten
               </Button>
               <Button
                 type="button"
@@ -357,7 +357,7 @@ export default function NewChatPage({
                     )
                   }
                 >
-                  Antworte auf {sender}
+                  Antwort vorbereiten
                 </Button>
                 <Button
                   type="button"
@@ -372,7 +372,7 @@ export default function NewChatPage({
                     )
                   }
                 >
-                  E-Mail von {sender} zusammenfassen
+                  E-Mail zusammenfassen
                 </Button>
               </div>
             )}

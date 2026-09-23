@@ -21,7 +21,6 @@ export interface OfficeMailItem {
   from?: OfficeEmailAddress;
   sender?: OfficeEmailAddress;
   body?: OfficeBody;
-  displayReplyFormAsync?: (formData: { htmlBody?: string }) => void;
 }
 
 interface OfficeMailbox {
@@ -91,18 +90,6 @@ export function readMailItem(office: OfficeApi): OfficeMailItem | null {
   return office.context?.mailbox?.item ?? null;
 }
 
-/**
- * Opens Outlook's native reply form for the current mail with the draft
- * pre-filled. Outlook handles recipients, subject and quoting; nothing is sent
- * — the user reviews and sends. Returns false when the host can't reply.
- */
-export function displayReply(office: OfficeApi, htmlBody: string): boolean {
-  const item = office.context?.mailbox?.item;
-  if (!item?.displayReplyFormAsync) return false;
-  item.displayReplyFormAsync({ htmlBody });
-  return true;
-}
-
 /** Reads the plain-text body of the current mail. Resolves to '' if the host
  *  can't provide it. */
 export function readBody(office: OfficeApi): Promise<string> {
@@ -134,9 +121,9 @@ export function resetReplyPreservation(): void {
 export function writeReplyPreservingBody(
   office: OfficeApi,
   replyHtml: string,
-): void {
+): boolean {
   const body = office.context?.mailbox?.item?.body;
-  if (!body?.setAsync) return;
+  if (!body?.setAsync) return false;
   const write = (tail: string) => {
     body.setAsync?.(tail ? `${replyHtml}${tail}` : replyHtml, {
       coercionType: 'html',
@@ -144,7 +131,7 @@ export function writeReplyPreservingBody(
   };
   if (preservedBodyTail !== null) {
     write(preservedBodyTail);
-    return;
+    return true;
   }
   if (body.getAsync) {
     body.getAsync('html', (result) => {
@@ -155,6 +142,7 @@ export function writeReplyPreservingBody(
     preservedBodyTail = '';
     write('');
   }
+  return true;
 }
 
 function relativeLuminance(hex: string): number | null {

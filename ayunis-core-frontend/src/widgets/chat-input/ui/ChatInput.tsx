@@ -32,7 +32,6 @@ import { SourcesList } from './SourcesList';
 import { ChatInputExpandable } from './ChatInputExpandable';
 import { showError } from '@/shared/lib/toast';
 import './chat-input-glow.css';
-import { ActionModeSelector } from './ActionModeSelector';
 import { ChatInputSendControls } from './ChatInputSendControls';
 import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 import type {
@@ -465,7 +464,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                           onRemove={() => onSkillRemove()}
                         />
                       )}
-                    {isEmbedded && <ActionModeSelector />}
                   </div>
 
                   <ChatInputSendControls

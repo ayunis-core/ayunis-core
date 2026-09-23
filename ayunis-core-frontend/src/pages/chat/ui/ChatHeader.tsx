@@ -1,11 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import {
-  MoreVertical,
-  ShieldCheck,
-  Trash2,
-  Pencil,
-  SquarePen,
-} from 'lucide-react';
+import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Button } from '@ayunis/ui/components/button';
@@ -64,19 +58,9 @@ export default function ChatHeader({
       action={
         <div className="flex items-center gap-1">
           {isEmbedded && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t('newChat.newChat')}
-                  onClick={() => void navigate({ to: '/chat' })}
-                >
-                  <SquarePen className="h-5 w-5 text-primary" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('newChat.newChat')}</TooltipContent>
-            </Tooltip>
+            <Button size="sm" onClick={() => void navigate({ to: '/chat' })}>
+              {t('newChat.newChat')}
+            </Button>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -5,7 +5,6 @@ import {
   loadOffice,
   readMailItem,
   readHostTheme,
-  displayReply,
   readBody,
   isComposeItem,
   writeReplyPreservingBody,
@@ -58,7 +57,6 @@ export function useOutlookMail(): {
   isOutlook: boolean;
   mail: OutlookMail | null;
   isLoading: boolean;
-  draftReply: (htmlBody: string) => void;
   readMailBody: () => Promise<string>;
 } {
   const isEmbedded = useEmbedded();
@@ -66,11 +64,6 @@ export function useOutlookMail(): {
   const [mail, setMail] = useState<OutlookMail | null>(null);
   const [isLoading, setIsLoading] = useState(isEmbedded);
   const officeRef = useRef<OfficeApi | null>(null);
-
-  const draftReply = useCallback((htmlBody: string) => {
-    const office = officeRef.current;
-    if (office) displayReply(office, htmlBody);
-  }, []);
 
   const readMailBody = useCallback(async () => {
     const office = officeRef.current;
@@ -125,35 +118,7 @@ export function useOutlookMail(): {
     };
   }, [isEmbedded]);
 
-  return { isOutlook, mail, isLoading, draftReply, readMailBody };
-}
-
-/**
- * Lightweight companion to {@link useOutlookMail}: loads Office and exposes only
- * `draftReply`, without the polling/theme side effects. Meant for spots like an
- * assistant message where many instances would otherwise each start a poll.
- */
-export function useOutlookReply(): { draftReply: (htmlBody: string) => void } {
-  const isEmbedded = useEmbedded();
-  const officeRef = useRef<OfficeApi | null>(null);
-
-  useEffect(() => {
-    if (!isEmbedded) return;
-    let cancelled = false;
-    void loadOffice().then((office) => {
-      if (!cancelled && office?.context?.mailbox) officeRef.current = office;
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [isEmbedded]);
-
-  const draftReply = useCallback((htmlBody: string) => {
-    const office = officeRef.current;
-    if (office) displayReply(office, htmlBody);
-  }, []);
-
-  return { draftReply };
+  return { isOutlook, mail, isLoading, readMailBody };
 }
 
 /**
@@ -164,7 +129,7 @@ export function useOutlookReply(): { draftReply: (htmlBody: string) => void } {
 export function useOutlookCompose(options?: { reactive?: boolean }): {
   isCompose: boolean;
   originalText: string;
-  setReplyBody: (html: string) => void;
+  setReplyBody: (html: string) => boolean;
 } {
   const isEmbedded = useEmbedded();
   const reactive = options?.reactive ?? false;
@@ -175,9 +140,11 @@ export function useOutlookCompose(options?: { reactive?: boolean }): {
   useEffect(() => {
     if (!isEmbedded) return;
     let cancelled = false;
+    let intervalId: number | undefined;
 
     const detect = (office: OfficeApi) => {
-      if (cancelled || !office.context?.mailbox?.item) return;
+      if (cancelled) return;
+      if (!office.context?.mailbox?.item) return;
       const compose = isComposeItem(office);
       setIsCompose(compose);
       if (!compose) return;
@@ -192,12 +159,12 @@ export function useOutlookCompose(options?: { reactive?: boolean }): {
     };
 
     void loadOffice().then((office) => {
-      if (cancelled || !office?.context?.mailbox?.item) return;
+      if (cancelled || !office?.context?.mailbox) return;
       officeRef.current = office;
       detect(office);
-      // In a pinned pane the mode flips live (read → reply) via ItemChanged.
-      // Only the start buttons opt into this; per-message instances stay
-      // one-shot so they don't each register a handler.
+      // In a pinned pane the mode flips live (read → reply). ItemChanged is
+      // the fast path; the poll is the fallback for hosts where it doesn't
+      // fire — the same pairing useOutlookMail relies on.
       if (!reactive) return;
       const itemChanged = office.EventType?.ItemChanged;
       if (itemChanged && office.context.mailbox.addHandlerAsync) {
@@ -205,16 +172,20 @@ export function useOutlookCompose(options?: { reactive?: boolean }): {
           if (!cancelled) detect(office);
         });
       }
+      intervalId = window.setInterval(() => {
+        if (!cancelled) detect(office);
+      }, POLL_INTERVAL_MS);
     });
 
     return () => {
       cancelled = true;
+      if (intervalId !== undefined) window.clearInterval(intervalId);
     };
   }, [isEmbedded, reactive]);
 
   const setReplyBody = useCallback((html: string) => {
     const office = officeRef.current;
-    if (office) writeReplyPreservingBody(office, html);
+    return office ? writeReplyPreservingBody(office, html) : false;
   }, []);
 
   return { isCompose, originalText, setReplyBody };

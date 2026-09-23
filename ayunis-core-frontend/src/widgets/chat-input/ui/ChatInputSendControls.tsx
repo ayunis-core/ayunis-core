@@ -31,7 +31,7 @@ export function ChatInputSendControls({
 }: Readonly<ChatInputSendControlsProps>) {
   const { t } = useTranslation('common');
   return (
-    <div className="flex-shrink-0 flex space-x-2">
+    <div className="flex-shrink-0 flex gap-2">
       {/* Below the narrowest task-pane width the model selector is dropped
           entirely so the remaining controls never collide. */}
       <span className={cn('contents', isEmbedded && '@max-[17rem]:hidden')}>

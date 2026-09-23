@@ -74,3 +74,11 @@ export function getHostingPriority(provider: ModelProvider): number {
   const hostedIn = getHostedInByProvider(provider);
   return hostedIn ? HOSTING_PRIORITY[hostedIn] : 3;
 }
+
+export function stripProviderSuffix(displayName: string): string {
+  const openIndex = displayName.lastIndexOf('(');
+  if (openIndex > 0 && displayName.trimEnd().endsWith(')')) {
+    return displayName.slice(0, openIndex).trimEnd();
+  }
+  return displayName;
+}

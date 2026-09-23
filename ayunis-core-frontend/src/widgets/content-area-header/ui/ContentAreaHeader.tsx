@@ -47,16 +47,18 @@ export default function ContentAreaHeader({
             />
           </div>
         )}
-        <Breadcrumb>
-          <BreadcrumbList>
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="min-w-0 flex-nowrap">
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1;
               return (
                 <Fragment key={crumb.label}>
-                  <BreadcrumbItem>
+                  <BreadcrumbItem className={isLast ? 'min-w-0' : 'shrink-0'}>
                     {isLast ? (
                       <>
-                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                        <BreadcrumbPage className="truncate">
+                          {crumb.label}
+                        </BreadcrumbPage>
                         {badge}
                       </>
                     ) : (
@@ -65,7 +67,7 @@ export default function ContentAreaHeader({
                       </BreadcrumbLink>
                     )}
                   </BreadcrumbItem>
-                  {!isLast && <BreadcrumbSeparator />}
+                  {!isLast && <BreadcrumbSeparator className="shrink-0" />}
                 </Fragment>
               );
             })}

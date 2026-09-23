@@ -10,7 +10,10 @@ import {
   SelectItem,
   SelectLabel,
 } from '@ayunis/ui/components/select';
-import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
+import {
+  getHostingPriority,
+  stripProviderSuffix,
+} from '@/shared/lib/model-provider-metadata';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
 import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
 
@@ -33,14 +36,6 @@ function compareModels(a: ModelOption, b: ModelOption): number {
   if (tierA !== tierB) return tierB - tierA;
 
   return a.displayName.localeCompare(b.displayName);
-}
-
-function stripProviderSuffix(displayName: string): string {
-  const openIndex = displayName.lastIndexOf('(');
-  if (openIndex > 0 && displayName.trimEnd().endsWith(')')) {
-    return displayName.slice(0, openIndex).trimEnd();
-  }
-  return displayName;
 }
 
 interface ModelSelectOptionsProps {

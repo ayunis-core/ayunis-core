@@ -53,3 +53,23 @@ export function looksLikeEmailReply(text: string): boolean {
   const lower = text.toLowerCase();
   return EMAIL_CLOSINGS.some((closing) => lower.includes(closing));
 }
+
+function findLastAssistantMessage(messages: Message[]): Message | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    if (message.role === 'assistant') return message;
+  }
+  return null;
+}
+
+export function getReplyHtml(
+  messages: Message[],
+): { id: string; html: string } | null {
+  const last = findLastAssistantMessage(messages);
+  if (!last) return null;
+  const draft = getSendEmailBody(last);
+  if (draft) return { id: last.id, html: replyTextToHtml(draft) };
+  const answer = extractPlainText(last);
+  if (!answer || !looksLikeEmailReply(answer)) return null;
+  return { id: last.id, html: replyTextToHtml(answer) };
+}

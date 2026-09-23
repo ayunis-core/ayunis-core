@@ -2,8 +2,10 @@ import { useRef } from 'react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
-import InsertReplyToOutlookButton from './InsertReplyToOutlookButton';
+
+const SEND_EMAIL_TOOL = 'send_email';
 
 interface AssistantRunBlockProps {
   unit: AgentRunUnit;
@@ -20,7 +22,14 @@ export default function AssistantRunBlock({
   onOpenArtifact,
 }: Readonly<AssistantRunBlockProps>) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const hasText = unit.blocks.some((block) => block.kind === 'text');
+  const isEmbedded = useEmbedded();
+  const hasCopyableOutput = unit.blocks.some(
+    (block) =>
+      block.kind === 'text' ||
+      (isEmbedded &&
+        block.kind === 'rich-tool' &&
+        block.steps.some((step) => step.toolUse.name === SEND_EMAIL_TOOL)),
+  );
 
   return (
     <div
@@ -41,10 +50,9 @@ export default function AssistantRunBlock({
             onOpenArtifact={onOpenArtifact}
           />
         </div>
-        {hasText && (
+        {hasCopyableOutput && (
           <div className="flex items-center gap-1">
             <CopyAssistantTextButton contentRef={contentRef} />
-            <InsertReplyToOutlookButton contentRef={contentRef} />
           </div>
         )}
       </div>

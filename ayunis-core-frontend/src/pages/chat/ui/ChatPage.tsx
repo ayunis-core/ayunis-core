@@ -8,7 +8,7 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
 import type { Thread, Message } from '../model/openapi';
-import { useComposeReplyWriter } from '../hooks/useComposeReplyWriter';
+import { useOutlookReplyWriter } from '../hooks/useOutlookReplyWriter';
 import { showError } from '@/shared/lib/toast';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -285,7 +285,7 @@ export default function ChatPage({
     },
   });
 
-  useComposeReplyWriter(messages, isStreaming);
+  useOutlookReplyWriter(messages);
 
   // Send is gated while a fresh upload is in flight or while server-side
   // processing of an attached source hasn't finished — both are reasons we
