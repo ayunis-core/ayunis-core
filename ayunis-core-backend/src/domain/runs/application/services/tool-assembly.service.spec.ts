@@ -218,7 +218,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(matches[0].description).toBe('first');
   });
 
-  it('should temporarily exclude the map tool from runtime assembly', async () => {
+  it('should include the map tool among the always-available tools', async () => {
     const { service } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
       imageModelExecute: jest.fn().mockResolvedValue({}),
@@ -230,7 +230,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       new Map(),
     );
 
-    expect(tools.map((tool: { type: ToolType }) => tool.type)).not.toContain(
+    expect(tools.map((tool: { type: ToolType }) => tool.type)).toContain(
       ToolType.MAP,
     );
   });

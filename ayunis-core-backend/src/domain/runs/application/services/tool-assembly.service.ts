@@ -316,8 +316,7 @@ export class ToolAssemblyService {
     // Code execution tool is always available
     tools.push(await this.assembleCodeExecutionTool(thread));
 
-    // The map tool stays registered but is temporarily withheld because Azure
-    // intermittently returns 500 responses for its GeoJSON tool schema.
+    // Always-available tools
     tools.push(
       ...(await this.assembleSimpleTools([
         ToolType.SEND_EMAIL,
@@ -325,6 +324,7 @@ export class ToolAssemblyService {
         ToolType.BAR_CHART,
         ToolType.LINE_CHART,
         ToolType.PIE_CHART,
+        ToolType.MAP,
       ])),
     );
 
