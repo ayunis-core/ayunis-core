@@ -40,7 +40,8 @@
     },
     "workspaces": {
       "title": "Arbeitsbereiche",
-      "description": "Ein Arbeitsbereich bündelt Ihre Chats zu einem Thema und kann eine eigene Anweisung, eigenes Wissen und eigene Fähigkeiten haben. Diese wirken in jedem Chat des Arbeitsbereichs automatisch, zusätzlich zu dem, was Sie persönlich eingerichtet haben. Je mehr Kontext ein Arbeitsbereich enthält, desto genauer antwortet Ayunis Core darin."
+      "description": "Ein Arbeitsbereich bündelt Ihre Chats zu einem Thema und kann eine eigene Anweisung, eigenes Wissen und eigene Fähigkeiten haben. Diese wirken in jedem Chat des Arbeitsbereichs automatisch, zusätzlich zu dem, was Sie persönlich eingerichtet haben. Je mehr Kontext ein Arbeitsbereich enthält, desto genauer antwortet Ayunis Core darin.",
+      "helpLink": "Mehr über Arbeitsbereiche erfahren"
     },
     "advanced": {
       "title": "Fortgeschrittene Funktionen",
@@ -185,7 +186,8 @@
       "description": "Auch ältere Chats lassen sich nachträglich einsortieren. Öffnen Sie dazu das Menü am Chat in der Seitenleiste und wählen Sie den passenden Arbeitsbereich aus.",
       "action": "Chat zuordnen",
       "spotlightTitle": "Chat zuordnen",
-      "spotlightDescription": "Öffnen Sie dieses Menü und wählen Sie „Zu Arbeitsbereich hinzufügen“."
+      "spotlightDescription": "Öffnen Sie dieses Menü und wählen Sie „Zu Arbeitsbereich hinzufügen“.",
+      "unavailable": "Öffnen Sie zuerst einen Chat, damit sein Menü in der Seitenleiste angezeigt werden kann."
     },
     "workspaceInstruction": {
       "title": "Anweisung für den Arbeitsbereich hinterlegen",
@@ -213,7 +215,8 @@
       "description": "Sie können jeden Arbeitsbereich als Favorit markieren. Favoriten erscheinen mit ihrem Symbol in der Seitenleiste, sodass Sie von jeder Seite aus mit einem Klick dorthin gelangen.",
       "action": "Zu Favoriten hinzufügen",
       "spotlightTitle": "Zu Favoriten hinzufügen",
-      "spotlightDescription": "Klicken Sie auf den Stern, um den Arbeitsbereich zu Ihren Favoriten hinzuzufügen. Er erscheint anschließend in der Seitenleiste."
+      "spotlightDescription": "Klicken Sie auf den Stern, um den Arbeitsbereich zu Ihren Favoriten hinzuzufügen. Er erscheint anschließend in der Seitenleiste.",
+      "unavailable": "Alle Ihre Arbeitsbereiche sind bereits angepinnt."
     },
     "customInstructions": {
       "title": "Eigene Anweisungen festlegen",

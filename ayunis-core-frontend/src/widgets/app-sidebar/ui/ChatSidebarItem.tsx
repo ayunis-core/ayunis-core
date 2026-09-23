@@ -58,8 +58,9 @@ export function ChatSidebarItem({
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
-  const { isTourActive } = useOnboardingTour();
-  const isTourHighlighted = tourTarget !== undefined && isTourActive;
+  const { activeTarget } = useOnboardingTour();
+  const isTourHighlighted =
+    tourTarget !== undefined && activeTarget === tourTarget;
 
   return (
     <>

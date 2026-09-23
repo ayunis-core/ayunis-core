@@ -15,7 +15,10 @@ const mocks = vi.hoisted(() => ({
   workspacesError: null as Error | null,
   favoriteWorkspaceIds: [] as string[],
   areFavoritesLoading: false,
+  showInfo: vi.fn(),
 }));
+
+vi.mock('@/shared/lib/toast', () => ({ showInfo: mocks.showInfo }));
 
 vi.mock('@/features/favorites', () => ({
   useFavorites: () => ({
@@ -31,6 +34,7 @@ vi.mock('@tanstack/react-router', () => ({
 }));
 
 vi.mock('@/features/workspaces', () => ({
+  WORKSPACES_PER_PAGE: 20,
   useWorkspaces: () => ({
     workspaces: mocks.workspaces,
     isLoading: mocks.areWorkspacesLoading,
@@ -46,6 +50,7 @@ vi.mock('@/widgets/onboarding', async (importOriginal) => {
       launchTour: mocks.launchTour,
       armReturn: mocks.armReturn,
       isTourActive: false,
+      activeTarget: null,
       isReturnActive: false,
     }),
   };
@@ -74,6 +79,26 @@ function stepById(id: string) {
   return step;
 }
 
+function actionButton(stepId: string): HTMLButtonElement {
+  return screen.getByRole('button', { name: `steps.${stepId}.action` });
+}
+
+function mountSidebarRow(rect: Partial<DOMRect> = {}) {
+  const row = document.createElement('div');
+  row.setAttribute('data-tour', 'assign-chat-to-workspace');
+  row.getBoundingClientRect = () =>
+    ({
+      width: 200,
+      height: 32,
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 32,
+      ...rect,
+    }) as DOMRect;
+  document.body.appendChild(row);
+}
+
 async function clickAction(stepId: string) {
   render(
     <OnboardingStepItem
@@ -85,9 +110,7 @@ async function clickAction(stepId: string) {
     />,
   );
   await act(async () => {
-    fireEvent.click(
-      screen.getByRole('button', { name: `steps.${stepId}.action` }),
-    );
+    fireEvent.click(actionButton(stepId));
   });
 }
 
@@ -152,9 +175,7 @@ describe('OnboardingStepItem workspace steps', () => {
   });
 
   it('sends the assign step to the chat page for the sidebar spotlight', async () => {
-    const row = document.createElement('div');
-    row.setAttribute('data-tour', 'assign-chat-to-workspace');
-    document.body.appendChild(row);
+    mountSidebarRow();
 
     await clickAction('assignChatToWorkspace');
 
@@ -164,21 +185,33 @@ describe('OnboardingStepItem workspace steps', () => {
     );
   });
 
-  it('skips the assign spotlight when the sidebar holds no chat row', async () => {
+  it('explains and skips the assign spotlight when the sidebar holds no chat row', async () => {
     await clickAction('assignChatToWorkspace');
 
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/chat' });
     expect(mocks.launchTour).not.toHaveBeenCalled();
+    expect(mocks.showInfo).toHaveBeenCalledWith(
+      'steps.assignChatToWorkspace.unavailable',
+    );
   });
 
-  it('does not claim a missing workspace while the list is still loading', async () => {
+  it('treats a chat row hidden by a collapsed sidebar as missing', async () => {
+    mountSidebarRow({ left: -300, right: -100 });
+
+    await clickAction('assignChatToWorkspace');
+
+    expect(mocks.launchTour).not.toHaveBeenCalled();
+    expect(mocks.showInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables the action while the workspace list is still loading', async () => {
     mocks.workspaces = [];
     mocks.areWorkspacesLoading = true;
 
     await clickAction('workspaceSkill');
 
-    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/workspaces' });
-    expect(mocks.launchTour).not.toHaveBeenCalled();
+    expect(actionButton('workspaceSkill').disabled).toBe(true);
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
   it('does not claim a missing workspace when the list failed to load', async () => {
@@ -191,22 +224,25 @@ describe('OnboardingStepItem workspace steps', () => {
     expect(mocks.launchTour).not.toHaveBeenCalled();
   });
 
-  it('skips the favourite spotlight while the favourites are still loading', async () => {
+  it('disables the favourite action while the favourites are still loading', async () => {
     mocks.areFavoritesLoading = true;
 
     await clickAction('favoriteWorkspace');
 
-    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/workspaces' });
-    expect(mocks.launchTour).not.toHaveBeenCalled();
+    expect(actionButton('favoriteWorkspace').disabled).toBe(true);
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
-  it('skips the favourite spotlight when every workspace is already a favourite', async () => {
+  it('explains and skips the favourite spotlight when every workspace is already pinned', async () => {
     mocks.favoriteWorkspaceIds = ['workspace-1'];
 
     await clickAction('favoriteWorkspace');
 
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/workspaces' });
     expect(mocks.launchTour).not.toHaveBeenCalled();
+    expect(mocks.showInfo).toHaveBeenCalledWith(
+      'steps.favoriteWorkspace.unavailable',
+    );
   });
 
   it('falls back to the create-workspace spotlight when none exists yet', async () => {

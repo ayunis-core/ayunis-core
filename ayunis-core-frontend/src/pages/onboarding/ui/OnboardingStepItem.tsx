@@ -21,6 +21,7 @@ import {
   type OnboardingStep,
   type OnboardingStepId,
   findPinTourWorkspace,
+  isTourTargetVisible,
 } from '@/widgets/onboarding';
 import {
   useKnowledgeBasesControllerFindAll,
@@ -30,6 +31,7 @@ import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-sco
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import { useWorkspaces } from '@/features/workspaces';
 import { useFavorites } from '@/features/favorites';
+import { showInfo } from '@/shared/lib/toast';
 
 type WorkspaceDetailTab = 'skills' | 'knowledge' | 'instructions';
 
@@ -46,9 +48,11 @@ const WORKSPACE_DETAIL_STEP_IDS = new Set<string>([
   ...Object.keys(WORKSPACE_DETAIL_STEP_TABS),
 ]);
 
+// Presence in the DOM is not enough: a collapsed sidebar keeps the row mounted
+// but hidden or off-screen, and joyride would stall on it until its timeout.
 function isSidebarSpotlightMissing(spotlight: TourTargetName): boolean {
   if (spotlight !== TOUR_TARGET.assignChatToWorkspace) return false;
-  return document.querySelector(`[data-tour="${spotlight}"]`) === null;
+  return !isTourTargetVisible(spotlight);
 }
 
 const WORKSPACE_STEP_IDS = new Set<string>([
@@ -102,8 +106,11 @@ export default function OnboardingStepItem({
   const { favorites, isLoading: areFavoritesLoading } = useFavorites();
   const firstWorkspace = workspaces.at(0);
   const hasUnfavoritedWorkspace =
-    !areFavoritesLoading &&
     findPinTourWorkspace(workspaces, favorites) !== undefined;
+  // The action stays disabled until the data it decides on has arrived, so a
+  // click never acts on a still-loading list.
+  const isResolvingWorkspaceState =
+    needsWorkspace && (areWorkspacesLoading || areFavoritesLoading);
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt
@@ -167,8 +174,11 @@ export default function OnboardingStepItem({
     armReturn();
 
     if (!firstWorkspace) {
+      // With the list failed we cannot tell whether a workspace exists, so we
+      // open the overview without claiming there is none.
+      const canOfferCreate = !workspacesError;
       void navigate({ to: '/workspaces' }).then(() => {
-        if (areWorkspacesLoading || workspacesError) return;
+        if (!canOfferCreate) return;
         triggerSpotlight(TOUR_TARGET.createWorkspace, {
           translationKey: 'createWorkspace',
         });
@@ -182,6 +192,8 @@ export default function OnboardingStepItem({
       (spotlight === TOUR_TARGET.favoriteWorkspace && !hasUnfavoritedWorkspace);
 
     if (hasNoTarget) {
+      // Still go there, but say why nothing is highlighted.
+      showInfo(t(`steps.${step.translationKey}.unavailable`));
       void navigate({ to });
       return;
     }
@@ -317,7 +329,11 @@ export default function OnboardingStepItem({
             {(step.action ?? step.secondaryAction) && (
               <div className="flex items-center gap-2">
                 {step.action && (
-                  <Button size="sm" onClick={handleAction} disabled={completed}>
+                  <Button
+                    size="sm"
+                    onClick={handleAction}
+                    disabled={completed || isResolvingWorkspaceState}
+                  >
                     {t(`steps.${step.translationKey}.action`)}
                     <ArrowRight className="size-3" />
                   </Button>

@@ -17,6 +17,14 @@ describe('findPinTourWorkspace', () => {
     expect(findPinTourWorkspace([workspace('a')], undefined)?.id).toBe('a');
   });
 
+  it('only considers the first page of the list', () => {
+    const workspaces = Array.from({ length: 21 }, (_, i) => workspace(`w${i}`));
+    const firstPagePinned = workspaces
+      .slice(0, 20)
+      .map((w) => favoriteOf(w.id));
+    expect(findPinTourWorkspace(workspaces, firstPagePinned)).toBeUndefined();
+  });
+
   it('ignores favorites of another reference type', () => {
     const skillFavorite = {
       referenceId: 'a',

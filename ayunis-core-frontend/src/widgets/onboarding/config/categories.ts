@@ -183,6 +183,7 @@ export const ONBOARDING_CATEGORIES = [
     id: 'workspaces',
     translationKey: 'workspaces',
     requiresFeature: 'workspacesEnabled',
+    helpPath: 'workspaces/',
     steps: [
       {
         id: 'createWorkspace',

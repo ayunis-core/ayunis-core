@@ -1,14 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
 import { WorkspacesPage } from '@/pages/workspaces';
+import { WORKSPACES_PER_PAGE } from '@/features/workspaces';
 import {
   workspacesControllerFindAll,
   getWorkspacesControllerFindAllQueryKey,
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-
-const WORKSPACES_PER_PAGE = 20;
 
 const searchSchema = z.object({
   page: z.number().min(1).optional().catch(1),

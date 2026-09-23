@@ -40,7 +40,8 @@
     },
     "workspaces": {
       "title": "Workspaces",
-      "description": "A workspace groups your chats around one topic and can have its own instruction, its own knowledge and its own skills. These apply automatically in every chat in the workspace, on top of what you have set up personally. The more context a workspace holds, the more precise Ayunis Core answers in it."
+      "description": "A workspace groups your chats around one topic and can have its own instruction, its own knowledge and its own skills. These apply automatically in every chat in the workspace, on top of what you have set up personally. The more context a workspace holds, the more precise Ayunis Core answers in it.",
+      "helpLink": "Learn more about workspaces"
     },
     "advanced": {
       "title": "Advanced features",
@@ -185,7 +186,8 @@
       "description": "Older chats can be filed later on as well. Open the menu on the chat in the sidebar and pick the workspace you want.",
       "action": "Move chat",
       "spotlightTitle": "Move chat",
-      "spotlightDescription": "Open this menu and choose “Add to workspace”."
+      "spotlightDescription": "Open this menu and choose “Add to workspace”.",
+      "unavailable": "Open a chat first so its menu can be shown in the sidebar."
     },
     "workspaceInstruction": {
       "title": "Add an instruction for the workspace",
@@ -213,7 +215,8 @@
       "description": "You can mark any workspace as a favourite. Favourites appear with their icon in the sidebar, so you can reach the workspace from any page with a single click.",
       "action": "Add to favourites",
       "spotlightTitle": "Add to favourites",
-      "spotlightDescription": "Click the star to add the workspace to your favourites. It then appears in the sidebar."
+      "spotlightDescription": "Click the star to add the workspace to your favourites. It then appears in the sidebar.",
+      "unavailable": "All your workspaces are already pinned."
     },
     "customInstructions": {
       "title": "Set custom instructions",
