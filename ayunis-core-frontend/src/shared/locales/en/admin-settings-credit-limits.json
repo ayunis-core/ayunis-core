@@ -18,7 +18,7 @@
   "table": {
     "teamsTitle": "Credit limits for teams",
     "usersTitle": "Credit limits for users",
-    "limit": "Monthly credit limit",
+    "limit": "Credit limit",
     "actions": "Actions",
     "configure": "Configure",
     "search": "Search teams or users",
