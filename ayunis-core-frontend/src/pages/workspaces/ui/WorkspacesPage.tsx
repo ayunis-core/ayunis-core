@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import AppLayout from '@/layouts/app-layout';
@@ -6,6 +6,7 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import type { Workspace } from '@/features/workspaces';
 import { PaginationWidget } from '@/widgets/pagination';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
@@ -32,10 +33,16 @@ export default function WorkspacesPage({
     </Button>
   );
 
-  const headerAction = (
+  const spotlitCreateButton = (
+    <OnboardingTourTarget name={TOUR_TARGET.createWorkspace}>
+      {createButton}
+    </OnboardingTourTarget>
+  );
+
+  const renderHeaderAction = (action: ReactNode) => (
     <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="workspaces/" />
-      {createButton}
+      {action}
     </div>
   );
 
@@ -50,11 +57,11 @@ export default function WorkspacesPage({
           header={
             <ContentAreaHeader
               breadcrumbs={[{ label: t('page.title') }]}
-              action={headerAction}
+              action={renderHeaderAction(createButton)}
             />
           }
         >
-          <WorkspacesEmptyState action={createButton} />
+          <WorkspacesEmptyState action={spotlitCreateButton} />
         </FullScreenMessageLayout>
         {createDialog}
       </AppLayout>
@@ -67,7 +74,7 @@ export default function WorkspacesPage({
         contentHeader={
           <ContentAreaHeader
             breadcrumbs={[{ label: t('page.title') }]}
-            action={headerAction}
+            action={renderHeaderAction(spotlitCreateButton)}
           />
         }
         contentArea={

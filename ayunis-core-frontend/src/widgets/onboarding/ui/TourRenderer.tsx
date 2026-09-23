@@ -1,4 +1,4 @@
-import type { TourRequest } from '../model/onboardingTourContext';
+import type { TourRequest } from '@/widgets/onboarding/model/onboardingTourContext';
 import { useEffect, useState } from 'react';
 import {
   useJoyride,
@@ -7,7 +7,7 @@ import {
   type Step,
   type TooltipRenderProps,
 } from 'react-joyride';
-import { useStableTarget } from '../lib/useStableTarget';
+import { useStableTarget } from '@/widgets/onboarding/lib/useStableTarget';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
@@ -37,12 +37,13 @@ function readSpotlightRadius(target: string): number {
 
   // The [data-tour] handle is a layout-only wrapper with no rounding of its own;
   // read the corner radius from the wrapped control so the spotlight matches it.
-  const shape = el.firstElementChild ?? el;
+  const shape = readRadius(el) > 0 ? el : (el.firstElementChild ?? el);
 
-  return (
-    (Number.parseFloat(getComputedStyle(shape).borderTopLeftRadius) || 0) +
-    SPOTLIGHT_PADDING
-  );
+  return readRadius(shape) + SPOTLIGHT_PADDING;
+}
+
+function readRadius(element: Element): number {
+  return Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
 }
 
 function TourTooltip({

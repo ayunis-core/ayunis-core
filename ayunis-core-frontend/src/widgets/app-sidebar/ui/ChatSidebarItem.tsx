@@ -26,6 +26,7 @@ import {
 import { cn } from '@ayunis/ui/lib/cn';
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
+import { useOnboardingTour, type TourTargetName } from '@/widgets/onboarding';
 import { useWorkspaces } from '@/features/workspaces';
 import { useToggleFavorite } from '@/features/favorites';
 import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
@@ -38,6 +39,7 @@ interface ChatSidebarItemProps {
   isPinned: boolean;
   onRename: (threadId: string, currentTitle: string | null) => void;
   onDelete: (threadId: string) => void;
+  tourTarget?: TourTargetName;
 }
 
 export function ChatSidebarItem({
@@ -45,6 +47,7 @@ export function ChatSidebarItem({
   isPinned,
   onRename,
   onDelete,
+  tourTarget,
 }: Readonly<ChatSidebarItemProps>) {
   const { t } = useTranslation('common');
   const params = useParams({ strict: false });
@@ -55,6 +58,9 @@ export function ChatSidebarItem({
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
+  const { activeTarget } = useOnboardingTour();
+  const isTourHighlighted =
+    tourTarget !== undefined && activeTarget === tourTarget;
 
   return (
     <>
@@ -71,7 +77,10 @@ export function ChatSidebarItem({
         </SidebarMenuButton>
         <DropdownMenu>
           <DropdownMenuTrigger data-testid="dropdown-menu-trigger" asChild>
-            <SidebarMenuAction showOnHover>
+            <SidebarMenuAction
+              showOnHover={!isTourHighlighted}
+              data-tour={tourTarget}
+            >
               <MoreHorizontal />
               <span className="sr-only">{t('sidebar.more')}</span>
             </SidebarMenuAction>

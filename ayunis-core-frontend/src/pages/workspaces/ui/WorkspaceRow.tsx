@@ -13,14 +13,19 @@ import {
   useIsKnowledgeBasesEnabled,
   useIsSkillsEnabled,
 } from '@/features/feature-toggles';
+import { TOUR_TARGET } from '@/widgets/onboarding';
 import type { Workspace } from '@/features/workspaces';
 import { WorkspacePinButton } from './WorkspacePinButton';
 
 interface WorkspaceRowProps {
   workspace: Workspace;
+  pinTourTarget?: boolean;
 }
 
-export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
+export function WorkspaceRow({
+  workspace,
+  pinTourTarget = false,
+}: Readonly<WorkspaceRowProps>) {
   const { t } = useTranslation('workspaces');
   const skillsEnabled = useIsSkillsEnabled();
   const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
@@ -67,7 +72,10 @@ export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
         )}
       </ItemContent>
       <ItemActions className="relative">
-        <WorkspacePinButton workspaceId={workspace.id} />
+        <WorkspacePinButton
+          workspaceId={workspace.id}
+          tourTarget={pinTourTarget ? TOUR_TARGET.favoriteWorkspace : undefined}
+        />
       </ItemActions>
     </Item>
   );

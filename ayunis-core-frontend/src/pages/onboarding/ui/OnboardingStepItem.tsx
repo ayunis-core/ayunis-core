@@ -19,6 +19,10 @@ import {
   ACTION_TYPE,
   SECONDARY_ACTION_TYPE,
   type OnboardingStep,
+  type OnboardingStepId,
+  findPinTourWorkspace,
+  findAssignTourThread,
+  isTourTargetVisible,
 } from '@/widgets/onboarding';
 import {
   useKnowledgeBasesControllerFindAll,
@@ -26,6 +30,39 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import { useWorkspaces } from '@/features/workspaces';
+import { useFavorites } from '@/features/favorites';
+import { useThreads } from '@/widgets/app-sidebar/api';
+import { showInfo } from '@/shared/lib/toast';
+
+type WorkspaceDetailTab = 'skills' | 'knowledge' | 'instructions';
+
+const WORKSPACE_DETAIL_STEP_TABS: Partial<
+  Record<OnboardingStepId, WorkspaceDetailTab>
+> = {
+  workspaceInstruction: 'instructions',
+  workspaceKnowledge: 'knowledge',
+  workspaceSkill: 'skills',
+};
+
+const WORKSPACE_DETAIL_STEP_IDS = new Set<string>([
+  'startWorkspaceChat',
+  ...Object.keys(WORKSPACE_DETAIL_STEP_TABS),
+]);
+
+// Presence in the DOM is not enough: a collapsed sidebar keeps the row mounted
+// but hidden or off-screen, and joyride would stall on it until its timeout.
+function isSidebarSpotlightMissing(spotlight: TourTargetName): boolean {
+  if (spotlight !== TOUR_TARGET.assignChatToWorkspace) return false;
+  return !isTourTargetVisible(spotlight);
+}
+
+const WORKSPACE_STEP_IDS = new Set<string>([
+  'favoriteWorkspace',
+  'selectWorkspaceInChat',
+  'assignChatToWorkspace',
+  ...WORKSPACE_DETAIL_STEP_IDS,
+]);
 
 interface OnboardingStepItemProps {
   step: OnboardingStep;
@@ -61,6 +98,30 @@ export default function OnboardingStepItem({
   );
   const hasPersonalSkill =
     skillsResponse?.data.some((skill) => !skill.isShared) ?? false;
+
+  const needsWorkspace = WORKSPACE_STEP_IDS.has(step.id);
+  const {
+    workspaces,
+    isLoading: areWorkspacesLoading,
+    error: workspacesError,
+  } = useWorkspaces();
+  const { favorites, isLoading: areFavoritesLoading } = useFavorites();
+  // The assign step's target is a sidebar chat row, which only exists once
+  // the sidebar has loaded its threads.
+  const {
+    threads,
+    isLoading: areThreadsLoading,
+    isError: hasThreadsError,
+  } = useThreads();
+  const hasMovableChat = findAssignTourThread(threads, favorites) !== undefined;
+  const firstWorkspace = workspaces.at(0);
+  const hasUnfavoritedWorkspace =
+    findPinTourWorkspace(workspaces, favorites) !== undefined;
+  // The action stays disabled until the data it decides on has arrived, so a
+  // click never acts on a still-loading list.
+  const isResolvingWorkspaceState =
+    needsWorkspace &&
+    (areWorkspacesLoading || areFavoritesLoading || areThreadsLoading);
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt
@@ -120,6 +181,68 @@ export default function OnboardingStepItem({
     return { to, spotlight, translationKey: step.translationKey };
   };
 
+  const handleWorkspaceAction = (to: string, spotlight?: TourTargetName) => {
+    armReturn();
+
+    if (!firstWorkspace) {
+      // With the list failed we cannot tell whether a workspace exists, so we
+      // open the overview without claiming there is none.
+      const canOfferCreate = !workspacesError;
+      void navigate({ to: '/workspaces' }).then(() => {
+        if (!canOfferCreate) return;
+        triggerSpotlight(TOUR_TARGET.createWorkspace, {
+          translationKey: 'createWorkspace',
+        });
+      });
+      return;
+    }
+
+    if (spotlight === TOUR_TARGET.assignChatToWorkspace && hasThreadsError) {
+      // With the chat list failed we cannot tell what exists, so open the
+      // chat page without claiming anything.
+      void navigate({ to });
+      return;
+    }
+
+    if (spotlight === TOUR_TARGET.assignChatToWorkspace && !hasMovableChat) {
+      // Nothing unpinned to move: point at the composer so the user gets a
+      // chat, then the step can be tried again.
+      void navigate({ to: '/chat' }).then(() =>
+        triggerSpotlight(TOUR_TARGET.chatComposer, {
+          translationKey: 'firstChatForWorkspace',
+        }),
+      );
+      return;
+    }
+
+    const hasNoTarget =
+      (spotlight === TOUR_TARGET.assignChatToWorkspace &&
+        isSidebarSpotlightMissing(spotlight)) ||
+      (spotlight === TOUR_TARGET.favoriteWorkspace && !hasUnfavoritedWorkspace);
+
+    if (hasNoTarget) {
+      // Still go there, but say why nothing is highlighted.
+      showInfo(t(`steps.${step.translationKey}.unavailable`));
+      void navigate({ to });
+      return;
+    }
+
+    const spotlightAfterNavigation = () => {
+      if (spotlight) triggerSpotlight(spotlight);
+    };
+
+    if (!WORKSPACE_DETAIL_STEP_IDS.has(step.id)) {
+      void navigate({ to }).then(spotlightAfterNavigation);
+      return;
+    }
+
+    void navigate({
+      to: '/workspaces/$workspaceId',
+      params: { workspaceId: firstWorkspace.id },
+      search: { tab: WORKSPACE_DETAIL_STEP_TABS[step.id] },
+    }).then(spotlightAfterNavigation);
+  };
+
   const handleAction = () => {
     const action = step.action;
     if (!action) return;
@@ -153,6 +276,11 @@ export default function OnboardingStepItem({
       }).then(() => {
         if (action.spotlight) triggerSpotlight(action.spotlight);
       });
+      return;
+    }
+
+    if (needsWorkspace) {
+      handleWorkspaceAction(action.to, action.spotlight);
       return;
     }
 
@@ -230,7 +358,11 @@ export default function OnboardingStepItem({
             {(step.action ?? step.secondaryAction) && (
               <div className="flex items-center gap-2">
                 {step.action && (
-                  <Button size="sm" onClick={handleAction} disabled={completed}>
+                  <Button
+                    size="sm"
+                    onClick={handleAction}
+                    disabled={completed || isResolvingWorkspaceState}
+                  >
                     {t(`steps.${step.translationKey}.action`)}
                     <ArrowRight className="size-3" />
                   </Button>

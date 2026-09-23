@@ -1,3 +1,4 @@
+import type { FeatureTogglesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { TOUR_TARGET, type TourTargetName } from './tour-targets';
 
 export const ACTION_TYPE = {
@@ -179,6 +180,86 @@ export const ONBOARDING_CATEGORIES = [
     ],
   },
   {
+    id: 'workspaces',
+    translationKey: 'workspaces',
+    requiresFeature: 'workspacesEnabled',
+    helpPath: 'workspaces/',
+    steps: [
+      {
+        id: 'createWorkspace',
+        translationKey: 'createWorkspace',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.createWorkspace,
+        },
+      },
+      {
+        id: 'selectWorkspaceInChat',
+        translationKey: 'selectWorkspaceInChat',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/chat',
+          spotlight: TOUR_TARGET.selectWorkspaceInChat,
+        },
+      },
+      {
+        id: 'startWorkspaceChat',
+        translationKey: 'startWorkspaceChat',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.chatComposer,
+        },
+      },
+      {
+        id: 'assignChatToWorkspace',
+        translationKey: 'assignChatToWorkspace',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/chat',
+          spotlight: TOUR_TARGET.assignChatToWorkspace,
+        },
+      },
+      {
+        id: 'workspaceInstruction',
+        translationKey: 'workspaceInstruction',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.workspaceInstruction,
+        },
+      },
+      {
+        id: 'workspaceKnowledge',
+        translationKey: 'workspaceKnowledge',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.workspaceKnowledge,
+        },
+      },
+      {
+        id: 'workspaceSkill',
+        translationKey: 'workspaceSkill',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.workspaceSkill,
+        },
+      },
+      {
+        id: 'favoriteWorkspace',
+        translationKey: 'favoriteWorkspace',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.favoriteWorkspace,
+        },
+      },
+    ],
+  },
+  {
     id: 'workflows',
     translationKey: 'workflows',
     steps: [
@@ -281,5 +362,6 @@ export interface OnboardingCategory {
   translationKey: string;
   steps: readonly OnboardingStep[];
   adminOnly?: boolean;
+  requiresFeature?: keyof FeatureTogglesResponseDto;
   helpPath?: string;
 }

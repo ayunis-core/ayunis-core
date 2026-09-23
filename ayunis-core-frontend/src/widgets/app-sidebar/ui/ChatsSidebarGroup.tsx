@@ -14,6 +14,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
+import { TOUR_TARGET, findAssignTourThread } from '@/widgets/onboarding';
 import { ChatSidebarItem } from './ChatSidebarItem';
 import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
 
@@ -76,6 +77,7 @@ export function ChatsSidebarGroup() {
   const otherThreads = threads.filter(
     (thread) => !pinnedThreadIds.has(thread.id),
   );
+  const assignTourThreadId = findAssignTourThread(threads, favorites)?.id;
 
   const [threadToRename, setThreadToRename] = useState<{
     id: string;
@@ -120,6 +122,11 @@ export function ChatsSidebarGroup() {
                   setThreadToRename({ id: threadId, title })
                 }
                 onDelete={handleDeleteClick}
+                tourTarget={
+                  thread.id === assignTourThreadId
+                    ? TOUR_TARGET.assignChatToWorkspace
+                    : undefined
+                }
               />
             ))}
             {hasMore && (
