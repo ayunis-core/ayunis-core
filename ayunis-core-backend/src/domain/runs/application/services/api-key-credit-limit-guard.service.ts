@@ -5,8 +5,6 @@ import { GetMonthlyCreditUsageForApiKeyUseCase } from 'src/domain/usage/applicat
 import { ApiKeyCreditLimitExceededError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { ResolveCreditLimitForApiKeyQuery } from 'src/iam/credit-limits/application/use-cases/resolve-credit-limit-for-api-key/resolve-credit-limit-for-api-key.query';
 import { ResolveCreditLimitForApiKeyUseCase } from 'src/iam/credit-limits/application/use-cases/resolve-credit-limit-for-api-key/resolve-credit-limit-for-api-key.use-case';
-import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.query';
-import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 
 @Injectable()
 export class ApiKeyCreditLimitGuardService {
@@ -15,7 +13,6 @@ export class ApiKeyCreditLimitGuardService {
   constructor(
     private readonly resolveCreditLimitForApiKeyUseCase: ResolveCreditLimitForApiKeyUseCase,
     private readonly getMonthlyCreditUsageForApiKeyUseCase: GetMonthlyCreditUsageForApiKeyUseCase,
-    private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
   ) {}
 
   async ensureWithinLimit(orgId: UUID, apiKeyId: UUID): Promise<void> {
@@ -24,11 +21,6 @@ export class ApiKeyCreditLimitGuardService {
         new ResolveCreditLimitForApiKeyQuery(orgId, apiKeyId),
       );
     if (monthlyCreditLimit === null) return;
-
-    const isUsageBased = await this.isUsageBasedSubscriptionUseCase.execute(
-      new IsUsageBasedSubscriptionQuery(orgId),
-    );
-    if (!isUsageBased) return;
 
     const { creditsUsed } =
       await this.getMonthlyCreditUsageForApiKeyUseCase.execute(

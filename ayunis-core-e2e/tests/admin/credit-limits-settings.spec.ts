@@ -5,6 +5,7 @@ import {
 } from '../../src/clients/api/credit-limits.client';
 import {
   createEmptyThread,
+  getThread,
   sendThreadMessage,
 } from '../../src/clients/api/threads.client';
 import { createCreditLimitsFixture } from '../../src/factories/credit-limits.factory';
@@ -150,6 +151,9 @@ test('team credit ceiling blocks a member with positive or no personal limit unt
     );
     expect(await noPersonalLimitRun.text()).toContain(
       'TEAM_CREDIT_LIMIT_EXCEEDED',
+    );
+    expect((await getThread(fixture.member.api, thread.id)).messages).toEqual(
+      [],
     );
 
     await openCreditLimitDialog(

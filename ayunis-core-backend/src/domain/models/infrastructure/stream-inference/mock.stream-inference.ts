@@ -109,6 +109,7 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
 }
 
 const MOCK_CHUNK_DELAY_MS = 40;
+const MOCK_USAGE = { inputTokens: 0, outputTokens: 0 } as const;
 const MALFORMED_TOOL_CALL_RETRY_PROMPT =
   'E2E trigger malformed completed tool call';
 const PAGINATED_RESEARCH_PROMPT = 'E2E trigger paginated research: ';
@@ -179,9 +180,11 @@ async function* providerTextResponse(
   const deltas = splitIntoDeltas(responseText);
   for (const [index, textDelta] of deltas.entries()) {
     await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+    const isLast = index === deltas.length - 1;
     yield {
       textDelta,
-      finishReason: index === deltas.length - 1 ? 'stop' : undefined,
+      finishReason: isLast ? 'stop' : undefined,
+      usage: isLast ? MOCK_USAGE : undefined,
     };
   }
 }
@@ -320,6 +323,7 @@ async function* sourceCitationToolCallResponse(
       },
     ],
     finishReason: 'tool_calls',
+    usage: MOCK_USAGE,
   };
 }
 
@@ -336,7 +340,7 @@ async function* malformedProviderToolCallResponse(): AsyncIterable<ProviderChunk
     ],
   };
   await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
-  yield { finishReason: 'stop' };
+  yield { finishReason: 'stop', usage: MOCK_USAGE };
 }
 
 async function* researchToolCallResponse(
@@ -357,7 +361,7 @@ async function* researchToolCallResponse(
   await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
   yield { toolCallDeltas: [...documents, ...websites] };
   await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
-  yield { finishReason: 'tool_calls' };
+  yield { finishReason: 'tool_calls', usage: MOCK_USAGE };
 }
 
 function textResponse(

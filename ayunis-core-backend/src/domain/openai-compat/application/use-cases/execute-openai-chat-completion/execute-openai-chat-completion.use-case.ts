@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { Observable, catchError, finalize, map, throwError } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
 import {
@@ -8,7 +8,10 @@ import {
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
 import { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
-import { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import {
+  StreamInferenceInput,
+  type StreamInferenceAttemptLifecycle,
+} from 'src/domain/models/application/ports/stream-inference.handler';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
@@ -37,10 +40,8 @@ import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-di
  * and is the only caller of `InferenceUsageGuard` on this surface.
  * The controller stays purely DTO↔command + SSE framing + HTTP filter.
  *
- * Streaming usage is recorded via RxJS `finalize()` so the accumulator
- * runs on complete, error, AND unsubscribe (client disconnect alike).
- * Totals are summed across chunks — never last-wins (AYC-92 streaming
- * usage-drift bug).
+ * Direct stream attempt gating and critical accounting are supplied through
+ * the models module's provider-neutral attempt lifecycle seam.
  */
 @Injectable()
 export class ExecuteOpenAIChatCompletionUseCase {
@@ -71,26 +72,29 @@ export class ExecuteOpenAIChatCompletionUseCase {
     const requestId = this.requestMapper.newRequestId();
     const tools = this.requestMapper.toToolSchemas(request);
 
-    const response = await this.executeNonStreamingInference(
-      new GetInferenceCommand({
-        model,
-        messages,
-        tools,
-        toolChoice: this.requestMapper.toModelToolChoice(request),
-        instructions: systemPrompt || undefined,
-        acceptTokenLimitCompletion: true,
-      }),
+    const inferenceCommand = new GetInferenceCommand({
+      model,
+      messages,
+      tools,
+      toolChoice: this.requestMapper.toModelToolChoice(request),
+      instructions: systemPrompt || undefined,
+      acceptTokenLimitCompletion: true,
+    });
+    await this.inferenceUsageGuard.ensureModelCallAllowed(
+      command.principal,
+      model,
     );
+    const response = await this.executeNonStreamingInference(inferenceCommand);
 
     if (
-      response.meta.inputTokens !== undefined &&
+      response.meta.inputTokens !== undefined ||
       response.meta.outputTokens !== undefined
     ) {
       this.inferenceUsageGuard.collectUsage(
         model,
         {
-          inputTokens: response.meta.inputTokens,
-          outputTokens: response.meta.outputTokens,
+          inputTokens: response.meta.inputTokens ?? 0,
+          outputTokens: response.meta.outputTokens ?? 0,
         },
         requestId,
       );
@@ -128,8 +132,11 @@ export class ExecuteOpenAIChatCompletionUseCase {
       threadId,
     );
 
-    const requestId = this.requestMapper.newRequestId();
     const completionId = this.completionId();
+    await this.inferenceUsageGuard.ensureModelCallAllowed(
+      command.principal,
+      model,
+    );
 
     const source$ = this.streamInferenceUseCase.execute(
       new StreamInferenceInput({
@@ -139,13 +146,10 @@ export class ExecuteOpenAIChatCompletionUseCase {
         tools: this.requestMapper.toToolSchemas(request),
         toolChoice: this.requestMapper.toModelToolChoice(request),
         orgId: command.principal.orgId,
+        attemptLifecycle: this.createAttemptLifecycle(command.principal, model),
       }),
     );
 
-    // Closures capture the running totals so `finalize` can read whatever
-    // landed before complete / error / unsubscribe. Sum-across-chunks, not
-    // last-wins (AYC-92 streaming drift bug).
-    const totals = { inputTokens: 0, outputTokens: 0 };
     let isFirst = true;
     // Per-stream session — currently translates provider-native tool-call
     // indices into OpenAI's contiguous zero-based numbering.
@@ -153,10 +157,6 @@ export class ExecuteOpenAIChatCompletionUseCase {
 
     return this.mapProviderInputErrors(source$).pipe(
       map((chunk) => {
-        if (chunk.usage) {
-          totals.inputTokens += chunk.usage.inputTokens ?? 0;
-          totals.outputTokens += chunk.usage.outputTokens ?? 0;
-        }
         const mapped = this.streamMapper.toChunk({
           id: completionId,
           modelName: command.request.model,
@@ -164,17 +164,44 @@ export class ExecuteOpenAIChatCompletionUseCase {
           isFirst,
           session,
         });
-        isFirst = false;
+        if (mapped !== null) isFirst = false;
         return mapped;
       }),
       // Drop chunks that mapped to null (e.g. empty deltas).
       filterNonNull(),
-      finalize(() => {
-        if (totals.inputTokens > 0 || totals.outputTokens > 0) {
-          this.inferenceUsageGuard.collectUsage(model, totals, requestId);
-        }
-      }),
     );
+  }
+
+  private createAttemptLifecycle(
+    principal: ExecuteOpenAIChatCompletionCommand['principal'],
+    model: LanguageModel,
+  ): StreamInferenceAttemptLifecycle {
+    let firstAttemptPreauthorized = true;
+    return {
+      onAttemptStart: async () => {
+        if (firstAttemptPreauthorized) {
+          firstAttemptPreauthorized = false;
+          return;
+        }
+        await this.inferenceUsageGuard.ensureModelCallAllowed(principal, model);
+      },
+      onAttemptTerminal: async (attempt) => {
+        if (attempt.usage) {
+          await this.inferenceUsageGuard.collectUsageCritical(
+            model,
+            attempt.usage,
+            attempt.requestId,
+          );
+          return;
+        }
+        if (model.consumesCredits) {
+          throw new InferenceFailedError(
+            'Provider call completed without usage data',
+            { requestId: attempt.requestId, outcome: attempt.outcome },
+          );
+        }
+      },
+    };
   }
 
   private async prepare(command: ExecuteOpenAIChatCompletionCommand): Promise<{

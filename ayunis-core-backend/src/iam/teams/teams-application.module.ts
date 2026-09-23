@@ -9,6 +9,7 @@ import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-ca
 import { CreateTeamUseCase } from 'src/iam/teams/application/use-cases/create-team/create-team.use-case';
 import { DeleteTeamUseCase } from 'src/iam/teams/application/use-cases/delete-team/delete-team.use-case';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
+import { FindAllUserIdsByTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-ids/find-all-user-ids-by-team-ids.use-case';
 import { FindTeamsByOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-org-id/find-teams-by-org-id.use-case';
 import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
@@ -43,6 +44,7 @@ import { UsersModule } from 'src/iam/users/users.module';
     RemoveTeamMemberUseCase,
     CheckUserTeamMembershipUseCase,
     FindAllUserIdsByTeamIdUseCase,
+    FindAllUserIdsByTeamIdsUseCase,
     FindTeamsByUserIdUseCase,
     FindTeamsByOrgIdUseCase,
     AssignUserToTeamsUseCase,
@@ -60,6 +62,7 @@ import { UsersModule } from 'src/iam/users/users.module';
     RemoveTeamMemberUseCase,
     CheckUserTeamMembershipUseCase,
     FindAllUserIdsByTeamIdUseCase,
+    FindAllUserIdsByTeamIdsUseCase,
     FindTeamsByUserIdUseCase,
     FindTeamsByOrgIdUseCase,
     AssignUserToTeamsUseCase,

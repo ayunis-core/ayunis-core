@@ -3,6 +3,10 @@ import type { LanguageModel } from 'src/domain/models/domain/models/language.mod
 
 const RUNTIME_MODEL_REGISTRY = Symbol('ayunis:runtime-model-registry');
 
+export type RuntimeLanguageModelResolver = (
+  provider: ModelProvider,
+) => LanguageModel;
+
 export class RuntimeModelRegistry {
   private readonly modelsByProvider = new WeakMap<
     ModelProvider,

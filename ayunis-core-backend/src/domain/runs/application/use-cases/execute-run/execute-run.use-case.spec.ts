@@ -58,6 +58,7 @@ import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/appl
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import {
@@ -82,6 +83,7 @@ import {
 import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import { ExecuteRunUseCase } from './execute-run.use-case';
+import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -94,6 +96,7 @@ interface Harness {
   findThread: jest.Mock;
   save: jest.Mock;
   collectUsage: jest.Mock;
+  ensureModelCallAllowed: jest.Mock;
   cleanup: jest.Mock;
   createToolResult: jest.Mock;
   createSeedToolResult: jest.Mock;
@@ -128,15 +131,18 @@ interface HarnessOptions {
   workspaceSkills?: BackendSkill[];
   effectiveAnonymousOnly?: boolean;
   contextWindowSize?: number;
+  modelName?: string;
+  modelConsumesCredits?: boolean;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
   const model = {
-    name: 'claude',
+    name: overrides.modelName ?? 'claude',
     provider: 'anthropic',
     contextWindowSize: overrides.contextWindowSize,
     canVision: false,
     canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
+    consumesCredits: overrides.modelConsumesCredits ?? false,
   } as unknown as LanguageModel;
   const permitted = {
     model,
@@ -192,6 +198,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   } as unknown as EffectiveRunModelResolverService;
   const inferenceUsageGuard = {
     preflight: jest.fn().mockResolvedValue(undefined),
+    ensureModelCallAllowed: jest.fn().mockResolvedValue(undefined),
     collectUsage: jest.fn(),
     collectUsageCritical: jest.fn().mockResolvedValue(undefined),
   } as unknown as jest.Mocked<InferenceUsageGuard>;
@@ -338,6 +345,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   );
   const collectUsage = inferenceUsageGuard.collectUsageCritical as jest.Mock;
   const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
+  const creditGateHookFactory = new CreditGateHookFactory(inferenceUsageGuard);
   const toolUsageHookFactory = new ToolUsageHookFactory(eventEmitter);
   const toolResultCollector = overrides.toolResultCollector ?? {
     collectToolResults: jest
@@ -368,6 +376,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     resolveModelProviderUseCase,
     messageCleanupService,
     persistenceHookFactory,
+    creditGateHookFactory,
     usageHookFactory,
     modelCallObservabilityHookFactory,
     skillActivationHookFactory,
@@ -384,6 +393,8 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     findThread,
     save,
     collectUsage,
+    ensureModelCallAllowed:
+      inferenceUsageGuard.ensureModelCallAllowed as jest.Mock,
     cleanup,
     createToolResult: flushToolResult,
     createSeedToolResult: createToolResult,
@@ -520,6 +531,180 @@ describe('ExecuteRunUseCase', () => {
     );
   });
 
+  it('removes the seeded message when the first paid call is rejected', async () => {
+    const { useCase, ensureModelCallAllowed, provider, createUser, cleanup } =
+      buildHarness({ modelConsumesCredits: true });
+    ensureModelCallAllowed.mockRejectedValue(
+      new CreditBudgetExceededError({
+        orgId,
+        creditsUsed: 100,
+        monthlyCredits: 100,
+      }),
+    );
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(CreditBudgetExceededError);
+
+    expect(createUser).toHaveBeenCalledTimes(1);
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).toHaveBeenCalledWith(threadId);
+  });
+
+  it('preserves a seeded tool result when its continuation call is rejected', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const toolResultCollector = {
+      collectToolResults: jest.fn().mockResolvedValue({
+        contents: [
+          new ToolResultMessageContent(
+            'chart-1',
+            'bar_chart',
+            'Chart displayed',
+          ),
+        ],
+        piiMasks: null,
+      }),
+    } as unknown as ToolResultCollectorService;
+    const { useCase, ensureModelCallAllowed, createSeedToolResult, cleanup } =
+      buildHarness({
+        modelConsumesCredits: true,
+        lastMessage,
+        toolResultCollector,
+      });
+    ensureModelCallAllowed.mockRejectedValue(
+      new CreditBudgetExceededError({
+        orgId,
+        creditsUsed: 100,
+        monthlyCredits: 100,
+      }),
+    );
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
+    });
+
+    await expect(drain(await useCase.execute(command))).rejects.toBeInstanceOf(
+      CreditBudgetExceededError,
+    );
+
+    expect(createSeedToolResult).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves completed tool phases when a later paid call is rejected', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const {
+      useCase,
+      ensureModelCallAllowed,
+      collectUsage,
+      save,
+      createToolResult,
+      cleanup,
+    } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }),
+        textTurn('The permit exists.'),
+      ],
+    });
+    ensureModelCallAllowed
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(
+        new CreditBudgetExceededError({
+          orgId,
+          creditsUsed: 101,
+          monthlyCredits: 100,
+        }),
+      );
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(CreditBudgetExceededError);
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(collectUsage.mock.invocationCallOrder[0]).toBeLessThan(
+      ensureModelCallAllowed.mock.invocationCallOrder[1],
+    );
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves completed tool phases when a later paid call omits usage', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, save, createToolResult, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }),
+        [
+          {
+            toolCallDeltas: [
+              {
+                index: 0,
+                id: 'permit-2',
+                name: lookupTool.name,
+                argumentsDelta: '{"parcelId":"incomplete"',
+              },
+            ],
+          },
+          { finishReason: 'tool_calls' },
+        ],
+      ],
+    });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow(
+      'Agent runtime failed',
+    );
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('does not execute tools after paid output arrives without usage', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, provider, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }, {}),
+      ],
+    });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow(
+      'Agent runtime failed',
+    );
+
+    expect(provider.requests).toHaveLength(1);
+    expect(execute).not.toHaveBeenCalled();
+    expect(cleanup).toHaveBeenCalledWith(threadId);
+  });
+
   it('inherits child usage and observability without persisting its transcript', async () => {
     const childModel = {
       name: 'gpt-5-mini',
@@ -578,14 +763,20 @@ describe('ExecuteRunUseCase', () => {
         return 'Child research complete.';
       },
     };
-    const { useCase, collectUsage, emitAsync, save, createToolResult } =
-      buildHarness({
-        runtimeTools: [delegate],
-        turns: [
-          toolCallTurn({ id: 'delegate-1', name: delegate.name, input: {} }),
-          textTurn('The permit research is complete.'),
-        ],
-      });
+    const {
+      useCase,
+      collectUsage,
+      ensureModelCallAllowed,
+      emitAsync,
+      save,
+      createToolResult,
+    } = buildHarness({
+      runtimeTools: [delegate],
+      turns: [
+        toolCallTurn({ id: 'delegate-1', name: delegate.name, input: {} }),
+        textTurn('The permit research is complete.'),
+      ],
+    });
 
     await drain(await useCase.execute(userCommand()));
 
@@ -596,6 +787,10 @@ describe('ExecuteRunUseCase', () => {
       { inputTokens: 7, outputTokens: 2 },
       expect.any(String),
       'agent_runtime',
+    );
+    expect(ensureModelCallAllowed).toHaveBeenCalledWith(
+      { userId, orgId },
+      childModel,
     );
     const completions = emitAsync.mock.calls
       .filter(([name]) => name === InferenceCompletedEvent.EVENT_NAME)
@@ -829,6 +1024,34 @@ describe('ExecuteRunUseCase', () => {
     expect(save.mock.calls[0][0].message.content).toMatchObject([
       { text: 'Partial answer' },
     ]);
+    expect(cleanup).toHaveBeenCalledWith(threadId);
+  });
+
+  it('still cleans up when critical usage persistence fails during cancellation', async () => {
+    const controller = new AbortController();
+    const { useCase, collectUsage, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      providerStream: async function* () {
+        yield {
+          textDelta: 'Partial paid answer',
+          usage: { inputTokens: 12, outputTokens: 4 },
+        };
+        controller.abort();
+        yield { textDelta: 'not retained' };
+      },
+    });
+    collectUsage.mockRejectedValue(new Error('usage database unavailable'));
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Hi there'),
+      signal: controller.signal,
+    });
+
+    await expect(drain(await useCase.execute(command))).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_FAILED',
+    });
+
+    expect(collectUsage).toHaveBeenCalledTimes(1);
     expect(cleanup).toHaveBeenCalledWith(threadId);
   });
 

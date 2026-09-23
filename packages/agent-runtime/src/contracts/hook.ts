@@ -80,6 +80,11 @@ interface ModelCallOutcomeBase<
   readonly usage: UsageType;
   readonly finishReason: FinishReason;
   readonly outputState: 'partial' | 'final';
+  /** At least one chunk was consumed from the provider stream. */
+  readonly providerConsumptionStarted: boolean;
+  /** Provider content existed, including output buffered from the consumer. */
+  readonly producedOutput: boolean;
+  /** At least one content event was exposed to the consumer. */
   readonly visibleOutput: boolean;
   readonly durationMs: number;
 }

@@ -10,7 +10,7 @@ import { GetMonthlyCreditUsageForUserUseCase } from './application/use-cases/get
 import { GetMonthlyCreditUsageForUsersUseCase } from './application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
 import { GetMonthlyCreditUsageForApiKeyUseCase } from './application/use-cases/get-monthly-credit-usage-for-api-key/get-monthly-credit-usage-for-api-key.use-case';
 import { GetMonthlyCreditUsageForApiKeysUseCase } from './application/use-cases/get-monthly-credit-usage-for-api-keys/get-monthly-credit-usage-for-api-keys.use-case';
-import { GetMonthlyCreditUsageForTeamUseCase } from './application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
+import { GetMonthlyCreditUsageForTeamsUseCase } from './application/use-cases/get-monthly-credit-usage-for-teams/get-monthly-credit-usage-for-teams.use-case';
 import { GetCreditUsageUseCase } from './application/use-cases/get-credit-usage/get-credit-usage.use-case';
 import { UsageController } from './presenters/http/usage.controller';
 import { SuperAdminUsageController } from './presenters/http/super-admin-usage.controller';
@@ -53,7 +53,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     GetMonthlyCreditUsageForUsersUseCase,
     GetMonthlyCreditUsageForApiKeyUseCase,
     GetMonthlyCreditUsageForApiKeysUseCase,
-    GetMonthlyCreditUsageForTeamUseCase,
+    GetMonthlyCreditUsageForTeamsUseCase,
     GetCreditUsageUseCase,
 
     // Mappers
@@ -77,7 +77,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     GetMonthlyCreditUsageForUsersUseCase,
     GetMonthlyCreditUsageForApiKeyUseCase,
     GetMonthlyCreditUsageForApiKeysUseCase,
-    GetMonthlyCreditUsageForTeamUseCase,
+    GetMonthlyCreditUsageForTeamsUseCase,
     GetCreditUsageUseCase,
   ],
 })

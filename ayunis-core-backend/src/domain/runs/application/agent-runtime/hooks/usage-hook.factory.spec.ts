@@ -37,7 +37,14 @@ const messages = [
   },
 ];
 
-const catalogModel = { name: 'Municipal Assistant' } as LanguageModel;
+const catalogModel = {
+  name: 'Municipal Assistant',
+  consumesCredits: true,
+} as LanguageModel;
+const freeCatalogModel = {
+  name: 'Open Municipal Assistant',
+  consumesCredits: false,
+} as LanguageModel;
 
 describe('UsageHookFactory', () => {
   it('records every call outcome with the actual call model and model-call ID', async () => {
@@ -139,7 +146,7 @@ describe('UsageHookFactory', () => {
     );
   });
 
-  it('does not record usage when the provider reports no token fields', async () => {
+  it('fails closed after a paid call emits output without usage', async () => {
     const collectUsageCritical = jest.fn();
     const factory = new UsageHookFactory({
       collectUsageCritical,
@@ -152,6 +159,146 @@ describe('UsageHookFactory', () => {
         model: provider,
         messages,
         hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 2 },
+      }),
+    );
+
+    expect(provider.requests).toHaveLength(1);
+    expect(
+      completedEvents
+        .filter(
+          (event): event is Extract<RunEvent, { type: 'text_delta' }> =>
+            event.type === 'text_delta',
+        )
+        .map((event) => event.delta)
+        .join(''),
+    ).toBe('The office opens at 8.');
+    expect(completedEvents.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+    });
+    expect(collectUsageCritical).not.toHaveBeenCalled();
+  });
+
+  it('blocks retries after a completed paid call reports no usage', async () => {
+    const collectUsageCritical = jest.fn();
+    const factory = new UsageHookFactory({
+      collectUsageCritical,
+    } as unknown as InferenceUsageGuard);
+    const stream = jest.fn(async function* () {
+      yield { finishReason: 'stop' as const };
+    });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      stream,
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 2 },
+      }),
+    );
+
+    expect(stream).toHaveBeenCalledTimes(1);
+    expect(completedEvents.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+    });
+    expect(collectUsageCritical).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when a paid call consumed provider data before cancellation', async () => {
+    const controller = new AbortController();
+    const collectUsageCritical = jest.fn();
+    const factory = new UsageHookFactory({
+      collectUsageCritical,
+    } as unknown as InferenceUsageGuard);
+    const stream = jest.fn(async function* () {
+      yield {};
+      controller.abort();
+      throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+    });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      stream,
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(stream).toHaveBeenCalledTimes(1);
+    expect(completedEvents.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+    });
+    expect(collectUsageCritical).not.toHaveBeenCalled();
+  });
+
+  it('blocks retries after hidden paid output arrives without usage', async () => {
+    const collectUsageCritical = jest.fn();
+    const factory = new UsageHookFactory({
+      collectUsageCritical,
+    } as unknown as InferenceUsageGuard);
+    const stream = jest.fn(async function* () {
+      yield {
+        toolCallDeltas: [
+          {
+            index: 0,
+            id: 'lookup-1',
+            name: 'lookup_permit',
+            argumentsDelta: '{',
+          },
+        ],
+        finishReason: 'stop' as const,
+      };
+    });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      stream,
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 2 },
+      }),
+    );
+
+    expect(stream).toHaveBeenCalledTimes(1);
+    expect(completedEvents.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+    });
+    expect(collectUsageCritical).not.toHaveBeenCalled();
+  });
+
+  it('allows free-model output without usage', async () => {
+    const collectUsageCritical = jest.fn();
+    const factory = new UsageHookFactory({
+      collectUsageCritical,
+    } as unknown as InferenceUsageGuard);
+    const provider = new MockProvider([textTurn('The office opens at 8.', {})]);
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => freeCatalogModel })],
       }),
     );
 

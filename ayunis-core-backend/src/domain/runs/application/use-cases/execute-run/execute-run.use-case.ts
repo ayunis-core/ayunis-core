@@ -30,8 +30,8 @@ import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cas
 import {
   RunUserInput,
   RunToolResultInput,
+  type RunInput,
 } from 'src/domain/runs/domain/run-input.entity';
-import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -55,6 +55,7 @@ import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmas
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
@@ -77,13 +78,13 @@ import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/applicati
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { shouldPreserveRejectedTranscript } from './rejected-transcript-policy';
 
 const MAX_ITERATIONS = 50;
 
 @Injectable()
 export class ExecuteRunUseCase {
   private readonly runEventStreamLogger = new Logger('RunEventStreamAdapter');
-
   private readonly logger = new Logger(ExecuteRunUseCase.name);
 
   constructor(
@@ -102,6 +103,7 @@ export class ExecuteRunUseCase {
     private readonly resolveModelProviderUseCase: ResolveModelProviderUseCase,
     private readonly messageCleanupService: MessageCleanupService,
     private readonly persistenceHookFactory: PersistenceHookFactory,
+    private readonly creditGateHookFactory: CreditGateHookFactory,
     private readonly usageHookFactory: UsageHookFactory,
     private readonly modelCallObservabilityHookFactory: ModelCallObservabilityHookFactory,
     private readonly skillActivationHookFactory: SkillActivationHookFactory,
@@ -251,11 +253,11 @@ export class ExecuteRunUseCase {
       cleanupRequired = outcome === 'aborted';
       return outcome;
     } catch (error) {
-      // Both errors leave a complete, already-streamed tool transcript;
-      // rolling it back would re-arm the turn's pending tool calls.
+      // Completed phases must remain because rollback would re-arm pending tool calls.
       if (
         error instanceof RunMaxIterationsReachedError ||
-        error instanceof RunToolRepeatedlyFailingError
+        error instanceof RunToolRepeatedlyFailingError ||
+        shouldPreserveRejectedTranscript(error, input)
       ) {
         cleanupRequired = false;
       }
@@ -334,6 +336,10 @@ export class ExecuteRunUseCase {
     maxTokens: number,
   ): Hook[] {
     return [
+      this.creditGateHookFactory.create({
+        principal: { userId: prepared.userId, orgId: prepared.orgId },
+        resolveModel: models.resolve,
+      }),
       this.usageHookFactory.create({ resolveModel: models.resolve }),
       this.modelCallObservabilityHookFactory.create({
         userId: prepared.userId,

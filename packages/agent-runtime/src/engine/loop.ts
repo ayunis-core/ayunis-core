@@ -450,4 +450,6 @@ const toModelCallResult = (outcome: ModelCallOutcome): ModelCallResult => ({
   usage: outcome.usage,
   finishReason: outcome.finishReason,
   invalidToolCallSnapshots: [],
+  providerConsumptionStarted: outcome.providerConsumptionStarted,
+  producedOutput: outcome.producedOutput,
 });

@@ -57,11 +57,18 @@ describe('MockStreamInferenceHandler runtime provider', () => {
           },
         ],
       },
-      { finishReason: 'stop' },
+      {
+        finishReason: 'stop',
+        usage: { inputTokens: 0, outputTokens: 0 },
+      },
     ]);
     expect(recovered.map((chunk) => chunk.textDelta).join('')).toBe(
       'recovered::bedrock::claude-sonnet-4-6',
     );
+    expect(recovered.at(-1)?.usage).toEqual({
+      inputTokens: 0,
+      outputTokens: 0,
+    });
   });
 
   it('requests the first available source for the citation E2E trigger', async () => {
@@ -106,6 +113,7 @@ describe('MockStreamInferenceHandler runtime provider', () => {
           },
         ],
         finishReason: 'tool_calls',
+        usage: { inputTokens: 0, outputTokens: 0 },
       },
     ]);
   });
@@ -149,6 +157,7 @@ describe('MockStreamInferenceHandler runtime provider', () => {
           },
         ],
         finishReason: 'tool_calls',
+        usage: { inputTokens: 0, outputTokens: 0 },
       },
     ]);
   });
@@ -198,6 +207,7 @@ describe('MockStreamInferenceHandler runtime provider', () => {
           },
         ],
         finishReason: 'tool_calls',
+        usage: { inputTokens: 0, outputTokens: 0 },
       },
     ]);
   });
@@ -312,6 +322,10 @@ describe('MockStreamInferenceHandler runtime provider', () => {
     expect(response.map((chunk) => chunk.textDelta).join('')).toBe(
       "I'll name this chat {{legal:DE/BGB/sec_433/par_2}}. You're talking to bedrock::claude-sonnet-4-6",
     );
+    expect(response.at(-1)?.usage).toEqual({
+      inputTokens: 0,
+      outputTokens: 0,
+    });
   });
 
   it('requests every document and website in the paginated research scenario', async () => {
@@ -351,7 +365,10 @@ describe('MockStreamInferenceHandler runtime provider', () => {
       'website_content',
       'website_content',
     ]);
-    expect(response.at(-1)?.finishReason).toBe('tool_calls');
+    expect(response.at(-1)).toMatchObject({
+      finishReason: 'tool_calls',
+      usage: { inputTokens: 0, outputTokens: 0 },
+    });
   });
 
   it('completes the paginated research scenario after tool results return', async () => {
@@ -387,5 +404,9 @@ describe('MockStreamInferenceHandler runtime provider', () => {
     expect(response.map((chunk) => chunk.textDelta).join('')).toBe(
       'research-complete::bedrock::claude-sonnet-4-6',
     );
+    expect(response.at(-1)?.usage).toEqual({
+      inputTokens: 0,
+      outputTokens: 0,
+    });
   });
 });

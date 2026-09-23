@@ -51,6 +51,8 @@ import {
 import type { RuntimeModelRegistry } from './runtime-model.registry';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import { mapRuntimeHookError } from './runtime-hook-error';
+import { mapCreditPolicyError } from 'src/domain/runs/application/credit-policy-error';
+import { mapUsageAccountingError } from './usage-accounting-error.mapper';
 
 interface StreamingTurn {
   id: UUID;
@@ -463,18 +465,17 @@ function mapRunError(
   logger: Logger,
   models?: RuntimeModelRegistry,
 ): ApplicationError {
-  const hookFailure = mapRuntimeHookError(event, logger);
-  if (hookFailure) return hookFailure;
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
-    // Checked before the generic reconstruction: the run error keeps the
-    // user-facing code and localized message, while the classified provider
-    // failure serialized into details rides on `cause` so AppSignal groups
-    // under PROVIDER_UNAVAILABLE_*_ANONYMIZE (AYC-654).
     return new RunAnonymizationUnavailableError(
       undefined,
       reconstructRuntimeModelError(event.details),
     );
   }
+  const policyError =
+    mapCreditPolicyError(event) ?? mapUsageAccountingError(event);
+  if (policyError) return policyError;
+  const hookFailure = mapRuntimeHookError(event, logger);
+  if (hookFailure) return hookFailure;
   const runtimeModelError = reconstructRuntimeModelError(event.details);
   if (runtimeModelError instanceof ApplicationError) {
     return runtimeModelError;

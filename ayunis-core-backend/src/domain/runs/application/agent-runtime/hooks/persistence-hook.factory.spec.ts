@@ -522,6 +522,8 @@ function acceptedCallTurnContext(
       type,
       call: {
         type: 'accepted',
+        providerConsumptionStarted: true,
+        producedOutput: true,
         visibleOutput: true,
         message: {
           role: 'assistant',

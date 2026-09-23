@@ -58,7 +58,9 @@ describe('InferenceUsageGuard', () => {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<CheckQuotaUseCase>;
     creditBudgetGuardService = {
-      ensureBudgetAvailable: jest.fn().mockResolvedValue(undefined),
+      ensureBudgetAvailable: jest
+        .fn()
+        .mockResolvedValue({ monetaryLimitsApply: true }),
     } as unknown as jest.Mocked<CreditBudgetGuardService>;
     creditLimitGuardService = {
       ensureWithinLimits: jest.fn().mockResolvedValue(undefined),
@@ -80,11 +82,10 @@ describe('InferenceUsageGuard', () => {
     );
   });
 
-  describe('preflight with userId principal', () => {
-    it('runs fair-use + credit-budget when the model has a tier bucket', async () => {
+  describe('preflight', () => {
+    it('checks only the user fair-use quota during run admission', async () => {
       await guard.preflight({ userId, orgId }, makeModel(ModelTier.MEDIUM));
 
-      expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
       expect(checkQuotaUseCase.execute.mock.calls[0][0]).toEqual(
         expect.objectContaining({
           userId,
@@ -94,37 +95,11 @@ describe('InferenceUsageGuard', () => {
       );
       expect(
         creditBudgetGuardService.ensureBudgetAvailable,
-      ).toHaveBeenCalledWith(orgId);
-      expect(creditLimitGuardService.ensureWithinLimits).toHaveBeenCalledWith(
-        orgId,
-        userId,
-      );
+      ).not.toHaveBeenCalled();
+      expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
     });
 
-    it('propagates UserCreditLimitExceededError from the credit-limit guard', async () => {
-      creditLimitGuardService.ensureWithinLimits.mockRejectedValue(
-        new UserCreditLimitExceededError({
-          userId,
-          creditsUsed: 100,
-          limit: 50,
-        }),
-      );
-
-      await expect(
-        guard.preflight({ userId, orgId }, makeModel(ModelTier.MEDIUM)),
-      ).rejects.toBeInstanceOf(UserCreditLimitExceededError);
-    });
-
-    it('skips fair-use for a ZERO-tier model but still runs credit-budget', async () => {
-      await guard.preflight({ userId, orgId }, makeModel(ModelTier.ZERO));
-
-      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
-      expect(
-        creditBudgetGuardService.ensureBudgetAvailable,
-      ).toHaveBeenCalledWith(orgId);
-    });
-
-    it('propagates QuotaExceededError from fair-use check', async () => {
+    it('propagates fair-use rejection without running monetary policy', async () => {
       checkQuotaUseCase.execute.mockRejectedValue(
         new QuotaExceededError(
           QuotaType.FAIR_USE_MESSAGES_MEDIUM,
@@ -142,55 +117,73 @@ describe('InferenceUsageGuard', () => {
       ).not.toHaveBeenCalled();
     });
 
-    it('propagates CreditBudgetExceededError', async () => {
-      creditBudgetGuardService.ensureBudgetAvailable.mockRejectedValue(
-        new CreditBudgetExceededError({
-          orgId,
-          creditsUsed: 1000,
-          monthlyCredits: 500,
-        }),
-      );
-
-      await expect(
-        guard.preflight({ userId, orgId }, makeModel(ModelTier.MEDIUM)),
-      ).rejects.toBeInstanceOf(CreditBudgetExceededError);
-    });
-
-    it('skips credit-budget and credit-limit for a free model with no token costs', async () => {
-      await guard.preflight({ userId, orgId }, makeFreeModel(ModelTier.MEDIUM));
-
-      expect(
-        creditBudgetGuardService.ensureBudgetAvailable,
-      ).not.toHaveBeenCalled();
-      expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
-    });
-
-    it('still runs fair-use for a free model with a tier bucket', async () => {
-      await guard.preflight({ userId, orgId }, makeFreeModel(ModelTier.MEDIUM));
-
-      expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not throw for a free model even when the credit budget is exhausted', async () => {
-      creditBudgetGuardService.ensureBudgetAvailable.mockRejectedValue(
-        new CreditBudgetExceededError({
-          orgId,
-          creditsUsed: 1000,
-          monthlyCredits: 500,
-        }),
-      );
-
-      await expect(
-        guard.preflight({ userId, orgId }, makeFreeModel(ModelTier.ZERO)),
-      ).resolves.toBeUndefined();
-    });
-  });
-
-  describe('preflight with apiKey principal', () => {
-    it('skips fair-use entirely for api-key requests and still runs credit-budget', async () => {
+    it('skips fair-use for API-key principals', async () => {
       await guard.preflight({ apiKeyId, orgId }, makeModel(ModelTier.MEDIUM));
 
       expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('ensureModelCallAllowed', () => {
+    it('checks the organization and all user limits at the paid-call boundary', async () => {
+      await guard.ensureModelCallAllowed(
+        { userId, orgId },
+        makeModel(ModelTier.MEDIUM),
+      );
+
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).toHaveBeenCalledWith(orgId);
+      expect(creditLimitGuardService.ensureWithinLimits).toHaveBeenCalledWith(
+        orgId,
+        userId,
+      );
+    });
+
+    it('propagates organization budget rejection', async () => {
+      creditBudgetGuardService.ensureBudgetAvailable.mockRejectedValue(
+        new CreditBudgetExceededError({
+          orgId,
+          creditsUsed: 1000,
+          monthlyCredits: 500,
+        }),
+      );
+
+      await expect(
+        guard.ensureModelCallAllowed(
+          { userId, orgId },
+          makeModel(ModelTier.MEDIUM),
+        ),
+      ).rejects.toBeInstanceOf(CreditBudgetExceededError);
+      expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
+    });
+
+    it('propagates personal limit rejection', async () => {
+      creditLimitGuardService.ensureWithinLimits.mockRejectedValue(
+        new UserCreditLimitExceededError({
+          userId,
+          creditsUsed: 100,
+          limit: 50,
+        }),
+      );
+
+      await expect(
+        guard.ensureModelCallAllowed(
+          { userId, orgId },
+          makeModel(ModelTier.MEDIUM),
+        ),
+      ).rejects.toBeInstanceOf(UserCreditLimitExceededError);
+    });
+
+    it('checks the organization and acting API-key limit', async () => {
+      await guard.ensureModelCallAllowed(
+        { apiKeyId, orgId },
+        makeModel(ModelTier.MEDIUM),
+      );
+
       expect(
         creditBudgetGuardService.ensureBudgetAvailable,
       ).toHaveBeenCalledWith(orgId);
@@ -199,7 +192,7 @@ describe('InferenceUsageGuard', () => {
       ).toHaveBeenCalledWith(orgId, apiKeyId);
     });
 
-    it('propagates API key credit limit errors', async () => {
+    it('propagates API-key limit rejection', async () => {
       apiKeyCreditLimitGuardService.ensureWithinLimit.mockRejectedValue(
         new ApiKeyCreditLimitExceededError({
           apiKeyId,
@@ -209,20 +202,39 @@ describe('InferenceUsageGuard', () => {
       );
 
       await expect(
-        guard.preflight({ apiKeyId, orgId }, makeModel(ModelTier.MEDIUM)),
+        guard.ensureModelCallAllowed(
+          { apiKeyId, orgId },
+          makeModel(ModelTier.MEDIUM),
+        ),
       ).rejects.toBeInstanceOf(ApiKeyCreditLimitExceededError);
     });
 
-    it('skips credit-budget for a free model on an api-key request', async () => {
-      await guard.preflight(
-        { apiKeyId, orgId },
+    it('skips principal limits when the organization is not usage-based', async () => {
+      creditBudgetGuardService.ensureBudgetAvailable.mockResolvedValue({
+        monetaryLimitsApply: false,
+      });
+
+      await guard.ensureModelCallAllowed(
+        { userId, orgId },
+        makeModel(ModelTier.MEDIUM),
+      );
+
+      expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
+      expect(
+        apiKeyCreditLimitGuardService.ensureWithinLimit,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('bypasses every monetary limit for free models', async () => {
+      await guard.ensureModelCallAllowed(
+        { userId, orgId },
         makeFreeModel(ModelTier.MEDIUM),
       );
 
-      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
       expect(
         creditBudgetGuardService.ensureBudgetAvailable,
       ).not.toHaveBeenCalled();
+      expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
       expect(
         apiKeyCreditLimitGuardService.ensureWithinLimit,
       ).not.toHaveBeenCalled();

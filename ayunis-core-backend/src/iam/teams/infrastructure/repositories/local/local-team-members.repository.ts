@@ -154,6 +154,39 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     return records.map((record) => record.userId);
   }
 
+  async findAllUserIdsByTeamIds(
+    organizationId: UUID,
+    teamIds: UUID[],
+  ): Promise<Map<UUID, UUID[]>> {
+    this.logger.log(
+      { organizationId, count: teamIds.length },
+      'findAllUserIdsByTeamIds',
+    );
+
+    if (teamIds.length === 0) {
+      return new Map();
+    }
+    const userIdsByTeam = new Map<UUID, UUID[]>(
+      teamIds.map((teamId) => [teamId, []]),
+    );
+
+    const rows = await this.teamMembers
+      .createQueryBuilder('tm')
+      .select('tm.team_id', 'teamId')
+      .addSelect('ARRAY_AGG(tm.user_id)', 'userIds')
+      .innerJoin('tm.team', 'team')
+      .where('team.org_id = :organizationId', { organizationId })
+      .andWhere('tm.team_id IN (:...teamIds)', { teamIds })
+      .groupBy('tm.team_id')
+      .getRawMany<{ teamId: UUID; userIds: UUID[] }>();
+
+    for (const { teamId, userIds } of rows) {
+      userIdsByTeam.set(teamId, userIds);
+    }
+
+    return userIdsByTeam;
+  }
+
   async countByTeamIds(teamIds: UUID[]): Promise<Map<UUID, number>> {
     this.logger.log({ count: teamIds.length }, 'countByTeamIds');
 
