@@ -191,7 +191,7 @@
     },
     "firstChatForWorkspace": {
       "spotlightTitle": "A chat first, then the workspace",
-      "spotlightDescription": "Start a first chat here. Afterwards you can move it into a workspace from its menu in the sidebar."
+      "spotlightDescription": "Start a chat here. Afterwards you can move it into a workspace from its menu in the sidebar."
     },
     "workspaceInstruction": {
       "title": "Add an instruction for the workspace",

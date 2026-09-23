@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   areFavoritesLoading: false,
   areThreadsLoading: false,
   threads: [] as { id: string }[],
+  threadsError: null as Error | null,
   showInfo: vi.fn(),
 }));
 
@@ -24,6 +25,7 @@ vi.mock('@/widgets/app-sidebar/api', () => ({
   useThreads: () => ({
     threads: mocks.threads,
     isLoading: mocks.areThreadsLoading,
+    isError: mocks.threadsError !== null,
   }),
 }));
 
@@ -133,6 +135,7 @@ describe('OnboardingStepItem workspace steps', () => {
     mocks.areFavoritesLoading = false;
     mocks.areThreadsLoading = false;
     mocks.threads = [{ id: 'thread-1' }];
+    mocks.threadsError = null;
   });
 
   afterEach(() => {
@@ -208,6 +211,29 @@ describe('OnboardingStepItem workspace steps', () => {
         title: 'steps.firstChatForWorkspace.spotlightTitle',
       }),
     );
+    expect(mocks.showInfo).not.toHaveBeenCalled();
+  });
+
+  it('spotlights the composer when every chat is already pinned', async () => {
+    mocks.favoriteWorkspaceIds = ['thread-1'];
+
+    await clickAction('assignChatToWorkspace');
+
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/chat' });
+    expect(mocks.launchTour).toHaveBeenCalledWith(
+      expect.objectContaining({ target: 'chat-composer' }),
+    );
+    expect(mocks.showInfo).not.toHaveBeenCalled();
+  });
+
+  it('claims nothing when the chat list failed to load', async () => {
+    mocks.threads = [];
+    mocks.threadsError = new Error('offline');
+
+    await clickAction('assignChatToWorkspace');
+
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/chat' });
+    expect(mocks.launchTour).not.toHaveBeenCalled();
     expect(mocks.showInfo).not.toHaveBeenCalled();
   });
 

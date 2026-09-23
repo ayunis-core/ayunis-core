@@ -21,6 +21,7 @@ import {
   type OnboardingStep,
   type OnboardingStepId,
   findPinTourWorkspace,
+  findAssignTourThread,
   isTourTargetVisible,
 } from '@/widgets/onboarding';
 import {
@@ -107,8 +108,12 @@ export default function OnboardingStepItem({
   const { favorites, isLoading: areFavoritesLoading } = useFavorites();
   // The assign step's target is a sidebar chat row, which only exists once
   // the sidebar has loaded its threads.
-  const { threads, isLoading: areThreadsLoading } = useThreads();
-  const hasChat = threads.length > 0;
+  const {
+    threads,
+    isLoading: areThreadsLoading,
+    isError: hasThreadsError,
+  } = useThreads();
+  const hasMovableChat = findAssignTourThread(threads, favorites) !== undefined;
   const firstWorkspace = workspaces.at(0);
   const hasUnfavoritedWorkspace =
     findPinTourWorkspace(workspaces, favorites) !== undefined;
@@ -192,8 +197,15 @@ export default function OnboardingStepItem({
       return;
     }
 
-    if (spotlight === TOUR_TARGET.assignChatToWorkspace && !hasChat) {
-      // Nothing to move yet: point at the composer so the user gets a first
+    if (spotlight === TOUR_TARGET.assignChatToWorkspace && hasThreadsError) {
+      // With the chat list failed we cannot tell what exists, so open the
+      // chat page without claiming anything.
+      void navigate({ to });
+      return;
+    }
+
+    if (spotlight === TOUR_TARGET.assignChatToWorkspace && !hasMovableChat) {
+      // Nothing unpinned to move: point at the composer so the user gets a
       // chat, then the step can be tried again.
       void navigate({ to: '/chat' }).then(() =>
         triggerSpotlight(TOUR_TARGET.chatComposer, {

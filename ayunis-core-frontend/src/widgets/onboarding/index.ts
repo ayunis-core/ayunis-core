@@ -20,3 +20,4 @@ export {
 export { TOUR_TARGET, type TourTargetName } from './config/tour-targets';
 export { findPinTourWorkspace } from './lib/findPinTourWorkspace';
 export { isTourTargetVisible } from './lib/isTourTargetVisible';
+export { findAssignTourThread } from './lib/findAssignTourThread';
