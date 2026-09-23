@@ -18,3 +18,4 @@ export {
   type OnboardingStepId,
 } from './config/categories';
 export { TOUR_TARGET, type TourTargetName } from './config/tour-targets';
+export { findPinTourWorkspace } from './lib/findPinTourWorkspace';

@@ -36,10 +36,6 @@ vi.mock('@/features/workspaces', () => ({
     isLoading: mocks.areWorkspacesLoading,
     error: mocks.workspacesError,
   }),
-  findUnfavoritedWorkspace: (
-    workspaces: { id: string }[],
-    favorites: string[],
-  ) => workspaces.find((workspace) => !favorites.includes(workspace.id)),
 }));
 
 vi.mock('@/widgets/onboarding', async (importOriginal) => {

@@ -20,6 +20,7 @@ import {
   SECONDARY_ACTION_TYPE,
   type OnboardingStep,
   type OnboardingStepId,
+  findPinTourWorkspace,
 } from '@/widgets/onboarding';
 import {
   useKnowledgeBasesControllerFindAll,
@@ -27,7 +28,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
-import { findUnfavoritedWorkspace, useWorkspaces } from '@/features/workspaces';
+import { useWorkspaces } from '@/features/workspaces';
 import { useFavorites } from '@/features/favorites';
 
 type WorkspaceDetailTab = 'skills' | 'knowledge' | 'instructions';
@@ -102,7 +103,7 @@ export default function OnboardingStepItem({
   const firstWorkspace = workspaces.at(0);
   const hasUnfavoritedWorkspace =
     !areFavoritesLoading &&
-    findUnfavoritedWorkspace(workspaces, favorites) !== undefined;
+    findPinTourWorkspace(workspaces, favorites) !== undefined;
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt

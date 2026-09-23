@@ -1,8 +1,6 @@
 import { useFavorites } from '@/features/favorites';
-import {
-  findUnfavoritedWorkspace,
-  type Workspace,
-} from '@/features/workspaces';
+import type { Workspace } from '@/features/workspaces';
+import { findPinTourWorkspace } from '@/widgets/onboarding';
 import { WorkspaceRow } from './WorkspaceRow';
 
 interface WorkspacesContentProps {
@@ -15,7 +13,7 @@ export function WorkspacesContent({
   const { favorites, isLoading: areFavoritesLoading } = useFavorites();
   const pinTourWorkspaceId = areFavoritesLoading
     ? undefined
-    : findUnfavoritedWorkspace(workspaces, favorites)?.id;
+    : findPinTourWorkspace(workspaces, favorites)?.id;
 
   return (
     <div className="flex flex-col gap-2">
