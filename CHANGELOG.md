@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.42.0](https://github.com/ayunis-core/ayunis-core/compare/v2.41.0...v2.42.0) (2026-09-23)
+
+
+### Features
+
+* **analytics:** integrate OpenPanel tracking (AYC-914) ([#1624](https://github.com/ayunis-core/ayunis-core/issues/1624)) ([e981779](https://github.com/ayunis-core/ayunis-core/commit/e9817797d4e4dbed014785da418e9300537c9faf))
+* **anonymization:** bulk-add words to the global whitelist (AYC-1030) ([#1731](https://github.com/ayunis-core/ayunis-core/issues/1731)) ([61e0a13](https://github.com/ayunis-core/ayunis-core/commit/61e0a131ac74cedd38dbb83280c866556165cce9))
+* **chat:** add clickable source citations (AYC-289) ([#1637](https://github.com/ayunis-core/ayunis-core/issues/1637)) ([ad9d940](https://github.com/ayunis-core/ayunis-core/commit/ad9d94043b947bdb875178021c1507112d0bb9f4))
+* **mcp:** enable custom integrations for cloud deployments (AYC-000) ([#1736](https://github.com/ayunis-core/ayunis-core/issues/1736)) ([0fe4ec7](https://github.com/ayunis-core/ayunis-core/commit/0fe4ec7b7ee3b14d462a5744f511651d11dc86fc))
+* **onboarding:** add a workspaces category to the getting started steps (AYC-000) ([#1709](https://github.com/ayunis-core/ayunis-core/issues/1709)) ([9ce6895](https://github.com/ayunis-core/ayunis-core/commit/9ce6895310f0c30f4f8412f788af813dbe678535))
+* **usage:** enforce credit limits at model call boundaries (AYC-1011) ([#1732](https://github.com/ayunis-core/ayunis-core/issues/1732)) ([5eeb6c0](https://github.com/ayunis-core/ayunis-core/commit/5eeb6c000068f12d3f56faf203e2255b2be9c110))
+* **users:** assign teams during CSV import (AYC-286) ([#1735](https://github.com/ayunis-core/ayunis-core/issues/1735)) ([0a0eafb](https://github.com/ayunis-core/ayunis-core/commit/0a0eafb58eaf253638e1332b5915a204c24b1c3c))
+* **workspaces:** apply workspaces iteration-1 feedback (AYC-000) ([#1740](https://github.com/ayunis-core/ayunis-core/issues/1740)) ([0d937fc](https://github.com/ayunis-core/ayunis-core/commit/0d937fcc1eddd3c1ef08725cd11a3c522a1d8b0b))
+
+
+### Bug Fixes
+
+* **admin-settings:** remove credit usage column from credit limits table (AYC-916) ([#1629](https://github.com/ayunis-core/ayunis-core/issues/1629)) ([07fba8c](https://github.com/ayunis-core/ayunis-core/commit/07fba8c6029e1eb4f5b18ea8a77cc94e955928d6))
+* **admin-settings:** show credit spend next to limits (AYC-916) ([#1743](https://github.com/ayunis-core/ayunis-core/issues/1743)) ([470a333](https://github.com/ayunis-core/ayunis-core/commit/470a3336b1e446603450a1ca13bab893a5dba676))
+* **chat:** re-enable map widget (AYC-827) ([#1741](https://github.com/ayunis-core/ayunis-core/issues/1741)) ([15070cd](https://github.com/ayunis-core/ayunis-core/commit/15070cd5a83a6d4587189c33a9dad67b730915a7))
+* **models:** use Azure Responses API for reasoning tools (AYC-519) ([#1739](https://github.com/ayunis-core/ayunis-core/issues/1739)) ([7f039a5](https://github.com/ayunis-core/ayunis-core/commit/7f039a52ff710dd97ea934510660bea94ffe14ed))
+* **webhooks:** preserve subscription lifecycle order (AYC-650) ([#1738](https://github.com/ayunis-core/ayunis-core/issues/1738)) ([131ae9b](https://github.com/ayunis-core/ayunis-core/commit/131ae9b2b2b14621dac0b8f3f1f1c743414e3528))
+
 ## [2.41.0](https://github.com/ayunis-core/ayunis-core/compare/v2.40.3...v2.41.0) (2026-09-22)
 
 
