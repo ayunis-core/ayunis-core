@@ -41,6 +41,23 @@ Principle 1 governs code you wrote. This one governs everything you *assert*: ro
 
 When an access path or tool fails, report the blocker immediately. Do not keep silently probing alternate routes — a named blocker is useful, a long invisible search is not.
 
+### Planning and Execution Modes
+
+The workflow has two entry paths:
+
+- **Execution mode is the default** for requests to implement, fix, or handle work. Proceed through implementation, validation, and delivery without requiring a separate plan approval.
+- **Planning mode is opt-in** when the user explicitly asks for a plan, asks to investigate or design before implementation, or activates the host's native plan mode.
+
+In planning mode:
+
+- Inspect the ticket, repository, architecture, nearby implementations, tests, and relevant documentation deeply enough to produce a decision-complete plan.
+- Read-only discovery is allowed. Do not edit files, create branches or worktrees, install dependencies, start services, change ticket state, commit, push, or create a PR.
+- Ask only questions whose answers would materially change the implementation.
+- Present the plan in the conversation unless the user explicitly requests a plan artifact.
+- Use the host's plan-approval mechanism when available; otherwise stop after presenting the plan and wait for explicit approval to implement.
+
+Approval of a plan transitions the task to execution mode. Recheck repository and ticket state before acting because they may have changed while the plan was pending. Do not ask every user to choose a mode: infer it from the request and preserve the existing direct-execution path when planning was not requested.
+
 ### 3. Incremental Progress
 
 - Make one logical change at a time
@@ -68,6 +85,8 @@ Watch for complexity creep. When a fix keeps growing — extra parameters, a wat
 ### 7. Implementation Delivery and PR Completion
 
 Unless the user explicitly asks to keep changes local, a request to implement or fix code includes committing the validated change and creating or updating its PR through the repository's `git-workflow`. Follow that workflow's ticket-ID rules, including its `AYC-000` fallback for small unticketed maintenance work; never invent a product ticket ID.
+
+A request for a plan is not authorization to implement or perform delivery actions. Delivery begins only after the user approves the plan or directly requests implementation.
 
 Before declaring implementation complete, apply the Proportional Workflow's runtime and review-evidence requirements. Use `e2e` for durable browser-journey and system-boundary regression coverage when lower-level tests are insufficient. Use `qa` for explicitly requested or PR-specific live verification, including behaviors, visuals, and edge cases that automated coverage does not prove. QA may supplement but does not replace required E2E coverage. For a visually meaningful frontend change, capture the required QA views and load `pr-media` when publishing them materially helps review. Do not create screenshots for backend-only or non-visual changes.
 
@@ -103,7 +122,9 @@ If a change matches more than one level, use the highest. If it is unclear wheth
 
 #### Classification Checkpoint
 
-Classify the change **before implementation**, record the selected path and the trigger for it in the working notes, and carry that classification into the PR description. Do not infer the workflow level from diff size after the code is written. Scan every High-Risk trigger explicitly; any match selects the High-Risk Path.
+Classify the proposed change **before implementation**, whether the task starts in planning or execution mode. Record the selected path and its trigger in the working notes, and carry that classification into the PR description. Do not infer the workflow level from diff size after the code is written. Scan every High-Risk trigger explicitly; any match selects the High-Risk Path.
+
+In planning mode, include the provisional classification, applicable failure-mode matrix, ownership trace, and validation strategy in the plan. Do not perform implementation-only validation such as writing a reproduction test, modifying fixtures, or exercising destructive transitions. When execution begins, re-confirm the classification against the current scope and repository state. If implementation reveals a higher-risk trigger, upgrade the workflow immediately and expand validation; never retain a lower path merely because the original plan selected it.
 
 Before changing behavior, write a compact failure-mode matrix for the affected contract. Cover the states and transitions that could produce a materially different result, not only the happy path. At minimum, consider:
 
@@ -115,6 +136,8 @@ Before changing behavior, write a compact failure-mode matrix for the affected c
 - secrets or persisted values that must be preserved, cleared, masked, or invalidated.
 
 Trace each relevant transition across the full ownership path — UI, transport contract, application/domain logic, persistence, related per-user or organization data, and caches — and assign an observable check to every credible failure mode. If a layer does not participate, record that rather than silently omitting it.
+
+Planning mode changes when evidence is produced, not the rigor required. The plan specifies the evidence the selected path will require; execution produces that evidence. Direct execution follows the same classification checkpoint without requiring a separate user-approved plan.
 
 #### Fast Path
 
