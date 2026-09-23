@@ -19,13 +19,11 @@
     "teamsTitle": "Credit limits for teams",
     "usersTitle": "Credit limits for users",
     "limit": "Monthly credit limit",
-    "used": "Used this month",
     "actions": "Actions",
     "configure": "Configure",
     "search": "Search teams or users",
     "empty": "No matching teams or users.",
-    "blocked": "Paid-model usage blocked",
-    "usageUnavailable": "Not available without a configured limit"
+    "blocked": "Paid-model usage blocked"
   },
   "form": {
     "noLimit": "No additional limit",

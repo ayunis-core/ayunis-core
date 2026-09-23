@@ -44,7 +44,6 @@ export function CreditLimitsTable({
           <TableRow>
             <TableHead>{t(`tabs.${filters.tab}`)}</TableHead>
             <TableHead>{t('table.limit')}</TableHead>
-            <TableHead>{t('table.used')}</TableHead>
             <TableHead>
               <span className="sr-only">{t('table.actions')}</span>
             </TableHead>
@@ -61,7 +60,7 @@ export function CreditLimitsTable({
           ))}
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4}>{t('table.empty')}</TableCell>
+              <TableCell colSpan={3}>{t('table.empty')}</TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -109,11 +108,6 @@ function CreditLimitTableRow({
             {t('table.blocked')}
           </span>
         )}
-      </TableCell>
-      <TableCell>
-        {limit
-          ? limit.creditsUsed.toLocaleString(i18n.language)
-          : t('table.usageUnavailable')}
       </TableCell>
       <TableCell className="text-right">
         <Button
