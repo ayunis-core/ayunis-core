@@ -14,13 +14,16 @@ vi.mock('@/widgets/markdown', () => ({
   Markdown: ({
     children,
     renderLegalReferences,
+    renderSourceCitations,
   }: {
     children: string;
     renderLegalReferences?: boolean;
+    renderSourceCitations?: boolean;
   }) => (
     <div
       data-testid={`text-${children}`}
       data-legal-references={renderLegalReferences ? 'true' : 'false'}
+      data-source-citations={renderSourceCitations ? 'true' : 'false'}
     >
       {children}
     </div>
@@ -102,6 +105,17 @@ describe('AgentRunTimeline', () => {
     ).toBe('true');
     expect(
       screen.getByTestId('text-after').getAttribute('data-legal-references'),
+    ).toBe('true');
+  });
+
+  it('enables source citations for assistant text blocks', () => {
+    render(<AgentRunTimeline unit={unit} />);
+
+    expect(
+      screen.getByTestId('text-before').getAttribute('data-source-citations'),
+    ).toBe('true');
+    expect(
+      screen.getByTestId('text-after').getAttribute('data-source-citations'),
     ).toBe('true');
   });
 

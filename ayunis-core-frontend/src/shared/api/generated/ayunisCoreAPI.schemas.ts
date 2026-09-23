@@ -4532,6 +4532,28 @@ export interface ThreadAiContextResponseDto {
   knowledgeBases: ThreadAiContextKnowledgeBaseResponseDto[];
 }
 
+export interface SourceCitationChunkResponseDto {
+  id: string;
+  /** Exact extracted chunk text shown to the model */
+  content: string;
+  /** @nullable */
+  startLine: number | null;
+  /** @nullable */
+  endLine: number | null;
+}
+
+export interface SourceCitationSourceResponseDto {
+  id: string;
+  name: string;
+  /** @nullable */
+  url: string | null;
+}
+
+export interface SourceCitationResponseDto {
+  chunk: SourceCitationChunkResponseDto;
+  source: SourceCitationSourceResponseDto;
+}
+
 export interface SuperAdminTrialResponseDto {
   /** Trial unique identifier */
   id: string;

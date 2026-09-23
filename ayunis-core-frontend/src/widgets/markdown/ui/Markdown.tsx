@@ -4,30 +4,49 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import CodeBlock from './Codeblock';
 import PiiMaskInline from './PiiMaskInline';
+import SourceCitationInline from './SourceCitationInline';
 import { rehypePiiMasks } from '@/widgets/markdown/lib/rehype-pii-masks';
 import { rehypeLegalMarkers } from '@/widgets/markdown/lib/rehype-legal-markers';
+import { rehypeSourceCitations } from '@/widgets/markdown/lib/rehype-source-citations';
 
 // Module constants so react-markdown doesn't re-parse on every render.
 const REMARK_PLUGINS = [remarkGfm];
 const REHYPE_PLUGINS = [rehypePiiMasks];
 const LEGAL_REHYPE_PLUGINS = [rehypePiiMasks, rehypeLegalMarkers];
+const SOURCE_REHYPE_PLUGINS = [rehypePiiMasks, rehypeSourceCitations];
+const LEGAL_SOURCE_REHYPE_PLUGINS = [
+  rehypePiiMasks,
+  rehypeLegalMarkers,
+  rehypeSourceCitations,
+];
 
 interface MarkdownProps {
   children: string;
   className?: string;
   renderLegalReferences?: boolean;
+  renderSourceCitations?: boolean;
+  renderImages?: boolean;
 }
 
 interface SpanComponentProps {
   children?: ReactNode;
   // react-markdown delivers hast data attributes in kebab-case.
   'data-pii-token'?: string;
+  'data-source-citation'?: string;
+  'data-source-chunk-id'?: string;
+  'data-source-label'?: string;
 }
 
 interface CodeComponentProps {
   inline?: boolean;
   className?: string;
   children?: ReactNode;
+}
+
+interface ImageComponentProps {
+  src?: string;
+  alt?: string;
+  title?: string;
 }
 
 interface TableComponentProps {
@@ -44,6 +63,8 @@ function Markdown({
   children,
   className = '',
   renderLegalReferences = false,
+  renderSourceCitations = false,
+  renderImages = true,
 }: Readonly<MarkdownProps>) {
   return (
     <div
@@ -51,14 +72,25 @@ function Markdown({
     >
       <ReactMarkdown
         remarkPlugins={REMARK_PLUGINS}
-        rehypePlugins={
-          renderLegalReferences ? LEGAL_REHYPE_PLUGINS : REHYPE_PLUGINS
-        }
+        rehypePlugins={resolveRehypePlugins(
+          renderLegalReferences,
+          renderSourceCitations,
+        )}
         components={{
           span: (props: SpanComponentProps) => {
             const token = props['data-pii-token'];
             if (typeof token === 'string') {
               return <PiiMaskInline token={token} />;
+            }
+            const isSourceCitation = props['data-source-citation'] === 'true';
+            const chunkId = props['data-source-chunk-id'];
+            const label = props['data-source-label'];
+            if (
+              isSourceCitation &&
+              typeof chunkId === 'string' &&
+              typeof label === 'string'
+            ) {
+              return <SourceCitationInline citation={{ chunkId, label }} />;
             }
             return <span>{props.children}</span>;
           },
@@ -105,6 +137,10 @@ function Markdown({
               </CodeBlock>
             );
           },
+          img: ({ src, alt, title }: ImageComponentProps) => {
+            if (!renderImages) return alt ? <span>{alt}</span> : null;
+            return <img src={src} alt={alt ?? ''} title={title} />;
+          },
           pre: ({ children }: TableComponentProps) => {
             return <div className="my-4">{children}</div>;
           },
@@ -134,7 +170,7 @@ function Markdown({
                 rel="noopener noreferrer"
                 className={
                   isLegalReference
-                    ? 'bg-brand/15 text-brand px-1 py-0.5 rounded font-medium'
+                    ? 'bg-muted text-foreground px-1 py-0.5 rounded font-medium'
                     : undefined
                 }
                 data-testid={isLegalReference ? 'legal-reference' : undefined}
@@ -149,6 +185,18 @@ function Markdown({
       </ReactMarkdown>
     </div>
   );
+}
+
+function resolveRehypePlugins(
+  renderLegalReferences: boolean,
+  renderSourceCitations: boolean,
+) {
+  if (renderLegalReferences && renderSourceCitations) {
+    return LEGAL_SOURCE_REHYPE_PLUGINS;
+  }
+  if (renderLegalReferences) return LEGAL_REHYPE_PLUGINS;
+  if (renderSourceCitations) return SOURCE_REHYPE_PLUGINS;
+  return REHYPE_PLUGINS;
 }
 
 export default memo(Markdown);

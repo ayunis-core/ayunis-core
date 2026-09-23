@@ -49,6 +49,7 @@ import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
+import SourceCitationController from './SourceCitationController';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -448,13 +449,15 @@ export default function ChatPage({
   return (
     <AppLayout>
       <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
-        <ChatInterfaceLayout
-          chatHeader={chatHeader}
-          chatContent={chatContent}
-          chatInput={chatInput}
-          resetKey={thread.id}
-          sidePanel={sidePanel}
-        />
+        <SourceCitationController key={thread.id} threadId={thread.id}>
+          <ChatInterfaceLayout
+            chatHeader={chatHeader}
+            chatContent={chatContent}
+            chatInput={chatInput}
+            resetKey={thread.id}
+            sidePanel={sidePanel}
+          />
+        </SourceCitationController>
       </PiiMaskProvider>
       <RenameThreadDialog
         open={renameDialogOpen}

@@ -1,7 +1,8 @@
-import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
-import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
+import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 
 export interface ThreadsFindAllOptions {
   withSources?: boolean;
@@ -51,6 +52,10 @@ export abstract class ThreadsRepository {
     id: UUID,
     userId: UUID,
   ): Promise<ThreadContextRefs | null>;
+  abstract findCitationContext(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadCitationContext | null>;
   abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]>;
   abstract findAll(
     userId: UUID,

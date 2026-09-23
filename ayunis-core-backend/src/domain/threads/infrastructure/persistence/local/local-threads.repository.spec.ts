@@ -50,6 +50,58 @@ describe('LocalThreadsRepository', () => {
     );
   });
 
+  it('loads only owner-scoped citation assignment data in one query', async () => {
+    const citationContext = {
+      userId: randomUUID(),
+      workspaceId: randomUUID(),
+      sourceAssignments: [
+        { sourceId: randomUUID(), originSkillId: randomUUID() },
+      ],
+      knowledgeBaseAssignments: [
+        { knowledgeBaseId: randomUUID(), originSkillId: null },
+      ],
+    };
+    const threadRepository = {
+      query: jest.fn().mockResolvedValue([citationContext]),
+    } as unknown as jest.Mocked<Repository<ThreadRecord>>;
+    const repository = new LocalThreadsRepository(
+      threadRepository,
+      {} as ThreadMapper,
+      {} as LocalThreadAssignmentsRepository,
+    );
+    const threadId = randomUUID();
+
+    await expect(
+      repository.findCitationContext(threadId, citationContext.userId),
+    ).resolves.toBe(citationContext);
+    expect(threadRepository.query).toHaveBeenCalledTimes(1);
+    expect(threadRepository.query).toHaveBeenCalledWith(
+      expect.not.stringContaining('messages'),
+      [threadId, citationContext.userId],
+    );
+    expect(threadRepository.query).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /thread_source_assignments[\s\S]+thread_knowledge_base_assignments/,
+      ),
+      [threadId, citationContext.userId],
+    );
+  });
+
+  it('returns null when no owner-scoped citation context exists', async () => {
+    const threadRepository = {
+      query: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<Repository<ThreadRecord>>;
+    const repository = new LocalThreadsRepository(
+      threadRepository,
+      {} as ThreadMapper,
+      {} as LocalThreadAssignmentsRepository,
+    );
+
+    await expect(
+      repository.findCitationContext(randomUUID(), randomUUID()),
+    ).resolves.toBeNull();
+  });
+
   it('returns messages in chronological order', async () => {
     const olderMessage = {
       createdAt: new Date('2026-08-10T08:00:00Z'),

@@ -21,6 +21,7 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
     updateCsvSourceData: jest.fn().mockResolvedValue(true),
     extractTextLines: jest.fn().mockResolvedValue(null),
+    findCitationTarget: jest.fn().mockResolvedValue(null),
     findContentChunksByIds: jest.fn().mockResolvedValue([]),
     delete: jest.fn().mockResolvedValue(undefined),
     deleteMany: jest.fn().mockResolvedValue(undefined),
