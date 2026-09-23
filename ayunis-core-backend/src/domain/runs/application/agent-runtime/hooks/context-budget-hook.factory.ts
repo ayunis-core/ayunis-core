@@ -5,7 +5,7 @@ import {
   type MessageContent,
 } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
-import { CompleteTurnSelector } from '../complete-turn-selector';
+import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
 
 interface ContextBudgetHookParams {
   maxTokens: number;
@@ -18,7 +18,8 @@ export class ContextBudgetHookFactory {
   create(params: ContextBudgetHookParams): Hook {
     return {
       name: 'ayunis-context-budget',
-      beforeModelCall: (ctx) => {
+      inheritToChildRuns: false,
+      beforeModelTurn: (ctx) => {
         ctx.transformMessages((messages) =>
           this.trimToCompleteTurns(messages, params.maxTokens),
         );

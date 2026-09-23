@@ -1,8 +1,15 @@
 import type { PersonalSkill as BackendSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import { MockProvider, textTurn, toolCallTurn } from '@ayunis/agent-runtime';
+import {
+  MockProvider,
+  ModelProviderError,
+  textTurn,
+  toolCallTurn,
+} from '@ayunis/agent-runtime';
 import type {
+  ModelProvider,
   ProviderRequest,
   Tool as RuntimeTool,
+  ToolExecutionContext,
 } from '@ayunis/agent-runtime';
 import type { ProviderChunk } from '@ayunis/inference';
 import type { UUID } from 'crypto';
@@ -61,7 +68,9 @@ import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-ru
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
 import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
 import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
-import type { RuntimeModelProviderDecorator } from 'src/domain/runs/application/agent-runtime/runtime-model-provider.decorator';
+import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
+import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
+import { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -184,6 +193,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const inferenceUsageGuard = {
     preflight: jest.fn().mockResolvedValue(undefined),
     collectUsage: jest.fn(),
+    collectUsageCritical: jest.fn().mockResolvedValue(undefined),
   } as unknown as jest.Mocked<InferenceUsageGuard>;
   const initialRunContext = {
     tools: overrides.backendTools ?? [],
@@ -303,9 +313,8 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
       ? jest.fn().mockRejectedValue(new Error('provider down'))
       : jest.fn().mockResolvedValue(provider),
   } as unknown as ResolveModelProviderUseCase;
-  const runtimeModelProviderDecorator = {
-    decorate: jest.fn((resolvedProvider) => resolvedProvider),
-  } as unknown as RuntimeModelProviderDecorator;
+  const modelCallObservabilityHookFactory =
+    new ModelCallObservabilityHookFactory(eventEmitter);
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
     cleanupTrailingNonAssistantMessages: cleanup,
@@ -327,7 +336,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     { execute: flushToolResult } as never,
     addMessageToThreadUseCase,
   );
-  const collectUsage = inferenceUsageGuard.collectUsage as jest.Mock;
+  const collectUsage = inferenceUsageGuard.collectUsageCritical as jest.Mock;
   const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
   const toolUsageHookFactory = new ToolUsageHookFactory(eventEmitter);
   const toolResultCollector = overrides.toolResultCollector ?? {
@@ -357,10 +366,10 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     addMessageToThreadUseCase,
     runtimeHistoryMaterializer,
     resolveModelProviderUseCase,
-    runtimeModelProviderDecorator,
     messageCleanupService,
     persistenceHookFactory,
     usageHookFactory,
+    modelCallObservabilityHookFactory,
     skillActivationHookFactory,
     runTelemetryService,
     toolResultCollector as ToolResultCollectorService,
@@ -400,10 +409,8 @@ function realBackendToolAdapter(executeTool: jest.Mock): BackendToolAdapter {
   );
 }
 
-async function drain(
-  gen: AsyncIterable<RunStreamItem>,
-): Promise<RunStreamItem[]> {
-  const items: RunStreamItem[] = [];
+async function drain<T>(gen: AsyncIterable<T>): Promise<T[]> {
+  const items: T[] = [];
   for await (const item of gen) {
     items.push(item);
   }
@@ -483,10 +490,163 @@ describe('ExecuteRunUseCase', () => {
     expect(collectUsage).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ inputTokens: expect.any(Number) }),
-      savedMessage.id,
+      expect.any(String),
       'agent_runtime',
     );
     expect(collectUsage).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs critical usage before best-effort observability and turn persistence', async () => {
+    const { useCase, collectUsage, emitAsync, save } = buildHarness({
+      turns: [
+        textTurn('The permit is valid.', {
+          inputTokens: 18,
+          outputTokens: 6,
+        }),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    const completionIndex = emitAsync.mock.calls.findIndex(
+      ([eventName]) => eventName === InferenceCompletedEvent.EVENT_NAME,
+    );
+    expect(completionIndex).toBeGreaterThanOrEqual(0);
+    expect(collectUsage.mock.invocationCallOrder[0]).toBeLessThan(
+      emitAsync.mock.invocationCallOrder[completionIndex],
+    );
+    expect(emitAsync.mock.invocationCallOrder[completionIndex]).toBeLessThan(
+      save.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('inherits child usage and observability without persisting its transcript', async () => {
+    const childModel = {
+      name: 'gpt-5-mini',
+      provider: 'azure',
+    } as LanguageModel;
+    const childTurns = [
+      toolCallTurn(
+        { id: 'child-tool-1', name: 'child_lookup', input: {} },
+        { inputTokens: 5, outputTokens: 1 },
+      ),
+      textTurn('Child analysis complete.', {
+        inputTokens: 7,
+        outputTokens: 2,
+      }),
+    ];
+    let childTurn = 0;
+    const childProvider: ModelProvider = {
+      name: 'azure:gpt-5-mini',
+      async *stream() {
+        const chunks = childTurns[childTurn] ?? [];
+        childTurn += 1;
+        for (const chunk of chunks) yield chunk;
+      },
+    };
+    const childTool: RuntimeTool = {
+      name: 'child_lookup',
+      description: 'Look up child-only research data.',
+      parameters: { type: 'object' },
+      execute: () => 'Child-only lookup result.',
+    };
+    const delegate: RuntimeTool = {
+      name: 'delegate_research',
+      description: 'Delegate research to another configured model.',
+      parameters: { type: 'object' },
+      execute: async (
+        _input: Record<string, unknown>,
+        ctx: ToolExecutionContext,
+      ) => {
+        RuntimeModelRegistry.fromContext(ctx.context).register(
+          childProvider,
+          childModel,
+        );
+        await drain(
+          ctx.runChild({
+            instructions: 'Research the permit.',
+            model: childProvider,
+            messages: [
+              {
+                role: 'user',
+                content: [{ type: 'text', text: 'Review the permit.' }],
+              },
+            ],
+            tools: [childTool],
+          }),
+        );
+        return 'Child research complete.';
+      },
+    };
+    const { useCase, collectUsage, emitAsync, save, createToolResult } =
+      buildHarness({
+        runtimeTools: [delegate],
+        turns: [
+          toolCallTurn({ id: 'delegate-1', name: delegate.name, input: {} }),
+          textTurn('The permit research is complete.'),
+        ],
+      });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(collectUsage).toHaveBeenCalledWith(
+      childModel,
+      { inputTokens: 7, outputTokens: 2 },
+      expect.any(String),
+      'agent_runtime',
+    );
+    const completions = emitAsync.mock.calls
+      .filter(([name]) => name === InferenceCompletedEvent.EVENT_NAME)
+      .map(([, event]) => event as InferenceCompletedEvent);
+    const childCompletion = completions.find(
+      (event) => event.model === childModel.name,
+    );
+    expect(childCompletion).toMatchObject({
+      model: childModel.name,
+      provider: childModel.provider,
+    });
+    expect(
+      completions.filter((event) => event.model !== childModel.name),
+    ).toHaveLength(2);
+    expect(
+      completions.filter((event) => event.model === childModel.name),
+    ).toHaveLength(2);
+    expect(
+      collectUsage.mock.calls.find(
+        ([usedModel]) => usedModel === childModel,
+      )?.[2],
+    ).toBe(childCompletion?.modelCallId);
+    expect(new Set(completions.map((event) => event.modelCallId)).size).toBe(
+      completions.length,
+    );
+  });
+
+  it('uses the runtime retry defaults with the resolved provider directly', async () => {
+    jest.useFakeTimers();
+    let attempts = 0;
+    const { useCase } = buildHarness({
+      providerStream: async function* () {
+        attempts += 1;
+        if (attempts < 4) {
+          throw new ModelProviderError({
+            kind: 'server',
+            stage: 'stream_establishment',
+            upstreamStatus: 503,
+            cause: new Error('service unavailable'),
+          });
+        }
+        yield { textDelta: 'Recovered response', finishReason: 'stop' };
+      },
+    });
+
+    const result = drain(await useCase.execute(userCommand()));
+    await jest.advanceTimersByTimeAsync(10_000);
+
+    await expect(result).resolves.toEqual(expect.any(Array));
+    expect(attempts).toBe(4);
+    jest.useRealTimers();
   });
 
   it('preserves the persisted transcript when the tool-failure breaker trips', async () => {
@@ -584,7 +744,9 @@ describe('ExecuteRunUseCase', () => {
 
     await drain(await useCase.execute(command));
 
-    expect(providerSignal()).toBe(controller.signal);
+    expect(providerSignal()).toBeDefined();
+    expect(providerSignal()).not.toBe(controller.signal);
+    expect(providerSignal()?.aborted).toBe(false);
   });
 
   it('cleans up an orphaned tool-use message when cancellation follows persistence', async () => {
@@ -650,8 +812,8 @@ describe('ExecuteRunUseCase', () => {
     const controller = new AbortController();
     const { useCase, save, cleanup } = buildHarness({
       providerStream: async function* () {
-        controller.abort();
         yield { textDelta: 'Partial answer' };
+        controller.abort();
         yield { textDelta: 'not retained' };
       },
     });

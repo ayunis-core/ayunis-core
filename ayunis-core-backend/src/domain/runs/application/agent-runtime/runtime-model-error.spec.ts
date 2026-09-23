@@ -1,7 +1,10 @@
 import { ProviderServerError } from 'src/common/errors/provider.errors';
-import { serializeRuntimeModelError } from './runtime-model-error';
+import {
+  reconstructRuntimeModelError,
+  serializeRuntimeModelError,
+} from './runtime-model-error';
 
-describe('serializeRuntimeModelError', () => {
+describe('runtime anonymization provider error serialization', () => {
   it('does not serialize raw provider cause messages', () => {
     const error = new ProviderServerError(
       {
@@ -27,5 +30,30 @@ describe('serializeRuntimeModelError', () => {
       },
     });
     expect(JSON.stringify(serialized)).not.toContain('classified resident');
+  });
+
+  it('reconstructs safe provider metadata for AppSignal grouping', () => {
+    const reconstructed = reconstructRuntimeModelError({
+      hostError: {
+        type: 'provider_server',
+        context: {
+          provider: 'anonymize',
+          upstreamStatus: 503,
+          upstreamRequestId: 'req_anonymize_503',
+          failureStage: 'stream_establishment',
+        },
+      },
+    });
+
+    expect(reconstructed).toBeInstanceOf(ProviderServerError);
+    expect(reconstructed).toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_SERVER_ANONYMIZE',
+      context: {
+        provider: 'anonymize',
+        upstreamStatus: 503,
+        upstreamRequestId: 'req_anonymize_503',
+        failureStage: 'stream_establishment',
+      },
+    });
   });
 });

@@ -5,9 +5,10 @@
 export const INFERENCE_MAX_RETRIES = 3;
 
 /**
- * Streaming provider SDKs must not retry internally. Retry ownership belongs
- * exclusively to RuntimeStreamInferenceHandler for direct streams and
- * RuntimeModelProviderDecorator for agent-runtime streams.
+ * Streaming provider SDKs must not retry internally. Direct streams retain
+ * their host-side retry policy in RuntimeStreamInferenceHandler; agent runs
+ * delegate retry, backoff, cancellation, and idle-timeout ownership to
+ * @ayunis/agent-runtime.
  */
 export const STREAMING_PROVIDER_MAX_RETRIES = 0;
 

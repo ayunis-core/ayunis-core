@@ -1,6 +1,6 @@
 import type { Message } from '@ayunis/agent-runtime';
 import type { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
-import { CompleteTurnSelector } from '../complete-turn-selector';
+import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
 import { ContextBudgetHookFactory } from './context-budget-hook.factory';
 
 const textMessage = (role: Message['role'], text: string): Message => ({
@@ -22,13 +22,19 @@ function buildHook(maxTokens: number, tokensPerContent = 20) {
 
 function getTransform(hook: ReturnType<typeof buildHook>['hook']) {
   const transformMessages = jest.fn();
-  hook.beforeModelCall!({ transformMessages } as never);
+  hook.beforeModelTurn!({ transformMessages } as never);
   return transformMessages.mock.calls[0][0] as (
     messages: readonly Message[],
   ) => Message[];
 }
 
 describe('ContextBudgetHookFactory', () => {
+  it('does not inherit the root model context budget into child runs', () => {
+    const { hook } = buildHook(100);
+
+    expect(hook.inheritToChildRuns).toBe(false);
+  });
+
   it('keeps the newest complete turn when older turns no longer fit', () => {
     const { hook } = buildHook(70, 30);
     const messages = [
@@ -94,13 +100,13 @@ describe('ContextBudgetHookFactory', () => {
     ).toThrow(expect.objectContaining({ code: 'CONTEXT_BUDGET_EXCEEDED' }));
   });
 
-  it('registers a fresh transform before every model call', () => {
+  it('registers trimming for model turns instead of retryable model calls', () => {
     const { hook } = buildHook(100);
     const transformMessages = jest.fn();
 
-    hook.beforeModelCall!({ transformMessages } as never);
-    hook.beforeModelCall!({ transformMessages } as never);
+    hook.beforeModelTurn!({ transformMessages } as never);
 
-    expect(transformMessages).toHaveBeenCalledTimes(2);
+    expect(transformMessages).toHaveBeenCalledTimes(1);
+    expect(hook.beforeModelCall).toBeUndefined();
   });
 });

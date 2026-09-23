@@ -68,6 +68,7 @@ describe('InferenceUsageGuard', () => {
     } as unknown as jest.Mocked<ApiKeyCreditLimitGuardService>;
     collectUsageAsyncService = {
       collect: jest.fn(),
+      collectCritical: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<CollectUsageAsyncService>;
 
     guard = new InferenceUsageGuard(
@@ -229,25 +230,51 @@ describe('InferenceUsageGuard', () => {
   });
 
   describe('collectUsage', () => {
-    it('forwards run execution path to CollectUsageAsyncService', () => {
+    it('keeps non-critical callers fire-and-forget', () => {
       const model = makeModel(ModelTier.LOW);
       const requestId = randomUUID();
 
-      guard.collectUsage(
+      const result = guard.collectUsage(
         model,
         { inputTokens: 42, outputTokens: 8 },
         requestId,
-        'agent_runtime',
+        'legacy',
       );
 
-      expect(collectUsageAsyncService.collect).toHaveBeenCalledTimes(1);
+      expect(result).toBeUndefined();
       expect(collectUsageAsyncService.collect).toHaveBeenCalledWith(
+        model,
+        42,
+        8,
+        requestId,
+        'legacy',
+      );
+    });
+
+    it('awaits critical agent-runtime usage collection', async () => {
+      const model = makeModel(ModelTier.LOW);
+      const requestId = randomUUID();
+      const persistenceError = new Error('Usage database unavailable');
+      collectUsageAsyncService.collectCritical.mockRejectedValue(
+        persistenceError,
+      );
+
+      await expect(
+        guard.collectUsageCritical(
+          model,
+          { inputTokens: 42, outputTokens: 8 },
+          requestId,
+          'agent_runtime',
+        ),
+      ).rejects.toBe(persistenceError);
+      expect(collectUsageAsyncService.collectCritical).toHaveBeenCalledWith(
         model,
         42,
         8,
         requestId,
         'agent_runtime',
       );
+      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
     });
   });
 });

@@ -198,6 +198,6 @@ function contextTransform(
     new CompleteTurnSelector(countTokens),
   ).create({ maxTokens });
   const transformMessages = jest.fn();
-  hook.beforeModelCall!({ transformMessages } as never);
+  hook.beforeModelTurn!({ transformMessages } as never);
   return transformMessages.mock.calls[0][0];
 }

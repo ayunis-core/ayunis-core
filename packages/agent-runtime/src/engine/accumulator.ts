@@ -101,9 +101,18 @@ export class ChunkAccumulator {
     message.content.push(...toolCalls.contents);
     return {
       message,
-      usage: this.usage,
+      usage: { ...this.usage },
       finishReason: this.finishReason,
       invalidToolCallSnapshots: toolCalls.invalidSnapshots,
+    };
+  }
+
+  partialResult(): ModelCallResult {
+    return {
+      message: this.partialMessage(),
+      usage: { ...this.usage },
+      finishReason: this.finishReason,
+      invalidToolCallSnapshots: [],
     };
   }
 

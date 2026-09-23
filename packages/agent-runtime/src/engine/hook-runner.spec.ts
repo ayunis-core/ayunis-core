@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { RunContext } from '../context/run-context';
 import { AgentRuntimeError } from '../contracts/errors';
 import type { Hook } from '../contracts/hook';
 import type { ModelProvider } from '../contracts/provider';
+import { EmitBuffer } from './event-queue';
+import { HookRunner } from './hook-runner';
+import { PendingMutations } from './mutations';
+import { AbortState } from './run-state';
 import {
   MockProvider,
   textTurn,
@@ -290,11 +295,12 @@ describe('hook lifecycle', () => {
     const interruptions: unknown[] = [];
     const observer: Hook = {
       name: 'observer',
-      modelCallInterrupted: (ctx) => {
+      afterModelCall: (ctx) => {
+        if (ctx.outcome.type !== 'provider_failure') return;
         interruptions.push({
           iteration: ctx.iteration,
-          message: ctx.message,
-          reason: ctx.reason,
+          message: ctx.outcome.message,
+          reason: 'error',
         });
       },
     };
@@ -342,10 +348,10 @@ describe('hook lifecycle', () => {
     });
   });
 
-  it('preserves a provider failure when an interruption hook also fails', async () => {
+  it('surfaces a critical call-hook failure with the provider failure retained', async () => {
     const brokenPersistence: Hook = {
       name: 'persistence',
-      modelCallInterrupted: () => {
+      afterModelCall: () => {
         throw new Error('database unavailable');
       },
     };
@@ -365,15 +371,23 @@ describe('hook lifecycle', () => {
     );
 
     expect(events.find((event) => event.type === 'error')).toMatchObject({
-      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+      code: 'HOOK_FAILED',
+      details: {
+        hookName: 'persistence',
+        phase: 'afterModelCall',
+        underlyingError: {
+          code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+        },
+      },
     });
   });
 
-  it('preserves an aborted outcome when an interruption hook fails', async () => {
+  it('preserves an aborted outcome when a best-effort terminal hook fails', async () => {
     const controller = new AbortController();
     const brokenPersistence: Hook = {
       name: 'persistence',
-      modelCallInterrupted: () => {
+      afterModelCallFailureMode: 'best_effort',
+      afterModelCall: () => {
         throw new Error('database unavailable');
       },
     };
@@ -401,8 +415,10 @@ describe('hook lifecycle', () => {
     const phases: string[] = [];
     const observer: Hook = {
       name: 'observer',
-      modelCallInterrupted: (ctx) => {
-        phases.push(`interrupted:${ctx.reason}:${ctx.message.content.length}`);
+      afterModelCall: (ctx) => {
+        phases.push(
+          `call:${ctx.outcome.type}:${ctx.outcome.message.content.length}`,
+        );
       },
       runEnd: (ctx) => {
         phases.push(`runEnd:${ctx.status}`);
@@ -417,10 +433,7 @@ describe('hook lifecycle', () => {
       }
     }
 
-    expect(phases).toEqual([
-      'interrupted:consumer_abandoned:1',
-      'runEnd:aborted',
-    ]);
+    expect(phases).toEqual(['call:consumer_abandoned:1', 'runEnd:aborted']);
   });
 
   it('reports critical runEnd failures without replacing the original outcome', async () => {
@@ -538,5 +551,218 @@ describe('hook lifecycle', () => {
       code: 'HOOK_FAILED',
       details: { hookName: 'critical-persistence', phase: 'runEnd' },
     });
+  });
+
+  it('exposes only effective controls to call and run terminal hooks', async () => {
+    const apiShapes: Array<{ phase: string; keys: string[] }> = [];
+    const hook: Hook = {
+      name: 'terminal-controls',
+      afterModelCall: (ctx) => {
+        ctx.context.set('call-finished', true);
+        ctx.emit({ name: 'call_observed', data: null });
+        apiShapes.push({ phase: 'afterModelCall', keys: Object.keys(ctx) });
+      },
+      runEnd: (ctx) => {
+        expect(ctx.context.get('call-finished')).toBe(true);
+        ctx.emit({ name: 'run_observed', data: null });
+        apiShapes.push({ phase: 'runEnd', keys: Object.keys(ctx) });
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(new MockProvider([textTurn('Done')]), { hooks: [hook] }),
+    );
+
+    const mutationKeys = [
+      'transformMessages',
+      'addTools',
+      'removeTools',
+      'setTools',
+      'addInstructions',
+      'setInstructions',
+    ];
+    for (const shape of apiShapes) {
+      expect(shape.keys, shape.phase).toEqual(
+        expect.arrayContaining(['context', 'abort', 'emit']),
+      );
+      expect(
+        shape.keys.filter((key) => mutationKeys.includes(key)),
+        shape.phase,
+      ).toEqual([]);
+    }
+    expect(
+      events
+        .filter((event) => event.type === 'custom')
+        .map((event) => event.name),
+    ).toEqual(['call_observed', 'run_observed']);
+  });
+
+  it('retains the original outcome when a critical afterModelTurn hook fails', async () => {
+    const brokenPersistence: Hook = {
+      name: 'persistence',
+      afterModelTurn: () => {
+        throw new Error('database unavailable');
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(new MockProvider([textTurn('Done')]), {
+        hooks: [brokenPersistence],
+      }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'HOOK_FAILED',
+      details: {
+        hookName: 'persistence',
+        phase: 'afterModelTurn',
+        originalOutcome: 'accepted',
+      },
+    });
+  });
+
+  it('isolates and freezes afterModelTurn messages without disabling its mutations', async () => {
+    const mutationErrors: string[] = [];
+    const observedTexts: string[] = [];
+    const mutator: Hook = {
+      name: 'turn-mutator',
+      afterModelTurn: (ctx) => {
+        if (ctx.turn !== 1) return;
+        ctx.addInstructions('Persisted turn instruction.');
+        const content = ctx.messages[0]?.content[0];
+        if (content?.type !== 'text') return;
+        try {
+          (content as { text: string }).text = 'Tampered';
+        } catch (error) {
+          mutationErrors.push(error instanceof Error ? error.name : 'error');
+        }
+      },
+    };
+    const observer: Hook = {
+      name: 'turn-observer',
+      afterModelTurn: (ctx) => {
+        if (ctx.turn !== 1) return;
+        const content = ctx.messages[0]?.content[0];
+        if (content?.type === 'text') observedTexts.push(content.text);
+      },
+    };
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'echo', input: { value: 'x' } }),
+      textTurn('Done'),
+    ]);
+
+    await collectEvents(
+      baseInput(model, {
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'Original request' }],
+          },
+        ],
+        tools: [echoTool()],
+        hooks: [mutator, observer],
+      }),
+    );
+
+    expect(mutationErrors).toEqual(['TypeError']);
+    expect(observedTexts).toEqual(['Original request']);
+    expect(model.requests[1].messages[0]?.content[0]).toMatchObject({
+      type: 'text',
+      text: 'Original request',
+    });
+    expect(model.requests[1].instructions).toContain(
+      'Persisted turn instruction.',
+    );
+  });
+
+  it('gives every runEnd hook the same isolated frozen message snapshot', async () => {
+    const mutationErrors: string[] = [];
+    const observedTexts: string[] = [];
+    const mutator: Hook = {
+      name: 'run-end-mutator',
+      runEnd: (ctx) => {
+        const content = ctx.messages[0]?.content[0];
+        if (content?.type !== 'text') return;
+        try {
+          (content as { text: string }).text = 'Tampered';
+        } catch (error) {
+          mutationErrors.push(error instanceof Error ? error.name : 'error');
+        }
+      },
+    };
+    const observer: Hook = {
+      name: 'run-end-observer',
+      runEnd: (ctx) => {
+        const content = ctx.messages[0]?.content[0];
+        if (content?.type === 'text') observedTexts.push(content.text);
+      },
+    };
+
+    await collectEvents(
+      baseInput(new MockProvider([textTurn('Done')]), {
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'Original request' }],
+          },
+        ],
+        hooks: [mutator, observer],
+      }),
+    );
+
+    expect(mutationErrors).toEqual(['TypeError']);
+    expect(observedTexts).toEqual(['Original request']);
+  });
+
+  it('does not build beforeModelCall snapshots for hooks without that callback', async () => {
+    let schemaReads = 0;
+    const parameters: Record<string, unknown> = { type: 'object' };
+    Object.defineProperty(parameters, 'properties', {
+      enumerable: true,
+      get: () => {
+        schemaReads += 1;
+        return {};
+      },
+    });
+    const model = new MockProvider([textTurn('Done')]);
+    const hooks: Hook[] = [
+      { name: 'run-start-only', runStart: () => undefined },
+      { name: 'run-end-only', runEnd: () => undefined },
+      { name: 'active', beforeModelCall: () => undefined },
+      { name: 'tool-only', afterToolCall: () => undefined },
+    ];
+    const runner = new HookRunner({
+      hooks,
+      context: RunContext.create(),
+      mutations: new PendingMutations(),
+      emits: new EmitBuffer(),
+      abortState: new AbortState(),
+    });
+
+    await runner.beforeModelCall({
+      iteration: 0,
+      identity: {
+        modelCallId: crypto.randomUUID(),
+        runId: crypto.randomUUID(),
+        turn: 1,
+        callSequence: 1,
+        trigger: 'initial',
+        model,
+      },
+      config: {
+        instructions: 'Be helpful.',
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'Hello' }],
+          },
+        ],
+        tools: [echoTool({ parameters })],
+      },
+      mode: 'normal',
+      signal: new AbortController().signal,
+    });
+
+    expect(schemaReads).toBe(2);
   });
 });

@@ -19,7 +19,7 @@ import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.f
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
-import { RuntimeModelProviderDecorator } from './application/agent-runtime/runtime-model-provider.decorator';
+import { ModelCallObservabilityHookFactory } from './application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { CompleteTurnSelector } from './application/agent-runtime/complete-turn-selector';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
@@ -97,7 +97,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ContextBudgetHookFactory,
     CompleteTurnSelector,
     RuntimeHistoryMaterializer,
-    RuntimeModelProviderDecorator,
+    ModelCallObservabilityHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,

@@ -1,9 +1,24 @@
 import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { RunEvent, ToolCallSnapshot } from '@ayunis/agent-runtime';
+import type {
+  ProviderFailureFacts,
+  RunEvent,
+  ToolCallSnapshot,
+} from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
-import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ApplicationError,
+  type ErrorMetadata,
+} from 'src/common/errors/base.error';
+import {
+  ProviderConnectionError,
+  ProviderRequestRejectedError,
+  ProviderServerError,
+  ProviderTimeoutError,
+  type ProviderErrorContext,
+} from 'src/common/errors/provider.errors';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
@@ -27,10 +42,16 @@ import {
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 import { reconstructRuntimeModelError } from './runtime-model-error';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import {
+  InferenceAbortedError,
+  InferenceFailedError,
+  InferenceImageTooLargeError,
+  InferenceStreamStalledError,
+} from 'src/domain/models/application/models.errors';
+import type { RuntimeModelRegistry } from './runtime-model.registry';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import { mapRuntimeHookError } from './runtime-hook-error';
 
-/** Accumulates one assistant turn's streamed text/thinking for live display. */
 interface StreamingTurn {
   id: UUID;
   text: string;
@@ -38,26 +59,13 @@ interface StreamingTurn {
   toolCalls: Map<number, ToolCallSnapshot>;
 }
 
-/**
- * Folds the runtime's fine-grained `RunEvent` stream into the coarse
- * `RunStreamItem`s the runs SSE presenter already knows how to serialize:
- *
- * - text and thinking deltas plus runtime-owned tool-call snapshots become a growing
- *   `AssistantMessage` re-yielded per tick;
- * - `assistant_message` yields the authoritative message (tool_use + provider
- *   metadata) under the same id as the streamed one;
- * - `tool_result_message` yields the backend tool-result message;
- * - `custom` mask events become `RunPiiMasksUpdate` (yielded before the message
- *   carrying the tokens, as the client expects);
- * - `error` is captured and thrown only once the stream drains, so the
- *   runtime's `runEnd` hooks still fire before the error surfaces as an SSE
- *   error frame.
- */
+/** Delays mapped errors until runtime terminal hooks have completed. */
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
   logger: Logger,
   integrations?: RuntimeToolIntegrationRegistry,
+  models?: RuntimeModelRegistry,
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
   let pendingError: ApplicationError | null = null;
@@ -75,6 +83,7 @@ export async function* adaptRunEventsToStream(
       threadId,
       assistant.lastCompletedIteration(),
       logger,
+      models,
     );
     if (side instanceof ApplicationError) {
       pendingError = side;
@@ -101,7 +110,6 @@ function readOutcome(event: RunEvent): RunExecutionOutcome | undefined {
     : undefined;
 }
 
-/** Maps the assistant-turn events (deltas + the authoritative message). */
 class AssistantTurnAccumulator {
   private turn: StreamingTurn | null = null;
   private turnIndex = 0;
@@ -154,22 +162,18 @@ class AssistantTurnAccumulator {
     return this.turn;
   }
 
-  /**
-   * The iteration of the most recently completed assistant turn — the one a
-   * following `tool_result_message` belongs to (tools always follow their
-   * assistant turn, so `turnIndex` has already advanced past it).
-   */
+  /** Tool results follow the assistant turn after its index has advanced. */
   lastCompletedIteration(): number {
     return Math.max(0, this.turnIndex - 1);
   }
 }
 
-/** Maps the non-assistant events, or an ApplicationError to throw on drain. */
 function toSideStreamItem(
   event: RunEvent,
   threadId: UUID,
   iteration: number,
   logger: Logger,
+  models?: RuntimeModelRegistry,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'tool_result_message') {
     return toBackendToolResultMessage(
@@ -184,7 +188,7 @@ function toSideStreamItem(
       : null;
   }
   if (event.type === 'error') {
-    return mapRunError(event, logger);
+    return mapRunError(event, logger, models);
   }
   if (event.type === 'finalization_error') {
     return mapFinalizationError(event, logger);
@@ -304,7 +308,163 @@ const RUN_ERROR_MAPPERS = new Map<
   ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
 ]);
 
-function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
+function mapPortableProviderError(
+  event: RunErrorEvent,
+  models: RuntimeModelRegistry | undefined,
+): ApplicationError | undefined {
+  if (
+    event.code !== 'PROVIDER_FAILED' ||
+    !event.providerFailure ||
+    !event.modelCall ||
+    !models
+  ) {
+    return undefined;
+  }
+  let model: LanguageModel;
+  try {
+    model = models.resolveByProviderName(event.modelCall.provider);
+  } catch {
+    return undefined;
+  }
+  const failure = event.providerFailure;
+  const context = providerErrorContext(model.provider, model.name, failure);
+  if (isRuntimeIdleStall(event, failure)) {
+    return new InferenceStreamStalledError(
+      readIdleMs(event.message),
+      providerFailureMetadata(failure, context),
+    );
+  }
+  if (isOversizedImageError(models.getCallError(event.modelCall.modelCallId))) {
+    return new InferenceImageTooLargeError({
+      provider: context.provider,
+      modelId: context.modelId,
+      status: failure.upstreamStatus,
+      upstreamRequestId: failure.upstreamRequestId,
+    });
+  }
+  return mapProviderFailure(failure, context);
+}
+
+function mapProviderFailure(
+  failure: ProviderFailureFacts,
+  context: ProviderErrorContext,
+): ApplicationError {
+  if (failure.kind === 'connection') {
+    return new ProviderConnectionError(context);
+  }
+  if (failure.kind === 'timeout') return new ProviderTimeoutError(context);
+  if (failure.kind === 'server') return new ProviderServerError(context);
+  if (failure.kind === 'rate_limit') {
+    return new ProviderRequestRejectedError(context);
+  }
+  if (failure.kind === 'abort') {
+    return new InferenceAbortedError(providerFailureMetadata(failure, context));
+  }
+  return new InferenceFailedError(
+    'Provider inference failed',
+    providerFailureMetadata(failure, context),
+  );
+}
+
+function providerErrorContext(
+  provider: string,
+  modelId: string,
+  failure: ProviderFailureFacts,
+): ProviderErrorContext {
+  return {
+    provider,
+    modelId,
+    failureStage: failure.stage,
+    ...(failure.timeoutSource && { timeoutSource: failure.timeoutSource }),
+    ...(failure.upstreamStatus !== undefined && {
+      upstreamStatus: failure.upstreamStatus,
+    }),
+    ...(failure.upstreamRequestId && {
+      upstreamRequestId: failure.upstreamRequestId,
+    }),
+    ...(failure.retryAfterMs !== undefined && {
+      retryAfterMs: failure.retryAfterMs,
+    }),
+    ...(failure.transportCode && {
+      underlyingCode: failure.transportCode,
+    }),
+    ...(failure.host && { host: failure.host }),
+  };
+}
+
+function providerFailureMetadata(
+  failure: ProviderFailureFacts,
+  context: ProviderErrorContext,
+): ErrorMetadata {
+  return {
+    provider: context.provider,
+    modelId: context.modelId,
+    failureStage: failure.stage,
+    ...(failure.upstreamStatus !== undefined && {
+      status: failure.upstreamStatus,
+    }),
+    ...(failure.upstreamRequestId && {
+      upstreamRequestId: failure.upstreamRequestId,
+    }),
+    ...(failure.retryAfterMs !== undefined && {
+      retryAfterMs: failure.retryAfterMs,
+    }),
+    ...(failure.timeoutSource && { timeoutSource: failure.timeoutSource }),
+    ...(failure.transportCode && {
+      underlyingCode: failure.transportCode,
+    }),
+    ...(failure.host && { host: failure.host }),
+  };
+}
+
+const RUNTIME_IDLE_PREFIX = 'Model provider stream was idle for ';
+const MILLISECONDS_SUFFIX = 'ms';
+
+function isRuntimeIdleStall(
+  event: RunErrorEvent,
+  failure: ProviderFailureFacts,
+): boolean {
+  return (
+    failure.kind === 'timeout' &&
+    event.message.startsWith(RUNTIME_IDLE_PREFIX) &&
+    event.message.endsWith(MILLISECONDS_SUFFIX) &&
+    Number.isFinite(readIdleMs(event.message)) &&
+    readIdleMs(event.message) > 0
+  );
+}
+
+function readIdleMs(message: string): number {
+  return Number(
+    message.slice(RUNTIME_IDLE_PREFIX.length, -MILLISECONDS_SUFFIX.length),
+  );
+}
+
+function isOversizedImageError(error: unknown): boolean {
+  let current: unknown = error;
+  const seen = new Set<unknown>();
+  for (let depth = 0; depth < 8; depth++) {
+    if (current instanceof Error) {
+      const message = current.message.toLowerCase();
+      if (message.includes('image exceeds ') && message.includes(' maximum')) {
+        return true;
+      }
+    }
+    if (typeof current !== 'object' || current === null || seen.has(current)) {
+      return false;
+    }
+    seen.add(current);
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
+function mapRunError(
+  event: RunErrorEvent,
+  logger: Logger,
+  models?: RuntimeModelRegistry,
+): ApplicationError {
+  const hookFailure = mapRuntimeHookError(event, logger);
+  if (hookFailure) return hookFailure;
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
     // Checked before the generic reconstruction: the run error keeps the
     // user-facing code and localized message, while the classified provider
@@ -318,6 +478,10 @@ function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
   const runtimeModelError = reconstructRuntimeModelError(event.details);
   if (runtimeModelError instanceof ApplicationError) {
     return runtimeModelError;
+  }
+  const portableProviderError = mapPortableProviderError(event, models);
+  if (portableProviderError) {
+    return portableProviderError;
   }
   const mapper = RUN_ERROR_MAPPERS.get(event.code);
   if (mapper) {
