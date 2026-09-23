@@ -24,6 +24,7 @@ const CAPABILITY_DISCOVERY_TIMEOUT = { timeout: 10000 };
 describe('McpSdkClientAdapter', () => {
   let adapter: McpSdkClientAdapter;
   let clientPool: McpClientPoolService;
+  let configService: { get: jest.Mock };
   let clientMock: {
     connect: jest.Mock;
     close: jest.Mock;
@@ -66,7 +67,8 @@ describe('McpSdkClientAdapter', () => {
     (Client as unknown as jest.Mock).mockImplementation(() => clientMock);
 
     clientPool = new McpClientPoolService();
-    adapter = new McpSdkClientAdapter(clientPool);
+    configService = { get: jest.fn().mockReturnValue(false) };
+    adapter = new McpSdkClientAdapter(clientPool, configService as never);
   });
 
   afterEach(async () => {
@@ -84,7 +86,7 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('passes configured headers to the v2 HTTP transport', async () => {
+    it('preserves self-hosted transport while passing configured headers', async () => {
       await adapter.listTools(config);
 
       expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
@@ -95,6 +97,26 @@ describe('McpSdkClientAdapter', () => {
           onInsufficientScope: 'throw',
         },
       );
+    });
+
+    it('uses the guarded fetch boundary for all cloud transport requests', async () => {
+      const guardedFetch = { fetch: jest.fn() };
+      configService.get.mockReturnValue(true);
+      adapter = new McpSdkClientAdapter(
+        clientPool,
+        configService as never,
+        undefined,
+        undefined,
+        guardedFetch,
+      );
+
+      await adapter.listTools(config);
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
+        new URL(config.serverUrl),
+        expect.objectContaining({ fetch: guardedFetch.fetch }),
+      );
+      expect(configService.get).toHaveBeenCalledWith('app.isCloudHosted');
     });
 
     it('uses the guarded fetch boundary for OAuth transport requests', async () => {
@@ -122,6 +144,7 @@ describe('McpSdkClientAdapter', () => {
       const oauthFetch = { fetch: jest.fn() };
       adapter = new McpSdkClientAdapter(
         clientPool,
+        configService as never,
         providerFactory as never,
         integrations as never,
         oauthFetch,
@@ -146,7 +169,7 @@ describe('McpSdkClientAdapter', () => {
         new URL(config.serverUrl),
         expect.objectContaining({
           authProvider,
-          fetchFn: oauthFetch.fetch,
+          fetch: oauthFetch.fetch,
         }),
       );
     });

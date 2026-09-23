@@ -1,7 +1,9 @@
 import { Injectable, Optional, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   Client,
   StreamableHTTPClientTransport,
+  type StreamableHTTPClientTransportOptions,
 } from '@modelcontextprotocol/client';
 import {
   McpClientPort,
@@ -85,6 +87,7 @@ export class McpSdkClientAdapter extends McpClientPort {
 
   constructor(
     private readonly clientPool: McpClientPoolService,
+    private readonly configService: ConfigService,
     @Optional() private readonly oauthProviderFactory?: McpOAuthProviderFactory,
     @Optional() private readonly integrations?: McpIntegrationsRepositoryPort,
     @Optional() private readonly oauthFetch?: McpOAuthFetchPort,
@@ -327,17 +330,21 @@ export class McpSdkClientAdapter extends McpClientPort {
     // Otherwise, let the SDK handle the default headers (Accept, Content-Type, etc.)
     const hasHeaders = config.headers && Object.keys(config.headers).length > 0;
     const authProvider = await this.buildOAuthProvider(config);
-    const oauthFetch = authProvider ? this.requireOAuthFetch() : undefined;
+    const cloudHosted =
+      this.configService.get<boolean>('app.isCloudHosted') ?? false;
+    const useGuardedFetch = Boolean(authProvider ?? cloudHosted);
+    const guardedFetch = useGuardedFetch
+      ? this.requireGuardedFetch()
+      : undefined;
+    const transportOptions: StreamableHTTPClientTransportOptions = {
+      requestInit: hasHeaders ? { headers: { ...config.headers } } : undefined,
+      authProvider,
+      onInsufficientScope: 'throw',
+      ...(guardedFetch ? { fetch: guardedFetch.fetch } : {}),
+    };
     const transport = new StreamableHTTPClientTransport(
       new URL(config.serverUrl),
-      {
-        requestInit: hasHeaders
-          ? { headers: { ...config.headers } }
-          : undefined,
-        authProvider,
-        onInsufficientScope: 'throw',
-        ...(oauthFetch ? { fetchFn: oauthFetch.fetch } : {}),
-      },
+      transportOptions,
     );
 
     // Create client with capabilities
@@ -370,9 +377,9 @@ export class McpSdkClientAdapter extends McpClientPort {
     });
   }
 
-  private requireOAuthFetch(): McpOAuthFetchPort {
+  private requireGuardedFetch(): McpOAuthFetchPort {
     if (!this.oauthFetch)
-      throw new Error('OAuth fetch dependency is unavailable');
+      throw new Error('Guarded fetch dependency is unavailable');
     return this.oauthFetch;
   }
 }
