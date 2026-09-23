@@ -84,7 +84,10 @@ function backoff(ms: number): Promise<void> {
  * the `@ayunis` packages; this tier only owns host-side concerns.
  */
 export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandler {
-  private readonly providerCache = new Map<string, ModelProvider>();
+  private readonly providerCache = new Map<
+    string,
+    { revision: number; provider: ModelProvider }
+  >();
   protected readonly logger = new Logger(RuntimeStreamInferenceHandler.name);
 
   protected constructor(
@@ -104,15 +107,16 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
     return (chunk) => chunk;
   }
 
-  /** Memoizes the provider per model so the vendor SDK client is reused. */
+  /** Memoizes the provider per model revision so the vendor SDK client is reused. */
   private getProvider(model: Model): ModelProvider {
-    const cached = this.providerCache.get(model.name);
-    if (cached) {
-      return cached;
+    const revision = model.updatedAt.getTime();
+    const cached = this.providerCache.get(model.id);
+    if (cached?.revision === revision) {
+      return cached.provider;
     }
-    const created = this.createProvider(model);
-    this.providerCache.set(model.name, created);
-    return created;
+    const provider = this.createProvider(model);
+    this.providerCache.set(model.id, { revision, provider });
+    return provider;
   }
 
   /**

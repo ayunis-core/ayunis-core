@@ -4,11 +4,15 @@ import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
 
 import { azure, openai } from './openai-provider';
 
-const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
+const { chatCreateMock, responsesCreateMock } = vi.hoisted(() => ({
+  chatCreateMock: vi.fn(),
+  responsesCreateMock: vi.fn(),
+}));
 
 vi.mock('openai', () => {
   class FakeOpenAI {
-    chat = { completions: { create: createMock } };
+    chat = { completions: { create: chatCreateMock } };
+    responses = { create: responsesCreateMock };
   }
   return { default: FakeOpenAI, OpenAI: FakeOpenAI, AzureOpenAI: FakeOpenAI };
 });
@@ -68,6 +72,120 @@ describe('azure', () => {
     expect(provider.name).toBe('azure:gpt-4o-deployment');
     expect(typeof provider.stream).toBe('function');
   });
+
+  it('uses stateless Responses streaming with tools and reasoning', async () => {
+    responsesCreateMock.mockReturnValue(
+      fakeStream(
+        [
+          { type: 'response.output_text.delta', delta: 'I will search.' },
+          {
+            type: 'response.completed',
+            response: {
+              output: [{ type: 'message' }],
+              usage: { input_tokens: 17, output_tokens: 4 },
+            },
+          },
+        ],
+        () => {},
+      ),
+    );
+    const provider = azure({
+      apiKey: 'azure-test',
+      endpoint: 'https://my-resource.openai.azure.com',
+      model: 'gpt-6-astra',
+      reasoningEffort: 'low',
+    });
+    const request: ProviderRequest = {
+      instructions: 'Use official municipal sources.',
+      messages: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Find the retention policy.' }],
+        },
+      ],
+      tools: [
+        {
+          name: 'search',
+          description: 'Search municipal documents',
+          parameters: { type: 'object', properties: {} },
+        },
+      ],
+      toolChoice: 'auto',
+    };
+
+    const out: ProviderChunk[] = [];
+    for await (const chunk of provider.stream(request)) out.push(chunk);
+
+    expect(responsesCreateMock).toHaveBeenCalledWith(
+      {
+        model: 'gpt-6-astra',
+        instructions: 'Use official municipal sources.',
+        input: [{ role: 'user', content: 'Find the retention policy.' }],
+        tools: [
+          {
+            type: 'function',
+            name: 'search',
+            description: 'Search municipal documents',
+            parameters: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false,
+              required: [],
+            },
+            strict: true,
+          },
+        ],
+        tool_choice: 'auto',
+        reasoning: { effort: 'low' },
+        include: ['reasoning.encrypted_content'],
+        store: false,
+        stream: true,
+      },
+      undefined,
+    );
+    expect(chatCreateMock).not.toHaveBeenCalled();
+    expect(out).toEqual([
+      { textDelta: 'I will search.' },
+      {
+        finishReason: 'stop',
+        usage: { inputTokens: 17, outputTokens: 4 },
+      },
+    ]);
+  });
+
+  it('omits tool and reasoning options when they are unused', async () => {
+    responsesCreateMock.mockReturnValue(
+      fakeStream(
+        [
+          {
+            type: 'response.completed',
+            response: { output: [], usage: undefined },
+          },
+        ],
+        () => {},
+      ),
+    );
+    const provider = azure({
+      apiKey: 'azure-test',
+      endpoint: 'https://my-resource.openai.azure.com',
+      model: 'gpt-5.4',
+    });
+
+    const out: ProviderChunk[] = [];
+    for await (const chunk of provider.stream(makeRequest())) out.push(chunk);
+
+    expect(out).toEqual([{ finishReason: 'stop' }]);
+    expect(responsesCreateMock).toHaveBeenCalledWith(
+      {
+        model: 'gpt-5.4',
+        instructions: '',
+        input: [],
+        store: false,
+        stream: true,
+      },
+      undefined,
+    );
+  });
 });
 
 describe('streamChat', () => {
@@ -89,7 +207,7 @@ describe('streamChat', () => {
     };
 
     let pulls = 0;
-    createMock.mockReturnValue(
+    chatCreateMock.mockReturnValue(
       fakeStream([content, finish, usage, leak], () => {
         pulls++;
       }),
@@ -129,7 +247,7 @@ describe('streamChat', () => {
     };
 
     let pulls = 0;
-    createMock.mockReturnValue(
+    chatCreateMock.mockReturnValue(
       fakeStream([content, finish, usage, leak], () => {
         pulls++;
       }),
@@ -153,7 +271,7 @@ describe('streamChat', () => {
       choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
     };
 
-    createMock.mockReturnValue(fakeStream([content, finish], () => {}));
+    chatCreateMock.mockReturnValue(fakeStream([content, finish], () => {}));
 
     const provider = openai({ apiKey: 'sk-test', model: 'gpt-5' });
     const out: ProviderChunk[] = [];
