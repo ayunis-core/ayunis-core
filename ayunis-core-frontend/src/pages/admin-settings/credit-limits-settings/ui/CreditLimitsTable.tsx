@@ -92,7 +92,7 @@ function CreditLimitTableRow({
   const limitLabel =
     limit === null
       ? t('form.noLimit')
-      : limit.monthlyCredits.toLocaleString(i18n.language);
+      : `${limit.creditsUsed.toLocaleString(i18n.language)} / ${limit.monthlyCredits.toLocaleString(i18n.language)}`;
   return (
     <TableRow data-testid={`credit-limits-row-${row.id}`}>
       <TableCell>
