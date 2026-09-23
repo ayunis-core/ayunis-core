@@ -34,7 +34,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `McpOAuthAuthorizationService` — Starts and completes per-user OAuth authorization and disconnects grants
 - `McpOAuthClientConfigurationService` — Validates static client configuration and invalidates issuer-bound OAuth state when it changes
 - `McpOAuthProviderFactory` — Implements the SDK OAuth provider with durable discovery, registration, PKCE, tokens, and locked refresh
-- `McpOAuthFetchService` — Applies HTTPS, private-address, DNS-pinning, and same-origin redirect protections to every server-side OAuth request
+- `McpOAuthFetchService` — Applies HTTPS, private-address, DNS-pinning, and same-origin redirect protections to every server-side OAuth request and all MCP transport requests on cloud deployments
 
 **Ports:**
 

@@ -44,6 +44,7 @@ describe('McpIntegrationsController', () => {
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let listConfigsUseCase: jest.Mocked<ListPredefinedMcpIntegrationConfigsUseCase>;
   let oauthClientConfiguration: jest.Mocked<McpOAuthClientConfigurationService>;
+  let configService: jest.Mocked<Pick<ConfigService, 'get'>>;
   beforeEach(async () => {
     const mockCreateUseCase = {
       execute: jest.fn(),
@@ -179,6 +180,7 @@ describe('McpIntegrationsController', () => {
     validateUseCase = module.get(ValidateMcpIntegrationUseCase);
     listConfigsUseCase = module.get(ListPredefinedMcpIntegrationConfigsUseCase);
     oauthClientConfiguration = module.get(McpOAuthClientConfigurationService);
+    configService = module.get(ConfigService);
   });
 
   describe('createPredefined', () => {
@@ -272,6 +274,29 @@ describe('McpIntegrationsController', () => {
   });
 
   describe('createCustom', () => {
+    it('allows custom integrations on cloud deployments', async () => {
+      configService.get.mockReturnValue(true);
+      const dto: CreateCustomIntegrationDto = {
+        name: 'Council Archive',
+        serverUrl: 'https://archive.example.com/mcp',
+        configSchema: {
+          orgFields: [],
+          userFields: [],
+        },
+        orgConfigValues: {},
+      };
+      createUseCase.execute.mockResolvedValue(
+        aCustomMcpIntegration({
+          name: dto.name,
+          serverUrl: dto.serverUrl,
+        }),
+      );
+
+      const result = await controller.createCustom(dto);
+
+      expect(result.type).toBe('custom');
+    });
+
     it('forwards schema-configured credentials when creating custom integration', async () => {
       const dto: CreateCustomIntegrationDto = {
         name: 'Custom Server',

@@ -9,7 +9,6 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
-  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import {
@@ -64,7 +63,6 @@ import { InstallMarketplaceIntegrationCommand } from 'src/domain/mcp/application
 import { SetUserMcpConfigCommand } from 'src/domain/mcp/application/use-cases/set-user-mcp-config/set-user-mcp-config.command';
 import { GetUserMcpConfigQuery } from 'src/domain/mcp/application/use-cases/get-user-mcp-config/get-user-mcp-config.query';
 import { CredentialFieldValue } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
-import { ConfigService } from '@nestjs/config';
 import { McpOAuthAuthorizationService } from 'src/domain/mcp/application/services/mcp-oauth-authorization.service';
 import {
   CompleteMcpOAuthDto,
@@ -93,7 +91,6 @@ export class McpIntegrationsController {
     private readonly getUserMcpConfigUseCase: GetUserMcpConfigUseCase,
     private readonly responseMapper: McpIntegrationResponseMapper,
     private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
-    private readonly configService: ConfigService,
     private readonly oauthAuthorization: McpOAuthAuthorizationService,
   ) {}
 
@@ -176,14 +173,6 @@ export class McpIntegrationsController {
     @Body() dto: CreateCustomIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log({ name: dto.name, url: dto.serverUrl }, 'createCustom');
-
-    const isCloud =
-      this.configService.get<boolean>('app.isCloudHosted') ?? false;
-    if (isCloud) {
-      throw new ForbiddenException(
-        'Custom MCP integrations are not allowed on cloud',
-      );
-    }
 
     const configSchema = {
       authType: dto.configSchema.authType ?? 'CUSTOM',
