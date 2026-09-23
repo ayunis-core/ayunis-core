@@ -11,9 +11,11 @@ export interface WorkspaceListOptions {
   offset: number;
 }
 
-export interface WorkspaceThreadStats {
+export interface WorkspaceListStats {
   chatCount: number;
   lastActivityAt: Date | null;
+  skillCount: number;
+  knowledgeBaseCount: number;
 }
 
 export interface WorkspaceKnowledgeBaseRef {
@@ -38,12 +40,12 @@ export abstract class WorkspacesRepository {
   abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Workspace[]>;
 
   /**
-   * Chat count and latest chat activity per workspace, for the list page.
-   * Missing entries mean "no chats".
+   * Chat, skill and knowledge-base counts plus the latest chat activity per
+   * workspace, for the list page. Missing entries mean "nothing yet".
    */
-  abstract getThreadStats(
+  abstract getListStats(
     workspaceIds: UUID[],
-  ): Promise<Map<UUID, WorkspaceThreadStats>>;
+  ): Promise<Map<UUID, WorkspaceListStats>>;
   abstract findById(userId: UUID, id: UUID): Promise<Workspace | null>;
   abstract save(workspace: Workspace): Promise<Workspace>;
   abstract getContextRefs(workspaceId: UUID): Promise<WorkspaceContextRefs>;

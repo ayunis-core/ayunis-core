@@ -37,7 +37,7 @@ export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesReposito
   return {
     findAllByUserId: jest.fn().mockResolvedValue([]),
     findAllByIds: jest.fn().mockResolvedValue([]),
-    getThreadStats: jest.fn().mockResolvedValue(new Map()),
+    getListStats: jest.fn().mockResolvedValue(new Map()),
     findById: jest.fn().mockResolvedValue(null),
     getContextRefs: jest.fn().mockResolvedValue({
       skillIds: [],

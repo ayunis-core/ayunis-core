@@ -352,7 +352,7 @@ export const useInitiateChat = (options?: {
       queryKey: getThreadsControllerFindOneQueryKey(threadId),
     });
     if (workspaceId) {
-      // Workspace cards derive chatCount/lastActivityAt from these queries.
+      // The workspace list is ordered by chat activity, so it must refetch.
       void queryClient.invalidateQueries({
         queryKey: getWorkspacesControllerFindAllQueryKey(),
       });

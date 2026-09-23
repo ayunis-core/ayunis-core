@@ -80,6 +80,7 @@ export function ChatSidebarItem({
             className="rounded-lg"
             side="bottom"
             align="end"
+            collisionPadding={8}
             data-testid="chat-dropdown"
             onCloseAutoFocus={handleCloseAutoFocus}
           >

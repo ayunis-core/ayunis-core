@@ -12,6 +12,8 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 export interface WorkspaceListItem {
   workspace: Workspace;
   chatCount: number;
+  skillCount: number;
+  knowledgeBaseCount: number;
   /** Later of the workspace's own edit and its most recent chat activity. */
   lastActivityAt: Date;
 }
@@ -35,16 +37,18 @@ export class FindAllWorkspacesUseCase {
       this.resolveUserId(),
       query,
     );
-    const stats = await this.workspacesRepository.getThreadStats(
+    const stats = await this.workspacesRepository.getListStats(
       workspaces.data.map((workspace) => workspace.id),
     );
 
     const data = workspaces.data.map((workspace) => {
-      const threadStats = stats.get(workspace.id);
-      const chatActivity = threadStats?.lastActivityAt;
+      const workspaceStats = stats.get(workspace.id);
+      const chatActivity = workspaceStats?.lastActivityAt;
       return {
         workspace,
-        chatCount: threadStats?.chatCount ?? 0,
+        chatCount: workspaceStats?.chatCount ?? 0,
+        skillCount: workspaceStats?.skillCount ?? 0,
+        knowledgeBaseCount: workspaceStats?.knowledgeBaseCount ?? 0,
         lastActivityAt:
           chatActivity && chatActivity > workspace.updatedAt
             ? chatActivity

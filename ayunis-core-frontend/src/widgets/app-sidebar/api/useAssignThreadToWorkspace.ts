@@ -48,7 +48,7 @@ export function useAssignThreadToWorkspace() {
       void queryClient.invalidateQueries({
         queryKey: getThreadAiContextControllerGetAiContextQueryKey(threadId),
       });
-      // Workspace cards derive chatCount/lastActivityAt from the list query.
+      // The workspace list is ordered by chat activity, so it must refetch.
       void queryClient.invalidateQueries({
         queryKey: getWorkspacesControllerFindAllQueryKey(),
       });

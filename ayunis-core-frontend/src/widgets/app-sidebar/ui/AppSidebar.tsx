@@ -87,6 +87,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t('sidebar.newChat'),
       url: '/chat',
       icon: Plus,
+      exact: true,
       // Starting a conversation is a write, so it is blocked without a
       // certificate. Existing chats stay reachable.
       disabled: isAcademyGated,
@@ -97,6 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: t('sidebar.workspaces'),
             url: '/workspaces',
             icon: FolderOpen,
+            exact: true,
           },
         ]
       : []),
@@ -152,8 +154,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuButton
                   asChild
                   isActive={
-                    item.url === '/chat'
-                      ? location.pathname === '/chat'
+                    item.exact
+                      ? location.pathname === item.url
                       : location.pathname.startsWith(item.url)
                   }
                 >
