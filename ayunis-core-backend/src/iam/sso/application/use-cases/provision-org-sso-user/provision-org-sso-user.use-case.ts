@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InviteAlreadyAcceptedError } from 'src/iam/invites/application/invites.errors';
 import { AcceptPendingInviteCommand } from 'src/iam/invites/application/use-cases/accept-pending-invite/accept-pending-invite.command';
@@ -38,6 +39,8 @@ import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
 import type { Invite } from 'src/iam/invites/domain/invite.entity';
 import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
 import { emailDomainFromAddress } from 'src/iam/sso/domain/sso-connection-values';
+import { AssignUserToTeamsCommand } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.command';
+import { AssignUserToTeamsUseCase } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.use-case';
 
 interface ProvisioningResult {
   user: User;
@@ -59,6 +62,7 @@ export class ProvisionOrgSsoUserUseCase {
     private readonly createFederatedUser: CreateFederatedUserUseCase,
     private readonly findInvite: FindPendingInviteByEmailAndOrgUseCase,
     private readonly acceptInvite: AcceptPendingInviteUseCase,
+    private readonly assignUserToTeams: AssignUserToTeamsUseCase,
     private readonly assertSeatAvailable: AssertSeatAvailableUseCase,
     private readonly publishUserCreated: UserCreatedEventPublisher,
     private readonly publishUserUpdated: UserUpdatedEventPublisher,
@@ -127,6 +131,7 @@ export class ProvisionOrgSsoUserUseCase {
     const invite = await this.admissionInvite(command, lockedConnection);
     await this.consumeInvite(invite);
     const user = await this.createUserAndIdentity(command, invite);
+    await this.assignInviteTeams(invite, user.id);
     this.logProvisionedUser(user, invite);
     return { user, created: true, emailVerifiedChanged: false };
   }
@@ -172,7 +177,8 @@ export class ProvisionOrgSsoUserUseCase {
     if (localPasswordLoginEnabled) {
       throw new SsoAccountLinkRequiredError();
     }
-    await this.closePendingInviteForExistingAccount(command);
+    const invite = await this.closePendingInviteForExistingAccount(command);
+    await this.assignInviteTeams(invite, existingUser.id);
     const verification = await this.verifyUserEmail.execute(
       new VerifyUserEmailCommand(existingUser.id, login.email),
     );
@@ -197,19 +203,22 @@ export class ProvisionOrgSsoUserUseCase {
 
   private async closePendingInviteForExistingAccount(
     command: ProvisionOrgSsoUserCommand,
-  ): Promise<void> {
+  ): Promise<Invite | null> {
     const { login } = command;
     const invite = await this.findInvite.execute(
       new FindPendingInviteByEmailAndOrgQuery(login.email, login.orgId),
     );
-    if (!invite) return;
+    if (!invite) return null;
+    const expired = invite.expiresAt <= new Date();
     try {
       await this.acceptInvite.execute(
         new AcceptPendingInviteCommand(invite.id),
       );
     } catch (error: unknown) {
       if (!(error instanceof InviteAlreadyAcceptedError)) throw error;
+      return null;
     }
+    return expired ? null : invite;
   }
 
   private async admissionInvite(
@@ -268,6 +277,16 @@ export class ProvisionOrgSsoUserUseCase {
       }
       throw error;
     }
+  }
+
+  private async assignInviteTeams(
+    invite: Invite | null,
+    userId: UUID,
+  ): Promise<void> {
+    if (!invite) return;
+    await this.assignUserToTeams.execute(
+      new AssignUserToTeamsCommand(userId, invite.orgId, invite.teamIds),
+    );
   }
 
   private logProvisionedUser(user: User, invite: Invite | null): void {

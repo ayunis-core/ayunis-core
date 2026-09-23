@@ -1314,6 +1314,107 @@
         "tags": ["invites"]
       }
     },
+    "/super-admin/orgs/{orgId}/invites": {
+      "get": {
+        "operationId": "SuperAdminInvitesController_getInvites",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search invites by email",
+            "schema": {
+              "example": "john@example.com",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of invites to return",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of invites to skip",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns pending invites for the selected organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedInvitesListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List pending invites in an organization",
+        "tags": ["Super Admin Invites"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/invites/bulk": {
+      "post": {
+        "description": "Create invitations for a selected organization, including team assignments applied when each user joins.",
+        "operationId": "SuperAdminInvitesController_createBulk",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBulkInvitesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The invites have been processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBulkInvitesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create multiple invites in an organization",
+        "tags": ["Super Admin Invites"]
+      }
+    },
     "/super-admin/orgs": {
       "post": {
         "description": "Create a new organization in the system. Only accessible to users with the super admin system role.",
@@ -12271,6 +12372,15 @@
             "description": "Role to assign to the invited user",
             "enum": ["admin", "manager", "user"],
             "example": "user"
+          },
+          "teamNames": {
+            "description": "Names of teams to assign after the invited user joins the organization",
+            "example": ["Research", "Operations"],
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": ["email", "role"]

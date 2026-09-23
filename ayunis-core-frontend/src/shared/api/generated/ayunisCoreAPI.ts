@@ -214,6 +214,7 @@ import type {
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
   SuperAdminAcademyChapterResponseDto,
+  SuperAdminInvitesControllerGetInvitesParams,
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
@@ -2930,6 +2931,177 @@ export const useInvitesControllerDeleteInvite = <TError = void,
         TContext
       > => {
       return useMutation(getInvitesControllerDeleteInviteMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List pending invites in an organization
+ */
+export const superAdminInvitesControllerGetInvites = (
+    orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<PaginatedInvitesListResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminInvitesControllerGetInvitesQueryKey = (orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams,) => {
+    return [
+    `/super-admin/orgs/${orgId}/invites`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminInvitesControllerGetInvitesQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>> = ({ signal }) => superAdminInvitesControllerGetInvites(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminInvitesControllerGetInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>>
+export type SuperAdminInvitesControllerGetInvitesQueryError = unknown
+
+
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminInvitesControllerGetInvitesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List pending invites in an organization
+ */
+
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminInvitesControllerGetInvitesQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Create invitations for a selected organization, including team assignments applied when each user joins.
+ * @summary Create multiple invites in an organization
+ */
+export const superAdminInvitesControllerCreateBulk = (
+    orgId: string,
+    createBulkInvitesDto: CreateBulkInvitesDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<CreateBulkInvitesResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createBulkInvitesDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminInvitesControllerCreateBulkMutationKey = () => ['superAdminInvitesControllerCreateBulk'] as const;
+
+export const getSuperAdminInvitesControllerCreateBulkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, TError,SuperAdminInvitesControllerCreateBulkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, TError,SuperAdminInvitesControllerCreateBulkMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminInvitesControllerCreateBulkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, SuperAdminInvitesControllerCreateBulkMutationVariables> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminInvitesControllerCreateBulk(orgId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminInvitesControllerCreateBulkMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>>
+    export type SuperAdminInvitesControllerCreateBulkMutationBody = CreateBulkInvitesDto
+    export type SuperAdminInvitesControllerCreateBulkMutationError = unknown
+    export type SuperAdminInvitesControllerCreateBulkMutationVariables = {orgId: string;data: CreateBulkInvitesDto}
+
+    /**
+ * @summary Create multiple invites in an organization
+ */
+export const useSuperAdminInvitesControllerCreateBulk = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, TError,SuperAdminInvitesControllerCreateBulkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>,
+        TError,
+        SuperAdminInvitesControllerCreateBulkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminInvitesControllerCreateBulkMutationOptions(options), queryClient);
     }
 
 /**

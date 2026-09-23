@@ -10,7 +10,7 @@ import {
   InviteAlreadyAcceptedError,
   UnexpectedInviteError,
 } from 'src/iam/invites/application/invites.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { getInviteExpiresAt } from 'src/iam/invites/application/services/invite-expiration.util';
 
 interface ResendExpiredInviteResult {
@@ -28,80 +28,71 @@ export class ResendExpiredInviteUseCase {
     private readonly configService: ConfigService,
   ) {}
 
-  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(
     command: ResendExpiredInviteCommand,
   ): Promise<ResendExpiredInviteResult> {
     this.logger.log({ inviteId: command.inviteId }, 'execute');
+    return await this.resend(command);
+  }
 
-    try {
-      // 1. Find the existing invite
-      const existingInvite = await this.invitesRepository.findOne(
-        command.inviteId,
-      );
-      if (!existingInvite) {
-        throw new InviteNotFoundError(command.inviteId);
-      }
+  private async resend(
+    command: ResendExpiredInviteCommand,
+  ): Promise<ResendExpiredInviteResult> {
+    const existingInvite = await this.invitesRepository.findOne(
+      command.inviteId,
+    );
+    this.validateExistingInvite(existingInvite, command.inviteId);
 
-      // 2. Verify invite is not already accepted
-      if (existingInvite.acceptedAt) {
-        throw new InviteAlreadyAcceptedError();
-      }
+    await this.invitesRepository.delete(command.inviteId);
+    const newInvite = this.createReplacementInvite(existingInvite);
+    await this.invitesRepository.create(newInvite);
 
-      // 3. Verify it is actually expired
-      if (existingInvite.expiresAt >= new Date()) {
-        throw new InviteNotExpiredError(command.inviteId);
-      }
+    this.logger.debug(
+      {
+        oldInviteId: command.inviteId,
+        newInviteId: newInvite.id,
+        email: newInvite.email,
+      },
+      'Expired invite resent successfully',
+    );
 
-      // 4. Delete the expired invite
-      await this.invitesRepository.delete(command.inviteId);
-
-      // 5. Create a new invite with the same data
-      const validDuration = this.configService.get<string>(
-        'auth.jwt.inviteExpiresIn',
-        '7d',
-      );
-      const inviteExpiresAt = getInviteExpiresAt(validDuration);
-
-      const newInvite = new Invite({
-        email: existingInvite.email,
-        orgId: existingInvite.orgId,
-        role: existingInvite.role,
-        inviterId: existingInvite.inviterId,
-        expiresAt: inviteExpiresAt,
-      });
-
-      await this.invitesRepository.create(newInvite);
-
-      // 6. Generate JWT token for the new invite
-      const inviteToken = this.inviteJwtService.generateInviteToken({
+    return {
+      token: this.inviteJwtService.generateInviteToken({
         inviteId: newInvite.id,
-      });
+      }),
+      invite: newInvite,
+    };
+  }
 
-      this.logger.debug(
-        {
-          oldInviteId: command.inviteId,
-          newInviteId: newInvite.id,
-          email: newInvite.email,
-        },
-        'Expired invite resent successfully',
-      );
-
-      return {
-        token: inviteToken,
-        invite: newInvite,
-      };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error resending expired invite',
-      );
-      throw new UnexpectedInviteError(error as Error);
+  private validateExistingInvite(
+    invite: Invite | null,
+    inviteId: string,
+  ): asserts invite is Invite {
+    if (!invite) {
+      throw new InviteNotFoundError(inviteId);
     }
+    if (invite.acceptedAt) {
+      throw new InviteAlreadyAcceptedError();
+    }
+    if (invite.expiresAt >= new Date()) {
+      throw new InviteNotExpiredError(inviteId);
+    }
+  }
+
+  private createReplacementInvite(existingInvite: Invite): Invite {
+    const validDuration = this.configService.get<string>(
+      'auth.jwt.inviteExpiresIn',
+      '7d',
+    );
+
+    return new Invite({
+      email: existingInvite.email,
+      orgId: existingInvite.orgId,
+      role: existingInvite.role,
+      inviterId: existingInvite.inviterId,
+      expiresAt: getInviteExpiresAt(validDuration),
+      teamIds: existingInvite.teamIds,
+    });
   }
 }

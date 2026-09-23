@@ -1,8 +1,11 @@
-import type { APIRequestContext, APIResponse } from '@playwright/test';
-import { config } from '../../config';
-import type { AcceptInviteDto } from '../generated/ayunisCoreAPI.schemas';
-import { CreateInviteDtoRole } from '../generated/ayunisCoreAPI.schemas';
-import { generatedApi } from './generated-api';
+import type { APIRequestContext, APIResponse } from "@playwright/test";
+import { config } from "../../config";
+import type { AcceptInviteDto } from "../generated/ayunisCoreAPI.schemas";
+import {
+  CreateBulkInviteItemDtoRole,
+  CreateInviteDtoRole,
+} from "../generated/ayunisCoreAPI.schemas";
+import { generatedApi } from "./generated-api";
 
 export async function inviteUser(
   api: APIRequestContext,
@@ -27,4 +30,32 @@ export async function acceptInvite(
   input: AcceptInviteDto,
 ): Promise<void> {
   await generatedApi.invitesControllerAcceptInvite(input, { api });
+}
+
+export async function bulkInviteUser(
+  api: APIRequestContext,
+  email: string,
+  teamNames: string[],
+): Promise<void> {
+  await generatedApi.invitesControllerCreateBulk(
+    {
+      invites: [{ email, role: CreateBulkInviteItemDtoRole.user, teamNames }],
+    },
+    { api },
+  );
+}
+
+export async function bulkInviteUserAsSuperAdmin(
+  api: APIRequestContext,
+  orgId: string,
+  email: string,
+  teamNames: string[],
+): Promise<void> {
+  await generatedApi.superAdminInvitesControllerCreateBulk(
+    orgId,
+    {
+      invites: [{ email, role: CreateBulkInviteItemDtoRole.user, teamNames }],
+    },
+    { api },
+  );
 }

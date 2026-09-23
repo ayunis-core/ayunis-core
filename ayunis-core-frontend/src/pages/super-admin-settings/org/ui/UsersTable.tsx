@@ -25,6 +25,10 @@ import SuperAdminUsersSearch from './SuperAdminUsersSearch';
 import SuperAdminUsersPagination from './SuperAdminUsersPagination';
 import { SuperAdminUserActions } from '@/widgets/super-admin-user-actions';
 import { UserLockStatus } from '@/widgets/user-lock-status';
+import { BulkInviteDialog } from '@/features/bulk-user-invite';
+import { Button } from '@ayunis/ui/components/button';
+import { Upload } from 'lucide-react';
+import { useState } from 'react';
 
 interface UsersTableProps {
   users: UserResponseDto[];
@@ -42,6 +46,8 @@ export default function UsersTable({
   currentPage,
 }: Readonly<UsersTableProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+  const { t: tUsers } = useTranslation('admin-settings-users');
+  const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const roleLabels: Record<UserResponseDtoRole, string> = {
     admin: t('table.roleAdmin'),
     manager: t('table.roleManager'),
@@ -64,7 +70,17 @@ export default function UsersTable({
             </CardTitle>
             <CardDescription>{t('header.description')}</CardDescription>
           </div>
-          <CreateUserDialog orgId={orgId} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setBulkInviteOpen(true)}
+              data-testid="super-admin-bulk-invite"
+            >
+              <Upload />
+              {tUsers('inviteMenu.inviteMany')}
+            </Button>
+            <CreateUserDialog orgId={orgId} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -133,6 +149,11 @@ export default function UsersTable({
           </>
         )}
       </CardContent>
+      <BulkInviteDialog
+        open={bulkInviteOpen}
+        onOpenChange={setBulkInviteOpen}
+        orgId={orgId}
+      />
     </Card>
   );
 }

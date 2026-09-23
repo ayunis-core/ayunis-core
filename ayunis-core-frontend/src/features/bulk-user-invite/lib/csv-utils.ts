@@ -20,9 +20,11 @@ export interface CsvError {
 export interface ParsedInvite {
   email: string;
   role: CreateInviteDtoRole;
+  teamNames: string[];
   rowNumber: number;
   isValid: boolean;
   error?: CsvError;
+  serverError?: string;
 }
 
 export interface CsvParseResult {
@@ -96,10 +98,13 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
   const headers = headerLine.split(separator).map((h) => h.trim());
 
   // Validate headers
-  const expectedHeaders = ['email', 'role'];
+  const requiredHeaders = ['email', 'role'];
   const headersMatch =
-    headers.length === expectedHeaders.length &&
-    headers.every((h, i) => h === expectedHeaders[i]);
+    (headers.length === requiredHeaders.length || headers.length === 3) &&
+    headers
+      .slice(0, requiredHeaders.length)
+      .every((header, index) => header === requiredHeaders[index]) &&
+    (headers.length === 2 || headers[2] === 'teams');
 
   if (!headersMatch) {
     return {
@@ -121,11 +126,12 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     // Simple CSV parsing (handles basic cases)
     const values = parseCsvLine(line, separator);
 
-    if (values.length !== 2) {
+    if (values.length !== headers.length) {
       const error: CsvError = { code: 'INVALID_ROW_FORMAT', row: rowNumber };
       result.push({
         email: values[0] || '',
         role: 'user',
+        teamNames: [],
         rowNumber,
         isValid: false,
         error,
@@ -134,7 +140,7 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
       continue;
     }
 
-    const [email, roleValue] = values;
+    const [email, roleValue, teamsValue = ''] = values;
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = roleValue.trim().toLowerCase();
 
@@ -153,6 +159,7 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     result.push({
       email: email.trim(),
       role: normalizedRole as CreateInviteDtoRole,
+      teamNames: parseTeamNames(teamsValue),
       rowNumber,
       isValid,
       error,
@@ -164,6 +171,29 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     data: result,
     errors,
   };
+}
+
+function parseTeamNames(value: string): string[] {
+  const names: string[] = [];
+  let current = '';
+  let escaping = false;
+
+  for (const char of value) {
+    if (escaping) {
+      current += char === '|' || char === '\\' ? char : `\\${char}`;
+      escaping = false;
+    } else if (char === '\\') {
+      escaping = true;
+    } else if (char === '|') {
+      names.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  names.push(`${current}${escaping ? '\\' : ''}`.trim());
+
+  return [...new Set(names.filter(Boolean))];
 }
 
 /**
@@ -198,7 +228,7 @@ function parseCsvLine(line: string, separator: ',' | ';'): string[] {
 }
 
 export function generateInviteTemplate(): string {
-  return 'email,role\nuser@example.com,user\nmanager@example.com,manager\nadmin@example.com,admin';
+  return 'email,role,teams\nuser@example.com,user,Research|Operations\nmanager@example.com,manager,Research\nadmin@example.com,admin,';
 }
 
 export function generateUrlsCsv(

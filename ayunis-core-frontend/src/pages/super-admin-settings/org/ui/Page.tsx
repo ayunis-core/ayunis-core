@@ -5,6 +5,7 @@ import type {
   UserResponseDto,
   SuperAdminTrialResponseDto,
   PaginationDto,
+  InviteResponseDto,
 } from '@/shared/api';
 import UsersTable from './UsersTable';
 import OrgDetails from './OrgDetails';
@@ -26,6 +27,9 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
+import SuperAdminInvitesSection from './SuperAdminInvitesSection';
+import SuperAdminInvitesSearch from './SuperAdminInvitesSearch';
+import SuperAdminInvitesPagination from './SuperAdminInvitesPagination';
 
 interface SuperAdminSettingsOrgPageProps {
   org: SuperAdminOrgResponseDto;
@@ -33,6 +37,10 @@ interface SuperAdminSettingsOrgPageProps {
   usersPagination?: PaginationDto;
   usersSearch?: string;
   usersCurrentPage: number;
+  invites: InviteResponseDto[];
+  invitesPagination?: PaginationDto;
+  invitesSearch?: string;
+  invitesCurrentPage: number;
   subscription: SubscriptionResponseDto | null;
   subscriptionHistory?: SubscriptionHistoryItem[];
   activeSubscriptionCount?: number;
@@ -54,6 +62,10 @@ export default function SuperAdminSettingsOrgPage({
   usersPagination,
   usersSearch,
   usersCurrentPage,
+  invites,
+  invitesPagination,
+  invitesSearch,
+  invitesCurrentPage,
   subscription,
   subscriptionHistory = [],
   activeSubscriptionCount = 0,
@@ -66,6 +78,9 @@ export default function SuperAdminSettingsOrgPage({
   const { id } = useParams({
     from: '/_authenticated/super-admin-settings/orgs/$id',
   });
+  const invitesTotal = invitesPagination?.total ?? 0;
+  const invitesLimit = invitesPagination?.limit ?? 10;
+  const invitesTotalPages = Math.ceil(invitesTotal / invitesLimit);
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -125,13 +140,33 @@ export default function SuperAdminSettingsOrgPage({
           <OrgDetails org={org} />
         </TabsContent>
         <TabsContent value="users" className="mt-4">
-          <UsersTable
-            users={users}
-            orgId={org.id}
-            pagination={usersPagination}
-            search={usersSearch}
-            currentPage={usersCurrentPage}
-          />
+          <div className="space-y-4">
+            <SuperAdminInvitesSection
+              invites={invites}
+              total={invitesTotal}
+              searchSlot={
+                <SuperAdminInvitesSearch
+                  search={invitesSearch}
+                  orgId={org.id}
+                />
+              }
+              paginationSlot={
+                <SuperAdminInvitesPagination
+                  currentPage={invitesCurrentPage}
+                  totalPages={invitesTotalPages}
+                  search={invitesSearch}
+                  orgId={org.id}
+                />
+              }
+            />
+            <UsersTable
+              users={users}
+              orgId={org.id}
+              pagination={usersPagination}
+              search={usersSearch}
+              currentPage={usersCurrentPage}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="subscriptions" className="mt-4">
           <SubscriptionsTab
