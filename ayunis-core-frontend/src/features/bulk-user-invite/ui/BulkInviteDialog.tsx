@@ -33,8 +33,12 @@ import {
   downloadCsv,
   type ParsedInvite,
   type CsvError,
-} from '../lib/csv-utils';
-import { useBulkInviteCreate } from '../api/useBulkInviteCreate';
+} from '@/features/bulk-user-invite/lib/csv-utils';
+import {
+  type BulkInviteValidationError,
+  useBulkInviteCreate,
+} from '@/features/bulk-user-invite/api/useBulkInviteCreate';
+import { applyValidationErrors } from '@/features/bulk-user-invite/lib/apply-validation-errors';
 import BulkInviteResultsContent from './BulkInviteResultsContent';
 import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { Badge } from '@ayunis/ui/components/badge';
@@ -44,11 +48,13 @@ type DialogStep = 'upload' | 'preview' | 'submitting' | 'results';
 interface BulkInviteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  orgId?: string;
 }
 
 export default function BulkInviteDialog({
   open,
   onOpenChange,
+  orgId,
 }: Readonly<BulkInviteDialogProps>) {
   const { t } = useTranslation('admin-settings-users');
   const [step, setStep] = useState<DialogStep>('upload');
@@ -84,12 +90,13 @@ export default function BulkInviteDialog({
   }, [handleOpenChange]);
 
   const { createBulkInvites } = useBulkInviteCreate(
+    orgId,
     (response: CreateBulkInvitesResponseDto) => {
       setResults(response);
       setStep('results');
     },
-    () => {
-      // On error, go back to preview step so user can retry
+    (errors: BulkInviteValidationError[]) => {
+      setParsedData((current) => applyValidationErrors(current, errors, t));
       setStep('preview');
     },
   );
@@ -208,6 +215,7 @@ export default function BulkInviteDialog({
       .map((item) => ({
         email: item.email,
         role: item.role,
+        teamNames: item.teamNames,
       }));
 
     if (validInvites.length > 0) {
@@ -263,6 +271,7 @@ export default function BulkInviteDialog({
           </Button>
           <input
             ref={fileInputRef}
+            data-testid="bulk-invite-file-input"
             type="file"
             accept=".csv"
             onChange={handleFileSelect}
@@ -306,9 +315,9 @@ export default function BulkInviteDialog({
 
   // Preview Step
   const previewContent = (
-    <div className="space-y-4">
-      <div className="max-h-[300px] overflow-auto border rounded-md">
-        <Table>
+    <div className="min-w-0 space-y-4">
+      <div className="max-h-[300px] w-full overflow-auto rounded-md border">
+        <Table className="min-w-[620px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[60px]">
@@ -318,6 +327,7 @@ export default function BulkInviteDialog({
               <TableHead className="w-[100px]">
                 {t('bulkInvite.role')}
               </TableHead>
+              <TableHead>{t('bulkInvite.teams')}</TableHead>
               <TableHead className="w-[100px]">
                 {t('bulkInvite.status')}
               </TableHead>
@@ -340,12 +350,23 @@ export default function BulkInviteDialog({
                         {translateCsvError(item.error)}
                       </span>
                     )}
+                    {item.serverError && (
+                      <span
+                        className="text-xs text-destructive"
+                        data-testid={`bulk-invite-server-error-${item.rowNumber}`}
+                      >
+                        {item.serverError}
+                      </span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="capitalize">
                     {item.role}
                   </Badge>
+                </TableCell>
+                <TableCell className="max-w-[220px]">
+                  {item.teamNames.length > 0 ? item.teamNames.join(', ') : '—'}
                 </TableCell>
                 <TableCell>
                   {item.isValid ? (
@@ -378,6 +399,7 @@ export default function BulkInviteDialog({
           type="button"
           onClick={handleSubmit}
           disabled={!allValid || parsedData.length === 0}
+          data-testid="bulk-invite-submit"
         >
           {t('bulkInvite.submit', { count: validCount })}
         </Button>
@@ -447,7 +469,10 @@ export default function BulkInviteDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent
+        className="w-[calc(100vw-2rem)] min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden sm:max-w-[700px]"
+        data-testid="bulk-invite-dialog"
+      >
         <DialogHeader>
           <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>{getDescription()}</DialogDescription>

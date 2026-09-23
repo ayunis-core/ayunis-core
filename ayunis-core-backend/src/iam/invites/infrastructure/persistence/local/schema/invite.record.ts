@@ -1,9 +1,10 @@
-import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { InviteTeamRecord } from 'src/iam/invites/infrastructure/persistence/local/schema/invite-team.record';
 
 @Entity({ name: 'invites' })
 export class InviteRecord extends BaseRecord {
@@ -36,4 +37,9 @@ export class InviteRecord extends BaseRecord {
 
   @Column()
   expiresAt: Date;
+
+  @OneToMany(() => InviteTeamRecord, (inviteTeam) => inviteTeam.invite, {
+    cascade: ['insert'],
+  })
+  inviteTeams?: InviteTeamRecord[];
 }

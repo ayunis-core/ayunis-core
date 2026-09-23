@@ -1,10 +1,11 @@
-import type { APIRequestContext } from '@playwright/test';
+import type { APIRequestContext } from "@playwright/test";
 import type {
+  PaginatedTeamMembersResponseDto,
   PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
   TeamResponseDto,
-} from '../generated/ayunisCoreAPI.schemas';
-import { generatedApi } from './generated-api';
+} from "../generated/ayunisCoreAPI.schemas";
+import { generatedApi } from "./generated-api";
 
 export function createTeam(
   api: APIRequestContext,
@@ -18,11 +19,24 @@ export async function addTeamMember(
   teamId: string,
   userId: string,
 ): Promise<void> {
-  await generatedApi.teamsControllerAddTeamMember(
+  await generatedApi.teamsControllerAddTeamMember(teamId, { userId }, { api });
+}
+
+export function listTeamMembers(
+  api: APIRequestContext,
+  teamId: string,
+): Promise<PaginatedTeamMembersResponseDto> {
+  return generatedApi.teamsControllerListTeamMembers(
     teamId,
-    { userId },
+    { limit: 100, offset: 0 },
     { api },
   );
+}
+
+export function listMyTeams(
+  api: APIRequestContext,
+): Promise<TeamResponseDto[]> {
+  return generatedApi.teamsControllerListMyTeams({ api });
 }
 
 export async function setTeamModelOverride(

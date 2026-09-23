@@ -30,6 +30,8 @@ import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-v
 import type { User } from 'src/iam/users/domain/user.entity';
 import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
 import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import { AssignUserToTeamsCommand } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.command';
+import { AssignUserToTeamsUseCase } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.use-case';
 
 @Injectable()
 export class AcceptInviteUseCase {
@@ -44,6 +46,7 @@ export class AcceptInviteUseCase {
     private readonly publishUserCreated: UserCreatedEventPublisher,
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
     private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
+    private readonly assignUserToTeams: AssignUserToTeamsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
@@ -92,7 +95,14 @@ export class AcceptInviteUseCase {
     if (!(await this.invitesRepository.accept(invite.id))) {
       throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
     }
-    return this.createUserUseCase.createPreparedWithoutPublishing(preparedUser);
+    const user =
+      await this.createUserUseCase.createPreparedWithoutPublishing(
+        preparedUser,
+      );
+    await this.assignUserToTeams.execute(
+      new AssignUserToTeamsCommand(user.id, invite.orgId, invite.teamIds),
+    );
+    return user;
   }
 
   private async resolveValidatedInvite(

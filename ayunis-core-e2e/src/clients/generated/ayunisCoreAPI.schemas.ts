@@ -327,6 +327,11 @@ export interface CreateBulkInviteItemDto {
   email: string;
   /** Role to assign to the invited user */
   role: CreateBulkInviteItemDtoRole;
+  /**
+     * Names of teams to assign after the invited user joins the organization
+     * @maxItems 50
+     */
+  teamNames?: string[];
 }
 
 export interface CreateBulkInvitesDto {
@@ -5518,6 +5523,21 @@ search?: string;
 limit?: number;
 /**
  * Number of invites to skip (default: 0)
+ */
+offset?: number;
+};
+
+export type SuperAdminInvitesControllerGetInvitesParams = {
+/**
+ * Search invites by email
+ */
+search?: string;
+/**
+ * Maximum number of invites to return
+ */
+limit?: number;
+/**
+ * Number of invites to skip
  */
 offset?: number;
 };

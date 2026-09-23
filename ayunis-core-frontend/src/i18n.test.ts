@@ -34,3 +34,31 @@ describe('language preference persistence', () => {
     expect(window.localStorage.getItem('ayunis-language')).toBe('en');
   });
 });
+
+describe('bulk invite success pluralization', () => {
+  afterAll(async () => {
+    await i18n.changeLanguage('de');
+  });
+
+  it('uses the singular German form for one invitation', async () => {
+    await i18n.changeLanguage('de');
+
+    expect(
+      i18n.t('bulkInvite.allSuccess', {
+        ns: 'admin-settings-users',
+        count: 1,
+      }),
+    ).toBe('1 Einladung erfolgreich erstellt!');
+  });
+
+  it('uses the plural German form for multiple invitations', async () => {
+    await i18n.changeLanguage('de');
+
+    expect(
+      i18n.t('bulkInvite.allSuccess', {
+        ns: 'admin-settings-users',
+        count: 3,
+      }),
+    ).toBe('Alle 3 Einladungen erfolgreich erstellt!');
+  });
+});

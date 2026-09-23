@@ -24,6 +24,7 @@ import { UserCreatedEventPublisher } from 'src/iam/users/application/services/us
 import { User } from 'src/iam/users/domain/user.entity';
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import { AssignUserToTeamsUseCase } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.use-case';
 
 describe('AcceptInviteUseCase', () => {
   let useCase: AcceptInviteUseCase;
@@ -35,6 +36,7 @@ describe('AcceptInviteUseCase', () => {
   let mockPublishUserCreated: Partial<UserCreatedEventPublisher>;
   let mockAcquireAllocationLock: Partial<AcquireSeatAllocationLockUseCase>;
   let mockGetOrgAuthenticationPolicy: { execute: jest.Mock };
+  let mockAssignUserToTeams: { execute: jest.Mock };
 
   const inviteId = 'invite-id' as UUID;
   const orgId = 'org-id' as UUID;
@@ -65,6 +67,7 @@ describe('AcceptInviteUseCase', () => {
     mockPublishUserCreated = { publish: jest.fn() };
     mockAcquireAllocationLock = { execute: jest.fn() };
     mockGetOrgAuthenticationPolicy = { execute: jest.fn() };
+    mockAssignUserToTeams = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -91,6 +94,10 @@ describe('AcceptInviteUseCase', () => {
         {
           provide: GetOrgAuthenticationPolicyUseCase,
           useValue: mockGetOrgAuthenticationPolicy,
+        },
+        {
+          provide: AssignUserToTeamsUseCase,
+          useValue: mockAssignUserToTeams,
         },
       ],
     }).compile();
@@ -150,6 +157,45 @@ describe('AcceptInviteUseCase', () => {
       expect(mockPublishUserCreated.publish).toHaveBeenCalledWith(createdUser);
     },
   );
+
+  it('assigns every invited team before publishing the created user', async () => {
+    const teamIds = [
+      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' as UUID,
+      'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' as UUID,
+    ];
+    const invite = new Invite({
+      id: inviteId,
+      email: 'member@example.com',
+      orgId,
+      role: UserRole.USER,
+      expiresAt: new Date(Date.now() + 86_400_000),
+      teamIds,
+    });
+    jest
+      .spyOn(mockInviteJwtService, 'verifyInviteToken')
+      .mockReturnValue({ inviteId, type: INVITE_TOKEN_TYPE });
+    jest.spyOn(mockInvitesRepository, 'findOne').mockResolvedValue(invite);
+    jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
+    jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
+
+    await useCase.execute(
+      new AcceptInviteCommand({
+        inviteToken: 'valid-token',
+        userName: 'Jane Doe',
+        password: 'securePass123',
+        hasAcceptedMarketing: false,
+      }),
+    );
+
+    expect(mockAssignUserToTeams.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: createdUser.id, orgId, teamIds }),
+    );
+    expect(
+      mockAssignUserToTeams.execute.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      jest.mocked(mockPublishUserCreated.publish!).mock.invocationCallOrder[0],
+    );
+  });
 
   it('passes department through to user creation', async () => {
     await acceptInviteWithRole(UserRole.USER, 'jugendamt');

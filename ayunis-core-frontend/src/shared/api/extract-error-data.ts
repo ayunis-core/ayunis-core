@@ -10,12 +10,14 @@ interface ErrorData {
   message: string;
   status: number;
   errors?: FieldError[];
+  metadata?: Record<string, unknown>;
 }
 
 interface ResponseData {
   code?: string;
   message?: string;
   errors?: FieldError[];
+  metadata?: Record<string, unknown>;
 }
 
 export default function extractErrorData(error: unknown): ErrorData {
@@ -28,6 +30,7 @@ export default function extractErrorData(error: unknown): ErrorData {
       message: message ?? 'An unknown error occurred',
       status: error.response?.status ?? 500,
       errors: responseData?.errors,
+      metadata: responseData?.metadata,
     };
   }
   throw error;

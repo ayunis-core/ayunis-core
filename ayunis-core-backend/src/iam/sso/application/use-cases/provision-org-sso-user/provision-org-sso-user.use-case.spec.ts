@@ -36,6 +36,7 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
   const createFederatedUser = { execute: jest.fn() };
   const findInvite = { execute: jest.fn() };
   const acceptInvite = { execute: jest.fn() };
+  const assignUserToTeams = { execute: jest.fn() };
   const assertSeat = { execute: jest.fn() };
   const publishUserCreated = { publish: jest.fn() };
   const publishUserUpdated = { publish: jest.fn() };
@@ -52,6 +53,7 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
     verifyUserEmail.execute.mockResolvedValue({ user: user(), changed: false });
     findInvite.execute.mockResolvedValue(null);
     acceptInvite.execute.mockResolvedValue(undefined);
+    assignUserToTeams.execute.mockResolvedValue(undefined);
     createFederatedUser.execute.mockResolvedValue(user());
     acquireAllocationLock.execute.mockResolvedValue(undefined);
   });
@@ -104,6 +106,22 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
     expect(acceptInvite.execute.mock.invocationCallOrder[0]).toBeLessThan(
       createFederatedUser.execute.mock.invocationCallOrder[0],
     );
+  });
+
+  it('assigns every invited team after creating an SSO user', async () => {
+    const teamIds = [randomUUID(), randomUUID()];
+    findInvite.execute.mockResolvedValue(
+      pendingInvite(UserRole.USER, new Date('2099-01-01'), teamIds),
+    );
+
+    await useCase().execute(command());
+
+    expect(assignUserToTeams.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER_ID, orgId: ORG_ID, teamIds }),
+    );
+    expect(
+      createFederatedUser.execute.mock.invocationCallOrder[0],
+    ).toBeLessThan(assignUserToTeams.execute.mock.invocationCallOrder[0]);
   });
 
   it('requires account linking when password invite acceptance wins the race', async () => {
@@ -363,6 +381,29 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
     expect(identities.create).toHaveBeenCalledWith(
       expect.objectContaining({ userId: USER_ID }),
     );
+    expect(assignUserToTeams.execute).not.toHaveBeenCalled();
+  });
+
+  it('ignores an expired invite when linking an existing SSO-only account', async () => {
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      false,
+    );
+    findUserByEmail.execute.mockResolvedValue(user());
+    findInvite.execute.mockResolvedValue(
+      pendingInvite(UserRole.USER, new Date('2020-01-01T00:00:00.000Z')),
+    );
+
+    await expect(useCase().execute(command())).resolves.toMatchObject({
+      id: USER_ID,
+    });
+    expect(acceptInvite.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ inviteId: expect.any(String) }),
+    );
+    expect(assignUserToTeams.execute).not.toHaveBeenCalled();
+    expect(identities.create).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER_ID }),
+    );
   });
 
   it('uses the locked current policy before first-login account linking', async () => {
@@ -441,6 +482,7 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
       createFederatedUser as never,
       findInvite as never,
       acceptInvite as never,
+      assignUserToTeams as never,
       assertSeat as never,
       publishUserCreated as never,
       publishUserUpdated as never,
@@ -492,11 +534,16 @@ function user(orgId = ORG_ID, emailVerified = true): User {
   });
 }
 
-function pendingInvite(role: UserRole, expiresAt = new Date('2099-01-01')) {
+function pendingInvite(
+  role: UserRole,
+  expiresAt = new Date('2099-01-01'),
+  teamIds: ReturnType<typeof randomUUID>[] = [],
+) {
   return new Invite({
     email: 'staff@stadt.example',
     orgId: ORG_ID,
     role,
     expiresAt,
+    teamIds,
   });
 }

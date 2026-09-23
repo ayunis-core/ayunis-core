@@ -46,6 +46,7 @@ import { SsoBrokerSessionRecord } from 'src/iam/sso/infrastructure/persistence/p
 import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-broker-session-cleanup.task';
 import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
 import { SetOrgLocalPasswordLoginEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-local-password-login-enabled/set-org-local-password-login-enabled.use-case';
+import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { SetOrgLocalPasswordLoginEnabledUseCase } from 'src/iam/sso/application/
     ]),
     OrgsModule,
     InvitesModule,
+    TeamsApplicationModule,
     SubscriptionsModule,
     UsersModule,
     SessionsModule,

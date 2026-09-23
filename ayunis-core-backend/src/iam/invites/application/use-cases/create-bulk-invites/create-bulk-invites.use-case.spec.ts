@@ -33,6 +33,8 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 import { BulkInviteDeliveryService } from 'src/iam/invites/application/services/bulk-invite-delivery.service';
 import { BulkInviteValidatorService } from 'src/iam/invites/application/services/bulk-invite-validator.service';
 import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
+import { BulkInviteTeamResolverService } from 'src/iam/invites/application/services/bulk-invite-team-resolver.service';
+import type { UUID } from 'crypto';
 
 describe('CreateBulkInvitesUseCase', () => {
   let useCase: CreateBulkInvitesUseCase;
@@ -44,9 +46,10 @@ describe('CreateBulkInvitesUseCase', () => {
   let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let acquireAllocationLock: jest.Mocked<AcquireSeatAllocationLockUseCase>;
+  let teamResolver: jest.Mocked<BulkInviteTeamResolverService>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
 
   beforeEach(async () => {
     const mockInvitesRepository = {
@@ -86,6 +89,13 @@ describe('CreateBulkInvitesUseCase', () => {
       execute: jest.fn(),
     };
 
+    const mockTeamResolver = {
+      resolve: jest.fn().mockImplementation((command) => ({
+        teamIdsByInvite: command.invites.map(() => []),
+        errors: [],
+      })),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBulkInvitesUseCase,
@@ -109,6 +119,10 @@ describe('CreateBulkInvitesUseCase', () => {
           provide: AcquireSeatAllocationLockUseCase,
           useValue: mockAcquireAllocationLock,
         },
+        {
+          provide: BulkInviteTeamResolverService,
+          useValue: mockTeamResolver,
+        },
       ],
     }).compile();
 
@@ -121,6 +135,7 @@ describe('CreateBulkInvitesUseCase', () => {
     updateSeatsUseCase = module.get(UpdateSeatsUseCase);
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
     acquireAllocationLock = module.get(AcquireSeatAllocationLockUseCase);
+    teamResolver = module.get(BulkInviteTeamResolverService);
   });
 
   afterEach(() => {
@@ -198,6 +213,72 @@ describe('CreateBulkInvitesUseCase', () => {
           expect.objectContaining({ email: 'user2@example.com' }),
         ]),
       );
+    });
+
+    it('persists every resolved team on its invite', async () => {
+      const researchId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' as UUID;
+      const operationsId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' as UUID;
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          {
+            email: 'user1@example.com',
+            role: UserRole.USER,
+            teamNames: ['Research', 'Operations'],
+          },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+      setupDefaultConfigMocks();
+      invitesRepository.findByEmails.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+      teamResolver.resolve.mockResolvedValue({
+        teamIdsByInvite: [[researchId, operationsId]],
+        errors: [],
+      });
+
+      await useCase.execute(command);
+
+      expect(invitesRepository.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({
+          email: 'user1@example.com',
+          teamIds: [researchId, operationsId],
+        }),
+      ]);
+    });
+
+    it('rejects the whole import when a requested team is unknown', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          {
+            email: 'user1@example.com',
+            role: UserRole.USER,
+            teamNames: ['Unknown team'],
+          },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+      setupDefaultConfigMocks();
+      invitesRepository.findByEmails.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      teamResolver.resolve.mockResolvedValue({
+        teamIdsByInvite: [[]],
+        errors: [
+          {
+            row: 1,
+            email: 'user1@example.com',
+            errorCode: 'TEAM_NOT_FOUND',
+            message: 'Unknown team: Unknown team',
+          },
+        ],
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        BulkInviteValidationFailedError,
+      );
+      expect(invitesRepository.createMany).not.toHaveBeenCalled();
     });
 
     it('runs validation reads sequentially on the transactional connection', async () => {
