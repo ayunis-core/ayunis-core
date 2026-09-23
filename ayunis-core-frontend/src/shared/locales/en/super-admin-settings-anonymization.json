@@ -5,12 +5,16 @@
   "loadError": "The global anonymization exceptions could not be loaded.",
   "retry": "Retry",
   "add": {
-    "placeholder": "Add a word, e.g. Mitarbeitende",
+    "placeholder": "Add words, separated by commas, e.g. Mitarbeitende, Bürgeramt",
     "button": "Add",
-    "success": "Word saved.",
-    "duplicate": "This word is already on the list for this data type.",
+    "success_one": "{{count}} word saved.",
+    "success_other": "{{count}} words saved.",
+    "successWithDuplicates_one": "{{count}} word saved, {{duplicates}} already on the list.",
+    "successWithDuplicates_other": "{{count}} words saved, {{duplicates}} already on the list.",
+    "allDuplicates_one": "This word is already on the list for this data type.",
+    "allDuplicates_other": "All {{count}} words are already on the list for this data type.",
     "empty": "Please enter a word.",
-    "error": "Saving the word failed."
+    "error": "Saving the words failed."
   },
   "delete": {
     "success": "Word removed.",

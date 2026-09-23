@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import type { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { GlobalAnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/global-anonymization-whitelist.repository';
 import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
 import { GlobalAnonymizationWhitelistWordRecord } from './schema/global-anonymization-whitelist-word.record';
@@ -34,37 +33,47 @@ export class PostgresGlobalAnonymizationWhitelistRepository extends GlobalAnonym
     );
   }
 
-  async findByCategoryAndWord(
-    category: PiiCategory,
-    word: string,
-  ): Promise<GlobalAnonymizationWhitelistWord | null> {
-    this.logger.debug({ category }, 'findByCategoryAndWord');
+  async createMany(
+    words: GlobalAnonymizationWhitelistWord[],
+  ): Promise<GlobalAnonymizationWhitelistWord[]> {
+    this.logger.debug({ count: words.length }, 'createMany');
 
-    const record = await this.repository.findOne({
-      where: { category, wordLowercase: word.trim().toLowerCase() },
-    });
+    if (words.length === 0) {
+      return [];
+    }
 
-    return record
-      ? GlobalAnonymizationWhitelistWordMapper.toDomain(record)
-      : null;
-  }
+    // ON CONFLICT DO NOTHING makes the unique (category, wordLowercase) index
+    // decide which words are new, so concurrent adds cannot collide and the
+    // returned ids are exactly the words that were inserted.
+    const result = await this.repository
+      .createQueryBuilder()
+      .insert()
+      .into(GlobalAnonymizationWhitelistWordRecord)
+      .values(
+        words.map((word) =>
+          GlobalAnonymizationWhitelistWordMapper.toRecord(word),
+        ),
+      )
+      .orIgnore()
+      .returning(['id'])
+      .execute();
 
-  async create(
-    word: GlobalAnonymizationWhitelistWord,
-  ): Promise<GlobalAnonymizationWhitelistWord> {
-    this.logger.debug({ category: word.category }, 'create');
+    const createdIds = (result.raw as { id: UUID }[]).map((row) => row.id);
+    if (createdIds.length === 0) {
+      return [];
+    }
 
-    const record = await this.repository.save(
-      GlobalAnonymizationWhitelistWordMapper.toRecord(word),
-    );
-    // Reload with the user relation so the returned word carries the
-    // author's email, same as findAll.
-    const reloaded = await this.repository.findOne({
-      where: { id: record.id },
+    // Reload with the user relation so the returned words carry the author's
+    // email, same as findAll.
+    const records = await this.repository.find({
+      where: { id: In(createdIds) },
       relations: { createdByUser: true },
+      order: { wordLowercase: 'ASC' },
     });
 
-    return GlobalAnonymizationWhitelistWordMapper.toDomain(reloaded ?? record);
+    return records.map((record) =>
+      GlobalAnonymizationWhitelistWordMapper.toDomain(record),
+    );
   }
 
   async delete(id: UUID): Promise<boolean> {

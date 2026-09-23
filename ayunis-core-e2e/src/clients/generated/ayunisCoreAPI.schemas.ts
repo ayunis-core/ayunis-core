@@ -3735,13 +3735,19 @@ export interface GlobalPiiWhitelistWordDto {
   createdAt: string;
 }
 
-export interface AddGlobalPiiWhitelistWordRequestDto {
+export interface AddGlobalPiiWhitelistWordsRequestDto {
   category: PiiCategory;
   /**
-     * Plain word to exempt from anonymization (no patterns)
-     * @maxLength 200
+     * Plain words to exempt from anonymization (no patterns)
+     * @maxItems 1000
      */
-  word: string;
+  words: string[];
+}
+
+export interface AddGlobalPiiWhitelistWordsResponseDto {
+  added: GlobalPiiWhitelistWordDto[];
+  /** Submitted words that were already on the whitelist */
+  duplicates: string[];
 }
 
 /**

@@ -13,7 +13,7 @@ import { GetPiiWhitelistUseCase } from './application/use-cases/get-pii-whitelis
 import { UpdatePiiWhitelistUseCase } from './application/use-cases/update-pii-whitelist/update-pii-whitelist.use-case';
 import { AnonymizeTextForOrgUseCase } from './application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { GetGlobalPiiWhitelistUseCase } from './application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
-import { AddGlobalPiiWhitelistWordUseCase } from './application/use-cases/add-global-pii-whitelist-word/add-global-pii-whitelist-word.use-case';
+import { AddGlobalPiiWhitelistWordsUseCase } from './application/use-cases/add-global-pii-whitelist-words/add-global-pii-whitelist-words.use-case';
 import { DeleteGlobalPiiWhitelistWordUseCase } from './application/use-cases/delete-global-pii-whitelist-word/delete-global-pii-whitelist-word.use-case';
 import { AnonymizationSettingsController } from './presenters/http/anonymization-settings.controller';
 import { SuperAdminAnonymizationWhitelistController } from './presenters/http/super-admin-anonymization-whitelist.controller';
@@ -43,7 +43,7 @@ import { SuperAdminAnonymizationWhitelistController } from './presenters/http/su
     UpdatePiiWhitelistUseCase,
     AnonymizeTextForOrgUseCase,
     GetGlobalPiiWhitelistUseCase,
-    AddGlobalPiiWhitelistWordUseCase,
+    AddGlobalPiiWhitelistWordsUseCase,
     DeleteGlobalPiiWhitelistWordUseCase,
   ],
   exports: [
