@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { Observable, catchError, throwError } from 'rxjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { StreamInferenceHandlerRegistry } from 'src/domain/models/application/registry/stream-inference-handler.registry';
@@ -75,7 +76,8 @@ export class StreamInferenceUseCase {
     }
     const diagnostics = extractProviderErrorDiagnostics(error);
     const status = diagnostics.upstreamStatus;
-    const message = error instanceof Error ? error.message : String(error);
+    const cause = error instanceof ModelProviderError ? error.cause : error;
+    const message = cause instanceof Error ? cause.message : String(cause);
     this.logProviderInferenceFailed(error, input, diagnostics);
     // Anthropic/Bedrock reject oversized images with "image exceeds N MB
     // maximum" — surface a distinct code so the UI can tell the user to shrink
@@ -136,6 +138,7 @@ export class StreamInferenceUseCase {
 // separately because it does not reliably pass `instanceof Error` across
 // realms (e.g. under Jest's sandboxed globals).
 function isAbortError(error: unknown): boolean {
+  if (error instanceof ModelProviderError) return error.kind === 'abort';
   return (
     (error instanceof Error || error instanceof DOMException) &&
     error.name === 'AbortError'

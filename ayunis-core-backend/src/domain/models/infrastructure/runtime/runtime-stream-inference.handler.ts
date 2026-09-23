@@ -188,7 +188,6 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
             provider: input.model.provider,
             attempt,
             reason: setupFailure.reason,
-            err: setupFailure.error,
           },
           'Provider stream failed before the first chunk',
         );

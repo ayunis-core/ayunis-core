@@ -76,14 +76,9 @@ function serializeError(
 function serializeProviderError(
   error: ProviderUnavailableError,
 ): SerializedRuntimeModelError {
-  const type = providerErrorType(error);
-  const causeMessage = error.metadata?.causeMessage;
   return {
-    type,
-    context: {
-      ...error.context,
-      ...(typeof causeMessage === 'string' ? { causeMessage } : {}),
-    },
+    type: providerErrorType(error),
+    context: { ...error.context },
   };
 }
 
@@ -132,19 +127,16 @@ function reconstructProviderError(
   serialized: SerializedRuntimeModelError,
 ): Error {
   const context = toProviderContext(serialized.context);
-  const causeMessage = serialized.context.causeMessage;
-  const cause =
-    typeof causeMessage === 'string' ? new Error(causeMessage) : undefined;
   if (serialized.type === 'provider_connection') {
-    return new ProviderConnectionError(context, cause);
+    return new ProviderConnectionError(context);
   }
   if (serialized.type === 'provider_timeout') {
-    return new ProviderTimeoutError(context, cause);
+    return new ProviderTimeoutError(context);
   }
   if (serialized.type === 'provider_rejected') {
-    return new ProviderRequestRejectedError(context, cause);
+    return new ProviderRequestRejectedError(context);
   }
-  return new ProviderServerError(context, cause);
+  return new ProviderServerError(context);
 }
 
 function toProviderContext(
@@ -167,6 +159,21 @@ function toProviderContext(
     ...(typeof context.retryAfterMs === 'number' && {
       retryAfterMs: context.retryAfterMs,
     }),
+    ...providerLifecycleContext(context),
+  };
+}
+
+function providerLifecycleContext(
+  context: Readonly<Record<string, unknown>>,
+): Pick<ProviderErrorContext, 'failureStage' | 'timeoutSource'> {
+  const failureStage = context.failureStage;
+  const timeoutSource = context.timeoutSource;
+  return {
+    ...((failureStage === 'stream_establishment' ||
+      failureStage === 'stream_consumption') && { failureStage }),
+    ...((timeoutSource === 'transport' ||
+      timeoutSource === 'response_start' ||
+      timeoutSource === 'whole_stream') && { timeoutSource }),
   };
 }
 

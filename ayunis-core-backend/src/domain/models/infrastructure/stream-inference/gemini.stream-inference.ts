@@ -5,7 +5,7 @@ import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { RuntimeStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/runtime-stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { STREAMING_PROVIDER_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class GeminiStreamInferenceHandler extends RuntimeStreamInferenceHandler {
@@ -20,7 +20,7 @@ export class GeminiStreamInferenceHandler extends RuntimeStreamInferenceHandler 
     return gemini({
       apiKey: this.configService.get<string>('models.gemini.apiKey') ?? '',
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: STREAMING_PROVIDER_MAX_RETRIES,
     });
   }
 }

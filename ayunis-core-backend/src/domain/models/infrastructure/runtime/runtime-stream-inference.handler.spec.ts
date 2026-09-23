@@ -1,4 +1,5 @@
-import type { ModelProvider } from '@ayunis/inference';
+import { ModelProviderError, type ModelProvider } from '@ayunis/inference';
+import { Logger } from '@nestjs/common';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import type { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
@@ -102,7 +103,10 @@ function firstChunkOf(handler: TestHandler): {
 
 describe('RuntimeStreamInferenceHandler', () => {
   beforeEach(() => jest.useFakeTimers());
-  afterEach(() => jest.useRealTimers());
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
 
   it('rebuilds a cached provider when the model configuration changes', () => {
     const handler = new CacheTestHandler();
@@ -246,6 +250,51 @@ describe('RuntimeStreamInferenceHandler', () => {
     await completed;
     expect(deltas).toEqual(['recovered']);
     expect(calls).toBe(2);
+  });
+
+  it('retries portable provider failures without logging their raw causes', async () => {
+    const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'openai:compatible-model',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield await Promise.reject(
+            new ModelProviderError({
+              kind: 'server',
+              stage: 'stream_establishment',
+              upstreamStatus: 503,
+              cause: new Error('provider echoed classified resident data'),
+            }),
+          );
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+
+    const deltas: (string | null)[] = [];
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: (chunk) => deltas.push(chunk.textContentDelta),
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+
+    await completed;
+    expect(deltas).toEqual(['recovered']);
+    expect(calls).toBe(2);
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'test-model',
+        provider: 'test',
+        reason: 'server',
+      }),
+      'Provider stream failed before the first chunk',
+    );
+    expect(warn.mock.calls[0]?.[0]).not.toHaveProperty('err');
   });
 
   it('recovers on the third attempt after repeated provider server failures', async () => {

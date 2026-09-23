@@ -1,3 +1,7 @@
+import type {
+  ProviderFailureStage,
+  ProviderTimeoutSource,
+} from '@ayunis/inference';
 import { ApplicationError } from './base.error';
 
 /**
@@ -31,6 +35,10 @@ export interface ProviderErrorContext {
   upstreamRequestId?: string;
   /** Pause the provider asked for before resending a rate-limited request. */
   retryAfterMs?: number;
+  /** Provider lifecycle phase in which the failure surfaced. */
+  failureStage?: ProviderFailureStage;
+  /** Deadline category when the provider reports a timeout. */
+  timeoutSource?: ProviderTimeoutSource;
 }
 
 export const PROVIDER_UNAVAILABLE_PREFIX = 'PROVIDER_UNAVAILABLE';

@@ -28,6 +28,14 @@ describe('openai client construction', () => {
       expect.objectContaining({ timeout: 45_000 }),
     );
   });
+
+  it('disables SDK retries when the streaming host passes maxRetries zero', () => {
+    openai({ apiKey: 'sk-test', model: 'gpt-5.4', maxRetries: 0 });
+
+    expect(openaiCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ maxRetries: 0 }),
+    );
+  });
 });
 
 describe('azure client construction', () => {
@@ -70,6 +78,19 @@ describe('azure client construction', () => {
 
     expect(openaiCtor).toHaveBeenCalledWith(
       expect.objectContaining({ timeout: 45_000 }),
+    );
+  });
+
+  it('disables SDK retries when the streaming host passes maxRetries zero', () => {
+    azure({
+      apiKey: 'azure-key',
+      endpoint: 'https://my-resource.openai.azure.com',
+      model: 'gpt-5.4',
+      maxRetries: 0,
+    });
+
+    expect(openaiCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ maxRetries: 0 }),
     );
   });
 

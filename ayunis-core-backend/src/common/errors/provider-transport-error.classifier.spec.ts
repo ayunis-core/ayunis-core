@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import {
   classifyTransportError,
   isRetryableProviderRateLimitFailure,
@@ -266,6 +267,79 @@ describe('classifyTransportError', () => {
       expect(
         rateLimitRetryDelayMs(rateLimited({ 'retry-after': tooLong }), 1),
       ).toBeUndefined();
+    });
+  });
+
+  describe('portable provider failures', () => {
+    const portable = (
+      kind: ConstructorParameters<typeof ModelProviderError>[0]['kind'],
+      retryAfterMs?: number,
+    ) =>
+      new ModelProviderError({
+        kind,
+        stage: 'stream_establishment',
+        retryAfterMs,
+        cause: new Error('raw provider failure'),
+      });
+
+    it('preserves canonical portable transport diagnostics', () => {
+      const error = new ModelProviderError({
+        kind: 'connection',
+        stage: 'stream_establishment',
+        transportCode: 'ENETRESET',
+        host: 'api.example.com',
+        cause: new Error('unclassified raw failure'),
+      });
+
+      expect(classifyTransportError(error)).toEqual({
+        failureClass: ProviderFailureClass.CONNECTION,
+        code: 'ENETRESET',
+        host: 'api.example.com',
+      });
+    });
+
+    it('classifies retry categories without inspecting SDK errors again', () => {
+      expect(isRetryableSetupFailure(portable('connection'))).toBe(true);
+      expect(isRetryableProviderTimeoutFailure(portable('timeout'))).toBe(true);
+      expect(isRetryableProviderServerFailure(portable('server'))).toBe(true);
+      expect(isRetryableProviderRateLimitFailure(portable('rate_limit'))).toBe(
+        true,
+      );
+    });
+
+    it('uses portable retry timing at the host retry boundary', () => {
+      expect(rateLimitRetryDelayMs(portable('rate_limit', 2_500), 1)).toBe(
+        2_500,
+      );
+    });
+
+    it('does not retry portable rejections, aborts, or unknown failures', () => {
+      for (const kind of ['rejection', 'abort', 'unknown'] as const) {
+        const error = portable(kind);
+        expect(isRetryableSetupFailure(error)).toBe(false);
+        expect(isRetryableProviderTimeoutFailure(error)).toBe(false);
+        expect(isRetryableProviderServerFailure(error)).toBe(false);
+        expect(isRetryableProviderRateLimitFailure(error)).toBe(false);
+      }
+    });
+
+    it('does not reinspect raw causes after portable classification', () => {
+      const cases = [
+        ['abort', 'ECONNRESET'],
+        ['rejection', 'ETIMEDOUT'],
+        ['unknown', 'ECONNREFUSED'],
+      ] as const;
+
+      for (const [kind, causeCode] of cases) {
+        const error = new ModelProviderError({
+          kind,
+          stage: 'stream_establishment',
+          cause: errorWithCode('racing raw failure', causeCode),
+        });
+        expect(classifyTransportError(error)).toBeUndefined();
+        expect(isRetryableSetupFailure(error)).toBe(false);
+        expect(isRetryableProviderTimeoutFailure(error)).toBe(false);
+      }
     });
   });
 

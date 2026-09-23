@@ -1,9 +1,10 @@
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { RunAbortedError, type AgentRuntimeError } from '@ayunis/agent-runtime';
-import type {
-  ModelProvider,
-  ProviderChunk,
-  ProviderRequest,
+import {
+  ModelProviderError,
+  type ModelProvider,
+  type ProviderChunk,
+  type ProviderRequest,
 } from '@ayunis/inference';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -265,6 +266,53 @@ describe('RuntimeModelProviderDecorator', () => {
     },
   );
 
+  it('retries portable server failures and maps them with backend provider identity', async () => {
+    jest.useFakeTimers();
+    let attempts = 0;
+    const provider: ModelProvider = {
+      name: 'openai:llama-3.3-70b',
+      async *stream() {
+        attempts += 1;
+        if (attempts === 1) {
+          yield await Promise.reject(
+            new ModelProviderError({
+              kind: 'server',
+              stage: 'stream_establishment',
+              upstreamStatus: 503,
+              upstreamRequestId: 'req_scaleway_503',
+              cause: Object.assign(new Error('service unavailable'), {
+                status: 503,
+              }),
+            }),
+          );
+        }
+        yield { textDelta: 'Recovered response' };
+      },
+    };
+    const scalewayModel = {
+      name: 'llama-3.3-70b',
+      provider: 'scaleway',
+    } as LanguageModel;
+    const { decorate, logger } = buildHarness(scalewayModel);
+
+    const collected = collect(decorate(provider));
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+
+    await expect(collected).resolves.toEqual([
+      { textDelta: 'Recovered response' },
+    ]);
+    expect(attempts).toBe(2);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'scaleway',
+        upstreamStatus: 503,
+        upstreamRequestId: 'req_scaleway_503',
+      }),
+      'Provider unavailable during runtime inference',
+    );
+    jest.useRealTimers();
+  });
+
   it('recovers on the third attempt after repeated upstream server failures', async () => {
     jest.useFakeTimers();
     let attempts = 0;
@@ -471,6 +519,38 @@ describe('RuntimeModelProviderDecorator', () => {
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
       'classified text',
     );
+  });
+
+  it('recognizes an oversized-image rejection through its portable cause', async () => {
+    const rejection = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      cause: new Error('image exceeds 5 MB maximum'),
+    });
+    const { decorate } = buildHarness();
+
+    await expect(
+      collect(decorate(throwingProvider(rejection))),
+    ).rejects.toMatchObject({ code: 'INFERENCE_IMAGE_TOO_LARGE' });
+  });
+
+  it('maps portable abort failures to the runtime aborted outcome', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const abort = new ModelProviderError({
+      kind: 'abort',
+      stage: 'stream_establishment',
+      cause: abortError(),
+    });
+    const { decorate } = buildHarness();
+
+    await expect(
+      collect(decorate(throwingProvider(abort)), {
+        ...request,
+        signal: controller.signal,
+      }),
+    ).rejects.toBeInstanceOf(RunAbortedError);
   });
 
   it('preserves a classified provider failure when cancellation races with it', async () => {

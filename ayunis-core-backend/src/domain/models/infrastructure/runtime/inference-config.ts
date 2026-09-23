@@ -1,10 +1,15 @@
 /**
- * SDK-level retry count for transient provider failures, passed to every
- * `@ayunis` provider. Set explicitly (rather than relying on the provider
- * default) to preserve the pre-runtime handlers' 3-retry behavior as a
- * deliberate choice.
+ * SDK-level retry count for non-streaming inference. These handlers retain
+ * their established provider-owned retry behavior as a deliberate exception.
  */
 export const INFERENCE_MAX_RETRIES = 3;
+
+/**
+ * Streaming provider SDKs must not retry internally. Retry ownership belongs
+ * exclusively to RuntimeStreamInferenceHandler for direct streams and
+ * RuntimeModelProviderDecorator for agent-runtime streams.
+ */
+export const STREAMING_PROVIDER_MAX_RETRIES = 0;
 
 /**
  * Output-token budget for the Claude handlers — both the direct Anthropic API
