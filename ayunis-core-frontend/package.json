@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite --port 3001",
     "start": "vite --port 3001",
-    "build": "vite build && tsc",
+    "build": "vite build && node src/shared/scripts/check-build-module-imports.mjs && tsc",
     "serve": "vite preview",
     "test": "vitest run",
     "openapi:fetch": "node --env-file .env src/shared/scripts/fetch-openapi-schema.js",
@@ -80,6 +80,7 @@
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
     "dependency-cruiser": "^17.3.8",
+    "es-module-lexer": "^2.2.0",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

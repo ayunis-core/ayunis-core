@@ -661,6 +661,9 @@ importers:
       dependency-cruiser:
         specifier: ^17.3.8
         version: 17.4.2
+      es-module-lexer:
+        specifier: ^2.2.0
+        version: 2.2.0
       eslint:
         specifier: ^10.9.1
         version: 10.9.1(jiti@2.7.0)
