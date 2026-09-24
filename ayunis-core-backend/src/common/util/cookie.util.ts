@@ -38,15 +38,19 @@ function buildCookieOptions(configService: ConfigService): CookieOptions {
 
 function getCookieNames(configService: ConfigService): CookieNames {
   return {
-    accessTokenName: configService.get<string>(
-      'auth.cookie.accessTokenName',
-      'access_token',
-    ),
+    accessTokenName: getAccessTokenCookieName(configService),
     refreshTokenName: configService.get<string>(
       'auth.cookie.refreshTokenName',
       'refresh_token',
     ),
   };
+}
+
+export function getAccessTokenCookieName(configService: ConfigService): string {
+  return configService.get<string>(
+    'auth.cookie.accessTokenName',
+    'access_token',
+  );
 }
 
 export function setCookies(

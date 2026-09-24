@@ -12,6 +12,10 @@
     "superAdmins": "Super-Admins",
     "platformConfig": "Plattform-Konfiguration",
     "appAlerts": "App-Hinweise",
-    "anonymization": "Anonymisierung"
+    "anonymization": "Anonymisierung",
+    "queueInspection": "Warteschlangen"
+  },
+  "groups": {
+    "operations": "Betrieb"
   }
 }
