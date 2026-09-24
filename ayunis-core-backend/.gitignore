@@ -20,6 +20,9 @@ lerna-debug.log*
 /coverage
 /.nyc_output
 
+# Lint
+.eslintcache
+
 # IDEs and editors
 /.idea
 .project
