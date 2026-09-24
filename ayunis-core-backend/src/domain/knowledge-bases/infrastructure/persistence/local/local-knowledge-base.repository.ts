@@ -30,7 +30,10 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { buildKnowledgeBaseAccessSubqueries } from './queries/knowledge-base-access.db-query';
+import {
+  applyKnowledgeBaseTargetFilter,
+  buildKnowledgeBaseAccessSubqueries,
+} from './queries/knowledge-base-access.db-query';
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 
 @Injectable()
@@ -230,13 +233,16 @@ export class LocalKnowledgeBaseRepository
   async findActiveAccessible(
     userId: UUID,
     orgId: UUID,
+    knowledgeBaseId?: UUID,
+    sourceId?: UUID,
   ): Promise<PersonalKnowledgeBase[]> {
-    const records = await this.buildAccessiblePersonalQuery(userId, orgId)
-      .innerJoin(
-        KnowledgeBaseActivationRecord,
-        'activation',
-        'activation.knowledgeBaseId = knowledgeBase.id AND activation.userId = :userId',
-      )
+    const query = this.buildAccessiblePersonalQuery(userId, orgId).innerJoin(
+      KnowledgeBaseActivationRecord,
+      'activation',
+      'activation.knowledgeBaseId = knowledgeBase.id AND activation.userId = :userId',
+    );
+    applyKnowledgeBaseTargetFilter(query, { knowledgeBaseId, sourceId });
+    const records = await query
       .orderBy('LOWER(knowledgeBase.name)', 'ASC')
       .addOrderBy('knowledgeBase.id', 'ASC')
       .getMany();

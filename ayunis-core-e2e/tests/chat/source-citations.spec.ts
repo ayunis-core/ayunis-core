@@ -6,6 +6,7 @@ import { login } from '../../src/clients/api/auth.client';
 import { skipChatPersonalization } from '../../src/clients/api/chat-settings.client';
 import { dismissWelcomeVideo } from '../../src/clients/api/onboarding.client';
 import { generatedApi } from '../../src/clients/api/generated-api';
+import { getThreadSourceCitationResponse } from '../../src/clients/api/threads.client';
 import {
   CreateKnowledgeBaseDtoOwnerType,
   CreateKnowledgeBaseShareDtoEntityType,
@@ -53,8 +54,10 @@ test('opens an accessible source citation without exposing it to another user', 
   const memberContext = await browser.newContext({ baseURL: config.apiURL });
   try {
     await login(memberContext.request, member.email, member.password);
-    const denied = await memberContext.request.get(
-      `/api/threads/${threadId}/source-chunks/${chunkId}`,
+    const denied = await getThreadSourceCitationResponse(
+      memberContext.request,
+      threadId,
+      chunkId,
     );
     expect(denied.status()).toBe(404);
   } finally {
@@ -62,7 +65,7 @@ test('opens an accessible source citation without exposing it to another user', 
   }
 });
 
-test('reauthorizes a knowledge-base source before and after sharing', async ({
+test('opens citations from active knowledge bases and reauthorizes sharing', async ({
   api,
   browser,
   mail,
@@ -86,11 +89,6 @@ test('reauthorizes a knowledge-base source before and after sharing', async ({
   await waitForKnowledgeBaseSourceReady(api, knowledgeBase.id);
 
   const ownerThreadId = await startThread(page, 'Find shared source evidence');
-  await generatedApi.threadKnowledgeBasesControllerAddKnowledgeBase(
-    ownerThreadId,
-    knowledgeBase.id,
-    { api },
-  );
   await page.goto(`/chats/${ownerThreadId}`);
   await sendMessage(page, 'E2E cite first source');
   const ownerCitation = page.getByTestId('source-citation').last();
@@ -115,8 +113,10 @@ test('reauthorizes a knowledge-base source before and after sharing', async ({
       memberPage,
       'Check shared source evidence',
     );
-    const beforeGrant = await memberApi.get(
-      `/api/threads/${memberThreadId}/source-chunks/${chunkId}`,
+    const beforeGrant = await getThreadSourceCitationResponse(
+      memberApi,
+      memberThreadId,
+      chunkId,
     );
     expect(beforeGrant.status()).toBe(404);
     const hiddenResponse = (await beforeGrant.json()) as {
@@ -133,9 +133,9 @@ test('reauthorizes a knowledge-base source before and after sharing', async ({
         },
         { api },
       );
-    await generatedApi.threadKnowledgeBasesControllerAddKnowledgeBase(
-      memberThreadId,
+    await generatedApi.knowledgeBasesControllerSetActivation(
       knowledgeBase.id,
+      { isActive: true },
       { api: memberApi },
     );
     await memberPage.goto(`/chats/${memberThreadId}`);
@@ -147,9 +147,35 @@ test('reauthorizes a knowledge-base source before and after sharing', async ({
       memberPage.getByTestId('source-citation-excerpt'),
     ).toContainText('The council approved the mobility plan');
 
+    await generatedApi.knowledgeBasesControllerSetActivation(
+      knowledgeBase.id,
+      { isActive: false },
+      { api: memberApi },
+    );
+    const afterDeactivation = await getThreadSourceCitationResponse(
+      memberApi,
+      memberThreadId,
+      chunkId,
+    );
+    expect(afterDeactivation.status()).toBe(404);
+
+    await generatedApi.knowledgeBasesControllerSetActivation(
+      knowledgeBase.id,
+      { isActive: true },
+      { api: memberApi },
+    );
+    const afterReactivation = await getThreadSourceCitationResponse(
+      memberApi,
+      memberThreadId,
+      chunkId,
+    );
+    expect(afterReactivation.status()).toBe(200);
+
     await generatedApi.sharesControllerDeleteShare(share.id, { api });
-    const afterRevocation = await memberApi.get(
-      `/api/threads/${memberThreadId}/source-chunks/${chunkId}`,
+    const afterRevocation = await getThreadSourceCitationResponse(
+      memberApi,
+      memberThreadId,
+      chunkId,
     );
     expect(afterRevocation.status()).toBe(404);
     expect(await afterRevocation.json()).toMatchObject({
@@ -208,8 +234,10 @@ test('reauthorizes a skill source before and after sharing', async ({
       memberPage,
       'Check skill source evidence',
     );
-    const beforeGrant = await memberApi.get(
-      `/api/threads/${memberThreadId}/source-chunks/${chunkId}`,
+    const beforeGrant = await getThreadSourceCitationResponse(
+      memberApi,
+      memberThreadId,
+      chunkId,
     );
     expect(beforeGrant.status()).toBe(404);
 
@@ -235,8 +263,10 @@ test('reauthorizes a skill source before and after sharing', async ({
     ).toContainText('The council approved the mobility plan');
 
     await generatedApi.sharesControllerDeleteShare(share.id, { api });
-    const afterRevocation = await memberApi.get(
-      `/api/threads/${memberThreadId}/source-chunks/${chunkId}`,
+    const afterRevocation = await getThreadSourceCitationResponse(
+      memberApi,
+      memberThreadId,
+      chunkId,
     );
     expect(afterRevocation.status()).toBe(404);
   } finally {
