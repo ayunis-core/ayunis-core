@@ -68,7 +68,7 @@ export class AgentRecord extends BaseRecord {
 
 ### 2. Generate the Migration
 
-The dev stack must be running (`./dev status`).
+Generation needs a running slot (`./dev status`). Use the slot the survey's runtime answer allowed; do not start one on your own.
 
 ```bash
 pnpm run migration:generate:dev src/db/migrations/DescriptiveMigrationName
@@ -132,14 +132,14 @@ PascalCase describing the change:
 Shut the stack down and spin the DB up on an empty volume, then let migrations replay from zero:
 
 ```bash
-# 1. Shut the stack down completely (from any worktree)
+# 1. Shut the stack down completely (from the owning worktree)
 ./dev down
+```
 
-# 2. Wipe the slot's Postgres volume so ./dev up starts from an empty DB.
-#    Without -v the volume survives and the drift returns immediately.
-docker compose -p ayunis-dev-<SLOT> down -v
+Step 2 deletes the slot's Postgres volume. That is a destructive Docker command and on the Forbidden Actions list, so **the user runs it, not you**. Tell them the slot number and the exact command (`./dev` passes `-f compose.dev.yml -p ayunis-dev-<SLOT>`), and wait. The `dev-environment` skill's "Migration fails with `42P07 duplicate-table`" section has the full recovery text.
 
-# 3. Bring the stack back up — ./dev up replays every migration from scratch
+```bash
+# 3. After the user has wiped the volume — ./dev up replays every migration from scratch
 ./dev up --slot <SLOT>
 
 # 4. Optional: reseed fixtures (see seed-database skill)
@@ -165,7 +165,7 @@ If a `VerifyNoDrift` file *is* produced, entities and migrations are genuinely o
 | Don't | Why | Instead |
 | --- | --- | --- |
 | Write migration SQL by hand | Drift between entities and schema | Modify the entity, then auto-generate |
-| Hand-author a migration to reconcile drift | Poisons migration history for teammates and deploys | Rebuild the DB (`./dev down` + wipe volume + `./dev up`) |
+| Hand-author a migration to reconcile drift | Poisons migration history for teammates and deploys | Rebuild the DB (`./dev down`, user wipes the volume, `./dev up`) |
 | Edit a generated migration | Constraint names will mismatch | Fix the entity and regenerate |
 | Hand-write FK/index/constraint names | Perpetual drift on future generates | Let TypeORM name everything |
 | Use `@Column` for a FK without `@ManyToOne` | No FK in the database, no referential integrity | Add `@ManyToOne` + `@JoinColumn` |
