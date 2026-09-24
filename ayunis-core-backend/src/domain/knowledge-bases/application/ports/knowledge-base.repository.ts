@@ -58,6 +58,8 @@ export abstract class KnowledgeBaseRepository {
   abstract findActiveAccessible(
     userId: UUID,
     orgId: UUID,
+    knowledgeBaseId?: UUID,
+    sourceId?: UUID,
   ): Promise<PersonalKnowledgeBase[]>;
   abstract findPaginatedAccessible(
     userId: UUID,
