@@ -390,7 +390,7 @@ export default function ChatPage({
       <p className="text-xs text-muted-foreground text-center mb-2">
         {t('chat.inputDisclaimer')}
       </p>
-      {thread.isLongChat && <LongChatWarning />}
+      {thread.isLongChat && <LongChatWarning key={thread.id} />}
       <AcademyGateNotice className="mb-2" />
       {selectedModel?.hasProviderFault && (
         <ProviderFaultNotice modelName={selectedModel.displayName} />

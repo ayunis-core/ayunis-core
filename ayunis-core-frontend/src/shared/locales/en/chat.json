@@ -254,8 +254,9 @@
     "modelUnavailableTitle": "AI model no longer available",
     "modelUnavailableDescription": "The AI model used in this chat is no longer available, so this conversation cannot be continued. Start a new chat to keep working.",
     "modelProviderFaultWarning": "The model ‘{{modelName}}’ currently has a known provider issue. You can continue this conversation, but responses may fail.",
-    "longChatWarningTitle": "Conversation too long",
-    "longChatWarningDescription": "For better results, consider starting a new chat.",
+    "longChatWarningTitle": "This chat has reached your model's limit",
+    "longChatWarningDescription": "Every message sends the entire conversation so far, including all attached files, to the model again. Your selected model has a fixed limit for this, and this chat has almost reached it. That is a property of the model, not an Ayunis setting. If you would like to keep working, start a new chat.",
+    "longChatWarningDismiss": "Dismiss warning",
     "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers.",
     "sourceCitation": {
       "title": "Source citation",
