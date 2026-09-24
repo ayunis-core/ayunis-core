@@ -6,6 +6,7 @@ on:
       - 'ayunis-core-backend/**'
       - '.github/workflows/backend-tests.yml'
       - '.github/actions/setup-node-pnpm/action.yml'
+      - '.github/actions/start-minio/action.yml'
       - 'docker-compose.yml'
   push:
     branches: [main]
@@ -77,15 +78,7 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Start MinIO
-        run: |
-          docker run -d \
-            --name minio \
-            -p 9000:9000 \
-            -e MINIO_ROOT_USER=ayunis-ci \
-            -e MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret \
-            quay.io/minio/minio:latest server /data
-          # Wait for MinIO to be ready
-          timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
+        uses: ./.github/actions/start-minio
 
       - name: Build workspace packages
         run: pnpm run build:deps
