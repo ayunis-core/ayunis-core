@@ -8,6 +8,7 @@ import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { JWT_SECRET } from 'src/iam/authentication/application/tokens/jwt-secret.token';
+import { getAccessTokenCookieName } from 'src/common/util/cookie.util';
 
 interface JwtPayload {
   sub: UUID;
@@ -30,10 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: (req: Request) => {
-        const cookieName = configService.get<string>(
-          'auth.cookie.accessTokenName',
-          'access_token',
-        );
+        const cookieName = getAccessTokenCookieName(configService);
 
         const token = req.cookies[cookieName] as string;
 

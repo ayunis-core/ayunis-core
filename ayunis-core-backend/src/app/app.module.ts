@@ -55,6 +55,7 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from 'src/integrations/integrations.module';
+import { QueueInspectionModule } from 'src/integrations/queue-inspection/queue-inspection.module';
 import { LoggingModule } from 'src/common/logger/logging.module';
 
 @Module({
@@ -150,6 +151,7 @@ import { LoggingModule } from 'src/common/logger/logging.module';
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
+    QueueInspectionModule,
   ],
   controllers: [AppController],
   providers: [

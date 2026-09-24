@@ -36,6 +36,7 @@ import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   setCookies,
   clearCookies,
+  getAccessTokenCookieName,
   setMfaPendingCookie,
 } from 'src/common/util/cookie.util';
 import { StartAuthenticatedSessionCommand } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.command';
@@ -60,6 +61,8 @@ import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objec
 export class AuthenticationController {
   private readonly logger = new Logger(AuthenticationController.name);
 
+  // NestJS injects these use cases and adapters through the controller constructor.
+  // eslint-disable-next-line max-params
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
@@ -287,9 +290,7 @@ export class AuthenticationController {
   async me(@Req() req: Request, @Res() res: Response) {
     this.logger.log('me');
 
-    const accessTokenName = this.configService.get<string>(
-      'auth.cookie.accessTokenName',
-    );
+    const accessTokenName = getAccessTokenCookieName(this.configService);
     const refreshTokenName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',
     );
