@@ -11,6 +11,8 @@
     "languageModelsDescription": "Models for text generation and conversation.",
     "embeddingModelsDescription": "Models for document analysis and search.",
     "imageGenerationModelsDescription": "Models for image generation and visual creation.",
+    "imageGenerationModelsHint": "Image models are used automatically for image generation and do not appear in the chat model selector. Once a model is enabled here, users can generate images and the model is used automatically, without having to select it manually. Only one image generation model can be active at a time.",
+    "hintTriggerLabel": "More information about {{label}}",
     "noLanguageModels": "No language models available.",
     "noEmbeddingModels": "No embedding models available.",
     "noImageGenerationModels": "No image generation models available.",

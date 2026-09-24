@@ -57,6 +57,28 @@ describe(ModelTypeCard.name, () => {
     expect(screen.queryByTestId('team-model-image-generation-card')).toBeNull();
   });
 
+  it('explains image model behaviour with a hint that other model types do not get', () => {
+    const { rerender } = render(
+      <ModelTypeCard
+        type="image-generation"
+        models={[model('selected', true)]}
+        actions={actions()}
+      />,
+    );
+
+    expect(screen.getByTestId('model-type-card-hint-trigger')).toBeTruthy();
+
+    rerender(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={actions()}
+      />,
+    );
+
+    expect(screen.queryByTestId('model-type-card-hint-trigger')).toBeNull();
+  });
+
   it('lets callers disable alternatives while keeping the selected model removable', () => {
     const modelActions = actions();
     render(
