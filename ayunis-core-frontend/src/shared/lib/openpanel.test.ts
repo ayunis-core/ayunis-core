@@ -1,38 +1,119 @@
+import { OpenPanel } from '@openpanel/web';
 import { expect, it } from 'vitest';
 import {
+  createOpenPanelScreenViewAnalytics,
+  sanitizeOpenPanelReferrer,
   trackOpenPanelOutgoingLinks,
   trackOpenPanelScreenViews,
 } from './openpanel';
 
-it('tracks each resolved pathname once without sensitive search parameters', () => {
+type RouteMatch = {
+  fullPath: string;
+  globalNotFound?: boolean;
+};
+
+function createScreenViewHarness() {
   const trackedPaths: string[] = [];
-  const listeners: Array<
-    (event: { toLocation: { pathname: string } }) => void
-  > = [];
+  let listener:
+    ((event: { toLocation: { pathname: string } }) => void) | undefined;
   const router = {
+    state: { matches: [] as RouteMatch[] },
     subscribe: (
       _event: 'onResolved',
-      listener: (event: { toLocation: { pathname: string } }) => void,
+      nextListener: (event: { toLocation: { pathname: string } }) => void,
     ) => {
-      listeners.push(listener);
+      listener = nextListener;
       return () => undefined;
     },
   };
   const analytics = {
-    screenView: (pathname: string) => {
-      trackedPaths.push(pathname);
-    },
+    screenView: (pathname: string) => trackedPaths.push(pathname),
   };
 
   trackOpenPanelScreenViews(router, analytics);
-  expect(trackedPaths).toEqual([]);
-  listeners.at(0)?.({ toLocation: { pathname: '/password/reset' } });
-  listeners.at(0)?.({ toLocation: { pathname: '/password/reset' } });
-  listeners.at(0)?.({ toLocation: { pathname: '/accept-invite' } });
-  listeners.at(0)?.({ toLocation: { pathname: '/accept-invite' } });
 
-  expect(listeners).toHaveLength(1);
-  expect(trackedPaths).toEqual(['/password/reset', '/accept-invite']);
+  return {
+    trackedPaths,
+    resolve(pathname: string, matches: RouteMatch[]) {
+      router.state.matches = matches;
+      listener?.({ toLocation: { pathname } });
+    },
+  };
+}
+
+it('tracks each static route once without sensitive search parameters', () => {
+  const harness = createScreenViewHarness();
+
+  harness.resolve('/password/reset', [{ fullPath: '/password/reset' }]);
+  harness.resolve('/password/reset', [{ fullPath: '/password/reset' }]);
+  harness.resolve('/accept-invite', [{ fullPath: '/accept-invite' }]);
+
+  expect(harness.trackedPaths).toEqual(['/password/reset', '/accept-invite']);
+});
+
+it('groups different route parameters under the stable route template', () => {
+  const harness = createScreenViewHarness();
+  const matches = [{ fullPath: '/' }, { fullPath: '/chats/$threadId' }];
+
+  harness.resolve('/chats/thread-a', matches);
+  harness.resolve('/chats/thread-b', matches);
+
+  expect(harness.trackedPaths).toEqual([
+    '/chats/$threadId',
+    '/chats/$threadId',
+  ]);
+});
+
+it('emits consecutive views of the same route template through OpenPanel', () => {
+  const client = new OpenPanel({ clientId: 'test-client', disabled: true });
+  const analytics = createOpenPanelScreenViewAnalytics(client);
+
+  analytics.screenView('/chats/$threadId');
+  analytics.screenView('/chats/$threadId');
+
+  expect(client.queue).toMatchObject([
+    {
+      type: 'track',
+      payload: {
+        name: 'screen_view',
+        properties: { __path: '/chats/$threadId' },
+      },
+    },
+    {
+      type: 'track',
+      payload: {
+        name: 'screen_view',
+        properties: { __path: '/chats/$threadId' },
+      },
+    },
+  ]);
+});
+
+it('keeps only the referrer origin', () => {
+  expect(
+    sanitizeOpenPanelReferrer(
+      'https://example.com/private/report?token=secret#section',
+    ),
+  ).toBe('https://example.com');
+  expect(sanitizeOpenPanelReferrer('not a URL')).toBe('');
+});
+
+it('normalizes an index route template to its canonical pathname', () => {
+  const harness = createScreenViewHarness();
+
+  harness.resolve('/chats', [{ fullPath: '/chats/' }]);
+
+  expect(harness.trackedPaths).toEqual(['/chats']);
+});
+
+it('groups unmatched paths without exposing their raw pathname', () => {
+  const harness = createScreenViewHarness();
+
+  harness.resolve('/private/raw-value', [
+    { fullPath: '/', globalNotFound: true },
+  ]);
+
+  expect(harness.trackedPaths).toEqual(['/__unmatched__']);
 });
 
 it('tracks only the origin of outgoing links', () => {

@@ -7,6 +7,8 @@ import {
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { GetKnowledgeBaseDocumentTextQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.query';
 import { GetKnowledgeBaseDocumentTextUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
+import { FindActiveKnowledgeBasesQuery } from 'src/domain/knowledge-bases/application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.query';
+import { FindActiveKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.use-case';
 import {
   SourceCitationNotFoundError,
   UnexpectedRunError,
@@ -48,6 +50,7 @@ export class GetThreadSourceCitationUseCase {
     private readonly findCitationTargetUseCase: FindSourceCitationTargetUseCase,
     private readonly findOneSkillUseCase: FindOneSkillUseCase,
     private readonly getKnowledgeBaseDocumentTextUseCase: GetKnowledgeBaseDocumentTextUseCase,
+    private readonly findActiveKnowledgeBasesUseCase: FindActiveKnowledgeBasesUseCase,
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
   ) {}
 
@@ -157,11 +160,12 @@ export class GetThreadSourceCitationUseCase {
     threadId: UUID,
   ): Promise<boolean> {
     const knowledgeBaseId = target.source.knowledgeBaseId;
-    if (
-      !knowledgeBaseId ||
-      !this.hasKnowledgeBaseAssignment(thread, knowledgeBaseId)
-    ) {
-      return false;
+    if (!knowledgeBaseId) return false;
+    if (!this.hasKnowledgeBaseAssignment(thread, knowledgeBaseId)) {
+      return this.isActiveKnowledgeBaseAccessible(
+        knowledgeBaseId,
+        target.source.id,
+      );
     }
     try {
       await this.getKnowledgeBaseDocumentTextUseCase.execute(
@@ -183,6 +187,17 @@ export class GetThreadSourceCitationUseCase {
       }
       throw error;
     }
+  }
+
+  private async isActiveKnowledgeBaseAccessible(
+    knowledgeBaseId: UUID,
+    sourceId: UUID,
+  ): Promise<boolean> {
+    const activeKnowledgeBases =
+      await this.findActiveKnowledgeBasesUseCase.execute(
+        new FindActiveKnowledgeBasesQuery({ knowledgeBaseId, sourceId }),
+      );
+    return activeKnowledgeBases.length > 0;
   }
 
   private hasKnowledgeBaseAssignment(

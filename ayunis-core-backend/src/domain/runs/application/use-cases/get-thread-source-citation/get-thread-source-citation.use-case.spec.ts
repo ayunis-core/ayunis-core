@@ -5,6 +5,8 @@ import type { FindSourceCitationTargetUseCase } from 'src/domain/sources/applica
 import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import type { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
 import type { GetKnowledgeBaseDocumentTextUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
+import type { FindActiveKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.use-case';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
@@ -32,6 +34,7 @@ describe('GetThreadSourceCitationUseCase', () => {
   let findCitationTargetUseCase: jest.Mocked<FindSourceCitationTargetUseCase>;
   let findOneSkillUseCase: jest.Mocked<FindOneSkillUseCase>;
   let getKnowledgeBaseDocumentTextUseCase: jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
+  let findActiveKnowledgeBasesUseCase: jest.Mocked<FindActiveKnowledgeBasesUseCase>;
   let buildWorkspaceRunContextUseCase: jest.Mocked<BuildWorkspaceRunContextUseCase>;
   let useCase: GetThreadSourceCitationUseCase;
 
@@ -48,6 +51,9 @@ describe('GetThreadSourceCitationUseCase', () => {
     getKnowledgeBaseDocumentTextUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
+    findActiveKnowledgeBasesUseCase = {
+      execute: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<FindActiveKnowledgeBasesUseCase>;
     buildWorkspaceRunContextUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<BuildWorkspaceRunContextUseCase>;
@@ -56,6 +62,7 @@ describe('GetThreadSourceCitationUseCase', () => {
       findCitationTargetUseCase,
       findOneSkillUseCase,
       getKnowledgeBaseDocumentTextUseCase,
+      findActiveKnowledgeBasesUseCase,
       buildWorkspaceRunContextUseCase,
     );
   });
@@ -290,6 +297,38 @@ describe('GetThreadSourceCitationUseCase', () => {
     );
 
     expect(result.source.url).toBe('https://example.com');
+  });
+
+  it('returns a citation for a document in an active personal knowledge base without a thread assignment', async () => {
+    const knowledgeBaseId = randomUUID();
+    const citationTarget = target({ knowledgeBaseId });
+    findActiveKnowledgeBasesUseCase.execute.mockResolvedValue([
+      new PersonalKnowledgeBase({
+        id: knowledgeBaseId,
+        name: 'Municipal regulations',
+        orgId,
+        userId,
+      }),
+    ]);
+
+    await expect(executeFor(thread(), citationTarget)).resolves.toEqual(
+      expectedResult(citationTarget),
+    );
+    expect(findActiveKnowledgeBasesUseCase.execute).toHaveBeenCalledWith({
+      knowledgeBaseId,
+      sourceId: citationTarget.source.id,
+    });
+    expect(getKnowledgeBaseDocumentTextUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects an inactive knowledge base document without a thread assignment', async () => {
+    const knowledgeBaseId = randomUUID();
+    const citationTarget = target({ knowledgeBaseId });
+
+    await expect(executeFor(thread(), citationTarget)).rejects.toThrow(
+      SourceCitationNotFoundError,
+    );
+    expect(getKnowledgeBaseDocumentTextUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('does not treat a persisted knowledge base assignment as current access', async () => {

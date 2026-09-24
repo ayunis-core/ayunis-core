@@ -37,6 +37,17 @@ export function getThreadAiContextResponse(
   return api.get(`${config.apiURL}/api/threads/${threadId}/ai-context`);
 }
 
+export function getThreadSourceCitationResponse(
+  api: APIRequestContext,
+  threadId: string,
+  chunkId: string | null,
+): Promise<APIResponse> {
+  if (!chunkId) throw new Error('A source citation chunk ID is required');
+  return api.get(
+    `${config.apiURL}/api/threads/${threadId}/source-chunks/${chunkId}`,
+  );
+}
+
 export async function deleteThread(
   api: APIRequestContext,
   threadId: string,
