@@ -12,7 +12,7 @@ import {
   type StyleSpecification,
 } from 'maplibre-gl';
 import type { Geometry, Position } from 'geojson';
-import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   Card,
