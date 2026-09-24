@@ -25,6 +25,7 @@ import {
 import {
   InferenceFailedError,
   InferenceImageTooLargeError,
+  InferenceStreamStalledError,
 } from 'src/domain/models/application/models.errors';
 import {
   RunPiiMasksUpdate,
@@ -117,6 +118,38 @@ async function collectWithOutcome(events: AsyncIterable<RunEvent>) {
     if (next.done) return { items, outcome: next.value };
     items.push(next.value);
   }
+}
+
+function collectRuntime(
+  provider: ModelProvider,
+  model: LanguageModel,
+  modelCallIdleTimeoutMs?: number,
+): Promise<RunStreamItem[]> {
+  const context = RunContext.create();
+  const models = RuntimeModelRegistry.attach(context);
+  models.register(provider, model);
+  const observability = new ModelCallObservabilityHookFactory({
+    emitAsync: jest.fn().mockResolvedValue([]),
+  } as unknown as EventEmitter2).create({
+    userId: '223e4567-e89b-12d3-a456-426614174000',
+    orgId: '323e4567-e89b-12d3-a456-426614174000',
+    models,
+  });
+  return collect(
+    run({
+      instructions: 'Answer the user.',
+      model: provider,
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'Hello.' }] }],
+      context,
+      hooks: [observability],
+      retry: { maxRetries: 0 },
+      ...(modelCallIdleTimeoutMs !== undefined && {
+        modelCallIdleTimeoutMs,
+      }),
+    }),
+    createLoggerMock(),
+    models,
+  );
 }
 
 describe('adaptRunEventsToStream', () => {
@@ -541,6 +574,7 @@ describe('adaptRunEventsToStream', () => {
       ),
     ).rejects.toMatchObject<Partial<RunExecutionFailedError>>({
       message: 'Run execution failed: Agent runtime failed',
+      metadata: { runtimeErrorCode: 'PROVIDER_FAILED' },
     });
     expect(logger.error).toHaveBeenCalledWith(
       {
@@ -645,6 +679,116 @@ describe('adaptRunEventsToStream', () => {
       });
     },
   );
+
+  it('classifies an Azure rate limit retained in the terminal provider cause', async () => {
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.2',
+      stream() {
+        throw new ModelProviderError({
+          kind: 'unknown',
+          stage: 'stream_consumption',
+          retryAfterMs: 4_500,
+          cause: Object.assign(new Error('sensitive Azure response'), {
+            code: 'rate_limit_exceeded',
+            type: 'too_many_requests',
+          }),
+        });
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'gpt-5.2',
+      provider: 'azure',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ProviderRequestRejectedError);
+    expect(error).toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_REJECTED_AZURE',
+      metadata: expect.objectContaining({
+        provider: 'azure',
+        modelId: 'gpt-5.2',
+        failureStage: 'stream_consumption',
+        upstreamStatus: 429,
+        retryAfterMs: 4_500,
+      }),
+    });
+    expect(JSON.stringify(error)).not.toContain('sensitive Azure response');
+  });
+
+  it('keeps safe diagnostics for an unknown terminal provider failure', async () => {
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.2',
+      stream() {
+        throw new ModelProviderError({
+          kind: 'unknown',
+          stage: 'stream_consumption',
+          cause: Object.assign(new Error('sensitive provider response'), {
+            code: 'unexpected_provider_condition',
+            type: 'upstream_error',
+            cause: Object.assign(new Error('nested transport response'), {
+              code: 'ERR_NESTED_TRANSPORT',
+            }),
+          }),
+        });
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'gpt-5.2',
+      provider: 'azure',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceFailedError);
+    expect(error).toMatchObject({
+      code: 'INFERENCE_FAILED',
+      metadata: expect.objectContaining({
+        provider: 'azure',
+        modelId: 'gpt-5.2',
+        failureStage: 'stream_consumption',
+        upstreamCode: 'unexpected_provider_condition',
+        upstreamType: 'upstream_error',
+      }),
+    });
+    expect((error as InferenceFailedError).toClientResponse()).toEqual({
+      code: 'INFERENCE_FAILED',
+      message: 'Internal server error',
+    });
+    expect(JSON.stringify(error)).not.toContain('sensitive provider response');
+  });
+
+  it('maps a full runtime idle stream timeout to INFERENCE_TIMEOUT', async () => {
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream(request) {
+        yield {};
+        await new Promise<void>((resolve) => {
+          request.signal?.addEventListener('abort', () => resolve(), {
+            once: true,
+          });
+        });
+      },
+    };
+
+    const result = collectRuntime(
+      provider,
+      {
+        name: 'claude-sonnet-4-5',
+        provider: 'anthropic',
+      } as LanguageModel,
+      10,
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+      metadata: expect.objectContaining({
+        provider: 'anthropic',
+        modelId: 'claude-sonnet-4-5',
+        failureStage: 'stream_consumption',
+      }),
+      constructor: InferenceStreamStalledError,
+    });
+  });
 
   it('preserves a runtime-owned idle stall as InferenceStreamStalledError', async () => {
     const result = collect(

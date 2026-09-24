@@ -1,24 +1,9 @@
 import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type {
-  ProviderFailureFacts,
-  RunEvent,
-  ToolCallSnapshot,
-} from '@ayunis/agent-runtime';
+import type { RunEvent, ToolCallSnapshot } from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
-import {
-  ApplicationError,
-  type ErrorMetadata,
-} from 'src/common/errors/base.error';
-import {
-  ProviderConnectionError,
-  ProviderRequestRejectedError,
-  ProviderServerError,
-  ProviderTimeoutError,
-  type ProviderErrorContext,
-} from 'src/common/errors/provider.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
-import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
@@ -42,13 +27,9 @@ import {
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 import { reconstructRuntimeModelError } from './runtime-model-error';
-import {
-  InferenceAbortedError,
-  InferenceFailedError,
-  InferenceImageTooLargeError,
-  InferenceStreamStalledError,
-} from 'src/domain/models/application/models.errors';
+import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
+import { mapPortableProviderError } from './provider-failure.mapper';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import { mapRuntimeHookError } from './runtime-hook-error';
 import { mapCreditPolicyError } from 'src/domain/runs/application/credit-policy-error';
@@ -310,156 +291,6 @@ const RUN_ERROR_MAPPERS = new Map<
   ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
 ]);
 
-function mapPortableProviderError(
-  event: RunErrorEvent,
-  models: RuntimeModelRegistry | undefined,
-): ApplicationError | undefined {
-  if (
-    event.code !== 'PROVIDER_FAILED' ||
-    !event.providerFailure ||
-    !event.modelCall ||
-    !models
-  ) {
-    return undefined;
-  }
-  let model: LanguageModel;
-  try {
-    model = models.resolveByProviderName(event.modelCall.provider);
-  } catch {
-    return undefined;
-  }
-  const failure = event.providerFailure;
-  const context = providerErrorContext(model.provider, model.name, failure);
-  if (isRuntimeIdleStall(event, failure)) {
-    return new InferenceStreamStalledError(
-      readIdleMs(event.message),
-      providerFailureMetadata(failure, context),
-    );
-  }
-  if (isOversizedImageError(models.getCallError(event.modelCall.modelCallId))) {
-    return new InferenceImageTooLargeError({
-      provider: context.provider,
-      modelId: context.modelId,
-      status: failure.upstreamStatus,
-      upstreamRequestId: failure.upstreamRequestId,
-    });
-  }
-  return mapProviderFailure(failure, context);
-}
-
-function mapProviderFailure(
-  failure: ProviderFailureFacts,
-  context: ProviderErrorContext,
-): ApplicationError {
-  if (failure.kind === 'connection') {
-    return new ProviderConnectionError(context);
-  }
-  if (failure.kind === 'timeout') return new ProviderTimeoutError(context);
-  if (failure.kind === 'server') return new ProviderServerError(context);
-  if (failure.kind === 'rate_limit') {
-    return new ProviderRequestRejectedError(context);
-  }
-  if (failure.kind === 'abort') {
-    return new InferenceAbortedError(providerFailureMetadata(failure, context));
-  }
-  return new InferenceFailedError(
-    'Provider inference failed',
-    providerFailureMetadata(failure, context),
-  );
-}
-
-function providerErrorContext(
-  provider: string,
-  modelId: string,
-  failure: ProviderFailureFacts,
-): ProviderErrorContext {
-  return {
-    provider,
-    modelId,
-    failureStage: failure.stage,
-    ...(failure.timeoutSource && { timeoutSource: failure.timeoutSource }),
-    ...(failure.upstreamStatus !== undefined && {
-      upstreamStatus: failure.upstreamStatus,
-    }),
-    ...(failure.upstreamRequestId && {
-      upstreamRequestId: failure.upstreamRequestId,
-    }),
-    ...(failure.retryAfterMs !== undefined && {
-      retryAfterMs: failure.retryAfterMs,
-    }),
-    ...(failure.transportCode && {
-      underlyingCode: failure.transportCode,
-    }),
-    ...(failure.host && { host: failure.host }),
-  };
-}
-
-function providerFailureMetadata(
-  failure: ProviderFailureFacts,
-  context: ProviderErrorContext,
-): ErrorMetadata {
-  return {
-    provider: context.provider,
-    modelId: context.modelId,
-    failureStage: failure.stage,
-    ...(failure.upstreamStatus !== undefined && {
-      status: failure.upstreamStatus,
-    }),
-    ...(failure.upstreamRequestId && {
-      upstreamRequestId: failure.upstreamRequestId,
-    }),
-    ...(failure.retryAfterMs !== undefined && {
-      retryAfterMs: failure.retryAfterMs,
-    }),
-    ...(failure.timeoutSource && { timeoutSource: failure.timeoutSource }),
-    ...(failure.transportCode && {
-      underlyingCode: failure.transportCode,
-    }),
-    ...(failure.host && { host: failure.host }),
-  };
-}
-
-const RUNTIME_IDLE_PREFIX = 'Model provider stream was idle for ';
-const MILLISECONDS_SUFFIX = 'ms';
-
-function isRuntimeIdleStall(
-  event: RunErrorEvent,
-  failure: ProviderFailureFacts,
-): boolean {
-  return (
-    failure.kind === 'timeout' &&
-    event.message.startsWith(RUNTIME_IDLE_PREFIX) &&
-    event.message.endsWith(MILLISECONDS_SUFFIX) &&
-    Number.isFinite(readIdleMs(event.message)) &&
-    readIdleMs(event.message) > 0
-  );
-}
-
-function readIdleMs(message: string): number {
-  return Number(
-    message.slice(RUNTIME_IDLE_PREFIX.length, -MILLISECONDS_SUFFIX.length),
-  );
-}
-
-function isOversizedImageError(error: unknown): boolean {
-  let current: unknown = error;
-  const seen = new Set<unknown>();
-  for (let depth = 0; depth < 8; depth++) {
-    if (current instanceof Error) {
-      const message = current.message.toLowerCase();
-      if (message.includes('image exceeds ') && message.includes(' maximum')) {
-        return true;
-      }
-    }
-    if (typeof current !== 'object' || current === null || seen.has(current)) {
-      return false;
-    }
-    seen.add(current);
-    current = (current as { cause?: unknown }).cause;
-  }
-  return false;
-}
-
 function mapRunError(
   event: RunErrorEvent,
   logger: Logger,
@@ -496,5 +327,7 @@ function mapRunError(
     },
     'Agent runtime failed',
   );
-  return new RunExecutionFailedError('Agent runtime failed');
+  return new RunExecutionFailedError('Agent runtime failed', {
+    runtimeErrorCode: event.code,
+  });
 }
