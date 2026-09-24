@@ -28,6 +28,7 @@ import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
 import {
+  createOpenPanelScreenViewAnalytics,
   openPanel,
   trackOpenPanelOutgoingLinks,
   trackOpenPanelScreenViews,
@@ -87,7 +88,10 @@ declare module '@tanstack/react-router' {
 }
 
 if (openPanel) {
-  trackOpenPanelScreenViews(router, openPanel);
+  trackOpenPanelScreenViews(
+    router,
+    createOpenPanelScreenViewAnalytics(openPanel),
+  );
   trackOpenPanelOutgoingLinks(openPanel);
 }
 
