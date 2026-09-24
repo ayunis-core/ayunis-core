@@ -31,7 +31,7 @@ jobs:
         working-directory: ayunis-core-frontend
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
