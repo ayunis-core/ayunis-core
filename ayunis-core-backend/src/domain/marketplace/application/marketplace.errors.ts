@@ -33,3 +33,11 @@ export class MarketplaceUnavailableError extends ApplicationError {
     return { code: this.code, message: this.message };
   }
 }
+
+export class UnexpectedMarketplaceError extends ApplicationError {
+  constructor(error: unknown) {
+    super('Unexpected marketplace error', 'UNEXPECTED_MARKETPLACE_ERROR', 500, {
+      error,
+    });
+  }
+}
