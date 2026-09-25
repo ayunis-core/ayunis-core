@@ -403,6 +403,90 @@ describe('CheerioUrlRetrieverHandler.parseHtml', () => {
     expect(result.websiteTitle).toBe('Hi');
   });
 
+  it('preserves block boundaries while keeping inline text together', () => {
+    const result = handler.parseHtml(
+      [
+        '<main>',
+        '<h1>Digital services</h1>',
+        '<p>Apply <strong>online</strong> now.</p>',
+        '<section><h2>Opening hours</h2><p>Monday to Friday</p></section>',
+        '</main>',
+      ].join(''),
+      'https://stadt.example.de/services',
+    );
+
+    expect(result.content).toBe(
+      'Digital services\nApply online now.\nOpening hours\nMonday to Friday',
+    );
+  });
+
+  it('omits non-visible page content from extracted text', () => {
+    const result = handler.parseHtml(
+      [
+        '<body><p>Public information</p>',
+        '<script>trackVisitor()</script>',
+        '<style>.hidden { display: none; }</style>',
+        '<noscript><iframe>tracking fallback</iframe></noscript>',
+        '<template>dialog placeholder</template></body>',
+      ].join(''),
+      'https://stadt.example.de/information',
+    );
+
+    expect(result.content).toBe('Public information');
+  });
+
+  it('keeps readable SVG text', () => {
+    const result = handler.parseHtml(
+      '<body><svg><text>Permit fee: €25</text></svg></body>',
+      'https://stadt.example.de/fees',
+    );
+
+    expect(result.content).toBe('Permit fee: €25');
+  });
+
+  it('extracts only body text when optional body tags are omitted', () => {
+    const result = handler.parseHtml(
+      '<title>Service portal</title><p>Apply for a permit</p>',
+      'https://stadt.example.de/permits',
+    );
+
+    expect(result.content).toBe('Apply for a permit');
+    expect(result.websiteTitle).toBe('Service portal');
+  });
+
+  it('does not insert artificial line breaks into long blocks', () => {
+    const paragraph = 'Municipal service guidance '.repeat(20).trim();
+    const result = handler.parseHtml(
+      `<body><p>${paragraph}</p></body>`,
+      'https://stadt.example.de/guidance',
+    );
+
+    expect(result.content).toBe(paragraph);
+  });
+
+  it('collapses source formatting inside a block', () => {
+    const result = handler.parseHtml(
+      '<body><p>Apply online\nfor a parking\npermit.</p></body>',
+      'https://stadt.example.de/parking',
+    );
+
+    expect(result.content).toBe('Apply online for a parking permit.');
+  });
+
+  it('separates text around nested blocks', () => {
+    const result = handler.parseHtml(
+      [
+        '<body>Services<ul>',
+        '<li>Permits<ul><li>Building</li></ul></li>',
+        '<li>Registration</li>',
+        '</ul></body>',
+      ].join(''),
+      'https://stadt.example.de/services',
+    );
+
+    expect(result.content).toBe('Services\nPermits\nBuilding\nRegistration');
+  });
+
   it('resolves relative links against the page URL', () => {
     const result = handler.parseHtml(
       '<a href="/about">About</a><a href="team">Team</a>',
