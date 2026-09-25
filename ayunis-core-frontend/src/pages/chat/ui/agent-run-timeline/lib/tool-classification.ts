@@ -17,6 +17,7 @@ const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'create_calendar_event',
   'create_skill',
   'edit_skill',
+  'install_marketplace_skill',
 ]);
 
 export function isRichTool(toolName: string): boolean {

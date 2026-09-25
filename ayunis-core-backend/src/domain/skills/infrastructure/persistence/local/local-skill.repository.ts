@@ -156,6 +156,22 @@ export class LocalSkillRepository implements SkillRepository {
     return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
+  async findPersonalByMarketplaceIdentifier(
+    userId: UUID,
+    marketplaceIdentifier: string,
+  ): Promise<PersonalSkill | null> {
+    this.logger.log(
+      { userId, marketplaceIdentifier },
+      'findPersonalByMarketplaceIdentifier',
+    );
+    const record = await this.skillRepository.findOne({
+      where: { userId, workspaceId: IsNull(), marketplaceIdentifier },
+      relations: [...SKILL_RELATIONS],
+      order: { createdAt: 'ASC' },
+    });
+    return record ? this.skillMapper.toPersonal(record) : null;
+  }
+
   async findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceSkill[]> {
     this.logger.log({ workspaceId }, 'findAllByWorkspaceId');
     const records = await this.skillRepository.find({

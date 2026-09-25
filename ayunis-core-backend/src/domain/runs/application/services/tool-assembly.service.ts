@@ -431,7 +431,11 @@ export class ToolAssemblyService {
   }
 
   private assembleMarketplaceTools(): Promise<Tool[]> {
-    return buildMarketplaceTools(this.configService, this.assembleToolsUseCase);
+    return buildMarketplaceTools(
+      this.configService,
+      this.assembleToolsUseCase,
+      this.features.skillsEnabled,
+    );
   }
 
   private async assembleSourceTools(thread: Thread): Promise<Tool[]> {

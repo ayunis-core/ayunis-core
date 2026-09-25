@@ -112,6 +112,7 @@
         "create_calendar_event": "Created calendar event",
         "create_skill": "Created skill",
         "edit_skill": "Edited skill",
+        "install_marketplace_skill": "Offered skill install",
         "activate_skill": "Activated skill",
         "internet_search": "Searched the internet",
         "website_content": "Fetched website",
@@ -177,6 +178,22 @@
         "error": "Failed to update skill",
         "errorDuplicate": "A skill with this name already exists",
         "skillNotFound": "Could not find this skill. It may have been deleted."
+      },
+      "install_marketplace_skill": {
+        "title": "Install skill from the marketplace",
+        "install": "Install skill",
+        "installing": "Installing…",
+        "installed": "Skill installed",
+        "success": "Skill installed successfully",
+        "error": "Failed to install the skill",
+        "notFound": "This skill is no longer available in the marketplace",
+        "unavailable": "The marketplace is currently unavailable",
+        "noPermission": "You are not allowed to install skills. Open the install page or ask an administrator.",
+        "openInstallPage": "Open install page",
+        "loading": "Loading catalogue entry…",
+        "entryUnavailable": "This skill is not available in the marketplace right now, so it cannot be installed from here.",
+        "alreadyInstalled": "Already installed",
+        "openSkill": "Open skill"
       },
       "create_document": {
         "title": "Document",

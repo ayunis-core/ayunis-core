@@ -112,6 +112,7 @@
         "create_calendar_event": "Kalendereintrag erstellt",
         "create_skill": "Fähigkeit erstellt",
         "edit_skill": "Fähigkeit bearbeitet",
+        "install_marketplace_skill": "Fähigkeit zur Installation angeboten",
         "activate_skill": "Fähigkeit aktiviert",
         "internet_search": "Im Internet gesucht",
         "website_content": "Website abgerufen",
@@ -177,6 +178,22 @@
         "error": "Fähigkeit konnte nicht aktualisiert werden",
         "errorDuplicate": "Eine Fähigkeit mit diesem Namen existiert bereits",
         "skillNotFound": "Fähigkeit konnte nicht gefunden werden. Sie wurde möglicherweise gelöscht."
+      },
+      "install_marketplace_skill": {
+        "title": "Fähigkeit aus dem Marketplace installieren",
+        "install": "Fähigkeit installieren",
+        "installing": "Wird installiert…",
+        "installed": "Fähigkeit installiert",
+        "success": "Fähigkeit erfolgreich installiert",
+        "error": "Fähigkeit konnte nicht installiert werden",
+        "notFound": "Diese Fähigkeit ist im Marketplace nicht mehr verfügbar",
+        "unavailable": "Der Marketplace ist derzeit nicht erreichbar",
+        "noPermission": "Sie dürfen keine Fähigkeiten installieren. Öffnen Sie die Installationsseite oder wenden Sie sich an Ihre Administration.",
+        "openInstallPage": "Installationsseite öffnen",
+        "loading": "Katalogeintrag wird geladen…",
+        "entryUnavailable": "Diese Fähigkeit ist im Marketplace derzeit nicht verfügbar und kann hier nicht installiert werden.",
+        "alreadyInstalled": "Bereits installiert",
+        "openSkill": "Fähigkeit öffnen"
       },
       "create_document": {
         "title": "Dokument",
