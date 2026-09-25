@@ -16,4 +16,17 @@ export class OrgContextRunner {
       return fn();
     });
   }
+
+  // Same, but acting as a specific user: for event listeners that create
+  // resources on behalf of a user who is not the request's principal.
+  // `override` matters: the default `inherit` copies the parent store, which
+  // includes the publisher's open transaction; the listener would then keep
+  // using that transaction after the request committed and released it.
+  runForUser<T>(userId: UUID, orgId: UUID, fn: () => Promise<T>): Promise<T> {
+    return this.contextService.run({ ifNested: 'override' }, async () => {
+      this.contextService.set('userId', userId);
+      this.contextService.set('orgId', orgId);
+      return fn();
+    });
+  }
 }

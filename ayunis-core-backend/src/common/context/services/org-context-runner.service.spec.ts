@@ -48,4 +48,37 @@ describe('OrgContextRunner', () => {
       expect(second).toBe(otherOrgId);
     });
   });
+
+  describe('runForUser', () => {
+    const userId = '33333333-3333-3333-3333-333333333333' as UUID;
+
+    it('exposes both the userId and the orgId inside the callback', async () => {
+      const seen = await runner.runForUser(userId, orgId, () =>
+        Promise.resolve({
+          userId: contextService.get('userId'),
+          orgId: contextService.get('orgId'),
+        }),
+      );
+
+      expect(seen).toEqual({ userId, orgId });
+    });
+
+    it('does not leak the identity outside the callback', async () => {
+      await runner.runForUser(userId, orgId, () => Promise.resolve());
+
+      expect(contextService.get('userId')).toBeUndefined();
+      expect(contextService.get('orgId')).toBeUndefined();
+    });
+
+    it('starts from an empty store instead of inheriting the parent context', async () => {
+      const inherited = await contextService.run(async () => {
+        contextService.set('refreshToken', 'parent-only');
+        return runner.runForUser(userId, orgId, () =>
+          Promise.resolve(contextService.get('refreshToken')),
+        );
+      });
+
+      expect(inherited).toBeUndefined();
+    });
+  });
 });

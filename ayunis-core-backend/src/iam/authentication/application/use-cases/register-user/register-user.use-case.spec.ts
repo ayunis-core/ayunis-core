@@ -27,9 +27,11 @@ import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-case
 import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';
 import { ConfigService } from '@nestjs/config';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;
+  let mockPublishUserCreated: { publish: jest.Mock };
   let mockCreateAdminUserUseCase: Partial<CreateAdminUserUseCase>;
   let mockIsValidPasswordUseCase: Partial<IsValidPasswordUseCase>;
   let mockCreateOrgUseCase: Partial<CreateOrgUseCase>;
@@ -56,6 +58,7 @@ describe('RegisterUserUseCase', () => {
     mockConfigService = {
       get: jest.fn().mockReturnValue(false),
     };
+    mockPublishUserCreated = { publish: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -85,6 +88,10 @@ describe('RegisterUserUseCase', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: UserCreatedEventPublisher,
+          useValue: mockPublishUserCreated,
         },
       ],
     }).compile();
@@ -146,6 +153,7 @@ describe('RegisterUserUseCase', () => {
         orgId: 'org-id',
       }),
     );
+    expect(mockPublishUserCreated.publish).toHaveBeenCalledWith(mockUser);
   });
 
   it('should pass department to create-admin-user command', async () => {
