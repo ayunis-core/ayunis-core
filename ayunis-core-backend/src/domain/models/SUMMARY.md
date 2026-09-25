@@ -85,3 +85,20 @@ Direct-inference streams use `StreamIdleWatchdog` from `src/common/streaming/str
 The module supports image generation via a provider-abstracted handler system. The abstract `ImageGenerationHandler` port (`application/ports/image-generation.handler.ts`) defines the contract for generating images given a model, prompt, size, quality, and optional `referenceImages` (raw buffers with content types). When reference images are present the Azure handler calls the provider's image-edit endpoint (up to 16 reference images per request) instead of plain text-to-image generation, so the image model sees the actual source images rather than a text description. `ImageGenerationHandlerRegistry` (`application/registry/image-generation-handler.registry.ts`) maps model providers to their handler implementations, following the same pattern as `InferenceHandlerRegistry`. Infrastructure implementations include `AzureImageGenerationHandler` (`infrastructure/image-generation/azure.image-generation.ts`) for Azure-hosted generation and `MockImageGenerationHandler` (`infrastructure/image-generation/mock.image-generation.ts`) for test environments. `GenerateImageUseCase` (`application/use-cases/generate-image/generate-image.use-case.ts`) is the facade that resolves the correct handler via the registry and executes the generation request with proper error handling. `ImageGenerationFailedError` (`application/models.errors.ts`) is thrown when image generation encounters an unexpected failure.
 
 Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.
+
+## Eligible default selection and completed-response accounting
+
+`GetDefaultModelUseCase` resolves the caller's effective grants once. Its optional
+`excludeAnonymousOnly` constraint filters those grants before applying defaults;
+`preferOrganizationDefault` moves an eligible organization default ahead of the
+usual user → team → organization → alphabetical fallback order. Existing callers
+retain the usual order and anonymity behavior. No grants produces
+`NO_DEFAULT_MODEL_FOUND`; grants that are all anonymous-only produce
+`ONLY_ANONYMOUS_MODELS_AVAILABLE` when that constraint is requested.
+
+`GetInferenceCommand.onUsage` is an optional awaited callback for callers that
+account completed non-streaming responses. It runs before token-limit rejection,
+so consumed tokens are still recorded for truncated completions. Accounting
+failures retain their identity and prevent returning the result; they are not
+classified as provider failures. Calls that throw before returning a response
+cannot provide usage through this callback.

@@ -1,3 +1,4 @@
+import type { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { Message } from 'src/domain/messages/domain/message.entity';
@@ -10,6 +11,7 @@ export class GetInferenceCommand {
   toolChoice: ModelToolChoice;
   instructions?: string;
   acceptTokenLimitCompletion: boolean;
+  onUsage?: (usage: InferenceResponse['meta']) => Promise<void>;
 
   constructor(params: {
     model: LanguageModel;
@@ -18,8 +20,10 @@ export class GetInferenceCommand {
     toolChoice: ModelToolChoice;
     instructions?: string;
     acceptTokenLimitCompletion?: boolean;
+    onUsage?: (usage: InferenceResponse['meta']) => Promise<void>;
   }) {
     this.model = params.model;
+    this.onUsage = params.onUsage;
     this.messages = params.messages;
     this.tools = params.tools;
     this.toolChoice = params.toolChoice;

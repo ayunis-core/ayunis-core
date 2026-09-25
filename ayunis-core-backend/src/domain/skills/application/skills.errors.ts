@@ -20,6 +20,8 @@ export enum SkillErrorCode {
   MARKETPLACE_INSTALL_FAILED = 'MARKETPLACE_INSTALL_FAILED',
   SKILL_NOT_ACTIVE = 'SKILL_NOT_ACTIVE',
   SKILL_NAME_RESOLUTION_FAILED = 'SKILL_NAME_RESOLUTION_FAILED',
+  SKILL_TEXT_IMPROVEMENT_FAILED = 'SKILL_TEXT_IMPROVEMENT_FAILED',
+  SKILL_TEXT_IMPROVEMENT_UNAVAILABLE = 'SKILL_TEXT_IMPROVEMENT_UNAVAILABLE',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
 }
 
@@ -243,6 +245,28 @@ export class UnexpectedSkillError extends SkillError {
       SkillErrorCode.UNEXPECTED_SKILL_ERROR,
       500,
       { error },
+    );
+  }
+}
+
+export class SkillTextImprovementFailedError extends SkillError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The improved text could not be generated',
+      SkillErrorCode.SKILL_TEXT_IMPROVEMENT_FAILED,
+      502,
+      metadata,
+    );
+  }
+}
+
+export class SkillTextImprovementUnavailableError extends SkillError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'No permitted model may receive skill texts without anonymization',
+      SkillErrorCode.SKILL_TEXT_IMPROVEMENT_UNAVAILABLE,
+      422,
+      metadata,
     );
   }
 }
