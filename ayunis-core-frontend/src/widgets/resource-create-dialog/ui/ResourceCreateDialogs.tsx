@@ -1,3 +1,4 @@
+import { useSkillTextAssist } from '@/widgets/skill-improve-button';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,6 +28,8 @@ export function SkillCreateDialog({
   buttonClassName,
   showIcon = false,
   footerHint,
+  open,
+  onOpenChange,
 }: Readonly<{
   onCreate: (data: CreateSkillFormData) => Promise<unknown>;
   buttonText?: string;
@@ -34,10 +37,18 @@ export function SkillCreateDialog({
   buttonClassName?: string;
   showIcon?: boolean;
   footerHint?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>) {
   const { t } = useTranslation('skills');
   const translations = useCreateDialogTranslations('skills');
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const [isOwnOpen, setIsOwnOpen] = useState(false);
+  const isOpen = isControlled ? open : isOwnOpen;
+  const setIsOpen = (next: boolean) => {
+    if (isControlled) onOpenChange?.(next);
+    else setIsOwnOpen(next);
+  };
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<CreateSkillFormData>({
     resolver: zodResolver(
@@ -55,6 +66,13 @@ export function SkillCreateDialog({
       }),
     ),
     defaultValues: { name: '', shortDescription: '', instructions: '' },
+  });
+
+  const assist = useSkillTextAssist(form, {
+    labels: {
+      trigger: t('createDialog.form.shortDescriptionLabel'),
+      instructions: t('createDialog.form.instructionsLabel'),
+    },
   });
 
   const close = () => {
@@ -86,6 +104,8 @@ export function SkillCreateDialog({
       buttonClassName={buttonClassName}
       buttonTestId={buttonTestId}
       footerHint={footerHint}
+      hideTrigger={isControlled}
+      isSubmitDisabled={assist.isBusy}
     >
       <Form {...form}>
         <div className="space-y-6">
@@ -99,12 +119,15 @@ export function SkillCreateDialog({
               control={form.control}
               name="shortDescription"
               translationNamespace="skills"
+              multiline
+              {...assist.trigger}
             />
           </div>
           <InstructionsField
             control={form.control}
             name="instructions"
             translationNamespace="skills"
+            {...assist.instructions}
           />
         </div>
       </Form>

@@ -11,23 +11,30 @@ interface InfoHintProps {
   label: string;
   hint: string;
   testId: string;
+  showLabel?: boolean;
 }
 
 // The trigger is a real button so the explanation is reachable by keyboard, not
 // hover only. Its accessible name names the row rather than repeating the hint,
 // which Radix already exposes as the description via aria-describedby.
-export function InfoHint({ label, hint, testId }: Readonly<InfoHintProps>) {
-  const { t } = useTranslation('admin-settings-roles');
+export function InfoHint({
+  label,
+  hint,
+  testId,
+  showLabel = true,
+}: Readonly<InfoHintProps>) {
+  const { t } = useTranslation('common');
 
   return (
     <span className="inline-flex items-center gap-1">
-      {label}
+      {showLabel && label}
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
+            type="button"
             variant="ghost"
             size="icon-xs"
-            aria-label={t('hintTriggerLabel', { label })}
+            aria-label={t('common.hintTriggerLabel', { label })}
             data-testid={testId}
           >
             <Info />

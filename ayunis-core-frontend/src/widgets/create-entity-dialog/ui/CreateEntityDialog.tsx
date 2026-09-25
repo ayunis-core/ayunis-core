@@ -30,6 +30,8 @@ interface CreateEntityDialogProps {
   buttonClassName?: string;
   buttonTestId?: string;
   footerHint?: ReactNode;
+  hideTrigger?: boolean;
+  isSubmitDisabled?: boolean;
   children: ReactNode;
 }
 
@@ -45,20 +47,24 @@ export default function CreateEntityDialog({
   buttonClassName = '',
   buttonTestId,
   footerHint,
+  hideTrigger = false,
+  isSubmitDisabled = false,
   children,
 }: Readonly<CreateEntityDialogProps>) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          size="sm"
-          data-testid={buttonTestId}
-          className={`${showIcon ? 'inline-flex items-center gap-2' : ''} max-sm:max-w-full ${buttonClassName}`}
-        >
-          {showIcon && <Plus className="h-4 w-4" />}
-          {buttonText ?? translations.buttonText}
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button
+            size="sm"
+            data-testid={buttonTestId}
+            className={`${showIcon ? 'inline-flex items-center gap-2' : ''} max-sm:max-w-full ${buttonClassName}`}
+          >
+            {showIcon && <Plus className="h-4 w-4" />}
+            {buttonText ?? translations.buttonText}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>{translations.title}</DialogTitle>
@@ -85,7 +91,7 @@ export default function CreateEntityDialog({
               >
                 {translations.cancel}
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || isSubmitDisabled}>
                 {isLoading ? translations.creating : translations.create}
               </Button>
             </div>
