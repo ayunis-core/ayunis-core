@@ -49,12 +49,16 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     alwaysOnTemplatesExecute?: jest.Mock;
     skillsEnabled?: boolean;
     activeKnowledgeBasesExecute?: jest.Mock;
+    marketplaceEnabled?: boolean;
   }) {
+    const configFlags: Record<string, boolean> = {
+      'internetSearch.isAvailable':
+        overrides.internetSearchIsAvailable ?? false,
+      'marketplace.enabled': overrides.marketplaceEnabled ?? false,
+    };
     const configService = {
-      get: jest
-        .fn()
-        .mockReturnValue(overrides.internetSearchIsAvailable ?? false),
-    }; // internetSearch.isAvailable
+      get: jest.fn().mockImplementation((key: string) => configFlags[key]),
+    };
     const assembleToolsUseCase = {
       execute:
         overrides.assembleToolExecute ??
@@ -534,5 +538,29 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).not.toContain(ToolType.WEBSITE_CONTENT);
     expect(toolTypes).not.toContain(ToolType.INTERNET_SEARCH);
+  });
+
+  it('includes marketplace search when a marketplace is configured', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      marketplaceEnabled: true,
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).toContain(ToolType.MARKETPLACE_SEARCH);
+  });
+
+  it('omits marketplace search when no marketplace is configured', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      marketplaceEnabled: false,
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).not.toContain(ToolType.MARKETPLACE_SEARCH);
   });
 });
