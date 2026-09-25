@@ -30,6 +30,13 @@ import { cn } from '@ayunis/ui/lib/cn';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { SourcesList } from './SourcesList';
 import { ChatInputExpandable } from './ChatInputExpandable';
+import { SkillSlashMenu } from './SkillSlashMenu';
+import {
+  useSkillOptions,
+  type SkillOption,
+} from '@/widgets/chat-input/api/useSkillOptions';
+import { useSkillSlashMenu } from '@/widgets/chat-input/model/useSkillSlashMenu';
+import { useIsSkillsEnabled } from '@/features/feature-toggles';
 import { ChatInputActionBar } from './ChatInputActionBar';
 import { showError } from '@/shared/lib/toast';
 import './chat-input-glow.css';
@@ -92,6 +99,8 @@ interface ChatInputProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
+  onSkillSelect?: (skill: SkillOption) => void;
+  workspaceId?: string | null;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
@@ -139,6 +148,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      onSkillSelect,
+      workspaceId,
       initialMessage,
       draftChatId,
     },
@@ -154,6 +165,19 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     useDraftCursorAtEnd(textareaRef, draftChatId);
+    const areSkillsEnabled = useIsSkillsEnabled();
+    const skillOptions = useSkillOptions({
+      workspaceId,
+      enabled: areSkillsEnabled && Boolean(onSkillSelect),
+    });
+    const slashMenu = useSkillSlashMenu({
+      message,
+      setMessage,
+      textareaRef,
+      skills: skillOptions,
+      onSkillSelect,
+      isEnabled: areSkillsEnabled && Boolean(onSkillSelect) && !inFlight,
+    });
 
     // TextareaAutosize corrects its height during mount; the height transition
     // must not be active yet or that correction animates as a visible shrink
@@ -251,7 +275,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     useKeyboardShortcut(
       ['Enter'],
       () => {
-        if (isFocused) {
+        if (isFocused && !slashMenu.isOpen) {
           handleSend();
         }
       },
@@ -374,29 +398,44 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     </ChatInputExpandable>
                   )}
 
-                  <TextareaAutosize
-                    ref={textareaRef}
-                    minRows={1}
-                    maxRows={10}
-                    value={message}
-                    autoFocus
-                    readOnly={isSubmitting}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onPaste={handlePaste}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    placeholder={t('chatInput.placeholder')}
-                    aria-label={t('chatInput.placeholder')}
-                    className={cn(
-                      'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
-                      isHeightAnimationEnabled &&
-                        'chat-input-shell__textarea--animate',
-                      showProcessingGlow && 'opacity-90',
-                      isSubmitting && 'cursor-not-allowed',
-                      isStreaming && 'cursor-text',
-                    )}
-                    data-testid="input"
-                  />
+                  <SkillSlashMenu
+                    isOpen={slashMenu.isOpen}
+                    skills={slashMenu.matches}
+                    activeIndex={slashMenu.activeIndex}
+                    onActiveIndexChange={slashMenu.setActiveIndex}
+                    onSelect={slashMenu.select}
+                    onClose={slashMenu.close}
+                  >
+                    <TextareaAutosize
+                      ref={textareaRef}
+                      minRows={1}
+                      maxRows={10}
+                      value={message}
+                      autoFocus
+                      readOnly={isSubmitting}
+                      onChange={(e) => {
+                        setMessage(e.target.value);
+                        slashMenu.syncFromCaret();
+                      }}
+                      onKeyDown={slashMenu.handleKeyDown}
+                      onKeyUp={slashMenu.syncFromCaret}
+                      onClick={slashMenu.syncFromCaret}
+                      onPaste={handlePaste}
+                      onFocus={() => setIsFocused(true)}
+                      onBlur={() => setIsFocused(false)}
+                      placeholder={t('chatInput.placeholder')}
+                      aria-label={t('chatInput.placeholder')}
+                      className={cn(
+                        'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
+                        isHeightAnimationEnabled &&
+                          'chat-input-shell__textarea--animate',
+                        showProcessingGlow && 'opacity-90',
+                        isSubmitting && 'cursor-not-allowed',
+                        isStreaming && 'cursor-text',
+                      )}
+                      data-testid="input"
+                    />
+                  </SkillSlashMenu>
 
                   <ChatInputActionBar
                     isSubmitting={isSubmitting}

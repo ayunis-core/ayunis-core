@@ -112,7 +112,8 @@
     "transcriptionFailed": "Transkription fehlgeschlagen",
     "modelSelectorAriaLabel": "KI-Modell auswählen",
     "modelChangeDisabledTooltip": "Das Modell kann in einem bestehenden Chat nicht mehr gewechselt werden.",
-    "deactivateSkillTooltip": "Fähigkeit deaktivieren"
+    "deactivateSkillTooltip": "Fähigkeit deaktivieren",
+    "slashMenuHint": "Fähigkeit auswählen"
   },
   "common": {
     "loading": "Laden...",
@@ -212,7 +213,7 @@
     "skillCount_other": "{{count}} Fähigkeiten",
     "knowledgeCount_one": "{{count}} Wissenssammlung",
     "knowledgeCount_other": "{{count}} Wissenssammlungen",
-    "skillsHint": "Fähigkeiten aktivieren sich von selbst, sobald Ihre Eingabe dazu passt — oder Sie wählen hier eine aus.",
+    "skillsHint": "Fähigkeiten aktivieren sich von selbst, sobald Ihre Eingabe dazu passt. Wählen Sie hier eine aus oder tippen Sie / im Chat.",
     "knowledgeHint": "Wissenssammlungen werden durchsucht, sobald Ihre Frage dazu passt. Sie müssen nichts auswählen.",
     "sharedBadge": "Freigegeben",
     "skillsEmpty": "Für diesen Chat steht noch keine Fähigkeit bereit.",
