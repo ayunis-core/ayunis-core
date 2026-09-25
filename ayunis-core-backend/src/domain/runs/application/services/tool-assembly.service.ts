@@ -1,7 +1,7 @@
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService, ConfigType } from '@nestjs/config';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
@@ -20,6 +20,7 @@ import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/
 import { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
 import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
+import { marketplaceConfig } from 'src/config/marketplace.config';
 import {
   buildSkillSlug,
   SlugCollisionError,
@@ -31,6 +32,8 @@ import {
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { assembleImageGenerationTools } from './image-generation-tool-assembly.helper';
+import { assembleMarketplaceTools as buildMarketplaceTools } from './marketplace-tool-assembly.helper';
+import { assembleInternetTools as buildInternetTools } from './internet-tool-assembly.helper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
@@ -58,6 +61,8 @@ export class ToolAssemblyService {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
+    @Inject(marketplaceConfig.KEY)
+    private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -311,6 +316,7 @@ export class ToolAssemblyService {
     tools.push(...(await this.assembleSkillManagementTools(editableSkillIds)));
 
     tools.push(...(await this.assembleInternetTools()));
+    tools.push(...(await this.assembleMarketplaceTools()));
 
     tools.push(...(await this.assembleImageTools()));
 
@@ -389,27 +395,20 @@ export class ToolAssemblyService {
     return tools;
   }
 
-  private async assembleInternetTools(): Promise<Tool[]> {
-    const orgChatSettings = await this.getOrgChatSettingsUseCase.execute();
-    if (!orgChatSettings.internetSearchEnabled) {
-      this.logger.debug('Internet access disabled for org, skipping web tools');
-      return [];
-    }
+  private assembleInternetTools(): Promise<Tool[]> {
+    return buildInternetTools({
+      getOrgChatSettingsUseCase: this.getOrgChatSettingsUseCase,
+      configService: this.configService,
+      assembleToolsUseCase: this.assembleToolsUseCase,
+      logger: this.logger,
+    });
+  }
 
-    const tools: Tool[] = [
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({ type: ToolType.WEBSITE_CONTENT }),
-      ),
-    ];
-
-    if (this.configService.get<boolean>('internetSearch.isAvailable')) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({ type: ToolType.INTERNET_SEARCH }),
-        ),
-      );
-    }
-    return tools;
+  private assembleMarketplaceTools(): Promise<Tool[]> {
+    return buildMarketplaceTools({
+      marketplaceEnabled: this.marketplace.enabled,
+      assembleToolsUseCase: this.assembleToolsUseCase,
+    });
   }
 
   private async assembleSourceTools(thread: Thread): Promise<Tool[]> {

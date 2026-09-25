@@ -48,12 +48,15 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     systemPromptBuild?: jest.Mock;
     alwaysOnTemplatesExecute?: jest.Mock;
     activeKnowledgeBasesExecute?: jest.Mock;
+    marketplaceEnabled?: boolean;
   }) {
+    const configFlags: Record<string, boolean> = {
+      'internetSearch.isAvailable':
+        overrides.internetSearchIsAvailable ?? false,
+    };
     const configService = {
-      get: jest
-        .fn()
-        .mockReturnValue(overrides.internetSearchIsAvailable ?? false),
-    }; // internetSearch.isAvailable
+      get: jest.fn().mockImplementation((key: string) => configFlags[key]),
+    };
     const assembleToolsUseCase = {
       execute:
         overrides.assembleToolExecute ??
@@ -89,6 +92,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       execute:
         overrides.alwaysOnTemplatesExecute ?? jest.fn().mockResolvedValue([]),
     };
+    const marketplace = { enabled: overrides.marketplaceEnabled ?? false };
     const contextService = {
       get: overrides.contextServiceGet ?? jest.fn().mockReturnValue(undefined),
     };
@@ -123,6 +127,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
       getOrgChatSettingsUseCase,
+      marketplace,
     );
 
     return {
@@ -500,5 +505,29 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).not.toContain(ToolType.WEBSITE_CONTENT);
     expect(toolTypes).not.toContain(ToolType.INTERNET_SEARCH);
+  });
+
+  it('includes marketplace search when a marketplace is configured', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      marketplaceEnabled: true,
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).toContain(ToolType.MARKETPLACE_SEARCH);
+  });
+
+  it('omits marketplace search when no marketplace is configured', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      marketplaceEnabled: false,
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).not.toContain(ToolType.MARKETPLACE_SEARCH);
   });
 });

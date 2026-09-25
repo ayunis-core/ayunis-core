@@ -129,6 +129,7 @@
     },
     "tools": {
       "internet_search": "Im Internet suchen",
+      "marketplace_search": "Im Marketplace suchen",
       "website_content": "Website abfragen",
       "source_query": "Datei durchsuchen",
       "source_get_text": "Datei durchsuchen",
