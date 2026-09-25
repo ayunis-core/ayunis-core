@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.43.0](https://github.com/ayunis-core/ayunis-core/compare/v2.42.0...v2.43.0) (2026-09-25)
+
+
+### Features
+
+* **admin-settings:** explain image model availability in the model card (AYC-943) ([#1745](https://github.com/ayunis-core/ayunis-core/issues/1745)) ([81a3323](https://github.com/ayunis-core/ayunis-core/commit/81a3323d4bbbb5a3bbd9a7c89f7373d483a6e058))
+* **chat:** explain the long-chat warning and let users dismiss it (AYC-985) ([#1744](https://github.com/ayunis-core/ayunis-core/issues/1744)) ([a893158](https://github.com/ayunis-core/ayunis-core/commit/a89315820394e43fcb1f1d05954fe2e652141380))
+* **operations:** add protected queue inspection (AYC-1037) ([#1748](https://github.com/ayunis-core/ayunis-core/issues/1748)) ([dec1c6e](https://github.com/ayunis-core/ayunis-core/commit/dec1c6e1259d4631005596e0af9d5e9191c7b89c))
+
+
+### Bug Fixes
+
+* **analytics:** group dynamic OpenPanel routes (AYC-000) ([#1746](https://github.com/ayunis-core/ayunis-core/issues/1746)) ([dc49f51](https://github.com/ayunis-core/ayunis-core/commit/dc49f519fc6c099c072cd86081aee450fdff342b))
+* **chat:** authorize active knowledge base citations (AYC-1051) ([#1749](https://github.com/ayunis-core/ayunis-core/issues/1749)) ([413b08e](https://github.com/ayunis-core/ayunis-core/commit/413b08e0203b78dfefc43a5a1b3264b13112c822))
+* **chat:** bundle GeoJSON map worker dependencies (AYC-866) ([#1747](https://github.com/ayunis-core/ayunis-core/issues/1747)) ([20bdb8c](https://github.com/ayunis-core/ayunis-core/commit/20bdb8cc0d9bbf0d4d6788b155e2329ce79d814d))
+* **retrievers:** preserve web content block boundaries (AYC-1070) ([#1759](https://github.com/ayunis-core/ayunis-core/issues/1759)) ([2aec927](https://github.com/ayunis-core/ayunis-core/commit/2aec927bf334b0d0d8d5b4f32a13f6f549a3af9f))
+* **runs:** preserve terminal provider failure context (AYC-946) ([#1753](https://github.com/ayunis-core/ayunis-core/issues/1753)) ([03b8dec](https://github.com/ayunis-core/ayunis-core/commit/03b8decf872d14f661fe04949c4ea62b5662e9cf))
+* **storage:** classify missing objects during presigning (AYC-945) ([#1752](https://github.com/ayunis-core/ayunis-core/issues/1752)) ([a20a4d1](https://github.com/ayunis-core/ayunis-core/commit/a20a4d148c7bb0ed4f658dd7928664b883a19e59))
+* **subscriptions:** allow selecting next calendar year (AYC-1052) ([#1754](https://github.com/ayunis-core/ayunis-core/issues/1754)) ([c6a9ce4](https://github.com/ayunis-core/ayunis-core/commit/c6a9ce4071fab4c701a89162fca3268dad79211b))
+* **transcriptions:** classify undecodable mistral audio (AYC-996) ([#1751](https://github.com/ayunis-core/ayunis-core/issues/1751)) ([8900e80](https://github.com/ayunis-core/ayunis-core/commit/8900e809a26d351a407d6c94142c5579b8b106e3))
+
+
+### CI/CD
+
+* restore MinIO-backed checks (AYC-000) ([#1758](https://github.com/ayunis-core/ayunis-core/issues/1758)) ([093902f](https://github.com/ayunis-core/ayunis-core/commit/093902fc765361977b32be7596bc1ed36eed29cf))
+
 ## [2.42.0](https://github.com/ayunis-core/ayunis-core/compare/v2.41.0...v2.42.0) (2026-09-23)
 
 
