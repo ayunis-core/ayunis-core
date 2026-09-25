@@ -2,6 +2,7 @@ import type { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import type { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
 
 export interface ProviderStatsRow {
   provider: ModelProvider | string;
@@ -55,4 +56,27 @@ export interface GetUserUsageQueryParams {
   sortOrder: 'ASC' | 'DESC';
   offset: number;
   limit: number;
+}
+
+type NullableTimestamp = Date | string | null;
+
+export interface ApiKeyUsageRow {
+  apiKeyId: string;
+  name: string;
+  revokedAt: NullableTimestamp;
+  expiresAt: NullableTimestamp;
+  inputTokens: string;
+  outputTokens: string;
+  totalTokens: string;
+  requests: string;
+  pricedRequests: string;
+  credits: string | null;
+  lastUsedAt: NullableTimestamp;
+}
+
+export interface GetApiKeyUsageQueryParams {
+  apiKeyRepository: Repository<ApiKeyRecord>;
+  organizationId: UUID;
+  startDate?: Date;
+  endDate?: Date;
 }

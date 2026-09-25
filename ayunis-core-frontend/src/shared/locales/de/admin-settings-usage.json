@@ -49,5 +49,25 @@
     "inactive": "inaktiv",
     "totalCredits": "Gesamt: {{credits}} Credits",
     "emptyState": "Keine Benutzer entsprechen den ausgewählten Filtern auf dieser Seite. Versuchen Sie, Ihre Filter anzupassen oder zu einer anderen Seite zu navigieren."
+  },
+  "apiKeyUsage": {
+    "title": "API-Schlüssel-Verbrauch",
+    "description": "Verbrauch je API-Schlüssel im ausgewählten Monat, einschließlich widerrufener und abgelaufener Schlüssel.",
+    "apiKey": "API-Schlüssel",
+    "tokens": "Tokens",
+    "tokenSplit": "{{input}} Eingabe / {{output}} Ausgabe",
+    "requests": "Anfragen",
+    "credits": "Credits",
+    "lastUsed": "Zuletzt genutzt",
+    "creditsUnavailable": "Nicht verfügbar",
+    "unpricedRequests_one": "{{count}} Anfrage ohne Preis",
+    "unpricedRequests_other": "{{count}} Anfragen ohne Preis",
+    "status": {
+      "revoked": "Widerrufen",
+      "expired": "Abgelaufen"
+    },
+    "noKeys": "Keine API-Schlüssel",
+    "noKeysDescription": "Diese Organisation hat noch keine API-Schlüssel erstellt.",
+    "error": "Fehler beim Laden des API-Schlüssel-Verbrauchs"
   }
 }

@@ -41,6 +41,8 @@ import type {
   ApiKeyCreditLimitItemDto,
   ApiKeyCreditLimitResponseDto,
   ApiKeyResponseDto,
+  ApiKeyUsageControllerGetApiKeyUsageParams,
+  ApiKeyUsageResponseDto,
   AppAlertResponseDto,
   ArtifactListResponseDto,
   ArtifactResponseDto,
@@ -222,6 +224,7 @@ import type {
   SuperAdminTrialResponseDtoNullable,
   SuperAdminUsageControllerGetModelDistributionParams,
   SuperAdminUsageControllerGetUsageStatsParams,
+  SuperAdminUsageDataControllerGetApiKeyUsageParams,
   SuperAdminUsageDataControllerGetProviderUsageChartParams,
   SuperAdminUsageDataControllerGetProviderUsageParams,
   SuperAdminUsageDataControllerGetUserUsageParams,
@@ -17434,6 +17437,101 @@ export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnTy
 
 
 /**
+ * Returns token, request and credit usage for every API key of the current organization, including revoked and expired keys. Dates are optional - if not provided, shows all usage.
+ * @summary Get usage statistics by API key
+ */
+export const apiKeyUsageControllerGetApiKeyUsage = (
+    params?: ApiKeyUsageControllerGetApiKeyUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyUsageResponseDto>(
+      {url: `/usage/api-keys`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getApiKeyUsageControllerGetApiKeyUsageQueryKey = (params?: ApiKeyUsageControllerGetApiKeyUsageParams,) => {
+    return [
+    `/usage/api-keys`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getApiKeyUsageControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApiKeyUsageControllerGetApiKeyUsageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>> = ({ signal }) => apiKeyUsageControllerGetApiKeyUsage(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApiKeyUsageControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>>
+export type ApiKeyUsageControllerGetApiKeyUsageQueryError = unknown
+
+
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params: undefined |  ApiKeyUsageControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by API key
+ */
+
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApiKeyUsageControllerGetApiKeyUsageQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Get usage dashboard configuration for an organization
  */
 export const superAdminUsageControllerGetUsageConfig = (
@@ -18113,6 +18211,107 @@ export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<Ret
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSuperAdminUsageDataControllerGetUserUsageQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get usage statistics by API key for an organization
+ */
+export const superAdminUsageDataControllerGetApiKeyUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/api-keys`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/api-keys`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>> = ({ signal }) => superAdminUsageDataControllerGetApiKeyUsage(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>>
+export type SuperAdminUsageDataControllerGetApiKeyUsageQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by API key for an organization
+ */
+
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions(orgId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

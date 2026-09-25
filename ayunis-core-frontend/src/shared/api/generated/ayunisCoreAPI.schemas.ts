@@ -4184,6 +4184,48 @@ export interface ProviderUsageChartResponseDto {
   timeSeries: ProviderTimeSeriesRowDto[];
 }
 
+export interface ApiKeyUsageDto {
+  /** API key ID */
+  apiKeyId: string;
+  /** API key name */
+  name: string;
+  /**
+     * Revocation timestamp, or null if the key was not revoked
+     * @nullable
+     */
+  revokedAt: string | null;
+  /**
+     * Expiration date, or null if the key never expires
+     * @nullable
+     */
+  expiresAt: string | null;
+  /** Input tokens in the filtered period */
+  inputTokens: number;
+  /** Output tokens in the filtered period */
+  outputTokens: number;
+  /** Total tokens in the filtered period */
+  totalTokens: number;
+  /** Recorded inferences in the filtered period. Calls that produced no usage data are not counted. */
+  requests: number;
+  /**
+     * Credits of all priced requests in the filtered period. Null when the key has requests but none of them could be priced.
+     * @nullable
+     */
+  credits: number | null;
+  /** Requests without a credit value, for example because the model had no price configured */
+  unpricedRequests: number;
+  /**
+     * Last recorded use in the filtered period (null if none)
+     * @nullable
+     */
+  lastUsedAt: string | null;
+}
+
+export interface ApiKeyUsageResponseDto {
+  /** Usage per API key of the organization, including revoked and expired keys */
+  data: ApiKeyUsageDto[];
+}
+
 export interface TimeSeriesPointDto {
   /** Date of the data point */
   date: string;
@@ -5812,6 +5854,17 @@ provider?: string;
 modelId?: string;
 };
 
+export type ApiKeyUsageControllerGetApiKeyUsageParams = {
+/**
+ * Start date in ISO format
+ */
+startDate?: string;
+/**
+ * End date in ISO format
+ */
+endDate?: string;
+};
+
 export type SuperAdminUsageControllerGetUsageStatsParams = {
 startDate?: string;
 endDate?: string;
@@ -5866,6 +5919,11 @@ export const SuperAdminUsageDataControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
+
+export type SuperAdminUsageDataControllerGetApiKeyUsageParams = {
+startDate?: string;
+endDate?: string;
+};
 
 export type RunsControllerSendMessageBody = {
   threadId: string;

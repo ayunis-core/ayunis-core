@@ -12,18 +12,22 @@ import { UserUsageResponseDto } from './dto/user-usage-response.dto';
 import { ProviderUsageResponseDtoMapper } from './mappers/provider-usage-response-dto.mapper';
 import { ProviderUsageChartResponseDtoMapper } from './mappers/provider-usage-chart-response-dto.mapper';
 import { UserUsageResponseDtoMapper } from './mappers/user-usage-response-dto.mapper';
+import { ApiKeyUsageResponseDto } from './dto/api-key-usage-response.dto';
+import { ApiKeyUsageResponseDtoMapper } from './mappers/api-key-usage-response-dto.mapper';
+import { GetApiKeyUsageUseCase } from 'src/domain/usage/application/use-cases/get-api-key-usage/get-api-key-usage.use-case';
+import { GetApiKeyUsageQuery } from 'src/domain/usage/application/use-cases/get-api-key-usage/get-api-key-usage.query';
 import { parseDate } from './utils/parse-date.util';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { GetProviderUsageUseCase } from '../../application/use-cases/get-provider-usage/get-provider-usage.use-case';
-import { GetUserUsageUseCase } from '../../application/use-cases/get-user-usage/get-user-usage.use-case';
-import { GetProviderUsageQuery } from '../../application/use-cases/get-provider-usage/get-provider-usage.query';
+import { GetProviderUsageUseCase } from 'src/domain/usage/application/use-cases/get-provider-usage/get-provider-usage.use-case';
+import { GetUserUsageUseCase } from 'src/domain/usage/application/use-cases/get-user-usage/get-user-usage.use-case';
+import { GetProviderUsageQuery } from 'src/domain/usage/application/use-cases/get-provider-usage/get-provider-usage.query';
 import {
   GetUserUsageQuery,
   UserUsageSortBy,
   SortOrder,
-} from '../../application/use-cases/get-user-usage/get-user-usage.query';
-import { UsageConstants } from '../../domain/value-objects/usage.constants';
+} from 'src/domain/usage/application/use-cases/get-user-usage/get-user-usage.query';
+import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
@@ -37,6 +41,8 @@ export class SuperAdminUsageDataController {
     private readonly providerUsageMapper: ProviderUsageResponseDtoMapper,
     private readonly userUsageMapper: UserUsageResponseDtoMapper,
     private readonly providerUsageChartMapper: ProviderUsageChartResponseDtoMapper,
+    private readonly getApiKeyUsageUseCase: GetApiKeyUsageUseCase,
+    private readonly apiKeyUsageMapper: ApiKeyUsageResponseDtoMapper,
   ) {}
 
   @Get(':orgId/providers')
@@ -136,5 +142,27 @@ export class SuperAdminUsageDataController {
     });
     const userUsage = await this.getUserUsageUseCase.execute(query);
     return this.userUsageMapper.toDto(userUsage);
+  }
+
+  @Get(':orgId/api-keys')
+  @ApiOperation({
+    summary: 'Get usage statistics by API key for an organization',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
+  @ApiResponse({ status: 200, type: ApiKeyUsageResponseDto })
+  @ApiQuery({ name: 'startDate', type: String, required: false })
+  @ApiQuery({ name: 'endDate', type: String, required: false })
+  async getApiKeyUsage(
+    @Param('orgId') orgId: UUID,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<ApiKeyUsageResponseDto> {
+    const query = new GetApiKeyUsageQuery({
+      organizationId: orgId,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
+    });
+    const apiKeyUsage = await this.getApiKeyUsageUseCase.execute(query);
+    return this.apiKeyUsageMapper.toDto(apiKeyUsage);
   }
 }
