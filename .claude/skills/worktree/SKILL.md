@@ -9,6 +9,8 @@ description: Create and manage git worktrees for isolated working directories. U
 
 At the start of a task, the user will tell you which environment to work in. This skill covers creating and removing worktrees — for starting the dev stack, see the `dev-environment` skill.
 
+This is an execution-mode skill. Do not create, modify, or remove a worktree while producing an implementation plan; do so only after the user requests implementation or approves the plan.
+
 ## Creating a Worktree
 
 The user gives you a **task ID** and optionally a **branch name** (if the branch already exists).
