@@ -39,6 +39,7 @@ import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
+import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -61,6 +62,7 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.UPDATE_DIAGRAM]: () => new UpdateDiagramTool(),
   [ToolType.CREATE_SPREADSHEET]: () => new CreateSpreadsheetTool(),
   [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
+  [ToolType.MARKETPLACE_SEARCH]: () => new MarketplaceSearchTool(),
 };
 
 @Injectable()

@@ -29,4 +29,5 @@ export enum ToolType {
   UPDATE_DIAGRAM = 'update_diagram',
   CREATE_SPREADSHEET = 'create_spreadsheet',
   UPDATE_SPREADSHEET = 'update_spreadsheet',
+  MARKETPLACE_SEARCH = 'marketplace_search',
 }

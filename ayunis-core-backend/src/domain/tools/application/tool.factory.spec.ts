@@ -179,8 +179,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_DIAGRAM);
       expect(types).toContain(ToolType.CREATE_SPREADSHEET);
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
+      expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
 
-      expect(types.length).toBe(29);
+      expect(types.length).toBe(30);
     });
   });
 });
