@@ -29,7 +29,7 @@ Before implementation, state the observable behavior with the flag enabled and d
 2. Add property to `FeatureTogglesResponseDto` with `@ApiProperty`.
 3. Return it in `AppController.featureToggles()`.
 4. Apply `@RequireFeature(FeatureFlag.Xxx)` to the controller(s). Controller-level = gates all routes. The decorator composes `UseGuards` internally — do not add `@UseGuards(FeatureGuard)` separately.
-5. Run guard tests: `pnpm run test -- --testPathPattern=feature.guard`
+5. Run guard tests: `pnpm run test -- --testPathPatterns=feature.guard` (plural; Jest 30 rejects the singular flag)
 
 ### Frontend
 
@@ -51,11 +51,11 @@ Edit the default value in `features.config.ts`. `parseBooleanWithDefault` uses t
 
 ### Flag-off e2e recipe
 
-The flag resolves from `process.env` at boot, so one stack cannot serve both states — the OFF spec needs its own backend. Copy the `sso-disabled` setup from AYC-367; all three pieces are in-tree:
+The flag resolves from `process.env` at boot, so one stack cannot serve both states — the OFF spec needs its own backend. The reference implementation was the `sso-disabled` setup from AYC-367; it was removed when SSO became generally available (commit `341ebad52`), so use `git show 341ebad52^ -- .github/workflows/e2e-tests.yml ayunis-core-e2e/playwright.config.ts ayunis-core-e2e/tests/auth/sso-disabled-logout.spec.ts` as the template. The three pieces to recreate:
 
-- `.github/workflows/e2e-tests.yml` — steps `Start backend with SSO login disabled` and `Test logout lifecycle with SSO login disabled`: the same build artifact started again with the flag off on a spare port, health-polled, log added to the `backend-log` artifact. Same job as the flag-on run: one extra process and one spec, not a matrix.
-- `ayunis-core-e2e/playwright.config.ts` — the `sso-disabled` project. The spec must also be listed in the `chromium` project's `testIgnore`, or it runs in both states.
-- `ayunis-core-e2e/tests/auth/sso-disabled-logout.spec.ts` — prove the feature is gone first (gated route 404s; `publicApi` fixture for unauthenticated endpoints), then exercise the shared workflow that must stay available.
+- `.github/workflows/e2e-tests.yml` — two steps in the same job as the flag-on run: start the same build artifact again with the flag off on a spare port, health-poll it, add its log to the `backend-log` artifact; then run the OFF spec against it. One extra process and one spec, not a matrix.
+- `ayunis-core-e2e/playwright.config.ts` — a dedicated project for the OFF spec. The spec must also be listed in the `chromium` project's `testIgnore`, or it runs in both states.
+- `ayunis-core-e2e/tests/<area>/<feature>-disabled.spec.ts` — prove the feature is gone first (gated route 404s; `publicApi` fixture for unauthenticated endpoints), then exercise the shared workflow that must stay available.
 
 Locally: `FEATURE_<NAME>_ENABLED=false pnpm run start:dev` in a second slot. Shell env wins over `.env.dev` and `.env`; never hand-edit the generated `.env.dev`.
 

@@ -69,7 +69,7 @@ export function useDeleteEntity() {
 
 ## Pattern 2: Mutation Hook (with form)
 
-For create/update operations that use `react-hook-form`. For the full form validation pattern including field-level backend errors, load the **form-validation-pattern** skill.
+For create/update operations that use `react-hook-form`. For the full form validation pattern including field-level backend errors, load the **frontend-form-pattern** skill.
 
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query';
