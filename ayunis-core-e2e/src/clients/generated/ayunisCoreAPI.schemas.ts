@@ -2975,6 +2975,14 @@ export interface SkillListResponseDto {
   pagination: PaginationDto;
 }
 
+export interface InstalledMarketplaceSkillResponseDto {
+  /**
+     * ID of the current user's personal skill installed from this marketplace entry, or null when it is not installed.
+     * @nullable
+     */
+  skillId: string | null;
+}
+
 export interface UpdateSkillDto {
   /**
      * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.

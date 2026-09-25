@@ -26,10 +26,24 @@ describe(assembleMarketplaceTools.name, () => {
     assembleTool.execute.mockClear();
   });
 
-  it('assembles the marketplace search tool when a marketplace is configured', async () => {
+  it('assembles search and install when the marketplace and skills are enabled', async () => {
     const tools = await assembleMarketplaceTools(
       configWith(true),
       assembleTool,
+      true,
+    );
+
+    expect(tools.map((tool) => tool.type)).toEqual([
+      ToolType.MARKETPLACE_SEARCH,
+      ToolType.INSTALL_MARKETPLACE_SKILL,
+    ]);
+  });
+
+  it('assembles only search when the skills feature is disabled', async () => {
+    const tools = await assembleMarketplaceTools(
+      configWith(true),
+      assembleTool,
+      false,
     );
 
     expect(tools.map((tool) => tool.type)).toEqual([
@@ -41,6 +55,7 @@ describe(assembleMarketplaceTools.name, () => {
     const tools = await assembleMarketplaceTools(
       configWith(false),
       assembleTool,
+      true,
     );
 
     expect(tools).toEqual([]);
@@ -51,6 +66,7 @@ describe(assembleMarketplaceTools.name, () => {
     const tools = await assembleMarketplaceTools(
       configWith(undefined),
       assembleTool,
+      true,
     );
 
     expect(tools).toEqual([]);

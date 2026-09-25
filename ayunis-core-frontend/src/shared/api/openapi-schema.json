@@ -5669,6 +5669,35 @@
         "tags": ["skills"]
       }
     },
+    "/skills/marketplace/{identifier}": {
+      "get": {
+        "operationId": "SkillsController_findInstalledFromMarketplace",
+        "parameters": [
+          {
+            "name": "identifier",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstalledMarketplaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Find the personal skill installed from a marketplace entry",
+        "tags": ["skills"]
+      }
+    },
     "/skills/{id}": {
       "get": {
         "operationId": "SkillsController_findOne",
@@ -16273,6 +16302,18 @@
           }
         },
         "required": ["data", "pagination"]
+      },
+      "InstalledMarketplaceSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID of the current user's personal skill installed from this marketplace entry, or null when it is not installed."
+          }
+        },
+        "required": ["skillId"]
       },
       "UpdateSkillDto": {
         "type": "object",

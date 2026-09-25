@@ -142,6 +142,36 @@ describe('LocalSkillRepository', () => {
     });
   });
 
+  it('finds the personal skill installed from a marketplace entry for the owner only', async () => {
+    const record = { id: skillId } as SkillRecord;
+    const expected = { id: skillId };
+    mockManager.findOne.mockResolvedValue(record);
+    skillMapper.toPersonal.mockReturnValue(expected as never);
+
+    await expect(
+      repository.findPersonalByMarketplaceIdentifier(userId, 'finance-clerk'),
+    ).resolves.toBe(expected);
+
+    expect(mockManager.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId,
+          workspaceId: expect.anything(),
+          marketplaceIdentifier: 'finance-clerk',
+        }),
+      }),
+    );
+  });
+
+  it('returns null when no personal skill was installed from the entry', async () => {
+    mockManager.findOne.mockResolvedValue(null);
+
+    await expect(
+      repository.findPersonalByMarketplaceIdentifier(userId, 'finance-clerk'),
+    ).resolves.toBeNull();
+    expect(skillMapper.toPersonal).not.toHaveBeenCalled();
+  });
+
   it('excludes workspace-owned skills from owner lists', async () => {
     mockManager.find.mockResolvedValue([]);
 

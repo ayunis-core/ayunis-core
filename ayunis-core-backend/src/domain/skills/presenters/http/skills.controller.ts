@@ -29,6 +29,8 @@ import { DeleteSkillCommand } from 'src/domain/skills/application/use-cases/dele
 import { DeleteSkillUseCase } from 'src/domain/skills/application/use-cases/delete-skill/delete-skill.use-case';
 import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
 import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
+import { FindInstalledMarketplaceSkillQuery } from 'src/domain/skills/application/use-cases/find-installed-marketplace-skill/find-installed-marketplace-skill.query';
+import { FindInstalledMarketplaceSkillUseCase } from 'src/domain/skills/application/use-cases/find-installed-marketplace-skill/find-installed-marketplace-skill.use-case';
 import { InstallSkillFromMarketplaceCommand } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.command';
 import { InstallSkillFromMarketplaceUseCase } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 import { ListAccessibleSkillsQuery } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.query';
@@ -41,6 +43,7 @@ import { RequirePermission } from 'src/iam/authorization/application/decorators/
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
+import { InstalledMarketplaceSkillResponseDto } from './dto/installed-marketplace-skill-response.dto';
 import { ListSkillsQueryDto } from './dto/list-skills-query.dto';
 import { toSkillOwner } from './dto/skill-owner.dto';
 import {
@@ -66,6 +69,7 @@ export class SkillsController {
     private readonly updateSkill: UpdateSkillUseCase,
     private readonly deleteSkill: DeleteSkillUseCase,
     private readonly findSkill: FindOneSkillUseCase,
+    private readonly findInstalledMarketplaceSkill: FindInstalledMarketplaceSkillUseCase,
     private readonly listSkills: ListAccessibleSkillsUseCase,
     private readonly setActivation: SetSkillActivationUseCase,
     private readonly setPin: SetSkillPinUseCase,
@@ -133,6 +137,21 @@ export class SkillsController {
       ),
       pagination: { limit: page.limit, offset: page.offset, total: page.total },
     };
+  }
+
+  @Get('marketplace/:identifier')
+  @ApiOperation({
+    summary: 'Find the personal skill installed from a marketplace entry',
+  })
+  @ApiParam({ name: 'identifier', type: 'string' })
+  @ApiResponse({ status: 200, type: InstalledMarketplaceSkillResponseDto })
+  async findInstalledFromMarketplace(
+    @Param('identifier') identifier: string,
+  ): Promise<InstalledMarketplaceSkillResponseDto> {
+    const skill = await this.findInstalledMarketplaceSkill.execute(
+      new FindInstalledMarketplaceSkillQuery(identifier),
+    );
+    return { skillId: skill?.id ?? null };
   }
 
   @Get(':id')
