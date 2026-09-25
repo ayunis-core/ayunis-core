@@ -22,13 +22,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# The frontend consumes @ayunis/ui from source, so none of these jobs needs
+# another's output; they run in parallel instead of one ~3-minute chain.
 jobs:
   build:
+    name: Frontend build
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ayunis-core-frontend
 
     steps:
       - uses: actions/checkout@v7
@@ -37,22 +36,56 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Run production build
+        working-directory: ayunis-core-frontend
         run: pnpm run build
 
+  lint:
+    name: Frontend lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
       - name: Run linter
+        working-directory: ayunis-core-frontend
         run: pnpm run lint
 
+  test:
+    name: Frontend tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
       - name: Run tests
+        working-directory: ayunis-core-frontend
         run: pnpm run test
 
-      - name: Type-check UI package
+  ui-package:
+    name: UI package
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
         working-directory: packages/ui
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Type-check UI package
         run: pnpm run typecheck
 
       - name: Lint UI package
-        working-directory: packages/ui
         run: pnpm run lint
 
       - name: Check UI package dependencies
-        working-directory: packages/ui
         run: pnpm run deps:check

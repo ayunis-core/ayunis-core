@@ -15,8 +15,9 @@ export default defineConfig({
   // Local runs share one machine with the dev stack (ts-node backend, Vite,
   // Docker). More workers = CPU contention = 30s-timeout cascades: every
   // worker creates its org at t=0 (bcrypt + MJML email rendering are
-  // CPU-heavy) while Chromium records traces for all of them.
-  workers: process.env.CI ? 2 : 4,
+  // CPU-heavy) while Chromium records traces for all of them. CI runs the
+  // compiled backend on a 4-vCPU runner, so it can use one worker per core.
+  workers: 4,
   reporter: process.env.CI
     ? [['html', { open: 'never' }], ['list'], ['json', { outputFile: 'test-results/results.json' }]]
     : [['list'], ['json', { outputFile: 'test-results/results.json' }]],
