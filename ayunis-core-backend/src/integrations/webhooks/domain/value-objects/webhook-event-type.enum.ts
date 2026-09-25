@@ -1,6 +1,7 @@
 export enum WebhookEventType {
   ORG_CREATED = 'org.created',
   USER_CREATED = 'user.created',
+  USER_INVITED = 'user.invited',
   USER_UPDATED = 'user.updated',
   USER_DELETED = 'user.deleted',
   SUBSCRIPTION_CREATED = 'subscription.created',

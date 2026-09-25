@@ -35,6 +35,7 @@ import { BulkInviteValidatorService } from 'src/iam/invites/application/services
 import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
 import { BulkInviteTeamResolverService } from 'src/iam/invites/application/services/bulk-invite-team-resolver.service';
 import type { UUID } from 'crypto';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 describe('CreateBulkInvitesUseCase', () => {
   let useCase: CreateBulkInvitesUseCase;
@@ -47,6 +48,7 @@ describe('CreateBulkInvitesUseCase', () => {
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let acquireAllocationLock: jest.Mocked<AcquireSeatAllocationLockUseCase>;
   let teamResolver: jest.Mocked<BulkInviteTeamResolverService>;
+  let publishInviteCreated: jest.Mocked<InviteCreatedEventPublisher>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -96,6 +98,10 @@ describe('CreateBulkInvitesUseCase', () => {
       })),
     };
 
+    const mockPublishInviteCreated = {
+      publish: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBulkInvitesUseCase,
@@ -123,6 +129,10 @@ describe('CreateBulkInvitesUseCase', () => {
           provide: BulkInviteTeamResolverService,
           useValue: mockTeamResolver,
         },
+        {
+          provide: InviteCreatedEventPublisher,
+          useValue: mockPublishInviteCreated,
+        },
       ],
     }).compile();
 
@@ -136,6 +146,7 @@ describe('CreateBulkInvitesUseCase', () => {
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
     acquireAllocationLock = module.get(AcquireSeatAllocationLockUseCase);
     teamResolver = module.get(BulkInviteTeamResolverService);
+    publishInviteCreated = module.get(InviteCreatedEventPublisher);
   });
 
   afterEach(() => {
@@ -212,6 +223,16 @@ describe('CreateBulkInvitesUseCase', () => {
           expect.objectContaining({ email: 'user1@example.com' }),
           expect.objectContaining({ email: 'user2@example.com' }),
         ]),
+      );
+      const createdInvites = invitesRepository.createMany.mock.calls[0][0];
+      expect(publishInviteCreated.publish).toHaveBeenCalledTimes(2);
+      expect(publishInviteCreated.publish).toHaveBeenNthCalledWith(
+        1,
+        createdInvites[0],
+      );
+      expect(publishInviteCreated.publish).toHaveBeenNthCalledWith(
+        2,
+        createdInvites[1],
       );
     });
 
@@ -391,6 +412,7 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results[0].errorCode).toBe('EMAIL_SENDING_FAILED');
       expect(result.results[0].errorMessage).toBe('Email service unavailable');
       expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+      expect(publishInviteCreated.publish).not.toHaveBeenCalled();
     });
 
     it('should delete invite from database when JWT generation fails', async () => {
@@ -412,6 +434,7 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results[0].success).toBe(false);
       expect(result.results[0].errorMessage).toBe('JWT generation failed');
       expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+      expect(publishInviteCreated.publish).not.toHaveBeenCalled();
     });
 
     it('should handle mixed success/failure in bulk invites', async () => {
@@ -442,6 +465,11 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results[0].success).toBe(true);
       expect(result.results[1].success).toBe(false);
       expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+      const createdInvites = invitesRepository.createMany.mock.calls[0][0];
+      expect(publishInviteCreated.publish).toHaveBeenCalledTimes(1);
+      expect(publishInviteCreated.publish).toHaveBeenCalledWith(
+        createdInvites[0],
+      );
     });
   });
 
