@@ -33,7 +33,7 @@ import { PERMISSION_SECTIONS } from '@/pages/admin-settings/roles-settings/lib/c
 import { useUpdateRolePermissions } from '@/pages/admin-settings/roles-settings/api/useUpdateRolePermissions';
 import { PermissionMatrixRow } from './PermissionMatrixRow';
 import { PermissionGroupHeader } from './PermissionGroupHeader';
-import { InfoHint } from './InfoHint';
+import { InfoHint } from '@/shared/ui/info-hint';
 
 const ROLE_COLUMNS = ['user', 'manager', 'admin'] as const;
 
