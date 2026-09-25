@@ -107,6 +107,8 @@ export GOTENBERG_HOST_PORT=$((3100 + OFFSET))
 
 BACKEND_PORT=$((3000 + OFFSET))
 FRONTEND_PORT=$((3001 + OFFSET))
+MARKETPLACE_MOCK_PORT=$((3299 + OFFSET))
+MARKETPLACE_MOCK_URL="http://127.0.0.1:$MARKETPLACE_MOCK_PORT"
 BACKEND_HEALTH_URL="http://localhost:$BACKEND_PORT/api/health"
 FRONTEND_URL="http://localhost:$FRONTEND_PORT"
 
@@ -115,6 +117,7 @@ STATE_DIR="$REPO_DIR/.dev/slot-${SLOT}"
 CHECKOUT_ID="$(printf '%s' "$REPO_DIR" | cksum | cut -d' ' -f1)"
 BACKEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-backend"
 FRONTEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-frontend"
+MARKETPLACE_MOCK_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-marketplace-mock"
 
 INFRA_SERVICES=(
   postgres
@@ -147,7 +150,9 @@ BACKEND_SECRETS_PREFIX=""
 FRONTEND_SECRETS_PREFIX=""
 BACKEND_E2E_ENV_PREFIX=""
 if $E2E_MODE; then
-  BACKEND_E2E_ENV_PREFIX="env MOCK_INFERENCE=true DISABLE_ORG_EVENTS_WEBHOOKS=true ORG_EVENTS_WEBHOOK_URL= "
+  # MARKETPLACE_SERVICE_URL is not slot-offset by the backend, so the e2e
+  # marketplace mock URL is passed explicitly and wins over .env/Infisical.
+  BACKEND_E2E_ENV_PREFIX="env MOCK_INFERENCE=true DISABLE_ORG_EVENTS_WEBHOOKS=true ORG_EVENTS_WEBHOOK_URL= MARKETPLACE_SERVICE_URL=$MARKETPLACE_MOCK_URL "
 fi
 
 _infisical_preflight() {
@@ -270,6 +275,7 @@ cmd_up() {
   fi
 
   if $e2e_env_ready \
+    && { ! $E2E_MODE || _marketplace_mock_healthy; } \
     && _infra_healthy \
     && _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT" \
     && _service_healthy "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" "$FRONTEND_URL" "$FRONTEND_PORT"; then
@@ -346,6 +352,8 @@ cmd_up() {
       echo "# each event would cost up to 3 HTTPS attempts with 10s timeouts)."
       echo "DISABLE_ORG_EVENTS_WEBHOOKS=true"
       echo "ORG_EVENTS_WEBHOOK_URL="
+      echo "# e2e mode: MARKETPLACE_SERVICE_URL is overridden at backend start to"
+      echo "# the slot's marketplace contract server ($MARKETPLACE_MOCK_URL)."
     fi
     if $INFISICAL_OK; then
       echo "# Host-side database commands use the slot's published Postgres port."
@@ -384,6 +392,11 @@ EOF
   # -- 3. Run database migrations ------------------------------------------
   info "Running database migrations …"
   (cd "$REPO_DIR/ayunis-core-backend" && ${BACKEND_SECRETS_PREFIX}pnpm run migration:run:dev 2>&1) | tail -3
+
+  # -- 3.5 Marketplace contract server (e2e mode only) ---------------------
+  if $E2E_MODE; then
+    _start_marketplace_mock
+  fi
 
   # -- 4. Backend (native) ------------------------------------------------
   if _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT"; then
@@ -465,6 +478,7 @@ cmd_down() {
 
   _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_SESSION"
   _kill_pid "$STATE_DIR/backend.pid"  "Backend"  "$BACKEND_SESSION"
+  _kill_pid "$STATE_DIR/marketplace-mock.pid" "Marketplace mock" "$MARKETPLACE_MOCK_SESSION"
 
   # Compose project names are global (ayunis-dev-N), so another checkout may have
   # reused this slot number since we last used it. Only stop containers we started.
@@ -531,6 +545,14 @@ cmd_status() {
   else
     echo "  Frontend:  stopped"
   fi
+
+  if [ -f "$STATE_DIR/marketplace-mock.pid" ]; then
+    if _marketplace_mock_healthy; then
+      echo "  Marketplace mock: running  PID $(_display_pid "$STATE_DIR/marketplace-mock.pid")  $MARKETPLACE_MOCK_URL"
+    else
+      echo "  Marketplace mock: unhealthy  PID $(_display_pid "$STATE_DIR/marketplace-mock.pid")  $MARKETPLACE_MOCK_URL"
+    fi
+  fi
   echo ""
 }
 
@@ -542,7 +564,7 @@ cmd_logs() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --tail) tail_lines="${2:?--tail requires a number}"; shift 2 ;;
-      backend|frontend|infra|all) target="$1"; shift ;;
+      backend|frontend|infra|marketplace|all) target="$1"; shift ;;
       *) die "Unknown logs argument: $1" ;;
     esac
   done
@@ -557,11 +579,18 @@ cmd_logs() {
     infra)
       dc logs --tail "$tail_lines"
       ;;
+    marketplace)
+      _show_log "$STATE_DIR/marketplace-mock.log" "Marketplace mock" "$tail_lines"
+      ;;
     all)
       _show_log "$STATE_DIR/backend.log" "Backend" "$tail_lines"
       echo ""
       _show_log "$STATE_DIR/frontend.log" "Frontend" "$tail_lines"
       echo ""
+      if [ -f "$STATE_DIR/marketplace-mock.log" ]; then
+        _show_log "$STATE_DIR/marketplace-mock.log" "Marketplace mock" "$tail_lines"
+        echo ""
+      fi
       info "Docker infrastructure logs (last $tail_lines lines):"
       dc logs --tail "$tail_lines"
       ;;
@@ -657,6 +686,31 @@ _wait_for_service() {
   echo ""
 }
 
+_marketplace_mock_healthy() {
+  _service_healthy "$STATE_DIR/marketplace-mock.pid" "$MARKETPLACE_MOCK_SESSION" "$MARKETPLACE_MOCK_URL/health" "$MARKETPLACE_MOCK_PORT"
+}
+
+_start_marketplace_mock() {
+  if _marketplace_mock_healthy; then
+    info "Marketplace mock already running (PID $(_display_pid "$STATE_DIR/marketplace-mock.pid"))"
+    return
+  fi
+  _refuse_unmanaged_listener "$STATE_DIR/marketplace-mock.pid" "$MARKETPLACE_MOCK_PORT" "Marketplace mock"
+  if _pid_alive "$STATE_DIR/marketplace-mock.pid" "$MARKETPLACE_MOCK_SESSION"; then
+    warn "Restarting unhealthy Marketplace mock (PID $(_display_pid "$STATE_DIR/marketplace-mock.pid")) …"
+    _kill_pid "$STATE_DIR/marketplace-mock.pid" "Marketplace mock" "$MARKETPLACE_MOCK_SESSION"
+    _refuse_unmanaged_listener "$STATE_DIR/marketplace-mock.pid" "$MARKETPLACE_MOCK_PORT" "Marketplace mock"
+  fi
+  info "Starting marketplace mock on port $MARKETPLACE_MOCK_PORT …"
+  : > "$STATE_DIR/marketplace-mock.log"
+  _start_detached \
+    "$STATE_DIR/marketplace-mock.pid" \
+    "$STATE_DIR/marketplace-mock.log" \
+    "$MARKETPLACE_MOCK_SESSION" \
+    "cd '$REPO_DIR' && exec env E2E_MARKETPLACE_PORT=$MARKETPLACE_MOCK_PORT node ayunis-core-e2e/src/servers/marketplace-mock.ts"
+  _wait_for_service "Marketplace mock" "$STATE_DIR/marketplace-mock.pid" "$MARKETPLACE_MOCK_SESSION" "$MARKETPLACE_MOCK_URL/health" "$MARKETPLACE_MOCK_PORT" marketplace
+}
+
 _print_ready_summary() {
   echo ""
   echo "✅ Slot $SLOT is ready"
@@ -674,6 +728,9 @@ _print_ready_summary() {
     echo "  Anonymize:    disabled"
   fi
   echo "  Gotenberg:    localhost:$GOTENBERG_HOST_PORT"
+  if $E2E_MODE; then
+    echo "  Marketplace:  $MARKETPLACE_MOCK_URL  (e2e contract server)"
+  fi
 }
 
 _process_belongs_to_tree() {
@@ -849,7 +906,7 @@ case "$COMMAND" in
     echo "                                             --e2e: mock all LLM providers (MOCK_INFERENCE=true)"
     echo "  down   [--slot N]                          Stop everything"
     echo "  status [--slot N]                          Show what's running"
-    echo "  logs   [--slot N] [--tail N] [backend|frontend|infra|all]"
+    echo "  logs   [--slot N] [--tail N] [backend|frontend|infra|marketplace|all]"
     echo "                                             Print recent logs (default: all, 80 lines)"
     echo "  slots                                     List slots across all worktrees as JSON"
     echo "  ui     [--port N]                         Start the local slot control panel"

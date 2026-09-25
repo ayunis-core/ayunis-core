@@ -246,6 +246,10 @@ jobs:
           MISTRAL_API_KEY=e2e-ci-mistral-key
           MISTRAL_OCR_SERVER_URL=http://127.0.0.1:3199
 
+          # Deterministic marketplace contract server (catalogue for chat tools).
+          # Enables the marketplace UI entry points for every e2e run.
+          MARKETPLACE_SERVICE_URL=http://127.0.0.1:3299
+
           # MinIO
           MINIO_ENDPOINT=localhost
           MINIO_PORT=9000
@@ -275,6 +279,12 @@ jobs:
           nohup node ayunis-core-e2e/src/servers/mistral-ocr-mock.mjs > mistral-ocr-mock.log 2>&1 &
           timeout 30 bash -c 'until curl -sf http://127.0.0.1:3199/health; do sleep 1; done' \
             || { cat mistral-ocr-mock.log; exit 1; }
+
+      - name: Start marketplace contract server
+        run: |
+          nohup node ayunis-core-e2e/src/servers/marketplace-mock.ts > marketplace-mock.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:3299/health; do sleep 1; done' \
+            || { cat marketplace-mock.log; exit 1; }
 
       - name: Run migrations
         working-directory: ayunis-core-backend

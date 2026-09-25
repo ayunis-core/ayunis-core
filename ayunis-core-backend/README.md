@@ -197,6 +197,21 @@ Each domain module follows the same structure with:
 
 The API documentation is available at `/api` using Swagger UI when the application is running.
 
+### Generated clients for external services
+
+`src/common/clients/*/generated` (marketplace, code execution, anonymize) is
+Orval output, generated from each service's OpenAPI document with
+`pnpm run generate:client` (targets are in `orval.config.ts`). Nothing checks
+these clients against the deployed services automatically.
+
+Rule: when one of these services ships an API change, regenerate the client
+against the deployed service in the same change set and commit the diff.
+For the marketplace, point `orval.config.ts` at the staging instance's
+`/api/docs-json` for that run, then restore the local target. The e2e
+marketplace contract server (`ayunis-core-e2e/src/servers/marketplace-mock.ts`)
+is typed with the generated DTOs, so a regenerated client that changes a shape
+fails the e2e typecheck until the stub is updated too.
+
 ## Testing
 
 ```bash
