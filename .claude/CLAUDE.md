@@ -23,157 +23,80 @@ ayunis-core/
 
 ---
 
+## Match Effort to the Task
+
+Most requests are small. Do not run a small request through the full delivery pipeline.
+
+### Trivial
+
+Copy, static styling, config or doc typos, a one-file fix with an obvious cause, test-only maintenance, renames.
+
+Do: state the assumption in one line ("Treating as trivial: edit, lint, diff, no PR"), then make the edit, run the one relevant lint or focused test, inspect the diff, report. No survey, no classification, no failure-mode matrix, no reproduction test, no SUMMARY.md read, no commit, no PR. The user corrects the tier if it is wrong.
+
+### Non-trivial
+
+Behavior changes across layers, new features, anything touching a public contract, persistent data, or a security boundary.
+
+Do: run the pre-implementation survey below, then load `proportional-workflow` and follow the path chosen. It owns the classification checkpoint, failure-mode matrix, access-control testing rules, and the two-state feature-flag contract.
+
+### Pre-implementation survey
+
+Before writing code for non-trivial work, or whenever the tier is ambiguous, ask one `AskUserQuestion` with three questions. Put your recommended option first and mark it "(Recommended)". Do not ask if the user's message already answers all three.
+
+1. **Validation depth**: Fast (focused check, changed files only) / Standard (TDD, package tests, lint and type-check) / High-Risk (full suite, distinct-principal tests, environment evidence, PR evidence).
+2. **Delivery**: Leave uncommitted (default) / Commit / Commit and open PR.
+3. **Runtime verification**: None (tests, Storybook, or a rendered component are enough) / Reuse the running stack in this checkout / Start a new stack (worktree and slot). Recommend None for Fast, Reuse for Standard, and Start only when isolation or a different branch is needed. Name the slot you will use.
+
+The runtime answer is binding. Do not create a worktree or run `./dev up` when the answer was None or Reuse, and say so if you later think runtime evidence is missing.
+
+Skip the survey in unattended runs (`linear-implement`, scheduled tasks). There the ticket and the `proportional-workflow` rules decide, and delivery follows that skill's own contract.
+
+### Delivery follows the survey
+
+Leave changes uncommitted and report the diff unless the survey answer or the user's message asks to commit or open a PR. When a commit or PR is requested, load `git-workflow` first (Graphite only, never raw `git commit` or `git push`) and, after submitting, load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest revision. Never report PR work as complete while checks are pending or actionable findings remain.
+
+---
+
 ## Core Principles
 
-### 1. Validation-First
+### 1. Validation-first
 
-Do NOT trust your own assessment of code correctness. Verify through observable behavior using the smallest set of checks that covers the change's credible failure modes. See **Proportional Workflow** below for the required depth and the development skills for surface-specific patterns.
+Do not trust your own assessment of code correctness. Verify through observable behavior using the smallest set of checks that covers the change's credible failure modes.
 
-### 2. Evidence Before Diagnosis
+### 2. Evidence before diagnosis
 
-Principle 1 governs code you wrote. This one governs everything you *assert*: root causes, config values, provider behavior, "this is already fixed", "this should work".
+- **Reproduce before diagnosing.** For runtime, configuration, or integration failures, a root cause read from code is a hypothesis until reproduced at the smallest observable layer. Passing unit tests are not a substitute for one live request against the configured environment.
+- **Never recommend a config value you haven't verified.** An example value in the repo is not the fix. Check it against provider docs and the deployed environment, or label it unverified.
+- **Name the environment.** Staging and production differ. State where the evidence came from.
+- **Report only what the evidence supports.** Label hypotheses as hypotheses. Do not pad reports with suspected bugs inferred from general knowledge.
+- **Read what the code does today** before proposing a design from a ticket's description.
+- **Report blockers immediately.** When an access path or tool fails, say so. Do not silently probe alternate routes.
 
-- **Reproduce before diagnosing.** A "likely root cause" derived from reading code and config is not an answer. Reproduce the failure at the smallest layer where it is observable, then explain it. For runtime, configuration, or integration failures, passing unit tests are not a substitute for one live request against the actual configured environment.
-- **Never recommend a config value you haven't verified.** An example value found in the repo (an API version, endpoint, model id) is not "the fix". Check it against current provider documentation and the deployed environment, or label it explicitly as unverified.
-- **Name the environment.** Staging and production run different config and different model deployments. State which environment/app your evidence came from before drawing a conclusion; evidence from the wrong environment invalidates the whole analysis.
-- **Report only failure modes the evidence supports.** Do not append extra suspected bugs or "regressions" inferred from general model knowledge to an incident report. If you have a hypothesis, label it as one to check — an unsupported claim presented alongside real findings costs more trust than it buys.
-- **Check what the code does today before proposing a design.** When assessing a ticket in a known repo, read the current implementation and say what it actually does now, rather than reasoning from the ticket's description of intended behavior.
+### 3. Incremental progress
 
-When an access path or tool fails, report the blocker immediately. Do not keep silently probing alternate routes — a named blocker is useful, a long invisible search is not.
+One logical change at a time, validated in proportion to its risk. Never batch unrelated changes. No ceremonial commits for intermediate steps of one coherent change.
 
-### 3. Incremental Progress
+### 4. Respect boundaries
 
-- Make one logical change at a time
-- Validate each logical change in proportion to its risk
-- Commit after each validated logical change
-- Never batch unrelated changes; do not create ceremonial commits for intermediate steps of one coherent change
+- For non-trivial backend work, read the target module's SUMMARY.md and inspect the layer's two closest analogues before adding a file. Validation, orchestration, policy, domain invariants, and persistence go in their established layer; controllers only map validated input and orchestrate use cases.
+- Cross-module application code uses the target module's exported use cases, not its ports or adapters. TypeORM records may reference other modules' records for foreign keys (see `typeorm-migrations`). Details in the `ayunis-core-backend` skill.
+- Never edit generated code (e.g., the frontend API client).
 
-### 4. Respect Boundaries
+### 5. No useless comments
 
-- Read the target module's SUMMARY.md before making changes
-- Before adding a backend file, inspect the target layer's existing directories and two closest analogues. Place validation, orchestration, policy, domain invariants, and persistence in their established layer-specific locations; controllers only map validated HTTP input and orchestrate use cases.
-- Respect module boundaries — the `ayunis-core-backend` skill documents how cross-module work is done (application-layer code uses exported use cases from the target module, not ports/adapters; TypeORM schema records may reference records in other modules to declare foreign-key relations — see the `typeorm-migrations` skill)
-- Never edit generated code (e.g., the frontend API client)
+Comment only what the code cannot say: a non-obvious constraint, ordering requirement, or why. Never restate a name or body, narrate the next line, or summarize a well-named class. If a comment would paraphrase the code, improve the naming instead.
 
-### 5. No Useless Comments
+### 6. Simplest sufficient solution
 
-Only write a comment when it states something the code cannot: a non-obvious constraint, ordering requirement, or "why" (e.g., why an event fires *before* a delete). Never write comments that restate the name or body of the thing they annotate ("Returns the ids of every thread owned by a user" on `findAllIdsByUserId`, "// Delete the thread" above `threadsRepository.delete(...)`), narrate what the next line does, or summarize a well-named class a reader can grasp at a glance. If a comment would just paraphrase the code, improve the naming instead and write nothing.
+Lead with what a senior engineer would reach for. Prefer the library, pattern, or config that already solves the problem. When a fix keeps growing (extra parameters, watchdogs, budgets, plumbing), stop and name the tradeoff proactively. Often the right move is to challenge the constraint itself.
 
-### 6. Simplest Sufficient Solution
+### 7. Absolute imports
 
-Lead with the solution a senior engineer would reach for, not the first mechanism that occurs to you. Before building bespoke machinery, ask whether this is a standard, already-solved problem — reach for the library/pattern/config that solves it directly.
+New code uses path aliases, never parent traversal: `src/...` in the backend, `@/...` in the frontend. Same-directory `./sibling` imports are fine. The pre-commit ESLint run uses `--max-warnings=0`, so **any file you touch must have all of its `../` imports converted**. Don't rewrite files you aren't already changing.
 
-Watch for complexity creep. When a fix keeps growing — extra parameters, a watchdog, a budget, stall-reason plumbing — stop and name the tradeoff: *is the added complexity justified, or is a plainer approach enough?* Surface that question proactively rather than accreting machinery across iterations and waiting for the user to ask "is this worth it?". Often the right move is to challenge the constraint itself (e.g. "does a 300s ceiling even matter here?") instead of engineering around it.
+### 8. Linear ticket state
 
-### 7. Implementation Delivery and PR Completion
-
-Unless the user explicitly asks to keep changes local, a request to implement or fix code includes committing the validated change and creating or updating its PR through the repository's `git-workflow`. Follow that workflow's ticket-ID rules, including its `AYC-000` fallback for small unticketed maintenance work; never invent a product ticket ID.
-
-Before declaring implementation complete, apply the Proportional Workflow's runtime and review-evidence requirements. Use `e2e` for durable browser-journey and system-boundary regression coverage when lower-level tests are insufficient. Use `qa` for explicitly requested or PR-specific live verification, including behaviors, visuals, and edge cases that automated coverage does not prove. QA may supplement but does not replace required E2E coverage. For a visually meaningful frontend change, capture the required QA views and load `pr-media` when publishing them materially helps review. Do not create screenshots for backend-only or non-visual changes.
-
-Submitting a PR is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
-
-For code-backed Linear issues, PR completion or merge is not ticket completion. The merge integration should move the issue to the team's release-pending state (`Merged` for AYC); only the release process may move it to `Done` after a production release contains the change. Never set `Done` during implementation or reopen a completed issue without checking its state history first: restore the release-pending state only when `Done` occurred before the containing release.
-
-### 8. Absolute Imports
-
-New code always uses the path aliases, never relative imports: `src/...` in the backend, `@/...` in the frontend. Both are configured in the respective `tsconfig.json`. Same-directory `./sibling` imports are fine; parent traversal (`../`) is not.
-
-Enforced by `@typescript-eslint/no-restricted-imports` in both `eslint.config.mjs` files. It sits at `warn` so the pre-existing backlog stays visible without failing repo-wide lint, but the pre-commit staged ESLint run uses `--max-warnings=0` — so **any file you touch must have all of its `../` imports converted**, not just the lines you added. Don't go rewriting files you aren't already changing.
-
-### 9. Access-Control and Cross-User Testing
-
-Any change that affects sharing, permissions, visibility, organization scope, team scope, or resource access must be tested with distinct principals. A same-user test is not evidence that shared access works.
-
-- Identify the owner, grantor, recipient, and relevant organization/team boundaries before writing the test.
-- Create the resource as the owner and authenticate the recipient through an independent user context.
-- Assert the recipient cannot access the resource before the grant, then grant access and assert that the recipient can access it afterward.
-- Exercise the API path that performs the access query and every affected user-facing surface, such as list pages, detail pages, pickers, or workspace tabs.
-- Assert the externally observable result: response status and data, visibility, shared markers, and user actions. Do not test only that an internal query or helper was called.
-- Keep the E2E setup isolated and dynamically generated. Add a deterministic seed fixture when the scenario must also be reproducible for manual testing.
-- Treat the scenario as incomplete until the focused E2E test passes in CI. Record the exact command and environment when reporting verification.
-
-For access-control regressions, the test must preserve the causal order: verify the denied state first, apply the share or permission change second, and verify the allowed state last. This prevents a test from passing because the resource was visible for an unrelated reason.
-
-### 10. Proportional Workflow
-
-Validation-first does not mean running every available check for every change. Use the lightest workflow that produces credible evidence for the change's actual failure modes. Classify by blast radius, reversibility, and observability — not by diff size, estimated effort, or urgency. A five-line authorization fix is high-risk; a larger isolated copy-and-layout change may use the Fast Path.
-
-If a change matches more than one level, use the highest. If it is unclear whether an ordinary low-risk change qualifies for the Fast Path, use the Standard Path. If uncertainty involves security, data integrity, infrastructure, reversibility, or the boundary between Standard and High-Risk, use the High-Risk Path.
-
-#### Classification Checkpoint
-
-Classify the change **before implementation**, record the selected path and the trigger for it in the working notes, and carry that classification into the PR description. Do not infer the workflow level from diff size after the code is written. Scan every High-Risk trigger explicitly; any match selects the High-Risk Path.
-
-Before changing behavior, write a compact failure-mode matrix for the affected contract. Cover the states and transitions that could produce a materially different result, not only the happy path. At minimum, consider:
-
-- unchanged and no-op requests;
-- partial updates and omitted optional properties;
-- create, change, remove, and remove-then-recreate lifecycles;
-- validation failure and rollback or preservation of prior state;
-- authorization, authentication, tenant, and provider variants that take different code paths;
-- secrets or persisted values that must be preserved, cleared, masked, or invalidated.
-
-Trace each relevant transition across the full ownership path — UI, transport contract, application/domain logic, persistence, related per-user or organization data, and caches — and assign an observable check to every credible failure mode. If a layer does not participate, record that rather than silently omitting it.
-
-#### Fast Path
-
-Use only when all of these are true:
-
-- The change is isolated and easy to reverse.
-- It does not alter a public contract, persistent data, security boundary, or cross-module interaction.
-- Its behavior can be demonstrated with a focused check at one layer.
-- It does not touch authentication, authorization, sharing, tenant boundaries, migrations, infrastructure, secrets, billing, or external-provider configuration.
-
-Typical examples are documentation, copy, static styling, test-only maintenance, behavior-preserving refactors, and narrow bug fixes with one understood failure mode.
-
-Required:
-
-1. For a behavior bug, first reproduce it with the smallest practical failing test.
-2. Run a focused test when behavior or test code changed, plus any lint or type check applicable to the changed files.
-3. Render and inspect a visible UI change when automated checks cannot prove its result.
-4. Inspect the final diff for unintended changes.
-
-The Fast Path does **not automatically require** starting the full stack, broad package or repository suites, E2E coverage when a lower layer proves the behavior, PR media that adds no review value, or separate commits for mechanical steps within the same logical change. Run any of these when it is the only credible way to test a failure mode.
-
-#### Standard Path
-
-This is the default for ordinary features and behavior changes, including work that spans components or layers.
-
-Required:
-
-1. Define the observable acceptance criteria; reproduce bugs before fixing them.
-2. Use test-driven development for changed logic or behavior.
-3. Run the relevant unit or integration tests.
-4. Run lint and type-check or build for each affected package.
-5. Add E2E coverage when a browser journey or system boundary changes and lower-level tests do not sufficiently prove it.
-6. Capture PR media when it materially helps a reviewer evaluate a visible change.
-7. Exercise the real runtime when the reported failure or changed behavior only exists there.
-
-#### High-Risk Path
-
-Use for authentication, authorization, sharing, tenant isolation, migrations or data transformations, destructive or difficult-to-reverse data operations, public API/schema contracts, security-sensitive input or secret handling, billing, infrastructure/CI/deployment changes, external-provider configuration, cross-module persistence, concurrency-sensitive background work, and production incidents.
-
-Required:
-
-- Follow all applicable specialized skills and their safety checks.
-- Include the classification trigger, failure-mode matrix, ownership trace, and validation evidence in the PR description.
-- Validate configuration and integration behavior against the actual named environment.
-- Exercise affected behavior end-to-end when it has a user-facing or system-boundary path.
-- Run the full relevant validation suite, including distinct-principal tests for access control.
-- Run a full affected-package type-check after changing a port, interface, DTO, generated contract, or other shared type boundary; staged-file checks and transpile-only tests are not sufficient evidence.
-- Test destructive and omission-sensitive transitions at the system boundary, including removal followed by recreation when stale persisted data could reappear.
-- Report the exact environment and commands used as evidence.
-
-#### Pull Requests
-
-The workflow level controls local implementation and validation breadth. It does not weaken **Implementation Delivery and PR Completion**: once a PR is created or updated, CI and Cursor Bugbot must still be clean on the latest submitted revision.
-
-### 11. Feature Flags Have Two Contracts
-
-Every feature-gated change must define and verify behavior with the flag both enabled and disabled. Identify existing workflows that share routes, controllers, navigation, services, or persisted state with the gated feature; disabling new entry points must not disable shared behavior unless that is explicitly part of the contract.
-
-Flags resolve from `process.env` at boot, so mocking the guard or the config proves wiring, not the disabled-state contract — a second instance started with the flag off is what proves it. Load the `feature-toggles` skill for the two-state verification recipe.
+For code-backed Linear issues, PR merge is not ticket completion. The merge integration moves the issue to the release-pending state (`Merged` for AYC); only the release process moves it to `Done`. Never set `Done` during implementation. Never reopen a completed issue without checking its state history first.
 
 ---
 
@@ -181,58 +104,77 @@ Flags resolve from `process.env` at boot, so mocking the guard or the config pro
 
 These rules exist because an agent violated them and caused data loss. They are non-negotiable.
 
-### Never kill processes
+### Stop only processes you can prove are ours
 
-You do not understand what is running on the host machine. Processes that look like "just postgres" or "just ssh" may be Colima's infrastructure, SSH tunnels, or other critical services. If a port is occupied or a process is blocking something, **describe the problem and ask** — never `kill`, `pkill`, or `killall`.
+Processes that look like "just postgres" or "just ssh" may be Colima's infrastructure or SSH tunnels. Never `pkill` or `killall` by pattern. Never touch a process whose owner you have not established.
+
+You may stop an Ayunis dev process without asking when one of these holds, in this order of preference:
+
+1. `./dev down --slot N` run from the worktree that owns the slot. The script only stops its own pid-file processes and refuses foreign containers.
+2. `scripts/qa-teardown.sh` for a worktree registered in `.dev/qa-worktrees`.
+3. `docker compose -p ayunis-dev-N down` (never `-v`) when `./dev slots` shows no live worktree claims slot N.
+4. `kill <PID>` (SIGTERM, then verify) when `./dev slots` diagnostics or `lsof -p <PID> -d cwd` show the process is a `node`, `nest`, `vite`, or `esbuild` process whose cwd is inside an `ayunis-core*` checkout or under `.git/wt/trash/`.
+
+Report every PID, command, and cwd you stopped in the summary. For anything else, including a process with an unknown or deleted cwd that is not a trashed worktree, **describe the problem and ask**.
 
 ### Never use destructive Docker flags
 
-Never use `docker compose down -v`, `docker volume rm`, `docker system prune`, or any command that deletes volumes. Volumes contain database data that cannot be restored. The only safe Docker commands are:
-
-- `docker compose up` / `docker compose down` (without `-v`)
-- `docker compose ps` / `docker compose logs`
-- `docker compose exec` (to run commands inside containers)
+Never `docker compose down -v`, `docker volume rm`, `docker system prune`, or anything that deletes volumes. Safe commands: `docker compose up` / `down` (without `-v`), `ps`, `logs`, `exec`.
 
 ### Never modify system or infrastructure state
 
-Do not stop/restart Colima, edit Docker configs, change network settings, modify `/etc/hosts`, or touch anything outside the repository that isn't a source file.
+Do not stop or restart Colima, edit Docker configs, change network settings, modify `/etc/hosts`, or touch anything outside the repository that isn't a source file.
 
 ### When the environment is broken, stop and ask
 
-If Docker won't start, ports are occupied, containers won't come up, or anything infrastructure-related is failing: **describe what you see and ask for instructions.** Do not attempt to diagnose or fix environment issues autonomously. Every escalating "fix" risks making things worse.
+If Docker won't start, ports are occupied, or containers won't come up: **describe what you see and ask.** Do not diagnose or fix environment issues autonomously.
 
 ### General rule
 
-If an action is irreversible and isn't writing/editing source code, **ask first**.
+If an action is irreversible and isn't writing or editing source code, **ask first**.
 
 ---
 
 ## Code Quality Enforcement
 
-The following rules are enforced by ESLint, pre-commit hooks, and CI. Violations block commits and PRs.
+Enforced by ESLint, pre-commit hooks, and CI. Violations block commits and PRs.
 
-- **Strict TypeScript** — Backend uses `strict: true` (no implicit any, strict null checks, strict bind/call/apply). Frontend uses strict null checks.
-- **`no-explicit-any: error`** — Both backend and frontend. Use `unknown` or specific types. If `any` is truly unavoidable (e.g., TypeORM pgvector), add a targeted `eslint-disable` comment with a justification.
-- **sonarjs** — Both packages use `eslint-plugin-sonarjs` (recommended config). Cognitive complexity threshold: 15.
-- **Complexity thresholds** — Enforced via ESLint (AST-accurate): cyclomatic complexity (`complexity`) ≤ 10 and function length (`max-lines-per-function`) ≤ 50 lines block on changed files, both in the pre-commit hook (the staged ESLint run uses `--max-warnings=0`) and in CI (the `Complexity Check` workflow runs `ayunis-core-backend/eslint.complexity.config.mjs` on the PR's changed backend files). The rules also live at `warn` in `eslint.config.mjs` so the repo-wide backlog stays visible without failing CI lint. `max-params` ≤ 5 is `warn`-only and not gated (NestJS DI constructors legitimately need >5 injected deps). If a function exceeds the gated limits, split it into smaller units before committing. Keep the exclusion sets in `eslint.config.mjs` and `eslint.complexity.config.mjs` in sync.
-- **File size limit** — 500 lines per file (excluding tests, migrations, records, generated code). Enforced by `scripts/check-file-size.sh` in pre-commit.
-- **No `console.*`** — Use NestJS `Logger` on the backend. `console.warn` and `console.error` are allowed in specific infrastructure code.
-- **Circular dependency detection** — `madge` runs in pre-commit and CI.
+- **Strict TypeScript.** Backend `strict: true`; frontend strict null checks.
+- **`no-explicit-any: error`** in both packages. Use `unknown` or a specific type. If unavoidable (e.g., TypeORM pgvector), add a targeted `eslint-disable` with a justification.
+- **sonarjs** recommended config in both packages. Cognitive complexity ≤ 15.
+- **Complexity thresholds.** Cyclomatic complexity ≤ 10 and function length ≤ 50 lines block on changed files in pre-commit and in the CI `Complexity Check` workflow (`ayunis-core-backend/eslint.complexity.config.mjs`). `max-params` ≤ 5 is warn-only. Split functions that exceed the gated limits before committing. Keep the exclusion sets in `eslint.config.mjs` and `eslint.complexity.config.mjs` in sync.
+- **File size limit.** 500 lines per file (excluding tests, migrations, records, generated code), enforced by `scripts/check-file-size.sh`.
+- **No `console.*`.** Use NestJS `Logger` on the backend. `console.warn`/`console.error` are allowed in specific infrastructure code.
+- **Circular dependency detection** via `madge` in pre-commit and CI.
 
 ---
 
 ## Development Skills
 
-Load the implementation skills for the files and surfaces being changed. Load validation workflow skills such as `e2e`, `pr-media`, or `qa` when required by the classification above, by a credible failure mode, or by the user's explicit request. Surface-specific safety rules remain mandatory; the proportional workflow controls the breadth of otherwise generic validation checklists.
+Load the implementation skill for the surface being changed (`ayunis-core-backend`, `ayunis-core-frontend-dev`, `use-case-reference`, `frontend-hook-reference`, etc.). Load `e2e`, `pr-media`, or `qa` when `proportional-workflow` requires them or the user asks. Surface-specific safety rules are mandatory; the effort tier controls the breadth of generic validation.
 
 ---
 
 ## Communication
 
-Investigation reports, PR summaries, and status write-ups are decision tools, not essays. Default to terse and findings-first:
+Reports and summaries are decision tools, not essays.
 
-- Lead with the answer or recommendation; the "why" goes underneath, not before.
-- One tight line per item. For a batch (several PRs, tickets, or findings), give each a one-line verdict — e.g. *fix now / follow-up ticket / close* — rather than a multi-section prose block per item.
-- Skip preamble, restated context, and multi-header scaffolding unless the depth was asked for.
+- Lead with the answer or recommendation. The why goes underneath.
+- One tight line per item. For a batch, give each a one-line verdict (fix now / follow-up / close).
+- Skip preamble, restated context, and multi-header scaffolding unless depth was asked for.
 
-Expand only on request. When the user wants more, they'll say so — then go deep.
+Expand only on request.
+
+### Final summary
+
+Every task ends with this block and nothing after it. Use plain words a new team member would understand. Keep it under 150 words. Do not restate the request.
+
+```text
+**Done:** one sentence saying what the user can now do or rely on.
+**Changed:** one bullet per file or behavior, in plain language, file names as links.
+**Checked:** what was run and the result (tests, lint, CI, Bugbot). Say "not run" if something was skipped.
+**PR:** Graphite link (https://app.graphite.com/github/pr/ayunis-core/ayunis-core/<number>), never the GitHub link. Omit if no PR.
+**Open:** decisions or follow-ups that need the user. Omit if none.
+```
+
+Rules: no jargon, no code in prose, no numbers unless they change a decision, no closing offer.

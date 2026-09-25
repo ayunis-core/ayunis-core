@@ -1,6 +1,6 @@
 ---
 name: finish-pr
-description: "Complete the post-submit PR loop: wait for CI and Cursor Bugbot on the latest pushed revision, triage and fix actionable findings, amend and resubmit, and repeat until clean. MUST be used after creating or updating a PR before declaring implementation work complete."
+description: "Complete the post-submit PR loop: wait for CI and Cursor Bugbot on the latest pushed revision, triage and fix actionable findings, amend and resubmit, and repeat until clean. Use after a PR was created or updated because the user asked for one (or via linear-implement); not for uncommitted local work."
 ---
 
 # Finish PR
@@ -112,4 +112,4 @@ If the same CI failure or Bugbot finding survives three fix attempts, stop and e
 
 ## Report
 
-Report the PR URLs and concise evidence for CI and Bugbot status. Mention fixes made during the loop. If blocked, name the exact unfinished check or finding and the evidence that prevents further progress.
+Use the Final summary block from `CLAUDE.md`. The **PR** line is the Graphite URL that `gt submit` printed, never the GitHub URL. The **Checked** line names the head SHA, the passing checks, any intentionally skipped checks, and the Bugbot result. Fixes made during the loop go under **Changed**. If blocked, the **Open** line names the exact unfinished check or finding and the evidence that prevents further progress.

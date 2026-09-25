@@ -23,7 +23,14 @@ You can't verify "it works" without knowing what "works" means. Get the criteria
 
 Write them down as a checklist. Every one must end the run marked ✅/❌ with evidence.
 
-## 1. Worktree the branch
+## 1. Pick the environment
+
+Two lanes. Choose by who owns the branch and what is already running:
+
+- **Own branch, stack already running** — the branch under test is checked out in this checkout, it is the user's own work, and `./dev status` shows a running slot here. Skip the worktree and skip step 2: QA against that slot. Do not seed, reset, or tear anything down afterwards; it is the user's environment. If the survey in CLAUDE.md answered "Reuse the running stack", this lane is already chosen.
+- **Foreign or untrusted branch, or nothing running** — a colleague's PR, a bot branch, or the user asked for isolation. Use the worktree lane below; it is the only lane whose teardown is sanctioned.
+
+### Worktree lane
 
 **First, sweep leftovers from earlier QA runs.** A run that died mid-way leaves its slot and dev servers behind (this once ate 24 GB of RAM + swap). Only worktrees registered in the main checkout's `.dev/qa-worktrees` are touched, so the user's slots and worktrees are safe:
 
@@ -49,9 +56,9 @@ ln -sfn "$REPO/ayunis-core-frontend/.env" "$WT/ayunis-core-frontend/.env"
 cd "$WT" && pnpm install && (cd ayunis-core-backend && pnpm run build:deps)
 ```
 
-## 2. Bring up an ISOLATED slot
+## 2. Bring up an ISOLATED slot (worktree lane only)
 
-**Never reuse or touch a slot that is already running** — those are the user's. List them first and pick a free number (avoid 0/1 and anything running):
+**Never reuse or touch a slot that is already running** unless the own-branch lane above applies — those are the user's. List them first and pick a free number (avoid 0/1 and anything running):
 
 ```bash
 docker ps --filter name=ayunis-dev --format '{{.Names}}'   # see which slots are up

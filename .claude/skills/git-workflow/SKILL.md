@@ -115,6 +115,8 @@ Any commits in `HEAD..origin/<branch>` → **stop and reconcile** (`git pull --r
 gt submit --stack --force --no-interactive     # --publish to take PRs out of draft
 ```
 
+`gt submit` prints an `app.graphite.com` URL per PR. That is the link to report to the user; never hand back the `github.com` URL.
+
 `WARNING: Branch <name> has been updated remotely. Force submitting local version to remote...` is a **halt condition** → `references/submit-troubleshooting.md`.
 
 ### Verifying stack state after restack / submit
