@@ -1,5 +1,6 @@
 import { ActivateWorkspaceSkillByNameUseCase } from './application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
 import { forwardRef, Module } from '@nestjs/common';
+import { ModelsModule } from 'src/domain/models/models.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
@@ -35,6 +36,7 @@ import { AssignKnowledgeBaseToSkillUseCase } from './application/use-cases/assig
 import { UnassignKnowledgeBaseFromSkillUseCase } from './application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.use-case';
 import { ListSkillKnowledgeBasesUseCase } from './application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
+import { ImproveSkillTextUseCase } from './application/use-cases/improve-skill-text/improve-skill-text.use-case';
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 import { CreateSkillWithUniqueNameUseCase } from './application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import { CheckKnowledgeBaseSkillShareAccessUseCase } from './application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
@@ -92,6 +94,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     forwardRef(() => ThreadsModule),
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
+    forwardRef(() => ModelsModule),
   ],
   providers: [
     ActivateWorkspaceSkillByNameUseCase,
@@ -108,6 +111,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
 
     // Use Cases
     CreateSkillUseCase,
+    ImproveSkillTextUseCase,
     UpdateSkillUseCase,
     DeleteSkillUseCase,
     FindOneSkillUseCase,

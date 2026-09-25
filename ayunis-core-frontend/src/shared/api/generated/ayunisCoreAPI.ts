@@ -106,6 +106,8 @@ import type {
   GlobalPiiWhitelistWordDto,
   GrantCrawlDomainRequestDto,
   ImageGenerationModelResponseDto,
+  ImproveSkillTextDto,
+  ImprovedSkillTextResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InviteDetailResponseDto,
@@ -11283,6 +11285,74 @@ export const useSkillsControllerInstallFromMarketplace = <TError = unknown,
         TContext
       > => {
       return useMutation(getSkillsControllerInstallFromMarketplaceMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Rewrite a skill trigger or its instructions
+ */
+export const skillsControllerImproveText = (
+    improveSkillTextDto: ImproveSkillTextDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ImprovedSkillTextResponseDto>(
+      {url: `/skills/improve-text`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: improveSkillTextDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillsControllerImproveTextMutationKey = () => ['skillsControllerImproveText'] as const;
+
+export const getSkillsControllerImproveTextMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerImproveText>>, TError,SkillsControllerImproveTextMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerImproveText>>, TError,SkillsControllerImproveTextMutationVariables, TContext> => {
+
+const mutationKey = getSkillsControllerImproveTextMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerImproveText>>, SkillsControllerImproveTextMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  skillsControllerImproveText(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillsControllerImproveTextMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerImproveText>>>
+    export type SkillsControllerImproveTextMutationBody = ImproveSkillTextDto
+    export type SkillsControllerImproveTextMutationError = unknown
+    export type SkillsControllerImproveTextMutationVariables = {data: ImproveSkillTextDto}
+
+    /**
+ * @summary Rewrite a skill trigger or its instructions
+ */
+export const useSkillsControllerImproveText = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerImproveText>>, TError,SkillsControllerImproveTextMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillsControllerImproveText>>,
+        TError,
+        SkillsControllerImproveTextMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillsControllerImproveTextMutationOptions(options), queryClient);
     }
 
 /**
