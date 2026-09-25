@@ -7,10 +7,15 @@ The marketplace module provides integration with the external Ayunis Marketplace
 
 - `GetMarketplaceSkillUseCase` — Fetches skill details from the marketplace by identifier
 - `GetMarketplaceIntegrationUseCase` — Fetches MCP integration details (including config schema with org/user fields) from the marketplace by identifier
+- `ListMarketplaceCatalogueUseCase` — Returns the published catalogue as `MarketplaceCatalogueEntry[]` (type `skill`/`integration`, identifier, name, short description, category name, featured), optionally restricted to one type. Entries are grouped by type (skills, then integrations); within each type featured entries come first, then by name. Consumed by the chat `marketplace_search` tool
+
+**Models:**
+
+- `MarketplaceCatalogueEntry` — Normalized catalogue entry shared by skills and integrations
 
 **Ports:**
 
-- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`)
+- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`, `getIntegrationByIdentifier`, `listSkills`, `listIntegrations`, `listCategories`). The list methods walk every page of the public list API (no free-text search exists there) and return published entries only
 
 **Infrastructure:**
 
@@ -34,6 +39,7 @@ The marketplace module provides integration with the external Ayunis Marketplace
 - `MarketplaceSkillNotFoundError` — Skill with given identifier not found (404)
 - `MarketplaceIntegrationNotFoundError` — Integration with given identifier not found (404)
 - `MarketplaceUnavailableError` — Marketplace service is unavailable (503); returns safe retry guidance to clients and is classified as an expected dependency failure rather than a first-occurrence AppSignal incident
+- `UnexpectedMarketplaceError` — Boundary error for `@HandleUnexpectedErrors` in this module (500)
 
 **Module Dependencies:**
 
