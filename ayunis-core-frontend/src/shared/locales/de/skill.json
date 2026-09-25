@@ -66,8 +66,8 @@
       "nameLabel": "Name",
       "namePlaceholder": "Name der Fähigkeit eingeben...",
       "shortDescriptionLabel": "Auslöser",
-      "shortDescriptionPlaceholder": "Beschreiben Sie, wann die KI diese Fähigkeit aktivieren soll...",
-      "shortDescriptionHint": "Ein guter Auslöser hilft der KI zu verstehen, wann diese Fähigkeit verwendet werden soll.",
+      "shortDescriptionPlaceholder": "Beschreiben Sie, wann Ayunis Core diese Fähigkeit aktivieren soll...",
+      "shortDescriptionHint": "Ein guter Auslöser hilft Ayunis Core zu verstehen, wann diese Fähigkeit verwendet werden soll.",
       "instructionsLabel": "Anweisungen",
       "instructionsPlaceholder": "Detaillierte Anweisungen, die eingefügt werden, wenn die Fähigkeit aktiviert wird..."
     },

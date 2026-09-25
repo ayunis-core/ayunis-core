@@ -35,7 +35,7 @@
   "card": {
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
-    "activeTooltip": "Aktive Fähigkeiten stehen KI-Chats zur Verfügung. Inaktive Fähigkeiten werden erst wieder verwendet, wenn sie aktiviert werden.",
+    "activeTooltip": "Aktive Fähigkeiten stehen Ayunis Core in Chats zur Verfügung. Inaktive Fähigkeiten werden erst wieder verwendet, wenn sie aktiviert werden.",
     "pinLabel": "An neuen Chat anheften",
     "unpinLabel": "Von neuem Chat lösen",
     "deleteLabel": "Löschen",
@@ -55,8 +55,8 @@
       "nameLabel": "Name",
       "namePlaceholder": "Name der Fähigkeit eingeben...",
       "shortDescriptionLabel": "Auslöser",
-      "shortDescriptionPlaceholder": "Beschreiben Sie, wann die KI diese Fähigkeit aktivieren soll...",
-      "shortDescriptionHint": "Ein guter Auslöser hilft der KI zu verstehen, wann diese Fähigkeit verwendet werden soll.",
+      "shortDescriptionPlaceholder": "Beschreiben Sie, wann Ayunis Core diese Fähigkeit aktivieren soll...",
+      "shortDescriptionHint": "Ein guter Auslöser hilft Ayunis Core zu verstehen, wann diese Fähigkeit verwendet werden soll.",
       "instructionsLabel": "Detaillierte Anweisungen",
       "instructionsPlaceholder": "Detaillierte Anweisungen für diese Fähigkeit eingeben..."
     },
@@ -74,6 +74,7 @@
   },
   "create": {
     "duplicateName": "In diesem Arbeitsbereich gibt es bereits eine Fähigkeit mit diesem Namen.",
+    "duplicateNamePersonal": "Sie haben bereits eine Fähigkeit mit diesem Namen. Bitte wählen Sie einen anderen Namen.",
     "success": "Fähigkeit erfolgreich erstellt!",
     "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },

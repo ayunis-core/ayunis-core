@@ -30,8 +30,14 @@ export function useCreateSkill() {
     },
     onError: (error) => {
       try {
-        extractErrorData(error);
-        showError(t('create.error'));
+        const { code } = extractErrorData(error);
+        showError(
+          t(
+            code === 'DUPLICATE_SKILL_NAME'
+              ? 'create.duplicateNamePersonal'
+              : 'create.error',
+          ),
+        );
       } catch {
         showError(t('create.error'));
       }
