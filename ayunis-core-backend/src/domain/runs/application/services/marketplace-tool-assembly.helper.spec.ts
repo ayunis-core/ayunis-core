@@ -15,7 +15,7 @@ describe(assembleMarketplaceTools.name, () => {
     assembleTool.execute.mockClear();
   });
 
-  it('assembles the marketplace search tool when a marketplace is configured', async () => {
+  it('assembles search and install when a marketplace is configured', async () => {
     const tools = await assembleMarketplaceTools({
       marketplaceEnabled: true,
       assembleToolsUseCase: assembleTool,
@@ -23,6 +23,7 @@ describe(assembleMarketplaceTools.name, () => {
 
     expect(tools.map((tool) => tool.type)).toEqual([
       ToolType.MARKETPLACE_SEARCH,
+      ToolType.INSTALL_MARKETPLACE_SKILL,
     ]);
   });
 

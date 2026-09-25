@@ -33,6 +33,10 @@ export abstract class SkillRepository {
   abstract delete(skillId: UUID): Promise<void>;
   abstract findOne(id: UUID, userId: UUID): Promise<PersonalSkill | null>;
   abstract findAllByOwner(userId: UUID): Promise<PersonalSkill[]>;
+  abstract findPersonalByMarketplaceIdentifier(
+    userId: UUID,
+    marketplaceIdentifier: string,
+  ): Promise<PersonalSkill | null>;
   abstract findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceSkill[]>;
   abstract findPaginatedAccessible(
     userId: UUID,
