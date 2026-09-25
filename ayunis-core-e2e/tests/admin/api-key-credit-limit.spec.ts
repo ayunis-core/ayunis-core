@@ -1,4 +1,5 @@
 import type { APIRequestContext } from "@playwright/test";
+import { requestChatCompletionWithApiKey } from "../../src/clients/api/api-keys.client";
 import { login } from "../../src/clients/api/auth.client";
 import { generatedApi } from "../../src/clients/api/generated-api";
 import { expect, test } from "../../src/fixtures/test";
@@ -25,20 +26,6 @@ async function addUsageSubscription(
   );
 }
 
-async function requestCompletion(
-  api: APIRequestContext,
-  secret: string,
-  model: string,
-) {
-  return api.post("/api/openai-compat/v1/chat/completions", {
-    headers: { Authorization: `Bearer ${secret}` },
-    data: {
-      model,
-      messages: [{ role: "user", content: "Summarize the budget." }],
-    },
-  });
-}
-
 test("sets and removes an API key monthly credit limit", async ({
   api,
   org,
@@ -60,7 +47,7 @@ test("sets and removes an API key monthly credit limit", async ({
   await page.getByTestId("api-key-credit-limit-save").click();
   await expect(page.getByTestId("api-key-credit-limit-dialog")).toHaveCount(0);
 
-  const blockedResponse = await requestCompletion(
+  const blockedResponse = await requestChatCompletionWithApiKey(
     publicApi,
     apiKey.secret,
     org.defaultModel.name,
@@ -74,13 +61,14 @@ test("sets and removes an API key monthly credit limit", async ({
   await page.getByTestId("api-key-credit-limit-remove").click();
   await expect
     .poll(async () => {
-      const limits =
-        await generatedApi.creditLimitsControllerGetApiKeyLimits({ api });
+      const limits = await generatedApi.creditLimitsControllerGetApiKeyLimits({
+        api,
+      });
       return limits.some((limit) => limit.apiKeyId === apiKey.id);
     })
     .toBe(false);
 
-  const allowedResponse = await requestCompletion(
+  const allowedResponse = await requestChatCompletionWithApiKey(
     publicApi,
     apiKey.secret,
     org.defaultModel.name,

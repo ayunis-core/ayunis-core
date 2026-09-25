@@ -24,11 +24,11 @@ import {
 import { formatDate } from '@/shared/lib/format-date';
 import { useRemoveApiKeyCreditLimit } from '@/pages/admin-settings/api-keys-settings/api/useRemoveApiKeyCreditLimit';
 import { useRevokeApiKey } from '@/pages/admin-settings/api-keys-settings/api/useRevokeApiKey';
+import { partitionApiKeys } from '@/pages/admin-settings/api-keys-settings/lib/partition-api-keys';
 import {
   getApiKeyStatus,
-  partitionApiKeys,
   type ApiKeyStatus,
-} from '@/pages/admin-settings/api-keys-settings/lib/partition-api-keys';
+} from '@/shared/lib/api-key-status';
 import type {
   ApiKey,
   ApiKeyCreditLimit,
