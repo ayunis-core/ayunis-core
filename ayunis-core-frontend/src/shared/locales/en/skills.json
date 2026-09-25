@@ -35,7 +35,7 @@
   "card": {
     "activeLabel": "Active",
     "inactiveLabel": "Inactive",
-    "activeTooltip": "Active skills are available to AI chats. Inactive skills are not used until they are activated again.",
+    "activeTooltip": "Active skills are available to Ayunis Core in chats. Inactive skills are not used until they are activated again.",
     "pinLabel": "Pin to new chat",
     "unpinLabel": "Unpin from new chat",
     "deleteLabel": "Delete",
@@ -55,8 +55,8 @@
       "nameLabel": "Name",
       "namePlaceholder": "Enter skill name...",
       "shortDescriptionLabel": "Trigger",
-      "shortDescriptionPlaceholder": "Describe when the AI should activate this skill...",
-      "shortDescriptionHint": "A good trigger helps the AI understand when to use this skill.",
+      "shortDescriptionPlaceholder": "Describe when Ayunis Core should activate this skill...",
+      "shortDescriptionHint": "A good trigger helps Ayunis Core understand when to use this skill.",
       "instructionsLabel": "Detailed Instructions",
       "instructionsPlaceholder": "Enter detailed instructions for this skill..."
     },
@@ -75,7 +75,8 @@
   "create": {
     "success": "Skill created successfully!",
     "error": "Failed to create skill. Please try again.",
-    "duplicateName": "A skill with this name already exists in this workspace."
+    "duplicateName": "A skill with this name already exists in this workspace.",
+    "duplicateNamePersonal": "You already have a skill with this name. Please choose a different name."
   },
   "toggleActive": {
     "success": "Skill status updated successfully!",
