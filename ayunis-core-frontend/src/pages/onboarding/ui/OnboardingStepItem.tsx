@@ -24,12 +24,8 @@ import {
   findAssignTourThread,
   isTourTargetVisible,
 } from '@/widgets/onboarding';
-import {
-  useKnowledgeBasesControllerFindAll,
-  useSkillsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
-import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import { useWorkspaces } from '@/features/workspaces';
 import { useFavorites } from '@/features/favorites';
 import { useThreads } from '@/widgets/app-sidebar/api';
@@ -90,14 +86,6 @@ export default function OnboardingStepItem({
     { query: { enabled: isAddDocumentsStep && !locked } },
   );
   const firstKnowledgeBase = kbResponse?.data[0];
-
-  const isPinSkillStep = step.id === 'useSkillInChat';
-  const { data: skillsResponse } = useSkillsControllerFindAll(
-    personalSkillListParams,
-    { query: { enabled: isPinSkillStep && !locked } },
-  );
-  const hasPersonalSkill =
-    skillsResponse?.data.some((skill) => !skill.isShared) ?? false;
 
   const needsWorkspace = WORKSPACE_STEP_IDS.has(step.id);
   const {
@@ -169,13 +157,6 @@ export default function OnboardingStepItem({
         to,
         spotlight: TOUR_TARGET.createKnowledgeBase,
         translationKey: 'createKnowledgeBase',
-      };
-    }
-    if (isPinSkillStep && !hasPersonalSkill) {
-      return {
-        to,
-        spotlight: TOUR_TARGET.createSkill,
-        translationKey: 'createSkill',
       };
     }
     return { to, spotlight, translationKey: step.translationKey };

@@ -36,12 +36,6 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     .filter((skill) => skill.isShared)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // The "pin a skill" tour step anchors on the first active personal skill.
-  // With nothing pinnable (no skills yet, or none active) it falls back to the
-  // create-skill action so the step always has a visible target.
-  const pinTargetSkillId = personalSkills.find((skill) => skill.isActive)?.id;
-  const hasPinnableSkill = pinTargetSkillId !== undefined;
-
   const createSkillAction = (
     <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
       <CreateSkillDialog />
@@ -51,13 +45,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const headerAction = (
     <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="skills/" />
-      {hasPinnableSkill ? (
-        createSkillAction
-      ) : (
-        <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-          {createSkillAction}
-        </OnboardingTourTarget>
-      )}
+      {createSkillAction}
     </div>
   );
 
@@ -116,11 +104,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
               ) : (
                 <div className="space-y-3">
                   {personalSkills.map((skill) => (
-                    <SkillCard
-                      key={skill.id}
-                      skill={skill}
-                      pinTourTarget={skill.id === pinTargetSkillId}
-                    />
+                    <SkillCard key={skill.id} skill={skill} />
                   ))}
                 </div>
               )}

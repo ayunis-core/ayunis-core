@@ -71,9 +71,7 @@
       "delete": "Fähigkeit des Arbeitsbereichs löschen",
       "active": "Aktiv",
       "inactive": "Inaktiv",
-      "activeTooltip": "Aktive Fähigkeiten können vom Assistenten bei Bedarf in Chats dieses Arbeitsbereichs aktiviert werden. Anweisungen und Ressourcen werden erst bei der Aktivierung geladen. Inaktive Fähigkeiten können nicht aktiviert werden.",
-      "pin": "In Chats des Arbeitsbereichs anheften",
-      "unpin": "Aus Chats des Arbeitsbereichs lösen"
+      "activeTooltip": "Aktive Fähigkeiten können vom Assistenten bei Bedarf in Chats dieses Arbeitsbereichs aktiviert werden. Anweisungen und Ressourcen werden erst bei der Aktivierung geladen. Inaktive Fähigkeiten können nicht aktiviert werden."
     },
     "knowledge": {
       "title": "Wissenssammlungen",

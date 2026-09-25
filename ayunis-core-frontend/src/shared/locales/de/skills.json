@@ -36,8 +36,6 @@
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
     "activeTooltip": "Aktive Fähigkeiten stehen KI-Chats zur Verfügung. Inaktive Fähigkeiten werden erst wieder verwendet, wenn sie aktiviert werden.",
-    "pinLabel": "An neuen Chat anheften",
-    "unpinLabel": "Von neuem Chat lösen",
     "deleteLabel": "Löschen",
     "confirmDelete": {
       "title": "Fähigkeit löschen",
