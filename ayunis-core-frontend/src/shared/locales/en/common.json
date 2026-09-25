@@ -126,7 +126,8 @@
     "pagination": {
       "previous": "Previous",
       "next": "Next"
-    }
+    },
+    "hintTriggerLabel": "More information about {{label}}"
   },
   "error": {
     "title": "Something went wrong",

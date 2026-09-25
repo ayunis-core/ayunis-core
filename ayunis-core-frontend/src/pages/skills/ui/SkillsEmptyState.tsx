@@ -1,4 +1,4 @@
-import CreateSkillDialog from './CreateSkillDialog';
+import CreateSkillMenu from './CreateSkillMenu';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, Store } from 'lucide-react';
 import { EmptyState } from '@/widgets/empty-state';
@@ -10,7 +10,7 @@ export default function SkillsEmptyState() {
   const { t } = useTranslation('skills');
   const marketplace = useMarketplaceConfig();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  // Assume can-create while permissions load, matching CreateSkillDialog, so the
+  // Assume can-create while permissions load, matching CreateSkillMenu, so the
   // prompt doesn't flicker; drop the create copy/action only once we know the
   // member lacks the permission (they can still read skills shared with them).
   const canCreate = isLoadingPermissions || can('manage_skills');
@@ -26,7 +26,7 @@ export default function SkillsEmptyState() {
       action={
         canCreate ? (
           <div className="flex flex-col items-center gap-3">
-            <CreateSkillDialog
+            <CreateSkillMenu
               buttonText={t('createDialog.buttonTextFirst')}
               showIcon={true}
             />

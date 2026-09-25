@@ -91,5 +91,27 @@
     "success": "Skill deleted successfully!",
     "error": "Failed to delete skill. Please try again.",
     "notFound": "Skill not found. It may have been deleted."
+  },
+  "createMenu": {
+    "guided": "Create with Ayunis Core",
+    "editor": "Create it yourself",
+    "marketplace": "Add from the marketplace",
+    "guidedPrompt": "Help me create a new skill. Ask me the questions you need one at a time: What should the skill be for? In which situations should it kick in? What should it pay attention to, what should it avoid? Whatever you can already derive from my answers, propose it instead of asking. Once the picture is complete, create the skill with a name, a short description and instructions."
+  },
+  "improve": {
+    "action": "Improve",
+    "running": "Improving…",
+    "accept": "Keep it",
+    "retry": "Try again",
+    "undo": "Revert",
+    "tooltip": "Improve this text with Ayunis Core",
+    "needsInput": "Write a few words first, then Ayunis Core has something to work with.",
+    "error": "The text could not be improved. Please try again.",
+    "emptyAnswer": "No suggestion came back. Your text is unchanged.",
+    "noModel": "No model is enabled for your organisation."
+  },
+  "fieldHints": {
+    "trigger": "The trigger decides when this skill switches itself on. Describe the situation as concretely as you can: which topics are involved, which words come up, which questions get asked. Example: \"When a building application deadline comes up or someone asks for a cut-off date.\"",
+    "instructions": "The instructions describe how to work once the skill is active: the approach, the tone, how the answer is structured and what to leave out. Example: \"Answer factually in full sentences, always name the legal basis, and ask back when the file number is missing.\""
   }
 }

@@ -22,7 +22,12 @@ import {
   FormMessage,
 } from '@ayunis/ui/components/form';
 import { Textarea } from '@ayunis/ui/components/textarea';
-import { InstructionsField, NameField } from '@/widgets/entity-form-fields';
+import {
+  InstructionsField,
+  NameField,
+  ShortDescriptionField,
+} from '@/widgets/entity-form-fields';
+import { useSkillTextAssist } from '@/widgets/skill-improve-button';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
@@ -61,6 +66,14 @@ export function SkillPropertiesCard({
     defaultValues: skill,
   });
 
+  const assist = useSkillTextAssist(form, {
+    labels: {
+      trigger: t('properties.form.shortDescriptionLabel'),
+      instructions: t('properties.form.instructionsLabel'),
+    },
+    canImprove: !disabled,
+  });
+
   const submit = async (data: SkillPropertiesData) => {
     setIsSaving(true);
     try {
@@ -96,30 +109,14 @@ export function SkillPropertiesCard({
               translationPrefix="properties"
               disabled={disabled}
             />
-            <FormField
+            <ShortDescriptionField
               control={form.control}
               name="shortDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('properties.form.shortDescriptionLabel')}
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t(
-                        'properties.form.shortDescriptionPlaceholder',
-                      )}
-                      className="min-h-[80px] max-h-[200px]"
-                      disabled={disabled}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t('properties.form.shortDescriptionHint')}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              translationNamespace="skill"
+              translationPrefix="properties"
+              disabled={disabled}
+              multiline
+              {...assist.trigger}
             />
             <InstructionsField
               control={form.control}
@@ -128,8 +125,12 @@ export function SkillPropertiesCard({
               translationPrefix="properties"
               disabled={disabled}
               className="min-h-[250px] max-h-[500px]"
+              {...assist.instructions}
             />
-            <Button type="submit" disabled={isSaving || disabled}>
+            <Button
+              type="submit"
+              disabled={isSaving || disabled || assist.isBusy}
+            >
               {isSaving
                 ? t('properties.buttons.saving')
                 : t('properties.buttons.save')}
