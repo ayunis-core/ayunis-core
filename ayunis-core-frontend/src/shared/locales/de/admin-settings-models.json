@@ -11,6 +11,8 @@
     "languageModelsDescription": "Modelle für Textgenerierung und Konversation.",
     "embeddingModelsDescription": "Modelle für Dokumentenanalyse und Suche.",
     "imageGenerationModelsDescription": "Modelle für Bilderzeugung und visuelle Erstellung.",
+    "imageGenerationModelsHint": "Bildmodelle werden automatisch für die Bilderzeugung verwendet und erscheinen nicht in der Modellauswahl im Chat. Ist hier ein Modell aktiviert, können Nutzer Bilder erzeugen und es wird automatisch genutzt, ohne dieses vorher manuell auswählen zu müssen. Es kann immer nur ein Bilderzeugungsmodell gleichzeitig aktiv sein.",
+    "hintTriggerLabel": "Weitere Informationen zu {{label}}",
     "noLanguageModels": "Keine Sprachmodelle verfügbar.",
     "noEmbeddingModels": "Keine Embedding-Modelle verfügbar.",
     "noImageGenerationModels": "Keine Bilderzeugungsmodelle verfügbar.",
