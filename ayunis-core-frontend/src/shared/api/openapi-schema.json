@@ -5575,6 +5575,36 @@
         "tags": ["skills"]
       }
     },
+    "/skills/improve-text": {
+      "post": {
+        "operationId": "SkillsController_improveText",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImproveSkillTextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImprovedSkillTextResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rewrite a skill trigger or its instructions",
+        "tags": ["skills"]
+      }
+    },
     "/skills": {
       "post": {
         "operationId": "SkillsController_create",
@@ -16222,6 +16252,39 @@
           "isPinned",
           "creatorName"
         ]
+      },
+      "ImproveSkillTextDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": ["trigger", "instructions"],
+            "description": "Which of the two texts should come back rewritten"
+          },
+          "name": {
+            "type": "string",
+            "description": "The skill name, when it already exists"
+          },
+          "trigger": {
+            "type": "string",
+            "description": "The trigger as it currently stands in the form"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions as they currently stand in the form"
+          }
+        },
+        "required": ["field", "trigger", "instructions"]
+      },
+      "ImprovedSkillTextResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The rewritten text for the requested field"
+          }
+        },
+        "required": ["text"]
       },
       "CreateSkillDto": {
         "type": "object",

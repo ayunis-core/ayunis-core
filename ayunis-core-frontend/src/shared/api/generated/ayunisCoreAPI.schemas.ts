@@ -2945,6 +2945,33 @@ export interface SkillResponseDto {
   creatorName: string | null;
 }
 
+/**
+ * Which of the two texts should come back rewritten
+ */
+export type ImproveSkillTextDtoField = typeof ImproveSkillTextDtoField[keyof typeof ImproveSkillTextDtoField];
+
+
+export const ImproveSkillTextDtoField = {
+  trigger: 'trigger',
+  instructions: 'instructions',
+} as const;
+
+export interface ImproveSkillTextDto {
+  /** Which of the two texts should come back rewritten */
+  field: ImproveSkillTextDtoField;
+  /** The skill name, when it already exists */
+  name?: string;
+  /** The trigger as it currently stands in the form */
+  trigger: string;
+  /** The instructions as they currently stand in the form */
+  instructions: string;
+}
+
+export interface ImprovedSkillTextResponseDto {
+  /** The rewritten text for the requested field */
+  text: string;
+}
+
 export type CreateSkillDtoOwnerType = typeof CreateSkillDtoOwnerType[keyof typeof CreateSkillDtoOwnerType];
 
 
