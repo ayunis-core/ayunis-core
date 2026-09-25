@@ -8314,6 +8314,48 @@
         "tags": ["Admin Usage"]
       }
     },
+    "/usage/api-keys": {
+      "get": {
+        "description": "Returns token, request and credit usage for every API key of the current organization, including revoked and expired keys. Dates are optional - if not provided, shows all usage.",
+        "operationId": "ApiKeyUsageController_getApiKeyUsage",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "description": "Start date in ISO format",
+            "schema": {
+              "example": "2024-01-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "description": "End date in ISO format",
+            "schema": {
+              "example": "2024-01-31T23:59:59.999Z",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API key usage statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage statistics by API key",
+        "tags": ["Admin Usage"]
+      }
+    },
     "/super-admin/usage/{orgId}/config": {
       "get": {
         "operationId": "SuperAdminUsageController_getUsageConfig",
@@ -8706,6 +8748,53 @@
           }
         },
         "summary": "Get usage statistics by user for an organization",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/api-keys": {
+      "get": {
+        "operationId": "SuperAdminUsageDataController_getApiKeyUsage",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage statistics by API key for an organization",
         "tags": ["Super Admin Usage"]
       }
     },
@@ -18459,6 +18548,88 @@
           }
         },
         "required": ["timeSeries"]
+      },
+      "ApiKeyUsageDto": {
+        "type": "object",
+        "properties": {
+          "apiKeyId": {
+            "type": "string",
+            "description": "API key ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "API key name"
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Revocation timestamp, or null if the key was not revoked",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Expiration date, or null if the key never expires",
+            "nullable": true
+          },
+          "inputTokens": {
+            "type": "number",
+            "description": "Input tokens in the filtered period"
+          },
+          "outputTokens": {
+            "type": "number",
+            "description": "Output tokens in the filtered period"
+          },
+          "totalTokens": {
+            "type": "number",
+            "description": "Total tokens in the filtered period"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Recorded inferences in the filtered period. Calls that produced no usage data are not counted."
+          },
+          "credits": {
+            "type": "number",
+            "description": "Credits of all priced requests in the filtered period. Null when the key has requests but none of them could be priced.",
+            "nullable": true
+          },
+          "unpricedRequests": {
+            "type": "number",
+            "description": "Requests without a credit value, for example because the model had no price configured"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last recorded use in the filtered period (null if none)",
+            "nullable": true
+          }
+        },
+        "required": [
+          "apiKeyId",
+          "name",
+          "revokedAt",
+          "expiresAt",
+          "inputTokens",
+          "outputTokens",
+          "totalTokens",
+          "requests",
+          "credits",
+          "unpricedRequests",
+          "lastUsedAt"
+        ]
+      },
+      "ApiKeyUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Usage per API key of the organization, including revoked and expired keys",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyUsageDto"
+            }
+          }
+        },
+        "required": ["data"]
       },
       "TimeSeriesPointDto": {
         "type": "object",

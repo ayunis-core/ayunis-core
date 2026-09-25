@@ -49,5 +49,25 @@
     "inactive": "inactive",
     "totalCredits": "Total: {{credits}} credits",
     "emptyState": "No users match the selected filters on this page. Try adjusting your filters or navigate to another page."
+  },
+  "apiKeyUsage": {
+    "title": "API key usage",
+    "description": "Usage of each API key in the selected month, including revoked and expired keys.",
+    "apiKey": "API key",
+    "tokens": "Tokens",
+    "tokenSplit": "{{input}} in / {{output}} out",
+    "requests": "Requests",
+    "credits": "Credits",
+    "lastUsed": "Last used",
+    "creditsUnavailable": "Not available",
+    "unpricedRequests_one": "{{count}} request without price",
+    "unpricedRequests_other": "{{count}} requests without price",
+    "status": {
+      "revoked": "Revoked",
+      "expired": "Expired"
+    },
+    "noKeys": "No API keys",
+    "noKeysDescription": "This organization has not created any API keys yet.",
+    "error": "Error loading API key usage"
   }
 }
