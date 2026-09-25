@@ -86,6 +86,7 @@ none of these packages implements the Agent Plugins standard.
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md)      | Voice          | Audio transcription service                                                                                    |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md)                        | Metering       | Token and credit usage tracking                                                                                |
 | [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md)    | Blueprints     | Admin-managed skill templates with distribution modes                                                          |
+| [skill-authoring](ayunis-core-backend/src/domain/skill-authoring/SUMMARY.md)    | Authoring      | Model-assisted rewriting of skill triggers and instructions                                                    |
 | [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md)                    | Learning       | Academy chapters and lessons managed by super admins                                                           |
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode                                                                     |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md)  | Privacy        | Per-thread PII mask dictionary for anonymous mode                                                              |

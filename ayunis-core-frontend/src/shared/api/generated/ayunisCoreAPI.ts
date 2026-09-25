@@ -108,6 +108,8 @@ import type {
   GlobalPiiWhitelistWordDto,
   GrantCrawlDomainRequestDto,
   ImageGenerationModelResponseDto,
+  ImproveSkillTextDto,
+  ImprovedSkillTextResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InstalledMarketplaceSkillResponseDto,
@@ -23217,6 +23219,74 @@ export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addons
 
 
 
+
+/**
+ * @summary Rewrite a skill trigger or its instructions
+ */
+export const skillAuthoringControllerImproveText = (
+    improveSkillTextDto: ImproveSkillTextDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ImprovedSkillTextResponseDto>(
+      {url: `/skills/improve-text`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: improveSkillTextDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillAuthoringControllerImproveTextMutationKey = () => ['skillAuthoringControllerImproveText'] as const;
+
+export const getSkillAuthoringControllerImproveTextMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillAuthoringControllerImproveText>>, TError,SkillAuthoringControllerImproveTextMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillAuthoringControllerImproveText>>, TError,SkillAuthoringControllerImproveTextMutationVariables, TContext> => {
+
+const mutationKey = getSkillAuthoringControllerImproveTextMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillAuthoringControllerImproveText>>, SkillAuthoringControllerImproveTextMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  skillAuthoringControllerImproveText(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillAuthoringControllerImproveTextMutationResult = NonNullable<Awaited<ReturnType<typeof skillAuthoringControllerImproveText>>>
+    export type SkillAuthoringControllerImproveTextMutationBody = ImproveSkillTextDto
+    export type SkillAuthoringControllerImproveTextMutationError = unknown
+    export type SkillAuthoringControllerImproveTextMutationVariables = {data: ImproveSkillTextDto}
+
+    /**
+ * @summary Rewrite a skill trigger or its instructions
+ */
+export const useSkillAuthoringControllerImproveText = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillAuthoringControllerImproveText>>, TError,SkillAuthoringControllerImproveTextMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillAuthoringControllerImproveText>>,
+        TError,
+        SkillAuthoringControllerImproveTextMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillAuthoringControllerImproveTextMutationOptions(options), queryClient);
+    }
 
 /**
  * Authenticate user with email and password. Sets authentication cookies on successful login.

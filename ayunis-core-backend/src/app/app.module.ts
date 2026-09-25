@@ -33,6 +33,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { FavoritesModule } from 'src/domain/favorites/favorites.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { OpenAICompatModule } from 'src/domain/openai-compat/openai-compat.module';
+import { SkillAuthoringModule } from 'src/domain/skill-authoring/skill-authoring.module';
 import { IamModule } from 'src/iam/iam.module';
 
 import { AuthProvider } from 'src/config/authentication.config';
@@ -147,6 +148,7 @@ import { LoggingModule } from 'src/common/logger/logging.module';
     FavoritesModule,
     WorkspacesModule,
     OpenAICompatModule,
+    SkillAuthoringModule,
     IamModule.register({
       authProvider:
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
