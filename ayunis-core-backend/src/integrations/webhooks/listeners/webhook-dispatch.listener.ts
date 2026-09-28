@@ -51,6 +51,8 @@ import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-cr
 import { UserInvitedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-invited.webhook-event';
 import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
 import { OnboardingUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/onboarding-updated.webhook-event';
+import { AcademyProgressUpdatedEvent } from 'src/domain/academy/application/events/academy-progress-updated.event';
+import { AcademyProgressUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/academy-progress-updated.webhook-event';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -260,6 +262,26 @@ export class WebhookDispatchListener {
         ...event,
         userEmail: user.email,
         userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(AcademyProgressUpdatedEvent.EVENT_NAME)
+  async handleAcademyProgressUpdated(
+    event: AcademyProgressUpdatedEvent,
+  ): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new AcademyProgressUpdatedWebhookEvent({
+        userId: event.userId,
+        orgId: user.orgId,
+        userEmail: user.email,
+        userName: user.name,
+        started: event.started,
+        participationConfirmedAt:
+          event.participationConfirmedAt?.toISOString() ?? null,
       }),
     );
   }
