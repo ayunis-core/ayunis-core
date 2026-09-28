@@ -3,7 +3,7 @@ import {
   ImageGenerationHandler,
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../application/ports/image-generation.handler';
+} from 'src/domain/models/application/ports/image-generation.handler';
 
 /**
  * Mock image generation handler for testing environments.
@@ -12,7 +12,7 @@ import {
  * image-generation pipeline without making external API calls.
  *
  * @see ImageGenerationHandlerRegistry.getHandler() - Routing logic
- * @see MockInferenceHandler - Conversational equivalent
+ * @see MockInferenceProviderFactory - Conversational equivalent
  */
 @Injectable()
 export class MockImageGenerationHandler extends ImageGenerationHandler {

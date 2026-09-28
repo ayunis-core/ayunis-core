@@ -19,15 +19,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/domain/chat-settings/application/use-cases/generate-personalized-system-prompt/generate-personalized-system-prompt.use-case.ts",
-    "to": "src/domain/models/application/ports/inference.handler.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/domain/knowledge-bases/application/listeners/share-deleted.listener.ts",
     "to": "src/domain/shares/application/ports/shares-repository.port.ts",
     "rule": {
@@ -111,33 +102,6 @@
     "type": "dependency",
     "from": "src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.use-case.ts",
     "to": "src/iam/users/application/ports/users.repository.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/openai-compat/application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case.ts",
-    "to": "src/domain/models/application/ports/stream-inference.handler.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/openai-compat/application/mappers/openai-stream.mapper.ts",
-    "to": "src/domain/models/application/ports/stream-inference.handler.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/openai-compat/application/mappers/openai-response.mapper.ts",
-    "to": "src/domain/models/application/ports/inference.handler.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-module-port-imports"

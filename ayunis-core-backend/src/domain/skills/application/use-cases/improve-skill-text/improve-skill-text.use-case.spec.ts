@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { InferenceHandlerRegistry } from 'src/domain/models/application/registry/inference-handler.registry';
+import { InferenceCallService } from 'src/domain/models/application/services/inference-call.service';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
@@ -68,9 +68,9 @@ describe('ImproveSkillTextUseCase', () => {
         ImproveSkillTextUseCase,
         GetInferenceUseCase,
         {
-          provide: InferenceHandlerRegistry,
+          provide: InferenceCallService,
           useValue: {
-            getHandler: () => ({ answer: getInference.execute }),
+            complete: getInference.execute,
           },
         },
         { provide: SkillTextModelResolver, useValue: modelResolver },
@@ -311,9 +311,9 @@ describe('ImproveSkillTextUseCase trial accounting', () => {
         ImproveSkillTextUseCase,
         GetInferenceUseCase,
         {
-          provide: InferenceHandlerRegistry,
+          provide: InferenceCallService,
           useValue: {
-            getHandler: () => ({ answer: getInference.execute }),
+            complete: getInference.execute,
           },
         },
         {
@@ -435,14 +435,12 @@ describe('ImproveSkillTextUseCase with real inference accounting', () => {
           useValue: { get: getFromUserContext({ userId, orgId }) },
         },
         {
-          provide: InferenceHandlerRegistry,
+          provide: InferenceCallService,
           useValue: {
-            getHandler: () => ({
-              answer: async () => ({
-                content: [new TextMessageContent('Prüfe zuerst die')],
-                meta: { inputTokens: 500, outputTokens: 1024 },
-                finishReason: 'length',
-              }),
+            complete: async () => ({
+              content: [new TextMessageContent('Prüfe zuerst die')],
+              meta: { inputTokens: 500, outputTokens: 1024 },
+              finishReason: 'length',
             }),
           },
         },

@@ -8,7 +8,7 @@ import {
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
 import { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
-import { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import { StreamInferenceInput } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.input';
 import type { InferenceCallTerminalHandler } from 'src/domain/models/application/models/inference-call-terminal';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
