@@ -100,6 +100,23 @@ src/assertions/     Shared assertion helpers when repetition appears
 tests/<domain>/     Product journeys, one journey per spec file
 ```
 
+## Scope and stopping rule
+
+E2E tests prove the smallest set of critical browser-to-backend journeys needed
+for the acceptance criteria. The default stopping point is one representative
+happy path for each materially distinct journey. Add another E2E case only when
+it proves a high-risk outcome that depends on an integration boundary, such as
+authentication, authorization, persistence, email, uploads, or routing, or when
+it prevents a regression that lower-level tests could not catch.
+
+Do not exhaustively cover validation permutations, domain edge cases,
+role/provider combinations, responsive variants, or implementation details in
+E2E. Put those at the closest lower layer: unit, integration, API, or component
+tests. Do not duplicate a journey an existing E2E test already proves.
+
+Access-control changes are the exception: follow the repository instructions
+for distinct principals and assert denied-before, grant, then allowed-after.
+
 ## Adding a spec for a new feature
 
 1. One user journey per file under `tests/<domain>/`. Copy the closest

@@ -56,21 +56,19 @@ Do the work. This is deliberately open-ended — the ticket may ask for a code c
 
 - Follow the ticket's instructions and referenced patterns
 - Use the right skills/tools for the job (e.g. `ayunis-core-backend`, `typeorm-migrations`, `code-review`, etc.)
-- Classify the work using the repository's Proportional Workflow and run the corresponding validation
-- Browser journey or system boundary changed without sufficient lower-level coverage? Load the `e2e` skill; done means the focused journey spec exists or is updated and runs green (`pnpm --filter ayunis-core-e2e test --grep "<feature>"`)
+- Validate as the repository instructions require; without repository guidance, run tests, build, and lint
+- When the repository instructions require E2E coverage, load the `e2e` skill; done means the focused journey spec exists or is updated and runs green with that skill's test command
 - If execution surfaces a blocker, a wrong premise, or a decision that needs the user, stop and surface it — don't plow through
 
 ### 5. Deliver code changes
 
 Unless the user explicitly asks to keep changes local, code implementation includes delivery:
 
-1. Load `git-workflow`, commit the validated logical change, and submit or update its Graphite PR. The ticket ID from this workflow is the commit's required ticket ID.
-2. Use `e2e` for required durable browser-journey or system-boundary regression coverage when lower-level tests are insufficient.
-3. Load `qa` when the user requests it or when PR-specific behaviors, visuals, or edge cases need live evidence beyond automated coverage. QA may supplement but does not replace required E2E coverage.
-4. For visually meaningful frontend changes, capture the required QA views and load `pr-media` when publishing them materially helps review.
-5. After the latest revision is submitted, load `finish-pr` and keep ownership until its completion gate passes.
+1. Load `git-workflow`, commit the validated logical change, and submit or update its PR. The ticket ID from this workflow is the commit's required ticket ID.
+2. Produce the review evidence the repository instructions require for this change (for example E2E coverage, live QA, or PR media), using the matching skills.
+3. After the latest revision is submitted, load `finish-pr` and keep ownership until its completion gate passes.
 
-Do not create ceremonial screenshots for backend-only or non-visual changes. QA findings, CI failures, and actionable Bugbot findings remain part of the same logical change and PR.
+QA findings, CI failures, and actionable review-bot findings remain part of the same logical change and PR.
 
 ### 6. Summarize
 
@@ -111,13 +109,17 @@ If nothing qualifies, say so explicitly — don't manufacture follow-ups.
 
 ### 8. Hand off for release
 
-For code-backed tickets, validation, a green PR, and merge are not release. Do not move the ticket to `Done` during implementation. After merge, verify that the Git integration moved it to the team's merged or release-pending state. For AYC tickets, the expected state is `Merged`; update it manually only if the merge automation did not:
+For code-backed tickets, validation, a green PR, and merge are not release. Look up the team's release-pending state in the per-team state-names table in `manage-linear`.
+
+**Team with a release-pending state:** do not move the ticket to `Done` during implementation. After merge, verify that the Git integration moved it to the release-pending state. Update it manually only if the merge automation did not:
 
 ```bash
-linear issue update <ID> --state "Merged"
+linear issue update <ID> --state "<release-pending state>"
 ```
 
-Only the release process may move a code-backed ticket to `Done`, after the production release that contains the change. If the ticket is unexpectedly `Done`, inspect its issue history and linked release before changing it: restore the release-pending state only when it was completed before the containing release. Leave it `Done` when release automation completed it after that release, even if the merge happened shortly beforehand.
+Only the release process may move the ticket to `Done`, after the production release that contains the change. If the ticket is unexpectedly `Done`, inspect its issue history and linked release before changing it: restore the release-pending state only when it was completed before the containing release. Leave it `Done` when release automation completed it after that release, even if the merge happened shortly beforehand.
+
+**Team without a release-pending state:** move the ticket to the team's completion state after merge.
 
 For a non-code ticket with no release artifact, use the team's normal completion state after its deliverable and validation are complete.
 
@@ -132,7 +134,7 @@ The description (plus linked context) defines the scope. Don't silently expand �
 
 ### Propose before writing to Linear
 
-Creating or linking follow-up tickets is an external action. Propose first; execute on approval. Moving the ticket being implemented to its started state, and correcting a failed merge transition to its release-pending state after checking history, are routine parts of this workflow. `Done` remains owned by the release process for code-backed tickets.
+Creating or linking follow-up tickets is an external action. Propose first; execute on approval. Moving the ticket being implemented to its started state, and correcting a failed merge transition to its release-pending state after checking history, are routine parts of this workflow. On teams with a release-pending state, `Done` remains owned by the release process for code-backed tickets.
 
 ### Link what you create
 
