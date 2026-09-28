@@ -28,14 +28,14 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
   /**
    * Build a ToolAssemblyService with mocked dependencies.
-   * Constructor order (15 params):
+   * Constructor order (14 params):
    *  0 configService, 1 assembleToolsUseCase, 2 mcpToolAssembler,
    *  3 systemPromptBuilderService, 4 findActiveSkillsUseCase,
    *  5 findActiveKnowledgeBasesUseCase, 6 getUserSystemPromptUseCase,
    *  7 getOrgSystemPromptUseCase, 8 findActiveAlwaysOnTemplatesUseCase,
-   *  9 features, 10 contextService,
-   *  11 getPermittedImageGenerationModelUseCase, 12 artifactToolAssembler,
-   *  13 getOrgChatSettingsUseCase, 14 logger
+   *  9 contextService,
+   *  10 getPermittedImageGenerationModelUseCase, 11 artifactToolAssembler,
+   *  12 getOrgChatSettingsUseCase, 13 logger
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
@@ -47,7 +47,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     mcpIntegrationsExecute?: jest.Mock;
     systemPromptBuild?: jest.Mock;
     alwaysOnTemplatesExecute?: jest.Mock;
-    skillsEnabled?: boolean;
     activeKnowledgeBasesExecute?: jest.Mock;
   }) {
     const configService = {
@@ -90,7 +89,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       execute:
         overrides.alwaysOnTemplatesExecute ?? jest.fn().mockResolvedValue([]),
     };
-    const features = { skillsEnabled: overrides.skillsEnabled ?? false };
     const contextService = {
       get: overrides.contextServiceGet ?? jest.fn().mockReturnValue(undefined),
     };
@@ -121,7 +119,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getUserSystemPromptUseCase,
       getOrgSystemPromptUseCase,
       findActiveAlwaysOnTemplatesUseCase,
-      features,
       contextService,
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
@@ -357,7 +354,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const { service, assembleToolsUseCase } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(undefined),
       systemPromptBuild,
-      skillsEnabled: true,
     });
 
     const result = await service.buildRunContext(
@@ -426,7 +422,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     });
     const { service, assembleToolsUseCase } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(undefined),
-      skillsEnabled: true,
     });
 
     await service.buildRunContext(createMockThread(), [], true, false, {
@@ -471,35 +466,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
         command.type === ToolType.KNOWLEDGE_QUERY,
     );
     expect(knowledgeQueryCall?.[0].context).toEqual([activeKnowledgeBase]);
-  });
-
-  it('does not apply project skills when the skills feature is disabled', async () => {
-    const projectSkill = new WorkspaceSkill({
-      id: randomUUID(),
-      name: 'Project Skill',
-      shortDescription: 'Assigned to the project',
-      instructions: 'Use project context',
-      workspaceId: randomUUID(),
-    });
-    const systemPromptBuild = jest.fn().mockReturnValue('prompt');
-    const discoverMcpExecute = jest.fn();
-    const { service } = await buildService({
-      systemPromptBuild,
-      discoverMcpExecute,
-      skillsEnabled: false,
-    });
-
-    await service.buildRunContext(createMockThread(), [], true, false, {
-      instruction: null,
-      skills: [{ skill: projectSkill, isActive: true, isPinned: false }],
-      knowledgeBases: [],
-      runtimeKnowledgeBases: [],
-    });
-
-    expect(systemPromptBuild).toHaveBeenCalledWith(
-      expect.objectContaining({ skills: [] }),
-    );
-    expect(discoverMcpExecute).not.toHaveBeenCalled();
   });
 
   it('should include website content and internet search when internet access is enabled', async () => {

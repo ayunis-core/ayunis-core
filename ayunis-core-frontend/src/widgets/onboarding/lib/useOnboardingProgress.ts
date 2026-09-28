@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useFeatureToggles } from '@/features/feature-toggles';
 import {
   ONBOARDING_CATEGORIES,
   type OnboardingCategory,
@@ -25,16 +24,10 @@ export function useOnboardingProgress(
   );
 
   const categories: readonly OnboardingCategory[] = ONBOARDING_CATEGORIES;
-  const featureToggles = useFeatureToggles();
 
   const visibleCategories = useMemo(
-    () =>
-      categories.filter(
-        (cat) =>
-          (!cat.adminOnly || isAdmin) &&
-          (!cat.requiresFeature || featureToggles[cat.requiresFeature]),
-      ),
-    [categories, isAdmin, featureToggles],
+    () => categories.filter((cat) => !cat.adminOnly || isAdmin),
+    [categories, isAdmin],
   );
 
   const totalSteps = visibleCategories.reduce(

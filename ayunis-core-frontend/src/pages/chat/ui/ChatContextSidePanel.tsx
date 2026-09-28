@@ -14,10 +14,6 @@ import {
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useThreadAiContext } from '@/pages/chat/api/useThreadAiContext';
-import {
-  useIsKnowledgeBasesEnabled,
-  useIsSkillsEnabled,
-} from '@/features/feature-toggles';
 import type {
   ThreadAiContextKnowledgeBaseResponseDto,
   ThreadAiContextSkillResponseDto,
@@ -31,15 +27,8 @@ export function ChatContextSidePanel({
   threadId,
 }: Readonly<ChatContextSidePanelProps>) {
   const { t } = useTranslation('chat');
-  const skillsEnabled = useIsSkillsEnabled();
-  const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
-  const contextEnabled = skillsEnabled || knowledgeBasesEnabled;
-  const { context, isLoading, error, refetch } = useThreadAiContext(
-    threadId,
-    contextEnabled,
-  );
+  const { context, isLoading, error, refetch } = useThreadAiContext(threadId);
 
-  if (!contextEnabled) return null;
   if (isLoading) return <ContextLoading />;
   if (error || !context) {
     return (
@@ -65,10 +54,8 @@ export function ChatContextSidePanel({
   return (
     <ScrollArea className="min-h-0 flex-1">
       <div className="space-y-6 p-4" data-testid="chat-context-content">
-        {skillsEnabled && <SkillsSection skills={context.skills} />}
-        {knowledgeBasesEnabled && (
-          <KnowledgeBasesSection knowledgeBases={context.knowledgeBases} />
-        )}
+        <SkillsSection skills={context.skills} />
+        <KnowledgeBasesSection knowledgeBases={context.knowledgeBases} />
       </div>
     </ScrollArea>
   );

@@ -25,10 +25,6 @@ vi.mock('@tiptap/react', () => ({
   EditorContent: () => null,
 }));
 
-vi.mock('@/features/feature-toggles', () => ({
-  useIsLetterheadsEnabled: () => false,
-}));
-
 vi.mock('@/widgets/confirmation-modal', () => ({
   useConfirmation: () => ({ confirm: mocks.confirm }),
 }));

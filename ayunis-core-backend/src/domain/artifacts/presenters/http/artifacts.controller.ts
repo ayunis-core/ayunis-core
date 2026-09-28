@@ -21,8 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { UUID } from 'crypto';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
@@ -181,7 +179,6 @@ export class ArtifactsController {
   }
 
   @Get('workspace/:workspaceId')
-  @RequireFeature(FeatureFlag.Workspaces)
   @ApiOperation({ summary: 'Get all artifacts in a workspace' })
   @ApiParam({
     name: 'workspaceId',

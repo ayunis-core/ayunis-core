@@ -12,7 +12,6 @@ import {
   useToggleFavorite,
 } from '@/features/favorites';
 import { useWorkspaces } from '@/features/workspaces';
-import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Button } from '@ayunis/ui/components/button';
 import { PinButton } from '@/shared/ui/pin-button';
@@ -53,7 +52,6 @@ export default function ChatHeader({
   const { t } = useTranslation('chat');
   const { t: tCommon } = useTranslation('common');
   const { t: tWorkspace } = useTranslation('workspace');
-  const isWorkspacesEnabled = useIsWorkspacesEnabled();
   const { favorites } = useFavorites();
   const { toggle: togglePinned } = useToggleFavorite();
   const { workspaces } = useWorkspaces();
@@ -94,14 +92,12 @@ export default function ChatHeader({
       badge={anonymousBadge}
       action={
         <div className="flex items-center gap-1">
-          {isWorkspacesEnabled && (
-            <PinButton
-              isPinned={isPinned}
-              pinLabel={tCommon('sidebar.pinChat')}
-              unpinLabel={tCommon('sidebar.unpinChat')}
-              onToggle={() => togglePinned('thread', threadId)}
-            />
-          )}
+          <PinButton
+            isPinned={isPinned}
+            pinLabel={tCommon('sidebar.pinChat')}
+            unpinLabel={tCommon('sidebar.unpinChat')}
+            onToggle={() => togglePinned('thread', threadId)}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">

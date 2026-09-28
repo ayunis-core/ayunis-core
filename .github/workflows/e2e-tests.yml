@@ -209,9 +209,6 @@ jobs:
           # seed script while keeping production-only validations off.
           PORT=3000
           MOCK_INFERENCE=true
-          FEATURE_SKILLS_ENABLED=true
-          FEATURE_WORKSPACES_ENABLED=true
-          FEATURE_LETTERHEADS_ENABLED=true
 
           # Database
           POSTGRES_HOST=localhost

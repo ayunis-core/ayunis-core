@@ -5,7 +5,6 @@ import { useWorkspace } from './useWorkspace';
 const mocks = vi.hoisted(() => ({
   useFindOne: vi.fn(),
   getQueryKey: vi.fn((id: string) => ['workspace', id]),
-  workspacesEnabled: true,
 }));
 
 vi.mock('@/shared/api', () => ({
@@ -13,14 +12,9 @@ vi.mock('@/shared/api', () => ({
   getWorkspacesControllerFindOneQueryKey: mocks.getQueryKey,
 }));
 
-vi.mock('@/features/feature-toggles', () => ({
-  useIsWorkspacesEnabled: () => mocks.workspacesEnabled,
-}));
-
 describe('useWorkspace', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.workspacesEnabled = true;
     mocks.useFindOne.mockReturnValue({
       data: { id: 'workspace-id', name: 'Finance' },
       isLoading: false,
@@ -43,22 +37,11 @@ describe('useWorkspace', () => {
     });
   });
 
-  it('disables the request without an id or while workspaces are disabled', () => {
-    const { rerender } = renderHook(
-      ({ workspaceId }: { workspaceId: string | null }) =>
-        useWorkspace(workspaceId),
-      { initialProps: { workspaceId: null as string | null } },
-    );
+  it('disables the request without an id', () => {
+    renderHook(() => useWorkspace(null));
 
     expect(mocks.useFindOne).toHaveBeenLastCalledWith('', {
       query: { enabled: false, queryKey: ['workspace', ''] },
-    });
-
-    mocks.workspacesEnabled = false;
-    rerender({ workspaceId: 'workspace-id' });
-
-    expect(mocks.useFindOne).toHaveBeenLastCalledWith('workspace-id', {
-      query: { enabled: false, queryKey: ['workspace', 'workspace-id'] },
     });
   });
 });

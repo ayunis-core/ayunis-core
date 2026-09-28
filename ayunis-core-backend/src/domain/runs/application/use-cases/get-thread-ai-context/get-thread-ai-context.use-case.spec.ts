@@ -10,7 +10,7 @@ import type { FindThreadContextRefsUseCase } from 'src/domain/threads/applicatio
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import type { GetWorkspaceAiContextUseCase } from 'src/domain/workspaces/application/use-cases/get-workspace-ai-context/get-workspace-ai-context.use-case';
 import { UnexpectedRunError } from 'src/domain/runs/application/runs.errors';
-import { GetThreadAiContextUseCase } from './get-thread-ai-context.use-case';
+import { GetThreadAiContextUseCase } from 'src/domain/runs/application/use-cases/get-thread-ai-context/get-thread-ai-context.use-case';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
 const OTHER_USER_ID = '22222222-2222-4222-8222-222222222222' as UUID;
@@ -71,13 +71,6 @@ function setup() {
   const buildWorkspaceRunContext = {
     execute: jest.fn(),
   } as unknown as jest.Mocked<GetWorkspaceAiContextUseCase>;
-  const features = {
-    knowledgeBasesEnabled: true,
-    letterheadsEnabled: false,
-    skillsEnabled: true,
-    workspacesEnabled: true,
-    ssoLoginEnabled: false,
-  };
   const useCase = new GetThreadAiContextUseCase(
     findThreadContextRefs,
     findActiveSkills,
@@ -85,7 +78,6 @@ function setup() {
     findAccessibleKnowledgeBasesByIds,
     countKnowledgeBaseDocuments,
     buildWorkspaceRunContext,
-    features,
   );
   return {
     useCase,
@@ -100,7 +92,6 @@ function setup() {
     findAccessibleKnowledgeBasesByIds,
     countKnowledgeBaseDocuments,
     buildWorkspaceRunContext,
-    features,
   };
 }
 
@@ -244,16 +235,6 @@ describe(GetThreadAiContextUseCase.name, () => {
     expect(findActiveSkills.execute).not.toHaveBeenCalled();
     expect(findActiveKnowledgeBases.execute).not.toHaveBeenCalled();
     expect(findAccessibleKnowledgeBasesByIds.execute).not.toHaveBeenCalled();
-  });
-
-  it('hides skills when the skills feature is disabled', async () => {
-    const { useCase, features, findActiveSkills } = setup();
-    features.skillsEnabled = false;
-
-    const result = await useCase.execute({ threadId: THREAD_ID });
-
-    expect(result.skills).toEqual([]);
-    expect(findActiveSkills.execute).not.toHaveBeenCalled();
   });
 
   it('wraps unexpected context assembly failures', async () => {

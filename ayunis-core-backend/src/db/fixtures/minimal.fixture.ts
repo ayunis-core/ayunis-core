@@ -205,7 +205,6 @@ export const minimalFixture = {
       ],
       // Iteration-1 workspaces (AYC-700): enough to fill the sidebar group,
       // both list views and the manual ordering without clicking anything.
-      // Only visible while FEATURE_WORKSPACES_ENABLED is on.
       workspaces: [
         {
           name: 'Bürgeranfragen',

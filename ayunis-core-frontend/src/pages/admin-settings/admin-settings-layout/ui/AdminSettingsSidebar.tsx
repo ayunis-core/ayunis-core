@@ -19,7 +19,6 @@ import {
   SettingsSidebarWidget,
   type SidebarMenuGroup,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
-import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 import { useIsAcademyAddonActive } from '@/features/academy';
 import { useHasCreditBudget } from '@/features/credit-limits';
 import { MeResponseDtoRole } from '@/shared/api';
@@ -30,7 +29,6 @@ import {
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
-  const isLetterheadsEnabled = useIsLetterheadsEnabled();
   const academyAddonActive = useIsAcademyAddonActive();
   const authorization = useAuthorization();
   const hasCreditBudget = useHasCreditBudget(
@@ -93,15 +91,11 @@ export function AdminSettingsSidebar() {
           icon: <MessageSquareText />,
           label: t('layout.instructions'),
         },
-        ...(isLetterheadsEnabled
-          ? [
-              {
-                to: '/admin-settings/letterheads' as const,
-                icon: <FileText />,
-                label: t('layout.letterheads'),
-              },
-            ]
-          : []),
+        {
+          to: '/admin-settings/letterheads',
+          icon: <FileText />,
+          label: t('layout.letterheads'),
+        },
       ],
     },
     {

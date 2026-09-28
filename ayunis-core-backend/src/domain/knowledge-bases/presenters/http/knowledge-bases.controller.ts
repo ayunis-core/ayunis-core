@@ -71,8 +71,6 @@ import {
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
@@ -103,7 +101,6 @@ const DocumentUploadInterceptor = createDocumentUploadInterceptor(
 );
 
 @ApiTags('knowledge-bases')
-@RequireFeature(FeatureFlag.KnowledgeBases)
 @Controller('knowledge-bases')
 export class KnowledgeBasesController {
   private readonly logger = new Logger(KnowledgeBasesController.name);

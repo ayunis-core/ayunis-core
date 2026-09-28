@@ -23,13 +23,13 @@ describe('useThreadAiContext', () => {
     });
   });
 
-  it('uses the generated thread AI-context query and respects lazy loading', () => {
-    renderHook(() => useThreadAiContext('thread-id', false));
+  it('uses the generated thread AI-context query', () => {
+    renderHook(() => useThreadAiContext('thread-id'));
 
     expect(mocks.getQueryKey).toHaveBeenCalledWith('thread-id');
     expect(mocks.useAiContext).toHaveBeenCalledWith('thread-id', {
       query: {
-        enabled: false,
+        enabled: true,
         queryKey: ['ai-context', 'thread-id'],
         staleTime: 0,
       },

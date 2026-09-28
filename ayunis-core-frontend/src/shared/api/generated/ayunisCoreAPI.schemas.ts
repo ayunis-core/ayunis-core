@@ -12,18 +12,7 @@ export interface IsCloudResponseDto {
   isRegistrationDisabled: boolean;
 }
 
-export interface FeatureTogglesResponseDto {
-  /** Whether the standalone knowledge bases feature is enabled */
-  knowledgeBasesEnabled: boolean;
-  /** Whether the letterheads feature is enabled */
-  letterheadsEnabled: boolean;
-  /** Whether the skills feature is enabled */
-  skillsEnabled: boolean;
-  /** Whether the workspaces feature is enabled */
-  workspacesEnabled: boolean;
-  /** Whether employee-facing SSO login is enabled */
-  ssoLoginEnabled: boolean;
-}
+export interface FeatureTogglesResponseDto { [key: string]: unknown }
 
 /**
  * User role

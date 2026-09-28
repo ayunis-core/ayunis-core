@@ -1,20 +1,11 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PinnedSkills } from './PinnedSkills';
 
-const mocks = vi.hoisted(() => ({ request: vi.fn(), enabled: true }));
+const mocks = vi.hoisted(() => ({ request: vi.fn() }));
 vi.mock('@/shared/api/client', () => ({ customAxiosInstance: mocks.request }));
-vi.mock('@/features/feature-toggles', () => ({
-  useIsSkillsEnabled: () => mocks.enabled,
-}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -40,7 +31,6 @@ function setup(workspaceId?: string) {
 }
 
 beforeEach(() => {
-  mocks.enabled = true;
   mocks.request.mockReset();
   mocks.request.mockImplementation(({ url }: { url: string }) =>
     Promise.resolve(
@@ -137,12 +127,5 @@ describe('PinnedSkills project context', () => {
     setup('project-a');
     expect(await screen.findByRole('alert')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Personal Skill' })).toBeTruthy();
-  });
-
-  it('does not fetch or render skills when the feature is disabled', async () => {
-    mocks.enabled = false;
-    const { container } = setup('project-a');
-    await waitFor(() => expect(mocks.request).not.toHaveBeenCalled());
-    expect(container.innerHTML).toBe('');
   });
 });

@@ -42,7 +42,6 @@ import { useTheme } from '@/features/theme';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
-import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import {
   useMyPermissions,
@@ -69,7 +68,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const handleMobileNavigation = useMobileSidebarNavigationHandler();
-  const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
   const academyAddonActive = useIsAcademyAddonActive();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
@@ -92,34 +90,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       // certificate. Existing chats stay reachable.
       disabled: isAcademyGated,
     },
-    ...(featureToggles.workspacesEnabled
-      ? [
-          {
-            title: t('sidebar.workspaces'),
-            url: '/workspaces',
-            icon: FolderOpen,
-            exact: true,
-          },
-        ]
-      : []),
-    ...(featureToggles.skillsEnabled
-      ? [
-          {
-            title: t('sidebar.skills'),
-            url: '/skills',
-            icon: Sparkles,
-          },
-        ]
-      : []),
-    ...(featureToggles.knowledgeBasesEnabled
-      ? [
-          {
-            title: t('sidebar.knowledge'),
-            url: '/knowledge-bases',
-            icon: Brain,
-          },
-        ]
-      : []),
+    {
+      title: t('sidebar.workspaces'),
+      url: '/workspaces',
+      icon: FolderOpen,
+      exact: true,
+    },
+    {
+      title: t('sidebar.skills'),
+      url: '/skills',
+      icon: Sparkles,
+    },
+    {
+      title: t('sidebar.knowledge'),
+      url: '/knowledge-bases',
+      icon: Brain,
+    },
   ];
 
   return (
@@ -217,7 +203,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
 
-        {featureToggles.workspacesEnabled && <FavoritesSidebarGroup />}
+        <FavoritesSidebarGroup />
         <ChatsSidebarGroup />
       </SidebarContent>
 

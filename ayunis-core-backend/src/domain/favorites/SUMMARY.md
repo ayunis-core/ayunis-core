@@ -64,9 +64,7 @@ prevents duplicate favorites, and a user/position constraint protects order.
 
 ## HTTP API
 
-`FavoritesController` — base path `/favorites`, tag `favorites`. Gated with
-`@RequireFeature(FeatureFlag.Workspaces)` like the workspaces API, since
-favorites currently only surface workspace/thread pinning.
+`FavoritesController` — base path `/favorites`, tag `favorites`.
 
 | Method | Path                 | Purpose                                   |
 | ------ | -------------------- | ----------------------------------------- |

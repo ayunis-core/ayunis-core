@@ -6,8 +6,6 @@ import {
   getWorkspacesControllerFindOneQueryKey,
   threadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
-  appControllerFeatureToggles,
-  getAppControllerFeatureTogglesQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -39,14 +37,6 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
       deps: { search, page = 1 },
       context: { queryClient },
     }) => {
-      const featureToggles = await queryClient.fetchQuery({
-        queryKey: getAppControllerFeatureTogglesQueryKey(),
-        queryFn: () => appControllerFeatureToggles(),
-      });
-      if (!featureToggles.workspacesEnabled) {
-        throw redirect({ to: '/chat' });
-      }
-
       const chatsParams = {
         workspaceId,
         search: search || undefined,
