@@ -129,6 +129,7 @@
     },
     "tools": {
       "internet_search": "Search the internet",
+      "marketplace_search": "Search the marketplace",
       "website_content": "Query website",
       "source_query": "Query file",
       "source_get_text": "Query file",
