@@ -228,7 +228,39 @@ describe('PresidioAnonymizationProvider', () => {
     jest.useRealTimers();
   });
 
-  it('classifies a refused connection under the provider connection taxonomy', async () => {
+  it.each(['direct', 'cause', 'aggregate'])(
+    'recovers from a refused connection (%s) without losing detection results',
+    async (shape) => {
+      const refused = Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      });
+      const errors: Record<string, Error> = {
+        direct: refused,
+        cause: new TypeError('fetch failed', { cause: refused }),
+        aggregate: new AggregateError([refused]),
+      };
+      const error = errors[shape];
+      mockAnalyzeTextAnalyzePost
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce({
+          results: [{ entity_type: 'PERSON', start: 0, end: 4, score: 0.9 }],
+        });
+      await expect(provider.detect('Dani', ['PERSON'])).resolves.toEqual([
+        expect.objectContaining({ text: 'Dani', entityType: 'PERSON' }),
+      ]);
+      expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(2);
+      expect(mockAnalyzeTextAnalyzePost).toHaveBeenLastCalledWith({
+        text: 'Dani',
+        entities: ['PERSON'],
+      });
+      expect(logger.warn).not.toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.anything() }),
+        expect.anything(),
+      );
+    },
+  );
+
+  it('classifies a refused connection under the provider connection taxonomy after one retry', async () => {
     mockAnalyzeTextAnalyzePost.mockRejectedValue(
       Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:8002'), {
         code: 'ECONNREFUSED',
@@ -238,6 +270,7 @@ describe('PresidioAnonymizationProvider', () => {
     await expect(provider.detect('Ich bin der Dani')).rejects.toMatchObject({
       code: 'PROVIDER_UNAVAILABLE_CONNECTION_ANONYMIZE',
     });
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(2);
   });
 
   it('classifies an upstream 5xx under the provider server taxonomy', async () => {
@@ -250,6 +283,18 @@ describe('PresidioAnonymizationProvider', () => {
     await expect(provider.detect('Ich bin der Dani')).rejects.toMatchObject({
       code: 'PROVIDER_UNAVAILABLE_SERVER_ANONYMIZE',
     });
+  });
+
+  it('does not retry certificate failures', async () => {
+    mockAnalyzeTextAnalyzePost.mockRejectedValue(
+      Object.assign(new Error('certificate expired'), {
+        code: 'CERT_HAS_EXPIRED',
+      }),
+    );
+    await expect(provider.detect('Dani')).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_CONNECTION_ANONYMIZE',
+    });
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(1);
   });
 
   // A remaining 422 means our request shape drifted despite local validation.
