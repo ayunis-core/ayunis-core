@@ -12,7 +12,7 @@ Populate the local dev database with minimal fixture data for development and te
 Run from `ayunis-core-backend/`:
 
 | Command | Description |
-|---|---|
+| --- | --- |
 | `pnpm run seed:minimal:ts` | Upsert fixture data (idempotent — skips existing rows) |
 | `pnpm run seed:clean:ts` | Truncate all tables first, then seed |
 
@@ -23,11 +23,11 @@ The `:ts` variants run from source; the non-`:ts` variants run from `dist/` (req
 Defined in `src/db/fixtures/minimal.fixture.ts`:
 
 | Entity | Key values |
-|---|---|
+| --- | --- |
 | **Org** | `Demo Org` |
 | **User** | `admin@demo.local` / `admin` — Admin + Super Admin, email verified |
 | **Language model** | `eu.anthropic.claude-sonnet-4-6` (Bedrock) — streaming, tools, vision |
-| **Embedding model** | `text-embedding-3-large` (OpenAI) — 1536 dimensions |
+| **Embedding model** | `mistral-embed` (Mistral) — 1024 dimensions |
 | **Subscription** | 5 seats, €10/seat, monthly renewal |
 | **Permitted models** | Language model (default), embedding model |
 

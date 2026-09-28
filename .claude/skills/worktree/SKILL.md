@@ -15,11 +15,12 @@ The user gives you a **task ID** and optionally a **branch name** (if the branch
 
 ```bash
 TASK_ID="AYC-123"  # from user
+TASK_SLUG="$(printf '%s' "$TASK_ID" | tr '[:upper:]' '[:lower:]')"   # ${VAR,,} is bash 4+; macOS ships 3.2
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-WORKTREE_DIR="$(dirname "$REPO_ROOT")/ayunis-core-wt-${TASK_ID,,}"
+WORKTREE_DIR="$(dirname "$REPO_ROOT")/ayunis-core-wt-${TASK_SLUG}"
 
 # New branch from HEAD:
-git worktree add "$WORKTREE_DIR" -b "feat/${TASK_ID,,}/work" HEAD
+git worktree add "$WORKTREE_DIR" -b "feat/${TASK_SLUG}/work" HEAD
 
 # OR existing branch:
 git worktree add "$WORKTREE_DIR" "$BRANCH"
@@ -41,7 +42,8 @@ ln -sf "$REPO_ROOT/ayunis-core-frontend/.env" "$WORKTREE_DIR/ayunis-core-fronten
 cd "$WORKTREE_DIR" && pnpm install
 
 # Build the workspace packages so @ayunis/* types resolve (see below).
-cd "$WORKTREE_DIR" && pnpm run build:deps
+# The script lives in the backend package, not the repo root.
+cd "$WORKTREE_DIR/ayunis-core-backend" && pnpm run build:deps
 ```
 
 ## Build @ayunis/* deps before trusting a full typecheck
@@ -62,8 +64,8 @@ blind spots that only a full post-build typecheck covers. So, in any worktree, b
 running or trusting `tsc --noEmit`:
 
 ```bash
-cd "$WORKTREE_DIR" && pnpm run build:deps   # builds @ayunis/* dist/*.d.ts
-pnpm exec tsc --noEmit                       # now TS2307 noise is gone; real errors surface
+cd "$WORKTREE_DIR/ayunis-core-backend" && pnpm run build:deps   # builds @ayunis/* dist/*.d.ts
+pnpm exec tsc --noEmit                                           # now TS2307 noise is gone; real errors surface
 ```
 
 ## Empty Base Branch Gotcha
@@ -85,16 +87,20 @@ Fix: re-parent the child directly onto `main` so the empty base drops out
 of the stack:
 
 ```bash
-gt track --parent main --force   # run on the CHILD branch, not the base
+gt move --onto main              # run on the CHILD branch, not the base
 gt submit --stack --force --no-interactive
 ```
 
+(`gt track --force` does **not** do this: it picks the nearest tracked ancestor, which is the empty base itself.)
+
 Alternative (single-PR tasks): skip the `gt create` and commit on the
 worktree base branch directly with `gt modify --commit` so the base
-isn't empty in the first place. Prefer this when the task is a single
+isn't empty in the first place. This is the one place `--commit` is right:
+the base has no commit of its own yet, so a plain `gt modify` would amend
+the parent's commit. Prefer this when the task is a single
 self-contained change, not a stack.
 
-## Scenario C — Use an existing worktree
+## Use an existing worktree
 
 The user points you to a **worktree that already exists**. Just `cd` into it and start working.
 

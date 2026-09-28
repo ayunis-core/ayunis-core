@@ -25,7 +25,7 @@ The component imports the type:
 
 ```typescript
 // ui/ThingDetailPage.tsx
-import type { ThingFormFields } from '../model/types';
+import type { ThingFormFields } from '@/pages/things/model/types';
 
 const form = useForm<ThingFormFields>({
   defaultValues: { name: entity.name, description: entity.description ?? '' },

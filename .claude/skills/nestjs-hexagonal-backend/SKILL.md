@@ -79,10 +79,10 @@ High-Risk changes and changes to shared test infrastructure or broad behavior al
 
 > ⚠ **`pnpm run lint` is wired with `--fix`** in `ayunis-core-backend/package.json` — running it as a verification step will auto-rewrite unrelated files (migrations, fixtures, entities) and leave them in the working tree. Prefer `pnpm exec eslint <paths>` for verification. If you do run `pnpm run lint`, immediately check `git status --short` and `git restore` any files outside your change set.
 
-When module boundaries or imports change, run dep-cruiser as an architecture cross-check (it catches the no-cross-module-port-imports / no-domain-imports-presenters rules that the pre-commit hook enforces):
+When module boundaries or imports change, run dep-cruiser as an architecture cross-check (it catches the `no-cross-module-port-imports` / `domain-no-presenters` rules that the pre-commit hook enforces):
 
 ```bash
-pnpm exec depcruise src        # or whatever the project's depcheck script is
+pnpm run deps:check
 ```
 
 ## Backend-Specific TypeScript Rules
@@ -101,14 +101,14 @@ Every domain module ships a `SUMMARY.md`. Read it first when editing an existing
 ├── domain/              # Pure entities, no decorators
 ├── application/
 │   ├── use-cases/       # Business operations
-│   ├── ports/           # Abstract classes (DI tokens, not interfaces)
-│   └── dtos/            # Validation decorators
+│   └── ports/           # Abstract classes (DI tokens, not interfaces)
 ├── infrastructure/
 │   └── persistence/postgres/
 │       ├── schema/      # TypeORM records
 │       ├── mappers/     # Domain ↔ Record conversion
 │       └── *.repository.ts
 ├── presenters/http/     # Controllers (thin)
+│   └── dtos/            # Request/response DTOs with validation decorators
 └── [module].module.ts   # NestJS wiring
 ```
 
