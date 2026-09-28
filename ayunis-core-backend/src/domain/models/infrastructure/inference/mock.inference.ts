@@ -32,7 +32,7 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
  */
 @Injectable()
 export class MockInferenceHandler extends InferenceHandler {
-  answer(input: InferenceInput): Promise<InferenceResponse> {
+  async answer(input: InferenceInput): Promise<InferenceResponse> {
     // Extract the last user message to check for naming requests
     const lastUserMessage = input.messages
       .filter((m) => m.role === MessageRole.USER)
@@ -61,13 +61,15 @@ export class MockInferenceHandler extends InferenceHandler {
       }
     }
 
-    return Promise.resolve(
-      new InferenceResponse([new TextMessageContent(responseText)], {
-        inputTokens: 0,
-        outputTokens: 0,
-        totalTokens: 0,
-      }),
-    );
+    await input.onCallTerminal?.({
+      outcome: 'completed',
+      usage: { inputTokens: 0, outputTokens: 0 },
+    });
+    return new InferenceResponse([new TextMessageContent(responseText)], {
+      inputTokens: 0,
+      outputTokens: 0,
+      totalTokens: 0,
+    });
   }
 }
 

@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { openai } from '@ayunis/provider-openai';
 import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { RuntimeInferenceHandler } from '../runtime/runtime-inference.handler';
-import type { Model } from '../../domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
+import { RuntimeInferenceHandler } from 'src/domain/models/infrastructure/runtime/runtime-inference.handler';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { PROVIDER_SDK_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class OpenAIInferenceHandler extends RuntimeInferenceHandler {
@@ -20,7 +20,7 @@ export class OpenAIInferenceHandler extends RuntimeInferenceHandler {
     return openai({
       apiKey: this.configService.get<string>('models.openai.apiKey') ?? '',
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: PROVIDER_SDK_MAX_RETRIES,
     });
   }
 }

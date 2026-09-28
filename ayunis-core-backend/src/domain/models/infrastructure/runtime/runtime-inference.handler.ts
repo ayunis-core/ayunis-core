@@ -10,6 +10,10 @@ import { toProviderRequest } from './request.mapper';
 import { accumulateResponse } from './response-accumulator';
 import type { ChunkTransform } from './chunk-transform';
 import { applyChunkTransform } from './chunk-transform';
+import {
+  failedCallOutcome,
+  InferenceCallTracker,
+} from './inference-call-tracker';
 
 /**
  * Non-streaming inference handler backed by a `@ayunis` ModelProvider. The
@@ -59,9 +63,22 @@ export abstract class RuntimeInferenceHandler extends InferenceHandler {
   async answer(input: InferenceInput): Promise<InferenceResponse> {
     const request = await toProviderRequest(input, this.imageContentService);
     const provider = this.getProvider(input.model);
-    const transform = this.createChunkTransform();
-    return accumulateResponse(
-      applyChunkTransform(provider.stream(request), transform),
-    );
+    const call = new InferenceCallTracker();
+    let response: InferenceResponse;
+    try {
+      response = await accumulateResponse(
+        call.track(
+          applyChunkTransform(
+            provider.stream(request),
+            this.createChunkTransform(),
+          ),
+        ),
+      );
+    } catch (error) {
+      await call.settle(failedCallOutcome(error), input.onCallTerminal);
+      throw error;
+    }
+    await call.settle('completed', input.onCallTerminal);
+    return response;
   }
 }

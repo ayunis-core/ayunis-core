@@ -16,7 +16,6 @@ import {
   extractProviderExplanation,
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { rateLimitRetryDelayMs } from 'src/domain/models/application/helpers/rate-limit-retry-delay.helper';
 import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 
@@ -47,8 +46,6 @@ export class GetInferenceUseCase {
     }
 
     const response = await this.requestInference(command, orgId);
-    // Completed provider work is chargeable even when its output is rejected.
-    // Keep accounting outside provider error mapping so persistence errors retain their identity.
     await command.onUsage?.(response.meta);
     this.assertTokenLimitResponseAllowed(
       response,
@@ -62,56 +59,24 @@ export class GetInferenceUseCase {
     orgId: string,
   ): Promise<InferenceResponse> {
     try {
-      return await this.answer(command, orgId);
-    } catch (error) {
-      const retryAfterMs = rateLimitRetryDelayMs(error, {
-        provider: command.model.provider,
-        modelId: command.model.name,
-      });
-      if (retryAfterMs === undefined) this.handleInferenceError(error, command);
-      return this.retryAfterRateLimit(command, orgId, retryAfterMs);
-    }
-  }
+      const inferenceHandler = this.inferenceHandlerRegistry.getHandler(
+        command.model.provider,
+      );
 
-  // Safe to repeat: nothing reaches the caller and no usage is recorded until a response completes.
-  private async retryAfterRateLimit(
-    command: GetInferenceCommand,
-    orgId: string,
-    retryAfterMs: number,
-  ): Promise<InferenceResponse> {
-    this.logger.warn(
-      {
-        provider: command.model.provider,
-        modelId: command.model.name,
-        retryAfterMs,
-      },
-      'Provider rate limited inference; retrying once',
-    );
-    await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
-    try {
-      return await this.answer(command, orgId);
+      return await inferenceHandler.answer(
+        new InferenceInput({
+          model: command.model,
+          messages: stripReplayedToolNulls(command.messages, command.tools),
+          systemPrompt: command.instructions,
+          tools: command.tools,
+          toolChoice: command.toolChoice,
+          orgId,
+          onCallTerminal: command.onCallTerminal,
+        }),
+      );
     } catch (error) {
       this.handleInferenceError(error, command);
     }
-  }
-
-  private answer(
-    command: GetInferenceCommand,
-    orgId: string,
-  ): Promise<InferenceResponse> {
-    const inferenceHandler = this.inferenceHandlerRegistry.getHandler(
-      command.model.provider,
-    );
-    return inferenceHandler.answer(
-      new InferenceInput({
-        model: command.model,
-        messages: stripReplayedToolNulls(command.messages, command.tools),
-        systemPrompt: command.instructions,
-        tools: command.tools,
-        toolChoice: command.toolChoice,
-        orgId,
-      }),
-    );
   }
 
   private assertTokenLimitResponseAllowed(

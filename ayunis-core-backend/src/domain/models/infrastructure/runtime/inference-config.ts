@@ -1,16 +1,9 @@
 /**
- * SDK-level retry count for non-streaming inference. These handlers retain
- * their established provider-owned retry behavior as a deliberate exception.
+ * Provider SDKs must not retry internally: one host call is one upstream
+ * call. Agent runs delegate retry, backoff, cancellation, and idle-timeout
+ * ownership to @ayunis/agent-runtime; every other caller owns its retries.
  */
-export const INFERENCE_MAX_RETRIES = 3;
-
-/**
- * Streaming provider SDKs must not retry internally. Direct streams retain
- * their host-side retry policy in RuntimeStreamInferenceHandler; agent runs
- * delegate retry, backoff, cancellation, and idle-timeout ownership to
- * @ayunis/agent-runtime.
- */
-export const STREAMING_PROVIDER_MAX_RETRIES = 0;
+export const PROVIDER_SDK_MAX_RETRIES = 0;
 
 /**
  * Output-token budget for the Claude handlers — both the direct Anthropic API

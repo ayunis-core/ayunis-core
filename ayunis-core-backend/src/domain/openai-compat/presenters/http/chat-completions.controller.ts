@@ -129,18 +129,13 @@ export class ChatCompletionsController {
   ): Promise<void> {
     const stream$ = await this.useCase.executeStreaming(command);
 
-    response.setHeader('Content-Type', 'text/event-stream');
-    response.setHeader('Cache-Control', 'no-cache');
-    response.setHeader('Connection', 'keep-alive');
-    response.setHeader('X-Accel-Buffering', 'no');
-    response.flushHeaders();
-
     let subscription: Subscription | undefined;
     try {
       await new Promise<void>((resolve, reject) => {
         subscription = stream$.subscribe({
           next: (chunk) => {
             if (response.writableEnded) return;
+            openEventStream(response);
             response.write(`data: ${JSON.stringify(chunk)}\n\n`);
           },
           error: (err: unknown) =>
@@ -152,15 +147,15 @@ export class ChatCompletionsController {
         // subscribe call itself completes without setting subscription,
         // the listener below is what we rely on.
         request.on('close', () => {
-          // Client disconnected — abort the upstream stream. This triggers
-          // `finalize` inside the use case which records the partial usage
-          // row (AYC-92 streaming usage-on-disconnect bug fix).
+          // Client disconnected — abort the upstream call. The models
+          // module still awaits terminal usage accounting for it.
           subscription?.unsubscribe();
           resolve();
         });
       });
 
       if (!response.writableEnded) {
+        openEventStream(response);
         response.write('data: [DONE]\n\n');
         response.end();
       }
@@ -168,4 +163,19 @@ export class ChatCompletionsController {
       subscription?.unsubscribe();
     }
   }
+}
+
+/**
+ * Commits the SSE response on the first chunk rather than up front. The use
+ * case emits one as soon as the provider produces anything, so a failure
+ * before that — nothing consumed or billed — still reaches the caller as an
+ * HTTP error status (with retry headers) that OpenAI SDKs retry on their own.
+ */
+function openEventStream(response: Response): void {
+  if (response.headersSent) return;
+  response.setHeader('Content-Type', 'text/event-stream');
+  response.setHeader('Cache-Control', 'no-cache');
+  response.setHeader('Connection', 'keep-alive');
+  response.setHeader('X-Accel-Buffering', 'no');
+  response.flushHeaders();
 }
