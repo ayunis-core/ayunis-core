@@ -7,6 +7,7 @@ import {
   type SourceUploadStatus,
 } from '@/features/chat-initiation';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { resolveSelectedModel } from '@/widgets/model-select-options';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { showError } from '@/shared/lib/toast';
@@ -81,8 +82,13 @@ export function WorkspaceChatStarter({
     IntegrationSummary[]
   >([]);
 
-  const selectedModel = models.find((m) => m.id === modelId);
-  const isAnonymousEnforced = selectedModel?.anonymousOnly ?? false;
+  const {
+    model: selectedModel,
+    modelId: resolvedModelId,
+    isMode,
+  } = resolveSelectedModel(modelId, models, isAnonymous);
+  const isAnonymousEnforced =
+    !isMode && (selectedModel?.anonymousOnly ?? false);
   const isVisionEnabled = selectedModel?.canVision ?? false;
 
   function handleFileUpload(files: File[]) {
@@ -108,7 +114,7 @@ export function WorkspaceChatStarter({
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) {
-    if (!modelId) {
+    if (!resolvedModelId) {
       showError(t('newChat.noModelOrAgentError'));
       return;
     }
@@ -118,7 +124,7 @@ export function WorkspaceChatStarter({
 
     void initiateChat({
       message,
-      modelId,
+      modelId: resolvedModelId,
       sources,
       knowledgeBases: selectedKnowledgeBases,
       mcpIntegrations: selectedIntegrations,
@@ -148,7 +154,7 @@ export function WorkspaceChatStarter({
         knowledgeBases={selectedKnowledgeBases}
         mcpIntegrations={selectedIntegrations}
         submissionState={isCreating ? 'submitting' : 'idle'}
-        isSendDisabled={isAcademyGated}
+        isSendDisabled={isAcademyGated || !resolvedModelId}
         onModelChange={setModelId}
         onSend={handleSend}
         onCancel={handleCancel}

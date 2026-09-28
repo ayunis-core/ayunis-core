@@ -18,6 +18,7 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { resolveSelectedModel } from '@/widgets/model-select-options';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
@@ -131,9 +132,14 @@ export default function NewChatPage({
   const handleMistExitComplete = useCallback(() => {
     setMistPhase('hidden');
   }, []);
-  const selectedModel = models.find((m) => m.id === modelId);
+  const {
+    model: selectedModel,
+    modelId: resolvedModelId,
+    isMode,
+  } = resolveSelectedModel(modelId, models, isAnonymous);
 
-  const isAnonymousEnforced = selectedModel?.anonymousOnly ?? false;
+  const isAnonymousEnforced =
+    !isMode && (selectedModel?.anonymousOnly ?? false);
   const isVisionEnabled = selectedModel?.canVision ?? false;
 
   function handleFileUpload(files: File[]) {
@@ -190,7 +196,7 @@ export default function NewChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) {
-    if (!modelId) {
+    if (!resolvedModelId) {
       showError(t('newChat.noModelOrAgentError'));
       return;
     }
@@ -202,7 +208,7 @@ export default function NewChatPage({
 
     void initiateChat({
       message,
-      modelId,
+      modelId: resolvedModelId,
       sources,
       knowledgeBases: selectedKnowledgeBases,
       mcpIntegrations: selectedIntegrations,
@@ -286,7 +292,7 @@ export default function NewChatPage({
               knowledgeBases={selectedKnowledgeBases}
               mcpIntegrations={selectedIntegrations}
               submissionState={isCreating ? 'submitting' : 'idle'}
-              isSendDisabled={isAcademyGated}
+              isSendDisabled={isAcademyGated || !resolvedModelId}
               onModelChange={handleModelChange}
               onSend={handleSend}
               onCancel={handleCancel}
