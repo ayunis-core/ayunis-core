@@ -49,6 +49,8 @@ import { IntegrationInstalledWebhookEvent } from 'src/integrations/webhooks/doma
 import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
 import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
 import { UserInvitedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-invited.webhook-event';
+import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
+import { OnboardingUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/onboarding-updated.webhook-event';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -258,6 +260,22 @@ export class WebhookDispatchListener {
         ...event,
         userEmail: user.email,
         userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(OnboardingUpdatedEvent.EVENT_NAME)
+  async handleOnboardingUpdated(event: OnboardingUpdatedEvent): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new OnboardingUpdatedWebhookEvent({
+        ...event,
+        orgId: user.orgId,
+        userEmail: user.email,
+        userName: user.name,
+        userRole: user.role,
       }),
     );
   }

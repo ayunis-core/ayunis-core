@@ -4,21 +4,29 @@ import type { UUID } from 'crypto';
 import { UpdateOnboardingUseCase } from './update-onboarding.use-case';
 import { UpdateOnboardingCommand } from './update-onboarding.command';
 import { OnboardingRepository } from 'src/iam/onboarding/application/ports/onboarding.repository';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
+import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
 
 describe('UpdateOnboardingUseCase', () => {
   let useCase: UpdateOnboardingUseCase;
   let mockOnboardingRepository: Partial<OnboardingRepository>;
+  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   beforeAll(async () => {
     mockOnboardingRepository = {
       findByUserId: jest.fn(),
       saveProgress: jest.fn(),
     };
+    eventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<EventEmitter2>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateOnboardingUseCase,
         { provide: OnboardingRepository, useValue: mockOnboardingRepository },
+        { provide: EventEmitter2, useValue: eventEmitter },
       ],
     }).compile();
 
@@ -29,7 +37,15 @@ describe('UpdateOnboardingUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should save the submitted progress without loading current onboarding', async () => {
+  it('should emit the previous and persisted progress after saving an update', async () => {
+    const previous = new Onboarding({
+      userId: 'user-id' as UUID,
+      completedStepIds: ['create-assistant'],
+      hidden: false,
+    });
+    jest
+      .spyOn(mockOnboardingRepository, 'findByUserId')
+      .mockResolvedValue(previous);
     jest
       .spyOn(mockOnboardingRepository, 'saveProgress')
       .mockImplementation((onboarding) => Promise.resolve(onboarding));
@@ -44,7 +60,16 @@ describe('UpdateOnboardingUseCase', () => {
 
     expect(result.completedStepIds).toEqual(['create-assistant', 'start-chat']);
     expect(result.hidden).toBe(true);
-    expect(mockOnboardingRepository.findByUserId).not.toHaveBeenCalled();
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      OnboardingUpdatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        userId: 'user-id',
+        previousCompletedStepIds: ['create-assistant'],
+        completedStepIds: ['create-assistant', 'start-chat'],
+        previousHidden: false,
+        hidden: true,
+      }),
+    );
     expect(mockOnboardingRepository.saveProgress).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-id',
@@ -55,6 +80,9 @@ describe('UpdateOnboardingUseCase', () => {
   });
 
   it('should save progress for a user without an onboarding row yet', async () => {
+    jest
+      .spyOn(mockOnboardingRepository, 'findByUserId')
+      .mockResolvedValue(null);
     jest
       .spyOn(mockOnboardingRepository, 'saveProgress')
       .mockImplementation((onboarding) => Promise.resolve(onboarding));
@@ -71,9 +99,19 @@ describe('UpdateOnboardingUseCase', () => {
     expect(result.completedStepIds).toEqual(['create-assistant']);
     expect(result.hidden).toBe(false);
     expect(mockOnboardingRepository.saveProgress).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      OnboardingUpdatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        previousCompletedStepIds: [],
+        previousHidden: false,
+      }),
+    );
   });
 
   it('should wrap unexpected repository failures in OnboardingUnexpectedError', async () => {
+    jest
+      .spyOn(mockOnboardingRepository, 'findByUserId')
+      .mockResolvedValue(null);
     jest
       .spyOn(mockOnboardingRepository, 'saveProgress')
       .mockRejectedValue(new Error('connection lost'));
@@ -87,5 +125,7 @@ describe('UpdateOnboardingUseCase', () => {
         ),
       ),
     ).rejects.toThrow('An unexpected error occurred');
+
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });
