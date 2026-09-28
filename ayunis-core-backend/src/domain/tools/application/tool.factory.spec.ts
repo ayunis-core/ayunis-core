@@ -180,8 +180,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.CREATE_SPREADSHEET);
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
       expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
+      expect(types).toContain(ToolType.INSTALL_MARKETPLACE_SKILL);
 
-      expect(types.length).toBe(30);
+      expect(types.length).toBe(31);
     });
   });
 });

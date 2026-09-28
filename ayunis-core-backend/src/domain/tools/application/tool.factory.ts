@@ -40,6 +40,7 @@ import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spre
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
+import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -63,6 +64,7 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.CREATE_SPREADSHEET]: () => new CreateSpreadsheetTool(),
   [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
   [ToolType.MARKETPLACE_SEARCH]: () => new MarketplaceSearchTool(),
+  [ToolType.INSTALL_MARKETPLACE_SKILL]: () => new InstallMarketplaceSkillTool(),
 };
 
 @Injectable()

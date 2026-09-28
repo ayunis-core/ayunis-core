@@ -108,6 +108,7 @@ import type {
   ImageGenerationModelResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
+  InstalledMarketplaceSkillResponseDto,
   InviteDetailResponseDto,
   InvitesControllerGetInvitesParams,
   IpAllowlistResponseDto,
@@ -11435,6 +11436,99 @@ export function useSkillsControllerFindAll<TData = Awaited<ReturnType<typeof ski
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSkillsControllerFindAllQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Find the personal skill installed from a marketplace entry
+ */
+export const skillsControllerFindInstalledFromMarketplace = (
+    identifier: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<InstalledMarketplaceSkillResponseDto>(
+      {url: `/skills/marketplace/${identifier}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillsControllerFindInstalledFromMarketplaceQueryKey = (identifier: string,) => {
+    return [
+    `/skills/marketplace/${identifier}`
+    ] as const;
+    }
+
+
+export const getSkillsControllerFindInstalledFromMarketplaceQueryOptions = <TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillsControllerFindInstalledFromMarketplaceQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>> = ({ signal }) => skillsControllerFindInstalledFromMarketplace(identifier, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillsControllerFindInstalledFromMarketplaceQueryResult = NonNullable<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>>
+export type SkillsControllerFindInstalledFromMarketplaceQueryError = unknown
+
+
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Find the personal skill installed from a marketplace entry
+ */
+
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillsControllerFindInstalledFromMarketplaceQueryOptions(identifier,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
