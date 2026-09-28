@@ -145,11 +145,13 @@ codegen, etc.), verify the process serving the port is rooted in the current
 worktree — not another slot's stale backend.
 
 Fix: the squatter must be stopped before `./dev up --slot <SLOT>` succeeds
-and before any codegen-from-running-server is trustworthy. **Do not kill it
-yourself** — killing processes is on the Forbidden Actions list in `CLAUDE.md`.
-Report the offending PID and its worktree cwd to the user and let them stop
-it. If you want to keep both worktrees running, give them different slots
-instead.
+and before any codegen-from-running-server is trustworthy. Follow the
+"Stop only processes you can prove are ours" rule in `CLAUDE.md`: prefer
+`./dev down --slot <SLOT>` from the owning worktree; if that worktree is gone
+or the process is untracked, `kill <PID>` is allowed once `./dev slots` or
+`lsof` shows its cwd inside an `ayunis-core*` checkout. Report what you
+stopped. If you want to keep both worktrees running, give them different
+slots instead.
 
 ### Orphaned processes from a trashed worktree
 
@@ -168,8 +170,8 @@ Prevent: **always `./dev down` in a worktree before trashing/removing it.**
 The `worktree` skill's cleanup section names this too — respect it.
 
 Recover: because the parent worktree is already gone, there's no ambiguity
-about whether the process is still owned — it isn't. Report the orphan PIDs
-plus the trashed cwd to the user and ask permission to `kill <PID>` them. Once
-approved, `./dev up --slot <SLOT>` from your current worktree comes up clean.
-`docker compose down` alone does **not** clean these up — they're native
-processes, not containers.
+about whether the process is still owned — it isn't. `kill <PID>` the orphans
+(allowed by the `CLAUDE.md` rule for trashed-worktree cwds), verify the ports
+are free, and report the PIDs and cwds you stopped. Then `./dev up --slot
+<SLOT>` from your current worktree comes up clean. `docker compose down` alone
+does **not** clean these up — they're native processes, not containers.
