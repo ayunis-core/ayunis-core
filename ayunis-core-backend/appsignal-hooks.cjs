@@ -159,6 +159,16 @@ const SUPPRESSIONS = [
     exceptionType: 'UND_ERR_HEADERS_TIMEOUT',
   },
   {
+    id: 'transport-body-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-948',
+    reason:
+      'Response body stalled. Classified as PROVIDER_UNAVAILABLE_TIMEOUT_* ' +
+      'at provider boundaries; the raw undici exception duplicates the ' +
+      'classified failure (incident #489). Classified timeout reporting remains enabled.',
+    exceptionType: 'UND_ERR_BODY_TIMEOUT',
+  },
+  {
     id: 'transport-dns-again',
     lever: 'ignoreErrors',
     ticket: 'AYC-616',

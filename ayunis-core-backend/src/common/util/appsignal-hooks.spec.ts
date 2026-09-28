@@ -5,6 +5,7 @@ import { errors as undiciErrors } from 'undici';
 import { JobRetryScheduledError } from 'src/domain/sources/infrastructure/queue/bullmq-job.helpers';
 import { MarketplaceUnavailableError } from 'src/domain/marketplace/application/marketplace.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 
 type UndiciRequest = {
   method?: string;
@@ -167,6 +168,7 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
       type: 'entity.too.large',
     }),
   'transport-headers-timeout': () => new undiciErrors.HeadersTimeoutError(),
+  'transport-body-timeout': () => new undiciErrors.BodyTimeoutError(),
   // Node mints errno errors as plain Errors carrying `code`; these mirror
   // the exact shapes seen in incidents #409, #387, #457, #511.
   'transport-dns-again': () =>
@@ -269,6 +271,20 @@ describe('SUPPRESSIONS registry', () => {
     // The other half of the raw-duplicate suppressions: dropping the errno
     // must not touch the classified taxonomy the alerting relies on, which
     // reports under PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER> (AYC-767).
+    it('suppresses a raw body timeout but retains its classified provider failure', () => {
+      const raw = new undiciErrors.BodyTimeoutError();
+      const classified = wrapProviderFailure(
+        new TypeError('fetch failed', { cause: raw }),
+        { provider: 'openai' },
+      );
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(raw));
+      expect(classified).toBeInstanceOf(ProviderTimeoutError);
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
+      expect(ignoredErrorTypes).not.toContain(
+        exceptionTypeOf(new TypeError('unexpected failure')),
+      );
+    });
+
     it('leaves the classified provider taxonomy reporting', () => {
       const classified = new ProviderTimeoutError({
         provider: 'openai',
