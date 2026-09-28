@@ -35,6 +35,7 @@ import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application
 import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
 import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
+import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
@@ -212,6 +213,46 @@ describe('WebhookDispatchListener', () => {
         email: 'test@example.com',
         orgId: ORG_ID,
       });
+    });
+  });
+
+  describe('handleOnboardingUpdated', () => {
+    it('should dispatch onboarding progress enriched with the user identity', async () => {
+      await listener.handleOnboardingUpdated(
+        new OnboardingUpdatedEvent(
+          USER_ID,
+          ['sendFirstMessage'],
+          ['sendFirstMessage', 'uploadDocument'],
+          false,
+          true,
+        ),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.ONBOARDING_UPDATED);
+      expect(command.event.data).toEqual({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        userEmail: 'test@example.com',
+        userName: 'Test User',
+        userRole: UserRole.ADMIN,
+        previousCompletedStepIds: ['sendFirstMessage'],
+        completedStepIds: ['sendFirstMessage', 'uploadDocument'],
+        previousHidden: false,
+        hidden: true,
+      });
+    });
+
+    it('should skip onboarding progress when no webhook receiver is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleOnboardingUpdated(
+        new OnboardingUpdatedEvent(USER_ID, [], [], false, false),
+      );
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
     });
   });
 

@@ -15,6 +15,7 @@ export enum WebhookEventType {
   SKILL_INSTALLED = 'skill.installed',
   INTEGRATION_USED = 'integration.used',
   INTEGRATION_INSTALLED = 'integration.installed',
+  ONBOARDING_UPDATED = 'onboarding.updated',
   ADDON_ACTIVATED = 'addon.activated',
   ADDON_DEACTIVATED = 'addon.deactivated',
 }
