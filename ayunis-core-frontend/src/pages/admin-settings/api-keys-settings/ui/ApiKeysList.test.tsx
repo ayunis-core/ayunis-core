@@ -104,4 +104,72 @@ describe('ApiKeysList', () => {
 
     expect(mocks.revokeApiKey).toHaveBeenCalledWith(apiKey.id, apiKey.name);
   });
+
+  describe('archive', () => {
+    const revokedKey = {
+      ...apiKey,
+      id: '33333333-3333-3333-3333-333333333333',
+      name: 'Old export',
+      revokedAt: '2026-09-01T10:00:00.000Z',
+    };
+    const expiredKey = {
+      ...apiKey,
+      id: '44444444-4444-4444-4444-444444444444',
+      name: 'Pilot',
+      expiresAt: '2020-01-01T00:00:00.000Z',
+    };
+
+    it('keeps revoked and expired keys in a collapsed archive', () => {
+      render(
+        <ApiKeysList
+          apiKeys={[revokedKey, apiKey, expiredKey]}
+          creditLimits={[]}
+        />,
+      );
+
+      expect(screen.getByTestId(`api-key-item-${apiKey.id}`)).toBeTruthy();
+      expect(screen.queryByTestId(`api-key-item-${revokedKey.id}`)).toBeNull();
+      expect(screen.queryByTestId(`api-key-item-${expiredKey.id}`)).toBeNull();
+      expect(
+        screen.getByTestId('api-key-archive-toggle').textContent,
+      ).toContain('apiKeys.list.archiveTitle:{"count":2}');
+    });
+
+    it('shows archived keys without actions once the archive is opened', () => {
+      render(
+        <ApiKeysList
+          apiKeys={[revokedKey, apiKey, expiredKey]}
+          creditLimits={[]}
+        />,
+      );
+
+      fireEvent.click(screen.getByTestId('api-key-archive-toggle'));
+
+      const archive = screen.getByTestId('api-key-archive-list');
+      const revokedItem = screen.getByTestId(`api-key-item-${revokedKey.id}`);
+      const expiredItem = screen.getByTestId(`api-key-item-${expiredKey.id}`);
+      expect(archive.contains(revokedItem)).toBe(true);
+      expect(archive.contains(expiredItem)).toBe(true);
+      expect(revokedItem.textContent).toContain('apiKeys.list.revokedBadge');
+      expect(expiredItem.textContent).toContain('apiKeys.list.expiredBadge');
+      expect(
+        archive.querySelectorAll('[data-testid="api-key-actions-menu"]'),
+      ).toHaveLength(0);
+      expect(screen.getAllByTestId('api-key-actions-menu')).toHaveLength(1);
+    });
+
+    it('tells the admin when every key is archived', () => {
+      render(<ApiKeysList apiKeys={[revokedKey]} creditLimits={[]} />);
+
+      expect(screen.getByTestId('api-key-no-active')).toBeTruthy();
+      expect(screen.getByTestId('api-key-archive-toggle')).toBeTruthy();
+    });
+
+    it('hides the archive when no key is archived', () => {
+      render(<ApiKeysList apiKeys={[apiKey]} creditLimits={[]} />);
+
+      expect(screen.queryByTestId('api-key-archive-toggle')).toBeNull();
+      expect(screen.queryByTestId('api-key-no-active')).toBeNull();
+    });
+  });
 });

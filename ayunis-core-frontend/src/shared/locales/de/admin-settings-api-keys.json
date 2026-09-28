@@ -11,7 +11,11 @@
       "neverExpires": "Läuft nie ab",
       "revokedAt": "Widerrufen am {{date}}",
       "revokedBadge": "Widerrufen",
-      "actionsAriaLabel": "Aktionen für {{name}}"
+      "expiredAt": "Abgelaufen am {{date}}",
+      "expiredBadge": "Abgelaufen",
+      "actionsAriaLabel": "Aktionen für {{name}}",
+      "noActiveKeys": "Keine aktiven API-Schlüssel. Widerrufene und abgelaufene Schlüssel stehen im Archiv.",
+      "archiveTitle": "Archiv ({{count}})"
     },
     "createDialog": {
       "title": "API-Schlüssel erstellen",
