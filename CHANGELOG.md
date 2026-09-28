@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.44.0](https://github.com/ayunis-core/ayunis-core/compare/v2.43.0...v2.44.0) (2026-09-28)
+
+
+### Features
+
+* **api-keys:** move revoked and expired keys into an archive (AYC-000) ([#1771](https://github.com/ayunis-core/ayunis-core/issues/1771)) ([4ef0258](https://github.com/ayunis-core/ayunis-core/commit/4ef02580c00f7fdeb87647d98c77a7567377c611)), closes [#1768](https://github.com/ayunis-core/ayunis-core/issues/1768)
+* **chat:** install marketplace skills from the conversation (AYC-1080) ([#1763](https://github.com/ayunis-core/ayunis-core/issues/1763)) ([bc13c22](https://github.com/ayunis-core/ayunis-core/commit/bc13c22118ae3dc73d9c6f92e189c042a69b5b5c))
+* **webhooks:** emit first steps progress events (AYC-660) ([#1775](https://github.com/ayunis-core/ayunis-core/issues/1775)) ([9547eed](https://github.com/ayunis-core/ayunis-core/commit/9547eed6146534070c75eed798c0c12be983956b))
+* **webhooks:** emit invited user events (AYC-1006) ([#1764](https://github.com/ayunis-core/ayunis-core/issues/1764)) ([81ac661](https://github.com/ayunis-core/ayunis-core/commit/81ac66127005fca9726a96f688c2ab2e3411b514))
+
+
+### Bug Fixes
+
+* **anonymization:** retry refused connections once fail closed (AYC-958) ([#1784](https://github.com/ayunis-core/ayunis-core/issues/1784)) ([b209190](https://github.com/ayunis-core/ayunis-core/commit/b209190149cce559818896739ffa4148c871401b))
+* **app:** stop browsers reusing a stale index.html (AYC-1090) ([#1782](https://github.com/ayunis-core/ayunis-core/issues/1782)) ([215b2fc](https://github.com/ayunis-core/ayunis-core/commit/215b2fc49c86580bef25dd6e06abc2a0e3c2c9b3))
+* **docker:** pull minio from a public pinned image (AYC-000) ([#1780](https://github.com/ayunis-core/ayunis-core/issues/1780)) ([2c9b866](https://github.com/ayunis-core/ayunis-core/commit/2c9b8661d22f1fbe3dc3e48e5ccc6a947919b5fe))
+* **knowledge-bases:** keep cleanup outside deletion transaction (AYC-898) ([#1787](https://github.com/ayunis-core/ayunis-core/issues/1787)) ([90c48a0](https://github.com/ayunis-core/ayunis-core/commit/90c48a0ce732d2e52907bde00d48e05ab153c0cf))
+* **observability:** suppress classified body-timeout duplicates (AYC-948) ([#1783](https://github.com/ayunis-core/ayunis-core/issues/1783)) ([4335148](https://github.com/ayunis-core/ayunis-core/commit/43351484e35059936fb31f2d7b57fc6f3e0538b3))
+
+
+### Documentation
+
+* **skills:** reconcile agent guidance with agentfiles store (AYC-000) ([#1776](https://github.com/ayunis-core/ayunis-core/issues/1776)) ([c9f0cf9](https://github.com/ayunis-core/ayunis-core/commit/c9f0cf9d1f810d47f5dc8e53dc7290d2cfced53f))
+
+
+### Miscellaneous
+
+* **features:** remove feature flags for released features (AYC-000) ([#1773](https://github.com/ayunis-core/ayunis-core/issues/1773)) ([f3e58db](https://github.com/ayunis-core/ayunis-core/commit/f3e58db8df0e61187a396d95c0be062ef6ce50fd))
+
 ## [2.43.0](https://github.com/ayunis-core/ayunis-core/compare/v2.42.0...v2.43.0) (2026-09-25)
 
 
