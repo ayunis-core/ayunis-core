@@ -286,4 +286,34 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
       params: { name: 'x', date: null },
     });
   });
+
+  it('forwards the caller-supplied call-terminal handler to the provider call', async () => {
+    let received: InferenceInput | undefined;
+    const registry = {
+      getHandler: () => ({
+        answer: (input: InferenceInput) => {
+          received = input;
+          return Promise.resolve(new InferenceResponse([], {}));
+        },
+      }),
+    };
+    const contextService = { get: () => randomUUID() };
+    const useCase = new GetInferenceUseCase(
+      registry as never,
+      contextService as never,
+    );
+    const onCallTerminal = jest.fn();
+
+    await useCase.execute(
+      new GetInferenceCommand({
+        model,
+        messages: [],
+        tools: [],
+        toolChoice: ModelToolChoice.AUTO,
+        onCallTerminal,
+      }),
+    );
+
+    expect(received?.onCallTerminal).toBe(onCallTerminal);
+  });
 });

@@ -1,12 +1,7 @@
 import { ModelProviderError } from '@ayunis/inference';
 import {
   classifyTransportError,
-  isRetryableProviderRateLimitFailure,
-  isRetryableProviderServerFailure,
   isRetryableProviderTimeoutFailure,
-  isRetryableSetupFailure,
-  RATE_LIMIT_MAX_WAIT_MS,
-  rateLimitRetryDelayMs,
 } from './provider-transport-error.classifier';
 import { ProviderFailureClass } from './provider.errors';
 
@@ -159,35 +154,6 @@ describe('classifyTransportError', () => {
     });
   });
 
-  describe('isRetryableSetupFailure', () => {
-    it.each(['EAI_AGAIN', 'ECONNRESET'])(
-      'treats %s as retryable during request setup',
-      (code) => {
-        expect(isRetryableSetupFailure(errorWithCode('boom', code))).toBe(true);
-      },
-    );
-
-    it('does not retry timeouts — that would double an already-long wait', () => {
-      expect(
-        isRetryableSetupFailure(
-          errorWithCode('headers timeout', 'UND_ERR_HEADERS_TIMEOUT'),
-        ),
-      ).toBe(false);
-    });
-
-    it('does not retry non-transport errors', () => {
-      expect(isRetryableSetupFailure(new Error('boom'))).toBe(false);
-    });
-
-    it('does not retry client aborts', () => {
-      expect(
-        isRetryableSetupFailure(
-          new DOMException('The operation was aborted', 'AbortError'),
-        ),
-      ).toBe(false);
-    });
-  });
-
   describe('provider timeout failures', () => {
     it('accepts classified timeout errors', () => {
       expect(
@@ -214,71 +180,13 @@ describe('classifyTransportError', () => {
     });
   });
 
-  describe('provider server failures', () => {
-    it('accepts upstream 5xx status shapes', () => {
-      expect(
-        isRetryableProviderServerFailure(
-          Object.assign(new Error('service unavailable'), { status: 503 }),
-        ),
-      ).toBe(true);
-    });
-
-    it.each([429, 504])('rejects non-server status %s', (status) => {
-      expect(
-        isRetryableProviderServerFailure(
-          Object.assign(new Error('not a server retry'), { status }),
-        ),
-      ).toBe(false);
-    });
-  });
-
-  describe('provider rate limits', () => {
-    const rateLimited = (headers?: Record<string, string>) =>
-      Object.assign(new Error('rate limit exceeded'), {
-        status: 429,
-        ...(headers && { headers }),
-      });
-
-    it('accepts upstream 429 responses only', () => {
-      expect(isRetryableProviderRateLimitFailure(rateLimited())).toBe(true);
-      expect(
-        isRetryableProviderRateLimitFailure(
-          Object.assign(new Error('bad request'), { status: 400 }),
-        ),
-      ).toBe(false);
-    });
-
-    it('honors a retry-after header inside the wait budget', () => {
-      expect(
-        rateLimitRetryDelayMs(rateLimited({ 'retry-after': '2' }), 1),
-      ).toBe(2_000);
-      expect(
-        rateLimitRetryDelayMs(rateLimited({ 'retry-after-ms': '750' }), 1),
-      ).toBe(750);
-    });
-
-    it('backs off linearly when the provider sends no retry-after', () => {
-      expect(rateLimitRetryDelayMs(rateLimited(), 1)).toBe(1_000);
-      expect(rateLimitRetryDelayMs(rateLimited(), 2)).toBe(2_000);
-    });
-
-    it('gives up when the provider asks to wait longer than the budget', () => {
-      const tooLong = String(RATE_LIMIT_MAX_WAIT_MS / 1000 + 1);
-      expect(
-        rateLimitRetryDelayMs(rateLimited({ 'retry-after': tooLong }), 1),
-      ).toBeUndefined();
-    });
-  });
-
   describe('portable provider failures', () => {
     const portable = (
       kind: ConstructorParameters<typeof ModelProviderError>[0]['kind'],
-      retryAfterMs?: number,
     ) =>
       new ModelProviderError({
         kind,
         stage: 'stream_establishment',
-        retryAfterMs,
         cause: new Error('raw provider failure'),
       });
 
@@ -298,28 +206,13 @@ describe('classifyTransportError', () => {
       });
     });
 
-    it('classifies retry categories without inspecting SDK errors again', () => {
-      expect(isRetryableSetupFailure(portable('connection'))).toBe(true);
+    it('classifies portable timeouts without inspecting SDK errors again', () => {
       expect(isRetryableProviderTimeoutFailure(portable('timeout'))).toBe(true);
-      expect(isRetryableProviderServerFailure(portable('server'))).toBe(true);
-      expect(isRetryableProviderRateLimitFailure(portable('rate_limit'))).toBe(
-        true,
-      );
-    });
-
-    it('uses portable retry timing at the host retry boundary', () => {
-      expect(rateLimitRetryDelayMs(portable('rate_limit', 2_500), 1)).toBe(
-        2_500,
-      );
     });
 
     it('does not retry portable rejections, aborts, or unknown failures', () => {
       for (const kind of ['rejection', 'abort', 'unknown'] as const) {
-        const error = portable(kind);
-        expect(isRetryableSetupFailure(error)).toBe(false);
-        expect(isRetryableProviderTimeoutFailure(error)).toBe(false);
-        expect(isRetryableProviderServerFailure(error)).toBe(false);
-        expect(isRetryableProviderRateLimitFailure(error)).toBe(false);
+        expect(isRetryableProviderTimeoutFailure(portable(kind))).toBe(false);
       }
     });
 
@@ -337,7 +230,6 @@ describe('classifyTransportError', () => {
           cause: errorWithCode('racing raw failure', causeCode),
         });
         expect(classifyTransportError(error)).toBeUndefined();
-        expect(isRetryableSetupFailure(error)).toBe(false);
         expect(isRetryableProviderTimeoutFailure(error)).toBe(false);
       }
     });

@@ -4,7 +4,6 @@ import type { ImageContentService } from 'src/domain/messages/application/servic
 import type { Model } from 'src/domain/models/domain/model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider as ModelProviderName } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 import { AzureInferenceHandler } from './azure.inference';
 
 const azureMock = jest.fn<ModelProvider, [unknown]>();
@@ -50,13 +49,13 @@ describe('AzureInferenceHandler', () => {
     ).createProvider(model);
   };
 
-  it('uses low reasoning for reasoning models', () => {
+  it('uses low reasoning for reasoning models and keeps SDK retries disabled', () => {
     buildProvider(createModel('gpt-6-astra', true));
 
     expect(azureMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'gpt-6-astra',
-        maxRetries: INFERENCE_MAX_RETRIES,
+        maxRetries: 0,
         reasoningEffort: 'low',
       }),
     );

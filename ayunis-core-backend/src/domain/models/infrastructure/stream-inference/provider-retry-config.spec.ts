@@ -12,8 +12,18 @@ import { OtcStreamInferenceHandler } from './otc.stream-inference';
 import { ScalewayStreamInferenceHandler } from './scaleway.stream-inference';
 import { StackitStreamInferenceHandler } from './stackit.stream-inference';
 import { SynaforceStreamInferenceHandler } from './synaforce.stream-inference';
+import { AnthropicInferenceHandler } from 'src/domain/models/infrastructure/inference/anthropic.inference';
+import { AyunisOllamaInferenceHandler } from 'src/domain/models/infrastructure/inference/ayunis-ollama.inference';
+import { AzureInferenceHandler } from 'src/domain/models/infrastructure/inference/azure.inference';
+import { BedrockInferenceHandler } from 'src/domain/models/infrastructure/inference/bedrock.inference';
+import { GeminiInferenceHandler } from 'src/domain/models/infrastructure/inference/gemini.inference';
+import { LocalOllamaInferenceHandler } from 'src/domain/models/infrastructure/inference/local-ollama.inference';
+import { MistralInferenceHandler } from 'src/domain/models/infrastructure/inference/mistral.inference';
 import { OpenAIInferenceHandler } from 'src/domain/models/infrastructure/inference/openai.inference';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { OtcInferenceHandler } from 'src/domain/models/infrastructure/inference/otc.inference';
+import { ScalewayInferenceHandler } from 'src/domain/models/infrastructure/inference/scaleway.inference';
+import { StackitInferenceHandler } from 'src/domain/models/infrastructure/inference/stackit.inference';
+import { SynaforceInferenceHandler } from 'src/domain/models/infrastructure/inference/synaforce.inference';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import type { Model } from 'src/domain/models/domain/model.entity';
 
@@ -129,6 +139,61 @@ const streamingHandlers: Array<{
   },
 ];
 
+const nonStreamingHandlers: typeof streamingHandlers = [
+  {
+    name: 'Anthropic',
+    Handler: AnthropicInferenceHandler,
+    providerFactory: anthropicMock,
+  },
+  {
+    name: 'Bedrock',
+    Handler: BedrockInferenceHandler,
+    providerFactory: bedrockMock,
+  },
+  { name: 'Azure', Handler: AzureInferenceHandler, providerFactory: azureMock },
+  {
+    name: 'Gemini',
+    Handler: GeminiInferenceHandler,
+    providerFactory: geminiMock,
+  },
+  {
+    name: 'Mistral',
+    Handler: MistralInferenceHandler,
+    providerFactory: mistralMock,
+  },
+  {
+    name: 'OpenAI',
+    Handler: OpenAIInferenceHandler,
+    providerFactory: openaiMock,
+  },
+  { name: 'OTC', Handler: OtcInferenceHandler, providerFactory: openaiMock },
+  {
+    name: 'STACKIT',
+    Handler: StackitInferenceHandler,
+    providerFactory: openaiMock,
+  },
+  {
+    name: 'Scaleway',
+    Handler: ScalewayInferenceHandler,
+    providerFactory: openaiMock,
+  },
+  {
+    name: 'local Ollama',
+    Handler: LocalOllamaInferenceHandler,
+    providerFactory: ollamaMock,
+  },
+  {
+    name: 'Ayunis Ollama',
+    Handler: AyunisOllamaInferenceHandler,
+    providerFactory: ollamaMock,
+  },
+  {
+    name: 'Synaforce',
+    Handler: SynaforceInferenceHandler,
+    providerFactory: ollamaMock,
+  },
+];
+
 const configService = {
   get: jest.fn().mockReturnValue('configured-value'),
 } as unknown as ConfigService;
@@ -166,12 +231,14 @@ describe('provider retry configuration', () => {
     },
   );
 
-  it('keeps SDK retries enabled for non-streaming inference', () => {
-    invokeCreateProvider(OpenAIInferenceHandler);
+  it.each(nonStreamingHandlers)(
+    '$name non-streaming handler disables provider retries',
+    ({ Handler, providerFactory }) => {
+      invokeCreateProvider(Handler);
 
-    expect(openaiMock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ maxRetries: INFERENCE_MAX_RETRIES }),
-    );
-    expect(INFERENCE_MAX_RETRIES).toBe(3);
-  });
+      expect(providerFactory).toHaveBeenLastCalledWith(
+        expect.objectContaining({ maxRetries: 0 }),
+      );
+    },
+  );
 });

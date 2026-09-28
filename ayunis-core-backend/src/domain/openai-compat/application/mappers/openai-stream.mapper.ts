@@ -3,8 +3,8 @@ import type { StreamInferenceResponseChunk } from 'src/domain/models/application
 import type {
   ChatCompletionChunk,
   ChatCompletionChunkToolCallDelta,
-} from '../types/openai-chunk.types';
-import type { ChatCompletionFinishReason } from '../types/openai-response.types';
+} from 'src/domain/openai-compat/application/types/openai-chunk.types';
+import type { ChatCompletionFinishReason } from 'src/domain/openai-compat/application/types/openai-response.types';
 
 /**
  * Per-stream state carried across chunks. Currently only translates
@@ -49,6 +49,12 @@ export class OpenAIStreamMapper {
    * - Tool-call indices are remapped through `session` so the
    *   OpenAI-spec-required contiguous zero-based numbering is preserved
    *   regardless of what the upstream provider emits.
+   *
+   * AYC-1050: the first provider chunk always yields a frame — a role-only
+   * opener when it carries nothing visible — so the SSE response commits as
+   * soon as the provider call has consumed tokens. A later failure then ends
+   * in-band instead of as a retryable HTTP error that would make the caller's
+   * SDK repeat an already billed call.
    */
   toChunk(params: {
     id: string;
@@ -66,20 +72,11 @@ export class OpenAIStreamMapper {
       session,
     );
     const hasToolCallDelta = toolCallDeltas.length > 0;
-    const hasFinish =
-      chunk.finishReason !== undefined && chunk.finishReason !== null;
+    const finishReason = this.finishReasonOf(chunk);
 
-    if (!hasContent && !hasToolCallDelta && !hasFinish) {
-      return null;
+    if (!hasContent && !hasToolCallDelta && finishReason === null) {
+      return params.isFirst ? this.openingChunk(params) : null;
     }
-
-    const hasNewToolCall = chunk.toolCallsDelta.some(
-      (d) => d.id !== null || d.name !== null,
-    );
-
-    const finishReason: ChatCompletionFinishReason = hasFinish
-      ? this.mapFinishReason(chunk.finishReason ?? null, hasNewToolCall)
-      : null;
 
     return {
       id: params.id,
@@ -98,6 +95,30 @@ export class OpenAIStreamMapper {
         },
       ],
     };
+  }
+
+  private openingChunk(params: {
+    id: string;
+    modelName: string;
+  }): ChatCompletionChunk {
+    return {
+      id: params.id,
+      object: 'chat.completion.chunk',
+      created: Math.floor(Date.now() / 1000),
+      model: params.modelName,
+      choices: [
+        { index: 0, delta: { role: 'assistant' }, finish_reason: null },
+      ],
+    };
+  }
+
+  private finishReasonOf(
+    chunk: StreamInferenceResponseChunk,
+  ): ChatCompletionFinishReason {
+    const hasNewToolCall = chunk.toolCallsDelta.some(
+      (d) => d.id !== null || d.name !== null,
+    );
+    return this.mapFinishReason(chunk.finishReason ?? null, hasNewToolCall);
   }
 
   private mapToolCallDeltas(

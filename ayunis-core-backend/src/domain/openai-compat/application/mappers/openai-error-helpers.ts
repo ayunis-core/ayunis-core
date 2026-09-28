@@ -46,3 +46,17 @@ export function mappedError(
     body: envelope({ message, type: statusToType(status), code, param }),
   };
 }
+
+/**
+ * OpenAI SDKs read `retry-after-ms` first and fall back to `retry-after`
+ * seconds when scheduling their own retry. (`x-should-retry: false` is the
+ * opposite signal: the SDKs skip retrying an otherwise retryable status.)
+ */
+export function retryAfterHeaders(
+  retryAfterMs: number,
+): Record<string, string> {
+  return {
+    'retry-after-ms': String(retryAfterMs),
+    'retry-after': String(Math.ceil(retryAfterMs / 1000)),
+  };
+}

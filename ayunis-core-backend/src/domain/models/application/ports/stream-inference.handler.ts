@@ -1,33 +1,11 @@
 import type { ModelProvider } from '@ayunis/inference';
-import type { UUID } from 'crypto';
 import type { Observable } from 'rxjs';
 import type { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
-
-export interface StreamInferenceAttemptUsage {
-  inputTokens: number;
-  outputTokens: number;
-}
-
-export interface StreamInferenceAttemptContext {
-  requestId: UUID;
-}
-
-export interface StreamInferenceAttemptTerminalContext extends StreamInferenceAttemptContext {
-  outcome: 'completed' | 'failed' | 'aborted';
-  usage?: StreamInferenceAttemptUsage;
-  outputEmitted: boolean;
-}
-
-export interface StreamInferenceAttemptLifecycle {
-  onAttemptStart(context: StreamInferenceAttemptContext): Promise<void> | void;
-  onAttemptTerminal(
-    context: StreamInferenceAttemptTerminalContext,
-  ): Promise<void> | void;
-}
+import type { InferenceCallTerminalHandler } from 'src/domain/models/application/models/inference-call-terminal';
 
 export class StreamInferenceInput {
   public readonly model: Model;
@@ -36,7 +14,7 @@ export class StreamInferenceInput {
   public readonly tools: ToolSchema[];
   public readonly toolChoice?: ModelToolChoice;
   public readonly orgId: string;
-  public readonly attemptLifecycle?: StreamInferenceAttemptLifecycle;
+  public readonly onCallTerminal?: InferenceCallTerminalHandler;
 
   constructor(params: {
     model: Model;
@@ -45,7 +23,7 @@ export class StreamInferenceInput {
     tools?: ToolSchema[];
     toolChoice?: ModelToolChoice;
     orgId: string;
-    attemptLifecycle?: StreamInferenceAttemptLifecycle;
+    onCallTerminal?: InferenceCallTerminalHandler;
   }) {
     this.model = params.model;
     this.messages = params.messages;
@@ -55,7 +33,7 @@ export class StreamInferenceInput {
     this.toolChoice =
       params.tools && params.tools.length > 0 ? params.toolChoice : undefined;
     this.orgId = params.orgId;
-    this.attemptLifecycle = params.attemptLifecycle;
+    this.onCallTerminal = params.onCallTerminal;
   }
 }
 

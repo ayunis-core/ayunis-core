@@ -9,8 +9,15 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { OpenAIModelNotFoundError } from 'src/domain/openai-compat/application/openai-compat.errors';
+import {
+  OpenAIModelNotFoundError,
+  OpenAIUsageAccountingFailedError,
+} from 'src/domain/openai-compat/application/openai-compat.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ProviderRequestRejectedError,
+  ProviderServerError,
+} from 'src/common/errors/provider.errors';
 
 class UnexpectedOpenAIError extends ApplicationError {
   constructor() {
@@ -74,6 +81,51 @@ describe('OpenAIErrorMapper', () => {
       expect(result.status).toBe(500);
       expect(result.body.error.code).toBe('UNEXPECTED_OPENAI');
       expect(result.body.error.message).toBe('Internal server error');
+    });
+  });
+
+  describe('provider failures', () => {
+    it('forwards the provider retry timing as retry headers', () => {
+      const result = mapper.toEnvelope(
+        new ProviderRequestRejectedError({
+          provider: 'azure',
+          upstreamStatus: 429,
+          retryAfterMs: 2_500,
+        }),
+      );
+
+      expect(result.status).toBe(502);
+      expect(result.body.error.type).toBe('server_error');
+      expect(result.body.error.code).toBe(
+        'PROVIDER_UNAVAILABLE_REJECTED_AZURE',
+      );
+      expect(result.headers).toEqual({
+        'retry-after-ms': '2500',
+        'retry-after': '3',
+      });
+    });
+
+    it('adds no retry headers when the provider sent no retry timing', () => {
+      const result = mapper.toEnvelope(
+        new ProviderServerError({ provider: 'azure', upstreamStatus: 503 }),
+      );
+
+      expect(result.status).toBe(502);
+      expect(result.headers).toBeUndefined();
+    });
+  });
+
+  describe('usage accounting failures', () => {
+    it('tells OpenAI SDKs not to retry a call that already completed', () => {
+      const result = mapper.toEnvelope(
+        new OpenAIUsageAccountingFailedError({ outcome: 'completed' }),
+      );
+
+      expect(result.status).toBe(500);
+      expect(result.body.error.code).toBe(
+        'OPENAI_COMPAT_USAGE_ACCOUNTING_FAILED',
+      );
+      expect(result.headers).toEqual({ 'x-should-retry': 'false' });
     });
   });
 
