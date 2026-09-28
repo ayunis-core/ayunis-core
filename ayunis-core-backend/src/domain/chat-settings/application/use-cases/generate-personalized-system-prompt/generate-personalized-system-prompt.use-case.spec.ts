@@ -14,7 +14,7 @@ import type { UpsertUserSystemPromptUseCase } from 'src/domain/chat-settings/app
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 
 const userId = randomUUID();
 const orgId = randomUUID();

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { StreamInferenceResponseChunk } from 'src/domain/models/application/ports/stream-inference.handler';
+import type { StreamInferenceResponseChunk } from 'src/domain/models/application/models/stream-inference-response-chunk';
 import type {
   ChatCompletionChunk,
   ChatCompletionChunkToolCallDelta,

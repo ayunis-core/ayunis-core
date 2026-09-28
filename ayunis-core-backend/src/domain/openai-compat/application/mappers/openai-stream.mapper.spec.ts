@@ -5,7 +5,7 @@ import {
 import {
   StreamInferenceResponseChunk,
   StreamInferenceResponseChunkToolCall,
-} from 'src/domain/models/application/ports/stream-inference.handler';
+} from 'src/domain/models/application/models/stream-inference-response-chunk';
 
 describe('OpenAIStreamMapper', () => {
   const mapper = new OpenAIStreamMapper();

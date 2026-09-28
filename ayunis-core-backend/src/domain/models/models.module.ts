@@ -6,13 +6,7 @@ import { SuperAdminCatalogModelsController } from './presenters/http/super-admin
 import { SuperAdminLanguageCatalogModelsController } from './presenters/http/super-admin-language-catalog-models.controller';
 import { SuperAdminEmbeddingCatalogModelsController } from './presenters/http/super-admin-embedding-catalog-models.controller';
 import { SuperAdminImageGenerationCatalogModelsController } from './presenters/http/super-admin-image-generation-catalog-models.controller';
-import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
-import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
-import { OpenAIInferenceHandler } from './infrastructure/inference/openai.inference';
-import { AnthropicInferenceHandler } from './infrastructure/inference/anthropic.inference';
-import { MockInferenceHandler } from './infrastructure/inference/mock.inference';
-import { MockStreamInferenceHandler } from './infrastructure/stream-inference/mock.stream-inference';
 import { GetInferenceUseCase } from './application/use-cases/get-inference/get-inference.use-case';
 import { GetConfiguredModelsByTypeUseCase } from './application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
 import { GetDefaultModelUseCase } from './application/use-cases/get-default-model/get-default-model.use-case';
@@ -31,16 +25,12 @@ import { UpdatePermittedModelUseCase } from './application/use-cases/update-perm
 import { StreamInferenceUseCase } from './application/use-cases/stream-inference/stream-inference.use-case';
 import { ResolveModelProviderUseCase } from './application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import { MapMessagesToInferenceUseCase } from './application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
-import { StreamInferenceHandlerRegistry } from './application/registry/stream-inference-handler.registry';
-import { AnthropicStreamInferenceHandler } from './infrastructure/stream-inference/anthropic.stream-inference';
-import { OpenAIStreamInferenceHandler } from './infrastructure/stream-inference/openai.stream-inference';
 import { SetUserDefaultLanguageModelUseCase } from './application/use-cases/set-user-default-language-model/set-user-default-language-model.use-case';
 import { DeleteUserDefaultModelUseCase } from './application/use-cases/delete-user-default-model/delete-user-default-model.use-case';
 import { GetUserDefaultModelUseCase } from './application/use-cases/get-user-default-model/get-user-default-model.use-case';
 import { GetOrgDefaultModelUseCase } from './application/use-cases/get-org-default-model/get-org-default-model.use-case';
 import { SetOrgDefaultLanguageModelUseCase } from './application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
 import { MessageRequestDtoMapper } from './presenters/http/mappers/message-request-dto.mapper';
-import { MistralStreamInferenceHandler } from './infrastructure/stream-inference/mistral.stream-inference';
 import { CreateLanguageModelUseCase } from './application/use-cases/create-language-model/create-language-model.use-case';
 import { CreateEmbeddingModelUseCase } from './application/use-cases/create-embedding-model/create-embedding-model.use-case';
 import { UpdateLanguageModelUseCase } from './application/use-cases/update-language-model/update-language-model.use-case';
@@ -53,16 +43,27 @@ import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-
 import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-model.use-case';
 
 import { ModelProviderInfoRegistry } from './application/registry/model-provider-info.registry';
+import { AnthropicInferenceProviderFactory } from './infrastructure/inference-providers/anthropic.inference-provider';
+import { AyunisOllamaInferenceProviderFactory } from './infrastructure/inference-providers/ayunis-ollama.inference-provider';
+import { AzureInferenceProviderFactory } from './infrastructure/inference-providers/azure.inference-provider';
+import { BedrockInferenceProviderFactory } from './infrastructure/inference-providers/bedrock.inference-provider';
+import { GeminiInferenceProviderFactory } from './infrastructure/inference-providers/gemini.inference-provider';
+import { LocalOllamaInferenceProviderFactory } from './infrastructure/inference-providers/local-ollama.inference-provider';
+import { MistralInferenceProviderFactory } from './infrastructure/inference-providers/mistral.inference-provider';
+import { OpenAIInferenceProviderFactory } from './infrastructure/inference-providers/openai.inference-provider';
+import { OtcInferenceProviderFactory } from './infrastructure/inference-providers/otc.inference-provider';
+import { ScalewayInferenceProviderFactory } from './infrastructure/inference-providers/scaleway.inference-provider';
+import { StackitInferenceProviderFactory } from './infrastructure/inference-providers/stackit.inference-provider';
+import { SynaforceInferenceProviderFactory } from './infrastructure/inference-providers/synaforce.inference-provider';
+import { MockInferenceProviderFactory } from './infrastructure/inference-providers/mock.inference-provider';
+import { InferenceProviderRegistry } from './application/registry/inference-provider.registry';
+import { InferenceCallService } from './application/services/inference-call.service';
 import { GetModelProviderInfoUseCase } from './application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
 import { ModelProviderInfoResponseDtoMapper } from './presenters/http/mappers/model-provider-info-response-dto.mapper';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdUseCase } from './application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
-import { LocalOllamaInferenceHandler } from './infrastructure/inference/local-ollama.inference';
-import { LocalOllamaStreamInferenceHandler } from './infrastructure/stream-inference/local-ollama.stream-inference';
-import { SynaforceInferenceHandler } from './infrastructure/inference/synaforce.inference';
-import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inference/synaforce.stream-inference';
 import { GetPermittedLanguageModelsUseCase } from './application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelUseCase } from './application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
@@ -70,20 +71,6 @@ import { GetPermittedImageGenerationModelUseCase } from './application/use-cases
 import { UsersModule } from 'src/iam/users/users.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
-import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
-import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
-import { OtcInferenceHandler } from './infrastructure/inference/otc.inference';
-import { OtcStreamInferenceHandler } from './infrastructure/stream-inference/otc.stream-inference';
-import { BedrockInferenceHandler } from './infrastructure/inference/bedrock.inference';
-import { BedrockStreamInferenceHandler } from './infrastructure/stream-inference/bedrock.stream-inference';
-import { AzureInferenceHandler } from './infrastructure/inference/azure.inference';
-import { AzureStreamInferenceHandler } from './infrastructure/stream-inference/azure.stream-inference';
-import { GeminiInferenceHandler } from './infrastructure/inference/gemini.inference';
-import { GeminiStreamInferenceHandler } from './infrastructure/stream-inference/gemini.stream-inference';
-import { StackitInferenceHandler } from './infrastructure/inference/stackit.inference';
-import { StackitStreamInferenceHandler } from './infrastructure/stream-inference/stackit.stream-inference';
-import { ScalewayInferenceHandler } from './infrastructure/inference/scaleway.inference';
-import { ScalewayStreamInferenceHandler } from './infrastructure/stream-inference/scaleway.stream-inference';
 import { ConfigService } from '@nestjs/config';
 import { ImageGenerationHandlerRegistry } from './application/registry/image-generation-handler.registry';
 import { AzureImageGenerationHandler } from './infrastructure/image-generation/azure.image-generation';
@@ -116,7 +103,7 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     UsersModule,
     TeamsModule,
     StorageModule,
-    forwardRef(() => MessagesModule), // ImageContentService for inference handlers
+    forwardRef(() => MessagesModule), // ImageContentService for inference calls
     forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
   ],
@@ -137,141 +124,73 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     CatalogModelResponseDtoMapper,
     ModelProviderInfoResponseDtoMapper,
     MessageRequestDtoMapper,
-    MistralInferenceHandler,
-    OpenAIInferenceHandler,
-    AnthropicInferenceHandler,
-    LocalOllamaInferenceHandler,
-    SynaforceInferenceHandler,
-    AnthropicStreamInferenceHandler,
-    OpenAIStreamInferenceHandler,
-    MistralStreamInferenceHandler,
-    LocalOllamaStreamInferenceHandler,
-    SynaforceStreamInferenceHandler,
-    LocalOllamaInferenceHandler,
-    AyunisOllamaStreamInferenceHandler,
-    AyunisOllamaInferenceHandler,
-    OtcStreamInferenceHandler,
-    OtcInferenceHandler,
-    BedrockInferenceHandler,
-    BedrockStreamInferenceHandler,
-    AzureInferenceHandler,
-    AzureStreamInferenceHandler,
-    GeminiInferenceHandler,
-    GeminiStreamInferenceHandler,
-    StackitInferenceHandler,
-    StackitStreamInferenceHandler,
-    ScalewayInferenceHandler,
-    ScalewayStreamInferenceHandler,
-    MockStreamInferenceHandler,
-    MockInferenceHandler,
+    AnthropicInferenceProviderFactory,
+    AyunisOllamaInferenceProviderFactory,
+    AzureInferenceProviderFactory,
+    BedrockInferenceProviderFactory,
+    GeminiInferenceProviderFactory,
+    LocalOllamaInferenceProviderFactory,
+    MistralInferenceProviderFactory,
+    OpenAIInferenceProviderFactory,
+    OtcInferenceProviderFactory,
+    ScalewayInferenceProviderFactory,
+    StackitInferenceProviderFactory,
+    SynaforceInferenceProviderFactory,
+    MockInferenceProviderFactory,
+    {
+      provide: InferenceProviderRegistry,
+      useFactory: (
+        anthropicFactory: AnthropicInferenceProviderFactory,
+        ayunisOllamaFactory: AyunisOllamaInferenceProviderFactory,
+        azureFactory: AzureInferenceProviderFactory,
+        bedrockFactory: BedrockInferenceProviderFactory,
+        geminiFactory: GeminiInferenceProviderFactory,
+        localOllamaFactory: LocalOllamaInferenceProviderFactory,
+        mistralFactory: MistralInferenceProviderFactory,
+        openAIFactory: OpenAIInferenceProviderFactory,
+        otcFactory: OtcInferenceProviderFactory,
+        scalewayFactory: ScalewayInferenceProviderFactory,
+        stackitFactory: StackitInferenceProviderFactory,
+        synaforceFactory: SynaforceInferenceProviderFactory,
+        mockFactory: MockInferenceProviderFactory,
+        configService: ConfigService,
+      ) => {
+        const registry = new InferenceProviderRegistry(configService);
+        registry.register(ModelProvider.ANTHROPIC, anthropicFactory);
+        registry.register(ModelProvider.OPENAI, openAIFactory);
+        registry.register(ModelProvider.MISTRAL, mistralFactory);
+        registry.register(ModelProvider.OLLAMA, localOllamaFactory);
+        registry.register(ModelProvider.SYNAFORCE, synaforceFactory);
+        registry.register(ModelProvider.AYUNIS, ayunisOllamaFactory);
+        registry.register(ModelProvider.OTC, otcFactory);
+        registry.register(ModelProvider.BEDROCK, bedrockFactory);
+        registry.register(ModelProvider.AZURE, azureFactory);
+        registry.register(ModelProvider.GEMINI, geminiFactory);
+        registry.register(ModelProvider.STACKIT, stackitFactory);
+        registry.register(ModelProvider.SCALEWAY, scalewayFactory);
+        registry.registerMockFactory(mockFactory);
+        return registry;
+      },
+      inject: [
+        AnthropicInferenceProviderFactory,
+        AyunisOllamaInferenceProviderFactory,
+        AzureInferenceProviderFactory,
+        BedrockInferenceProviderFactory,
+        GeminiInferenceProviderFactory,
+        LocalOllamaInferenceProviderFactory,
+        MistralInferenceProviderFactory,
+        OpenAIInferenceProviderFactory,
+        OtcInferenceProviderFactory,
+        ScalewayInferenceProviderFactory,
+        StackitInferenceProviderFactory,
+        SynaforceInferenceProviderFactory,
+        MockInferenceProviderFactory,
+        ConfigService,
+      ],
+    },
+    InferenceCallService,
     AzureImageGenerationHandler,
     MockImageGenerationHandler,
-    {
-      provide: StreamInferenceHandlerRegistry,
-      // Registry factories mirror Nest's explicit injection list.
-      // eslint-disable-next-line max-params
-      useFactory: (
-        anthropicHandler: AnthropicStreamInferenceHandler,
-        openaiHandler: OpenAIStreamInferenceHandler,
-        mistralHandler: MistralStreamInferenceHandler,
-        ollamaHandler: LocalOllamaStreamInferenceHandler,
-        synaforceHandler: SynaforceStreamInferenceHandler,
-        ayunisHandler: AyunisOllamaStreamInferenceHandler,
-        otcHandler: OtcStreamInferenceHandler,
-        bedrockHandler: BedrockStreamInferenceHandler,
-        azureHandler: AzureStreamInferenceHandler,
-        geminiHandler: GeminiStreamInferenceHandler,
-        stackitHandler: StackitStreamInferenceHandler,
-        scalewayHandler: ScalewayStreamInferenceHandler,
-        mockHandler: MockStreamInferenceHandler,
-        configService: ConfigService,
-      ) => {
-        const registry = new StreamInferenceHandlerRegistry(configService);
-        registry.register(ModelProvider.OPENAI, openaiHandler);
-        registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
-        registry.register(ModelProvider.BEDROCK, bedrockHandler);
-        registry.register(ModelProvider.MISTRAL, mistralHandler);
-        registry.register(ModelProvider.OLLAMA, ollamaHandler);
-        registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
-        registry.register(ModelProvider.AYUNIS, ayunisHandler);
-        registry.register(ModelProvider.OTC, otcHandler);
-        registry.register(ModelProvider.AZURE, azureHandler);
-        registry.register(ModelProvider.GEMINI, geminiHandler);
-        registry.register(ModelProvider.STACKIT, stackitHandler);
-        registry.register(ModelProvider.SCALEWAY, scalewayHandler);
-        registry.registerMockHandler(mockHandler);
-        return registry;
-      },
-      inject: [
-        AnthropicStreamInferenceHandler,
-        OpenAIStreamInferenceHandler,
-        MistralStreamInferenceHandler,
-        LocalOllamaStreamInferenceHandler,
-        SynaforceStreamInferenceHandler,
-        AyunisOllamaStreamInferenceHandler,
-        OtcStreamInferenceHandler,
-        BedrockStreamInferenceHandler,
-        AzureStreamInferenceHandler,
-        GeminiStreamInferenceHandler,
-        StackitStreamInferenceHandler,
-        ScalewayStreamInferenceHandler,
-        MockStreamInferenceHandler,
-        ConfigService,
-      ],
-    },
-    {
-      provide: InferenceHandlerRegistry,
-      // Registry factories mirror Nest's explicit injection list.
-      // eslint-disable-next-line max-params
-      useFactory: (
-        mistralHandler: MistralInferenceHandler,
-        openaiHandler: OpenAIInferenceHandler,
-        anthropicHandler: AnthropicInferenceHandler,
-        bedrockHandler: BedrockInferenceHandler,
-        ollamaHandler: LocalOllamaInferenceHandler,
-        synaforceHandler: SynaforceInferenceHandler,
-        ayunisHandler: AyunisOllamaInferenceHandler,
-        otcHandler: OtcInferenceHandler,
-        azureHandler: AzureInferenceHandler,
-        geminiHandler: GeminiInferenceHandler,
-        stackitHandler: StackitInferenceHandler,
-        scalewayHandler: ScalewayInferenceHandler,
-        mockHandler: MockInferenceHandler,
-        configService: ConfigService,
-      ) => {
-        const registry = new InferenceHandlerRegistry(configService);
-        registry.register(ModelProvider.MISTRAL, mistralHandler);
-        registry.register(ModelProvider.OPENAI, openaiHandler);
-        registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
-        registry.register(ModelProvider.BEDROCK, bedrockHandler);
-        registry.register(ModelProvider.OLLAMA, ollamaHandler);
-        registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
-        registry.register(ModelProvider.AYUNIS, ayunisHandler);
-        registry.register(ModelProvider.OTC, otcHandler);
-        registry.register(ModelProvider.AZURE, azureHandler);
-        registry.register(ModelProvider.GEMINI, geminiHandler);
-        registry.register(ModelProvider.STACKIT, stackitHandler);
-        registry.register(ModelProvider.SCALEWAY, scalewayHandler);
-        registry.registerMockHandler(mockHandler);
-        return registry;
-      },
-      inject: [
-        MistralInferenceHandler,
-        OpenAIInferenceHandler,
-        AnthropicInferenceHandler,
-        BedrockInferenceHandler,
-        LocalOllamaInferenceHandler,
-        SynaforceInferenceHandler,
-        AyunisOllamaInferenceHandler,
-        OtcInferenceHandler,
-        AzureInferenceHandler,
-        GeminiInferenceHandler,
-        StackitInferenceHandler,
-        ScalewayInferenceHandler,
-        MockInferenceHandler,
-        ConfigService,
-      ],
-    },
     {
       provide: ImageGenerationHandlerRegistry,
       useFactory: (
@@ -345,7 +264,6 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     DeleteModelUseCase,
   ],
   exports: [
-    InferenceHandlerRegistry,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     UpdatePermittedModelUseCase,
