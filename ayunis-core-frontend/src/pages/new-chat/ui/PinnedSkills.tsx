@@ -11,7 +11,6 @@ import {
   useSkillsControllerFindAll,
   useWorkspaceContextControllerFindContext,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useIsSkillsEnabled } from '@/features/feature-toggles';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 interface PinnedSkillsProps {
@@ -30,15 +29,13 @@ export function PinnedSkills({
   workspaceId,
 }: Readonly<PinnedSkillsProps>) {
   const { t } = useTranslation('common');
-  const skillsEnabled = useIsSkillsEnabled();
   const { data: skillsResponse } = useSkillsControllerFindAll(
     personalSkillListParams,
-    { query: { enabled: skillsEnabled } },
   );
   const workspaceQuery = useWorkspaceContextControllerFindContext(
     workspaceId ?? '',
     {
-      query: { enabled: skillsEnabled && Boolean(workspaceId) },
+      query: { enabled: Boolean(workspaceId) },
     },
   );
   const pinnedSkills = [
@@ -49,8 +46,6 @@ export function PinnedSkills({
         ) ?? [])
       : []),
   ];
-
-  if (!skillsEnabled) return null;
 
   const skillsHelpPath =
     'skills/name-and-description/#f%C3%A4higkeiten-anheften--manuelle-aktivierung';

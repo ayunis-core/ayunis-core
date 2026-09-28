@@ -29,7 +29,6 @@ import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
 import { useOnboardingTour, type TourTargetName } from '@/widgets/onboarding';
 import { useWorkspaces } from '@/features/workspaces';
 import { useToggleFavorite } from '@/features/favorites';
-import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
@@ -51,7 +50,6 @@ export function ChatSidebarItem({
 }: Readonly<ChatSidebarItemProps>) {
   const { t } = useTranslation('common');
   const params = useParams({ strict: false });
-  const isWorkspacesEnabled = useIsWorkspacesEnabled();
   const { workspaces } = useWorkspaces();
   const { toggle: togglePinned } = useToggleFavorite();
   const { mutate: assignToWorkspace } = useAssignThreadToWorkspace();
@@ -105,45 +103,39 @@ export function ChatSidebarItem({
               <span>{t('sidebar.renameChat')}</span>
             </DropdownMenuItem>
 
-            {isWorkspacesEnabled && (
-              <>
-                <DropdownMenuItem
-                  onClick={() => togglePinned('thread', thread.id)}
-                >
-                  <Star className={cn(isPinned && 'fill-brand text-brand')} />
-                  <span>
-                    {isPinned ? t('sidebar.unpinChat') : t('sidebar.pinChat')}
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <FolderOpen />
-                    <span>{t('sidebar.addToWorkspace')}</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <WorkspacePickerMenuWithCreate
-                      workspaces={workspaces}
-                      selectedWorkspaceId={thread.workspaceId}
-                      onClear={() =>
-                        assignToWorkspace({
-                          threadId: thread.id,
-                          workspaceId: null,
-                        })
-                      }
-                      onSelect={(workspace) =>
-                        assignToWorkspace({
-                          threadId: thread.id,
-                          workspaceId: workspace.id,
-                        })
-                      }
-                      onCreateNew={() =>
-                        requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
-                      }
-                    />
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              </>
-            )}
+            <DropdownMenuItem onClick={() => togglePinned('thread', thread.id)}>
+              <Star className={cn(isPinned && 'fill-brand text-brand')} />
+              <span>
+                {isPinned ? t('sidebar.unpinChat') : t('sidebar.pinChat')}
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <FolderOpen />
+                <span>{t('sidebar.addToWorkspace')}</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <WorkspacePickerMenuWithCreate
+                  workspaces={workspaces}
+                  selectedWorkspaceId={thread.workspaceId}
+                  onClear={() =>
+                    assignToWorkspace({
+                      threadId: thread.id,
+                      workspaceId: null,
+                    })
+                  }
+                  onSelect={(workspace) =>
+                    assignToWorkspace({
+                      threadId: thread.id,
+                      workspaceId: workspace.id,
+                    })
+                  }
+                  onCreateNew={() =>
+                    requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
+                  }
+                />
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
 
             <DropdownMenuItem
               variant="destructive"

@@ -7,9 +7,6 @@ const state = vi.hoisted(() => ({ isAdmin: true, hasBudget: true }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-vi.mock('@/features/feature-toggles', () => ({
-  useIsLetterheadsEnabled: () => false,
-}));
 vi.mock('@/features/academy', () => ({ useIsAcademyAddonActive: () => false }));
 vi.mock('@/features/credit-limits', () => ({
   useHasCreditBudget: (enabled: boolean) => enabled && state.hasBudget,

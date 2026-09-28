@@ -1,7 +1,7 @@
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
@@ -20,7 +20,6 @@ import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/
 import { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
 import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
-import { featuresConfig } from 'src/config/features.config';
 import {
   buildSkillSlug,
   SlugCollisionError,
@@ -55,8 +54,6 @@ export class ToolAssemblyService {
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
     private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
-    @Inject(featuresConfig.KEY)
-    private readonly features: ConfigType<typeof featuresConfig>,
     private readonly contextService: ContextService,
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
@@ -98,7 +95,7 @@ export class ToolAssemblyService {
       tools,
       currentTime: new Date(),
       sources: allSources,
-      skills: this.resolvePromptSkills(skillContext.skillEntries, canUseTools),
+      skills: canUseTools ? skillContext.skillEntries : [],
       knowledgeBases: canUseTools
         ? mergeKnowledgeBases(
             thread.getUniqueKnowledgeBases(),
@@ -125,10 +122,8 @@ export class ToolAssemblyService {
     skillEntries: SkillEntry[];
   }> {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
-    const effectiveWorkspaceContext =
-      this.resolveWorkspaceContext(workspaceContext);
     const projectSkills =
-      effectiveWorkspaceContext?.skills.map(({ skill }) => skill) ?? [];
+      workspaceContext?.skills.map(({ skill }) => skill) ?? [];
     const { slugMap, skillEntries } = this.buildSkillSlugs(
       this.mergeById(activeSkills, projectSkills),
       alwaysOnTemplates,
@@ -139,24 +134,10 @@ export class ToolAssemblyService {
     );
 
     return {
-      workspaceContext: effectiveWorkspaceContext,
+      workspaceContext,
       slugMap,
       editableSkillIds,
       skillEntries,
-    };
-  }
-
-  private resolveWorkspaceContext(
-    workspaceContext?: WorkspaceRunContext,
-  ): WorkspaceRunContext | undefined {
-    if (!workspaceContext || this.features.skillsEnabled) {
-      return workspaceContext;
-    }
-
-    return {
-      ...workspaceContext,
-      skills: [],
-      runtimeKnowledgeBases: workspaceContext.knowledgeBases,
     };
   }
 
@@ -165,14 +146,6 @@ export class ToolAssemblyService {
       [],
       thread.sourceAssignments?.map((a) => a.source) ?? [],
     );
-  }
-
-  private resolvePromptSkills(
-    skillEntries: SkillEntry[],
-    canUseTools: boolean,
-  ): SkillEntry[] {
-    if (!canUseTools || !this.features.skillsEnabled) return [];
-    return skillEntries;
   }
 
   private mergeById<T extends { id: string }>(base: T[], additional: T[]): T[] {
@@ -397,8 +370,6 @@ export class ToolAssemblyService {
   private async assembleSkillManagementTools(
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
-    if (!this.features.skillsEnabled) return [];
-
     const tools: Tool[] = [
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({ type: ToolType.CREATE_SKILL }),
@@ -482,7 +453,7 @@ export class ToolAssemblyService {
   private async assembleActivateSkillTool(
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
-    if (!this.features.skillsEnabled || slugMap.size === 0) return [];
+    if (slugMap.size === 0) return [];
     return [
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({

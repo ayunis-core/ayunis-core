@@ -4,13 +4,13 @@ import {
 } from '@/shared/api';
 import type { ThreadAiContextResponseDto } from '@/shared/api';
 
-export function useThreadAiContext(threadId: string, enabled: boolean) {
+export function useThreadAiContext(threadId: string) {
   const query = useThreadAiContextControllerGetAiContext<
     ThreadAiContextResponseDto,
     unknown
   >(threadId, {
     query: {
-      enabled: enabled && !!threadId,
+      enabled: !!threadId,
       queryKey: getThreadAiContextControllerGetAiContextQueryKey(threadId),
       staleTime: 0,
     },

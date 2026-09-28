@@ -36,13 +36,10 @@ import { ApiSkillFileSourceUpload } from './decorators/skill-sources.decorators'
 import { MissingFileError } from 'src/domain/skills/application/skills.errors';
 import { AddFileSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('skills')
-@RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillSourcesController {
   private readonly logger = new Logger(SkillSourcesController.name);

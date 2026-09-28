@@ -3,17 +3,14 @@ import {
   useFavoritesControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { FavoritesControllerFindAll200Item } from '@/shared/api';
-import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 
 export type Favorite = FavoritesControllerFindAll200Item;
 export type FavoriteReferenceType = Favorite['referenceType'];
 
 export function useFavorites() {
-  const isEnabled = useIsWorkspacesEnabled();
   const query = useFavoritesControllerFindAll({
     query: {
       queryKey: getFavoritesControllerFindAllQueryKey(),
-      enabled: isEnabled,
     },
   });
 

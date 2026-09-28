@@ -1,7 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { ConfigType } from '@nestjs/config';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import type { featuresConfig } from 'src/config/features.config';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import {
   aWorkspace,
@@ -10,18 +8,15 @@ import {
   TEST_USER_ID,
   TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
-import { WorkspaceAccessService } from './workspace-access.service';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 
-function setup(workspacesEnabled = true) {
+function setup() {
   const repository = createMockWorkspacesRepository();
   const context = createMockContextService();
-  const features = {
-    workspacesEnabled,
-  } as ConfigType<typeof featuresConfig>;
   return {
     repository,
     context,
-    service: new WorkspaceAccessService(repository, context, features),
+    service: new WorkspaceAccessService(repository, context),
   };
 }
 
@@ -36,15 +31,6 @@ describe(WorkspaceAccessService.name, () => {
       TEST_USER_ID,
       TEST_WORKSPACE_ID,
     );
-  });
-
-  it('hides workspace access while the feature is disabled', async () => {
-    const { service, repository } = setup(false);
-
-    await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
-    ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
-    expect(repository.findById).not.toHaveBeenCalled();
   });
 
   it('rejects unauthenticated callers before querying persistence', async () => {

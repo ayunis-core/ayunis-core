@@ -11876,40 +11876,7 @@
       },
       "FeatureTogglesResponseDto": {
         "type": "object",
-        "properties": {
-          "knowledgeBasesEnabled": {
-            "type": "boolean",
-            "description": "Whether the standalone knowledge bases feature is enabled",
-            "example": true
-          },
-          "letterheadsEnabled": {
-            "type": "boolean",
-            "description": "Whether the letterheads feature is enabled",
-            "example": false
-          },
-          "skillsEnabled": {
-            "type": "boolean",
-            "description": "Whether the skills feature is enabled",
-            "example": false
-          },
-          "workspacesEnabled": {
-            "type": "boolean",
-            "description": "Whether the workspaces feature is enabled",
-            "example": false
-          },
-          "ssoLoginEnabled": {
-            "type": "boolean",
-            "description": "Whether employee-facing SSO login is enabled",
-            "example": false
-          }
-        },
-        "required": [
-          "knowledgeBasesEnabled",
-          "letterheadsEnabled",
-          "skillsEnabled",
-          "workspacesEnabled",
-          "ssoLoginEnabled"
-        ]
+        "properties": {}
       },
       "UserResponseDto": {
         "type": "object",

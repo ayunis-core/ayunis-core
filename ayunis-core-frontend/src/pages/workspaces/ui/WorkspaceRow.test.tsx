@@ -1,17 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Workspace } from '@/features/workspaces';
 import { WorkspaceRow } from './WorkspaceRow';
-
-const mocks = vi.hoisted(() => ({
-  skillsEnabled: true,
-  knowledgeBasesEnabled: true,
-}));
-
-vi.mock('@/features/feature-toggles', () => ({
-  useIsSkillsEnabled: () => mocks.skillsEnabled,
-  useIsKnowledgeBasesEnabled: () => mocks.knowledgeBasesEnabled,
-}));
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
@@ -45,11 +35,6 @@ function aWorkspace(overrides: Partial<Workspace> = {}): Workspace {
 }
 
 describe('WorkspaceRow', () => {
-  beforeEach(() => {
-    mocks.skillsEnabled = true;
-    mocks.knowledgeBasesEnabled = true;
-  });
-
   it('lists skills and knowledge bases without chats or the description', () => {
     render(
       <WorkspaceRow
@@ -70,25 +55,5 @@ describe('WorkspaceRow', () => {
     expect(
       screen.getByText('page.skillCount:0 · page.knowledgeBaseCount:0'),
     ).toBeTruthy();
-  });
-
-  it('renders the name alone when both features are switched off', () => {
-    mocks.skillsEnabled = false;
-    mocks.knowledgeBasesEnabled = false;
-
-    render(<WorkspaceRow workspace={aWorkspace()} />);
-
-    expect(screen.getByText('Design System')).toBeTruthy();
-    expect(screen.queryByText(/skillCount/)).toBeNull();
-    expect(screen.queryByText(/knowledgeBaseCount/)).toBeNull();
-  });
-
-  it('keeps only the enabled feature’s count', () => {
-    mocks.skillsEnabled = false;
-
-    render(<WorkspaceRow workspace={aWorkspace({ knowledgeBaseCount: 2 })} />);
-
-    expect(screen.getByText('page.knowledgeBaseCount:2')).toBeTruthy();
-    expect(screen.queryByText(/skillCount/)).toBeNull();
   });
 });

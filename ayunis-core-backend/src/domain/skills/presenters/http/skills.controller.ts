@@ -21,8 +21,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { CreateSkillCommand } from 'src/domain/skills/application/use-cases/create-skill/create-skill.command';
 import { CreateSkillUseCase } from 'src/domain/skills/application/use-cases/create-skill/create-skill.use-case';
 import { DeleteSkillCommand } from 'src/domain/skills/application/use-cases/delete-skill/delete-skill.command';
@@ -55,7 +53,6 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
 
 @ApiTags('skills')
-@RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillsController {
   private readonly logger = new Logger(SkillsController.name);

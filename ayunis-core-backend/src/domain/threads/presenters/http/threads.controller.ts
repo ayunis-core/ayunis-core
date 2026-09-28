@@ -9,7 +9,6 @@ import {
   Patch,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Query,
   Logger,
 } from '@nestjs/common';
@@ -58,9 +57,6 @@ import { PiiMaskDtoMapper } from 'src/domain/thread-pii-masks/presenters/http/ma
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
-import { ConfigService } from '@nestjs/config';
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
@@ -81,23 +77,7 @@ export class ThreadsController {
     private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
     private readonly unmaskThreadPiiMaskUseCase: UnmaskThreadPiiMaskUseCase,
     private readonly piiMaskDtoMapper: PiiMaskDtoMapper,
-    private readonly configService: ConfigService,
   ) {}
-
-  /**
-   * The workspace routes carry @RequireFeature, but `workspaceId` also rides
-   * along on routes that must stay open while the feature is off (create,
-   * list filter). Treat the parameter like a gated route: while the flag is
-   * off it does not exist, mirroring FeatureGuard's 404.
-   */
-  private assertWorkspaceParamAllowed(workspaceId: string | undefined): void {
-    if (
-      workspaceId !== undefined &&
-      !this.configService.get<boolean>(`features.${FeatureFlag.Workspaces}`)
-    ) {
-      throw new NotFoundException();
-    }
-  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new thread' })
@@ -118,7 +98,6 @@ export class ThreadsController {
       },
       'create',
     );
-    this.assertWorkspaceParamAllowed(createThreadDto.workspaceId);
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
@@ -163,7 +142,6 @@ export class ThreadsController {
   ): Promise<GetThreadsResponseDto> {
     const { search: text, ...safeQueryParams } = queryParams;
     this.logger.log({ ...safeQueryParams, text }, 'findAll');
-    this.assertWorkspaceParamAllowed(queryParams.workspaceId);
     const threads = await this.findAllThreadsUseCase.execute(
       new FindAllThreadsQuery(
         userId,
@@ -302,7 +280,6 @@ export class ThreadsController {
   }
 
   @Patch(':id/workspace')
-  @RequireFeature(FeatureFlag.Workspaces)
   @ApiOperation({ summary: 'Move a thread into a workspace or out of one' })
   @ApiParam({
     name: 'id',

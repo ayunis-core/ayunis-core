@@ -1,16 +1,10 @@
 import { registerAs } from '@nestjs/config';
 
-export enum FeatureFlag {
-  KnowledgeBases = 'knowledgeBasesEnabled',
-  Letterheads = 'letterheadsEnabled',
-  Skills = 'skillsEnabled',
-  Workspaces = 'workspacesEnabled',
-  SsoLogin = 'ssoLoginEnabled',
-}
+export enum FeatureFlag {}
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
 
-const parseBooleanWithDefault = (
+export const parseBooleanWithDefault = (
   value: string | undefined,
   defaultValue: boolean,
 ): boolean => {
@@ -20,27 +14,7 @@ const parseBooleanWithDefault = (
   return value.trim() === 'true';
 };
 
-export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
-  knowledgeBasesEnabled: parseBooleanWithDefault(
-    process.env.FEATURE_KNOWLEDGE_BASES_ENABLED,
-    true,
-  ),
-  letterheadsEnabled: parseBooleanWithDefault(
-    process.env.FEATURE_LETTERHEADS_ENABLED,
-    false,
-  ),
-  skillsEnabled: parseBooleanWithDefault(
-    process.env.FEATURE_SKILLS_ENABLED,
-    false,
-  ),
-  // Workspaces ("Projekte") group chats into folders. Off until the six-iteration
-  // rollout is far enough along to expose (AYC-700).
-  workspacesEnabled: parseBooleanWithDefault(
-    process.env.FEATURE_WORKSPACES_ENABLED,
-    false,
-  ),
-  ssoLoginEnabled: parseBooleanWithDefault(
-    process.env.FEATURE_SSO_LOGIN_ENABLED,
-    false,
-  ),
-}));
+export const featuresConfig = registerAs(
+  'features',
+  (): FeaturesConfig => ({}),
+);

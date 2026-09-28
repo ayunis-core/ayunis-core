@@ -4,8 +4,6 @@
 
 Workspaces group a user's chats and own workspace-scoped skills and knowledge bases. A workspace carries a name, optional description, appearance, and optional project instruction. User favorites and ordering belong to the favorites module.
 
-The module is guarded by `FEATURE_WORKSPACES_ENABLED` (off by default).
-
 ## Domain behavior
 
 - A workspace belongs to one user and organization.

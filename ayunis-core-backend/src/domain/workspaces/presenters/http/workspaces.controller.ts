@@ -20,8 +20,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { CreateWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/create-workspace/create-workspace.use-case';
 import { CreateWorkspaceCommand } from 'src/domain/workspaces/application/use-cases/create-workspace/create-workspace.command';
 import { FindAllWorkspacesUseCase } from 'src/domain/workspaces/application/use-cases/find-all-workspaces/find-all-workspaces.use-case';
@@ -41,7 +39,6 @@ import { WorkspaceListResponseDto } from './dtos/workspace-list-response.dto';
 
 @ApiTags('workspaces')
 @Controller('workspaces')
-@RequireFeature(FeatureFlag.Workspaces)
 export class WorkspacesController {
   private readonly logger = new Logger(WorkspacesController.name);
 

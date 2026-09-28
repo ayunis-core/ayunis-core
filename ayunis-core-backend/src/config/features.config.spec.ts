@@ -1,24 +1,14 @@
-import { featuresConfig } from './features.config';
+import { parseBooleanWithDefault } from './features.config';
 
-describe('featuresConfig', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    process.env = { ...originalEnv };
-    delete process.env.FEATURE_SSO_LOGIN_ENABLED;
+describe('parseBooleanWithDefault', () => {
+  it.each([undefined, '', '   '])('uses the default for %p', (value) => {
+    expect(parseBooleanWithDefault(value, true)).toBe(true);
+    expect(parseBooleanWithDefault(value, false)).toBe(false);
   });
 
-  afterAll(() => {
-    process.env = originalEnv;
-  });
-
-  it('defaults user-facing SSO login to disabled', () => {
-    expect(featuresConfig().ssoLoginEnabled).toBe(false);
-  });
-
-  it('enables user-facing SSO login only when explicitly true', () => {
-    process.env.FEATURE_SSO_LOGIN_ENABLED = 'true';
-
-    expect(featuresConfig().ssoLoginEnabled).toBe(true);
+  it('is true only for an explicit "true"', () => {
+    expect(parseBooleanWithDefault(' true ', false)).toBe(true);
+    expect(parseBooleanWithDefault('false', true)).toBe(false);
+    expect(parseBooleanWithDefault('yes', true)).toBe(false);
   });
 });

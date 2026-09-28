@@ -1,5 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import type { ConfigType } from '@nestjs/config';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CountKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/count-knowledge-base-documents/count-knowledge-base-documents.use-case';
@@ -21,8 +20,7 @@ import type {
 } from 'src/domain/runs/application/models/thread-ai-context';
 import { UnexpectedRunError } from 'src/domain/runs/application/runs.errors';
 import { mergeKnowledgeBases } from 'src/domain/runs/application/services/merge-knowledge-bases';
-import { featuresConfig } from 'src/config/features.config';
-import { GetThreadAiContextQuery } from './get-thread-ai-context.query';
+import { GetThreadAiContextQuery } from 'src/domain/runs/application/use-cases/get-thread-ai-context/get-thread-ai-context.query';
 
 @Injectable()
 export class GetThreadAiContextUseCase {
@@ -35,8 +33,6 @@ export class GetThreadAiContextUseCase {
     private readonly findAccessibleKnowledgeBasesByIds: FindAccessibleKnowledgeBasesByIdsUseCase,
     private readonly countKnowledgeBaseDocuments: CountKnowledgeBaseDocumentsUseCase,
     private readonly getWorkspaceAiContext: GetWorkspaceAiContextUseCase,
-    @Inject(featuresConfig.KEY)
-    private readonly features: ConfigType<typeof featuresConfig>,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
@@ -47,7 +43,7 @@ export class GetThreadAiContextUseCase {
     );
     const [skills, activeKnowledgeBases, attachedKnowledgeBases, workspace] =
       await Promise.all([
-        this.getActiveSkills(),
+        this.findActiveSkills.execute(new FindActiveSkillsQuery()),
         this.findActiveKnowledgeBases.execute(),
         this.findAccessibleKnowledgeBasesByIds.execute({
           knowledgeBaseIds: refs.knowledgeBaseIds,
@@ -78,15 +74,12 @@ export class GetThreadAiContextUseCase {
       knowledgeBaseIds: personalKnowledgeBases.map(({ id }) => id),
     });
     return {
-      skills: this.features.skillsEnabled
-        ? [
-            ...skills.map((skill) => this.toSkill(skill, null)),
-            ...(workspace?.skills
-              .filter(({ isActive }) => isActive)
-              .map(({ skill }) => this.toSkill(skill, skill.workspaceId)) ??
-              []),
-          ]
-        : [],
+      skills: [
+        ...skills.map((skill) => this.toSkill(skill, null)),
+        ...(workspace?.skills
+          .filter(({ isActive }) => isActive)
+          .map(({ skill }) => this.toSkill(skill, skill.workspaceId)) ?? []),
+      ],
       knowledgeBases: [
         ...personalKnowledgeBases.map((knowledgeBase) =>
           this.toKnowledgeBase(
@@ -131,11 +124,6 @@ export class GetThreadAiContextUseCase {
       documentCount,
       workspaceId,
     };
-  }
-
-  private getActiveSkills(): Promise<Skill[]> {
-    if (!this.features.skillsEnabled) return Promise.resolve([]);
-    return this.findActiveSkills.execute(new FindActiveSkillsQuery());
   }
 
   private getWorkspaceContext(

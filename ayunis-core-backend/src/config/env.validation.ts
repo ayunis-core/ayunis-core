@@ -187,13 +187,6 @@ export class EnvironmentVariables {
   @IsOptional() @IsIn(['brave', 'staan']) INTERNET_SEARCH_PROVIDER?: string;
   @IsOptional() @IsIn(['de-de', 'en-us', 'fr-fr']) STAAN_SEARCH_MARKET?: string;
 
-  // Feature flags
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_KNOWLEDGE_BASES_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_LETTERHEADS_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_SKILLS_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_WORKSPACES_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_SSO_LOGIN_ENABLED?: string;
-
   // Retention
   @IsOptional() @IsIn(BOOLEAN_STRINGS) RETENTION_DRY_RUN?: string;
 }

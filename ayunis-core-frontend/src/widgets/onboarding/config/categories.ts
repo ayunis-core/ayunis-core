@@ -1,4 +1,3 @@
-import type { FeatureTogglesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { TOUR_TARGET, type TourTargetName } from './tour-targets';
 
 export const ACTION_TYPE = {
@@ -182,7 +181,6 @@ export const ONBOARDING_CATEGORIES = [
   {
     id: 'workspaces',
     translationKey: 'workspaces',
-    requiresFeature: 'workspacesEnabled',
     helpPath: 'workspaces/',
     steps: [
       {
@@ -362,6 +360,5 @@ export interface OnboardingCategory {
   translationKey: string;
   steps: readonly OnboardingStep[];
   adminOnly?: boolean;
-  requiresFeature?: keyof FeatureTogglesResponseDto;
   helpPath?: string;
 }
