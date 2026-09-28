@@ -6,6 +6,7 @@ import {
   MarketplaceUnavailableError,
 } from 'src/domain/marketplace/application/marketplace.errors';
 import type { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import { createMockMarketplaceClient } from 'src/domain/marketplace/application/testing/marketplace.fixtures';
 
 describe('GetMarketplaceIntegrationUseCase', () => {
   let useCase: GetMarketplaceIntegrationUseCase;
@@ -48,11 +49,7 @@ describe('GetMarketplaceIntegrationUseCase', () => {
   };
 
   beforeEach(() => {
-    marketplaceClient = {
-      getSkillByIdentifier: jest.fn(),
-      getPreInstalledSkills: jest.fn(),
-      getIntegrationByIdentifier: jest.fn(),
-    };
+    marketplaceClient = createMockMarketplaceClient();
 
     useCase = new GetMarketplaceIntegrationUseCase(marketplaceClient);
   });

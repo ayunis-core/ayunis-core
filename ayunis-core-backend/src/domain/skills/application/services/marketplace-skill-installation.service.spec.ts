@@ -11,6 +11,7 @@ import type {
 import type { UUID } from 'crypto';
 import { MarketplaceSkillNotFoundError } from 'src/domain/marketplace/application/marketplace.errors';
 import { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
+import { createMockMarketplaceClient } from 'src/domain/marketplace/application/testing/marketplace.fixtures';
 
 const USER_ID = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
@@ -41,11 +42,7 @@ describe('MarketplaceSkillInstallationService', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<CreateSkillWithUniqueNameUseCase>;
 
-    marketplaceClient = {
-      getPreInstalledSkills: jest.fn(),
-      getSkillByIdentifier: jest.fn(),
-      getIntegrationByIdentifier: jest.fn(),
-    };
+    marketplaceClient = createMockMarketplaceClient();
 
     service = new MarketplaceSkillInstallationService(
       getMarketplaceSkillUseCase,
