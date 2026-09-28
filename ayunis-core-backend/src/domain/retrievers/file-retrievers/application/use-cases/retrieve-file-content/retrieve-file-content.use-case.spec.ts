@@ -1,3 +1,5 @@
+import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { NpmPdfParseFileRetrieverHandler } from 'src/domain/retrievers/file-retrievers/infrastructure/adapters/npm-pdf-parse-file-retriever.handler';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
@@ -15,6 +17,7 @@ import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cas
 import {
   EmptyOcrResultError,
   FileRetrieverUnauthorizedError,
+  TooManyPagesError,
   UnprocessableDocumentError,
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
@@ -270,7 +273,78 @@ describe('RetrieveFileContentUseCase', () => {
     ).rejects.toBe(emptyOcrError);
   });
 
-  it('does not fall back for deterministic Mistral document rejections', async () => {
+  it('recovers a readable PDF rejected by OCR without requiring a new chat', async () => {
+    const recovered = new FileRetrieverResult([
+      new FileRetrieverPage('Rechnung 2026-1059: Gesamtbetrag 119,00 EUR', 1),
+    ]);
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockRejectedValue(
+        new UnprocessableDocumentError('The document could not be processed'),
+      );
+    jest.spyOn(mockPdfParseHandler, 'processFile').mockResolvedValue(recovered);
+
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from('readable invoice pdf'),
+        fileName: 'invoice.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
+
+    expect(result).toBe(recovered);
+  });
+
+  it.each([false, true])(
+    'preserves an OCR rejection when local parsing returns no usable text (throws: %s)',
+    async (throws) => {
+      const original = new UnprocessableDocumentError(
+        'The document could not be processed',
+      );
+      jest.spyOn(mockMistralHandler, 'processFile').mockRejectedValue(original);
+      const parser = jest.spyOn(mockPdfParseHandler, 'processFile');
+      if (throws) parser.mockRejectedValue(new Error('Invalid PDF structure'));
+      else
+        parser.mockResolvedValue(
+          new FileRetrieverResult([new FileRetrieverPage('   ', 1)]),
+        );
+
+      await expect(
+        useCase.execute(
+          new RetrieveFileContentCommand({
+            fileData: Buffer.from('unreadable pdf'),
+            fileName: 'unreadable.pdf',
+            fileType: 'application/pdf',
+          }),
+        ),
+      ).rejects.toBe(original);
+      expect(parser).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each([
+    new TooManyPagesError(),
+    new FileRetrieverUnauthorizedError(),
+    new Error('Unexpected OCR failure'),
+  ])(
+    'does not bypass limits or hide operational errors with local parsing: %s',
+    async (error) => {
+      jest.spyOn(mockMistralHandler, 'processFile').mockRejectedValue(error);
+
+      await expect(
+        useCase.execute(
+          new RetrieveFileContentCommand({
+            fileData: Buffer.from('pdf content'),
+            fileName: 'invoice.pdf',
+            fileType: 'application/pdf',
+          }),
+        ),
+      ).rejects.toThrow(error.message);
+      expect(mockPdfParseHandler.processFile).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not fall back for OCR document rejections when local parsing is disabled', async () => {
     const documentError = new UnprocessableDocumentError(
       'Document is not a valid PDF',
     );
@@ -284,11 +358,46 @@ describe('RetrieveFileContentUseCase', () => {
           fileData: Buffer.from('invalid pdf'),
           fileName: 'invalid.pdf',
           fileType: 'application/pdf',
+          allowLocalPdfParsing: false,
         }),
       ),
     ).rejects.toBe(documentError);
     expect(mockPdfParseHandler.processFile).not.toHaveBeenCalled();
   });
+
+  it.each([true, false])(
+    'uses the real PDF parser after OCR rejection (readable text: %s)',
+    async (hasText) => {
+      const pdf = await PDFDocument.create();
+      const font = await pdf.embedFont(StandardFonts.Helvetica);
+      const page = pdf.addPage();
+      const invoiceText = 'Invoice 2026-1059: total EUR 119.00';
+      if (hasText) page.drawText(invoiceText, { font, x: 50, y: 700 });
+      const bytes = Buffer.from(await pdf.save({ useObjectStreams: false }));
+      const originalBytes = Buffer.from(bytes);
+      const original = new UnprocessableDocumentError(
+        'The document could not be processed',
+      );
+      jest.spyOn(mockMistralHandler, 'processFile').mockRejectedValue(original);
+      jest
+        .spyOn(mockPdfParseHandler, 'processFile')
+        .mockImplementation((file) =>
+          new NpmPdfParseFileRetrieverHandler().processFile(file),
+        );
+
+      const result = useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: bytes,
+          fileName: 'invoice.pdf',
+          fileType: 'application/pdf',
+        }),
+      );
+
+      if (hasText) expect((await result).pages[0].text).toContain(invoiceText);
+      else await expect(result).rejects.toBe(original);
+      expect(bytes).toEqual(originalBytes);
+    },
+  );
 
   it('should transcribe audio and wrap the transcript as a single page', async () => {
     const audioBuffer = Buffer.from('fake audio bytes');

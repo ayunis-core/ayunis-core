@@ -10,6 +10,7 @@ import { MarkSourceFailedCommand } from './mark-source-failed.command';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { SourceNotFoundError } from 'src/domain/sources/application/sources.errors';
+import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -68,6 +69,32 @@ describe('MarkSourceFailedUseCase', () => {
       },
       'Source marked as failed',
     );
+  });
+
+  it('persists the failure code and replaces it on a subsequent unknown failure', async () => {
+    const source = new FileSource({
+      id: sourceId,
+      name: 'report.pdf',
+      fileType: FileType.PDF,
+      type: TextType.FILE,
+    });
+    mockSourceRepository.findById.mockResolvedValue(source);
+    await useCase.execute(
+      new MarkSourceFailedCommand({
+        sourceId,
+        errorMessage: 'Internal diagnostic',
+        errorCode: Code.DOCUMENT_PAGE_LIMIT_EXCEEDED,
+      }),
+    );
+    expect(source.processingErrorCode).toBe(Code.DOCUMENT_PAGE_LIMIT_EXCEEDED);
+    await useCase.execute(
+      new MarkSourceFailedCommand({
+        sourceId,
+        errorMessage: 'Unknown failure',
+      }),
+    );
+    expect(source.processingErrorCode).toBe(Code.PROCESSING_FAILED);
+    expect(mockSourceRepository.save).toHaveBeenLastCalledWith(source);
   });
 
   it('should throw SourceNotFoundError when source does not exist', async () => {

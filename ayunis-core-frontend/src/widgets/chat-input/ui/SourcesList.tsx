@@ -1,5 +1,9 @@
+import { useTranslation } from 'react-i18next';
+import { getSourceProcessingErrorKey } from '@/widgets/chat-input/lib/source-processing-error';
+
 // Types
 import type {
+  SourceResponseDto,
   FileSourceResponseDtoFileType,
   SourceResponseDtoType,
   SourceResponseDtoCreatedBy,
@@ -43,6 +47,7 @@ interface Source {
   createdBy?: SourceResponseDtoCreatedBy;
   status?: SourceResponseDtoStatus;
   processingError?: string;
+  processingErrorCode?: SourceResponseDto['processingErrorCode'];
 }
 
 interface SourcesListProps {
@@ -83,6 +88,7 @@ export function SourcesList({
   onRemoveKnowledgeBase,
   onRemoveIntegration,
 }: Readonly<SourcesListProps>) {
+  const { t } = useTranslation('common');
   const visibleSources = sources.filter(
     (source) => source.createdBy !== 'system',
   );
@@ -141,6 +147,10 @@ export function SourcesList({
         const badge = (
           <Badge
             key={source.id}
+            data-testid="chat-source"
+            data-source-id={source.id}
+            data-source-status={source.status}
+            tabIndex={isFailed ? 0 : undefined}
             variant="secondary"
             className={cn(
               'flex items-center gap-1',
@@ -153,21 +163,26 @@ export function SourcesList({
             {!isProcessing && !isFailed && getSourceIcon(source)}
             <span>{source.name}</span>
             {!isProcessing && (
-              <div
+              <button
+                type="button"
+                data-testid="chat-source-remove"
+                aria-label={t('sources.removeFile', { name: source.name })}
                 className="cursor-pointer"
                 onClick={() => onRemove(source.id)}
               >
                 <XIcon className="h-3 w-3" />
-              </div>
+              </button>
             )}
           </Badge>
         );
 
-        if (isFailed && source.processingError) {
+        if (isFailed) {
           return (
             <Tooltip key={source.id}>
               <TooltipTrigger asChild>{badge}</TooltipTrigger>
-              <TooltipContent>{source.processingError}</TooltipContent>
+              <TooltipContent align="start">
+                {t(getSourceProcessingErrorKey(source.processingErrorCode))}
+              </TooltipContent>
             </Tooltip>
           );
         }

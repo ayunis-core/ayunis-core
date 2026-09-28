@@ -87,10 +87,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
         const { final, rethrow } = classifyJobFailure(job, error);
         if (final) {
-          await this.helper.markFailed(
-            sourceId,
-            error instanceof Error ? error.message : 'Unknown processing error',
-          );
+          await this.helper.markFailed(sourceId, error);
           await this.helper.cleanupIndex(sourceId);
           await this.cleanupMinioFile(minioPath);
         }

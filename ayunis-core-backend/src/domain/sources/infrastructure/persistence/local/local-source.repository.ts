@@ -218,6 +218,12 @@ export class LocalSourceRepository extends SourceRepository {
       .update()
       .set({
         status: toStatus,
+        ...(toStatus !== SourceStatus.FAILED
+          ? {
+              processingError: null,
+              processingErrorCode: null,
+            }
+          : {}),
         ...(updates?.processingError !== undefined
           ? { processingError: updates.processingError }
           : {}),

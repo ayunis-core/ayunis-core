@@ -11,6 +11,8 @@ import {
   SpreadsheetParserPort,
 } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
+import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -85,10 +87,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       );
       const { final, rethrow } = classifyJobFailure(job, error);
       if (final) {
-        await this.markPendingTargetsFailed(
-          targets,
-          error instanceof Error ? error.message : 'Unknown processing error',
-        );
+        await this.markPendingTargetsFailed(targets, error);
         await this.cleanupMinioFile(minioPath);
       }
       if (rethrow) throw rethrow;
@@ -179,7 +178,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
         // check while the full parse still drops it — fail its source.
         await this.tryMarkSourceFailed(
           source.id,
-          `Sheet "${sheetName ?? ''}" contains no data`,
+          new EmptyFileDataError(sheetName ?? source.name),
         );
         continue;
       }
@@ -222,24 +221,29 @@ export class DataSourceProcessingConsumer extends WorkerHost {
 
   private async markPendingTargetsFailed(
     targets: DataSourceProcessingTarget[],
-    errorMessage: string,
+    error: unknown,
   ): Promise<void> {
     for (const target of targets) {
       const source = await this.sourceRepository.findById(target.sourceId);
       if (source?.status !== SourceStatus.PROCESSING) {
         continue;
       }
-      await this.tryMarkSourceFailed(target.sourceId, errorMessage);
+      await this.tryMarkSourceFailed(target.sourceId, error);
     }
   }
 
   private async tryMarkSourceFailed(
     sourceId: UUID,
-    errorMessage: string,
+    error: unknown,
   ): Promise<void> {
     try {
       await this.markSourceFailedUseCase.execute(
-        new MarkSourceFailedCommand({ sourceId, errorMessage }),
+        new MarkSourceFailedCommand({
+          sourceId,
+          errorMessage:
+            error instanceof Error ? error.message : 'Unknown processing error',
+          errorCode: classifySourceProcessingError(error),
+        }),
       );
     } catch (err) {
       this.logger.error(

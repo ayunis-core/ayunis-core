@@ -10,7 +10,6 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useRouter } from '@tanstack/react-router';
 
 const UPLOAD_TIMEOUT_MS = 60_000;
 
@@ -24,7 +23,6 @@ interface UploadFileParams {
 
 export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
   const { t } = useTranslation('common');
-  const router = useRouter();
   const queryClient = useQueryClient();
   const mutationKey = ['createFileSource', threadId];
   const createFileSourceMutation = useMutation({
@@ -50,7 +48,6 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindOneQueryKey(threadId),
       });
-      void router.invalidate();
     },
   });
 

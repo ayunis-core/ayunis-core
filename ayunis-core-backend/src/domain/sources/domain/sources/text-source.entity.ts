@@ -1,9 +1,13 @@
 import type { UUID } from 'crypto';
-import { Source } from '../source.entity';
-import type { FileType } from '../source-type.enum';
-import { SourceType, TextType } from '../source-type.enum';
-import type { SourceCreator } from '../source-creator.enum';
-import type { SourceStatus } from '../source-status.enum';
+import { Source } from 'src/domain/sources/domain/source.entity';
+import type { FileType } from 'src/domain/sources/domain/source-type.enum';
+import {
+  SourceType,
+  TextType,
+} from 'src/domain/sources/domain/source-type.enum';
+import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import type { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 
 export abstract class TextSource extends Source {
   textType: TextType;
@@ -15,6 +19,7 @@ export abstract class TextSource extends Source {
     knowledgeBaseId?: UUID | null;
     status?: SourceStatus;
     processingError?: string | null;
+    processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
@@ -36,6 +41,7 @@ export class FileSource extends TextSource {
     knowledgeBaseId?: UUID | null;
     status?: SourceStatus;
     processingError?: string | null;
+    processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
@@ -60,6 +66,7 @@ export class UrlSource extends TextSource {
     knowledgeBaseId?: UUID | null;
     status?: SourceStatus;
     processingError?: string | null;
+    processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
