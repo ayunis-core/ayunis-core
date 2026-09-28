@@ -67,7 +67,7 @@ Watch for complexity creep. When a fix keeps growing — extra parameters, a wat
 
 ### 7. Implementation Delivery and PR Completion
 
-Unless the user explicitly asks to keep changes local, a request to implement or fix code includes committing the validated change and creating or updating its PR through the repository's `git-workflow`. Follow that workflow's ticket-ID rules, including its `AYC-000` fallback for small unticketed maintenance work; never invent a product ticket ID.
+Unless the user explicitly asks to keep changes local, a request to implement or fix code includes committing the validated change and creating or updating its PR through the repository's `git-workflow`. Use the provided ticket ID. For a small unticketed maintenance, tooling, documentation, or agent-workflow fix, use `AYC-000` without asking. Features, product bugs, customer work, and ambiguous changes require a real ticket ID; ask rather than inventing one.
 
 Before declaring implementation complete, apply the Proportional Workflow's runtime and review-evidence requirements. Use `e2e` for durable browser-journey and system-boundary regression coverage when lower-level tests are insufficient. Use `qa` for explicitly requested or PR-specific live verification, including behaviors, visuals, and edge cases that automated coverage does not prove. QA may supplement but does not replace required E2E coverage. For a visually meaningful frontend change, capture the required QA views and load `pr-media` when publishing them materially helps review. Do not create screenshots for backend-only or non-visual changes.
 
