@@ -15,6 +15,8 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedInviteAccessError } from 'src/iam/invites/application/invites.errors';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 describe(CreateInviteWithSeatReservationUseCase.name, () => {
   it('locks the organization before creating the invite', async () => {
@@ -24,12 +26,21 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
         calls.push('lock');
       }),
     } as jest.Mocked<SeatAllocationLock>;
+    const invite = new Invite({
+      email: 'user@example.de',
+      orgId: randomUUID(),
+      role: UserRole.USER,
+      expiresAt: new Date('2026-10-02T12:00:00.000Z'),
+    });
     const createInvite = {
       execute: jest.fn().mockImplementation(async () => {
         calls.push('create');
-        return { invite: {}, token: 'token' };
+        return { invite, token: 'token' };
       }),
     } as unknown as jest.Mocked<CreateInviteUseCase>;
+    const publishInviteCreated = {
+      publish: jest.fn().mockImplementation(() => calls.push('publish')),
+    } as unknown as jest.Mocked<InviteCreatedEventPublisher>;
     const command = new CreateInviteCommand({
       email: 'user@example.de',
       orgId: randomUUID(),
@@ -48,9 +59,11 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
       new AcquireSeatAllocationLockUseCase(lock),
       createInvite,
       contextService,
+      publishInviteCreated,
     ).execute(command);
 
-    expect(calls).toEqual(['lock', 'create']);
+    expect(calls).toEqual(['lock', 'create', 'publish']);
+    expect(publishInviteCreated.publish).toHaveBeenCalledWith(invite);
   });
 
   it('rejects a regular user before reserving a seat or creating an invite', async () => {
@@ -60,6 +73,9 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
     const createInvite = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<CreateInviteUseCase>;
+    const publishInviteCreated = {
+      publish: jest.fn(),
+    } as unknown as jest.Mocked<InviteCreatedEventPublisher>;
     const contextService = {
       get: jest.fn((key: string) =>
         key === 'role' ? UserRole.USER : undefined,
@@ -74,6 +90,10 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
         },
         { provide: CreateInviteUseCase, useValue: createInvite },
         { provide: ContextService, useValue: contextService },
+        {
+          provide: InviteCreatedEventPublisher,
+          useValue: publishInviteCreated,
+        },
       ],
     }).compile();
     const command = new CreateInviteCommand({
@@ -88,5 +108,6 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
     ).rejects.toThrow(UnauthorizedInviteAccessError);
     expect(acquireAllocationLock.execute).not.toHaveBeenCalled();
     expect(createInvite.execute).not.toHaveBeenCalled();
+    expect(publishInviteCreated.publish).not.toHaveBeenCalled();
   });
 });

@@ -33,6 +33,8 @@ import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.even
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
 import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
+import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
@@ -42,6 +44,7 @@ const MESSAGE_ID = '00000000-0000-0000-0000-000000000005' as UUID;
 const SKILL_ID = '00000000-0000-0000-0000-000000000006' as UUID;
 const INTEGRATION_ID = '00000000-0000-0000-0000-000000000007' as UUID;
 const API_KEY_ID = '00000000-0000-0000-0000-000000000008' as UUID;
+const INVITE_ID = '00000000-0000-0000-0000-000000000009' as UUID;
 
 function makeUser(): User {
   return new User({
@@ -154,6 +157,31 @@ describe('WebhookDispatchListener', () => {
 
       expect(findOrgByIdUseCase.execute).not.toHaveBeenCalled();
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleInviteCreated', () => {
+    it('dispatches an invited user without triggering user onboarding', async () => {
+      const invite = new Invite({
+        id: INVITE_ID,
+        email: 'invited.user@stadt.example',
+        orgId: ORG_ID,
+        role: UserRole.USER,
+        expiresAt: new Date('2026-10-02T12:00:00.000Z'),
+      });
+
+      await listener.handleInviteCreated(new InviteCreatedEvent(invite));
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USER_INVITED);
+      expect(command.event.data).toEqual({
+        id: INVITE_ID,
+        email: 'invited.user@stadt.example',
+        orgId: ORG_ID,
+        name: 'invited.user@stadt.example',
+      });
+      expect(findOrgByIdUseCase.execute).not.toHaveBeenCalled();
     });
   });
 

@@ -47,6 +47,8 @@ import { SkillInstalledWebhookEvent } from 'src/integrations/webhooks/domain/web
 import { IntegrationUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-used.webhook-event';
 import { IntegrationInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-installed.webhook-event';
 import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
+import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
+import { UserInvitedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-invited.webhook-event';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -79,6 +81,11 @@ export class WebhookDispatchListener {
         orgName,
       }),
     );
+  }
+
+  @OnEvent(InviteCreatedEvent.EVENT_NAME)
+  async handleInviteCreated(event: InviteCreatedEvent): Promise<void> {
+    await this.dispatch(new UserInvitedWebhookEvent(event.invite));
   }
 
   @OnEvent(UserUpdatedEvent.EVENT_NAME)

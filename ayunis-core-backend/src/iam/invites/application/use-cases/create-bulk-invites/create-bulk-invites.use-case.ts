@@ -24,6 +24,7 @@ import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 interface CreateBulkInvitesResult {
   totalCount: number;
@@ -45,6 +46,7 @@ export class CreateBulkInvitesUseCase {
     private readonly validator: BulkInviteValidatorService,
     private readonly delivery: BulkInviteDeliveryService,
     private readonly teamResolver: BulkInviteTeamResolverService,
+    private readonly publishInviteCreated: InviteCreatedEventPublisher,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
@@ -62,6 +64,7 @@ export class CreateBulkInvitesUseCase {
 
     const invites = await this.reserveInvites(command);
     const results = await this.delivery.deliver(command, invites);
+    this.publishSuccessfulInvites(invites, results);
     const successCount = results.filter((result) => result.success).length;
     const failureCount = results.length - successCount;
 
@@ -76,6 +79,17 @@ export class CreateBulkInvitesUseCase {
       failureCount,
       results,
     };
+  }
+
+  private publishSuccessfulInvites(
+    invites: Invite[],
+    results: BulkInviteResult[],
+  ): void {
+    results.forEach((result, index) => {
+      if (result.success) {
+        this.publishInviteCreated.publish(invites[index]);
+      }
+    });
   }
 
   @Transactional()

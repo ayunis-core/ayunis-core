@@ -35,6 +35,7 @@ import { BulkInviteValidatorService } from 'src/iam/invites/application/services
 import { FindPendingInviteByEmailAndOrgUseCase } from 'src/iam/invites/application/use-cases/find-pending-invite-by-email-and-org/find-pending-invite-by-email-and-org.use-case';
 import { AcceptPendingInviteUseCase } from 'src/iam/invites/application/use-cases/accept-pending-invite/accept-pending-invite.use-case';
 import { BulkInviteTeamResolverService } from 'src/iam/invites/application/services/bulk-invite-team-resolver.service';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
@@ -93,6 +94,7 @@ import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
     BulkInviteDeliveryService,
     BulkInviteValidatorService,
     BulkInviteTeamResolverService,
+    InviteCreatedEventPublisher,
     FindPendingInviteByEmailAndOrgUseCase,
     AcceptPendingInviteUseCase,
     GetInvitesByOrgUseCase,
