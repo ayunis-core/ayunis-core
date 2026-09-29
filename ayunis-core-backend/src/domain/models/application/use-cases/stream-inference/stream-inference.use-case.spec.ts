@@ -3,7 +3,8 @@ import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { EMPTY, firstValueFrom, throwError } from 'rxjs';
 import { randomUUID } from 'crypto';
 import { StreamInferenceUseCase } from './stream-inference.use-case';
-import { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import { StreamInferenceInput } from './stream-inference.input';
+import type { InferenceCall } from 'src/domain/models/application/services/inference-call.service';
 import {
   InferenceAbortedError,
   InferenceFailedError,
@@ -33,10 +34,8 @@ function makeInput(): StreamInferenceInput {
 }
 
 function useCaseWithFailingHandler(error: unknown): StreamInferenceUseCase {
-  const registry = {
-    getHandler: () => ({ answer: () => throwError(() => error) }),
-  };
-  return new StreamInferenceUseCase(registry as never);
+  const inferenceCallService = { stream: () => throwError(() => error) };
+  return new StreamInferenceUseCase(inferenceCallService as never);
 }
 
 describe('StreamInferenceUseCase error mapping', () => {
@@ -221,16 +220,14 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
         }),
       ],
     });
-    let received: StreamInferenceInput | undefined;
-    const registry = {
-      getHandler: () => ({
-        answer: (input: StreamInferenceInput) => {
-          received = input;
-          return EMPTY;
-        },
-      }),
+    let received: InferenceCall | undefined;
+    const inferenceCallService = {
+      stream: (call: InferenceCall) => {
+        received = call;
+        return EMPTY;
+      },
     };
-    const useCase = new StreamInferenceUseCase(registry as never);
+    const useCase = new StreamInferenceUseCase(inferenceCallService as never);
     const onCallTerminal = jest.fn();
 
     useCase.execute(

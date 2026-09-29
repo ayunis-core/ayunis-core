@@ -1,10 +1,7 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { GetInferenceCommand } from './get-inference.command';
-import { InferenceHandlerRegistry } from 'src/domain/models/application/registry/inference-handler.registry';
-import {
-  InferenceInput,
-  InferenceResponse,
-} from 'src/domain/models/application/ports/inference.handler';
+import { InferenceCallService } from 'src/domain/models/application/services/inference-call.service';
+import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import {
   InferenceFailedError,
   InferenceTokenLimitError,
@@ -21,7 +18,7 @@ export class GetInferenceUseCase {
   private readonly logger = new Logger(GetInferenceUseCase.name);
 
   constructor(
-    private readonly inferenceHandlerRegistry: InferenceHandlerRegistry,
+    private readonly inferenceCallService: InferenceCallService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -43,21 +40,15 @@ export class GetInferenceUseCase {
     }
 
     try {
-      const inferenceHandler = this.inferenceHandlerRegistry.getHandler(
-        command.model.provider,
-      );
-
-      const response = await inferenceHandler.answer(
-        new InferenceInput({
-          model: command.model,
-          messages: stripReplayedToolNulls(command.messages, command.tools),
-          systemPrompt: command.instructions,
-          tools: command.tools,
-          toolChoice: command.toolChoice,
-          orgId,
-          onCallTerminal: command.onCallTerminal,
-        }),
-      );
+      const response = await this.inferenceCallService.complete({
+        model: command.model,
+        messages: stripReplayedToolNulls(command.messages, command.tools),
+        systemPrompt: command.instructions,
+        tools: command.tools,
+        toolChoice: command.toolChoice,
+        orgId,
+        onCallTerminal: command.onCallTerminal,
+      });
       this.assertTokenLimitResponseAllowed(
         response,
         command.acceptTokenLimitCompletion,

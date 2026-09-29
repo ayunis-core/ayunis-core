@@ -12,7 +12,7 @@ import { UserMessage } from 'src/domain/messages/domain/messages/user-message.en
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { UUID } from 'crypto';
 import { getRequiredUserContext } from 'src/common/context/required-context';

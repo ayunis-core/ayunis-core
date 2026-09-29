@@ -8,8 +8,8 @@ import type { StreamInferenceUseCase } from 'src/domain/models/application/use-c
 import { OpenAIRequestMapper } from 'src/domain/openai-compat/application/mappers/openai-request.mapper';
 import { OpenAIResponseMapper } from 'src/domain/openai-compat/application/mappers/openai-response.mapper';
 import { OpenAIStreamMapper } from 'src/domain/openai-compat/application/mappers/openai-stream.mapper';
-import { StreamInferenceResponseChunk } from 'src/domain/models/application/ports/stream-inference.handler';
-import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import { StreamInferenceResponseChunk } from 'src/domain/models/application/models/stream-inference-response-chunk';
+import { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';

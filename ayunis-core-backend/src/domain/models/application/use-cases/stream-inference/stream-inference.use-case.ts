@@ -1,13 +1,9 @@
 import { ModelProviderError } from '@ayunis/inference';
 import { Observable, catchError, throwError } from 'rxjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { StreamInferenceHandlerRegistry } from 'src/domain/models/application/registry/stream-inference-handler.registry';
-import {
-  StreamInferenceHandler,
-  StreamInferenceInput,
-} from 'src/domain/models/application/ports/stream-inference.handler';
-import { StreamInferenceResponseChunk } from 'src/domain/models/application/ports/stream-inference.handler';
-import { Model } from 'src/domain/models/domain/model.entity';
+import { InferenceCallService } from 'src/domain/models/application/services/inference-call.service';
+import type { StreamInferenceResponseChunk } from 'src/domain/models/application/models/stream-inference-response-chunk';
+import { StreamInferenceInput } from './stream-inference.input';
 import {
   InferenceAbortedError,
   InferenceFailedError,
@@ -25,16 +21,14 @@ import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/st
 export class StreamInferenceUseCase {
   private readonly logger = new Logger(StreamInferenceUseCase.name);
 
-  constructor(
-    private readonly streamInferenceRegistry: StreamInferenceHandlerRegistry,
-  ) {}
+  constructor(private readonly inferenceCallService: InferenceCallService) {}
 
   execute(
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
     try {
-      return this.getHandler(input.model)
-        .answer(this.sanitizeReplayedMessages(input))
+      return this.inferenceCallService
+        .stream(this.sanitizeReplayedMessages(input))
         .pipe(
           catchError((error: unknown) =>
             throwError(() => this.handleInferenceError(error, input)),
@@ -127,10 +121,6 @@ export class StreamInferenceUseCase {
       orgId: input.orgId,
       onCallTerminal: input.onCallTerminal,
     });
-  }
-
-  private getHandler(model: Model): StreamInferenceHandler {
-    return this.streamInferenceRegistry.getHandler(model.provider);
   }
 }
 

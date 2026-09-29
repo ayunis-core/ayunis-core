@@ -13,10 +13,8 @@ import {
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
-import {
-  InferenceResponse,
-  type InferenceInput,
-} from 'src/domain/models/application/ports/inference.handler';
+import { InferenceResponse } from 'src/domain/models/application/models/inference-response';
+import type { InferenceCall } from 'src/domain/models/application/services/inference-call.service';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
@@ -41,23 +39,25 @@ function makeCommand(acceptTokenLimitCompletion = false): GetInferenceCommand {
 }
 
 function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
-  const registry = {
-    getHandler: () => ({ answer: () => Promise.reject(error) }),
-  };
+  const inferenceCallService = { complete: () => Promise.reject(error) };
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
-  return new GetInferenceUseCase(registry as never, contextService as never);
+  return new GetInferenceUseCase(
+    inferenceCallService as never,
+    contextService as never,
+  );
 }
 
 function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
-  const registry = {
-    getHandler: () => ({ answer: () => Promise.resolve(response) }),
-  };
+  const inferenceCallService = { complete: () => Promise.resolve(response) };
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
-  return new GetInferenceUseCase(registry as never, contextService as never);
+  return new GetInferenceUseCase(
+    inferenceCallService as never,
+    contextService as never,
+  );
 }
 
 describe('GetInferenceUseCase error mapping', () => {
@@ -255,18 +255,16 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
         }),
       ],
     });
-    let received: InferenceInput | undefined;
-    const registry = {
-      getHandler: () => ({
-        answer: (input: InferenceInput) => {
-          received = input;
-          return Promise.resolve({ content: [] });
-        },
-      }),
+    let received: InferenceCall | undefined;
+    const inferenceCallService = {
+      complete: (call: InferenceCall) => {
+        received = call;
+        return Promise.resolve({ content: [] });
+      },
     };
     const contextService = { get: () => randomUUID() };
     const useCase = new GetInferenceUseCase(
-      registry as never,
+      inferenceCallService as never,
       contextService as never,
     );
 
@@ -288,18 +286,16 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
   });
 
   it('forwards the caller-supplied call-terminal handler to the provider call', async () => {
-    let received: InferenceInput | undefined;
-    const registry = {
-      getHandler: () => ({
-        answer: (input: InferenceInput) => {
-          received = input;
-          return Promise.resolve(new InferenceResponse([], {}));
-        },
-      }),
+    let received: InferenceCall | undefined;
+    const inferenceCallService = {
+      complete: (call: InferenceCall) => {
+        received = call;
+        return Promise.resolve(new InferenceResponse([], {}));
+      },
     };
     const contextService = { get: () => randomUUID() };
     const useCase = new GetInferenceUseCase(
-      registry as never,
+      inferenceCallService as never,
       contextService as never,
     );
     const onCallTerminal = jest.fn();
