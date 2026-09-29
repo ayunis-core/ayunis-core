@@ -2,3 +2,7 @@ ayunis-core-backend/.env
 ayunis-core-backend/.env.dev
 ayunis-core-frontend/.env
 .claude/settings.local.json
+AGENTS.md
+.claude/CLAUDE.md
+.claude/skills/
+.agents/skills

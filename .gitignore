@@ -16,3 +16,9 @@ tsconfig.?????????*.json
 
 # Local pnpm content-addressable store (created when pnpm runs with a store-dir inside the checkout)
 .pnpm-store/
+
+# Agent instructions and skills are deployed from the agentfiles store (`af apply`)
+/AGENTS.md
+/.claude/CLAUDE.md
+/.claude/skills/
+/.agents/skills
