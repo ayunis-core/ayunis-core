@@ -80,17 +80,24 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
   resolveProvider(model: Model): ModelProvider {
     const defaultResponseText = `${model.provider}::${model.name}`;
     let malformedAttemptEmitted = false;
+    let researchAnswerAttempted = false;
     return {
       name: defaultResponseText,
       stream: (request) => {
         const lastUserText = lastProviderUserText(request);
         const researchInput = parseResearchInput(lastUserText);
         if (researchInput) {
-          return request.messages.some(
+          const hasToolResults = request.messages.some(
             (message) => message.role === 'tool_result',
-          )
-            ? providerTextResponse(`research-complete::${defaultResponseText}`)
-            : researchToolCallResponse(researchInput);
+          );
+          if (!hasToolResults) return researchToolCallResponse(researchInput);
+          if (!researchAnswerAttempted) {
+            researchAnswerAttempted = true;
+            return providerThinkingOnlyResponse();
+          }
+          return providerTextResponse(
+            `research-complete::${defaultResponseText}`,
+          );
         }
         if (lastUserText === MALFORMED_TOOL_CALL_RETRY_PROMPT) {
           if (!malformedAttemptEmitted) {
@@ -172,6 +179,13 @@ function isPaginatedResearchInput(
     Array.isArray(input.urls) &&
     input.urls.every((url) => typeof url === 'string')
   );
+}
+
+async function* providerThinkingOnlyResponse(): AsyncIterable<ProviderChunk> {
+  await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+  yield { thinkingDelta: 'I have enough research to answer.' };
+  await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+  yield { finishReason: 'stop', usage: MOCK_USAGE };
 }
 
 async function* providerTextResponse(

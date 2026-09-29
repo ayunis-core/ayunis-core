@@ -5,7 +5,11 @@ import {
   RunAbortedError,
 } from '../contracts/errors';
 import type { RunEventPayload, ToolCallSnapshot } from '../contracts/event';
-import type { ModelCallIdentity, ModelCallOutcome } from '../contracts/hook';
+import type {
+  ModelCallIdentity,
+  ModelCallOutcome,
+  ModelCallRejectedReason,
+} from '../contracts/hook';
 import { ModelProviderError } from '../contracts/provider';
 import type {
   ModelProvider,
@@ -15,6 +19,12 @@ import type {
 } from '../contracts/provider';
 import type { ModelCallResult } from './accumulator';
 import { ChunkAccumulator } from './accumulator';
+import {
+  closeIterator,
+  hasAnswerOrToolUse,
+  hasToolUse,
+  openIterator,
+} from './model-call-helpers';
 import { IdleTimeoutError, type ModelCallScope } from './model-call-scope';
 import type { ModelCallMode } from './request-snapshot';
 
@@ -97,7 +107,7 @@ const collectParams = (
   markIteratorReadPending: (pending) => {
     execution.iteratorReadPending = pending;
   },
-  suppressSnapshots: params.mode === 'tool_disabled_fallback',
+  suppressSnapshots: params.mode !== 'normal',
 });
 
 const failedExecutionOutcome = (
@@ -227,7 +237,7 @@ function* completeValidOutput(
   result: ModelCallResult,
   execution: ModelCallExecution,
 ): Generator<RunEventPayload, ModelCallOutcome> {
-  if (params.mode === 'tool_disabled_fallback' && hasToolUse(result)) {
+  if (params.mode !== 'normal' && hasToolUse(result)) {
     return rejectedOutcome({
       params,
       result,
@@ -237,12 +247,17 @@ function* completeValidOutput(
       startedAt: execution.startedAt,
     });
   }
-  if (result.message.content.length === 0) {
+  if (!hasAnswerOrToolUse(result)) {
+    const noContent = result.message.content.length === 0;
     return rejectedOutcome({
       params,
       result,
-      reason: 'empty',
-      error: new ProviderError('Model provider returned an empty response'),
+      reason: noContent ? 'empty' : 'no_final_answer',
+      error: new ProviderError(
+        noContent
+          ? 'Model provider returned an empty response'
+          : 'Model provider returned no answer',
+      ),
       visibleOutput: execution.visibleOutput,
       startedAt: execution.startedAt,
     });
@@ -317,7 +332,7 @@ function* invalidSnapshots(
 interface RejectedOutcomeParams {
   params: ModelCallParams;
   result: ModelCallResult;
-  reason: 'empty' | 'malformed' | 'invalid_fallback';
+  reason: ModelCallRejectedReason;
   error: AgentRuntimeError;
   visibleOutput: boolean;
   startedAt: number;
@@ -472,27 +487,3 @@ const toAbortError = (error: unknown): AgentRuntimeError =>
   error instanceof AgentRuntimeError
     ? error
     : new RunAbortedError('Run aborted during model call');
-
-const hasToolUse = (result: ModelCallResult): boolean =>
-  result.message.content.some((content) => content.type === 'tool_use');
-
-const openIterator = (
-  model: ModelProvider,
-  request: ProviderRequest,
-): AsyncIterator<ProviderChunk> =>
-  model.stream(request)[Symbol.asyncIterator]();
-
-const closeIterator = async (
-  iterator: AsyncIterator<ProviderChunk>,
-  awaitCleanup: boolean,
-): Promise<void> => {
-  let cleanup: Promise<IteratorResult<ProviderChunk>> | undefined;
-  try {
-    cleanup = iterator.return?.();
-  } catch {
-    return;
-  }
-  if (!cleanup) return;
-  const observed = cleanup.catch(() => undefined);
-  if (awaitCleanup) await observed;
-};

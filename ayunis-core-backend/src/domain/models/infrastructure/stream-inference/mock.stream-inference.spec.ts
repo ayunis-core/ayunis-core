@@ -371,7 +371,7 @@ describe('MockStreamInferenceHandler runtime provider', () => {
     });
   });
 
-  it('completes the paginated research scenario after tool results return', async () => {
+  it('returns an answer when paginated research is retried after thinking only', async () => {
     const provider = new MockStreamInferenceHandler().resolveProvider(model);
     const researchRequest: ProviderRequest = {
       ...request,
@@ -399,12 +399,17 @@ describe('MockStreamInferenceHandler runtime provider', () => {
       ],
     };
 
-    const response = await collect(provider.stream(researchRequest));
+    const firstResponse = await collect(provider.stream(researchRequest));
+    const recoveredResponse = await collect(provider.stream(researchRequest));
 
-    expect(response.map((chunk) => chunk.textDelta).join('')).toBe(
+    expect(firstResponse.map((chunk) => chunk.textDelta).join('')).toBe('');
+    expect(firstResponse.map((chunk) => chunk.thinkingDelta).join('')).toBe(
+      'I have enough research to answer.',
+    );
+    expect(recoveredResponse.map((chunk) => chunk.textDelta).join('')).toBe(
       'research-complete::bedrock::claude-sonnet-4-6',
     );
-    expect(response.at(-1)?.usage).toEqual({
+    expect(recoveredResponse.at(-1)?.usage).toEqual({
       inputTokens: 0,
       outputTokens: 0,
     });

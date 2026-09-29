@@ -5,11 +5,15 @@ import type { ProviderRequest, ToolChoice } from '../contracts/provider';
 import type { Tool } from '../contracts/tool';
 import type { MutableRunConfig } from './mutations';
 
-export type ModelCallMode = 'normal' | 'tool_disabled_fallback';
+export type ModelCallMode =
+  'normal' | 'tool_disabled_fallback' | 'answer_only_recovery';
 
 const FALLBACK_INSTRUCTION =
   'Previous attempts produced malformed tool calls. Do not call tools. ' +
   'Respond directly with the most useful explanation or answer you can provide.';
+const ANSWER_ONLY_INSTRUCTION =
+  'The previous response did not include a user-visible answer. ' +
+  'Do not call tools. Respond with a final answer for the user.';
 
 export const cloneRunConfig = (config: MutableRunConfig): MutableRunConfig => ({
   instructions: config.instructions,
@@ -47,10 +51,10 @@ const toProviderRequest = (options: {
           parameters: cloneUnknown(parameters),
         }))
       : [];
-  const instructions =
-    options.mode === 'normal'
-      ? options.config.instructions
-      : `${options.config.instructions}\n\n${FALLBACK_INSTRUCTION}`;
+  const instructions = instructionsForMode(
+    options.config.instructions,
+    options.mode,
+  );
   return {
     instructions,
     messages: cloneMessages(options.config.messages),
@@ -60,6 +64,18 @@ const toProviderRequest = (options: {
       : {}),
     signal: options.signal,
   };
+};
+
+const instructionsForMode = (
+  instructions: string,
+  mode: ModelCallMode,
+): string => {
+  if (mode === 'normal') return instructions;
+  const recoveryInstruction =
+    mode === 'answer_only_recovery'
+      ? ANSWER_ONLY_INSTRUCTION
+      : FALLBACK_INSTRUCTION;
+  return `${instructions}\n\n${recoveryInstruction}`;
 };
 
 const cloneMessages = (messages: readonly Message[]): Message[] =>
