@@ -242,6 +242,7 @@ import type {
   TranscriptionResponseDto,
   TranscriptionsControllerTranscribeBody,
   TriggerPasswordResetResponseDto,
+  UpdateApiKeyDto,
   UpdateArtifactDto,
   UpdateBillingInfoDto,
   UpdateChapterRequestDto,
@@ -20135,6 +20136,75 @@ export const useApiKeysControllerCreateApiKey = <TError = void,
         TContext
       > => {
       return useMutation(getApiKeysControllerCreateApiKeyMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Rename an active API key or change its description. The secret stays the same.
+ */
+export const apiKeysControllerUpdateApiKey = (
+    id: string,
+    updateApiKeyDto: UpdateApiKeyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyResponseDto>(
+      {url: `/api-keys/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateApiKeyDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getApiKeysControllerUpdateApiKeyMutationKey = () => ['apiKeysControllerUpdateApiKey'] as const;
+
+export const getApiKeysControllerUpdateApiKeyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerUpdateApiKey>>, TError,ApiKeysControllerUpdateApiKeyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerUpdateApiKey>>, TError,ApiKeysControllerUpdateApiKeyMutationVariables, TContext> => {
+
+const mutationKey = getApiKeysControllerUpdateApiKeyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerUpdateApiKey>>, ApiKeysControllerUpdateApiKeyMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  apiKeysControllerUpdateApiKey(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApiKeysControllerUpdateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerUpdateApiKey>>>
+    export type ApiKeysControllerUpdateApiKeyMutationBody = UpdateApiKeyDto
+    export type ApiKeysControllerUpdateApiKeyMutationError = void
+    export type ApiKeysControllerUpdateApiKeyMutationVariables = {id: string;data: UpdateApiKeyDto}
+
+    /**
+ * @summary Rename an active API key or change its description. The secret stays the same.
+ */
+export const useApiKeysControllerUpdateApiKey = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerUpdateApiKey>>, TError,ApiKeysControllerUpdateApiKeyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof apiKeysControllerUpdateApiKey>>,
+        TError,
+        ApiKeysControllerUpdateApiKeyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApiKeysControllerUpdateApiKeyMutationOptions(options), queryClient);
     }
 
 /**

@@ -8,6 +8,7 @@ function buildApiKey(overrides: Partial<ApiKey>): ApiKey {
   return {
     id: '11111111-1111-1111-1111-111111111111',
     name: 'Key',
+    description: null,
     prefixPreview: 'ayk_live_abc...',
     expiresAt: null,
     revokedAt: null,
