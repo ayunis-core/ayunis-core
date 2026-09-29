@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.44.1](https://github.com/ayunis-core/ayunis-core/compare/v2.44.0...v2.44.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **letterheads:** commit removal before storage cleanup (AYC-1062) ([#1792](https://github.com/ayunis-core/ayunis-core/issues/1792)) ([02b01be](https://github.com/ayunis-core/ayunis-core/commit/02b01bea2cb9552f91ee3000fb95503ffaa84771))
+* **mcp:** retain timeout operation diagnostics (AYC-1063) ([#1793](https://github.com/ayunis-core/ayunis-core/issues/1793)) ([2ee9e1e](https://github.com/ayunis-core/ayunis-core/commit/2ee9e1e0ea3debdce2165091b4c64ca929e73e7c))
+* **observability:** suppress classified socket duplicates (AYC-997) ([#1790](https://github.com/ayunis-core/ayunis-core/issues/1790)) ([1f6f723](https://github.com/ayunis-core/ayunis-core/commit/1f6f723cfd651dc53266d766c29f615207b6dee3))
+* **runs:** recover when research ends without an answer (AYC-1058) ([#1786](https://github.com/ayunis-core/ayunis-core/issues/1786)) ([d42e3c0](https://github.com/ayunis-core/ayunis-core/commit/d42e3c0f8c6f7b131b8862fd42a82bed21c863a2))
+* **runs:** retain provider rejection diagnostics (AYC-999) ([#1791](https://github.com/ayunis-core/ayunis-core/issues/1791)) ([ea6e644](https://github.com/ayunis-core/ayunis-core/commit/ea6e644a30b094003d231907fde84ded3a16279c))
+* **sources:** keep the collection link when the crawl worker races the url assignment (AYC-1048) ([#1734](https://github.com/ayunis-core/ayunis-core/issues/1734)) ([e6bd093](https://github.com/ayunis-core/ayunis-core/commit/e6bd0938b090d8ebf86d2e874dd4061ee369c521))
+* **sources:** recover OCR-rejected PDFs and localize chat failures (AYC-1059) ([#1788](https://github.com/ayunis-core/ayunis-core/issues/1788)) ([baa29af](https://github.com/ayunis-core/ayunis-core/commit/baa29af5f5bbc5e4898f5ff09cc60146680f2282))
+
+
+### Documentation
+
+* **skills:** tool-agnostic worktrees with &lt;ticket-id&gt;-&lt;slug&gt; naming (AYC-000) ([#1797](https://github.com/ayunis-core/ayunis-core/issues/1797)) ([a9e86dd](https://github.com/ayunis-core/ayunis-core/commit/a9e86dd446cac6d5a6baf6b828607f188dfde795))
+
 ## [2.44.0](https://github.com/ayunis-core/ayunis-core/compare/v2.43.0...v2.44.0) (2026-09-28)
 
 
