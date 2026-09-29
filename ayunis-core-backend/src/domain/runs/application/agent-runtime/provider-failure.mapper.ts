@@ -64,7 +64,12 @@ function mapResolvedProviderError(
   const callError = models.getCallError(modelCallId);
   const diagnostics = collectProviderErrorDiagnostics(callError);
   const failure = classifyKnownRateLimit(providerFailure, diagnostics);
-  const context = providerErrorContext(model.provider, model.name, failure);
+  const context = providerErrorContext(
+    model.provider,
+    model.name,
+    failure,
+    diagnostics,
+  );
   if (isRuntimeIdleStall(event, failure)) {
     return new InferenceStreamStalledError(
       readIdleMs(event.message),
@@ -166,11 +171,13 @@ function providerErrorContext(
   provider: string,
   modelId: string,
   failure: ProviderFailureFacts,
+  diagnostics: ProviderErrorDiagnostics,
 ): ProviderErrorContext {
   return {
     provider,
     modelId,
     failureStage: failure.stage,
+    ...providerDiagnosticContext(diagnostics),
     ...(failure.timeoutSource && { timeoutSource: failure.timeoutSource }),
     ...(failure.upstreamStatus !== undefined && {
       upstreamStatus: failure.upstreamStatus,
@@ -185,6 +192,28 @@ function providerErrorContext(
       underlyingCode: failure.transportCode,
     }),
     ...(failure.host && { host: failure.host }),
+  };
+}
+
+function providerDiagnosticContext(
+  diagnostics: ProviderErrorDiagnostics,
+): Pick<
+  ProviderErrorContext,
+  'upstreamCode' | 'upstreamType' | 'upstreamParam' | 'upstreamReason'
+> {
+  return {
+    ...(diagnostics.upstreamCode && {
+      upstreamCode: diagnostics.upstreamCode,
+    }),
+    ...(diagnostics.upstreamType && {
+      upstreamType: diagnostics.upstreamType,
+    }),
+    ...(diagnostics.upstreamParam && {
+      upstreamParam: diagnostics.upstreamParam,
+    }),
+    ...(diagnostics.upstreamReason && {
+      upstreamReason: diagnostics.upstreamReason,
+    }),
   };
 }
 

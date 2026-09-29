@@ -39,6 +39,10 @@ describe('runtime anonymization provider error serialization', () => {
         context: {
           provider: 'anonymize',
           upstreamStatus: 503,
+          upstreamCode: 'temporarily_unavailable',
+          upstreamType: 'server_error',
+          upstreamParam: 'tools[3].parameters',
+          upstreamReason: 'invalid_tool_schema',
           upstreamRequestId: 'req_anonymize_503',
           failureStage: 'stream_establishment',
         },
@@ -51,6 +55,10 @@ describe('runtime anonymization provider error serialization', () => {
       context: {
         provider: 'anonymize',
         upstreamStatus: 503,
+        upstreamCode: 'temporarily_unavailable',
+        upstreamType: 'server_error',
+        upstreamParam: 'tools[3].parameters',
+        upstreamReason: 'invalid_tool_schema',
         upstreamRequestId: 'req_anonymize_503',
         failureStage: 'stream_establishment',
       },
