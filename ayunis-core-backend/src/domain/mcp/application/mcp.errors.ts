@@ -156,13 +156,19 @@ function redactServerUrl(serverUrl: string): string {
  * `cause` only.
  */
 export class McpConnectionTimeoutError extends McpError {
-  constructor(serverUrl: string, timeoutMs: number, cause?: unknown) {
+  constructor(
+    serverUrl: string,
+    timeoutMs: number,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
     super(
       `The MCP server at ${redactServerUrl(serverUrl)} did not respond ` +
         `within ${Math.round(timeoutMs / 1000)}s. Please verify the server ` +
         `is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_TIMEOUT,
       504,
+      metadata,
     );
     if (cause !== undefined) {
       this.cause = cause;
@@ -178,12 +184,13 @@ export class McpConnectionTimeoutError extends McpError {
  * suppressed (AYC-616).
  */
 export class McpConnectionFailedError extends McpError {
-  constructor(serverUrl: string, cause?: unknown) {
+  constructor(serverUrl: string, cause?: unknown, metadata?: ErrorMetadata) {
     super(
       `The MCP server at ${redactServerUrl(serverUrl)} could not be ` +
         `reached. Please verify the server is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_FAILED,
       502,
+      metadata,
     );
     if (cause !== undefined) {
       this.cause = cause;

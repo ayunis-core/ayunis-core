@@ -26,7 +26,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 
 **Services:**
 
-- `McpClientService` — Handles authenticated server communication through the MCP SDK adapter and forwards caller-selected capability-list timeout budgets
+- `McpClientService` — Handles authenticated server communication through the MCP SDK adapter and forwards caller-selected capability-list timeout budgets; classified transport failures retain privacy-safe integration, organization, server host, operation, timeout, and underlying error diagnostics
 - `McpClientPoolService` — Pools SDK connections per tenant, integration, user, configuration, and connection timeout budget; keeps at most 100 idle clients and invalidates sessions when integration or user credentials change
 - `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes
 - `McpConfigService` — Validates schemas and merges, encrypts, and retains organization/user config values

@@ -43,6 +43,14 @@ const SDK_TIMEOUT_CODES: ReadonlySet<unknown> = new Set([
 ]);
 const MAX_CAUSE_DEPTH = 4;
 
+function serverHost(serverUrl: string): string {
+  try {
+    return new URL(serverUrl).hostname;
+  } catch {
+    return 'invalid-url';
+  }
+}
+
 function isTimeoutOrAbortError(error: unknown, depth = 0): boolean {
   if (depth >= MAX_CAUSE_DEPTH || typeof error !== 'object' || error === null) {
     return false;
@@ -109,6 +117,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         return result.tools;
       },
       options,
+      'listTools',
     );
   }
 
@@ -126,6 +135,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         return result.resources;
       },
       options,
+      'listResources',
     );
   }
 
@@ -148,6 +158,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         }));
       },
       options,
+      'listResourceTemplates',
     );
   }
 
@@ -165,6 +176,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         return result.prompts;
       },
       options,
+      'listPrompts',
     );
   }
 
@@ -175,20 +187,25 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     call: McpToolCall,
   ): Promise<McpToolResult> {
-    return this.withClient(config, async (client) => {
-      const result = await client.callTool(
-        {
-          name: call.toolName,
-          arguments: call.parameters,
-        },
-        this.requestOptions,
-      );
+    return this.withClient(
+      config,
+      async (client) => {
+        const result = await client.callTool(
+          {
+            name: call.toolName,
+            arguments: call.parameters,
+          },
+          this.requestOptions,
+        );
 
-      return {
-        content: result.content,
-        isError: Boolean(result.isError),
-      };
-    });
+        return {
+          content: result.content,
+          isError: Boolean(result.isError),
+        };
+      },
+      this.requestOptions,
+      'callTool',
+    );
   }
 
   /**
@@ -199,21 +216,26 @@ export class McpSdkClientAdapter extends McpClientPort {
     uri: string,
     parameters?: Record<string, unknown>,
   ): Promise<{ content: unknown; mimeType: string }> {
-    return this.withClient(config, async (client) => {
-      const request = parameters ? { uri, arguments: parameters } : { uri };
+    return this.withClient(
+      config,
+      async (client) => {
+        const request = parameters ? { uri, arguments: parameters } : { uri };
 
-      const result = await client.readResource(request, this.requestOptions);
+        const result = await client.readResource(request, this.requestOptions);
 
-      // MCP resources can have text or blob content
-      const firstContent = result.contents[0];
-      const content =
-        'text' in firstContent ? firstContent.text : firstContent.blob;
+        // MCP resources can have text or blob content
+        const firstContent = result.contents[0];
+        const content =
+          'text' in firstContent ? firstContent.text : firstContent.blob;
 
-      return {
-        content: content,
-        mimeType: firstContent.mimeType || 'text/plain',
-      };
-    });
+        return {
+          content: content,
+          mimeType: firstContent.mimeType || 'text/plain',
+        };
+      },
+      this.requestOptions,
+      'readResource',
+    );
   }
 
   /**
@@ -224,19 +246,24 @@ export class McpSdkClientAdapter extends McpClientPort {
     name: string,
     args: Record<string, string>,
   ): Promise<{ messages: unknown[] }> {
-    return this.withClient(config, async (client) => {
-      const result = await client.getPrompt(
-        {
-          name,
-          arguments: args,
-        },
-        this.requestOptions,
-      );
+    return this.withClient(
+      config,
+      async (client) => {
+        const result = await client.getPrompt(
+          {
+            name,
+            arguments: args,
+          },
+          this.requestOptions,
+        );
 
-      return {
-        messages: result.messages,
-      };
-    });
+        return {
+          messages: result.messages,
+        };
+      },
+      this.requestOptions,
+      'getPrompt',
+    );
   }
 
   /**
@@ -250,6 +277,7 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     operation: (client: Client) => Promise<T>,
     requestOptions = this.requestOptions,
+    operationName = 'unknown',
   ): Promise<T> {
     try {
       return await this.clientPool.withClient(
@@ -259,7 +287,12 @@ export class McpSdkClientAdapter extends McpClientPort {
         { connectTimeout: requestOptions.timeout },
       );
     } catch (error) {
-      throw this.toOperationError(error, config, requestOptions.timeout);
+      throw this.toOperationError(
+        error,
+        config,
+        requestOptions.timeout,
+        operationName,
+      );
     }
   }
 
@@ -267,22 +300,61 @@ export class McpSdkClientAdapter extends McpClientPort {
     error: unknown,
     config: McpConnectionConfig,
     timeoutMs: number,
+    operation: string,
   ): unknown {
     // Transport errnos (timeouts beyond the SDK's own codes, DNS, reset,
     // broken pipe) must not escape raw either: their raw span duplicates
     // are suppressed AppSignal-side (AYC-616), so the classified error is
     // the only outage signal left.
     const transport = classifyTransportError(error);
+    const metadata = this.buildOperationErrorMetadata(
+      error,
+      config,
+      timeoutMs,
+      operation,
+      transport?.code,
+    );
     if (
       isTimeoutOrAbortError(error) ||
       transport?.failureClass === ProviderFailureClass.TIMEOUT
     ) {
-      return new McpConnectionTimeoutError(config.serverUrl, timeoutMs, error);
+      return new McpConnectionTimeoutError(
+        config.serverUrl,
+        timeoutMs,
+        error,
+        metadata,
+      );
     }
     if (transport?.failureClass === ProviderFailureClass.CONNECTION) {
-      return new McpConnectionFailedError(config.serverUrl, error);
+      return new McpConnectionFailedError(config.serverUrl, error, metadata);
     }
     return error;
+  }
+
+  private buildOperationErrorMetadata(
+    error: unknown,
+    config: McpConnectionConfig,
+    timeoutMs: number,
+    operation: string,
+    transportCode?: string,
+  ): Record<string, unknown> {
+    const candidate =
+      typeof error === 'object' && error !== null
+        ? (error as { code?: unknown; name?: unknown })
+        : {};
+    const underlyingCode = transportCode ?? candidate.code;
+    return {
+      integrationId: config.connectionScope.integrationId,
+      orgId: config.connectionScope.orgId,
+      operation,
+      serverHost: serverHost(config.serverUrl),
+      timeoutMs,
+      ...((typeof underlyingCode === 'string' ||
+        typeof underlyingCode === 'number') && { underlyingCode }),
+      ...(typeof candidate.name === 'string' && {
+        underlyingName: candidate.name,
+      }),
+    };
   }
 
   /**
@@ -297,11 +369,16 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
   ): Promise<{ valid: boolean; error?: string }> {
     try {
-      await this.withClient(config, async (client) => {
-        await client.listTools(undefined, this.requestOptions);
-        await client.listResources(undefined, this.requestOptions);
-        await client.listPrompts(undefined, this.requestOptions);
-      });
+      await this.withClient(
+        config,
+        async (client) => {
+          await client.listTools(undefined, this.requestOptions);
+          await client.listResources(undefined, this.requestOptions);
+          await client.listPrompts(undefined, this.requestOptions);
+        },
+        this.requestOptions,
+        'validateConnection',
+      );
       return { valid: true };
     } catch (error) {
       this.logger.warn(
