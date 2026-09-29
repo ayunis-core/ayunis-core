@@ -63,7 +63,7 @@ letterheads/
 - Page margins are validated (non-negative, finite) when a `Letterhead` entity is constructed
 - Uploaded PDFs are validated with `pdf-lib` and must be exactly one page each
 - Create stores the first-page PDF and optional continuation PDF under org-scoped storage paths like `letterheads/<orgId>/<letterheadId>/...`
-- Update can replace either PDF, update metadata/margins, or remove the continuation page and delete its stored object
+- Update can replace either PDF, update metadata/margins, or remove the continuation page; removal is persisted before best-effort object cleanup so storage failures cannot roll back the database state
 - Find-all and find-one are organization-scoped via request context
 - Delete throws `LetterheadNotFoundError` if no matching record exists
 - Each letterhead is scoped to an organization via `orgId`
