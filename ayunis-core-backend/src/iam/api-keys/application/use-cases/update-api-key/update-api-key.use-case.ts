@@ -7,6 +7,7 @@ import {
   type ApiKeyMetadataChanges,
 } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import {
+  ApiKeyExpirationInPastError,
   ApiKeyInvalidInputError,
   ApiKeyNotEditableError,
   ApiKeyNotFoundError,
@@ -57,26 +58,45 @@ export class UpdateApiKeyUseCase {
   }
 }
 
-function normalizeChanges(changes: {
-  name?: string;
-  description?: string | null;
-}): ApiKeyMetadataChanges {
-  const normalized: ApiKeyMetadataChanges = {};
+type RequestedChanges = UpdateApiKeyCommand['changes'];
 
-  if (changes.name !== undefined) {
-    const name = changes.name.trim();
-    if (!name) {
-      throw new ApiKeyInvalidInputError('Name cannot be empty');
-    }
-    normalized.name = name;
-  }
-
-  if (changes.description !== undefined) {
-    normalized.description = changes.description?.trim() || null;
-  }
+function normalizeChanges(changes: RequestedChanges): ApiKeyMetadataChanges {
+  const normalized: ApiKeyMetadataChanges = {
+    ...normalizeName(changes.name),
+    ...normalizeDescription(changes.description),
+    ...normalizeExpiresAt(changes.expiresAt),
+  };
 
   if (Object.keys(normalized).length === 0) {
-    throw new ApiKeyInvalidInputError('Provide a name or a description');
+    throw new ApiKeyInvalidInputError(
+      'Provide a name, a description or an expiry date',
+    );
   }
   return normalized;
+}
+
+function normalizeName(name: RequestedChanges['name']): ApiKeyMetadataChanges {
+  if (name === undefined) return {};
+  const trimmed = name.trim();
+  if (!trimmed) {
+    throw new ApiKeyInvalidInputError('Name cannot be empty');
+  }
+  return { name: trimmed };
+}
+
+function normalizeDescription(
+  description: RequestedChanges['description'],
+): ApiKeyMetadataChanges {
+  if (description === undefined) return {};
+  return { description: description?.trim() || null };
+}
+
+function normalizeExpiresAt(
+  expiresAt: RequestedChanges['expiresAt'],
+): ApiKeyMetadataChanges {
+  if (expiresAt === undefined) return {};
+  if (expiresAt !== null && expiresAt.getTime() <= Date.now()) {
+    throw new ApiKeyExpirationInPastError();
+  }
+  return { expiresAt };
 }

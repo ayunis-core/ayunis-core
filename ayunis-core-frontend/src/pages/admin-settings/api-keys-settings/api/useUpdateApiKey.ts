@@ -7,6 +7,7 @@ import {
   getApiKeysControllerListApiKeysQueryKey,
   getCreditLimitsControllerGetApiKeyLimitsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import type { UpdateApiKeyDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -31,6 +32,8 @@ export function useUpdateApiKey(
           const { code, errors } = extractErrorData(error);
           if (code === 'VALIDATION_ERROR' && errors) {
             setValidationErrors(form, errors, t, 'apiKeys.validation');
+          } else if (code === 'API_KEY_EXPIRATION_IN_PAST') {
+            showError(t('apiKeys.createApiKey.expirationInPast'));
           } else if (code === 'API_KEY_NOT_EDITABLE') {
             showError(t('apiKeys.editDialog.notEditable'));
           } else if (code === 'API_KEY_NOT_FOUND') {
@@ -54,14 +57,8 @@ export function useUpdateApiKey(
     },
   });
 
-  function updateApiKey(id: string, values: EditApiKeyFormValues) {
-    mutation.mutate({
-      id,
-      data: {
-        name: values.name,
-        description: values.description || null,
-      },
-    });
+  function updateApiKey(id: string, data: UpdateApiKeyDto) {
+    mutation.mutate({ id, data });
   }
 
   return {

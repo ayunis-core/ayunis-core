@@ -65,6 +65,46 @@ test("renames an API key and edits its description without changing the secret",
   });
 });
 
+test("sets, changes and removes the expiry date of an active key", async ({
+  api,
+  org,
+  publicApi,
+}) => {
+  const apiKey = await generatedApi.apiKeysControllerCreateApiKey(
+    { name: `E2E expiry key ${Date.now()}` },
+    { api },
+  );
+  const inOneWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  const set = await requestUpdateApiKey(api, apiKey.id, {
+    expiresAt: inOneWeek.toISOString(),
+  });
+  expect(set.status()).toBe(200);
+  expect(new Date((await set.json()).expiresAt).getTime()).toBe(
+    inOneWeek.getTime(),
+  );
+
+  const completion = await requestChatCompletionWithApiKey(
+    publicApi,
+    apiKey.secret,
+    org.defaultModel.name,
+  );
+  expect(completion.status()).toBe(200);
+
+  const past = await requestUpdateApiKey(api, apiKey.id, {
+    expiresAt: new Date(Date.now() - 60_000).toISOString(),
+  });
+  expect(past.status()).toBe(400);
+  expect(await past.json()).toMatchObject({
+    code: "API_KEY_EXPIRATION_IN_PAST",
+  });
+
+  const removed = await requestUpdateApiKey(api, apiKey.id, {
+    expiresAt: null,
+  });
+  expect(await removed.json()).toMatchObject({ expiresAt: null });
+});
+
 test("rejects edits of archived keys", async ({ api }) => {
   const apiKey = await generatedApi.apiKeysControllerCreateApiKey(
     { name: `E2E revoked key ${Date.now()}` },

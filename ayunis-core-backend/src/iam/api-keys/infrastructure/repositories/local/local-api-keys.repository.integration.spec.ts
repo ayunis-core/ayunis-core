@@ -108,6 +108,17 @@ describe('LocalApiKeysRepository.updateMetadataIfActive', () => {
     });
   });
 
+  it('sets and removes the expiry date of an active key', async () => {
+    const id = await insertKey();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await repository.updateMetadataIfActive(id, orgId, { expiresAt });
+    expect((await load(id)).expiresAt?.getTime()).toBe(expiresAt.getTime());
+
+    await repository.updateMetadataIfActive(id, orgId, { expiresAt: null });
+    expect((await load(id)).expiresAt).toBeNull();
+  });
+
   it('clears the description when null is given', async () => {
     const id = await insertKey();
 

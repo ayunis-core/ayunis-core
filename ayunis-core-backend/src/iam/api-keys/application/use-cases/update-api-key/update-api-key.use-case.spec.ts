@@ -4,6 +4,7 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import {
+  ApiKeyExpirationInPastError,
   ApiKeyInvalidInputError,
   ApiKeyNotEditableError,
   ApiKeyNotFoundError,
@@ -98,6 +99,41 @@ describe('UpdateApiKeyUseCase', () => {
       );
     },
   );
+
+  it('sets a future expiry date', async () => {
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await useCase.execute(new UpdateApiKeyCommand(apiKeyId, { expiresAt }));
+
+    expect(apiKeysRepository.updateMetadataIfActive).toHaveBeenCalledWith(
+      apiKeyId,
+      orgId,
+      { expiresAt },
+    );
+  });
+
+  it('removes the expiry date when null is given', async () => {
+    await useCase.execute(
+      new UpdateApiKeyCommand(apiKeyId, { expiresAt: null }),
+    );
+
+    expect(apiKeysRepository.updateMetadataIfActive).toHaveBeenCalledWith(
+      apiKeyId,
+      orgId,
+      { expiresAt: null },
+    );
+  });
+
+  it('rejects an expiry date that is not in the future', async () => {
+    await expect(
+      useCase.execute(
+        new UpdateApiKeyCommand(apiKeyId, {
+          expiresAt: new Date(Date.now() - 1000),
+        }),
+      ),
+    ).rejects.toBeInstanceOf(ApiKeyExpirationInPastError);
+    expect(apiKeysRepository.updateMetadataIfActive).not.toHaveBeenCalled();
+  });
 
   it('returns the key as stored after the update', async () => {
     const stored = buildKey({ name: 'Renamed' });

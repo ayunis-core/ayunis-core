@@ -9618,7 +9618,7 @@
             }
           },
           "400": {
-            "description": "Invalid input"
+            "description": "Invalid input or an expiry date that is not in the future"
           },
           "401": {
             "description": "User is not authenticated"
@@ -9633,7 +9633,7 @@
             "description": "The API key is revoked or expired and cannot be edited"
           }
         },
-        "summary": "Rename an active API key or change its description. The secret stays the same.",
+        "summary": "Rename an active API key, change its description or set, change or remove its expiry date. The secret stays the same.",
         "tags": ["api-keys"]
       },
       "delete": {
@@ -19466,6 +19466,13 @@
             "description": "Plain-text description of what the key is used for. Omit to keep it, send null or an empty string to remove it.",
             "example": "OptiGov connector, server portal-01",
             "maxLength": 500,
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "New expiry date (ISO 8601, must be in the future). Omit to keep it, send null to let the key never expire.",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
             "nullable": true
           }
         }

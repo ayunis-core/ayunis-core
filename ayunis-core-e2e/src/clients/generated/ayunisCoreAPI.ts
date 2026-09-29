@@ -3702,7 +3702,7 @@ const apiKeysControllerCreateApiKey = (
     }
 
 /**
- * @summary Rename an active API key or change its description. The secret stays the same.
+ * @summary Rename an active API key, change its description or set, change or remove its expiry date. The secret stays the same.
  */
 const apiKeysControllerUpdateApiKey = (
     id: string,
