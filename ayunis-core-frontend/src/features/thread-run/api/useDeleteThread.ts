@@ -19,6 +19,17 @@ export function useDeleteThread(params: UseDeleteChatParams) {
   const router = useRouter();
   const { mutate } = useThreadsControllerDelete({
     mutation: {
+      onSuccess: (_data, variables) => {
+        clearChatDraft(variables.id);
+        void queryClient.invalidateQueries({
+          queryKey: getThreadsControllerFindAllQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getFavoritesControllerFindAllQueryKey(),
+        });
+        void router.invalidate();
+        params.onSuccess?.();
+      },
       onError: params.onError,
     },
   });
@@ -26,22 +37,7 @@ export function useDeleteThread(params: UseDeleteChatParams) {
   function deleteChat(threadId: string) {
     params.onBeforeDelete?.();
     abortActiveThreadRun(threadId);
-    mutate(
-      { id: threadId },
-      {
-        onSuccess: () => {
-          clearChatDraft(threadId);
-          void queryClient.invalidateQueries({
-            queryKey: getThreadsControllerFindAllQueryKey(),
-          });
-          void queryClient.invalidateQueries({
-            queryKey: getFavoritesControllerFindAllQueryKey(),
-          });
-          void router.invalidate();
-          params.onSuccess?.();
-        },
-      },
-    );
+    mutate({ id: threadId });
   }
 
   return { deleteChat };
