@@ -2,6 +2,7 @@ import type {
   ProviderErrorContext,
   ProviderUnavailableError,
 } from 'src/common/errors/provider.errors';
+import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import {
   ProviderConnectionError,
   ProviderRequestRejectedError,
@@ -98,6 +99,7 @@ function toProviderContext(
     ...(typeof context.upstreamStatus === 'number' && {
       upstreamStatus: context.upstreamStatus,
     }),
+    ...readProviderDiagnostics(context),
     ...(typeof context.upstreamRequestId === 'string' && {
       upstreamRequestId: context.upstreamRequestId,
     }),
@@ -124,6 +126,38 @@ function providerLifecycleContext(
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readProviderDiagnostics(
+  context: Readonly<Record<string, unknown>>,
+): Pick<
+  ProviderErrorContext,
+  'upstreamCode' | 'upstreamType' | 'upstreamParam' | 'upstreamReason'
+> {
+  return {
+    ...(typeof context.upstreamCode === 'string' && {
+      upstreamCode: context.upstreamCode,
+    }),
+    ...(typeof context.upstreamType === 'string' && {
+      upstreamType: context.upstreamType,
+    }),
+    ...(typeof context.upstreamParam === 'string' && {
+      upstreamParam: context.upstreamParam,
+    }),
+    ...(isProviderErrorReason(context.upstreamReason) && {
+      upstreamReason: context.upstreamReason,
+    }),
+  };
+}
+
+const PROVIDER_ERROR_REASONS: ReadonlySet<string> = new Set(
+  Object.values(ProviderErrorReason),
+);
+
+function isProviderErrorReason(
+  value: unknown,
+): value is ProviderErrorContext['upstreamReason'] {
+  return typeof value === 'string' && PROVIDER_ERROR_REASONS.has(value);
 }
 
 function isRuntimeModelErrorType(
