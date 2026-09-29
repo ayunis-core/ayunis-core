@@ -18,6 +18,7 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
@@ -82,7 +83,8 @@ export default function NewChatPage({
   useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
 
   const [modelId, setModelId] = useState(selectedModelId);
-  const [isAnonymous, setIsAnonymous] = useState(false);
+  const { isAnonymousByDefault } = useAnonymousModeDefault();
+  const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
   const [workspaceId, setWorkspaceId] = useState<string | null>(
     initialWorkspaceId ?? null,
   );
