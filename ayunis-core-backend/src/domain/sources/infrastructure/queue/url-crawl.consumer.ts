@@ -76,10 +76,7 @@ export class UrlCrawlConsumer extends WorkerHost {
       this.logger.error({ err: error as Error, sourceId }, 'URL crawl failed');
       const { final, rethrow } = classifyJobFailure(job, error);
       if (final) {
-        await this.helper.markFailed(
-          sourceId,
-          error instanceof Error ? error.message : 'Unknown crawl error',
-        );
+        await this.helper.markFailed(sourceId, error);
         await this.helper.cleanupIndex(sourceId);
       }
       if (rethrow) throw rethrow;

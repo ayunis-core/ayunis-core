@@ -15217,6 +15217,17 @@
           "isReasoning"
         ]
       },
+      "SourceProcessingErrorCode": {
+        "type": "string",
+        "enum": [
+          "DOCUMENT_UNREADABLE",
+          "DOCUMENT_EMPTY",
+          "DOCUMENT_PAGE_LIMIT_EXCEEDED",
+          "PROCESSING_TIMEOUT",
+          "PROCESSING_UNAVAILABLE",
+          "PROCESSING_FAILED"
+        ]
+      },
       "SourceResponseDto": {
         "type": "object",
         "properties": {
@@ -15249,7 +15260,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -15303,7 +15322,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -15369,7 +15396,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -15434,7 +15469,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",

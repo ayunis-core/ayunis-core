@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import type { UUID } from 'crypto';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 
 /** Sources stuck in PROCESSING for longer than this are marked FAILED */
@@ -72,6 +73,7 @@ export class StaleProcessingCleanupTask {
         new MarkSourceFailedCommand({
           sourceId,
           errorMessage: 'Processing timed out',
+          errorCode: SourceProcessingErrorCode.PROCESSING_TIMEOUT,
         }),
       );
       this.logger.warn({ sourceId }, 'Marked stale source as failed');
