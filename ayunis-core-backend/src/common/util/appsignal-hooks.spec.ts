@@ -4,7 +4,10 @@ import createHttpError from 'http-errors';
 import { errors as undiciErrors } from 'undici';
 import { JobRetryScheduledError } from 'src/domain/sources/infrastructure/queue/bullmq-job.helpers';
 import { MarketplaceUnavailableError } from 'src/domain/marketplace/application/marketplace.errors';
-import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
+import {
+  ProviderConnectionError,
+  ProviderTimeoutError,
+} from 'src/common/errors/provider.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 
 type UndiciRequest = {
@@ -178,6 +181,8 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     }),
   'transport-connection-reset': () =>
     Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' }),
+  'transport-socket-closed': () =>
+    Object.assign(new Error('other side closed'), { code: 'UND_ERR_SOCKET' }),
   'transport-connection-aborted': () =>
     Object.assign(new Error('timeout of 30000ms exceeded'), {
       code: 'ECONNABORTED',
@@ -283,6 +288,20 @@ describe('SUPPRESSIONS registry', () => {
       expect(ignoredErrorTypes).not.toContain(
         exceptionTypeOf(new TypeError('unexpected failure')),
       );
+    });
+
+    it('suppresses a raw socket closure but retains its classified provider failure', () => {
+      const raw = Object.assign(new Error('other side closed'), {
+        code: 'UND_ERR_SOCKET',
+      });
+      const classified = wrapProviderFailure(
+        new TypeError('fetch failed', { cause: raw }),
+        { provider: 'azure' },
+      );
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(raw));
+      expect(classified).toBeInstanceOf(ProviderConnectionError);
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
     });
 
     it('leaves the classified provider taxonomy reporting', () => {

@@ -189,6 +189,17 @@ const SUPPRESSIONS = [
     exceptionType: 'ECONNRESET',
   },
   {
+    id: 'transport-socket-closed',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-997',
+    reason:
+      'Undici reports a peer closing an outbound provider socket as ' +
+      'UND_ERR_SOCKET. Provider boundaries classify the failure as ' +
+      'PROVIDER_UNAVAILABLE_CONNECTION_*; the raw instrumentation exception ' +
+      'is a duplicate (incident #626).',
+    exceptionType: 'UND_ERR_SOCKET',
+  },
+  {
     id: 'transport-connection-aborted',
     lever: 'ignoreErrors',
     ticket: 'AYC-616',
