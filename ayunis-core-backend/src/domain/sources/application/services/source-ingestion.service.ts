@@ -8,6 +8,7 @@ import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity
 import { classifySourceProcessingError } from './classify-source-processing-error';
 import { SourceContentReplacementService } from './source-content-replacement.service';
 import { SourceProcessingHelper } from './source-processing-helper.service';
+import { SourceContentDegradationGuard } from './source-content-degradation-guard.service';
 import type { TextSourceExtractor } from './text-source-extractor';
 
 export interface IngestionFailureOutcome {
@@ -42,6 +43,7 @@ export class SourceIngestionService {
     private readonly sourceRepository: SourceRepository,
     private readonly contentReplacement: SourceContentReplacementService,
     private readonly helper: SourceProcessingHelper,
+    private readonly degradationGuard: SourceContentDegradationGuard,
   ) {}
 
   async ingest<TInput>(run: TextSourceIngestionRun<TInput>): Promise<void> {
@@ -67,6 +69,9 @@ export class SourceIngestionService {
     if (!(await this.claim(sourceId, kind))) return;
 
     const extracted = await extractor.extract(input);
+    if (kind === SourceIngestionKind.REINDEX) {
+      await this.degradationGuard.assertNotDegraded(sourceId, extracted.chunks);
+    }
     const content = await this.contentReplacement.prepare({
       sourceId,
       orgId,

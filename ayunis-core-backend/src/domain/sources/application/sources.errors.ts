@@ -12,6 +12,8 @@ export enum SourceErrorCode {
   UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
   SOURCE_REINDEX_NOT_SUPPORTED = 'SOURCE_REINDEX_NOT_SUPPORTED',
   SOURCE_NOT_READY_FOR_REINDEX = 'SOURCE_NOT_READY_FOR_REINDEX',
+  INVALID_REINDEX_INTERVAL = 'INVALID_REINDEX_INTERVAL',
+  SOURCE_CONTENT_DEGRADED = 'SOURCE_CONTENT_DEGRADED',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -128,9 +130,13 @@ export class UnsupportedSourceFileTypeError extends SourceError {
 }
 
 export class SourceReindexNotSupportedError extends SourceError {
-  constructor(sourceId: string, metadata?: ErrorMetadata) {
+  constructor(
+    sourceId: string,
+    reason = 'only URL sources can',
+    metadata?: ErrorMetadata,
+  ) {
     super(
-      `Source '${sourceId}' cannot be re-indexed; only URL sources can`,
+      `Source '${sourceId}' cannot be re-indexed; ${reason}`,
       SourceErrorCode.SOURCE_REINDEX_NOT_SUPPORTED,
       400,
       metadata,
@@ -144,6 +150,36 @@ export class SourceNotReadyForReindexError extends SourceError {
       `Source '${sourceId}' is ${status}; only a ready source can be re-indexed`,
       SourceErrorCode.SOURCE_NOT_READY_FOR_REINDEX,
       409,
+      metadata,
+    );
+  }
+}
+
+export class InvalidReindexIntervalError extends SourceError {
+  constructor(value: number, unit: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid re-index interval '${value} ${unit}'; use 1-52 weeks or 1-12 months`,
+      SourceErrorCode.INVALID_REINDEX_INTERVAL,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * A re-index yielded far fewer pages than the content it would replace,
+ * which usually means a partial outage rather than a smaller site.
+ */
+export class SourceContentDegradedError extends SourceError {
+  constructor(
+    sourceId: string,
+    pages: { previous: number; current: number },
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `Re-index of source '${sourceId}' found ${pages.current} of the previously indexed ${pages.previous} pages; keeping the previous content`,
+      SourceErrorCode.SOURCE_CONTENT_DEGRADED,
+      422,
       metadata,
     );
   }

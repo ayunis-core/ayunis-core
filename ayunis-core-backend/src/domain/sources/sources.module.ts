@@ -35,7 +35,11 @@ import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-craw
 import { EnqueueSourceReindexUseCase } from './application/use-cases/enqueue-source-reindex/enqueue-source-reindex.use-case';
 import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
+import { SetSourceReindexScheduleUseCase } from './application/use-cases/set-source-reindex-schedule/set-source-reindex-schedule.use-case';
 import { SourceContentReplacementService } from './application/services/source-content-replacement.service';
+import { SourceReindexHandlerRegistry } from './application/services/source-reindex-handler.registry';
+import { UrlSourceReindexHandler } from './application/services/url-source-reindex-handler.service';
+import { ScheduledSourceReindexTask } from './infrastructure/tasks/scheduled-source-reindex.task';
 
 @Module({
   imports: [
@@ -75,7 +79,16 @@ import { SourceContentReplacementService } from './application/services/source-c
     EnqueueUrlCrawlUseCase,
     EnqueueSourceReindexUseCase,
     StartUrlCrawlUseCase,
+    SetSourceReindexScheduleUseCase,
     SourceContentReplacementService,
+    UrlSourceReindexHandler,
+    {
+      provide: SourceReindexHandlerRegistry,
+      useFactory: (url: UrlSourceReindexHandler) =>
+        new SourceReindexHandlerRegistry([url]),
+      inject: [UrlSourceReindexHandler],
+    },
+    ScheduledSourceReindexTask,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -106,6 +119,7 @@ import { SourceContentReplacementService } from './application/services/source-c
     EnqueueUrlCrawlUseCase,
     EnqueueSourceReindexUseCase,
     StartUrlCrawlUseCase,
+    SetSourceReindexScheduleUseCase,
   ],
 })
 export class SourcesModule {}

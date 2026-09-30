@@ -10,6 +10,7 @@ import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-case
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
 import { SourceContentReplacementService } from 'src/domain/sources/application/services/source-content-replacement.service';
 import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
+import { SourceContentDegradationGuard } from 'src/domain/sources/application/services/source-content-degradation-guard.service';
 import { FileSourceExtractor } from 'src/domain/sources/application/services/file-source-extractor.service';
 import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
@@ -41,6 +42,7 @@ import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/ta
     SourceProcessingHelper,
     SourceContentReplacementService,
     SourceIngestionService,
+    SourceContentDegradationGuard,
     FileSourceExtractor,
   ],
   exports: [DocumentProcessingPort],

@@ -40,6 +40,7 @@ export class StartUrlCrawlUseCase {
         new CreateProcessingUrlSourceCommand({
           url: command.url,
           maxDepth: command.maxDepth,
+          reindexInterval: command.reindexInterval,
         }),
       );
 

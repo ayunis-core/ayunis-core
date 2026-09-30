@@ -7,6 +7,7 @@ const ERROR_KEYS: Record<Code, string> = {
   [Code.PROCESSING_TIMEOUT]: 'sources.processingErrors.timeout',
   [Code.PROCESSING_UNAVAILABLE]: 'sources.processingErrors.unavailable',
   [Code.PROCESSING_FAILED]: 'sources.processingErrors.failed',
+  [Code.CONTENT_DEGRADED]: 'sources.processingErrors.contentDegraded',
 };
 
 export function getSourceProcessingErrorKey(code?: Code): string {

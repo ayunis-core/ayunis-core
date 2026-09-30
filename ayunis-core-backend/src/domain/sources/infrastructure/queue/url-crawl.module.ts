@@ -9,6 +9,7 @@ import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-case
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
 import { SourceContentReplacementService } from 'src/domain/sources/application/services/source-content-replacement.service';
 import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
+import { SourceContentDegradationGuard } from 'src/domain/sources/application/services/source-content-degradation-guard.service';
 import { UrlSourceExtractor } from 'src/domain/sources/application/services/url-source-extractor.service';
 import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
@@ -37,6 +38,7 @@ import { UrlCrawlConsumer } from './url-crawl.consumer';
     SourceProcessingHelper,
     SourceContentReplacementService,
     SourceIngestionService,
+    SourceContentDegradationGuard,
     UrlSourceExtractor,
   ],
   exports: [UrlCrawlProcessingPort],

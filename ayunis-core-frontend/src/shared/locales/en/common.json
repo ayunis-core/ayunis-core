@@ -142,7 +142,8 @@
       "empty": "No text could be read from the document. Use a more legible version and upload it again in this chat.",
       "timeout": "Document processing timed out. Remove the file and upload it again in this chat. Splitting large documents may help.",
       "tooManyPages": "The document has too many pages. Split it into smaller files and upload them in this chat.",
-      "unavailable": "The document processing service is temporarily unavailable. Remove the file and upload it again in this chat later."
+      "unavailable": "The document processing service is temporarily unavailable. Remove the file and upload it again in this chat later.",
+      "contentDegraded": "The update found far fewer pages than the previous index, so the previous content was kept. The next scheduled update will try again."
     },
     "failedToAdd": "Error uploading file",
     "invalidFileTypeError": "This file type is currently not supported.",

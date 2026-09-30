@@ -7,6 +7,9 @@ import type { SourceStatus } from 'src/domain/sources/domain/source-status.enum'
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
 import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import type { SourceReindexSchedule } from 'src/domain/sources/application/models/source-reindex-schedule';
+import type { DueSourceReindex } from 'src/domain/sources/application/models/due-source-reindex';
+
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
   abstract findByIds(ids: UUID[]): Promise<Source[]>;
@@ -53,6 +56,29 @@ export abstract class SourceRepository {
       errorCode: SourceProcessingErrorCode;
     },
   ): Promise<boolean>;
+  /**
+   * Writes a source's re-index schedule and nothing else. UPDATE-only;
+   * returns false when the source is gone.
+   */
+  abstract updateReindexSchedule(
+    sourceId: UUID,
+    schedule: SourceReindexSchedule,
+  ): Promise<boolean>;
+  /**
+   * Claims up to `limit` due sources of a knowledge base and moves each one's
+   * next due date one interval past now, in one statement that skips rows
+   * another claimer holds — so concurrent schedulers never claim a source
+   * twice. Sources outside a knowledge base are never claimed: their org,
+   * which the run needs, is unknown.
+   */
+  abstract claimDueReindexes(limit: number): Promise<DueSourceReindex[]>;
+  /**
+   * Makes a claimed source due again at its previous due date so the next
+   * sweep retries it. Does nothing when its schedule changed since the claim.
+   */
+  abstract releaseReindexClaim(claim: DueSourceReindex): Promise<void>;
+  /** Distinct pages (chunk `meta.url`) in the source's committed content. */
+  abstract countIndexedPages(sourceId: UUID): Promise<number>;
   /**
    * Writes a CSV source's parsed data. UPDATE-only — returns false instead of
    * resurrecting the row when the source was deleted mid-processing.
