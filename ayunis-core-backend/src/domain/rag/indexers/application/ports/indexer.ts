@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import type { IndexEntry } from '../../domain/index-entry.entity';
+import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import type { PreparedIndexContent } from 'src/domain/rag/indexers/domain/prepared-index-content.entity';
 
 export interface SearchInput {
   orgId: UUID;
@@ -19,13 +20,20 @@ export interface SearchMultiInput {
   };
 }
 
-export interface IngestBulkInput {
+export interface PrepareBulkInput {
   orgId: UUID;
-  entries: { indexEntry: IndexEntry; content: string }[];
+  documentId: UUID;
+  entries: { chunkId: UUID; content: string }[];
 }
 
 export abstract class IndexerPort {
-  abstract ingestBulk(input: IngestBulkInput): Promise<void>;
+  /** Computes the entries, including provider calls; persists nothing. */
+  abstract prepareBulk(input: PrepareBulkInput): Promise<PreparedIndexContent>;
+  /**
+   * Atomically swaps the document's stored entries for the prepared ones,
+   * joining the caller's transaction when one is active.
+   */
+  abstract replace(prepared: PreparedIndexContent): Promise<void>;
   abstract search(input: SearchInput): Promise<IndexEntry[]>;
   abstract searchMulti(input: SearchMultiInput): Promise<IndexEntry[]>;
   abstract delete(documentId: UUID): Promise<void>;

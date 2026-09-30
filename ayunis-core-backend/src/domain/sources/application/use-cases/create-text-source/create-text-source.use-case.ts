@@ -19,20 +19,17 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
-import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { UUID } from 'crypto';
-import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
-import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
-import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
-import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { fileTypeFromMimeType } from 'src/domain/sources/application/util/source-file-type.helpers';
+import { SourceContentReplacementService } from 'src/domain/sources/application/services/source-content-replacement.service';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import type { PreparedTextSourceContent } from 'src/domain/sources/application/models/prepared-text-source-content';
 
 interface TextSourceWithContent {
   source: TextSource;
@@ -49,14 +46,12 @@ export class CreateTextSourceUseCase {
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
-    private readonly ingestBulkContentUseCase: IngestBulkContentUseCase,
-    private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
+    private readonly contentReplacement: SourceContentReplacementService,
   ) {}
 
   async execute(command: CreateFileSourceCommand): Promise<FileSource>;
   async execute(command: CreateUrlSourceCommand): Promise<UrlSource>;
-  @Transactional()
   async execute(command: CreateTextSourceCommand): Promise<TextSource> {
     this.logger.debug('Creating text source');
     const orgId = this.contextService.get('orgId');
@@ -72,17 +67,14 @@ export class CreateTextSourceUseCase {
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
-      this.logger.debug({ sourceId: result.source.id }, 'Saving source');
-      const saved = await this.sourceRepository.saveTextSource(result.source, {
+      const content = await this.contentReplacement.prepare({
+        sourceId: result.source.id,
+        orgId,
         text: result.text,
         chunks: result.chunks,
       });
-      await this.indexSourceContentChunks({
-        sourceId: saved.id,
-        chunks: result.chunks,
-        orgId,
-      });
-      return saved;
+      this.logger.debug({ sourceId: result.source.id }, 'Saving source');
+      return await this.persist(result.source, content);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(
@@ -95,6 +87,21 @@ export class CreateTextSourceUseCase {
         error: error as Error,
       });
     }
+  }
+
+  // The content commit only writes onto an existing row, so the new row is
+  // inserted first, in the same transaction.
+  @Transactional()
+  private async persist(
+    source: TextSource,
+    content: PreparedTextSourceContent,
+  ): Promise<TextSource> {
+    await this.sourceRepository.save(source);
+    const saved = await this.contentReplacement.commit(source, content);
+    if (!saved) {
+      throw new Error(`Source ${source.id} vanished while being created`);
+    }
+    return saved;
   }
 
   private async createFileSource(
@@ -184,44 +191,5 @@ export class CreateTextSourceUseCase {
     }
 
     return sourceContentChunks;
-  }
-
-  /**
-   * Index source content using the indexers module.
-   * Uses bulk ingestion to minimize embedding API calls and DB round-trips:
-   * - Embedding model is resolved once (not per chunk)
-   * - All child chunk texts are embedded in batched API calls
-   * - All parent chunks are saved in a single DB write
-   */
-  private async indexSourceContentChunks(params: {
-    sourceId: UUID;
-    chunks: TextSourceContentChunk[];
-    orgId: UUID;
-  }): Promise<void> {
-    this.logger.debug({ sourceId: params.sourceId }, 'Indexing source content');
-
-    // Step 1: Delete any existing index entries for this source
-    // (handles re-upload/re-index scenarios, no-op for new sources)
-    await this.deleteContentUseCase.execute(
-      new DeleteContentCommand({ documentId: params.sourceId }),
-    );
-
-    // Step 2: Bulk ingest all chunks in one operation
-    await this.ingestBulkContentUseCase.execute(
-      new IngestBulkContentCommand({
-        orgId: params.orgId,
-        entries: params.chunks.map((chunk) => ({
-          documentId: params.sourceId,
-          chunkId: chunk.id,
-          content: chunk.content,
-        })),
-        type: IndexType.PARENT_CHILD,
-      }),
-    );
-
-    this.logger.debug(
-      { sourceId: params.sourceId, chunkCount: params.chunks.length },
-      'Successfully indexed source content',
-    );
   }
 }

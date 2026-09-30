@@ -1,16 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { ChildChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/child-chunk.entity';
+import { PreparedParentChildContent } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/prepared-parent-child-content.entity';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.command';
 import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
-import { IngestBulkContentCommand } from './ingest-bulk-content.command';
+import { PrepareBulkContentCommand } from './prepare-bulk-content.command';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
@@ -27,23 +29,31 @@ import type { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-
  */
 const EMBEDDING_BATCH_SIZE = 64;
 
+/**
+ * Splits and embeds entries into parent/child chunks without persisting them;
+ * `ReplaceContentUseCase` stores the result.
+ */
 @Injectable()
-export class IngestBulkContentUseCase {
-  private readonly logger = new Logger(IngestBulkContentUseCase.name);
+export class PrepareBulkContentUseCase {
+  private readonly logger = new Logger(PrepareBulkContentUseCase.name);
 
   constructor(
-    private readonly parentChildIndexerRepository: ParentChildIndexerRepositoryPort,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly embedTextUseCase: EmbedTextUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
   ) {}
 
-  async execute(command: IngestBulkContentCommand): Promise<void> {
-    if (command.entries.length === 0) return;
+  @HandleUnexpectedErrors(UnexpectedIndexError)
+  async execute(
+    command: PrepareBulkContentCommand,
+  ): Promise<PreparedParentChildContent> {
+    if (command.entries.length === 0) {
+      return new PreparedParentChildContent(command.documentId, []);
+    }
 
     this.logger.debug(
       { entryCount: command.entries.length, orgId: command.orgId },
-      'Bulk ingesting entries',
+      'Preparing bulk entries',
     );
 
     // 1. Resolve embedding model ONCE for the entire batch
@@ -74,21 +84,16 @@ export class IngestBulkContentUseCase {
     );
 
     // 5. Reassemble parent chunks with their embeddings
-    const parentChunks = this.assembleParentChunks(parentPlans, allEmbeddings);
-
-    // 6. Bulk save all parent chunks
-    await this.parentChildIndexerRepository.saveMany(parentChunks);
-
-    this.logger.debug(
-      {
-        parentChunkCount: parentChunks.length,
-        childEmbeddingCount: allChildTexts.length,
-      },
-      'Bulk ingested chunks',
+    const parentChunks = this.assembleParentChunks(
+      command.documentId,
+      parentPlans,
+      allEmbeddings,
     );
+
+    return new PreparedParentChildContent(command.documentId, parentChunks);
   }
 
-  private buildParentPlans(command: IngestBulkContentCommand): ParentPlan[] {
+  private buildParentPlans(command: PrepareBulkContentCommand): ParentPlan[] {
     return command.entries.map((entry) => {
       const splitResult = this.splitTextUseCase.execute(
         new SplitTextCommand(entry.content, SplitterType.RECURSIVE),
@@ -96,8 +101,7 @@ export class IngestBulkContentUseCase {
       const parentId = randomUUID();
       return {
         parentId,
-        relatedDocumentId: entry.indexEntry.relatedDocumentId,
-        relatedChunkId: entry.indexEntry.relatedChunkId,
+        relatedChunkId: entry.chunkId,
         content: entry.content,
         childTexts: splitResult.chunks.map((chunk) => chunk.text),
       };
@@ -132,6 +136,7 @@ export class IngestBulkContentUseCase {
   }
 
   private assembleParentChunks(
+    documentId: UUID,
     plans: ParentPlan[],
     allEmbeddings: number[][],
   ): ParentChunk[] {
@@ -147,7 +152,7 @@ export class IngestBulkContentUseCase {
       });
       return new ParentChunk({
         id: plan.parentId,
-        relatedDocumentId: plan.relatedDocumentId,
+        relatedDocumentId: documentId,
         relatedChunkId: plan.relatedChunkId,
         content: plan.content,
         children: childChunks,
@@ -158,7 +163,6 @@ export class IngestBulkContentUseCase {
 
 interface ParentPlan {
   parentId: UUID;
-  relatedDocumentId: UUID;
   relatedChunkId: UUID;
   content: string;
   childTexts: string[];

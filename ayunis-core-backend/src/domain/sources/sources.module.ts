@@ -34,6 +34,7 @@ import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
+import { SourceContentReplacementService } from './application/services/source-content-replacement.service';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
     StartUrlCrawlUseCase,
+    SourceContentReplacementService,
   ],
   exports: [
     LocalSourceRepositoryModule,

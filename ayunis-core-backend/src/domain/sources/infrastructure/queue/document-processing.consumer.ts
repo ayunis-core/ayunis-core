@@ -11,11 +11,13 @@ import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
+import { SourceContentReplacementService } from 'src/domain/sources/application/services/source-content-replacement.service';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import type { PreparedTextSourceContent } from 'src/domain/sources/application/models/prepared-text-source-content';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import {
@@ -34,6 +36,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly sourceRepository: SourceRepository,
+    private readonly contentReplacement: SourceContentReplacementService,
     private readonly helper: SourceProcessingHelper,
   ) {
     super();
@@ -59,16 +62,14 @@ export class DocumentProcessingConsumer extends WorkerHost {
         if (!(await this.claimSourceOrSkip(sourceId, minioPath))) return;
 
         const { text, chunks } = await this.downloadAndExtractText(job.data);
+        const content = await this.contentReplacement.prepare({
+          sourceId,
+          orgId,
+          text,
+          chunks,
+        });
 
-        // Save against a fresh read, never the pre-extraction copy:
-        // AddDocumentToKnowledgeBaseUseCase assigns the knowledge base only
-        // after enqueueing, and the re-check also keeps a deleted source from
-        // being resurrected.
-        const source = await this.reloadIfStillProcessing(sourceId, minioPath);
-        if (!source) return;
-
-        await this.sourceRepository.saveTextSource(source, { text, chunks });
-        await this.helper.index(sourceId, orgId, chunks);
+        if (!(await this.commitContent(sourceId, minioPath, content))) return;
         await this.markSourceReady(sourceId, minioPath);
 
         this.logger.log(
@@ -171,6 +172,25 @@ export class DocumentProcessingConsumer extends WorkerHost {
     );
 
     return { text, chunks };
+  }
+
+  /** Returns false, having written nothing, when the source is gone. */
+  private async commitContent(
+    sourceId: UUID,
+    minioPath: string,
+    content: PreparedTextSourceContent,
+  ): Promise<boolean> {
+    // Save against a fresh read, never the pre-extraction copy:
+    // AddDocumentToKnowledgeBaseUseCase assigns the knowledge base only
+    // after enqueueing. The re-check and the commit's own row lock keep a
+    // deleted source from being resurrected.
+    const source = await this.reloadIfStillProcessing(sourceId, minioPath);
+    if (!source) return false;
+    if (await this.contentReplacement.commit(source, content)) return true;
+
+    this.logger.warn({ sourceId }, 'Source deleted before commit, skipping');
+    await this.cleanupMinioFile(minioPath);
+    return false;
   }
 
   private async reloadIfStillProcessing(

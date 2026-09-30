@@ -5,14 +5,15 @@ import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
 import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { ContextModule } from 'src/common/context/context.module';
-import { LocalSourceRepositoryModule } from '../persistence/local/local-source-repository.module';
-import { MarkSourceFailedUseCase } from '../../application/use-cases/mark-source-failed/mark-source-failed.use-case';
-import { SourceProcessingHelper } from '../../application/services/source-processing-helper.service';
-import { DocumentProcessingPort } from '../../application/ports/document-processing.port';
+import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/persistence/local/local-source-repository.module';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
+import { SourceContentReplacementService } from 'src/domain/sources/application/services/source-content-replacement.service';
+import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DocumentProcessingProducer } from './document-processing.producer';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
-import { StaleProcessingCleanupTask } from '../tasks/stale-processing-cleanup.task';
+import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { StaleProcessingCleanupTask } from '../tasks/stale-processing-cleanup.ta
     StaleProcessingCleanupTask,
     MarkSourceFailedUseCase,
     SourceProcessingHelper,
+    SourceContentReplacementService,
   ],
   exports: [DocumentProcessingPort],
 })

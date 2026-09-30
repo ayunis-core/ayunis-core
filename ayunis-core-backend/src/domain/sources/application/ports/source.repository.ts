@@ -10,10 +10,16 @@ export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
   abstract findByIds(ids: UUID[]): Promise<Source[]>;
   abstract findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]>;
-  abstract saveTextSource(
+  /**
+   * Updates an existing source row and replaces its text details and every
+   * content chunk. Must run inside a transaction. Returns null and writes
+   * nothing when the source row no longer exists, so a source deleted
+   * mid-processing is never re-created.
+   */
+  abstract replaceTextSource(
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
-  ): Promise<TextSource>;
+  ): Promise<TextSource | null>;
   abstract findStaleProcessingSourceIds(
     staleBefore: Date,
     limit: number,

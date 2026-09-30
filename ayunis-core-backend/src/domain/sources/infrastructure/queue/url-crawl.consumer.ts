@@ -10,11 +10,13 @@ import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
+import { SourceContentReplacementService } from 'src/domain/sources/application/services/source-content-replacement.service';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import type { PreparedTextSourceContent } from 'src/domain/sources/application/models/prepared-text-source-content';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
@@ -29,6 +31,7 @@ export class UrlCrawlConsumer extends WorkerHost {
     private readonly crawlUrlUseCase: CrawlUrlUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly sourceRepository: SourceRepository,
+    private readonly contentReplacement: SourceContentReplacementService,
     private readonly helper: SourceProcessingHelper,
   ) {
     super();
@@ -58,15 +61,13 @@ export class UrlCrawlConsumer extends WorkerHost {
         orgId,
         maxDepth,
       );
-      // Re-reading prevents a concurrent deletion from being resurrected and
-      // picks up the collection assignment AddUrlToKnowledgeBase makes right
-      // after enqueueing, which the pre-crawl copy may predate.
-      const source = await this.reloadIfStillProcessing(sourceId);
-      if (!source) return;
-
-      if (title) source.name = title;
-      await this.sourceRepository.saveTextSource(source, { text, chunks });
-      await this.helper.index(sourceId, orgId, chunks);
+      const content = await this.contentReplacement.prepare({
+        sourceId,
+        orgId,
+        text,
+        chunks,
+      });
+      if (!(await this.commitContent(sourceId, title, content))) return;
       await this.markSourceReady(sourceId);
       this.logger.log(
         { chunks: chunks.length, pages: pageCount, sourceId },
@@ -211,6 +212,26 @@ export class UrlCrawlConsumer extends WorkerHost {
       if (text.charCodeAt(index) === 10) count++;
     }
     return count;
+  }
+
+  /** Returns false, having written nothing, when the source is gone. */
+  private async commitContent(
+    sourceId: UUID,
+    title: string,
+    content: PreparedTextSourceContent,
+  ): Promise<boolean> {
+    // Re-reading picks up the collection assignment AddUrlToKnowledgeBase
+    // makes right after enqueueing, which the pre-crawl copy may predate. The
+    // re-check and the commit's own row lock keep a deleted source from being
+    // resurrected.
+    const source = await this.reloadIfStillProcessing(sourceId);
+    if (!source) return false;
+
+    if (title) source.name = title;
+    if (await this.contentReplacement.commit(source, content)) return true;
+
+    this.logger.warn({ sourceId }, 'Source deleted before commit, skipping');
+    return false;
   }
 
   private async reloadIfStillProcessing(

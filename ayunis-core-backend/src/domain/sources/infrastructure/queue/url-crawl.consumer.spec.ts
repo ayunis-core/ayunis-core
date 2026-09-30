@@ -22,6 +22,7 @@ import {
   UrlRetrieverTimeoutError,
   UrlRetrieverUnsupportedContentTypeError,
 } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { UrlCrawlConsumer } from './url-crawl.consumer';
 
@@ -92,14 +93,28 @@ const sourceRepository = {
   findById: jest.fn(),
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
   refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
-  saveTextSource: jest
-    .fn()
-    .mockImplementation((s: unknown) => Promise.resolve(s)),
   updateStatusConditionally: jest.fn(),
 };
 
+const contentReplacement = {
+  prepare: jest.fn(
+    async (params: {
+      sourceId: UUID;
+      text: string;
+      chunks: TextSourceContentChunk[];
+    }) => ({
+      text: params.text,
+      chunks: params.chunks,
+      index: { documentId: params.sourceId },
+    }),
+  ),
+  commit: jest.fn<
+    Promise<UrlSource | null>,
+    [UrlSource, { text: string; chunks: TextSourceContentChunk[] }]
+  >(async (source) => source),
+};
+
 const indexer = {
-  index: jest.fn().mockResolvedValue(undefined),
   cleanupIndex: jest.fn().mockResolvedValue(undefined),
   markFailed: jest.fn().mockResolvedValue(undefined),
 };
@@ -114,6 +129,7 @@ describe('UrlCrawlConsumer', () => {
       crawlUrlUseCase as never,
       splitTextUseCase as never,
       sourceRepository as never,
+      contentReplacement as never,
       indexer as never,
     );
   });
@@ -125,11 +141,12 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [, content] = sourceRepository.saveTextSource.mock.calls[0];
+    const [, content] = contentReplacement.commit.mock.calls[0];
     expect(content.text).toBe('root content\n\nabout content');
-    expect(
-      content.chunks.map((c: { meta: { url: string } }) => c.meta.url),
-    ).toEqual(['https://acme.test/', 'https://acme.test/about']);
+    expect(content.chunks.map((c) => c.meta.url)).toEqual([
+      'https://acme.test/',
+      'https://acme.test/about',
+    ]);
   });
 
   it('stores chunk offsets in the concatenated source coordinate space', async () => {
@@ -177,7 +194,7 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [, content] = sourceRepository.saveTextSource.mock.calls[0];
+    const [, content] = contentReplacement.commit.mock.calls[0];
     expect(content.text).toBe(`${rootContent}\n\n${documentContent}`);
     expect(content.chunks[0].meta).toMatchObject({
       startCharOffset: 0,
@@ -201,7 +218,7 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    const [savedSource] = contentReplacement.commit.mock.calls[0];
     expect(savedSource.name).toBe('Acme Home');
   });
 
@@ -244,9 +261,26 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    const [savedSource] = contentReplacement.commit.mock.calls[0];
     expect(savedSource.knowledgeBaseId).toBe(KNOWLEDGE_BASE_ID);
     expect(savedSource.name).toBe('Acme Home');
+  });
+
+  it('embeds before re-reading the source, so the commit uses a copy read right before it', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const reloadOrder = sourceRepository.findById.mock.invocationCallOrder[1];
+    expect(contentReplacement.prepare.mock.invocationCallOrder[0]).toBeLessThan(
+      reloadOrder,
+    );
+    expect(
+      contentReplacement.commit.mock.invocationCallOrder[0],
+    ).toBeGreaterThan(reloadOrder);
+    const [prepareParams] = contentReplacement.prepare.mock.calls[0];
+    expect(prepareParams).toMatchObject({ sourceId: SOURCE_ID, orgId: ORG_ID });
   });
 
   it('skips the crawl when the heartbeat finds the source gone or no longer processing', async () => {
@@ -256,7 +290,7 @@ describe('UrlCrawlConsumer', () => {
     await consumer.process(makeJob());
 
     expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
-    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(contentReplacement.commit).not.toHaveBeenCalled();
   });
 
   it('skips writing content when the source is deleted mid-crawl', async () => {
@@ -268,8 +302,18 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(contentReplacement.commit).not.toHaveBeenCalled();
     expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+  });
+
+  it('does not mark the source ready when it is deleted before the commit', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    contentReplacement.commit.mockResolvedValueOnce(null);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+    expect(indexer.markFailed).not.toHaveBeenCalled();
   });
 
   it('marks the source failed on the last attempt when the crawl throws', async () => {

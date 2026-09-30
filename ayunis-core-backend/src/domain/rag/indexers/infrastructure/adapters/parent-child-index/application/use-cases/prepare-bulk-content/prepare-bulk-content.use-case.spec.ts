@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { IngestBulkContentUseCase } from './ingest-bulk-content.use-case';
-import { IngestBulkContentCommand } from './ingest-bulk-content.command';
-import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
+import { PrepareBulkContentUseCase } from './prepare-bulk-content.use-case';
+import { PrepareBulkContentCommand } from './prepare-bulk-content.command';
+import { PreparedParentChildContent } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/prepared-parent-child-content.entity';
+import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
-import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import {
   SplitResult,
   TextChunk,
@@ -36,23 +36,13 @@ const PERMITTED_MODEL = new PermittedEmbeddingModel({
   orgId: ORG_ID,
 });
 
-describe('IngestBulkContentUseCase', () => {
-  let useCase: IngestBulkContentUseCase;
-  let mockRepo: jest.Mocked<ParentChildIndexerRepositoryPort>;
+describe('PrepareBulkContentUseCase', () => {
+  let useCase: PrepareBulkContentUseCase;
   let mockSplitter: jest.Mocked<SplitTextUseCase>;
   let mockEmbedder: jest.Mocked<EmbedTextUseCase>;
   let mockGetModel: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
 
   beforeEach(async () => {
-    mockRepo = {
-      save: jest.fn(),
-      saveMany: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-      find: jest.fn(),
-      findByDocumentIds: jest.fn(),
-    };
-
     mockSplitter = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<SplitTextUseCase>;
@@ -67,8 +57,7 @@ describe('IngestBulkContentUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        IngestBulkContentUseCase,
-        { provide: ParentChildIndexerRepositoryPort, useValue: mockRepo },
+        PrepareBulkContentUseCase,
         { provide: SplitTextUseCase, useValue: mockSplitter },
         { provide: EmbedTextUseCase, useValue: mockEmbedder },
         {
@@ -78,7 +67,7 @@ describe('IngestBulkContentUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get(IngestBulkContentUseCase);
+    useCase = module.get(PrepareBulkContentUseCase);
   });
 
   it('should resolve the embedding model exactly once for multiple entries', async () => {
@@ -91,21 +80,16 @@ describe('IngestBulkContentUseCase', () => {
       new Embedding([0.3, 0.4], 'child text', EMBEDDING_MODEL),
     ]);
 
-    const command = new IngestBulkContentCommand({
+    const command = new PrepareBulkContentCommand({
       orgId: ORG_ID,
+      documentId: DOC_ID,
       entries: [
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_1,
-          }),
+          chunkId: CHUNK_ID_1,
           content: 'Bebauungsplan Gewerbegebiet Abschnitt A',
         },
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_2,
-          }),
+          chunkId: CHUNK_ID_2,
           content: 'Bebauungsplan Gewerbegebiet Abschnitt B',
         },
       ],
@@ -147,21 +131,16 @@ describe('IngestBulkContentUseCase', () => {
       new Embedding([0.4], 'Kind-Abschnitt 2b', EMBEDDING_MODEL),
     ]);
 
-    const command = new IngestBulkContentCommand({
+    const command = new PrepareBulkContentCommand({
       orgId: ORG_ID,
+      documentId: DOC_ID,
       entries: [
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_1,
-          }),
+          chunkId: CHUNK_ID_1,
           content: 'Eltern-Abschnitt 1 mit detaillierten Textinhalten',
         },
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_2,
-          }),
+          chunkId: CHUNK_ID_2,
           content: 'Eltern-Abschnitt 2 mit weiteren Textinhalten',
         },
       ],
@@ -184,7 +163,7 @@ describe('IngestBulkContentUseCase', () => {
     );
   });
 
-  it('should save all parent chunks in a single bulk operation', async () => {
+  it('should prepare one parent chunk per entry for the document, in entry order', async () => {
     mockGetModel.execute.mockResolvedValue(PERMITTED_MODEL);
     mockSplitter.execute.mockReturnValue(
       new SplitResult([new TextChunk('Kind-Text', { index: 0 })], {}),
@@ -194,33 +173,35 @@ describe('IngestBulkContentUseCase', () => {
       new Embedding([0.2], 'Kind-Text', EMBEDDING_MODEL),
     ]);
 
-    const command = new IngestBulkContentCommand({
+    const command = new PrepareBulkContentCommand({
       orgId: ORG_ID,
+      documentId: DOC_ID,
       entries: [
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_1,
-          }),
+          chunkId: CHUNK_ID_1,
           content: 'Grundstücksverkehrsgenehmigung Abschnitt A',
         },
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_2,
-          }),
+          chunkId: CHUNK_ID_2,
           content: 'Grundstücksverkehrsgenehmigung Abschnitt B',
         },
       ],
     });
 
-    await useCase.execute(command);
+    const prepared = await useCase.execute(command);
 
-    expect(mockRepo.saveMany).toHaveBeenCalledTimes(1);
-    const savedChunks = mockRepo.saveMany.mock.calls[0][0];
-    expect(savedChunks).toHaveLength(2);
-    expect(savedChunks[0].relatedChunkId).toBe(CHUNK_ID_1);
-    expect(savedChunks[1].relatedChunkId).toBe(CHUNK_ID_2);
+    expect(prepared).toBeInstanceOf(PreparedParentChildContent);
+    expect(prepared.type).toBe(IndexType.PARENT_CHILD);
+    expect(prepared.documentId).toBe(DOC_ID);
+    expect(
+      prepared.parentChunks.map((chunk) => [
+        chunk.relatedDocumentId,
+        chunk.relatedChunkId,
+      ]),
+    ).toEqual([
+      [DOC_ID, CHUNK_ID_1],
+      [DOC_ID, CHUNK_ID_2],
+    ]);
   });
 
   it('should correctly map embeddings back to their parent chunks', async () => {
@@ -247,29 +228,23 @@ describe('IngestBulkContentUseCase', () => {
       new Embedding([3.0], 'B1', EMBEDDING_MODEL),
     ]);
 
-    const command = new IngestBulkContentCommand({
+    const command = new PrepareBulkContentCommand({
       orgId: ORG_ID,
+      documentId: DOC_ID,
       entries: [
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_1,
-          }),
+          chunkId: CHUNK_ID_1,
           content: 'Erster Elternblock mit Ratsbeschluss',
         },
         {
-          indexEntry: new IndexEntry({
-            relatedDocumentId: DOC_ID,
-            relatedChunkId: CHUNK_ID_2,
-          }),
+          chunkId: CHUNK_ID_2,
           content: 'Zweiter Elternblock mit Satzung',
         },
       ],
     });
 
-    await useCase.execute(command);
+    const { parentChunks: savedChunks } = await useCase.execute(command);
 
-    const savedChunks = mockRepo.saveMany.mock.calls[0][0];
     expect(savedChunks[0].children).toHaveLength(2);
     expect(savedChunks[0].children[0].embedding).toEqual([1.0]);
     expect(savedChunks[0].children[1].embedding).toEqual([2.0]);
@@ -277,16 +252,18 @@ describe('IngestBulkContentUseCase', () => {
     expect(savedChunks[1].children[0].embedding).toEqual([3.0]);
   });
 
-  it('should do nothing when entries array is empty', async () => {
-    const command = new IngestBulkContentCommand({
+  it('should prepare an empty replacement without provider calls when entries array is empty', async () => {
+    const command = new PrepareBulkContentCommand({
       orgId: ORG_ID,
+      documentId: DOC_ID,
       entries: [],
     });
 
-    await useCase.execute(command);
+    const prepared = await useCase.execute(command);
 
+    expect(prepared.documentId).toBe(DOC_ID);
+    expect(prepared.parentChunks).toEqual([]);
     expect(mockGetModel.execute).not.toHaveBeenCalled();
     expect(mockEmbedder.execute).not.toHaveBeenCalled();
-    expect(mockRepo.saveMany).not.toHaveBeenCalled();
   });
 });

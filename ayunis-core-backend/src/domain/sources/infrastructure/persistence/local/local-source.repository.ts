@@ -132,11 +132,11 @@ export class LocalSourceRepository extends SourceRepository {
     return records.map((record) => this.mapper.toDomain(record));
   }
 
-  async saveTextSource(
+  async replaceTextSource(
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
-  ): Promise<TextSource> {
-    this.logger.log({ sourceId: source.id }, 'saveTextSource');
+  ): Promise<TextSource | null> {
+    this.logger.log({ sourceId: source.id }, 'replaceTextSource');
     const {
       source: sourceRecord,
       details,
@@ -149,6 +149,27 @@ export class LocalSourceRepository extends SourceRepository {
       },
       'Saving text source record',
     );
+    // Serialises overlapping replacements of one source: the waiting one then
+    // sees the committed rows and replaces them instead of merging with them.
+    // Requires a transaction; TypeORM rejects the lock outside of one.
+    const locked = await this.sourceRepository
+      .createQueryBuilder('source')
+      .select('source.id')
+      .where('source.id = :sourceId', { sourceId: source.id })
+      .setLock('pessimistic_write')
+      .getRawOne<{ source_id: UUID }>();
+    if (!locked) {
+      this.logger.warn({ sourceId: source.id }, 'Source gone, content skipped');
+      return null;
+    }
+    // Matched by sourceId, not by the mapper's details id: older rows carry
+    // their own details id. The FK cascade removes the previous chunks.
+    await this.textSourceDetailsRepository
+      .createQueryBuilder()
+      .delete()
+      .from(TextSourceDetailsRecord)
+      .where('"sourceId" = :sourceId', { sourceId: source.id })
+      .execute();
     const savedSource = await this.sourceRepository.save(sourceRecord);
     this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
     const savedDetails = await this.textSourceDetailsRepository.save(details);

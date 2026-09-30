@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ParentChildIndexerModule } from './infrastructure/adapters/parent-child-index/parent-child-indexer.module';
-import { IngestBulkContentUseCase } from './application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
+import { PrepareBulkContentUseCase } from './application/use-cases/prepare-bulk-content/prepare-bulk-content.use-case';
+import { ReplaceBulkContentUseCase } from './application/use-cases/replace-bulk-content/replace-bulk-content.use-case';
 import { SearchContentUseCase } from './application/use-cases/search-content/search-content.use-case';
 import { DeleteContentUseCase } from './application/use-cases/delete-content/delete-content.use-case';
 import { IndexRegistry } from './application/indexer.registry';
@@ -19,13 +20,15 @@ import { IndexType } from './domain/value-objects/index-type.enum';
       },
       inject: [ParentChildIndexerAdapter],
     },
-    IngestBulkContentUseCase,
+    PrepareBulkContentUseCase,
+    ReplaceBulkContentUseCase,
     SearchContentUseCase,
     DeleteContentUseCase,
   ],
   exports: [
     IndexRegistry,
-    IngestBulkContentUseCase,
+    PrepareBulkContentUseCase,
+    ReplaceBulkContentUseCase,
     SearchContentUseCase,
     DeleteContentUseCase,
   ],
