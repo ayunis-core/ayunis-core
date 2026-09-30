@@ -1,9 +1,11 @@
 import { Buffer } from "node:buffer";
 import { createServer } from "node:http";
+import { randomUUID } from "node:crypto";
 import process from "node:process";
 
 const port = Number(process.env.E2E_MISTRAL_OCR_PORT ?? 3199);
 const fileId = "e2e-screenshot-pdf";
+const rejectedFiles = new Set();
 
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/health") {
@@ -11,9 +13,11 @@ const server = createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && request.url === "/v1/files") {
-    await readBody(request);
+    const body = await readBody(request);
+    const id = body.includes("AYC-1059-OCR-REJECT") ? randomUUID() : fileId;
+    if (id !== fileId) rejectedFiles.add(id);
     return sendJson(response, 200, {
-      id: fileId,
+      id,
       object: "file",
       bytes: 1024,
       created_at: 0,
@@ -26,6 +30,14 @@ const server = createServer(async (request, response) => {
 
   if (request.method === "POST" && request.url === "/v1/ocr") {
     const body = JSON.parse(await readBody(request));
+    if (rejectedFiles.has(body.document?.file_id)) {
+      return sendJson(response, 400, {
+        object: "error",
+        type: "document_parser_invalid_file",
+        message: "Synthetic OCR rejection",
+        code: "3740",
+      });
+    }
     if (!requestsImageTextAnnotations(body)) {
       return sendJson(response, 400, {
         message: "Expected image text annotations without base64 image data",
@@ -34,9 +46,25 @@ const server = createServer(async (request, response) => {
     return sendJson(response, 200, ocrResponse());
   }
 
-  if (request.method === "DELETE" && request.url === `/v1/files/${fileId}`) {
+  const id = request.url?.startsWith("/v1/files/")
+    ? request.url.slice("/v1/files/".length)
+    : undefined;
+  if (request.method === "GET" && rejectedFiles.has(id)) {
+    return sendJson(response, 200, {
+      id,
+      object: "file",
+      bytes: 1024,
+      created_at: 0,
+      filename: "ocr-rejected.pdf",
+      purpose: "ocr",
+      sample_type: "instruct",
+      source: "upload",
+    });
+  }
+  if (request.method === "DELETE" && (id === fileId || rejectedFiles.has(id))) {
+    rejectedFiles.delete(id);
     sendJson(response, 200, {
-      id: fileId,
+      id,
       object: "file",
       deleted: true,
     });

@@ -1,16 +1,6 @@
 [pre-start]
-env = '''
-set -e
-for f in ayunis-core-backend/.env \
-         ayunis-core-backend/.env.dev \
-         ayunis-core-frontend/.env; do
-  src="{{ primary_worktree_path }}/$f"
-  if [ -f "$src" ] && [ ! -f "$f" ]; then
-    mkdir -p "$(dirname "$f")"
-    cp "$src" "$f"
-  fi
-done
-'''
+# Copies the gitignored files listed in .worktreeinclude (secret .env files).
+copy = "wt step copy-ignored --require-include"
 
 [[post-start]]
 # Single root install: this is a pnpm workspace (workspace:* deps), so `npm ci`

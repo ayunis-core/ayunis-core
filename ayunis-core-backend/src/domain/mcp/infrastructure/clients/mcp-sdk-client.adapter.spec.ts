@@ -329,6 +329,25 @@ describe('McpSdkClientAdapter', () => {
 
       expect((mapped as Error).cause).toBe(abortError);
     });
+
+    it('attaches privacy-safe operation diagnostics to classified timeouts', async () => {
+      clientMock.listPrompts.mockRejectedValue(buildSdkTimeoutError());
+
+      const mapped = await adapter
+        .listPrompts(config, CAPABILITY_DISCOVERY_TIMEOUT)
+        .catch((error: unknown) => error);
+
+      expect(mapped).toBeInstanceOf(McpConnectionTimeoutError);
+      expect((mapped as McpConnectionTimeoutError).metadata).toEqual({
+        integrationId: config.connectionScope.integrationId,
+        orgId: config.connectionScope.orgId,
+        operation: 'listPrompts',
+        serverHost: 'mcp.example.com',
+        timeoutMs: 10000,
+        underlyingCode: 'REQUEST_TIMEOUT',
+        underlyingName: 'SdkError',
+      });
+    });
   });
 
   describe('connection failure classification', () => {

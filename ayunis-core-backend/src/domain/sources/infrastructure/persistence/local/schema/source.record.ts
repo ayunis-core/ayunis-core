@@ -9,6 +9,7 @@ import {
   TableInheritance,
 } from 'typeorm';
 import type { UUID } from 'crypto';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { BaseRecord } from 'src/common/db/base-record';
 import {
   DataType,
@@ -44,6 +45,9 @@ export abstract class SourceRecord extends BaseRecord {
 
   @Column({ type: 'text', nullable: true })
   processingError: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  processingErrorCode: SourceProcessingErrorCode | null;
 
   @Column({ type: 'timestamp', nullable: true })
   processingStartedAt: Date | null;

@@ -9,7 +9,7 @@ import { FileRetrieverRegistry } from 'src/domain/retrievers/file-retrievers/app
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 import {
-  EmptyOcrResultError,
+  UnprocessableDocumentError,
   FileRetrieverProviderNotAvailableError,
   FileRetrieverUnauthorizedError,
   FileRetrieverUnexpectedError,
@@ -117,9 +117,9 @@ export class RetrieveFileContentUseCase {
     try {
       return await this.processWithMistral(file, pageLimit);
     } catch (error) {
-      if (!(error instanceof EmptyOcrResultError)) throw error;
+      if (!(error instanceof UnprocessableDocumentError)) throw error;
       if (!allowLocalParsing) throw error;
-      return this.processEmptyOcrFallback(file, error);
+      return this.processLocalPdfFallback(file, error);
     }
   }
 
@@ -134,13 +134,13 @@ export class RetrieveFileContentUseCase {
     return handler.processFile(file, { pageLimit });
   }
 
-  private async processEmptyOcrFallback(
+  private async processLocalPdfFallback(
     file: File,
-    emptyOcrError: EmptyOcrResultError,
+    ocrError: UnprocessableDocumentError,
   ): Promise<FileRetrieverResult> {
     this.logger.warn(
       { fileName: file.filename },
-      'Mistral returned no pages; trying local PDF parsing',
+      'OCR could not read the document; trying local PDF parsing',
     );
     try {
       const result = await this.fileRetrieverRegistry
@@ -155,7 +155,7 @@ export class RetrieveFileContentUseCase {
         'Local PDF fallback failed',
       );
     }
-    throw emptyOcrError;
+    throw ocrError;
   }
 
   /**

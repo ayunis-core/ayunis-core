@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@ayunis/ui/lib/cn';
 import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
-import { getColumnDragId } from '../model/column-reordering';
+import { getColumnDragId } from '@/widgets/spreadsheet-editor/model/column-reordering';
+import { columnIndexToLetter } from '@/widgets/spreadsheet-editor/model/formula-references';
 
 interface SpreadsheetColumnRowProps {
   readonly label: string;
@@ -49,6 +50,9 @@ export function SpreadsheetColumnRow({
       >
         <GripVertical className="text-muted-foreground size-3.5" />
       </Button>
+      <span className="text-muted-foreground w-6 shrink-0 text-center text-xs font-medium">
+        {columnIndexToLetter(index)}
+      </span>
       <Input
         className="h-7 text-xs"
         value={label}

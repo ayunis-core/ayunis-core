@@ -2222,6 +2222,18 @@ export interface ModelResponseDto {
   isReasoning: boolean;
 }
 
+export type SourceProcessingErrorCode = typeof SourceProcessingErrorCode[keyof typeof SourceProcessingErrorCode];
+
+
+export const SourceProcessingErrorCode = {
+  DOCUMENT_UNREADABLE: 'DOCUMENT_UNREADABLE',
+  DOCUMENT_EMPTY: 'DOCUMENT_EMPTY',
+  DOCUMENT_PAGE_LIMIT_EXCEEDED: 'DOCUMENT_PAGE_LIMIT_EXCEEDED',
+  PROCESSING_TIMEOUT: 'PROCESSING_TIMEOUT',
+  PROCESSING_UNAVAILABLE: 'PROCESSING_UNAVAILABLE',
+  PROCESSING_FAILED: 'PROCESSING_FAILED',
+} as const;
+
 /**
  * Type of source
  */
@@ -2270,8 +2282,12 @@ export interface SourceResponseDto {
   createdBy: SourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: SourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2354,8 +2370,12 @@ export interface FileSourceResponseDto {
   createdBy: FileSourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: FileSourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2425,8 +2445,12 @@ export interface UrlSourceResponseDto {
   createdBy: UrlSourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: UrlSourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2505,8 +2529,12 @@ export interface CSVDataSourceResponseDto {
   createdBy: CSVDataSourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: CSVDataSourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -4826,14 +4854,23 @@ export interface UpsertOrgSystemPromptDto {
   systemPrompt: string;
 }
 
+export interface ChatStartDefaultsResponseDto {
+  /** Whether new chats start in anonymous mode; users may opt out */
+  anonymousModeByDefault: boolean;
+}
+
 export interface OrgChatSettingsResponseDto {
   /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
   internetSearchEnabled: boolean;
+  /** Whether new chats start in anonymous mode */
+  anonymousModeByDefault: boolean;
 }
 
 export interface UpsertOrgChatSettingsDto {
-  /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
-  internetSearchEnabled: boolean;
+  /** Whether internet access is available to the AI assistant */
+  internetSearchEnabled?: boolean;
+  /** Whether new chats start in anonymous mode; users can opt out */
+  anonymousModeByDefault?: boolean;
 }
 
 export interface RetentionPolicyResponseDto {

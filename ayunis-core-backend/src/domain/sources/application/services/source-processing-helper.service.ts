@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { classifySourceProcessingError } from './classify-source-processing-error';
 import type { UUID } from 'crypto';
 import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
@@ -61,10 +62,15 @@ export class SourceProcessingHelper {
     }
   }
 
-  async markFailed(sourceId: UUID, errorMessage: string): Promise<void> {
+  async markFailed(sourceId: UUID, error: unknown): Promise<void> {
     try {
       await this.markSourceFailedUseCase.execute(
-        new MarkSourceFailedCommand({ sourceId, errorMessage }),
+        new MarkSourceFailedCommand({
+          sourceId,
+          errorMessage:
+            error instanceof Error ? error.message : 'Unknown processing error',
+          errorCode: classifySourceProcessingError(error),
+        }),
       );
     } catch (err) {
       this.logger.error(

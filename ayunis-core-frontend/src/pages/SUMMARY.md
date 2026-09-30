@@ -4,6 +4,8 @@ Page components composing widgets and features for each application route.
 
 Route-level page modules handle authentication, chat conversations, agent management, prompt libraries, knowledge base management, skill management, user settings, organization admin settings, and super-admin platform management. Each page follows a consistent internal structure with api/, ui/, and model/ subdirectories separating data hooks, components, and types.
 
+Chat file uploads and removals invalidate the subscribed thread query only. They do not reload route loaders, whose pending thread fetches can otherwise be cancelled by concurrent uploads.
+
 The chat overview page places its search control in the content header. The project overview keeps only the add-project action there without repeating a content title. Project rows expose pinning with an explanatory tooltip.
 
 The new-chat page combines personal/shared and selected-workspace pinned skills into the same selectable quick-action buttons. Workspace changes clear only a selected skill belonging to a different workspace; regular skill selections remain available.

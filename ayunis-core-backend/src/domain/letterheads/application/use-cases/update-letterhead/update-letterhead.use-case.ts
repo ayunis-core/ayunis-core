@@ -66,7 +66,7 @@ export class UpdateLetterheadUseCase {
       existing,
       command,
     );
-    return this.letterheadsRepository.save(
+    const updated = await this.letterheadsRepository.save(
       this.buildUpdatedLetterhead(
         existing,
         command,
@@ -74,6 +74,8 @@ export class UpdateLetterheadUseCase {
         continuationPageStoragePath,
       ),
     );
+    await this.cleanupRemovedContinuationPage(orgId, existing, command);
+    return updated;
   }
 
   private resolveOrgId(): UUID {
@@ -111,12 +113,32 @@ export class UpdateLetterheadUseCase {
     if (!command.removeContinuationPage) {
       return existing.continuationPageStoragePath;
     }
-    if (existing.continuationPageStoragePath) {
+    return null;
+  }
+
+  private async cleanupRemovedContinuationPage(
+    orgId: UUID,
+    existing: Letterhead,
+    command: UpdateLetterheadCommand,
+  ): Promise<void> {
+    const objectName = existing.continuationPageStoragePath;
+    if (
+      !command.removeContinuationPage ||
+      command.continuationPagePdfBuffer ||
+      !objectName
+    ) {
+      return;
+    }
+    try {
       await this.deleteObjectUseCase.execute(
-        new DeleteObjectCommand(existing.continuationPageStoragePath),
+        new DeleteObjectCommand(objectName),
+      );
+    } catch (error) {
+      this.logger.error(
+        { err: error as Error, orgId, letterheadId: existing.id, objectName },
+        'Failed to clean up removed continuation page',
       );
     }
-    return null;
   }
 
   private async uploadPdf(

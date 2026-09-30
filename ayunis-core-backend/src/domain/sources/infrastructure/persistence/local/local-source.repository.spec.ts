@@ -21,6 +21,43 @@ import type { SourceMapper } from './mappers/source.mapper';
 import type { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 
 describe('LocalSourceRepository', () => {
+  it('clears failure metadata in the same guarded update that makes a source ready', async () => {
+    const qb = {
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+    const manager = {
+      getRepository: jest
+        .fn()
+        .mockReturnValue({ createQueryBuilder: () => qb }),
+    } as unknown as EntityManager;
+    const repository = new LocalSourceRepository(
+      {} as Repository<SourceRecord>,
+      {} as SourceMapper,
+      {} as SourceContentChunkMapper,
+      { tx: manager } as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+    const id = randomUUID();
+    await expect(
+      repository.updateStatusConditionally(
+        id,
+        SourceStatus.PROCESSING,
+        SourceStatus.READY,
+      ),
+    ).resolves.toBe(true);
+    expect(qb.set).toHaveBeenCalledWith({
+      status: SourceStatus.READY,
+      processingError: null,
+      processingErrorCode: null,
+    });
+    expect(qb.where).toHaveBeenCalledWith('id = :id AND status = :fromStatus', {
+      id,
+      fromStatus: SourceStatus.PROCESSING,
+    });
+  });
+
   it('uses the default repository outside an active transaction', async () => {
     const sourceRepository = {
       findOne: jest.fn().mockResolvedValue(null),
@@ -106,7 +143,10 @@ describe('LocalSourceRepository', () => {
       type: TextType.FILE,
       status: SourceStatus.READY,
     });
-    const sourceRecord = { id: source.id } as TextSourceRecord;
+    const sourceRecord = {
+      id: source.id,
+      knowledgeBaseId: null,
+    } as TextSourceRecord;
     const detailsRecord = { source: sourceRecord } as TextSourceDetailsRecord;
     const chunks = [{ id: randomUUID() }] as SourceContentChunkRecord[];
     const txSourceRepository = {
@@ -144,6 +184,9 @@ describe('LocalSourceRepository', () => {
       repository.saveTextSource(source, { text: 'Policy', chunks: [] }),
     ).resolves.toBe(source);
     expect(txSourceRepository.save).toHaveBeenCalledWith(sourceRecord);
+    expect(txSourceRepository.save.mock.calls[0][0]).not.toHaveProperty(
+      'knowledgeBaseId',
+    );
     expect(txDetailsRepository.save).toHaveBeenCalledWith(detailsRecord);
     expect(txChunkRepository.save).toHaveBeenCalledWith(chunks);
   });
@@ -213,5 +256,4 @@ describe('LocalSourceRepository', () => {
     );
     expect(queryBuilder.getOne).toHaveBeenCalledTimes(1);
   });
-
 });

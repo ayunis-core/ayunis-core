@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
@@ -12,6 +14,7 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
+import type { EntityManager } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
@@ -28,11 +31,17 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
   constructor(
     @InjectRepository(ThreadRecord)
-    private readonly threadRepository: Repository<ThreadRecord>,
+    private readonly defaultRepo: Repository<ThreadRecord>,
     private readonly threadMapper: ThreadMapper,
     private readonly assignments: LocalThreadAssignmentsRepository,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get threadRepository(): Repository<ThreadRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(ThreadRecord) ?? this.defaultRepo;
   }
 
   async create(thread: Thread): Promise<Thread> {
@@ -462,24 +471,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async findExpiredThreadRefsByOrg(
     params: FindExpiredThreadRefsParams,
   ): Promise<ExpiredThreadRef[]> {
-    this.logger.log(
-      {
-        orgId: params.orgId,
-        activeBefore: params.activeBefore,
-        limit: params.limit,
-        offset: params.offset,
-      },
-      'findExpiredThreadRefsByOrg',
-    );
-    // Select only id + owner (no message/source hydration) — enforcement
-    // deletes via DeleteThreadUseCase by id, so the full entity is unneeded.
-    // COALESCE(lastActivityAt, createdAt) defends against any null slipping
-    // through; ASC ordering keeps the oldest threads first so a paging offset
-    // can step past threads that failed to delete on a previous iteration.
-    // thread.id is a stable secondary key: enforcement advances the offset
-    // only past failed deletes, so rows with equal activity timestamps must
-    // keep a deterministic order across queries or expired threads could be
-    // skipped for the rest of the run.
+    this.logger.log({ ...params }, 'findExpiredThreadRefsByOrg');
+    // Enforcement advances its offset past failed deletes. Stable ID ordering
+    // prevents equal timestamps from skipping rows on subsequent batches.
     const rows = await this.threadRepository
       .createQueryBuilder('thread')
       .innerJoin('users', 'user', 'user.id = thread.userId')

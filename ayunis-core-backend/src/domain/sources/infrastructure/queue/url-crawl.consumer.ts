@@ -51,16 +51,18 @@ export class UrlCrawlConsumer extends WorkerHost {
     this.validateAndSetContext(orgId, userId);
 
     try {
-      const source = await this.loadSourceOrSkip(sourceId);
-      if (!source) return;
+      if (!(await this.loadSourceOrSkip(sourceId))) return;
 
       const { text, chunks, title, pageCount } = await this.crawlAndBuild(
         rootUrl,
         orgId,
         maxDepth,
       );
-      // Re-checking prevents a concurrent deletion from being resurrected.
-      if (!(await this.isSourceStillProcessing(sourceId))) return;
+      // Re-reading prevents a concurrent deletion from being resurrected and
+      // picks up the collection assignment AddUrlToKnowledgeBase makes right
+      // after enqueueing, which the pre-crawl copy may predate.
+      const source = await this.reloadIfStillProcessing(sourceId);
+      if (!source) return;
 
       if (title) source.name = title;
       await this.sourceRepository.saveTextSource(source, { text, chunks });
@@ -74,10 +76,7 @@ export class UrlCrawlConsumer extends WorkerHost {
       this.logger.error({ err: error as Error, sourceId }, 'URL crawl failed');
       const { final, rethrow } = classifyJobFailure(job, error);
       if (final) {
-        await this.helper.markFailed(
-          sourceId,
-          error instanceof Error ? error.message : 'Unknown crawl error',
-        );
+        await this.helper.markFailed(sourceId, error);
         await this.helper.cleanupIndex(sourceId);
       }
       if (rethrow) throw rethrow;
@@ -105,9 +104,15 @@ export class UrlCrawlConsumer extends WorkerHost {
     }
 
     // Reset processingStartedAt on every attempt so the stale-cleanup cron
-    // doesn't race with BullMQ retries on long-running jobs.
-    source.processingStartedAt = new Date();
-    await this.sourceRepository.save(source);
+    // doesn't race with BullMQ retries on long-running jobs. UPDATE-only: a
+    // full save() would write this possibly stale copy over concurrent
+    // changes to the row, such as the collection assignment.
+    const alive =
+      await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
+    if (!alive) {
+      this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
+      return null;
+    }
 
     return source;
   }
@@ -208,9 +213,14 @@ export class UrlCrawlConsumer extends WorkerHost {
     return count;
   }
 
-  private async isSourceStillProcessing(sourceId: UUID): Promise<boolean> {
+  private async reloadIfStillProcessing(
+    sourceId: UUID,
+  ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
-    if (source?.status !== SourceStatus.PROCESSING) {
+    if (
+      !(source instanceof TextSource) ||
+      source.status !== SourceStatus.PROCESSING
+    ) {
       this.logger.warn(
         {
           sourceId,
@@ -218,9 +228,9 @@ export class UrlCrawlConsumer extends WorkerHost {
         },
         'Source deleted or status changed mid-crawl',
       );
-      return false;
+      return null;
     }
-    return true;
+    return source;
   }
 
   private async markSourceReady(sourceId: UUID): Promise<void> {

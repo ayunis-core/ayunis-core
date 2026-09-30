@@ -768,6 +768,162 @@ describe('the agent loop', () => {
     });
   });
 
+  it('retries after research ends with thinking but no answer', async () => {
+    const researchTurns = Array.from({ length: 8 }, (_, index) =>
+      toolCallTurn({
+        id: `research-${index}`,
+        name: 'echo',
+        input: { value: `result-${index}` },
+      }),
+    );
+    const model = new MockProvider([
+      ...researchTurns,
+      [
+        { thinkingDelta: 'I have enough research to answer.' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 5 } },
+      ],
+      textTurn('The research supports this answer.'),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()] }),
+    );
+
+    expect(events.filter((event) => event.type === 'tool_result')).toHaveLength(
+      8,
+    );
+    expect(model.requests).toHaveLength(10);
+    expect(model.requests.at(-1)?.tools).toEqual([]);
+    expect(model.requests.at(-1)?.instructions).toContain(
+      'Do not call tools. Respond with a final answer for the user.',
+    );
+    expect(
+      events.filter((event) => event.type === 'assistant_message').at(-1),
+    ).toEqual(
+      expect.objectContaining({
+        message: expect.objectContaining({
+          content: expect.arrayContaining([
+            expect.objectContaining({
+              type: 'text',
+              text: 'The research supports this answer.',
+            }),
+          ]),
+        }),
+      }),
+    );
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('rejects tool calls during answer-only recovery', async () => {
+    const model = new MockProvider([
+      [
+        { thinkingDelta: 'I should answer now.' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 5 } },
+      ],
+      [
+        { thinkingDelta: 'Maybe I should use another tool.' },
+        ...toolCallTurn({
+          id: 'unexpected-research',
+          name: 'echo',
+          input: { value: 'keep researching' },
+        }),
+      ],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()] }),
+    );
+
+    expect(model.requests).toHaveLength(2);
+    expect(events.some((event) => event.type === 'tool_call_snapshot')).toBe(
+      false,
+    );
+    expect(events.some((event) => event.type === 'tool_result')).toBe(false);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('does not re-enable tools after malformed answer-only output', async () => {
+    const model = new MockProvider([
+      [
+        { thinkingDelta: 'I should answer now.' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 5 } },
+      ],
+      [
+        {
+          toolCallDeltas: [
+            { index: 0, id: 'malformed-research', name: 'echo' },
+            { index: 0, argumentsDelta: '{invalid' },
+          ],
+        },
+        {
+          finishReason: 'tool_calls',
+          usage: { inputTokens: 12, outputTokens: 5 },
+        },
+      ],
+      textTurn('Tools were incorrectly restored'),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()] }),
+    );
+
+    expect(model.requests).toHaveLength(2);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('fails instead of completing after repeated thinking-only responses', async () => {
+    const thinkingOnlyTurn = [
+      { thinkingDelta: 'I am still considering the research.' },
+      {
+        finishReason: 'stop' as const,
+        usage: { inputTokens: 12, outputTokens: 5 },
+      },
+    ];
+    const model = new MockProvider([
+      thinkingOnlyTurn,
+      thinkingOnlyTurn,
+      thinkingOnlyTurn,
+      thinkingOnlyTurn,
+    ]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(model.requests).toHaveLength(4);
+    expect(events.some((event) => event.type === 'assistant_message')).toBe(
+      false,
+    );
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_FAILED',
+      message: 'Model provider returned no answer',
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+      usage: { inputTokens: 48, outputTokens: 20 },
+    });
+  });
+
+  it('retries a whitespace-only response before completing', async () => {
+    const model = new MockProvider([
+      [
+        { textDelta: '   ' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 1 } },
+      ],
+      textTurn('Recovered'),
+    ]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(model.requests).toHaveLength(2);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
   it('retains usage from an empty attempt that recovers', async () => {
     const model = new MockProvider([
       [{ finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 0 } }],

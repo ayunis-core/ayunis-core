@@ -33,12 +33,13 @@ cd "$REPO" && scripts/qa-teardown.sh
 
 A non-zero exit means a slot did not come down and its worktree was kept for a retry. Report that to the user (Guardrails: don't fix infra) and carry on with a different slot.
 
-Then use the `worktree` skill. Base the worktree on the PR's branch (not a new one):
+Name the worktree `<ticket-id>-qa` (or `pr-<number>-qa`) per the `worktree` skill's convention, but create it with the command below rather than that skill's setup — the branch is untrusted and nothing may be written into it before `--guard`. Base it on the PR's branch (not a new one):
 
 ```bash
 git fetch origin
+WT="$(dirname "$REPO")/.worktrees/ayunis-core/<ticket-id>-qa"
 # --detach: QA is read-only, and it avoids git's "already checked out" refusal when <branch> is the one you're currently on
-git worktree add --detach /Users/<you>/Developer/ayunis-core-wt-<slug> origin/<branch>
+git worktree add --detach "$WT" origin/<branch>
 scripts/qa-teardown.sh --guard "$WT" || exit 1   # untrusted branch: refuse symlinked app dirs, drop any .dev/.env.dev it shipped. Run BEFORE writing anything into the worktree.
 mkdir -p "$REPO/.dev" && echo "$WT" >> "$REPO/.dev/qa-worktrees"   # registers it as QA-owned — REQUIRED, or teardown will refuse it. Lives in the MAIN checkout on purpose: the branch under test is untrusted and must not be able to opt worktrees in.
 # symlink secret envs + install

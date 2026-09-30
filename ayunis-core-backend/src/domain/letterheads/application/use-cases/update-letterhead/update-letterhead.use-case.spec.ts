@@ -13,6 +13,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import {
   LetterheadNotFoundError,
   LetterheadPdfNotSinglePageError,
+  UnexpectedLetterheadError,
 } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
@@ -185,6 +186,71 @@ describe('UpdateLetterheadUseCase', () => {
     expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({ objectName: continuationPath }),
     );
+  });
+
+  it('should persist removal before deleting the continuation file', async () => {
+    const continuationPath = `letterheads/${mockOrgId}/${mockLetterheadId}/continuation.pdf`;
+    letterheadsRepository.findById.mockResolvedValue(
+      new Letterhead({
+        ...existingLetterhead,
+        continuationPageStoragePath: continuationPath,
+      }),
+    );
+
+    await useCase.execute(
+      new UpdateLetterheadCommand({
+        letterheadId: mockLetterheadId,
+        removeContinuationPage: true,
+      }),
+    );
+
+    expect(letterheadsRepository.save.mock.invocationCallOrder[0]).toBeLessThan(
+      deleteObjectUseCase.execute.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('should keep a committed removal successful when storage cleanup fails', async () => {
+    const continuationPath = `letterheads/${mockOrgId}/${mockLetterheadId}/continuation.pdf`;
+    letterheadsRepository.findById.mockResolvedValue(
+      new Letterhead({
+        ...existingLetterhead,
+        continuationPageStoragePath: continuationPath,
+      }),
+    );
+    deleteObjectUseCase.execute.mockRejectedValue(
+      new Error('storage unavailable'),
+    );
+
+    const result = await useCase.execute(
+      new UpdateLetterheadCommand({
+        letterheadId: mockLetterheadId,
+        removeContinuationPage: true,
+      }),
+    );
+
+    expect(result.continuationPageStoragePath).toBeNull();
+    expect(letterheadsRepository.save).toHaveBeenCalled();
+  });
+
+  it('should not delete the continuation file when persistence fails', async () => {
+    const continuationPath = `letterheads/${mockOrgId}/${mockLetterheadId}/continuation.pdf`;
+    letterheadsRepository.findById.mockResolvedValue(
+      new Letterhead({
+        ...existingLetterhead,
+        continuationPageStoragePath: continuationPath,
+      }),
+    );
+    letterheadsRepository.save.mockRejectedValue(new Error('database error'));
+
+    await expect(
+      useCase.execute(
+        new UpdateLetterheadCommand({
+          letterheadId: mockLetterheadId,
+          removeContinuationPage: true,
+        }),
+      ),
+    ).rejects.toThrow(UnexpectedLetterheadError);
+    expect(deleteObjectUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should not call deleteObject when removeContinuationPage is true but no file exists', async () => {

@@ -79,7 +79,12 @@ const decideRecovery = (
   if (outcome.type === 'accepted') return { type: 'accepted', outcome };
   if (isAbortedOutcome(outcome)) return { type: 'abort' };
   if (options.isAborted()) return { type: 'abort' };
-  if (outcome.visibleOutput || state.retriesUsed >= options.maxRetries) {
+  const canRetryVisibleOutput =
+    outcome.type === 'rejected' && outcome.reason === 'no_final_answer';
+  if (
+    (outcome.visibleOutput && !canRetryVisibleOutput) ||
+    state.retriesUsed >= options.maxRetries
+  ) {
     return terminalDecision(outcome, state.malformedError);
   }
   return retryDecision(options, state, outcome);
@@ -162,6 +167,12 @@ const rejectedRetry = (
       return mode === 'tool_disabled_fallback' && previousMalformed
         ? noRetry(mode, previousMalformed)
         : semanticRetry('empty_recovery', mode, previousMalformed);
+    case 'no_final_answer':
+      return semanticRetry(
+        'empty_recovery',
+        'answer_only_recovery',
+        previousMalformed,
+      );
     case 'invalid_fallback':
       return noRetry(mode, previousMalformed);
     case 'malformed':
@@ -180,7 +191,7 @@ const malformedRetry = (
       ? outcome.error
       : previousMalformed;
   if (!malformed) return noRetry(mode, previousMalformed);
-  if (mode === 'tool_disabled_fallback') return noRetry(mode, malformed);
+  if (mode !== 'normal') return noRetry(mode, malformed);
   return retriesRemaining === 1
     ? semanticRetry('fallback', 'tool_disabled_fallback', malformed)
     : semanticRetry('malformed_recovery', 'normal', malformed);

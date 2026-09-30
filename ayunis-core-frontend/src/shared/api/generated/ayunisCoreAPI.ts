@@ -54,6 +54,7 @@ import type {
   CSVDataSourceResponseDto,
   ChangeSubscriptionRequestDto,
   ChatCompletionRequestDto,
+  ChatStartDefaultsResponseDto,
   CompleteMcpOAuthDto,
   ConfigureOrgSsoConnectionRequestDto,
   ConfirmEmailDto,
@@ -20933,6 +20934,99 @@ export const useOrgSystemPromptControllerDeleteOrgSystemPrompt = <TError = void,
     }
 
 /**
+ * @summary Get chat-start defaults for the authenticated organization member
+ */
+export const orgChatSettingsControllerGetChatStartDefaults = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ChatStartDefaultsResponseDto>(
+      {url: `/chat-settings/chat-start-defaults`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getOrgChatSettingsControllerGetChatStartDefaultsQueryKey = () => {
+    return [
+    `/chat-settings/chat-start-defaults`
+    ] as const;
+    }
+
+
+export const getOrgChatSettingsControllerGetChatStartDefaultsQueryOptions = <TData = Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getOrgChatSettingsControllerGetChatStartDefaultsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>> = ({ signal }) => orgChatSettingsControllerGetChatStartDefaults(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type OrgChatSettingsControllerGetChatStartDefaultsQueryResult = NonNullable<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>>
+export type OrgChatSettingsControllerGetChatStartDefaultsQueryError = unknown
+
+
+export function useOrgChatSettingsControllerGetChatStartDefaults<TData = Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOrgChatSettingsControllerGetChatStartDefaults<TData = Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOrgChatSettingsControllerGetChatStartDefaults<TData = Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get chat-start defaults for the authenticated organization member
+ */
+
+export function useOrgChatSettingsControllerGetChatStartDefaults<TData = Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgChatSettingsControllerGetChatStartDefaults>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getOrgChatSettingsControllerGetChatStartDefaultsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * Returns the organization-wide chat settings for the admin's organization. Defaults to internet access enabled when not configured. Admin only.
  * @summary Get the organization-wide chat settings
  */
@@ -21027,7 +21121,7 @@ export function useOrgChatSettingsControllerGetOrgChatSettings<TData = Awaited<R
 
 
 /**
- * Creates or replaces the organization-wide chat settings. When internet access is disabled, web search and website content tools are not offered to the AI assistant in any of the org users conversations. Admin only.
+ * Creates or partially updates the organization-wide chat settings. Omitted settings are preserved. When internet access is disabled, web search and website content tools are not offered to the AI assistant in any of the org users conversations. Admin only.
  * @summary Set or update the organization-wide chat settings
  */
 export const orgChatSettingsControllerUpsertOrgChatSettings = (

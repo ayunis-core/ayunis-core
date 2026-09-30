@@ -20,6 +20,7 @@ export const MIME_TYPES = {
   // Excel
   XLSX: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   XLS: 'application/vnd.ms-excel',
+  ODS: 'application/vnd.oasis.opendocument.spreadsheet',
 
   // CSV
   CSV: 'text/csv',
@@ -53,6 +54,7 @@ export const FILE_EXTENSIONS = {
   ODP: '.odp',
   XLSX: '.xlsx',
   XLS: '.xls',
+  ODS: '.ods',
   CSV: '.csv',
   TXT: '.txt',
   MD: '.md',
@@ -75,6 +77,7 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'CSV',
   'XLSX',
   'XLS',
+  'ODS',
   'MP3',
   'M4A',
   'WAV',
@@ -89,6 +92,7 @@ export type DetectedFileType =
   | 'odp'
   | 'xlsx'
   | 'xls'
+  | 'ods'
   | 'csv'
   | 'txt'
   | 'eml'
@@ -106,6 +110,7 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [MIME_TYPES.ODT]: 'odt',
   [MIME_TYPES.ODP]: 'odp',
   [MIME_TYPES.XLSX]: 'xlsx',
+  [MIME_TYPES.ODS]: 'ods',
   [MIME_TYPES.CSV]: 'csv',
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
   // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
@@ -127,6 +132,7 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.ODP]: 'odp',
   [FILE_EXTENSIONS.XLSX]: 'xlsx',
   [FILE_EXTENSIONS.XLS]: 'xls',
+  [FILE_EXTENSIONS.ODS]: 'ods',
   [FILE_EXTENSIONS.CSV]: 'csv',
   [FILE_EXTENSIONS.TXT]: 'txt',
   [FILE_EXTENSIONS.MD]: 'txt',
@@ -189,10 +195,10 @@ export function isDocumentFile(fileType: DetectedFileType): boolean {
 }
 
 /**
- * Check if the file type is a spreadsheet (Excel)
+ * Check if the file type is a spreadsheet (Excel, OpenDocument)
  */
 export function isSpreadsheetFile(fileType: DetectedFileType): boolean {
-  return fileType === 'xlsx' || fileType === 'xls';
+  return fileType === 'xlsx' || fileType === 'xls' || fileType === 'ods';
 }
 
 /**
@@ -247,6 +253,7 @@ const CANONICAL_MIME_BY_FILE_TYPE: Record<
   odp: MIME_TYPES.ODP,
   xlsx: MIME_TYPES.XLSX,
   xls: MIME_TYPES.XLS,
+  ods: MIME_TYPES.ODS,
   csv: MIME_TYPES.CSV,
   txt: MIME_TYPES.TXT,
   eml: MIME_TYPES.EML,

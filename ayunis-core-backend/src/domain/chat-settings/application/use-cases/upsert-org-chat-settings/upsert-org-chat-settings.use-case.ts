@@ -4,8 +4,8 @@ import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settin
 import { OrgChatSettingsRepository } from 'src/domain/chat-settings/application/ports/org-chat-settings.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { getRequiredOrgId } from 'src/common/context/required-context';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class UpsertOrgChatSettingsUseCase {
@@ -16,39 +16,12 @@ export class UpsertOrgChatSettingsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedChatSettingsError)
   async execute(
     command: UpsertOrgChatSettingsCommand,
   ): Promise<OrgChatSettings> {
     const orgId = getRequiredOrgId(this.contextService);
-    this.logger.log({ orgId }, 'execute');
-
-    try {
-      const orgChatSettings = new OrgChatSettings({
-        orgId,
-        internetSearchEnabled: command.internetSearchEnabled,
-      });
-
-      const result =
-        await this.orgChatSettingsRepository.upsert(orgChatSettings);
-
-      this.logger.debug(
-        {
-          orgId,
-          id: result.id,
-        },
-        'Org chat settings upserted',
-      );
-
-      return result;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Failed to upsert org chat settings',
-      );
-      throw new UnexpectedChatSettingsError(error as Error);
-    }
+    this.logger.log({ orgId }, 'Upserting org chat settings');
+    return this.orgChatSettingsRepository.upsert(orgId, command.settings);
   }
 }

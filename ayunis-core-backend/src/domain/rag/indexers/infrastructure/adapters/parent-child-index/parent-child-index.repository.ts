@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { ParentChunkRecord } from './infrastructure/persistence/schema/parent-chunk.record';
 import { Repository, SelectQueryBuilder } from 'typeorm';
@@ -20,10 +23,19 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
 
   constructor(
     @InjectRepository(ParentChunkRecord)
-    private readonly parentChunkRepository: Repository<ParentChunkRecord>,
+    private readonly defaultParentChunkRepository: Repository<ParentChunkRecord>,
     private readonly parentChildIndexerMapper: ParentChildIndexerMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get parentChunkRepository(): Repository<ParentChunkRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ParentChunkRecord) ??
+      this.defaultParentChunkRepository
+    );
   }
 
   async save(parentChunk: ParentChunk) {

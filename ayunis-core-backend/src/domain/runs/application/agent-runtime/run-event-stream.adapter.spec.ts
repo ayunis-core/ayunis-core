@@ -710,6 +710,8 @@ describe('adaptRunEventsToStream', () => {
         failureStage: 'stream_consumption',
         upstreamStatus: 429,
         retryAfterMs: 4_500,
+        upstreamCode: 'rate_limit_exceeded',
+        upstreamType: 'too_many_requests',
       }),
     });
     expect(JSON.stringify(error)).not.toContain('sensitive Azure response');

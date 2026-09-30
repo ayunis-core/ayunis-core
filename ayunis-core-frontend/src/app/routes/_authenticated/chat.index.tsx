@@ -1,3 +1,4 @@
+import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
 import { createFileRoute } from '@tanstack/react-router';
 import { NewChatPage, NewChatPageNoModelError } from '@/pages/new-chat';
 import {
@@ -46,6 +47,7 @@ export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { modelId }, context: { queryClient } }) => {
+    await queryClient.fetchQuery(anonymousModeDefaultQueryOptions());
     let selectedModelId: string | undefined;
     if (modelId) {
       selectedModelId = modelId;
