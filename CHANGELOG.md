@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.45.0](https://github.com/ayunis-core/ayunis-core/compare/v2.44.1...v2.45.0) (2026-09-30)
+
+
+### Features
+
+* **chat:** add organization default for anonymous mode (AYC-723) ([#1813](https://github.com/ayunis-core/ayunis-core/issues/1813)) ([26c9a45](https://github.com/ayunis-core/ayunis-core/commit/26c9a45dd457fc93118e2f5ba15ec76152439dce))
+* **knowledge-bases:** accept csv, excel and ods uploads (AYC-419) ([#1810](https://github.com/ayunis-core/ayunis-core/issues/1810)) ([cea2e48](https://github.com/ayunis-core/ayunis-core/commit/cea2e48b7e642014b85e4a796698e75266437ad5))
+* **spreadsheet:** show column letters in grid headers and column manager (AYC-737) ([#1808](https://github.com/ayunis-core/ayunis-core/issues/1808)) ([4a90650](https://github.com/ayunis-core/ayunis-core/commit/4a90650c3fe2fe7690a9fe98b319c458c029c2c0))
+* **webhooks:** forward monthly subscription credit updates (AYC-1017) ([#1807](https://github.com/ayunis-core/ayunis-core/issues/1807)) ([bebc5f3](https://github.com/ayunis-core/ayunis-core/commit/bebc5f323759c73fa5ac1a848e825eb408bc8dfd))
+
+
+### Bug Fixes
+
+* **auth:** recover stale chat sessions (AYC-1043) ([#1806](https://github.com/ayunis-core/ayunis-core/issues/1806)) ([b36adb2](https://github.com/ayunis-core/ayunis-core/commit/b36adb2c02cf5f09ecc454b1ebb0ab734bd5b77d))
+* **chat:** remove deleted histories without refresh (AYC-1041) ([#1796](https://github.com/ayunis-core/ayunis-core/issues/1796)) ([ca6b1bb](https://github.com/ayunis-core/ayunis-core/commit/ca6b1bb7faaceb7e2b11494bdd9f45f1b26af634))
+* **chat:** render read documents inline (AYC-966) ([#1805](https://github.com/ayunis-core/ayunis-core/issues/1805)) ([14c40b4](https://github.com/ayunis-core/ayunis-core/commit/14c40b49286bcd6ffcd4590e5403992b89232552))
+* **persistence:** enroll repositories in cls transactions (AYC-496) ([#1811](https://github.com/ayunis-core/ayunis-core/issues/1811)) ([12467fd](https://github.com/ayunis-core/ayunis-core/commit/12467fde537cc88d8b454bdac784d0877d3c09ab))
+* **users:** show invite statuses as badges (AYC-286) ([#1803](https://github.com/ayunis-core/ayunis-core/issues/1803)) ([bef793e](https://github.com/ayunis-core/ayunis-core/commit/bef793e8f7d93d3576b73ccf68386fab8e713cd1))
+
+
+### Documentation
+
+* **frontend:** document behavior hook placement (AYC-937) ([#1660](https://github.com/ayunis-core/ayunis-core/issues/1660)) ([e6d3b37](https://github.com/ayunis-core/ayunis-core/commit/e6d3b37dfaaaf3a28acd63ca5f7d7ca556032a2a))
+
 ## [2.44.1](https://github.com/ayunis-core/ayunis-core/compare/v2.44.0...v2.44.1) (2026-09-29)
 
 
