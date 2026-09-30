@@ -9,9 +9,9 @@ import { CreatePredefinedDialog } from './create-predefined-dialog';
 import { CreateCustomDialog } from './create-custom-dialog';
 import { EditIntegrationDialog } from './edit-integration-dialog';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
-import SettingsLayout from '../../admin-settings-layout';
-import { useMcpIntegrationsQueries } from '../api/useMcpIntegrationsQueries';
-import type { McpIntegration } from '../model/types';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
+import { useMcpIntegrationsQueries } from '@/pages/admin-settings/integrations-settings/api/useMcpIntegrationsQueries';
+import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -112,7 +112,6 @@ export function McpIntegrationsPage({
     <SettingsLayout
       action={
         <HeaderActions
-          isCloud={isCloud}
           onCreatePredefined={handleOpenCreatePredefined}
           onCreateCustom={() => setCreateCustomOpen(true)}
           t={t}
@@ -161,12 +160,10 @@ export function McpIntegrationsPage({
 }
 
 function HeaderActions({
-  isCloud,
   onCreatePredefined,
   onCreateCustom,
   t,
 }: Readonly<{
-  isCloud: boolean;
   onCreatePredefined: () => void;
   onCreateCustom: () => void;
   t: (key: string) => string;
@@ -188,29 +185,22 @@ function HeaderActions({
           </a>
         </Button>
       )}
-      {isCloud ? (
-        <Button variant="default" size="sm" onClick={onCreatePredefined}>
-          <Plus className="h-4 w-4" />
-          {t('integrations.page.add')}
-        </Button>
-      ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm">
-              <Plus className="h-4 w-4" />
-              {t('integrations.page.add')}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onCreatePredefined}>
-              {t('integrations.page.addPredefined')}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onCreateCustom}>
-              {t('integrations.page.addCustom')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm">
+            <Plus className="h-4 w-4" />
+            {t('integrations.page.add')}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onCreatePredefined}>
+            {t('integrations.page.addPredefined')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onCreateCustom}>
+            {t('integrations.page.addCustom')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

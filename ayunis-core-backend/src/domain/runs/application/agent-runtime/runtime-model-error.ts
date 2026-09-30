@@ -1,28 +1,20 @@
-import type { ErrorMetadata } from 'src/common/errors/base.error';
-import type { ProviderErrorContext } from 'src/common/errors/provider.errors';
+import type {
+  ProviderErrorContext,
+  ProviderUnavailableError,
+} from 'src/common/errors/provider.errors';
+import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import {
   ProviderConnectionError,
   ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
-  ProviderUnavailableError,
 } from 'src/common/errors/provider.errors';
-import {
-  InferenceAbortedError,
-  InferenceFailedError,
-  InferenceImageTooLargeError,
-  InferenceStreamStalledError,
-} from 'src/domain/models/application/models.errors';
 
 export type RuntimeModelErrorType =
   | 'provider_connection'
   | 'provider_timeout'
   | 'provider_server'
-  | 'provider_rejected'
-  | 'inference_aborted'
-  | 'inference_image_too_large'
-  | 'inference_stream_stalled'
-  | 'inference_failed';
+  | 'provider_rejected';
 
 export interface SerializedRuntimeModelError {
   readonly type: RuntimeModelErrorType;
@@ -36,55 +28,26 @@ export interface RuntimeModelErrorDetails extends Readonly<
 }
 
 export function serializeRuntimeModelError(
-  error: Error,
-  idleMs: number,
+  error: ProviderUnavailableError,
+  _idleMs?: number,
+): RuntimeModelErrorDetails;
+export function serializeRuntimeModelError(
+  error: ProviderUnavailableError,
 ): RuntimeModelErrorDetails {
   return {
-    hostError: serializeError(error, idleMs),
+    hostError: {
+      type: providerErrorType(error),
+      context: { ...error.context },
+    },
   };
 }
 
 export function reconstructRuntimeModelError(
   details: Readonly<Record<string, unknown>> | undefined,
-): Error | undefined {
+): ProviderUnavailableError | undefined {
   const serialized = readSerializedError(details?.hostError);
   if (!serialized) return undefined;
-  return reconstructError(serialized);
-}
-
-function serializeError(
-  error: Error,
-  idleMs: number,
-): SerializedRuntimeModelError {
-  if (error instanceof ProviderUnavailableError) {
-    return serializeProviderError(error);
-  }
-  if (error instanceof InferenceStreamStalledError) {
-    return { type: 'inference_stream_stalled', context: { idleMs } };
-  }
-  if (error instanceof InferenceImageTooLargeError) {
-    return { type: 'inference_image_too_large', context: error.metadata ?? {} };
-  }
-  if (error instanceof InferenceAbortedError) {
-    return { type: 'inference_aborted', context: error.metadata ?? {} };
-  }
-  const reason = error.message.replace(/^Inference failed: /, '');
-  const metadata = error instanceof InferenceFailedError ? error.metadata : {};
-  return { type: 'inference_failed', context: { reason, ...metadata } };
-}
-
-function serializeProviderError(
-  error: ProviderUnavailableError,
-): SerializedRuntimeModelError {
-  const type = providerErrorType(error);
-  const causeMessage = error.metadata?.causeMessage;
-  return {
-    type,
-    context: {
-      ...error.context,
-      ...(typeof causeMessage === 'string' ? { causeMessage } : {}),
-    },
-  };
+  return reconstructProviderError(serialized);
 }
 
 function providerErrorType(
@@ -99,52 +62,27 @@ function providerErrorType(
 function readSerializedError(
   value: unknown,
 ): SerializedRuntimeModelError | undefined {
-  if (!isRecord(value) || typeof value.type !== 'string') return undefined;
-  if (!isRuntimeModelErrorType(value.type) || !isRecord(value.context)) {
+  if (!isRecord(value) || !isRuntimeModelErrorType(value.type)) {
     return undefined;
   }
+  if (!isRecord(value.context)) return undefined;
   return { type: value.type, context: value.context };
-}
-
-function reconstructError(serialized: SerializedRuntimeModelError): Error {
-  if (serialized.type.startsWith('provider_')) {
-    return reconstructProviderError(serialized);
-  }
-  const context = serialized.context;
-  if (serialized.type === 'inference_stream_stalled') {
-    const idleMs = typeof context.idleMs === 'number' ? context.idleMs : 0;
-    return new InferenceStreamStalledError(idleMs);
-  }
-  if (serialized.type === 'inference_image_too_large') {
-    return new InferenceImageTooLargeError(context);
-  }
-  if (serialized.type === 'inference_aborted') {
-    return new InferenceAbortedError(context);
-  }
-  const reason =
-    typeof context.reason === 'string'
-      ? context.reason
-      : 'Provider inference failed';
-  return new InferenceFailedError(reason, withoutKey(context, 'reason'));
 }
 
 function reconstructProviderError(
   serialized: SerializedRuntimeModelError,
-): Error {
+): ProviderUnavailableError {
   const context = toProviderContext(serialized.context);
-  const causeMessage = serialized.context.causeMessage;
-  const cause =
-    typeof causeMessage === 'string' ? new Error(causeMessage) : undefined;
   if (serialized.type === 'provider_connection') {
-    return new ProviderConnectionError(context, cause);
+    return new ProviderConnectionError(context);
   }
   if (serialized.type === 'provider_timeout') {
-    return new ProviderTimeoutError(context, cause);
+    return new ProviderTimeoutError(context);
   }
   if (serialized.type === 'provider_rejected') {
-    return new ProviderRequestRejectedError(context, cause);
+    return new ProviderRequestRejectedError(context);
   }
-  return new ProviderServerError(context, cause);
+  return new ProviderServerError(context);
 }
 
 function toProviderContext(
@@ -161,39 +99,77 @@ function toProviderContext(
     ...(typeof context.upstreamStatus === 'number' && {
       upstreamStatus: context.upstreamStatus,
     }),
+    ...readProviderDiagnostics(context),
     ...(typeof context.upstreamRequestId === 'string' && {
       upstreamRequestId: context.upstreamRequestId,
     }),
     ...(typeof context.retryAfterMs === 'number' && {
       retryAfterMs: context.retryAfterMs,
     }),
+    ...providerLifecycleContext(context),
   };
 }
 
-function withoutKey(
+function providerLifecycleContext(
   context: Readonly<Record<string, unknown>>,
-  key: string,
-): ErrorMetadata {
-  return Object.fromEntries(
-    Object.entries(context).filter(([entryKey]) => entryKey !== key),
-  );
+): Pick<ProviderErrorContext, 'failureStage' | 'timeoutSource'> {
+  const failureStage = context.failureStage;
+  const timeoutSource = context.timeoutSource;
+  return {
+    ...((failureStage === 'stream_establishment' ||
+      failureStage === 'stream_consumption') && { failureStage }),
+    ...((timeoutSource === 'transport' ||
+      timeoutSource === 'response_start' ||
+      timeoutSource === 'whole_stream') && { timeoutSource }),
+  };
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function readProviderDiagnostics(
+  context: Readonly<Record<string, unknown>>,
+): Pick<
+  ProviderErrorContext,
+  'upstreamCode' | 'upstreamType' | 'upstreamParam' | 'upstreamReason'
+> {
+  return {
+    ...(typeof context.upstreamCode === 'string' && {
+      upstreamCode: context.upstreamCode,
+    }),
+    ...(typeof context.upstreamType === 'string' && {
+      upstreamType: context.upstreamType,
+    }),
+    ...(typeof context.upstreamParam === 'string' && {
+      upstreamParam: context.upstreamParam,
+    }),
+    ...(isProviderErrorReason(context.upstreamReason) && {
+      upstreamReason: context.upstreamReason,
+    }),
+  };
+}
+
+const PROVIDER_ERROR_REASONS: ReadonlySet<string> = new Set(
+  Object.values(ProviderErrorReason),
+);
+
+function isProviderErrorReason(
+  value: unknown,
+): value is ProviderErrorContext['upstreamReason'] {
+  return typeof value === 'string' && PROVIDER_ERROR_REASONS.has(value);
+}
+
 function isRuntimeModelErrorType(
-  value: string,
+  value: unknown,
 ): value is RuntimeModelErrorType {
-  return [
-    'provider_connection',
-    'provider_timeout',
-    'provider_server',
-    'provider_rejected',
-    'inference_aborted',
-    'inference_image_too_large',
-    'inference_stream_stalled',
-    'inference_failed',
-  ].includes(value);
+  return (
+    typeof value === 'string' &&
+    [
+      'provider_connection',
+      'provider_timeout',
+      'provider_server',
+      'provider_rejected',
+    ].includes(value)
+  );
 }

@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -15,6 +14,7 @@ import {
 } from 'src/domain/letterheads/application/letterheads.errors';
 import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { UpdateLetterheadCommand } from './update-letterhead.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpdateLetterheadUseCase {
@@ -66,7 +66,7 @@ export class UpdateLetterheadUseCase {
       existing,
       command,
     );
-    return this.letterheadsRepository.save(
+    const updated = await this.letterheadsRepository.save(
       this.buildUpdatedLetterhead(
         existing,
         command,
@@ -74,11 +74,12 @@ export class UpdateLetterheadUseCase {
         continuationPageStoragePath,
       ),
     );
+    await this.cleanupRemovedContinuationPage(orgId, existing, command);
+    return updated;
   }
 
   private resolveOrgId(): UUID {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) throw new UnauthorizedAccessError();
+    const orgId = getRequiredOrgId(this.contextService);
     return orgId;
   }
 
@@ -112,12 +113,32 @@ export class UpdateLetterheadUseCase {
     if (!command.removeContinuationPage) {
       return existing.continuationPageStoragePath;
     }
-    if (existing.continuationPageStoragePath) {
+    return null;
+  }
+
+  private async cleanupRemovedContinuationPage(
+    orgId: UUID,
+    existing: Letterhead,
+    command: UpdateLetterheadCommand,
+  ): Promise<void> {
+    const objectName = existing.continuationPageStoragePath;
+    if (
+      !command.removeContinuationPage ||
+      command.continuationPagePdfBuffer ||
+      !objectName
+    ) {
+      return;
+    }
+    try {
       await this.deleteObjectUseCase.execute(
-        new DeleteObjectCommand(existing.continuationPageStoragePath),
+        new DeleteObjectCommand(objectName),
+      );
+    } catch (error) {
+      this.logger.error(
+        { err: error as Error, orgId, letterheadId: existing.id, objectName },
+        'Failed to clean up removed continuation page',
       );
     }
-    return null;
   }
 
   private async uploadPdf(

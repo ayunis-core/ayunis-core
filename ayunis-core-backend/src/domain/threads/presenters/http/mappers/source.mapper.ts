@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Source } from 'src/domain/sources/domain/source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import {
   FileSource,
   UrlSource,
@@ -11,7 +13,7 @@ import {
   FileSourceResponseDto,
   UrlSourceResponseDto,
   CSVDataSourceResponseDto,
-} from '../dto/get-thread-response.dto/source-response.dto';
+} from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/source-response.dto';
 
 @Injectable()
 export class SourceDtoMapper {
@@ -19,14 +21,26 @@ export class SourceDtoMapper {
     source: Source,
     threadId?: UUID,
   ): FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto {
-    if (source instanceof FileSource) {
-      return this.fileSourceToDto(source, threadId);
-    } else if (source instanceof UrlSource) {
-      return this.urlSourceToDto(source, threadId);
-    } else if (source instanceof CSVDataSource) {
-      return this.csvDataSourceToDto(source, threadId);
+    const dto = this.mapSource(source, threadId);
+    if (source.status === SourceStatus.FAILED) {
+      dto.processingError = 'Source processing failed';
+      dto.processingErrorCode =
+        source.processingErrorCode ??
+        SourceProcessingErrorCode.PROCESSING_FAILED;
     }
+    return dto;
+  }
 
+  private mapSource(
+    source: Source,
+    threadId?: UUID,
+  ): FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto {
+    if (source instanceof FileSource)
+      return this.fileSourceToDto(source, threadId);
+    if (source instanceof UrlSource)
+      return this.urlSourceToDto(source, threadId);
+    if (source instanceof CSVDataSource)
+      return this.csvDataSourceToDto(source, threadId);
     throw new Error('Invalid source type: ' + source.type);
   }
 
@@ -43,7 +57,6 @@ export class SourceDtoMapper {
     fileDto.name = source.name;
     fileDto.createdBy = source.createdBy;
     fileDto.status = source.status;
-    fileDto.processingError = source.processingError ?? undefined;
     fileDto.createdAt = source.createdAt.toISOString();
     fileDto.updatedAt = source.updatedAt.toISOString();
 
@@ -63,7 +76,6 @@ export class SourceDtoMapper {
     urlDto.name = source.name;
     urlDto.createdBy = source.createdBy;
     urlDto.status = source.status;
-    urlDto.processingError = source.processingError ?? undefined;
     urlDto.createdAt = source.createdAt.toISOString();
     urlDto.updatedAt = source.updatedAt.toISOString();
 
@@ -83,7 +95,6 @@ export class SourceDtoMapper {
     csvDto.name = source.name;
     csvDto.createdBy = source.createdBy;
     csvDto.status = source.status;
-    csvDto.processingError = source.processingError ?? undefined;
     csvDto.createdAt = source.createdAt.toISOString();
     csvDto.updatedAt = source.updatedAt.toISOString();
 

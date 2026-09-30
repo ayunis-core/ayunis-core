@@ -1,4 +1,5 @@
 import i18n from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 import * as z from 'zod';
 
@@ -179,20 +180,11 @@ const resources = {
   },
 };
 
-// Language detector options
-// const detectionOptions = {
-//   // order and from where user language should be detected
-//   order: ["localStorage", "htmlTag", "path", "subdomain"],
-
-//   // keys or params to lookup language from
-//   lookupLocalStorage: "ayunis-language",
-
-//   // cache user language on
-//   caches: ["localStorage"],
-
-//   // only detect languages that are defined in our resources
-//   checkWhitelist: true,
-// };
+const detectionOptions = {
+  order: ['localStorage'],
+  lookupLocalStorage: 'ayunis-language',
+  caches: ['localStorage'],
+};
 
 // Validators that carry no explicit message fall back to zod's built-in
 // copy, which is English unless a locale is configured. i18next emits
@@ -211,8 +203,7 @@ i18n.on('languageChanged', (lng) => {
 });
 
 void i18n
-  // detect user language
-  //.use(LanguageDetector)
+  .use(LanguageDetector)
   // pass the i18n instance to react-i18next.
   .use(initReactI18next)
   // init i18next
@@ -222,7 +213,7 @@ void i18n
     fallbackLng: 'de',
     supportedLngs: ['en', 'de'],
 
-    //detection: detectionOptions,
+    detection: detectionOptions,
 
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default

@@ -28,9 +28,13 @@ import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 import { reconstructRuntimeModelError } from './runtime-model-error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import type { RuntimeModelRegistry } from './runtime-model.registry';
+import { mapPortableProviderError } from './provider-failure.mapper';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import { mapRuntimeHookError } from './runtime-hook-error';
+import { mapCreditPolicyError } from 'src/domain/runs/application/credit-policy-error';
+import { mapUsageAccountingError } from './usage-accounting-error.mapper';
 
-/** Accumulates one assistant turn's streamed text/thinking for live display. */
 interface StreamingTurn {
   id: UUID;
   text: string;
@@ -38,26 +42,13 @@ interface StreamingTurn {
   toolCalls: Map<number, ToolCallSnapshot>;
 }
 
-/**
- * Folds the runtime's fine-grained `RunEvent` stream into the coarse
- * `RunStreamItem`s the runs SSE presenter already knows how to serialize:
- *
- * - text and thinking deltas plus runtime-owned tool-call snapshots become a growing
- *   `AssistantMessage` re-yielded per tick;
- * - `assistant_message` yields the authoritative message (tool_use + provider
- *   metadata) under the same id as the streamed one;
- * - `tool_result_message` yields the backend tool-result message;
- * - `custom` mask events become `RunPiiMasksUpdate` (yielded before the message
- *   carrying the tokens, as the client expects);
- * - `error` is captured and thrown only once the stream drains, so the
- *   runtime's `runEnd` hooks still fire before the error surfaces as an SSE
- *   error frame.
- */
+/** Delays mapped errors until runtime terminal hooks have completed. */
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
   logger: Logger,
   integrations?: RuntimeToolIntegrationRegistry,
+  models?: RuntimeModelRegistry,
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
   let pendingError: ApplicationError | null = null;
@@ -75,6 +66,7 @@ export async function* adaptRunEventsToStream(
       threadId,
       assistant.lastCompletedIteration(),
       logger,
+      models,
     );
     if (side instanceof ApplicationError) {
       pendingError = side;
@@ -101,7 +93,6 @@ function readOutcome(event: RunEvent): RunExecutionOutcome | undefined {
     : undefined;
 }
 
-/** Maps the assistant-turn events (deltas + the authoritative message). */
 class AssistantTurnAccumulator {
   private turn: StreamingTurn | null = null;
   private turnIndex = 0;
@@ -154,22 +145,18 @@ class AssistantTurnAccumulator {
     return this.turn;
   }
 
-  /**
-   * The iteration of the most recently completed assistant turn — the one a
-   * following `tool_result_message` belongs to (tools always follow their
-   * assistant turn, so `turnIndex` has already advanced past it).
-   */
+  /** Tool results follow the assistant turn after its index has advanced. */
   lastCompletedIteration(): number {
     return Math.max(0, this.turnIndex - 1);
   }
 }
 
-/** Maps the non-assistant events, or an ApplicationError to throw on drain. */
 function toSideStreamItem(
   event: RunEvent,
   threadId: UUID,
   iteration: number,
   logger: Logger,
+  models?: RuntimeModelRegistry,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'tool_result_message') {
     return toBackendToolResultMessage(
@@ -184,7 +171,7 @@ function toSideStreamItem(
       : null;
   }
   if (event.type === 'error') {
-    return mapRunError(event, logger);
+    return mapRunError(event, logger, models);
   }
   if (event.type === 'finalization_error') {
     return mapFinalizationError(event, logger);
@@ -304,20 +291,29 @@ const RUN_ERROR_MAPPERS = new Map<
   ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
 ]);
 
-function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
+function mapRunError(
+  event: RunErrorEvent,
+  logger: Logger,
+  models?: RuntimeModelRegistry,
+): ApplicationError {
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
-    // Checked before the generic reconstruction: the run error keeps the
-    // user-facing code and localized message, while the classified provider
-    // failure serialized into details rides on `cause` so AppSignal groups
-    // under PROVIDER_UNAVAILABLE_*_ANONYMIZE (AYC-654).
     return new RunAnonymizationUnavailableError(
       undefined,
       reconstructRuntimeModelError(event.details),
     );
   }
+  const policyError =
+    mapCreditPolicyError(event) ?? mapUsageAccountingError(event);
+  if (policyError) return policyError;
+  const hookFailure = mapRuntimeHookError(event, logger);
+  if (hookFailure) return hookFailure;
   const runtimeModelError = reconstructRuntimeModelError(event.details);
   if (runtimeModelError instanceof ApplicationError) {
     return runtimeModelError;
+  }
+  const portableProviderError = mapPortableProviderError(event, models);
+  if (portableProviderError) {
+    return portableProviderError;
   }
   const mapper = RUN_ERROR_MAPPERS.get(event.code);
   if (mapper) {
@@ -331,5 +327,7 @@ function mapRunError(event: RunErrorEvent, logger: Logger): ApplicationError {
     },
     'Agent runtime failed',
   );
-  return new RunExecutionFailedError('Agent runtime failed');
+  return new RunExecutionFailedError('Agent runtime failed', {
+    runtimeErrorCode: event.code,
+  });
 }

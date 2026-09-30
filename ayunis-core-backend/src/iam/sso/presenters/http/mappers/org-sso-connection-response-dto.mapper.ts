@@ -16,6 +16,7 @@ export class OrgSsoConnectionResponseDtoMapper {
       zitadelIdpId: connection.zitadelIdpId,
       enabled: connection.enabled,
       jitProvisioningEnabled: connection.jitProvisioningEnabled,
+      localPasswordLoginEnabled: connection.localPasswordLoginEnabled,
     };
   }
 

@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { CountKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/count-knowledge-base-documents/count-knowledge-base-documents.use-case';
 import { GetWorkspaceSkillsUseCase } from 'src/domain/skills/application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
@@ -16,6 +15,7 @@ import type {
   WorkspaceSkillContext,
 } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { GetWorkspaceAiContextQuery } from './get-workspace-ai-context.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class GetWorkspaceAiContextUseCase {
@@ -36,8 +36,7 @@ export class GetWorkspaceAiContextUseCase {
       { workspaceId: query.workspaceId },
       'getWorkspaceAiContext',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.contextService);
 
     const workspace = await this.workspacesRepository.findById(
       userId,

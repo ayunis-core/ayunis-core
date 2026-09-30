@@ -10,7 +10,7 @@ import {
 } from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class CreateTeamUseCase {
@@ -22,11 +22,7 @@ export class CreateTeamUseCase {
   ) {}
 
   async execute(command: CreateTeamCommand): Promise<Team> {
-    const orgId = this.contextService.get('orgId');
-
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     const trimmedName = command.name.trim() || '';
 

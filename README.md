@@ -211,7 +211,7 @@ The seed also creates a shared-skill knowledge-base scenario for manual access t
 - Shared skill: `Geteiltes Bürgerwissen`
 - Shared knowledge base: `Geteiltes Bürgerwissen`
 
-Sign in as the member and open `/knowledge-bases`. Select the shared tab and verify that the seeded knowledge base is listed with its shared badge. To test the workspace path, enable `FEATURE_WORKSPACES_ENABLED`, create a workspace as the member, open its **Wissen** tab, and use **Hinzufügen** to verify that the shared knowledge base is available.
+Sign in as the member and open `/knowledge-bases`. Select the shared tab and verify that the seeded knowledge base is listed with its shared badge. To test the workspace path, create a workspace as the member, open its **Wissen** tab, and use **Hinzufügen** to verify that the shared knowledge base is available.
 
 ## 🎯 First steps
 
@@ -364,6 +364,7 @@ git update-index --chmod=+x .husky/commit-msg
 - **Documentation (Coming Soon)**
 - **[Contributing Guide](CONTRIBUTING.md)**
 - **[Deployment Guide](DEPLOYMENT.md)**
+- **[Authentication architecture](docs/architecture/authentication.md)**
 - **[Municipal SSO V1 operator runbook](docs/runbooks/municipal-sso-v1.md)**
 - **[License](LICENSE.md)**
 

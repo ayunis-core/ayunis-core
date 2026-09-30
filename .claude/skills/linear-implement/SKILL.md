@@ -1,6 +1,6 @@
 ---
 name: linear-implement
-description: Work a Linear ticket end-to-end — read it, mark In Progress, do the work, summarize, proactively suggest follow-up tickets, and mark Done.
+description: Work a Linear ticket end-to-end — read it, mark it started, implement and validate it, submit and finish its PR unless local-only was requested, summarize the outcome, proactively suggest follow-up tickets, and hand code work off for release.
 ---
 
 # Linear Implement
@@ -9,7 +9,7 @@ Take a Linear ticket and run with it. Generic entry point for "here's a ticket, 
 
 ## Input
 
-Daniel provides a Linear ticket ID (e.g. `AYC-123`) or URL. If one was mentioned earlier in the conversation, use that without asking again.
+The user provides a Linear ticket ID (e.g. `AYC-123`) or URL. If one was mentioned earlier in the conversation, use that without asking again.
 
 ## Process
 
@@ -33,7 +33,7 @@ Parse out:
 - **Scope & non-scope** — what's explicitly in or out
 - **Constraints** — referenced files, patterns, validation commands, acceptance criteria
 
-If anything material is unclear or the premise looks off, stop and ask Daniel before starting. Don't invent scope.
+If anything material is unclear or the premise looks off, stop and ask the user before starting. Don't invent scope.
 
 ### 3. Mark started
 
@@ -56,11 +56,21 @@ Do the work. This is deliberately open-ended — the ticket may ask for a code c
 
 - Follow the ticket's instructions and referenced patterns
 - Use the right skills/tools for the job (e.g. `ayunis-core-backend`, `typeorm-migrations`, `code-review`, etc.)
-- Classify the work using the repository's Proportional Workflow and run the corresponding validation
-- Browser journey or system boundary changed without sufficient lower-level coverage? Load the `e2e` skill; done means the focused journey spec exists or is updated and runs green (`pnpm --filter ayunis-core-e2e test --grep "<feature>"`)
-- If execution surfaces a blocker, a wrong premise, or a decision that needs Daniel, stop and surface it — don't plow through
+- Validate as the repository instructions require; without repository guidance, run tests, build, and lint
+- When the repository instructions require E2E coverage, load the `e2e` skill; done means the focused journey spec exists or is updated and runs green with that skill's test command
+- If execution surfaces a blocker, a wrong premise, or a decision that needs the user, stop and surface it — don't plow through
 
-### 5. Summarize
+### 5. Deliver code changes
+
+Unless the user explicitly asks to keep changes local, code implementation includes delivery:
+
+1. Load `git-workflow`, commit the validated logical change, and submit or update its PR. The ticket ID from this workflow is the commit's required ticket ID.
+2. Produce the review evidence the repository instructions require for this change (for example E2E coverage, live QA, or PR media), using the matching skills.
+3. After the latest revision is submitted, load `finish-pr` and keep ownership until its completion gate passes.
+
+QA findings, CI failures, and actionable review-bot findings remain part of the same logical change and PR.
+
+### 6. Summarize
 
 Present a compact summary:
 
@@ -75,9 +85,9 @@ Validation: <tests/build/manual result, or "none applicable">
 Deviations: <anything that differs from the original ask, or "none">
 ```
 
-### 6. Surface follow-ups proactively
+### 7. Surface follow-ups proactively
 
-If the work surfaced anything worth tracking separately, name it and propose a ticket for each. Always propose first — only create on Daniel's approval.
+If the work surfaced anything worth tracking separately, name it and propose a ticket for each. Always propose first — only create with the user's approval.
 
 Pick the right shape for each follow-up:
 
@@ -97,17 +107,21 @@ Examples of what qualifies as a follow-up:
 
 If nothing qualifies, say so explicitly — don't manufacture follow-ups.
 
-### 7. Close out
+### 8. Hand off for release
 
-If validation passes, no blockers remain, and Daniel is satisfied with the summary:
+For code-backed tickets, validation, a green PR, and merge are not release. Look up the team's release-pending state in the per-team state-names table in `manage-linear`.
+
+**Team with a release-pending state:** do not move the ticket to `Done` during implementation. After merge, verify that the Git integration moved it to the release-pending state. Update it manually only if the merge automation did not:
 
 ```bash
-linear issue update <ID> --state "Done"
+linear issue update <ID> --state "<release-pending state>"
 ```
 
-(`Done` is the standard closed-state name and currently shared across the AYC
-team — check `manage-linear`'s per-team state-names table if working in a team
-that diverges.)
+Only the release process may move the ticket to `Done`, after the production release that contains the change. If the ticket is unexpectedly `Done`, inspect its issue history and linked release before changing it: restore the release-pending state only when it was completed before the containing release. Leave it `Done` when release automation completed it after that release, even if the merge happened shortly beforehand.
+
+**Team without a release-pending state:** move the ticket to the team's completion state after merge.
+
+For a non-code ticket with no release artifact, use the team's normal completion state after its deliverable and validation are complete.
 
 If a blocker follow-up was created, leave the ticket in the started state and
 call that out instead.
@@ -120,7 +134,7 @@ The description (plus linked context) defines the scope. Don't silently expand �
 
 ### Propose before writing to Linear
 
-Creating, linking, or closing tickets is an external action. Propose first; execute on approval. The only routine state changes this workflow performs without asking are moving the current ticket to `In Progress` at the start and to `Done` at the end (once Daniel has seen the summary).
+Creating or linking follow-up tickets is an external action. Propose first; execute on approval. Moving the ticket being implemented to its started state, and correcting a failed merge transition to its release-pending state after checking history, are routine parts of this workflow. On teams with a release-pending state, `Done` remains owned by the release process for code-backed tickets.
 
 ### Link what you create
 
@@ -128,7 +142,7 @@ When creating a follow-up, always add the right relation (`--parent`, `related`,
 
 ### Commit discipline
 
-If the work involves code changes, don't commit unless Daniel asks. Leave changes staged for review.
+A request to implement a ticket authorizes committing and submitting its validated code changes through `git-workflow`. Keep changes local only when the user explicitly requests that. Never include unrelated working-tree changes.
 
 ### Follow existing patterns
 

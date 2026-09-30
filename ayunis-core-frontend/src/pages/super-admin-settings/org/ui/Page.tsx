@@ -1,24 +1,14 @@
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import type {
   SuperAdminOrgResponseDto,
   SubscriptionResponseDto,
   UserResponseDto,
   SuperAdminTrialResponseDto,
   PaginationDto,
+  InviteResponseDto,
 } from '@/shared/api';
-import { SubscriptionResponseDtoType } from '@/shared/api';
-import { Badge } from '@ayunis/ui/components/badge';
-import { Button } from '@ayunis/ui/components/button';
-import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
-import { ClockIcon } from 'lucide-react';
 import UsersTable from './UsersTable';
 import OrgDetails from './OrgDetails';
-import LicenseSeatsSection from './LicenseSeatsSection';
-import CreditBudgetSection from './CreditBudgetSection';
-import BillingInfoSection from './BillingInfoSection';
-import SubscriptionCancellationSection from './SubscriptionCancellationSection';
-import ChangeSubscriptionDialog from './ChangeSubscriptionDialog';
-import NoSubscriptionSection from './NoSubscriptionSection';
 import ModelsSection from './ModelsSection';
 import CrawlDomainsSection from './CrawlDomainsSection';
 import AddonsSection from './AddonsSection';
@@ -26,6 +16,8 @@ import TrialSection from './TrialSection';
 import NoTrialSection from './NoTrialSection';
 import UsageTab from './UsageTab';
 import SsoSection from './SsoSection';
+import SubscriptionsTab from './SubscriptionsTab';
+import type { SubscriptionHistoryItem } from '@/pages/super-admin-settings/org/model/types';
 import {
   Tabs,
   TabsList,
@@ -35,6 +27,9 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
+import SuperAdminInvitesSection from './SuperAdminInvitesSection';
+import SuperAdminInvitesSearch from './SuperAdminInvitesSearch';
+import SuperAdminInvitesPagination from './SuperAdminInvitesPagination';
 
 interface SuperAdminSettingsOrgPageProps {
   org: SuperAdminOrgResponseDto;
@@ -42,7 +37,13 @@ interface SuperAdminSettingsOrgPageProps {
   usersPagination?: PaginationDto;
   usersSearch?: string;
   usersCurrentPage: number;
+  invites: InviteResponseDto[];
+  invitesPagination?: PaginationDto;
+  invitesSearch?: string;
+  invitesCurrentPage: number;
   subscription: SubscriptionResponseDto | null;
+  subscriptionHistory?: SubscriptionHistoryItem[];
+  activeSubscriptionCount?: number;
   trial: SuperAdminTrialResponseDto | null;
   initialTab?:
     | 'org'
@@ -61,7 +62,13 @@ export default function SuperAdminSettingsOrgPage({
   usersPagination,
   usersSearch,
   usersCurrentPage,
+  invites,
+  invitesPagination,
+  invitesSearch,
+  invitesCurrentPage,
   subscription,
+  subscriptionHistory = [],
+  activeSubscriptionCount = 0,
   trial,
   initialTab = 'org',
 }: Readonly<SuperAdminSettingsOrgPageProps>) {
@@ -71,6 +78,9 @@ export default function SuperAdminSettingsOrgPage({
   const { id } = useParams({
     from: '/_authenticated/super-admin-settings/orgs/$id',
   });
+  const invitesTotal = invitesPagination?.total ?? 0;
+  const invitesLimit = invitesPagination?.limit ?? 10;
+  const invitesTotalPages = Math.ceil(invitesTotal / invitesLimit);
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -110,7 +120,10 @@ export default function SuperAdminSettingsOrgPage({
           <TabsList>
             <TabsTrigger value="org">{t('tabs.org')}</TabsTrigger>
             <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
-            <TabsTrigger value="subscriptions">
+            <TabsTrigger
+              value="subscriptions"
+              data-testid="org-subscriptions-tab"
+            >
               {t('tabs.subscriptions')}
             </TabsTrigger>
             <TabsTrigger value="trials">{t('tabs.trials')}</TabsTrigger>
@@ -127,64 +140,41 @@ export default function SuperAdminSettingsOrgPage({
           <OrgDetails org={org} />
         </TabsContent>
         <TabsContent value="users" className="mt-4">
-          <UsersTable
-            users={users}
-            orgId={org.id}
-            pagination={usersPagination}
-            search={usersSearch}
-            currentPage={usersCurrentPage}
-          />
+          <div className="space-y-4">
+            <SuperAdminInvitesSection
+              invites={invites}
+              total={invitesTotal}
+              searchSlot={
+                <SuperAdminInvitesSearch
+                  search={invitesSearch}
+                  orgId={org.id}
+                />
+              }
+              paginationSlot={
+                <SuperAdminInvitesPagination
+                  currentPage={invitesCurrentPage}
+                  totalPages={invitesTotalPages}
+                  search={invitesSearch}
+                  orgId={org.id}
+                />
+              }
+            />
+            <UsersTable
+              users={users}
+              orgId={org.id}
+              pagination={usersPagination}
+              search={usersSearch}
+              currentPage={usersCurrentPage}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="subscriptions" className="mt-4">
-          {subscription ? (
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <ChangeSubscriptionDialog
-                  orgId={org.id}
-                  trigger={
-                    <Button variant="outline">
-                      {t('changeSubscriptionDialog.changeButton')}
-                    </Button>
-                  }
-                />
-              </div>
-              {new Date(subscription.startsAt) > new Date() && (
-                <Alert>
-                  <ClockIcon className="h-4 w-4" />
-                  <AlertDescription className="flex items-center gap-2">
-                    <Badge variant="outline">
-                      {t('subscription.scheduled')}
-                    </Badge>
-                    {t('subscription.scheduledDescription', {
-                      date: new Date(
-                        subscription.startsAt,
-                      ).toLocaleDateString(),
-                    })}
-                  </AlertDescription>
-                </Alert>
-              )}
-              {subscription.type === SubscriptionResponseDtoType.SEAT_BASED && (
-                <LicenseSeatsSection
-                  subscription={subscription}
-                  orgId={org.id}
-                />
-              )}
-              {subscription.type === SubscriptionResponseDtoType.USAGE_BASED &&
-                subscription.monthlyCredits !== undefined && (
-                  <CreditBudgetSection
-                    orgId={org.id}
-                    monthlyCredits={subscription.monthlyCredits ?? 0}
-                  />
-                )}
-              <BillingInfoSection subscription={subscription} orgId={org.id} />
-              <SubscriptionCancellationSection
-                subscription={subscription}
-                orgId={org.id}
-              />
-            </div>
-          ) : (
-            <NoSubscriptionSection orgId={org.id} />
-          )}
+          <SubscriptionsTab
+            orgId={org.id}
+            subscription={subscription}
+            subscriptionHistory={subscriptionHistory}
+            activeSubscriptionCount={activeSubscriptionCount}
+          />
         </TabsContent>
         <TabsContent value="trials" className="mt-4">
           {trial ? (

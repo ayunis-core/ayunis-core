@@ -154,6 +154,28 @@ describe(LoginPage.name, () => {
     );
   });
 
+  it('shows only SSO when the organization disables local password login', async () => {
+    discover.mockResolvedValue({
+      available: true,
+      orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+      localPasswordLoginEnabled: false,
+    });
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByTestId('email'), {
+      target: { value: 'siro@qa-stadt.local' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'login.continue' }));
+
+    expect(
+      await screen.findByRole('button', { name: 'login.signInWithSso' }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId('password')).toBeNull();
+    expect(screen.queryByTestId('submit')).toBeNull();
+    expect(screen.queryByText('login.orUsePassword')).toBeNull();
+    expect(screen.queryByText('login.forgotPassword')).toBeNull();
+  });
+
   it('clears the password when the email is changed', async () => {
     discover.mockResolvedValue({ available: false });
     render(<LoginPage />);
@@ -272,5 +294,24 @@ describe(LoginPage.name, () => {
         }),
       );
     });
+  });
+
+  it('keeps the email field fillable by password managers across both steps', async () => {
+    discover.mockResolvedValue({ available: false });
+    render(<LoginPage />);
+
+    const email = screen.getByTestId('email');
+    expect(email.getAttribute('autocomplete')).toBe('username');
+
+    fireEvent.change(email, { target: { value: 'local@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'login.continue' }));
+
+    expect(
+      (await screen.findByTestId('password')).getAttribute('autocomplete'),
+    ).toBe('current-password');
+    // A disabled field is dropped from form parsing, so the manager cannot pair
+    // the username with the password it is offered to save.
+    expect(screen.getByTestId('email').hasAttribute('disabled')).toBe(false);
+    expect(screen.getByTestId('email').hasAttribute('readonly')).toBe(true);
   });
 });

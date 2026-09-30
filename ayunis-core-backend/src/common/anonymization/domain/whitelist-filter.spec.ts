@@ -65,6 +65,32 @@ describe('filterWhitelistedDetections', () => {
     expect(filterWhitelistedDetections(detections, entries)).toHaveLength(0);
   });
 
+  it('exempts an address listed in a long alternation pattern', () => {
+    const addresses = Array.from(
+      { length: 35 },
+      (_, index) => `Musterstraße ${index + 1}, 45772 Marl`,
+    );
+    const pattern = addresses.join('|');
+    const detections = [
+      detection({
+        entityType: 'LOCATION',
+        category: PiiCategory.LOCATION,
+        text: 'Musterstraße 35, 45772 Marl',
+      }),
+      detection({
+        entityType: 'LOCATION',
+        category: PiiCategory.LOCATION,
+        text: 'Privatweg 4, 45772 Marl',
+      }),
+    ];
+    const entries = [new PiiWhitelistEntry(PiiCategory.LOCATION, pattern)];
+
+    expect(pattern.length).toBeGreaterThan(900);
+    expect(filterWhitelistedDetections(detections, entries)).toEqual([
+      detections[1],
+    ]);
+  });
+
   it('keeps a value that only partially matches the pattern', () => {
     const detections = [
       detection({

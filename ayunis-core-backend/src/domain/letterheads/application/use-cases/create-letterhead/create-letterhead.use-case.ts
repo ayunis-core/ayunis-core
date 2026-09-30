@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID, type UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
@@ -10,6 +9,7 @@ import { UnexpectedLetterheadError } from 'src/domain/letterheads/application/le
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { CreateLetterheadCommand } from './create-letterhead.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class CreateLetterheadUseCase {
@@ -72,8 +72,7 @@ export class CreateLetterheadUseCase {
   }
 
   private resolveOrgId(): UUID {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) throw new UnauthorizedAccessError();
+    const orgId = getRequiredOrgId(this.contextService);
     return orgId;
   }
 

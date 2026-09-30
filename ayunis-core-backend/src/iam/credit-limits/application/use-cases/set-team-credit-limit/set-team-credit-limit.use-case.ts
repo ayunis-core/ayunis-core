@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import {
@@ -12,6 +11,7 @@ import { isNonNegativeFinite } from 'src/common/util/number.util';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 import { SetTeamCreditLimitCommand } from './set-team-credit-limit.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class SetTeamCreditLimitUseCase {
@@ -24,10 +24,7 @@ export class SetTeamCreditLimitUseCase {
   ) {}
 
   async execute(command: SetTeamCreditLimitCommand): Promise<TeamCreditLimit> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
     if (!isNonNegativeFinite(command.monthlyCredits)) {
       throw new InvalidCreditLimitError(
         'monthlyCredits must be a number greater than or equal to 0',

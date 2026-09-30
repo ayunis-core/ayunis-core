@@ -2,7 +2,6 @@ import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { AddFavoriteUseCase } from 'src/domain/favorites/application/use-cases/add-favorite/add-favorite.use-case';
-import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
 import {
   InvalidWorkspaceAppearanceError,
   InvalidWorkspaceDescriptionError,
@@ -60,18 +59,13 @@ describe('CreateWorkspaceUseCase', () => {
     expect(repository.save).toHaveBeenCalledWith(workspace);
   });
 
-  it('favorites a newly created workspace', async () => {
+  it('creates a workspace without adding it to favorites', async () => {
     const workspace = await useCase.execute(
       new CreateWorkspaceCommand({ name: 'Gebühren' }),
     );
 
-    expect(addFavoriteUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userId: TEST_USER_ID,
-        referenceType: FavoriteReferenceType.Workspace,
-        referenceId: workspace.id,
-      }),
-    );
+    expect(workspace.name).toBe('Gebühren');
+    expect(addFavoriteUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('applies the requested appearance', async () => {

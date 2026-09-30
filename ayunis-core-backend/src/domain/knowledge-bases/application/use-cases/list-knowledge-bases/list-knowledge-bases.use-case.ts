@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type {
   KnowledgeBaseContext,
@@ -22,6 +21,7 @@ import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-
 import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from 'src/domain/skills/application/use-cases/find-knowledge-base-ids-accessible-via-shared-skills/find-knowledge-base-ids-accessible-via-shared-skills.use-case';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 const DEFAULT_OFFSET = 0;
 
@@ -239,9 +239,7 @@ export class ListKnowledgeBasesUseCase {
   }
 
   private requirePrincipal(): { userId: UUID; orgId: UUID } {
-    const userId = this.context.get('userId');
-    const orgId = this.context.get('orgId');
-    if (!userId || !orgId) throw new UnauthorizedAccessError();
+    const { userId, orgId } = getRequiredUserContext(this.context);
     return { userId, orgId };
   }
 }

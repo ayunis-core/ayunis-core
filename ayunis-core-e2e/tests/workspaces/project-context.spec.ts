@@ -262,6 +262,9 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
     .getByTestId("workspace-instruction-input")
     .fill(fixture.instruction);
   await page.getByTestId("workspace-instruction-save").click();
+  await expect(
+    page.locator('[data-sonner-toast][data-type="success"]'),
+  ).toBeVisible();
 
   await expect
     .poll(async () => {
@@ -292,6 +295,11 @@ test("resets project page state when switching projects", async ({
   const secondFixture = await createProjectContextFixture(api, uniqueSuffix(), {
     attach: true,
   });
+
+  await generatedApi.favoritesControllerToggle(
+    { referenceType: "workspace", referenceId: secondFixture.workspace.id },
+    { api },
+  );
 
   await page.goto(`/workspaces/${firstFixture.workspace.id}`);
   await expect(page.getByTestId("workspace-page")).toBeVisible();

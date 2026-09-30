@@ -4,8 +4,10 @@
     "addWorkspace": "Add workspace",
     "emptyTitle": "No workspaces yet",
     "emptyDescription": "Create a workspace to group your chats by topic.",
-    "chatCount_one": "{{count}} chat",
-    "chatCount_other": "{{count}} chats"
+    "skillCount_one": "{{count}} skill",
+    "skillCount_other": "{{count}} skills",
+    "knowledgeBaseCount_one": "{{count}} knowledge base",
+    "knowledgeBaseCount_other": "{{count}} knowledge bases"
   },
   "card": {
     "pin": "Add to favorites",

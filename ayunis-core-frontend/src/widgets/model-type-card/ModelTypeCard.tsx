@@ -25,7 +25,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { Star } from 'lucide-react';
+import { CircleHelp, Star } from 'lucide-react';
+import { Button } from '@ayunis/ui/components/button';
 import { cn } from '@ayunis/ui/lib/cn';
 import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
@@ -92,15 +93,25 @@ export interface ModelActions {
   readonly isDisabling?: boolean;
 }
 
+type ModelType = 'language' | 'embedding' | 'image-generation';
+
 interface ModelTypeCardProps {
-  readonly type: 'language' | 'embedding' | 'image-generation';
+  readonly type: ModelType;
   readonly models: ModelWithConfigResponseDto[];
   readonly actions: ModelActions;
   readonly testIdPrefix?: string;
   readonly isToggleDisabled?: (model: ModelWithConfigResponseDto) => boolean;
 }
 
-const MODEL_TYPE_CONFIG = {
+interface ModelTypeConfig {
+  readonly titleKey: string;
+  readonly descriptionKey: string;
+  readonly emptyKey: string;
+  readonly defaultDescription: string;
+  readonly hintKey?: string;
+}
+
+const MODEL_TYPE_CONFIG: Record<ModelType, ModelTypeConfig> = {
   language: {
     titleKey: 'models.languageModels',
     descriptionKey: 'models.languageModelsDescription',
@@ -118,8 +129,41 @@ const MODEL_TYPE_CONFIG = {
     descriptionKey: 'models.imageGenerationModelsDescription',
     emptyKey: 'models.noImageGenerationModels',
     defaultDescription: 'Models for image generation and visual creation.',
+    hintKey: 'models.imageGenerationModelsHint',
   },
-} as const;
+};
+
+interface ModelTypeCardTitleProps {
+  readonly title: string;
+  readonly hintKey?: string;
+}
+
+// The trigger is a real button so the hint is reachable by keyboard, not hover
+// only. Its accessible name names the section rather than repeating the hint,
+// which Radix already exposes as the description via aria-describedby.
+function ModelTypeCardTitle({ title, hintKey }: ModelTypeCardTitleProps) {
+  const { t } = useTranslation('admin-settings-models');
+  if (!hintKey) return <CardTitle>{title}</CardTitle>;
+
+  return (
+    <CardTitle className="flex items-center gap-1">
+      {title}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={t('models.hintTriggerLabel', { label: title })}
+            data-testid="model-type-card-hint-trigger"
+          >
+            <CircleHelp />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{t(hintKey)}</TooltipContent>
+      </Tooltip>
+    </CardTitle>
+  );
+}
 
 export default function ModelTypeCard({
   type,
@@ -179,7 +223,7 @@ export default function ModelTypeCard({
         data-testid={testIdPrefix ? `${testIdPrefix}-${type}-card` : undefined}
       >
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <ModelTypeCardTitle title={title} hintKey={config.hintKey} />
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-4">
@@ -195,7 +239,7 @@ export default function ModelTypeCard({
       data-testid={testIdPrefix ? `${testIdPrefix}-${type}-card` : undefined}
     >
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <ModelTypeCardTitle title={title} hintKey={config.hintKey} />
         <CardDescription>
           {t(config.descriptionKey, {
             defaultValue: config.defaultDescription,

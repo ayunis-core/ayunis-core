@@ -2,7 +2,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  featureToggles: vi.fn(),
   findKnowledgeBase: vi.fn(),
   getShares: vi.fn(),
   listTeams: vi.fn(),
@@ -12,8 +11,6 @@ vi.mock('@/pages/knowledge-base', () => ({
   KnowledgeBasePage: () => null,
 }));
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
-  appControllerFeatureToggles: mocks.featureToggles,
-  getAppControllerFeatureTogglesQueryKey: () => ['feature-toggles'],
   getKnowledgeBasesControllerFindOneQueryKey: (id: string) => [
     `/knowledge-bases/${id}`,
   ],
@@ -45,7 +42,6 @@ function runLoader() {
 describe('personal knowledge-base detail route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.featureToggles.mockResolvedValue({ knowledgeBasesEnabled: true });
     mocks.findKnowledgeBase.mockResolvedValue({
       id: 'knowledge-base',
       ownerType: 'personal',

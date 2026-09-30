@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
@@ -6,6 +6,10 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   ValidateNested,
+  IsOptional,
+  ArrayUnique,
+  IsString,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -25,6 +29,21 @@ export class CreateBulkInviteItemDto {
   })
   @IsEnum(UserRole)
   role: UserRole;
+
+  @ApiPropertyOptional({
+    description:
+      'Names of teams to assign after the invited user joins the organization',
+    type: [String],
+    example: ['Research', 'Operations'],
+    maxItems: 50,
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ArrayUnique()
+  @IsString({ each: true })
+  @MaxLength(100, { each: true })
+  teamNames?: string[];
 }
 
 export class CreateBulkInvitesDto {

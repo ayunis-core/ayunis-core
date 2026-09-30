@@ -42,6 +42,10 @@ describe('useAssignThreadToWorkspace', () => {
 
   it('invalidates favorites after assigning a pinned thread', async () => {
     const queryClient = new QueryClient();
+    queryClient.setQueryData(['threads', 'thread-id'], {
+      id: 'thread-id',
+      workspaceId: 'old-workspace-id',
+    });
     const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -63,5 +67,8 @@ describe('useAssignThreadToWorkspace', () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['ai-context', 'thread-id'],
     });
+    expect(queryClient.getQueryData(['threads', 'thread-id'])).toEqual(
+      expect.objectContaining({ workspaceId: 'workspace-id' }),
+    );
   });
 });

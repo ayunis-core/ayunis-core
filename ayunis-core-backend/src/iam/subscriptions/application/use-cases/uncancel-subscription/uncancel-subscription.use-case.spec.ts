@@ -38,6 +38,7 @@ function createSeatBased(
   overrides: Partial<{
     cancelledAt: Date | null;
     renewalCycleAnchor: Date;
+    startsAt: Date;
   }> = {},
 ): SeatBasedSubscription {
   const anchor = overrides.renewalCycleAnchor ?? new Date('2025-01-01');
@@ -47,19 +48,19 @@ function createSeatBased(
     pricePerSeat: 9.99,
     renewalCycle: RenewalCycle.MONTHLY,
     renewalCycleAnchor: anchor,
-    startsAt: anchor,
+    startsAt: overrides.startsAt ?? anchor,
     cancelledAt: overrides.cancelledAt ?? null,
     billingInfo: createBillingInfo(),
   });
 }
 
 function createUsageBased(
-  overrides: Partial<{ cancelledAt: Date | null }> = {},
+  overrides: Partial<{ cancelledAt: Date | null; startsAt: Date }> = {},
 ): UsageBasedSubscription {
   return new UsageBasedSubscription({
     orgId: mockOrgId,
     monthlyCredits: 1000,
-    startsAt: new Date('2025-01-01'),
+    startsAt: overrides.startsAt ?? new Date('2025-01-01'),
     cancelledAt: overrides.cancelledAt ?? null,
     billingInfo: createBillingInfo(),
   });
@@ -225,5 +226,44 @@ describe('UncancelSubscriptionUseCase', () => {
       SubscriptionExpiredError,
     );
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+  });
+  // Cancelling a not-yet-started subscription only became reachable with
+  // AYC-995; canUncancel asked isActive(), which is false for a scheduled
+  // subscription, so restoring one was rejected as expired.
+  it('uncancels a seat-based subscription that was cancelled before it started', async () => {
+    const startsAt = new Date('2099-01-01T00:00:00.000Z');
+    const subscription = createSeatBased({
+      startsAt,
+      renewalCycleAnchor: startsAt,
+      cancelledAt: new Date(),
+    });
+    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+
+    await useCase.execute(
+      new UncancelSubscriptionCommand({
+        orgId: mockOrgId,
+        requestingUserId: mockUserId,
+      }),
+    );
+
+    expect(subscription.cancelledAt).toBeNull();
+    expect(subscriptionRepository.update).toHaveBeenCalledWith(subscription);
+  });
+
+  it('uncancels a usage-based subscription cancelled before it started, in a later month', async () => {
+    const subscription = createUsageBased({
+      startsAt: new Date('2099-01-01T00:00:00.000Z'),
+      cancelledAt: new Date('2026-01-15T00:00:00.000Z'),
+    });
+    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+
+    await useCase.execute(
+      new UncancelSubscriptionCommand({
+        orgId: mockOrgId,
+        requestingUserId: mockUserId,
+      }),
+    );
+
+    expect(subscription.cancelledAt).toBeNull();
   });
 });

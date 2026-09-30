@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { UnexpectedLetterheadError } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindAllLetterheadsUseCase {
@@ -19,10 +19,7 @@ export class FindAllLetterheadsUseCase {
     this.logger.log('Finding all letterheads');
 
     try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
+      const orgId = getRequiredOrgId(this.contextService);
 
       return await this.letterheadsRepository.findAllByOrgId(orgId);
     } catch (error) {

@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedFavoriteError } from 'src/domain/favorites/application/favorites.errors';
 import { FavoritesRepository } from 'src/domain/favorites/application/ports/favorites-repository.port';
 import { FavoriteReferenceResolver } from 'src/domain/favorites/application/services/favorite-reference-resolver.service';
 import type { FavoriteResult } from './favorite.result';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindFavoritesUseCase {
@@ -27,8 +27,7 @@ export class FindFavoritesUseCase {
   }
 
   private requireUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.contextService);
     return userId;
   }
 }

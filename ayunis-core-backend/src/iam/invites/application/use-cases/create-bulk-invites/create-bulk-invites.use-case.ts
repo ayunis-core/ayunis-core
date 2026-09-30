@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   BulkInviteDeliveryService,
   type BulkInviteResult,
 } from 'src/iam/invites/application/services/bulk-invite-delivery.service';
 import { BulkInviteValidatorService } from 'src/iam/invites/application/services/bulk-invite-validator.service';
+import { BulkInviteTeamResolverService } from 'src/iam/invites/application/services/bulk-invite-team-resolver.service';
 import {
   BulkInviteValidationFailedError,
   InvalidSeatsError,
@@ -23,6 +24,7 @@ import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 interface CreateBulkInvitesResult {
   totalCount: number;
@@ -43,8 +45,11 @@ export class CreateBulkInvitesUseCase {
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
     private readonly validator: BulkInviteValidatorService,
     private readonly delivery: BulkInviteDeliveryService,
+    private readonly teamResolver: BulkInviteTeamResolverService,
+    private readonly publishInviteCreated: InviteCreatedEventPublisher,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(
     command: CreateBulkInvitesCommand,
   ): Promise<CreateBulkInvitesResult> {
@@ -57,30 +62,34 @@ export class CreateBulkInvitesUseCase {
       'execute',
     );
 
-    try {
-      const invites = await this.reserveInvites(command);
-      const results = await this.delivery.deliver(command, invites);
-      const successCount = results.filter((result) => result.success).length;
-      const failureCount = results.length - successCount;
+    const invites = await this.reserveInvites(command);
+    const results = await this.delivery.deliver(command, invites);
+    this.publishSuccessfulInvites(invites, results);
+    const successCount = results.filter((result) => result.success).length;
+    const failureCount = results.length - successCount;
 
-      this.logger.log(
-        { totalCount: command.invites.length, successCount, failureCount },
-        'Bulk invites completed',
-      );
+    this.logger.log(
+      { totalCount: command.invites.length, successCount, failureCount },
+      'Bulk invites completed',
+    );
 
-      return {
-        totalCount: command.invites.length,
-        successCount,
-        failureCount,
-        results,
-      };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
+    return {
+      totalCount: command.invites.length,
+      successCount,
+      failureCount,
+      results,
+    };
+  }
+
+  private publishSuccessfulInvites(
+    invites: Invite[],
+    results: BulkInviteResult[],
+  ): void {
+    results.forEach((result, index) => {
+      if (result.success) {
+        this.publishInviteCreated.publish(invites[index]);
       }
-      this.logger.error({ err: error as Error }, 'Error creating bulk invites');
-      throw new UnexpectedInviteError(error as Error);
-    }
+    });
   }
 
   @Transactional()
@@ -89,12 +98,14 @@ export class CreateBulkInvitesUseCase {
   ): Promise<Invite[]> {
     await this.acquireAllocationLock.execute(command.orgId);
     const validationErrors = await this.validator.validate(command);
+    const teamResolution = await this.teamResolver.resolve(command);
+    validationErrors.push(...teamResolution.errors);
     if (validationErrors.length > 0) {
       throw new BulkInviteValidationFailedError(validationErrors);
     }
 
     await this.handleSeatsForBulkInvites(command);
-    const invites = this.buildInvites(command);
+    const invites = this.buildInvites(command, teamResolution.teamIdsByInvite);
     await this.invitesRepository.createMany(invites);
     this.logger.debug(
       { count: invites.length },
@@ -103,20 +114,24 @@ export class CreateBulkInvitesUseCase {
     return invites;
   }
 
-  private buildInvites(command: CreateBulkInvitesCommand): Invite[] {
+  private buildInvites(
+    command: CreateBulkInvitesCommand,
+    teamIdsByInvite: Invite['teamIds'][],
+  ): Invite[] {
     const validDuration = this.configService.get<string>(
       'auth.jwt.inviteExpiresIn',
       '7d',
     );
     const expiresAt = getInviteExpiresAt(validDuration);
     return command.invites.map(
-      (invite) =>
+      (invite, index) =>
         new Invite({
           email: invite.email,
           orgId: command.orgId,
           role: invite.role,
           inviterId: command.userId,
           expiresAt,
+          teamIds: teamIdsByInvite[index],
         }),
     );
   }

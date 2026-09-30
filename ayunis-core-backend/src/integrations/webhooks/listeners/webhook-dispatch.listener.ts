@@ -46,6 +46,11 @@ import { SkillUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-
 import { SkillInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/skill-installed.webhook-event';
 import { IntegrationUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-used.webhook-event';
 import { IntegrationInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-installed.webhook-event';
+import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
+import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
+import { UserInvitedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-invited.webhook-event';
+import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
+import { OnboardingUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/onboarding-updated.webhook-event';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -61,6 +66,7 @@ export class WebhookDispatchListener {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly configService: ConfigService,
+    private readonly webhookDeliverySequencer: WebhookDeliverySequencer,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
@@ -77,6 +83,11 @@ export class WebhookDispatchListener {
         orgName,
       }),
     );
+  }
+
+  @OnEvent(InviteCreatedEvent.EVENT_NAME)
+  async handleInviteCreated(event: InviteCreatedEvent): Promise<void> {
+    await this.dispatch(new UserInvitedWebhookEvent(event.invite));
   }
 
   @OnEvent(UserUpdatedEvent.EVENT_NAME)
@@ -104,7 +115,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionCreated(
     event: SubscriptionCreatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionCreatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -115,7 +127,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionCancelled(
     event: SubscriptionCancelledEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionCancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -126,7 +139,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionUncancelled(
     event: SubscriptionUncancelledEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionUncancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -137,7 +151,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionSeatsUpdated(
     event: SubscriptionSeatsUpdatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionSeatsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -148,7 +163,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionBillingInfoUpdated(
     event: SubscriptionBillingInfoUpdatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionBillingInfoUpdatedWebhookEvent(
         mapBillingInfoToWebhookPayload(event.payload),
       ),
@@ -248,6 +264,22 @@ export class WebhookDispatchListener {
     );
   }
 
+  @OnEvent(OnboardingUpdatedEvent.EVENT_NAME)
+  async handleOnboardingUpdated(event: OnboardingUpdatedEvent): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new OnboardingUpdatedWebhookEvent({
+        ...event,
+        orgId: user.orgId,
+        userEmail: user.email,
+        userName: user.name,
+        userRole: user.role,
+      }),
+    );
+  }
+
   @OnEvent(AddonActivatedEvent.EVENT_NAME)
   async handleAddonActivated(event: AddonActivatedEvent): Promise<void> {
     await this.dispatch(
@@ -321,6 +353,15 @@ export class WebhookDispatchListener {
       );
       return undefined;
     }
+  }
+
+  private dispatchSubscription(
+    orgId: UUID,
+    webhookEvent: WebhookEvent,
+  ): Promise<void> {
+    return this.webhookDeliverySequencer.enqueue(orgId, () =>
+      this.dispatch(webhookEvent),
+    );
   }
 
   private async dispatch(webhookEvent: WebhookEvent): Promise<void> {

@@ -17,6 +17,23 @@ function connectionWithDomains(...emailDomains: string[]) {
 }
 
 describe(OrgSsoConnection.name, () => {
+  it('allows local password login by default', () => {
+    expect(
+      connectionWithDomains('stadt.example').localPasswordLoginEnabled,
+    ).toBe(true);
+  });
+
+  it('retains an explicit SSO-only policy', () => {
+    const connection = new OrgSsoConnection({
+      orgId: ORG_ID,
+      emailDomains: [{ emailDomain: 'stadt.example', verifiedAt: VERIFIED_AT }],
+      zitadelOrgId: 'zitadel-org-1',
+      localPasswordLoginEnabled: false,
+    });
+
+    expect(connection.localPasswordLoginEnabled).toBe(false);
+  });
+
   it('normalizes and sorts every verified email domain', () => {
     const connection = connectionWithDomains(
       ' VHS.Bremerhaven.DE ',

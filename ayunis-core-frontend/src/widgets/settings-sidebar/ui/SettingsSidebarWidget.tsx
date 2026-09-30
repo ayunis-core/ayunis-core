@@ -18,6 +18,8 @@ export interface SidebarMenuItem {
   to: string;
   icon: ReactElement;
   label: string;
+  external?: boolean;
+  testId?: string;
 }
 
 export interface SidebarMenuGroup {
@@ -43,10 +45,22 @@ function SidebarItems({
       {items.map((item) => (
         <SidebarMenuItem key={item.to}>
           <SidebarMenuButton asChild isActive={pathname.startsWith(item.to)}>
-            <Link to={item.to}>
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
+            {item.external ? (
+              <a
+                href={item.to}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={item.testId}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </a>
+            ) : (
+              <Link to={item.to} data-testid={item.testId}>
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            )}
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}

@@ -3,10 +3,10 @@ import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class AddMcpIntegrationToThreadUseCase {
@@ -27,10 +27,7 @@ export class AddMcpIntegrationToThreadUseCase {
       'execute',
     );
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     const thread = await this.threadsRepository.findOne(
       command.threadId,

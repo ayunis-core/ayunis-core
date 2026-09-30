@@ -6,13 +6,9 @@ import type { FeaturesConfig } from 'src/config/features.config';
 
 describe('AppController', () => {
   it('exposes the current feature toggles', () => {
-    const features: FeaturesConfig = {
-      knowledgeBasesEnabled: true,
-      letterheadsEnabled: false,
-      skillsEnabled: true,
-      workspacesEnabled: true,
-      ssoLoginEnabled: false,
-    };
+    const features = {
+      exampleEnabled: true,
+    } as unknown as FeaturesConfig;
     const controller = new AppController(
       { execute: jest.fn() } as unknown as IsCloudUseCase,
       { execute: jest.fn() } as unknown as IsRegistrationDisabledUseCase,

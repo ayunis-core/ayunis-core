@@ -8,18 +8,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ayunis/ui/components/tabs';
-import {
-  getChatSidePanelTab,
-  resolveChatSidePanelView,
-} from '@/pages/chat/model/chat-side-panel';
+import { getChatSidePanelTab } from '@/pages/chat/model/chat-side-panel';
 import type {
   ChatSidePanelTab,
   ChatSidePanelView,
 } from '@/pages/chat/model/chat-side-panel';
-import {
-  useIsKnowledgeBasesEnabled,
-  useIsSkillsEnabled,
-} from '@/features/feature-toggles';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { ArtifactListSidePanel } from './ArtifactListSidePanel';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
@@ -45,11 +38,7 @@ export function ChatSidePanel({
   onClose,
 }: Readonly<ChatSidePanelProps>) {
   const { t } = useTranslation('chat');
-  const skillsEnabled = useIsSkillsEnabled();
-  const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
-  const contextEnabled = skillsEnabled || knowledgeBasesEnabled;
-  const effectiveView = resolveChatSidePanelView(view, contextEnabled);
-  const activeTab = getChatSidePanelTab(effectiveView);
+  const activeTab = getChatSidePanelTab(view);
 
   return (
     <aside
@@ -72,14 +61,12 @@ export function ChatSidePanel({
             >
               {t('chat.artifactPanel.title')}
             </TabsTrigger>
-            {contextEnabled && (
-              <TabsTrigger
-                value="context"
-                data-testid="chat-side-panel-tab-context"
-              >
-                {t('chat.context.tab')}
-              </TabsTrigger>
-            )}
+            <TabsTrigger
+              value="context"
+              data-testid="chat-side-panel-tab-context"
+            >
+              {t('chat.context.tab')}
+            </TabsTrigger>
           </TabsList>
           <Button
             variant="ghost"
@@ -98,20 +85,18 @@ export function ChatSidePanel({
         >
           <ArtifactPanelContent
             threadId={threadId}
-            view={effectiveView}
+            view={view}
             artifactPanelRef={artifactPanelRef}
             artifactPanelProps={artifactPanelProps}
             onSelectArtifact={onSelectArtifact}
           />
         </TabsContent>
-        {contextEnabled && (
-          <TabsContent
-            value="context"
-            className="min-h-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
-          >
-            <ChatContextSidePanel key={threadId} threadId={threadId} />
-          </TabsContent>
-        )}
+        <TabsContent
+          value="context"
+          className="min-h-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+        >
+          <ChatContextSidePanel key={threadId} threadId={threadId} />
+        </TabsContent>
       </Tabs>
     </aside>
   );

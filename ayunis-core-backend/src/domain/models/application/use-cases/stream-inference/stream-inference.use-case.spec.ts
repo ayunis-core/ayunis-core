@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { EMPTY, firstValueFrom, throwError } from 'rxjs';
 import { randomUUID } from 'crypto';
@@ -58,6 +59,18 @@ describe('StreamInferenceUseCase error mapping', () => {
   it('maps plain errors named AbortError (non-DOMException SDK aborts) to InferenceAbortedError', async () => {
     const abort = new Error('Request was aborted.');
     abort.name = 'AbortError';
+
+    await expect(
+      firstValueFrom(useCaseWithFailingHandler(abort).execute(makeInput())),
+    ).rejects.toBeInstanceOf(InferenceAbortedError);
+  });
+
+  it('maps portable abort failures to InferenceAbortedError', async () => {
+    const abort = new ModelProviderError({
+      kind: 'abort',
+      stage: 'stream_consumption',
+      cause: new DOMException('This operation was aborted', 'AbortError'),
+    });
 
     await expect(
       firstValueFrom(useCaseWithFailingHandler(abort).execute(makeInput())),
@@ -153,6 +166,22 @@ describe('StreamInferenceUseCase error mapping', () => {
     );
   });
 
+  it('recognizes oversized-image rejections through a portable failure cause', async () => {
+    const rejection = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      cause: new Error('image exceeds 5 MB maximum'),
+    });
+
+    await expect(
+      firstValueFrom(useCaseWithFailingHandler(rejection).execute(makeInput())),
+    ).rejects.toMatchObject({
+      code: 'INFERENCE_IMAGE_TOO_LARGE',
+      statusCode: 400,
+    });
+  });
+
   it('maps aborts to InferenceAbortedError even when a transport code is attached', async () => {
     const abort = Object.assign(new Error('aborted'), {
       name: 'AbortError',
@@ -202,6 +231,10 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
       }),
     };
     const useCase = new StreamInferenceUseCase(registry as never);
+    const attemptLifecycle = {
+      onAttemptStart: jest.fn(),
+      onAttemptTerminal: jest.fn(),
+    };
 
     useCase.execute(
       new StreamInferenceInput({
@@ -210,6 +243,7 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
         systemPrompt: '',
         tools: [tool],
         orgId: '123e4567-e89b-12d3-a456-426614174000',
+        attemptLifecycle,
       }),
     );
 
@@ -219,5 +253,6 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
     expect(history.content[0]).toMatchObject({
       params: { name: 'x', date: null },
     });
+    expect(received?.attemptLifecycle).toBe(attemptLifecycle);
   });
 });

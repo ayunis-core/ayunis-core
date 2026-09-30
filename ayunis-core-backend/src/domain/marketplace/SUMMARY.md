@@ -7,10 +7,13 @@ The marketplace module provides integration with the external Ayunis Marketplace
 
 - `GetMarketplaceSkillUseCase` — Fetches skill details from the marketplace by identifier
 - `GetMarketplaceIntegrationUseCase` — Fetches MCP integration details (including config schema with org/user fields) from the marketplace by identifier
+- `ListMarketplaceSkillsUseCase` — Every published skill as the generated `SkillListResponseDto[]`, featured entries first, then by name (German collation). Consumed by the chat `marketplace_search` tool
+- `ListMarketplaceIntegrationsUseCase` — Every published integration as `IntegrationListResponseDto[]`, same ordering, same consumer
+- `ListMarketplaceSkillCategoriesUseCase` — The skill categories as `SkillCategoryResponseDto[]`, used by the tool to resolve category IDs to names
 
 **Ports:**
 
-- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`)
+- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`, `getIntegrationByIdentifier`, `listSkills`, `listIntegrations`, `listCategories`). The list methods walk every page of the public list API (no free-text search exists there) and return published entries only
 
 **Infrastructure:**
 
@@ -34,6 +37,8 @@ The marketplace module provides integration with the external Ayunis Marketplace
 - `MarketplaceSkillNotFoundError` — Skill with given identifier not found (404)
 - `MarketplaceIntegrationNotFoundError` — Integration with given identifier not found (404)
 - `MarketplaceUnavailableError` — Marketplace service is unavailable (503); returns safe retry guidance to clients and is classified as an expected dependency failure rather than a first-occurrence AppSignal incident
+- `MarketplaceRequestRejectedError` — The marketplace answered a catalogue list call with a 4xx (502). Transport failures and 5xx are outages; a 4xx means the generated client drifted from the marketplace API, so this one alerts on first occurrence
+- `UnexpectedMarketplaceError` — Boundary error for `@HandleUnexpectedErrors` in this module (500)
 
 **Module Dependencies:**
 

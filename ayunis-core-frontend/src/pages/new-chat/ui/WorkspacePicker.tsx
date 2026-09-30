@@ -12,6 +12,9 @@ import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import { useWorkspaces } from '@/features/workspaces';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
+import { TOUR_TARGET } from '@/widgets/onboarding';
+
+const NEW_CHAT_ENTRANCE_MS = 900;
 
 interface WorkspacePickerProps {
   workspaceId: string | null;
@@ -34,7 +37,12 @@ export function WorkspacePicker({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            data-tour={TOUR_TARGET.selectWorkspaceInChat}
+            data-tour-settle={NEW_CHAT_ENTRANCE_MS}
+          >
             {selected ? (
               <WorkspaceIcon
                 icon={selected.icon}

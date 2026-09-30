@@ -12,10 +12,10 @@ import {
 } from 'src/iam/api-keys/application/api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
 import type { UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 const SECRET_BYTES = 32;
 const PG_UNIQUE_VIOLATION = '23505';
@@ -32,12 +32,7 @@ export class CreateApiKeyUseCase {
   ) {}
 
   async execute(command: CreateApiKeyCommand): Promise<CreateApiKeyResult> {
-    const orgId = this.contextService.get('orgId');
-    const userId = this.contextService.get('userId');
-
-    if (!orgId || !userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
     const trimmedName = command.name.trim();
 

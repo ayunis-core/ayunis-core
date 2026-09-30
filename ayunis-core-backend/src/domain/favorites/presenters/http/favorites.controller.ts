@@ -14,8 +14,6 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { FindFavoritesUseCase } from 'src/domain/favorites/application/use-cases/find-favorites/find-favorites.use-case';
 import { ReorderFavoritesCommand } from 'src/domain/favorites/application/use-cases/reorder-favorites/reorder-favorites.command';
 import { ReorderFavoritesUseCase } from 'src/domain/favorites/application/use-cases/reorder-favorites/reorder-favorites.use-case';
@@ -34,7 +32,6 @@ import { ToggleFavoriteDto } from './dtos/toggle-favorite.dto';
 // has no reachable server surface.
 @ApiTags('favorites')
 @ApiExtraModels(WorkspaceFavoriteResponseDto, ThreadFavoriteResponseDto)
-@RequireFeature(FeatureFlag.Workspaces)
 @Controller('favorites')
 export class FavoritesController {
   private readonly logger = new Logger(FavoritesController.name);

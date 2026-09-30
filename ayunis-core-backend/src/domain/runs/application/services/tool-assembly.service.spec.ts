@@ -28,14 +28,14 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
   /**
    * Build a ToolAssemblyService with mocked dependencies.
-   * Constructor order (15 params):
+   * Constructor order (14 params):
    *  0 configService, 1 assembleToolsUseCase, 2 mcpToolAssembler,
    *  3 systemPromptBuilderService, 4 findActiveSkillsUseCase,
    *  5 findActiveKnowledgeBasesUseCase, 6 getUserSystemPromptUseCase,
    *  7 getOrgSystemPromptUseCase, 8 findActiveAlwaysOnTemplatesUseCase,
-   *  9 features, 10 contextService,
-   *  11 getPermittedImageGenerationModelUseCase, 12 artifactToolAssembler,
-   *  13 getOrgChatSettingsUseCase, 14 logger
+   *  9 contextService,
+   *  10 getPermittedImageGenerationModelUseCase, 11 artifactToolAssembler,
+   *  12 getOrgChatSettingsUseCase, 13 logger
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
@@ -47,14 +47,16 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     mcpIntegrationsExecute?: jest.Mock;
     systemPromptBuild?: jest.Mock;
     alwaysOnTemplatesExecute?: jest.Mock;
-    skillsEnabled?: boolean;
     activeKnowledgeBasesExecute?: jest.Mock;
+    marketplaceEnabled?: boolean;
   }) {
+    const configFlags: Record<string, boolean> = {
+      'internetSearch.isAvailable':
+        overrides.internetSearchIsAvailable ?? false,
+    };
     const configService = {
-      get: jest
-        .fn()
-        .mockReturnValue(overrides.internetSearchIsAvailable ?? false),
-    }; // internetSearch.isAvailable
+      get: jest.fn().mockImplementation((key: string) => configFlags[key]),
+    };
     const assembleToolsUseCase = {
       execute:
         overrides.assembleToolExecute ??
@@ -90,7 +92,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       execute:
         overrides.alwaysOnTemplatesExecute ?? jest.fn().mockResolvedValue([]),
     };
-    const features = { skillsEnabled: overrides.skillsEnabled ?? false };
+    const marketplace = { enabled: overrides.marketplaceEnabled ?? false };
     const contextService = {
       get: overrides.contextServiceGet ?? jest.fn().mockReturnValue(undefined),
     };
@@ -121,11 +123,11 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getUserSystemPromptUseCase,
       getOrgSystemPromptUseCase,
       findActiveAlwaysOnTemplatesUseCase,
-      features,
       contextService,
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
       getOrgChatSettingsUseCase,
+      marketplace,
     );
 
     return {
@@ -218,7 +220,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(matches[0].description).toBe('first');
   });
 
-  it('should temporarily exclude the map tool from runtime assembly', async () => {
+  it('should include the map tool among the always-available tools', async () => {
     const { service } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
       imageModelExecute: jest.fn().mockResolvedValue({}),
@@ -230,7 +232,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       new Map(),
     );
 
-    expect(tools.map((tool: { type: ToolType }) => tool.type)).not.toContain(
+    expect(tools.map((tool: { type: ToolType }) => tool.type)).toContain(
       ToolType.MAP,
     );
   });
@@ -357,7 +359,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const { service, assembleToolsUseCase } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(undefined),
       systemPromptBuild,
-      skillsEnabled: true,
     });
 
     const result = await service.buildRunContext(
@@ -400,7 +401,51 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
       ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
     );
-    expect(editSkillCall?.[0].context).toEqual(['user__user-skill']);
+    expect(editSkillCall?.[0].context).toEqual(
+      new Map([
+        ['user__user-skill', activeSkill.id],
+        ['workspace__project-skill', projectSkill.id],
+      ]),
+    );
+  });
+
+  it('keeps editable skill IDs aligned with the first advertised slug on collisions', async () => {
+    const workspaceId = randomUUID();
+    const firstSkill = new WorkspaceSkill({
+      id: randomUUID(),
+      name: 'Budget Review',
+      shortDescription: 'First skill',
+      instructions: 'Use the first skill',
+      workspaceId,
+    });
+    const collidingSkill = new WorkspaceSkill({
+      id: randomUUID(),
+      name: 'Budget-Review',
+      shortDescription: 'Colliding skill',
+      instructions: 'Use the colliding skill',
+      workspaceId,
+    });
+    const { service, assembleToolsUseCase } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(undefined),
+    });
+
+    await service.buildRunContext(createMockThread(), [], true, false, {
+      instruction: null,
+      skills: [firstSkill, collidingSkill].map((skill) => ({
+        skill,
+        isActive: true,
+        isPinned: false,
+      })),
+      knowledgeBases: [],
+      runtimeKnowledgeBases: [],
+    });
+
+    const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
+    );
+    expect(editSkillCall?.[0].context).toEqual(
+      new Map([['workspace__budget-review', firstSkill.id]]),
+    );
   });
 
   it('makes active knowledge bases available without attaching them to the thread', async () => {
@@ -426,35 +471,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
         command.type === ToolType.KNOWLEDGE_QUERY,
     );
     expect(knowledgeQueryCall?.[0].context).toEqual([activeKnowledgeBase]);
-  });
-
-  it('does not apply project skills when the skills feature is disabled', async () => {
-    const projectSkill = new WorkspaceSkill({
-      id: randomUUID(),
-      name: 'Project Skill',
-      shortDescription: 'Assigned to the project',
-      instructions: 'Use project context',
-      workspaceId: randomUUID(),
-    });
-    const systemPromptBuild = jest.fn().mockReturnValue('prompt');
-    const discoverMcpExecute = jest.fn();
-    const { service } = await buildService({
-      systemPromptBuild,
-      discoverMcpExecute,
-      skillsEnabled: false,
-    });
-
-    await service.buildRunContext(createMockThread(), [], true, false, {
-      instruction: null,
-      skills: [{ skill: projectSkill, isActive: true, isPinned: false }],
-      knowledgeBases: [],
-      runtimeKnowledgeBases: [],
-    });
-
-    expect(systemPromptBuild).toHaveBeenCalledWith(
-      expect.objectContaining({ skills: [] }),
-    );
-    expect(discoverMcpExecute).not.toHaveBeenCalled();
   });
 
   it('should include website content and internet search when internet access is enabled', async () => {
@@ -489,5 +505,29 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).not.toContain(ToolType.WEBSITE_CONTENT);
     expect(toolTypes).not.toContain(ToolType.INTERNET_SEARCH);
+  });
+
+  it('includes marketplace search when a marketplace is configured', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      marketplaceEnabled: true,
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).toContain(ToolType.MARKETPLACE_SEARCH);
+  });
+
+  it('omits marketplace search when no marketplace is configured', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      marketplaceEnabled: false,
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).not.toContain(ToolType.MARKETPLACE_SEARCH);
   });
 });

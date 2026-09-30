@@ -179,6 +179,85 @@ export const ONBOARDING_CATEGORIES = [
     ],
   },
   {
+    id: 'workspaces',
+    translationKey: 'workspaces',
+    helpPath: 'workspaces/',
+    steps: [
+      {
+        id: 'createWorkspace',
+        translationKey: 'createWorkspace',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.createWorkspace,
+        },
+      },
+      {
+        id: 'selectWorkspaceInChat',
+        translationKey: 'selectWorkspaceInChat',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/chat',
+          spotlight: TOUR_TARGET.selectWorkspaceInChat,
+        },
+      },
+      {
+        id: 'startWorkspaceChat',
+        translationKey: 'startWorkspaceChat',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.chatComposer,
+        },
+      },
+      {
+        id: 'assignChatToWorkspace',
+        translationKey: 'assignChatToWorkspace',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/chat',
+          spotlight: TOUR_TARGET.assignChatToWorkspace,
+        },
+      },
+      {
+        id: 'workspaceInstruction',
+        translationKey: 'workspaceInstruction',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.workspaceInstruction,
+        },
+      },
+      {
+        id: 'workspaceKnowledge',
+        translationKey: 'workspaceKnowledge',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.workspaceKnowledge,
+        },
+      },
+      {
+        id: 'workspaceSkill',
+        translationKey: 'workspaceSkill',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.workspaceSkill,
+        },
+      },
+      {
+        id: 'favoriteWorkspace',
+        translationKey: 'favoriteWorkspace',
+        action: {
+          type: ACTION_TYPE.link,
+          to: '/workspaces',
+          spotlight: TOUR_TARGET.favoriteWorkspace,
+        },
+      },
+    ],
+  },
+  {
     id: 'workflows',
     translationKey: 'workflows',
     steps: [

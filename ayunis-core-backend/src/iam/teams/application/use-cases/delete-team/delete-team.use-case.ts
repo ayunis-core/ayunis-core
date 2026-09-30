@@ -3,8 +3,8 @@ import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repositor
 import { DeleteTeamCommand } from './delete-team.command';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Transactional } from '@nestjs-cls/transactional';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteTeamUseCase {
@@ -17,11 +17,7 @@ export class DeleteTeamUseCase {
 
   @Transactional()
   async execute(command: DeleteTeamCommand): Promise<void> {
-    const orgId = this.contextService.get('orgId');
-
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     this.logger.log({ teamId: command.teamId, orgId }, 'execute');
 

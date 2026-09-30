@@ -71,7 +71,10 @@ export class LocalInvitesRepository implements InvitesRepository {
 
   async findOne(id: UUID): Promise<Invite | null> {
     this.logger.log({ id }, 'findOne');
-    const entity = await this.invites.findOne({ where: { id } });
+    const entity = await this.invites.findOne({
+      where: { id },
+      relations: { inviteTeams: true },
+    });
 
     if (!entity) {
       this.logger.debug({ id }, 'Invite not found');
@@ -137,6 +140,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     // them orphaned and block re-inviting the same email (AYC-299).
     const entity = await this.invites.findOne({
       where: { email: exactEmail(email) },
+      relations: { inviteTeams: true },
     });
     if (!entity) {
       this.logger.debug({ email }, 'Invite not found by email');
@@ -152,6 +156,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     this.logger.log({ email, orgId }, 'findOneByEmailAndOrg');
     const entity = await this.invites.findOne({
       where: { email: exactEmail(email), orgId, acceptedAt: IsNull() },
+      relations: { inviteTeams: true },
     });
     if (!entity) {
       this.logger.debug({ email, orgId }, 'Invite not found by email and org');

@@ -97,6 +97,9 @@ describe('LocalInvitesRepository', () => {
         normalizedEmail: 'user@example.com',
       });
       expect(where).not.toHaveProperty('acceptedAt', IsNull());
+      expect(inviteRepo.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ relations: { inviteTeams: true } }),
+      );
     });
 
     it('returns null when no invite exists for the email', async () => {
@@ -128,6 +131,23 @@ describe('LocalInvitesRepository', () => {
       expect(where.email.getSql?.('invite.email')).toBe(
         'LOWER(invite.email) = :normalizedEmail',
       );
+      expect(inviteRepo.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ relations: { inviteTeams: true } }),
+      );
+    });
+  });
+
+  describe('findOne', () => {
+    it('loads invite teams needed during invite acceptance', async () => {
+      inviteRepo.findOne.mockResolvedValue(null);
+      const inviteId = randomUUID();
+
+      await repository.findOne(inviteId);
+
+      expect(inviteRepo.findOne).toHaveBeenCalledWith({
+        where: { id: inviteId },
+        relations: { inviteTeams: true },
+      });
     });
   });
 

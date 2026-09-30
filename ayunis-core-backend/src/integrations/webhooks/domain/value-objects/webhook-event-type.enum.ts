@@ -1,6 +1,7 @@
 export enum WebhookEventType {
   ORG_CREATED = 'org.created',
   USER_CREATED = 'user.created',
+  USER_INVITED = 'user.invited',
   USER_UPDATED = 'user.updated',
   USER_DELETED = 'user.deleted',
   SUBSCRIPTION_CREATED = 'subscription.created',
@@ -14,6 +15,7 @@ export enum WebhookEventType {
   SKILL_INSTALLED = 'skill.installed',
   INTEGRATION_USED = 'integration.used',
   INTEGRATION_INSTALLED = 'integration.installed',
+  ONBOARDING_UPDATED = 'onboarding.updated',
   ADDON_ACTIVATED = 'addon.activated',
   ADDON_DEACTIVATED = 'addon.deactivated',
 }

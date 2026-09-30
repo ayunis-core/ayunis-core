@@ -1,7 +1,5 @@
-import {
-  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-  useSuperAdminSubscriptionsControllerUncancelSubscription,
-} from '@/shared/api';
+import { useSuperAdminSubscriptionsControllerUncancelSubscription } from '@/shared/api';
+import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import { useTranslation } from 'react-i18next';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -32,13 +30,7 @@ export default function useSuperAdminSubscriptionUncancel(orgId: string) {
           }
         },
         onSettled: () => {
-          void queryClient.invalidateQueries({
-            queryKey:
-              getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
-                orgId,
-              ),
-          });
-          void router.invalidate();
+          invalidateOrgSubscriptionQueries(queryClient, router, orgId);
         },
       },
     });

@@ -67,6 +67,7 @@ describe('UpdateLanguageModelUseCase', () => {
     isArchived: boolean,
     tier?: ModelTier,
     hasProviderFault?: boolean,
+    contextWindowSize?: number,
   ): LanguageModel => {
     return new LanguageModel({
       id,
@@ -78,6 +79,7 @@ describe('UpdateLanguageModelUseCase', () => {
       isArchived,
       canUseTools: true,
       canVision: false,
+      contextWindowSize,
       tier,
       hasProviderFault,
     });
@@ -88,6 +90,7 @@ describe('UpdateLanguageModelUseCase', () => {
     isArchived: boolean,
     tier?: ModelTier,
     hasProviderFault?: boolean,
+    contextWindowSize?: number,
   ): UpdateLanguageModelCommand => {
     return new UpdateLanguageModelCommand({
       id,
@@ -99,6 +102,7 @@ describe('UpdateLanguageModelUseCase', () => {
       isArchived,
       canUseTools: true,
       canVision: false,
+      contextWindowSize,
       tier,
       hasProviderFault,
     });
@@ -342,6 +346,55 @@ describe('UpdateLanguageModelUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.hasProviderFault).toBe(false);
+    });
+
+    it('updates the context window size when provided', async () => {
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        undefined,
+        undefined,
+        32_000,
+      );
+      const command = createUpdateCommand(
+        mockModelId,
+        false,
+        undefined,
+        undefined,
+        128_000,
+      );
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(command);
+
+      expect(result).toHaveProperty('contextWindowSize', 128_000);
+      expect(modelsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ contextWindowSize: 128_000 }),
+      );
+    });
+
+    it('clears the context window size when omitted (full-replace semantics)', async () => {
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        undefined,
+        undefined,
+        128_000,
+      );
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(command);
+
+      expect(existingModel).toHaveProperty('contextWindowSize', 128_000);
+      expect(result).toHaveProperty('contextWindowSize', undefined);
+      expect(modelsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ contextWindowSize: undefined }),
+      );
     });
 
     it('should clear tier when omitted from the command (full-replace semantics)', async () => {

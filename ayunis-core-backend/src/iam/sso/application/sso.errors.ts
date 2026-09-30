@@ -9,6 +9,9 @@ export enum SsoErrorCode {
   CONNECTION_CONFLICT = 'SSO_CONNECTION_CONFLICT',
   CONNECTION_NOT_FOUND = 'SSO_CONNECTION_NOT_FOUND',
   CONNECTION_MUST_BE_DISABLED = 'SSO_CONNECTION_MUST_BE_DISABLED',
+  MUST_REMAIN_ENABLED = 'SSO_MUST_REMAIN_ENABLED',
+  PASSWORDLESS_USERS_EXIST = 'SSO_PASSWORDLESS_USERS_EXIST',
+  DOMAIN_ACCOUNT_CONFLICT = 'SSO_DOMAIN_ACCOUNT_CONFLICT',
   CONNECTION_CHANGED = 'SSO_CONNECTION_CHANGED',
   BROKER_NOT_CONFIGURED = 'SSO_BROKER_NOT_CONFIGURED',
   BROKER_RESPONSE_INVALID = 'SSO_BROKER_RESPONSE_INVALID',
@@ -71,11 +74,44 @@ export class SsoConnectionNotFoundError extends SsoError {
   }
 }
 
+export class SsoDomainAccountConflictError extends SsoError {
+  constructor(orgId: UUID) {
+    super(
+      'SSO domains are used by accounts in another organization; resolve account membership before requiring SSO',
+      SsoErrorCode.DOMAIN_ACCOUNT_CONFLICT,
+      409,
+      { orgId },
+    );
+  }
+}
+
 export class SsoConnectionMustBeDisabledError extends SsoError {
   constructor(orgId: UUID) {
     super(
       `Disable SSO for organization '${orgId}' before changing its mapping`,
       SsoErrorCode.CONNECTION_MUST_BE_DISABLED,
+      409,
+      { orgId },
+    );
+  }
+}
+
+export class SsoMustRemainEnabledError extends SsoError {
+  constructor(orgId: UUID) {
+    super(
+      `SSO must remain enabled for organization '${orgId}' while local password login is disabled`,
+      SsoErrorCode.MUST_REMAIN_ENABLED,
+      409,
+      { orgId },
+    );
+  }
+}
+
+export class SsoPasswordlessUsersExistError extends SsoError {
+  constructor(orgId: UUID) {
+    super(
+      `SSO cannot be disabled for organization '${orgId}' while users without passwords exist`,
+      SsoErrorCode.PASSWORDLESS_USERS_EXIST,
       409,
       { orgId },
     );

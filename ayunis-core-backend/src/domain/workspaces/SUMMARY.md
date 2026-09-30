@@ -4,11 +4,10 @@
 
 Workspaces group a user's chats and own workspace-scoped skills and knowledge bases. A workspace carries a name, optional description, appearance, and optional project instruction. User favorites and ordering belong to the favorites module.
 
-The module is guarded by `FEATURE_WORKSPACES_ENABLED` (off by default).
-
 ## Domain behavior
 
 - A workspace belongs to one user and organization.
+- Creating a workspace does not add it to favorites. Users explicitly favorite or unfavorite it; existing favorites are unchanged.
 - Workspace skills and knowledge bases use `workspaceId` ownership and cannot be mixed with personal resources.
 - Skill and knowledge-base activation is workspace-wide. Both start active; deactivation excludes them from new run context. Deactivating a skill also clears its pin.
 - Enabled skills are advertised as activation candidates. Instructions and attached resources are loaded only after `activate_skill` or a trusted quick action.

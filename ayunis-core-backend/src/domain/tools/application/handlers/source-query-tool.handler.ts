@@ -11,6 +11,7 @@ import {
   ToolExecutionHandler,
 } from 'src/domain/tools/application/ports/execution.handler';
 import { handleEmbeddingError } from 'src/domain/tools/application/utils/embedding-error.utils';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 @Injectable()
 export class SourceQueryToolHandler extends ToolExecutionHandler {
@@ -49,6 +50,10 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
 
       const result = matchedChunks.map((chunk) => {
         return {
+          chunkId: chunk.id,
+          sourceId: source.id,
+          sourceName: source.name,
+          citable: source.createdBy !== SourceCreator.SYSTEM,
           content: chunk.content,
           startLine: (chunk.meta.startLine as number | undefined) ?? null,
           endLine: (chunk.meta.endLine as number | undefined) ?? null,

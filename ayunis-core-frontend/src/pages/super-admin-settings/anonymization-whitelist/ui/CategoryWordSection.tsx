@@ -11,8 +11,9 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import type { GlobalPiiWhitelistWordDto, PiiCategory } from '@/shared/api';
-import { useAddGlobalWhitelistWord } from '../api/useAddGlobalWhitelistWord';
-import { useDeleteGlobalWhitelistWord } from '../api/useDeleteGlobalWhitelistWord';
+import { useAddGlobalWhitelistWords } from '@/pages/super-admin-settings/anonymization-whitelist/api/useAddGlobalWhitelistWords';
+import { useDeleteGlobalWhitelistWord } from '@/pages/super-admin-settings/anonymization-whitelist/api/useDeleteGlobalWhitelistWord';
+import { parseWordsInput } from '@/pages/super-admin-settings/anonymization-whitelist/lib/parse-words-input';
 
 interface CategoryWordSectionProps {
   readonly category: PiiCategory;
@@ -25,15 +26,15 @@ export function CategoryWordSection({
 }: CategoryWordSectionProps) {
   const { t, i18n } = useTranslation('super-admin-settings-anonymization');
   const [input, setInput] = useState('');
-  const { addWord, isPending: isAdding } = useAddGlobalWhitelistWord();
+  const { addWords, isPending: isAdding } = useAddGlobalWhitelistWords();
   const { deleteWord, isPending: isDeleting } = useDeleteGlobalWhitelistWord();
+  const parsedWords = parseWordsInput(input);
 
   function handleAdd() {
-    const word = input.trim();
-    if (word.length === 0) {
+    if (parsedWords.length === 0) {
       return;
     }
-    addWord({ category, word, onSuccess: () => setInput('') });
+    addWords({ category, words: parsedWords, onSuccess: () => setInput('') });
   }
 
   function formatAudit(word: GlobalPiiWhitelistWordDto): string {
@@ -58,6 +59,7 @@ export function CategoryWordSection({
               {words.map((word) => (
                 <li
                   key={word.id}
+                  data-testid="whitelist-word-item"
                   className="flex items-center justify-between rounded-md border px-3 py-1.5"
                 >
                   <div className="flex min-w-0 items-baseline gap-3">
@@ -92,12 +94,14 @@ export function CategoryWordSection({
               value={input}
               placeholder={t('add.placeholder')}
               disabled={isAdding}
+              data-testid={`whitelist-word-input-${category}`}
               onChange={(event) => setInput(event.target.value)}
             />
             <Button
               type="submit"
               variant="secondary"
-              disabled={isAdding || input.trim().length === 0}
+              data-testid={`whitelist-word-submit-${category}`}
+              disabled={isAdding || parsedWords.length === 0}
             >
               <Plus className="h-4 w-4" />
               {t('add.button')}

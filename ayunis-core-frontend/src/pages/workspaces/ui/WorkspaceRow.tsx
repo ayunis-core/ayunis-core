@@ -9,15 +9,25 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
+import { TOUR_TARGET } from '@/widgets/onboarding';
 import type { Workspace } from '@/features/workspaces';
 import { WorkspacePinButton } from './WorkspacePinButton';
 
 interface WorkspaceRowProps {
   workspace: Workspace;
+  pinTourTarget?: boolean;
 }
 
-export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
+export function WorkspaceRow({
+  workspace,
+  pinTourTarget = false,
+}: Readonly<WorkspaceRowProps>) {
   const { t } = useTranslation('workspaces');
+  const counts = [
+    t('page.skillCount', { count: workspace.skillCount ?? 0 }),
+    t('page.knowledgeBaseCount', { count: workspace.knowledgeBaseCount ?? 0 }),
+  ].join(' · ');
+
   return (
     <Item
       variant="outline"
@@ -43,17 +53,13 @@ export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
             {workspace.name}
           </Link>
         </ItemTitle>
-        <ItemDescription className="line-clamp-1">
-          {[
-            t('page.chatCount', { count: workspace.chatCount ?? 0 }),
-            workspace.description,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </ItemDescription>
+        <ItemDescription className="line-clamp-1">{counts}</ItemDescription>
       </ItemContent>
       <ItemActions className="relative">
-        <WorkspacePinButton workspaceId={workspace.id} />
+        <WorkspacePinButton
+          workspaceId={workspace.id}
+          tourTarget={pinTourTarget ? TOUR_TARGET.favoriteWorkspace : undefined}
+        />
       </ItemActions>
     </Item>
   );

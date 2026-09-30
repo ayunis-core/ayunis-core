@@ -85,9 +85,10 @@ describe('GetPresignedUrlUseCase', () => {
       jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(false);
 
       // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ObjectNotFoundError,
-      );
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: 'OBJECT_NOT_FOUND',
+        statusCode: 404,
+      });
       expect(mockObjectStorage.exists).toHaveBeenCalled();
       expect(mockObjectStorage.getPresignedUrl).not.toHaveBeenCalled();
     });
@@ -200,9 +201,10 @@ describe('GetPresignedUrlUseCase', () => {
         .mockRejectedValue(new Error('Exists check failed'));
 
       // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        DownloadFailedError,
-      );
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: 'DOWNLOAD_FAILED',
+        statusCode: 500,
+      });
       expect(mockObjectStorage.getPresignedUrl).not.toHaveBeenCalled();
     });
 

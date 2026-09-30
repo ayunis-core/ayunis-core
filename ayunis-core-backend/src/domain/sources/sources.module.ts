@@ -33,6 +33,7 @@ import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-u
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
+import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
     FindContentChunksByIdsUseCase,
+    FindSourceCitationTargetUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
     CreateProcessingSourceUseCase,
@@ -86,6 +88,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
     FindContentChunksByIdsUseCase,
+    FindSourceCitationTargetUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
     CreateProcessingSourceUseCase,

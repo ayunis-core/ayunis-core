@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { extractUpstreamStatus } from './extract-upstream-status.helper';
 
 export interface ProviderErrorDiagnostics {
@@ -52,14 +53,19 @@ const REASON_PATTERNS: ReadonlyArray<readonly [ProviderErrorReason, RegExp]> = [
 export function extractProviderErrorDiagnostics(
   error: unknown,
 ): ProviderErrorDiagnostics {
-  const record = asRecord(error);
+  const portableError = asPortableError(error);
+  const diagnosticSource = portableErrorSource(error);
+  const record = asRecord(diagnosticSource);
   const body = asRecord(read(record, 'error'));
   const nestedError = asRecord(read(body, 'error'));
   const response = asRecord(read(record, 'response'));
   const awsMetadata = asRecord(read(record, '$metadata'));
   const headers =
     asRecord(read(response, 'headers')) ?? asRecord(read(record, 'headers'));
-  const upstreamStatus = extractUpstreamStatus(error);
+  const upstreamStatus = firstDefined(
+    portableError?.upstreamStatus,
+    extractUpstreamStatus(diagnosticSource),
+  );
   const message = firstString(
     read(record, 'message'),
     read(body, 'message'),
@@ -71,9 +77,15 @@ export function extractProviderErrorDiagnostics(
     upstreamCode: extractCode(record, body),
     upstreamType: extractType(record, body, nestedError),
     upstreamParam: extractParam(record, body),
-    upstreamRequestId: extractRequestId(record, body, headers, awsMetadata),
+    upstreamRequestId: firstDefined(
+      portableError?.upstreamRequestId,
+      extractRequestId(record, body, headers, awsMetadata),
+    ),
     upstreamReason: classifyReason(message, upstreamStatus),
-    upstreamRetryAfterMs: extractRetryAfterMs(headers),
+    upstreamRetryAfterMs: firstDefined(
+      portableError?.retryAfterMs,
+      extractRetryAfterMs(headers),
+    ),
   });
 }
 
@@ -162,6 +174,18 @@ function extractRequestId(
     ),
     256,
   );
+}
+
+function asPortableError(error: unknown): ModelProviderError | undefined {
+  return error instanceof ModelProviderError ? error : undefined;
+}
+
+function portableErrorSource(error: unknown): unknown {
+  return asPortableError(error)?.cause ?? error;
+}
+
+function firstDefined<T>(...values: Array<T | undefined>): T | undefined {
+  return values.find((value): value is T => value !== undefined);
 }
 
 function read(

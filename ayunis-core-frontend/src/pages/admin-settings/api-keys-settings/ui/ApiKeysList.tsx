@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Ban, Coins, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Ban, ChevronRight, Coins, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@ayunis/ui/components/collapsible';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +24,11 @@ import {
 import { formatDate } from '@/shared/lib/format-date';
 import { useRemoveApiKeyCreditLimit } from '@/pages/admin-settings/api-keys-settings/api/useRemoveApiKeyCreditLimit';
 import { useRevokeApiKey } from '@/pages/admin-settings/api-keys-settings/api/useRevokeApiKey';
+import {
+  getApiKeyStatus,
+  partitionApiKeys,
+  type ApiKeyStatus,
+} from '@/pages/admin-settings/api-keys-settings/lib/partition-api-keys';
 import type {
   ApiKey,
   ApiKeyCreditLimit,
@@ -37,9 +47,12 @@ export function ApiKeysList({
   creditLimits,
   canManageCreditLimits = true,
 }: Readonly<ApiKeysListProps>) {
+  const { t } = useTranslation('admin-settings-api-keys');
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
   if (apiKeys.length === 0) return <ApiKeysEmptyState />;
 
+  const now = new Date();
+  const { active, archived } = partitionApiKeys(apiKeys, now);
   const limitsByApiKey = new Map(
     creditLimits.map((limit) => [limit.apiKeyId, limit]),
   );
@@ -47,16 +60,26 @@ export function ApiKeysList({
   return (
     <>
       <div className="space-y-3">
-        {apiKeys.map((apiKey) => (
+        {active.length === 0 && (
+          <p
+            className="text-muted-foreground text-sm"
+            data-testid="api-key-no-active"
+          >
+            {t('apiKeys.list.noActiveKeys')}
+          </p>
+        )}
+        {active.map((apiKey) => (
           <ApiKeyListItem
             key={apiKey.id}
             apiKey={apiKey}
+            status="active"
             creditLimit={limitsByApiKey.get(apiKey.id)}
             canManageCreditLimits={canManageCreditLimits}
             onManageCreditLimit={() => setSelectedApiKey(apiKey)}
           />
         ))}
       </div>
+      {archived.length > 0 && <ArchivedApiKeys apiKeys={archived} now={now} />}
       <SetApiKeyCreditLimitDialog
         apiKey={selectedApiKey}
         creditLimit={
@@ -69,8 +92,46 @@ export function ApiKeysList({
   );
 }
 
+function ArchivedApiKeys({
+  apiKeys,
+  now,
+}: Readonly<{ apiKeys: ApiKey[]; now: Date }>) {
+  const { t } = useTranslation('admin-settings-api-keys');
+
+  return (
+    <Collapsible className="group/archive">
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground -ml-2"
+          data-testid="api-key-archive-toggle"
+        >
+          <ChevronRight className="transition-transform group-data-[state=open]/archive:rotate-90" />
+          {t('apiKeys.list.archiveTitle', { count: apiKeys.length })}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent
+        className="mt-3 space-y-3"
+        data-testid="api-key-archive-list"
+      >
+        {apiKeys.map((apiKey) => (
+          <ApiKeyListItem
+            key={apiKey.id}
+            apiKey={apiKey}
+            status={getApiKeyStatus(apiKey, now)}
+            canManageCreditLimits={false}
+            onManageCreditLimit={() => undefined}
+          />
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 interface ApiKeyListItemProps {
   apiKey: ApiKey;
+  status: ApiKeyStatus;
   creditLimit?: ApiKeyCreditLimit;
   canManageCreditLimits: boolean;
   onManageCreditLimit: () => void;
@@ -78,6 +139,7 @@ interface ApiKeyListItemProps {
 
 function ApiKeyListItem({
   apiKey,
+  status,
   creditLimit,
   canManageCreditLimits,
   onManageCreditLimit,
@@ -85,7 +147,7 @@ function ApiKeyListItem({
   const { t } = useTranslation('admin-settings-api-keys');
   const { removeApiKeyCreditLimit, isRemoving } = useRemoveApiKeyCreditLimit();
   const { revokeApiKey, isRevoking } = useRevokeApiKey();
-  const isRevoked = apiKey.revokedAt !== null;
+  const isActive = status === 'active';
   const isLoading = isRemoving || isRevoking(apiKey.id);
 
   return (
@@ -93,13 +155,20 @@ function ApiKeyListItem({
       <ItemContent>
         <div className="flex items-center gap-2">
           <ItemTitle>{apiKey.name}</ItemTitle>
-          {isRevoked && (
+          {status === 'revoked' && (
             <Badge variant="secondary">{t('apiKeys.list.revokedBadge')}</Badge>
           )}
+          {status === 'expired' && (
+            <Badge variant="secondary">{t('apiKeys.list.expiredBadge')}</Badge>
+          )}
         </div>
-        <ApiKeyDetails apiKey={apiKey} creditLimit={creditLimit} />
+        <ApiKeyDetails
+          apiKey={apiKey}
+          status={status}
+          creditLimit={creditLimit}
+        />
       </ItemContent>
-      {!isRevoked && (
+      {isActive && (
         <ItemActions>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -158,12 +227,14 @@ function ApiKeyListItem({
 
 function ApiKeyDetails({
   apiKey,
+  status,
   creditLimit,
-}: Readonly<{ apiKey: ApiKey; creditLimit?: ApiKeyCreditLimit }>) {
+}: Readonly<{
+  apiKey: ApiKey;
+  status: ApiKeyStatus;
+  creditLimit?: ApiKeyCreditLimit;
+}>) {
   const { t } = useTranslation('admin-settings-api-keys');
-  const lifecycleText = apiKey.revokedAt
-    ? t('apiKeys.list.revokedAt', { date: formatDate(apiKey.revokedAt) })
-    : getActiveLifecycleText(apiKey, t);
   const creditText = creditLimit
     ? t('apiKeys.creditLimit.usage', {
         used: Math.round(creditLimit.creditsUsed).toLocaleString(),
@@ -178,19 +249,28 @@ function ApiKeyDetails({
         {' · '}
         {t('apiKeys.list.createdAt', { date: formatDate(apiKey.createdAt) })}
         {' · '}
-        {lifecycleText}
+        {getLifecycleText(apiKey, status, t)}
       </ItemDescription>
-      <ItemDescription data-testid="api-key-credit-usage">
-        {creditText}
-      </ItemDescription>
+      {status === 'active' && (
+        <ItemDescription data-testid="api-key-credit-usage">
+          {creditText}
+        </ItemDescription>
+      )}
     </>
   );
 }
 
-function getActiveLifecycleText(
+function getLifecycleText(
   apiKey: ApiKey,
+  status: ApiKeyStatus,
   t: ReturnType<typeof useTranslation>['t'],
 ): string {
+  if (status === 'revoked' && apiKey.revokedAt) {
+    return t('apiKeys.list.revokedAt', { date: formatDate(apiKey.revokedAt) });
+  }
+  if (status === 'expired' && apiKey.expiresAt) {
+    return t('apiKeys.list.expiredAt', { date: formatDate(apiKey.expiresAt) });
+  }
   return apiKey.expiresAt
     ? t('apiKeys.list.expiresAt', { date: formatDate(apiKey.expiresAt) })
     : t('apiKeys.list.neverExpires');

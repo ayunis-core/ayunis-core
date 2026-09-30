@@ -3,9 +3,9 @@ import { UpsertOrgChatSettingsCommand } from './upsert-org-chat-settings.command
 import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 import { OrgChatSettingsRepository } from 'src/domain/chat-settings/application/ports/org-chat-settings.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpsertOrgChatSettingsUseCase {
@@ -19,10 +19,7 @@ export class UpsertOrgChatSettingsUseCase {
   async execute(
     command: UpsertOrgChatSettingsCommand,
   ): Promise<OrgChatSettings> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
     this.logger.log({ orgId }, 'execute');
 
     try {

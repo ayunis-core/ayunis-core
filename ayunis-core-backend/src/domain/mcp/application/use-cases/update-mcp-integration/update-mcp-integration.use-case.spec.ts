@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { UpdateMcpIntegrationUseCase } from './update-mcp-integration.use-case';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
 import type { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import type { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
 import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
@@ -20,14 +21,17 @@ import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp
 import {
   McpIntegrationNotConfigurableError,
   McpMissingRequiredConfigError,
+  McpValidationFailedError,
 } from 'src/domain/mcp/application/mcp.errors';
 import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import type { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 
 describe('UpdateMcpIntegrationUseCase', () => {
   const orgId = randomUUID();
   const integrationId = randomUUID();
 
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
+  let userConfigRepository: jest.Mocked<McpIntegrationUserConfigRepositoryPort>;
   let context: jest.Mocked<ContextService>;
   let encryption: jest.Mocked<McpCredentialEncryptionPort>;
   let configService: McpConfigService;
@@ -48,6 +52,10 @@ describe('UpdateMcpIntegrationUseCase', () => {
       findByOrgIdAndMarketplaceIdentifier: jest.fn(),
       delete: jest.fn(),
     } as unknown as jest.Mocked<McpIntegrationsRepositoryPort>;
+
+    userConfigRepository = {
+      removeKeysByIntegrationId: jest.fn(),
+    } as unknown as jest.Mocked<McpIntegrationUserConfigRepositoryPort>;
 
     context = {
       get: jest.fn(),
@@ -73,6 +81,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
 
     useCase = new UpdateMcpIntegrationUseCase(
       repository,
+      userConfigRepository,
       context,
       encryption,
       configService,
@@ -203,6 +212,296 @@ describe('UpdateMcpIntegrationUseCase', () => {
       (result.auth as CustomHeaderMcpIntegrationAuth).getAuthHeaderName(),
     ).toBe('X-NEW-KEY');
     expect(repository.save).toHaveBeenCalledWith(integration);
+  });
+
+  it('updates a custom integration server URL and revalidates the connection', async () => {
+    const integration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Document archive',
+      serverUrl: 'https://old.example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    const result = await useCase.execute(
+      new UpdateMcpIntegrationCommand({
+        integrationId,
+        serverUrl: 'https://new.example.com/mcp',
+      }),
+    );
+
+    expect(result.serverUrl).toBe('https://new.example.com/mcp');
+    expect(validateUseCase.execute).toHaveBeenCalledWith({ integrationId });
+    expect(repository.save).toHaveBeenCalledTimes(2);
+  });
+
+  it('updates custom header definitions while preserving an omitted secret', async () => {
+    const integration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Document archive',
+      serverUrl: 'https://documents.example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [
+          {
+            key: 'apiToken',
+            label: 'API token',
+            type: 'secret',
+            headerName: 'X-Old-Token',
+            required: true,
+          },
+        ],
+        userFields: [],
+      },
+      orgConfigValues: { apiToken: 'encrypted:existing-token' },
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    const result = await useCase.execute(
+      new UpdateMcpIntegrationCommand({
+        integrationId,
+        configSchema: {
+          authType: 'CUSTOM',
+          orgFields: [
+            {
+              key: 'apiToken',
+              label: 'API token',
+              type: 'secret',
+              headerName: 'Authorization',
+              prefix: 'Bearer ',
+              required: true,
+            },
+          ],
+          userFields: [],
+        },
+        orgConfigValues: {},
+      }),
+    );
+
+    expect(
+      (result as SchemaConfiguredMcpIntegration).configSchema.orgFields[0],
+    ).toEqual(
+      expect.objectContaining({
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+      }),
+    );
+    expect(
+      (result as SchemaConfiguredMcpIntegration).orgConfigValues.apiToken,
+    ).toBe('encrypted:existing-token');
+    expect(encryption.encrypt).not.toHaveBeenCalled();
+    expect(validateUseCase.execute).toHaveBeenCalledWith({ integrationId });
+  });
+
+  it('rejects changing the type of an existing configuration field', async () => {
+    const integration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Document archive',
+      serverUrl: 'https://documents.example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [
+          {
+            key: 'apiToken',
+            label: 'API token',
+            type: 'secret',
+            headerName: 'Authorization',
+            required: true,
+          },
+        ],
+        userFields: [],
+      },
+      orgConfigValues: { apiToken: 'encrypted:existing-token' },
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    await expect(
+      useCase.execute(
+        new UpdateMcpIntegrationCommand({
+          integrationId,
+          name: 'Partially changed name',
+          configSchema: {
+            authType: 'CUSTOM',
+            orgFields: [
+              {
+                key: 'apiToken',
+                label: 'API token',
+                type: 'text',
+                headerName: 'Authorization',
+                required: true,
+              },
+            ],
+            userFields: [],
+          },
+        }),
+      ),
+    ).rejects.toThrow(McpValidationFailedError);
+    expect(integration.name).toBe('Document archive');
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects moving an existing configuration field to another scope', async () => {
+    const integration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Document archive',
+      serverUrl: 'https://documents.example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [
+          {
+            key: 'tenant',
+            label: 'Tenant',
+            type: 'text',
+            headerName: 'X-Tenant',
+            required: true,
+          },
+        ],
+        userFields: [],
+      },
+      orgConfigValues: { tenant: 'council-42' },
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    await expect(
+      useCase.execute(
+        new UpdateMcpIntegrationCommand({
+          integrationId,
+          configSchema: {
+            authType: 'CUSTOM',
+            orgFields: [],
+            userFields: [
+              {
+                key: 'tenant',
+                label: 'Tenant',
+                type: 'text',
+                headerName: 'X-Tenant',
+                required: true,
+              },
+            ],
+          },
+        }),
+      ),
+    ).rejects.toThrow(McpValidationFailedError);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('does not centrally validate integrations requiring user configuration', async () => {
+    const integration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'User-scoped archive',
+      serverUrl: 'https://documents.example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [],
+        userFields: [
+          {
+            key: 'apiToken',
+            label: 'API token',
+            type: 'secret',
+            headerName: 'Authorization',
+            required: true,
+          },
+        ],
+      },
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    await useCase.execute(
+      new UpdateMcpIntegrationCommand({
+        integrationId,
+        serverUrl: 'https://new-documents.example.com/mcp',
+      }),
+    );
+
+    expect(validateUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('removes deleted user field values from every user config', async () => {
+    const integration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [],
+        userFields: [
+          {
+            key: 'personalToken',
+            label: 'Personal token',
+            type: 'secret',
+            headerName: 'Authorization',
+            required: true,
+          },
+          {
+            key: 'region',
+            label: 'Region',
+            type: 'text',
+            headerName: 'X-Region',
+            required: false,
+          },
+        ],
+      },
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    await useCase.execute(
+      new UpdateMcpIntegrationCommand({
+        integrationId,
+        configSchema: {
+          authType: 'CUSTOM',
+          orgFields: [],
+          userFields: [
+            {
+              key: 'region',
+              label: 'Region',
+              type: 'text',
+              headerName: 'X-Region',
+              required: false,
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(userConfigRepository.removeKeysByIntegrationId).toHaveBeenCalledWith(
+      integrationId,
+      ['personalToken'],
+    );
+  });
+
+  it('preserves OAuth authType when an update schema omits it', async () => {
+    const integration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      configSchema: {
+        authType: 'OAUTH',
+        orgFields: [],
+        userFields: [],
+        oauth: { clientRegistration: 'automatic', scopes: [] },
+      },
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    await useCase.execute(
+      new UpdateMcpIntegrationCommand({
+        integrationId,
+        configSchema: {
+          orgFields: [],
+          userFields: [],
+          oauth: { clientRegistration: 'automatic', scopes: [] },
+        },
+      }),
+    );
+
+    expect(integration.configSchema.authType).toBe('OAUTH');
   });
 
   it('throws when user is not authenticated', async () => {

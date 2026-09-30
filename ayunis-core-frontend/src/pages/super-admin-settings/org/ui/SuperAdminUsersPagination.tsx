@@ -13,11 +13,14 @@ export default function SuperAdminUsersPagination({
   search,
   orgId,
 }: Readonly<SuperAdminUsersPaginationProps>) {
-  const buildSearchParams = (targetPage: number) => ({
-    tab: 'users' as const,
-    ...(search && { usersSearch: search }),
-    usersPage: targetPage,
-  });
+  const buildSearchParams =
+    (targetPage: number) =>
+    (previous: Record<string, string | number | boolean | undefined>) => ({
+      ...previous,
+      tab: 'users' as const,
+      usersSearch: search ?? undefined,
+      usersPage: targetPage,
+    });
 
   return (
     <PaginationWidget

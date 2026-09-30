@@ -83,6 +83,7 @@ describe('SetUserMcpConfigUseCase', () => {
       findByIntegrationAndUser: jest.fn(),
       findByIntegrationIdsAndUser: jest.fn(),
       deleteByIntegrationId: jest.fn(),
+      removeKeysByIntegrationId: jest.fn(),
     };
 
     credentialEncryption = {

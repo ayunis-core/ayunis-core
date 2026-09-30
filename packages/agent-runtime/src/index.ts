@@ -20,23 +20,41 @@ export type {
 export type {
   FinishReason,
   ModelProvider,
+  ModelProviderErrorDetails,
   ProviderChunk,
+  ProviderFailureFacts,
+  ProviderFailureKind,
+  ProviderFailureStage,
   ProviderRequest,
+  ProviderTimeoutSource,
   ToolCallDelta,
   ToolChoice,
   Usage,
 } from './contracts/provider';
+export { ModelProviderError } from './contracts/provider';
 export type {
   AfterModelCallContext,
+  AfterModelTurnContext,
   AfterToolCallContext,
   BeforeModelCallContext,
+  BeforeModelTurnContext,
   BeforeToolCallContext,
   Hook,
   HookApi,
+  HookControlApi,
+  ModelCallIdentity,
   ModelCallInterruptedContext,
   ModelCallInterruptionReason,
+  ModelCallOutcome,
+  ModelCallOutcomeSnapshot,
+  ModelCallRejectedReason,
+  ModelCallTrigger,
+  ModelTurnOutcome,
+  ModelTurnOutcomeSnapshot,
+  ReadonlySnapshot,
   RunEndContext,
   RunStartContext,
+  TerminalHookFailureMode,
   ToolCallOutcome,
 } from './contracts/hook';
 export type {
@@ -45,11 +63,24 @@ export type {
   RunEventEnvelope,
   RunEventPayload,
   RunStatus,
+  TerminalModelCallInfo,
   ToolCallSnapshot,
   ToolCallSummary,
 } from './contracts/event';
-export type { ChildRunInput, RunInput } from './contracts/run-input';
-export { DEFAULT_MAX_ITERATIONS } from './contracts/run-input';
+export type {
+  ChildRunInput,
+  ResolvedRetryConfig,
+  RetryAfterConfig,
+  RetryAfterPrecedence,
+  RetryBackoffConfig,
+  RetryConfig,
+  RunInput,
+} from './contracts/run-input';
+export {
+  DEFAULT_MAX_ITERATIONS,
+  DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS,
+  DEFAULT_RETRY_CONFIG,
+} from './contracts/run-input';
 export {
   AgentRuntimeError,
   HookFailedError,

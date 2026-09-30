@@ -18,6 +18,8 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
   let getMcpIntegrationsByIdsUseCase: jest.Mocked<GetMcpIntegrationsByIdsUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockMcpIntegrationId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockMcpIntegrationId2 = '123e4567-e89b-12d3-a456-426614174003' as UUID;
@@ -34,6 +36,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     const mockContextService = {
       get: jest.fn((key: string) => {
         if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
         return undefined;
       }),
     } as unknown as jest.Mocked<ContextService>;

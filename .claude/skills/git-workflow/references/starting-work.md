@@ -1,6 +1,6 @@
 # Starting Work — Choosing and Verifying the Base
 
-Read this **before the first edit** of any new PR, new branch, or follow-up on unmerged work.
+Read this **before the first edit** when starting or resuming any work in a stacked-PR context—including amendments—or choosing a base for a new/follow-up PR.
 
 ## Before starting new work — sync main and restack
 

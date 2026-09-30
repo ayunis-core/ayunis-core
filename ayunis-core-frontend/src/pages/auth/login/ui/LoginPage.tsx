@@ -38,6 +38,8 @@ export function LoginPage({
   const { t } = useTranslation('auth');
   const [showMethods, setShowMethods] = useState(false);
   const [ssoOrgId, setSsoOrgId] = useState<string | null>(null);
+  const [localPasswordLoginEnabled, setLocalPasswordLoginEnabled] =
+    useState(true);
   const [rememberedSsoOrgId, setRememberedSsoOrgId] = useState(
     getRememberedSsoOrgId,
   );
@@ -59,8 +61,12 @@ export function LoginPage({
     try {
       const result = await discover(form.getValues('email'));
       setSsoOrgId(result.available ? (result.orgId ?? null) : null);
+      setLocalPasswordLoginEnabled(
+        !result.available || result.localPasswordLoginEnabled !== false,
+      );
     } catch {
       setSsoOrgId(null);
+      setLocalPasswordLoginEnabled(true);
       showError(t('login.ssoDiscoveryFailed'));
     }
     setShowMethods(true);
@@ -70,6 +76,7 @@ export function LoginPage({
     form.resetField('password');
     setShowMethods(false);
     setSsoOrgId(null);
+    setLocalPasswordLoginEnabled(true);
   }
 
   function useAnotherAccount() {
@@ -109,15 +116,25 @@ export function LoginPage({
                 void continueWithEmail();
                 return;
               }
+              if (!localPasswordLoginEnabled && ssoOrgId) {
+                e.preventDefault();
+                beginSso(ssoOrgId, redirect);
+                return;
+              }
               void form.handleSubmit(onSubmit)(e);
             }}
             className="space-y-4"
           >
-            <EmailField form={form} disabled={showMethods || isDiscovering} />
+            <EmailField
+              form={form}
+              readOnly={showMethods}
+              disabled={isDiscovering}
+            />
             {showMethods ? (
               <LoginMethods
                 form={form}
                 ssoOrgId={ssoOrgId}
+                localPasswordLoginEnabled={localPasswordLoginEnabled}
                 redirect={redirect}
                 isLoading={isLoading}
                 onChangeEmail={changeEmail}
@@ -175,8 +192,13 @@ function RememberedSsoLogin({
 
 function EmailField({
   form,
+  readOnly,
   disabled,
-}: Readonly<{ form: UseFormReturn<LoginFormFields>; disabled: boolean }>) {
+}: Readonly<{
+  form: UseFormReturn<LoginFormFields>;
+  readOnly: boolean;
+  disabled: boolean;
+}>) {
   const { t } = useTranslation('auth');
   return (
     <FormField
@@ -189,7 +211,10 @@ function EmailField({
             <Input
               placeholder={t('login.emailPlaceholder')}
               type="email"
+              autoComplete="username"
               data-testid="email"
+              className={readOnly ? 'bg-muted' : undefined}
+              readOnly={readOnly}
               disabled={disabled}
               {...field}
             />
@@ -204,6 +229,7 @@ function EmailField({
 interface LoginMethodsProps {
   form: UseFormReturn<LoginFormFields>;
   ssoOrgId: string | null;
+  localPasswordLoginEnabled: boolean;
   redirect?: string;
   isLoading: boolean;
   onChangeEmail: () => void;
@@ -212,6 +238,7 @@ interface LoginMethodsProps {
 function LoginMethods({
   form,
   ssoOrgId,
+  localPasswordLoginEnabled,
   redirect,
   isLoading,
   onChangeEmail,
@@ -234,25 +261,32 @@ function LoginMethods({
             className="w-full"
             disabled={isLoading}
             onClick={() => beginSso(ssoOrgId, redirect)}
+            data-testid="login-sso"
           >
             {t('login.signInWithSso')}
           </Button>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            {t('login.orUsePassword')}
-            <span className="h-px flex-1 bg-border" />
-          </div>
+          {localPasswordLoginEnabled && (
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              {t('login.orUsePassword')}
+              <span className="h-px flex-1 bg-border" />
+            </div>
+          )}
         </>
       )}
-      <PasswordField form={form} />
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isLoading}
-        data-testid="submit"
-      >
-        {isLoading ? t('login.signingIn') : t('login.signInButton')}
-      </Button>
+      {localPasswordLoginEnabled && (
+        <>
+          <PasswordField form={form} />
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="submit"
+          >
+            {isLoading ? t('login.signingIn') : t('login.signInButton')}
+          </Button>
+        </>
+      )}
     </>
   );
 }
@@ -271,6 +305,7 @@ function PasswordField({
           <FormControl>
             <PasswordInput
               placeholder={t('login.passwordPlaceholder')}
+              autoComplete="current-password"
               data-testid="password"
               {...field}
             />

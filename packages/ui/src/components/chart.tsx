@@ -124,7 +124,7 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
+}: Partial<RechartsPrimitive.TooltipContentProps> &
   React.ComponentProps<'div'> & {
     hideLabel?: boolean;
     hideIndicator?: boolean;
@@ -140,7 +140,7 @@ function ChartTooltipContent({
     }
 
     const [item] = payload;
-    const key = `${labelKey || item?.dataKey || item?.name || 'value'}`;
+    const key = String(labelKey || item?.dataKey || item?.name || 'value');
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value =
       !labelKey && typeof label === 'string'
@@ -188,14 +188,14 @@ function ChartTooltipContent({
         {payload
           .filter((item) => item.type !== 'none')
           .map((item, index) => {
-            const key = `${nameKey || item.name || item.dataKey || 'value'}`;
+            const key = String(nameKey || item.name || item.dataKey || 'value');
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const itemPayload = item.payload as { fill?: string } | undefined;
             const indicatorColor = color || itemPayload?.fill || item.color;
 
             return (
               <div
-                key={item.dataKey}
+                key={String(item.dataKey)}
                 className={cn(
                   '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
                   indicator === 'dot' && 'items-center',
@@ -269,13 +269,12 @@ function ChartLegendContent({
   className,
   hideIcon = false,
   payload,
-  verticalAlign = 'bottom',
   nameKey,
-}: React.ComponentProps<'div'> &
-  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
-    hideIcon?: boolean;
-    nameKey?: string;
-  }): React.ReactElement | null {
+}: React.ComponentProps<'div'> & {
+  payload?: ReadonlyArray<RechartsPrimitive.LegendPayload>;
+  hideIcon?: boolean;
+  nameKey?: string;
+}): React.ReactElement | null {
   const { config } = useChart();
 
   if (!payload?.length) {
@@ -284,16 +283,12 @@ function ChartLegendContent({
 
   return (
     <div
-      className={cn(
-        'flex items-center justify-center gap-4',
-        verticalAlign === 'top' ? 'pb-3' : 'pt-3',
-        className,
-      )}
+      className={cn('flex items-center justify-center gap-4 pt-3', className)}
     >
       {payload
         .filter((item) => item.type !== 'none')
         .map((item) => {
-          const key = `${nameKey || String(item.dataKey) || 'value'}`;
+          const key = String(nameKey || item.dataKey || 'value');
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
           return (

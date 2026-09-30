@@ -1,8 +1,9 @@
 import {
   extractTextByLineRange,
+  paginateText,
   validateTextExtraction,
 } from './text-extraction.utils';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 describe('extractTextByLineRange', () => {
   const defaultParams = {
@@ -142,6 +143,91 @@ describe('extractTextByLineRange', () => {
     expect(result.extractedText).toBe('Line 2\nLine 3\nLine 4');
     expect(result.effectiveStartLine).toBe(2);
     expect(result.effectiveEndLine).toBe(4);
+  });
+});
+
+describe('paginateText', () => {
+  const defaultParams = {
+    toolName: 'read_document',
+    maxLines: 200,
+    maxChars: 5000,
+  };
+
+  it('returns the first bounded page and a next-page cursor', () => {
+    const text = Array.from(
+      { length: 205 },
+      (_, index) => `Budget line ${index + 1}`,
+    ).join('\n');
+
+    const result = paginateText({
+      ...defaultParams,
+      text,
+      startLine: 1,
+      numLines: 200,
+    });
+
+    expect(result.actualStartLine).toBe(1);
+    expect(result.actualEndLine).toBe(200);
+    expect(result.truncated).toBe(true);
+    expect(result.truncationReasons).toEqual(['max_lines']);
+    expect(result.nextStartLine).toBe(201);
+  });
+
+  it('returns a final page without truncation', () => {
+    const text = Array.from(
+      { length: 205 },
+      (_, index) => `Budget line ${index + 1}`,
+    ).join('\n');
+
+    const result = paginateText({
+      ...defaultParams,
+      text,
+      startLine: 201,
+      numLines: 200,
+    });
+
+    expect(result.extractedText).toBe(
+      'Budget line 201\nBudget line 202\nBudget line 203\nBudget line 204\nBudget line 205',
+    );
+    expect(result.actualStartLine).toBe(201);
+    expect(result.actualEndLine).toBe(205);
+    expect(result.truncated).toBe(false);
+    expect(result.truncationReasons).toEqual([]);
+    expect(result.nextStartLine).toBeNull();
+  });
+
+  it('makes oversized single lines recoverable across pages', () => {
+    const text = `${'a'.repeat(5000)}${'b'.repeat(3000)}`;
+
+    const firstPage = paginateText({
+      ...defaultParams,
+      text,
+      startLine: 1,
+      numLines: 200,
+    });
+    const secondPage = paginateText({
+      ...defaultParams,
+      text,
+      startLine: firstPage.nextStartLine!,
+      numLines: 200,
+    });
+
+    expect(firstPage.extractedText).toBe('a'.repeat(5000));
+    expect(firstPage.truncationReasons).toEqual(['max_chars']);
+    expect(secondPage.extractedText).toBe('b'.repeat(3000));
+    expect(secondPage.truncated).toBe(false);
+    expect(firstPage.extractedText + secondPage.extractedText).toBe(text);
+  });
+
+  it('rejects a start line beyond the available content', () => {
+    expect(() =>
+      paginateText({
+        ...defaultParams,
+        text: 'Budget line 1\nBudget line 2',
+        startLine: 3,
+        numLines: 20,
+      }),
+    ).toThrow(ToolExecutionFailedError);
   });
 });
 

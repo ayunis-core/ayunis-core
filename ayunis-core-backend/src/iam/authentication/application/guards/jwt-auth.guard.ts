@@ -6,7 +6,11 @@ import { Request, Response } from 'express';
 import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
 import { RefreshTokenCommand } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.command';
 import { ConfigService } from '@nestjs/config';
-import { setCookies, clearCookies } from 'src/common/util/cookie.util';
+import {
+  clearCookies,
+  getAccessTokenCookieName,
+  setCookies,
+} from 'src/common/util/cookie.util';
 import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
 
 @Injectable()
@@ -73,10 +77,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       setCookies(response, newTokens, this.configService, true);
 
       // Inject the new access token so this request can re-validate.
-      const accessTokenName = this.configService.get<string>(
-        'auth.cookie.accessTokenName',
-        'access_token',
-      );
+      const accessTokenName = getAccessTokenCookieName(this.configService);
       request.cookies[accessTokenName] = newTokens.access_token;
 
       return (await super.canActivate(context)) === true;

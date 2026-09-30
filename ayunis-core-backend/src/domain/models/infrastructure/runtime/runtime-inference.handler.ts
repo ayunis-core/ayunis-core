@@ -2,10 +2,10 @@ import type { ModelProvider } from '@ayunis/inference';
 import type {
   InferenceInput,
   InferenceResponse,
-} from '../../application/ports/inference.handler';
-import { InferenceHandler } from '../../application/ports/inference.handler';
+} from 'src/domain/models/application/ports/inference.handler';
+import { InferenceHandler } from 'src/domain/models/application/ports/inference.handler';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import type { Model } from '../../domain/model.entity';
+import type { Model } from 'src/domain/models/domain/model.entity';
 import { toProviderRequest } from './request.mapper';
 import { accumulateResponse } from './response-accumulator';
 import type { ChunkTransform } from './chunk-transform';
@@ -21,7 +21,10 @@ import { applyChunkTransform } from './chunk-transform';
  * host-side concerns, applied to both streaming and non-streaming paths.
  */
 export abstract class RuntimeInferenceHandler extends InferenceHandler {
-  private readonly providerCache = new Map<string, ModelProvider>();
+  private readonly providerCache = new Map<
+    string,
+    { revision: number; provider: ModelProvider }
+  >();
 
   protected constructor(
     protected readonly imageContentService: ImageContentService,
@@ -41,15 +44,16 @@ export abstract class RuntimeInferenceHandler extends InferenceHandler {
     return (chunk) => chunk;
   }
 
-  /** Memoizes the provider per model so the vendor SDK client is reused. */
+  /** Memoizes the provider per model revision so the vendor SDK client is reused. */
   private getProvider(model: Model): ModelProvider {
-    const cached = this.providerCache.get(model.name);
-    if (cached) {
-      return cached;
+    const revision = model.updatedAt.getTime();
+    const cached = this.providerCache.get(model.id);
+    if (cached?.revision === revision) {
+      return cached.provider;
     }
-    const created = this.createProvider(model);
-    this.providerCache.set(model.name, created);
-    return created;
+    const provider = this.createProvider(model);
+    this.providerCache.set(model.id, { revision, provider });
+    return provider;
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {

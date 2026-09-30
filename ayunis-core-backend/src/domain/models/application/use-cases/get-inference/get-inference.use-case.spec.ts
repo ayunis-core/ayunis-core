@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
 import { GetInferenceUseCase } from './get-inference.use-case';
@@ -151,6 +152,33 @@ describe('GetInferenceUseCase error mapping', () => {
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
       'classified text',
     );
+  });
+
+  it('preserves portable request-rejection diagnostics for OpenAI-compatible mapping', async () => {
+    const rejection = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      upstreamRequestId: 'req_portable_context_123',
+      cause: Object.assign(new Error('maximum context length exceeded'), {
+        code: 'context_length_exceeded',
+        type: 'invalid_request_error',
+        param: 'messages',
+      }),
+    });
+
+    await expect(
+      useCaseWithFailingHandler(rejection).execute(makeCommand()),
+    ).rejects.toMatchObject({
+      metadata: {
+        upstreamStatus: 400,
+        upstreamCode: 'context_length_exceeded',
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'messages',
+        upstreamRequestId: 'req_portable_context_123',
+        upstreamReason: 'context_length_exceeded',
+      },
+    });
   });
 
   it('maps unrecognized errors to InferenceFailedError', async () => {

@@ -32,12 +32,48 @@ export function anOrgSsoConnectionDomainState(
   return { connection, hasCanonicalEmailDomains };
 }
 
+function createMappingUpdateMocks() {
+  return {
+    setJitProvisioningEnabledIfMappingMatches: jest
+      .fn()
+      .mockImplementation((expected: OrgSsoConnection, enabled: boolean) =>
+        Promise.resolve(
+          anOrgSsoConnection({
+            ...expected,
+            jitProvisioningEnabled: enabled,
+          }),
+        ),
+      ),
+    setLocalPasswordLoginEnabledIfMappingMatches: jest
+      .fn()
+      .mockImplementation((expected: OrgSsoConnection, enabled: boolean) =>
+        Promise.resolve(
+          anOrgSsoConnection({
+            ...expected,
+            localPasswordLoginEnabled: enabled,
+          }),
+        ),
+      ),
+    setZitadelIdpIdIfMappingMatches: jest
+      .fn()
+      .mockImplementation(
+        (expected: OrgSsoConnection, zitadelIdpId: string | null) =>
+          Promise.resolve(anOrgSsoConnection({ ...expected, zitadelIdpId })),
+      ),
+  };
+}
+
 export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConnectionsRepository> {
   const findByOrgId: jest.MockedFunction<
     OrgSsoConnectionsRepository['findByOrgId']
   > = jest.fn().mockResolvedValue(null);
   return {
+    acquireMutationLock: jest.fn().mockResolvedValue(true),
     findByOrgId,
+    findLocalPasswordLoginEnabledByOrgId: jest.fn().mockResolvedValue(null),
+    findLocalPasswordLoginEnabledByOrgIdForSessionIssuance: jest
+      .fn()
+      .mockResolvedValue(null),
     findByOrgIdWithDomainState: jest
       .fn()
       .mockImplementation(async (orgId: UUID) => {
@@ -49,7 +85,7 @@ export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConne
     save: jest
       .fn()
       .mockImplementation((connection) => Promise.resolve(connection)),
-    updateConfigurationIfDisabled: jest
+    updateConfigurationIfUnchanged: jest
       .fn()
       .mockImplementation((connection: OrgSsoConnection) =>
         Promise.resolve(connection),
@@ -59,21 +95,6 @@ export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConne
       .mockImplementation((connection: OrgSsoConnection, enabled: boolean) =>
         Promise.resolve(anOrgSsoConnection({ ...connection, enabled })),
       ),
-    setJitProvisioningEnabledIfMappingMatches: jest
-      .fn()
-      .mockImplementation((expected: OrgSsoConnection, enabled: boolean) =>
-        Promise.resolve(
-          anOrgSsoConnection({
-            ...expected,
-            jitProvisioningEnabled: enabled,
-          }),
-        ),
-      ),
-    setZitadelIdpIdIfMappingMatches: jest
-      .fn()
-      .mockImplementation(
-        (expected: OrgSsoConnection, zitadelIdpId: string | null) =>
-          Promise.resolve(anOrgSsoConnection({ ...expected, zitadelIdpId })),
-      ),
+    ...createMappingUpdateMocks(),
   };
 }

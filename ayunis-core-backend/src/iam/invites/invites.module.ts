@@ -1,10 +1,11 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtConfigModule } from '../authentication/jwt.module';
+import { JwtConfigModule } from 'src/iam/authentication/jwt.module';
 
 // Entities and Infrastructure
 import { InviteRecord } from './infrastructure/persistence/local/schema/invite.record';
+import { InviteTeamRecord } from 'src/iam/invites/infrastructure/persistence/local/schema/invite-team.record';
 import { InviteMapper } from './infrastructure/persistence/local/mappers/invite.mapper';
 import { LocalInvitesRepository } from './infrastructure/persistence/local/local-invites.repository';
 
@@ -33,28 +34,35 @@ import { BulkInviteDeliveryService } from 'src/iam/invites/application/services/
 import { BulkInviteValidatorService } from 'src/iam/invites/application/services/bulk-invite-validator.service';
 import { FindPendingInviteByEmailAndOrgUseCase } from 'src/iam/invites/application/use-cases/find-pending-invite-by-email-and-org/find-pending-invite-by-email-and-org.use-case';
 import { AcceptPendingInviteUseCase } from 'src/iam/invites/application/use-cases/accept-pending-invite/accept-pending-invite.use-case';
+import { BulkInviteTeamResolverService } from 'src/iam/invites/application/services/bulk-invite-team-resolver.service';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
 import { InviteResponseMapper } from './presenters/http/mappers/invite-response.mapper';
+import { SuperAdminInvitesController } from 'src/iam/invites/presenters/http/super-admin-invites.controller';
 
 // External modules
-import { OrgsModule } from '../orgs/orgs.module';
-import { UsersModule } from '../users/users.module';
-import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-import { EmailsModule } from '../../common/emails/emails.module';
-import { EmailTemplatesModule } from '../../common/email-templates/email-templates.module';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { EmailsModule } from 'src/common/emails/emails.module';
+import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
+import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
+import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([InviteRecord]),
+    TypeOrmModule.forFeature([InviteRecord, InviteTeamRecord]),
     JwtConfigModule,
     OrgsModule,
     forwardRef(() => SubscriptionsModule),
     forwardRef(() => UsersModule),
+    forwardRef(() => TeamsApplicationModule),
     EmailsModule,
     EmailTemplatesModule,
+    SsoConnectionPolicyModule,
   ],
   providers: [
     // Mappers
@@ -85,6 +93,8 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     CreateInviteWithSeatReservationUseCase,
     BulkInviteDeliveryService,
     BulkInviteValidatorService,
+    BulkInviteTeamResolverService,
+    InviteCreatedEventPublisher,
     FindPendingInviteByEmailAndOrgUseCase,
     AcceptPendingInviteUseCase,
     GetInvitesByOrgUseCase,
@@ -92,10 +102,11 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     SendInvitationEmailUseCase,
     DeleteInviteByEmailUseCase,
   ],
-  controllers: [InvitesController],
+  controllers: [InvitesController, SuperAdminInvitesController],
   exports: [
     InvitesRepository, // Export repository for CLI user management
     CreateInviteUseCase,
+    CreateBulkInvitesUseCase,
     AcceptInviteUseCase,
     DeleteInviteUseCase,
     GetInvitesByOrgUseCase,

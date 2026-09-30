@@ -30,7 +30,10 @@ interface MalformedPdfFailure {
 export class NpmPdfParseFileRetrieverHandler extends FileRetrieverHandler {
   async processFile(file: File): Promise<FileRetrieverResult> {
     try {
-      const pdf = await PdfParse(file.fileData);
+      // PDF.js expects copying Uint8Array.slice(), not Buffer.slice() views.
+      // pdf-parse forwards typed arrays, but its declarations only allow Buffer.
+      const parse = PdfParse as (data: Uint8Array) => Promise<PdfParse.Result>;
+      const pdf = await parse(new Uint8Array(file.fileData));
       return new FileRetrieverResult([new FileRetrieverPage(pdf.text, 1)]);
     } catch (error) {
       const failure = classifyMalformedPdfError(error);

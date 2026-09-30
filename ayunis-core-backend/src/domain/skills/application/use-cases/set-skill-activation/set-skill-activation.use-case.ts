@@ -16,6 +16,7 @@ import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.en
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 interface SetSkillActivationCommand {
   skillId: UUID;
@@ -84,8 +85,7 @@ export class SetSkillActivationUseCase {
   }
 
   private requireUserId(): UUID {
-    const userId = this.context.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.context);
     return userId;
   }
 }

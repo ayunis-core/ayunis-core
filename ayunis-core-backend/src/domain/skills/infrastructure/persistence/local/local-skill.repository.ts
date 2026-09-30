@@ -156,6 +156,24 @@ export class LocalSkillRepository implements SkillRepository {
     return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
+  async findPersonalByMarketplaceIdentifier(
+    userId: UUID,
+    marketplaceIdentifier: string,
+  ): Promise<PersonalSkill | null> {
+    this.logger.log(
+      { userId, marketplaceIdentifier },
+      'findPersonalByMarketplaceIdentifier',
+    );
+    // The install page allows numbered duplicates of one entry; the chat card
+    // links to the copy the user made first.
+    const record = await this.skillRepository.findOne({
+      where: { userId, workspaceId: IsNull(), marketplaceIdentifier },
+      relations: [...SKILL_RELATIONS],
+      order: { createdAt: 'ASC' },
+    });
+    return record ? this.skillMapper.toPersonal(record) : null;
+  }
+
   async findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceSkill[]> {
     this.logger.log({ workspaceId }, 'findAllByWorkspaceId');
     const records = await this.skillRepository.find({

@@ -41,7 +41,7 @@ Before implementation, state the observable behavior with the flag enabled and d
 
 ## Changing a default
 
-Edit the default value in `features.config.ts`. `parseBooleanWithDefault` uses the default only when `FEATURE_<NAME>_ENABLED` is unset or empty, so the code default is the deployed value only if that host's `ayunis-core-backend/.env` does not set the var. Check the host file before claiming an environment flipped (`DEPLOYMENT.md` → Configuration Updates); CI sets several of these explicitly (`.github/workflows/e2e-tests.yml`).
+Edit the default value in `features.config.ts`. `parseBooleanWithDefault` uses the default only when `FEATURE_<NAME>_ENABLED` is unset or empty, so the code default is the deployed value only if that host's `ayunis-core-backend/.env` does not set the var. Check the host file before claiming an environment flipped (`DEPLOYMENT.md` → Configuration Updates); CI may set them explicitly (`.github/workflows/e2e-tests.yml`).
 
 ## Verification
 
@@ -51,17 +51,30 @@ Edit the default value in `features.config.ts`. `parseBooleanWithDefault` uses t
 
 ### Flag-off e2e recipe
 
-The flag resolves from `process.env` at boot, so one stack cannot serve both states — the OFF spec needs its own backend. Copy the `sso-disabled` setup from AYC-367; all three pieces are in-tree:
+The flag resolves from `process.env` at boot, so one stack cannot serve both states — the OFF spec needs its own backend. Copy the `sso-disabled` setup from AYC-367. It was removed when SSO went GA; read it with `git show 688f67e9d`:
 
 - `.github/workflows/e2e-tests.yml` — steps `Start backend with SSO login disabled` and `Test logout lifecycle with SSO login disabled`: the same build artifact started again with the flag off on a spare port, health-polled, log added to the `backend-log` artifact. Same job as the flag-on run: one extra process and one spec, not a matrix.
 - `ayunis-core-e2e/playwright.config.ts` — the `sso-disabled` project. The spec must also be listed in the `chromium` project's `testIgnore`, or it runs in both states.
 - `ayunis-core-e2e/tests/auth/sso-disabled-logout.spec.ts` — prove the feature is gone first (gated route 404s; `publicApi` fixture for unauthenticated endpoints), then exercise the shared workflow that must stay available.
 
-Locally: `FEATURE_<NAME>_ENABLED=false pnpm run start:dev` in a second slot. Shell env wins over `.env.dev` and `.env`; never hand-edit the generated `.env.dev`.
+Locally: `FEATURE_<NAME>_ENABLED=false pnpm run start:dev` in a second slot. Shell env wins over `.env.dev` and `.env`, but `ayunis-core-backend/.env.local` overrides the shell — remove the flag from it first. Never hand-edit the generated `.env.dev`.
 
 Mocked guards, mocked API clients, and direct controller invocation exercise wiring, not runtime composition: they do not satisfy the OFF contract for a shared path.
 
 Record both ON and OFF results in the PR validation summary.
+
+## Turning a toggle on for local work
+
+Follow **Local Backend Environment Overrides** in `dev-environment`. Do not edit
+the default in `features.config.ts` unless the production default is
+intentionally changing.
+
+After applying the override, verify the effective value before debugging the
+feature:
+
+```bash
+curl -s localhost:<backend-port>/api/feature-toggles | jq
+```
 
 ## Guard behavior
 

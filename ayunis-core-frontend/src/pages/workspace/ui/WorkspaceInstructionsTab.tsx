@@ -9,6 +9,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { useWorkspaceContextControllerFindContext } from '@/shared/api/generated/ayunisCoreAPI';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 export function WorkspaceInstructionsTab({
   workspaceId,
@@ -31,25 +32,31 @@ export function WorkspaceInstructionsTab({
     setValue(context.instruction ?? '');
   }, [context, isDirty]);
 
-  if (isLoading) return <p>{t('context.addDialog.loading')}</p>;
-  if (error || !context) return <WorkspaceContextLoadError />;
+  if (error || (!isLoading && !context)) return <WorkspaceContextLoadError />;
 
   return (
     <section className="space-y-3">
-      <Textarea
-        value={value}
-        data-testid="workspace-instruction-input"
-        onChange={(event) => {
-          setValue(event.target.value);
-          setIsDirty(true);
-        }}
-        placeholder={t('context.instructions.placeholder')}
-        rows={8}
-      />
+      <OnboardingTourTarget name={TOUR_TARGET.workspaceInstruction}>
+        <Textarea
+          value={value}
+          data-testid="workspace-instruction-input"
+          disabled={isLoading}
+          onChange={(event) => {
+            setValue(event.target.value);
+            setIsDirty(true);
+          }}
+          placeholder={
+            isLoading
+              ? t('context.addDialog.loading')
+              : t('context.instructions.placeholder')
+          }
+          rows={8}
+        />
+      </OnboardingTourTarget>
       <div className="flex justify-end">
         <Button
           data-testid="workspace-instruction-save"
-          disabled={isSavingInstruction || !isDirty}
+          disabled={isLoading || isSavingInstruction || !isDirty}
           onClick={() => {
             const instruction = value.trim() || null;
             void updateInstruction(instruction).then(() => {

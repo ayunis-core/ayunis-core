@@ -53,8 +53,46 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     super();
   }
 
+  async acquireMutationLock(orgId: UUID): Promise<boolean> {
+    const record = await this.records.findOne({
+      where: { orgId },
+      select: { id: true },
+      lock: { mode: 'pessimistic_write' },
+    });
+    return record !== null;
+  }
+
   findByOrgId(orgId: UUID): Promise<OrgSsoConnection | null> {
     return this.findOne({ orgId });
+  }
+
+  async findLocalPasswordLoginEnabledByOrgId(
+    orgId: UUID,
+  ): Promise<boolean | null> {
+    return this.findLocalPasswordLoginEnabled(orgId);
+  }
+
+  async findLocalPasswordLoginEnabledByOrgIdForSessionIssuance(
+    orgId: UUID,
+  ): Promise<boolean | null> {
+    return this.findLocalPasswordLoginEnabled(orgId, true);
+  }
+
+  private async findLocalPasswordLoginEnabled(
+    orgId: UUID,
+    lockForSessionIssuance = false,
+  ): Promise<boolean | null> {
+    const options = {
+      where: { orgId },
+      select: { localPasswordLoginEnabled: true },
+    };
+    const record = lockForSessionIssuance
+      ? await this.records.findOne({
+          ...options,
+          lock: { mode: 'pessimistic_read' },
+        })
+      : await this.records.findOne(options);
+    return record?.localPasswordLoginEnabled ?? null;
   }
 
   async findByOrgIdWithDomainState(
@@ -99,7 +137,7 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     }
   }
 
-  async updateConfigurationIfDisabled(
+  async updateConfigurationIfUnchanged(
     connection: OrgSsoConnection,
     expected: OrgSsoConnection,
   ): Promise<OrgSsoConnection | null> {
@@ -111,7 +149,7 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
           emailDomain: expected.emailDomain,
           zitadelOrgId: expected.zitadelOrgId ?? IsNull(),
           zitadelIdpId: expected.zitadelIdpId ?? IsNull(),
-          enabled: false,
+          enabled: expected.enabled,
           updatedAt: expected.updatedAt,
         },
         {
@@ -157,6 +195,23 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     return result.affected
       ? this.copyConnection(expected, {
           jitProvisioningEnabled: enabled,
+          updatedAt,
+        })
+      : null;
+  }
+
+  async setLocalPasswordLoginEnabledIfMappingMatches(
+    expected: OrgSsoConnection,
+    enabled: boolean,
+  ): Promise<OrgSsoConnection | null> {
+    const updatedAt = new Date();
+    const result = await this.records.update(
+      { orgId: expected.orgId, updatedAt: expected.updatedAt },
+      { localPasswordLoginEnabled: enabled, updatedAt },
+    );
+    return result.affected
+      ? this.copyConnection(expected, {
+          localPasswordLoginEnabled: enabled,
           updatedAt,
         })
       : null;
@@ -210,7 +265,11 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     changes: Partial<
       Pick<
         OrgSsoConnection,
-        'enabled' | 'jitProvisioningEnabled' | 'zitadelIdpId' | 'updatedAt'
+        | 'enabled'
+        | 'jitProvisioningEnabled'
+        | 'localPasswordLoginEnabled'
+        | 'zitadelIdpId'
+        | 'updatedAt'
       >
     >,
   ): OrgSsoConnection {

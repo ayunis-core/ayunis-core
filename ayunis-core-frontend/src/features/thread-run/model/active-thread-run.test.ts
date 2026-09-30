@@ -19,6 +19,17 @@ describe('active thread run', () => {
     expect(controller.signal.aborted).toBe(true);
   });
 
+  it('aborts an existing run before registering another for the same thread', () => {
+    const existingController = new AbortController();
+    const replacementController = new AbortController();
+    registerActiveThreadRun(threadId, existingController);
+
+    registerActiveThreadRun(threadId, replacementController);
+
+    expect(existingController.signal.aborted).toBe(true);
+    expect(replacementController.signal.aborted).toBe(false);
+  });
+
   it('does not unregister a newer run when an older run finishes', () => {
     const olderController = new AbortController();
     const newerController = new AbortController();

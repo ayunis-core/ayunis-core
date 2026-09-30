@@ -19,6 +19,8 @@ export interface ModelCallResult {
   usage: Usage;
   finishReason: FinishReason;
   invalidToolCallSnapshots: ToolCallSnapshot[];
+  providerConsumptionStarted: boolean;
+  producedOutput: boolean;
 }
 
 interface FinalizedToolCalls {
@@ -36,8 +38,10 @@ export class ChunkAccumulator {
   private readonly toolCalls = new Map<number, AccumulatingToolCall>();
   private usage: Usage = {};
   private finishReason: FinishReason = null;
+  private providerConsumptionStarted = false;
 
   accept(chunk: ProviderChunk): ToolCallSnapshot[] {
+    this.providerConsumptionStarted = true;
     this.acceptThinking(chunk);
     this.acceptText(chunk);
     const toolCallSnapshots = this.acceptToolCalls(chunk);
@@ -101,10 +105,27 @@ export class ChunkAccumulator {
     message.content.push(...toolCalls.contents);
     return {
       message,
-      usage: this.usage,
+      usage: { ...this.usage },
       finishReason: this.finishReason,
       invalidToolCallSnapshots: toolCalls.invalidSnapshots,
+      providerConsumptionStarted: this.providerConsumptionStarted,
+      producedOutput: this.producedOutput(),
     };
+  }
+
+  partialResult(): ModelCallResult {
+    return {
+      message: this.partialMessage(),
+      usage: { ...this.usage },
+      finishReason: this.finishReason,
+      invalidToolCallSnapshots: [],
+      providerConsumptionStarted: this.providerConsumptionStarted,
+      producedOutput: this.producedOutput(),
+    };
+  }
+
+  private producedOutput(): boolean {
+    return Boolean(this.thinking || this.text || this.toolCalls.size > 0);
   }
 
   partialMessage(): AssistantMessage {

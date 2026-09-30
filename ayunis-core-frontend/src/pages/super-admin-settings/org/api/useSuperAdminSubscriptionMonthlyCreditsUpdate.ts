@@ -1,7 +1,5 @@
-import {
-  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-  useSuperAdminSubscriptionsControllerUpdateMonthlyCredits,
-} from '@/shared/api';
+import { useSuperAdminSubscriptionsControllerUpdateMonthlyCredits } from '@/shared/api';
+import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -42,13 +40,7 @@ export default function useSuperAdminSubscriptionMonthlyCreditsUpdate(
           }
         },
         onSettled: () => {
-          void queryClient.invalidateQueries({
-            queryKey:
-              getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
-                orgId,
-              ),
-          });
-          void router.invalidate();
+          invalidateOrgSubscriptionQueries(queryClient, router, orgId);
         },
       },
     });

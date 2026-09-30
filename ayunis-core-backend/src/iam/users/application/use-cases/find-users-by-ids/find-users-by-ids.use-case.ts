@@ -7,7 +7,7 @@ import {
   UserUnexpectedError,
 } from 'src/iam/users/application/users.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindUsersByIdsUseCase {
@@ -19,11 +19,7 @@ export class FindUsersByIdsUseCase {
   ) {}
 
   async execute(query: FindUsersByIdsQuery): Promise<User[]> {
-    const orgId = this.contextService.get('orgId');
-
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     this.logger.log({ idCount: query.ids.length, orgId }, 'execute');
 

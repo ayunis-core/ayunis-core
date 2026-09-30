@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {
@@ -11,6 +10,7 @@ import {
 } from 'src/domain/workspaces/application/workspaces.errors';
 import { assertValidWorkspaceFields } from 'src/domain/workspaces/application/util/workspace-fields';
 import { UpdateWorkspaceCommand } from './update-workspace.command';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpdateWorkspaceUseCase {
@@ -49,10 +49,7 @@ export class UpdateWorkspaceUseCase {
   }
 
   private resolveUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
     return userId;
   }
 }

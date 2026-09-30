@@ -4,11 +4,25 @@ import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enu
 import type { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import type { UUID } from 'crypto';
 
+export const MAX_CONTEXT_WINDOW_SIZE = 2_147_483_647;
+
+function assertValidContextWindowSize(contextWindowSize?: number): void {
+  if (
+    contextWindowSize !== undefined &&
+    (!Number.isInteger(contextWindowSize) ||
+      contextWindowSize < 1 ||
+      contextWindowSize > MAX_CONTEXT_WINDOW_SIZE)
+  ) {
+    throw new RangeError('Context window size must be a positive integer');
+  }
+}
+
 export class LanguageModel extends Model {
   public readonly canStream: boolean;
   public readonly canUseTools: boolean;
   public readonly isReasoning: boolean;
   public readonly canVision: boolean;
+  public readonly contextWindowSize?: number;
   public readonly hasProviderFault: boolean;
   /** Cost per million input tokens in EUR */
   public readonly inputTokenCost?: number;
@@ -34,6 +48,7 @@ export class LanguageModel extends Model {
     canUseTools: boolean;
     isReasoning: boolean;
     canVision: boolean;
+    contextWindowSize?: number;
     isArchived: boolean;
     hasProviderFault?: boolean;
     inputTokenCost?: number;
@@ -42,10 +57,12 @@ export class LanguageModel extends Model {
     description?: string;
   }) {
     super({ ...params, type: ModelType.LANGUAGE });
+    assertValidContextWindowSize(params.contextWindowSize);
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
+    this.contextWindowSize = params.contextWindowSize;
     this.hasProviderFault = params.hasProviderFault ?? false;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;

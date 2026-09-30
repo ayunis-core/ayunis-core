@@ -4,7 +4,6 @@ import type { UserCreditLimitOverviewItem } from './user-credit-limit.view';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
@@ -14,6 +13,7 @@ import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-l
 import { selectUserCreditLimits } from 'src/iam/credit-limits/application/utils/select-user-credit-limits';
 import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overview.query';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class GetUserCreditLimitsOverviewUseCase {
@@ -30,10 +30,7 @@ export class GetUserCreditLimitsOverviewUseCase {
   async execute(
     query: GetUserCreditLimitsOverviewQuery = new GetUserCreditLimitsOverviewQuery(),
   ): Promise<UserCreditLimitOverviewItem[]> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     this.logger.log({ orgId }, 'Listing user credit limits');
 

@@ -112,6 +112,7 @@
         "create_calendar_event": "Kalendereintrag erstellt",
         "create_skill": "Fähigkeit erstellt",
         "edit_skill": "Fähigkeit bearbeitet",
+        "install_marketplace_skill": "Fähigkeit zur Installation angeboten",
         "activate_skill": "Fähigkeit aktiviert",
         "internet_search": "Im Internet gesucht",
         "website_content": "Website abgerufen",
@@ -129,6 +130,7 @@
     },
     "tools": {
       "internet_search": "Im Internet suchen",
+      "marketplace_search": "Im Marketplace suchen",
       "website_content": "Website abfragen",
       "source_query": "Datei durchsuchen",
       "source_get_text": "Datei durchsuchen",
@@ -176,6 +178,21 @@
         "error": "Fähigkeit konnte nicht aktualisiert werden",
         "errorDuplicate": "Eine Fähigkeit mit diesem Namen existiert bereits",
         "skillNotFound": "Fähigkeit konnte nicht gefunden werden. Sie wurde möglicherweise gelöscht."
+      },
+      "install_marketplace_skill": {
+        "title": "Fähigkeit aus dem Marketplace installieren",
+        "install": "Fähigkeit installieren",
+        "installing": "Wird installiert…",
+        "installed": "Fähigkeit installiert",
+        "success": "Fähigkeit erfolgreich installiert",
+        "error": "Fähigkeit konnte nicht installiert werden",
+        "notFound": "Diese Fähigkeit ist im Marketplace nicht mehr verfügbar",
+        "unavailable": "Der Marketplace ist derzeit nicht erreichbar",
+        "noPermission": "Sie dürfen keine Fähigkeiten installieren. Wenden Sie sich an Ihre Administration.",
+        "loading": "Katalogeintrag wird geladen…",
+        "entryUnavailable": "Diese Fähigkeit ist im Marketplace derzeit nicht verfügbar und kann hier nicht installiert werden.",
+        "alreadyInstalled": "Bereits installiert",
+        "openSkill": "Fähigkeit öffnen"
       },
       "create_document": {
         "title": "Dokument",
@@ -254,9 +271,19 @@
     "modelUnavailableTitle": "KI-Modell nicht mehr verfügbar",
     "modelUnavailableDescription": "Das in diesem Chat verwendete KI-Modell ist nicht mehr verfügbar, daher kann diese Konversation nicht fortgesetzt werden. Starten Sie einen neuen Chat, um weiterzuarbeiten.",
     "modelProviderFaultWarning": "Für das Modell „{{modelName}}“ ist derzeit eine Provider-Störung bekannt. Sie können die Konversation fortsetzen, Antworten können jedoch fehlschlagen.",
-    "longChatWarningTitle": "Konversation zu lang",
-    "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
+    "longChatWarningTitle": "Dieser Chat hat das Limit Ihres Modells erreicht",
+    "longChatWarningDescription": "Bei jeder Nachricht wird der gesamte bisherige Chat mit allen angehängten Dateien erneut an das Modell gesendet. Ihr ausgewähltes Modell hat dafür eine feste Obergrenze, die dieser Chat fast erreicht hat. Das ist eine Eigenschaft des Modells und keine Einstellung von Ayunis. Wenn Sie weiterarbeiten möchten, beginnen Sie einen neuen Chat.",
+    "longChatWarningDismiss": "Warnung ausblenden",
     "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",
+    "sourceCitation": {
+      "title": "Quellenbeleg",
+      "loading": "Quelle wird geladen…",
+      "unavailable": "Diese Quelle ist nicht verfügbar oder Sie haben keinen Zugriff.",
+      "line": "Zeile {{line}}",
+      "lines": "Zeilen {{start}}–{{end}}",
+      "excerpt": "Zitierter Auszug",
+      "close": "Schließen"
+    },
     "piiMask": {
       "tooltip": "{{category}} — vor dem Senden an das KI-Modell anonymisiert",
       "tooltipClickable": "{{category}} — vor dem Senden an das KI-Modell anonymisiert. Klicken, um die Maskierung aufzuheben.",

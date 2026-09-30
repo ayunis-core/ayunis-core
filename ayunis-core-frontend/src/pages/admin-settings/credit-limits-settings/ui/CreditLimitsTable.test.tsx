@@ -65,6 +65,25 @@ describe('CreditLimitsTable', () => {
     },
   );
 
+  it('keeps the row compact with only the target, its limit and the action', () => {
+    render(
+      <CreditLimitsTable
+        rows={rows}
+        filters={filters}
+        isPending={false}
+        isError={false}
+      />,
+    );
+    expect(
+      screen.getAllByRole('columnheader').map((h) => h.textContent),
+    ).toEqual(['tabs.users', 'table.limit', 'table.actions']);
+    expect(
+      screen.getAllByTestId('credit-limits-row-bob')[0].querySelectorAll('td'),
+    ).toHaveLength(3);
+    expect(screen.queryByText('table.used')).toBeNull();
+    expect(screen.queryByText('table.usageUnavailable')).toBeNull();
+  });
+
   it('shows no limit and zero distinctly and opens a zero limit for editing', () => {
     render(
       <CreditLimitsTable

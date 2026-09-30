@@ -18,6 +18,8 @@ import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-c
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
+const PAGE_SEPARATOR = '\n\n';
+
 @Processor(URL_CRAWL_QUEUE, { concurrency: 2 })
 export class UrlCrawlConsumer extends WorkerHost {
   private readonly logger = new Logger(UrlCrawlConsumer.name);
@@ -49,16 +51,18 @@ export class UrlCrawlConsumer extends WorkerHost {
     this.validateAndSetContext(orgId, userId);
 
     try {
-      const source = await this.loadSourceOrSkip(sourceId);
-      if (!source) return;
+      if (!(await this.loadSourceOrSkip(sourceId))) return;
 
       const { text, chunks, title, pageCount } = await this.crawlAndBuild(
         rootUrl,
         orgId,
         maxDepth,
       );
-      // Re-checking prevents a concurrent deletion from being resurrected.
-      if (!(await this.isSourceStillProcessing(sourceId))) return;
+      // Re-reading prevents a concurrent deletion from being resurrected and
+      // picks up the collection assignment AddUrlToKnowledgeBase makes right
+      // after enqueueing, which the pre-crawl copy may predate.
+      const source = await this.reloadIfStillProcessing(sourceId);
+      if (!source) return;
 
       if (title) source.name = title;
       await this.sourceRepository.saveTextSource(source, { text, chunks });
@@ -72,10 +76,7 @@ export class UrlCrawlConsumer extends WorkerHost {
       this.logger.error({ err: error as Error, sourceId }, 'URL crawl failed');
       const { final, rethrow } = classifyJobFailure(job, error);
       if (final) {
-        await this.helper.markFailed(
-          sourceId,
-          error instanceof Error ? error.message : 'Unknown crawl error',
-        );
+        await this.helper.markFailed(sourceId, error);
         await this.helper.cleanupIndex(sourceId);
       }
       if (rethrow) throw rethrow;
@@ -103,9 +104,15 @@ export class UrlCrawlConsumer extends WorkerHost {
     }
 
     // Reset processingStartedAt on every attempt so the stale-cleanup cron
-    // doesn't race with BullMQ retries on long-running jobs.
-    source.processingStartedAt = new Date();
-    await this.sourceRepository.save(source);
+    // doesn't race with BullMQ retries on long-running jobs. UPDATE-only: a
+    // full save() would write this possibly stale copy over concurrent
+    // changes to the row, such as the collection assignment.
+    const alive =
+      await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
+    if (!alive) {
+      this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
+      return null;
+    }
 
     return source;
   }
@@ -127,20 +134,35 @@ export class UrlCrawlConsumer extends WorkerHost {
 
     const chunks: TextSourceContentChunk[] = [];
     const texts: string[] = [];
+    let lineOffset = 0;
+    let charOffset = 0;
     for (const page of crawl.pages) {
+      if (texts.length > 0) {
+        lineOffset += this.countNewlines(PAGE_SEPARATOR);
+        charOffset += PAGE_SEPARATOR.length;
+      }
       texts.push(page.content);
-      chunks.push(...this.chunkPage(page.url, page.content));
+      chunks.push(
+        ...this.chunkPage(page.url, page.content, lineOffset, charOffset),
+      );
+      lineOffset += this.countNewlines(page.content);
+      charOffset += page.content.length;
     }
 
     return {
-      text: texts.join('\n\n'),
+      text: texts.join(PAGE_SEPARATOR),
       chunks,
       title: crawl.rootPage.websiteTitle,
       pageCount: crawl.pages.length,
     };
   }
 
-  private chunkPage(url: string, content: string): TextSourceContentChunk[] {
+  private chunkPage(
+    url: string,
+    content: string,
+    lineOffset: number,
+    charOffset: number,
+  ): TextSourceContentChunk[] {
     const split = this.splitTextUseCase.execute(
       new SplitTextCommand(content, SplitterType.RECURSIVE, {
         chunkSize: 2000,
@@ -151,14 +173,54 @@ export class UrlCrawlConsumer extends WorkerHost {
       (chunk) =>
         new TextSourceContentChunk({
           content: chunk.text,
-          meta: { url, ...chunk.metadata },
+          meta: {
+            url,
+            ...chunk.metadata,
+            ...this.offsetMetadata(chunk.metadata, lineOffset, charOffset),
+          },
         }),
     );
   }
 
-  private async isSourceStillProcessing(sourceId: UUID): Promise<boolean> {
+  private offsetMetadata(
+    metadata: Record<string, unknown>,
+    lineOffset: number,
+    charOffset: number,
+  ): Record<string, number> {
+    const shifted: Record<string, number> = {};
+    this.shiftNumber(metadata, shifted, 'startLine', lineOffset);
+    this.shiftNumber(metadata, shifted, 'endLine', lineOffset);
+    this.shiftNumber(metadata, shifted, 'startCharOffset', charOffset);
+    this.shiftNumber(metadata, shifted, 'endCharOffset', charOffset);
+    return shifted;
+  }
+
+  private shiftNumber(
+    source: Record<string, unknown>,
+    target: Record<string, number>,
+    key: string,
+    offset: number,
+  ): void {
+    const value = source[key];
+    if (typeof value === 'number') target[key] = value + offset;
+  }
+
+  private countNewlines(text: string): number {
+    let count = 0;
+    for (let index = 0; index < text.length; index++) {
+      if (text.charCodeAt(index) === 10) count++;
+    }
+    return count;
+  }
+
+  private async reloadIfStillProcessing(
+    sourceId: UUID,
+  ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
-    if (source?.status !== SourceStatus.PROCESSING) {
+    if (
+      !(source instanceof TextSource) ||
+      source.status !== SourceStatus.PROCESSING
+    ) {
       this.logger.warn(
         {
           sourceId,
@@ -166,9 +228,9 @@ export class UrlCrawlConsumer extends WorkerHost {
         },
         'Source deleted or status changed mid-crawl',
       );
-      return false;
+      return null;
     }
-    return true;
+    return source;
   }
 
   private async markSourceReady(sourceId: UUID): Promise<void> {

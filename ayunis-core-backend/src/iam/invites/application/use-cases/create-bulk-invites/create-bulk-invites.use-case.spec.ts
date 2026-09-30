@@ -33,6 +33,9 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 import { BulkInviteDeliveryService } from 'src/iam/invites/application/services/bulk-invite-delivery.service';
 import { BulkInviteValidatorService } from 'src/iam/invites/application/services/bulk-invite-validator.service';
 import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
+import { BulkInviteTeamResolverService } from 'src/iam/invites/application/services/bulk-invite-team-resolver.service';
+import type { UUID } from 'crypto';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 describe('CreateBulkInvitesUseCase', () => {
   let useCase: CreateBulkInvitesUseCase;
@@ -44,9 +47,11 @@ describe('CreateBulkInvitesUseCase', () => {
   let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let acquireAllocationLock: jest.Mocked<AcquireSeatAllocationLockUseCase>;
+  let teamResolver: jest.Mocked<BulkInviteTeamResolverService>;
+  let publishInviteCreated: jest.Mocked<InviteCreatedEventPublisher>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
 
   beforeEach(async () => {
     const mockInvitesRepository = {
@@ -86,6 +91,17 @@ describe('CreateBulkInvitesUseCase', () => {
       execute: jest.fn(),
     };
 
+    const mockTeamResolver = {
+      resolve: jest.fn().mockImplementation((command) => ({
+        teamIdsByInvite: command.invites.map(() => []),
+        errors: [],
+      })),
+    };
+
+    const mockPublishInviteCreated = {
+      publish: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBulkInvitesUseCase,
@@ -109,6 +125,14 @@ describe('CreateBulkInvitesUseCase', () => {
           provide: AcquireSeatAllocationLockUseCase,
           useValue: mockAcquireAllocationLock,
         },
+        {
+          provide: BulkInviteTeamResolverService,
+          useValue: mockTeamResolver,
+        },
+        {
+          provide: InviteCreatedEventPublisher,
+          useValue: mockPublishInviteCreated,
+        },
       ],
     }).compile();
 
@@ -121,6 +145,8 @@ describe('CreateBulkInvitesUseCase', () => {
     updateSeatsUseCase = module.get(UpdateSeatsUseCase);
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
     acquireAllocationLock = module.get(AcquireSeatAllocationLockUseCase);
+    teamResolver = module.get(BulkInviteTeamResolverService);
+    publishInviteCreated = module.get(InviteCreatedEventPublisher);
   });
 
   afterEach(() => {
@@ -198,6 +224,82 @@ describe('CreateBulkInvitesUseCase', () => {
           expect.objectContaining({ email: 'user2@example.com' }),
         ]),
       );
+      const createdInvites = invitesRepository.createMany.mock.calls[0][0];
+      expect(publishInviteCreated.publish).toHaveBeenCalledTimes(2);
+      expect(publishInviteCreated.publish).toHaveBeenNthCalledWith(
+        1,
+        createdInvites[0],
+      );
+      expect(publishInviteCreated.publish).toHaveBeenNthCalledWith(
+        2,
+        createdInvites[1],
+      );
+    });
+
+    it('persists every resolved team on its invite', async () => {
+      const researchId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' as UUID;
+      const operationsId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' as UUID;
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          {
+            email: 'user1@example.com',
+            role: UserRole.USER,
+            teamNames: ['Research', 'Operations'],
+          },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+      setupDefaultConfigMocks();
+      invitesRepository.findByEmails.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+      teamResolver.resolve.mockResolvedValue({
+        teamIdsByInvite: [[researchId, operationsId]],
+        errors: [],
+      });
+
+      await useCase.execute(command);
+
+      expect(invitesRepository.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({
+          email: 'user1@example.com',
+          teamIds: [researchId, operationsId],
+        }),
+      ]);
+    });
+
+    it('rejects the whole import when a requested team is unknown', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          {
+            email: 'user1@example.com',
+            role: UserRole.USER,
+            teamNames: ['Unknown team'],
+          },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+      setupDefaultConfigMocks();
+      invitesRepository.findByEmails.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      teamResolver.resolve.mockResolvedValue({
+        teamIdsByInvite: [[]],
+        errors: [
+          {
+            row: 1,
+            email: 'user1@example.com',
+            errorCode: 'TEAM_NOT_FOUND',
+            message: 'Unknown team: Unknown team',
+          },
+        ],
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        BulkInviteValidationFailedError,
+      );
+      expect(invitesRepository.createMany).not.toHaveBeenCalled();
     });
 
     it('runs validation reads sequentially on the transactional connection', async () => {
@@ -310,6 +412,7 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results[0].errorCode).toBe('EMAIL_SENDING_FAILED');
       expect(result.results[0].errorMessage).toBe('Email service unavailable');
       expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+      expect(publishInviteCreated.publish).not.toHaveBeenCalled();
     });
 
     it('should delete invite from database when JWT generation fails', async () => {
@@ -331,6 +434,7 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results[0].success).toBe(false);
       expect(result.results[0].errorMessage).toBe('JWT generation failed');
       expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+      expect(publishInviteCreated.publish).not.toHaveBeenCalled();
     });
 
     it('should handle mixed success/failure in bulk invites', async () => {
@@ -361,6 +465,11 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results[0].success).toBe(true);
       expect(result.results[1].success).toBe(false);
       expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+      const createdInvites = invitesRepository.createMany.mock.calls[0][0];
+      expect(publishInviteCreated.publish).toHaveBeenCalledTimes(1);
+      expect(publishInviteCreated.publish).toHaveBeenCalledWith(
+        createdInvites[0],
+      );
     });
   });
 

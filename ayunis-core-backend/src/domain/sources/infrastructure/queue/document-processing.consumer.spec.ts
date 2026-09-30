@@ -87,6 +87,7 @@ const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
 const sourceRepository = {
   findById: jest.fn(),
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
+  refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
   saveTextSource: jest
     .fn()
     .mockImplementation((s: unknown) => Promise.resolve(s)),
@@ -108,6 +109,7 @@ describe('DocumentProcessingConsumer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
 
     consumer = new DocumentProcessingConsumer(
       contextService as never,
@@ -118,6 +120,18 @@ describe('DocumentProcessingConsumer', () => {
       sourceRepository as never,
       helper as never,
     );
+  });
+
+  it('skips processing when the queued source can no longer be claimed', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(false);
+
+    await consumer.process(makeJob());
+
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
   it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {

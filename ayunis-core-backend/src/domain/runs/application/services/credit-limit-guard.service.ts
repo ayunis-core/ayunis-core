@@ -8,10 +8,8 @@ import {
 } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { GetMonthlyCreditUsageForUserUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.use-case';
 import { GetMonthlyCreditUsageForUserQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.query';
-import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
-import { GetMonthlyCreditUsageForTeamQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.query';
-import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
-import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.query';
+import { GetMonthlyCreditUsageForTeamsUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-teams/get-monthly-credit-usage-for-teams.use-case';
+import { GetMonthlyCreditUsageForTeamsQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-teams/get-monthly-credit-usage-for-teams.query';
 
 /**
  * Most-restrictive-wins: blocks a run if the acting user's personal limit OR
@@ -24,8 +22,7 @@ export class CreditLimitGuardService {
   constructor(
     private readonly resolveCreditLimitsForUserUseCase: ResolveCreditLimitsForUserUseCase,
     private readonly getMonthlyCreditUsageForUserUseCase: GetMonthlyCreditUsageForUserUseCase,
-    private readonly getMonthlyCreditUsageForTeamUseCase: GetMonthlyCreditUsageForTeamUseCase,
-    private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
+    private readonly getMonthlyCreditUsageForTeamsUseCase: GetMonthlyCreditUsageForTeamsUseCase,
   ) {}
 
   async ensureWithinLimits(orgId: UUID, userId: UUID): Promise<void> {
@@ -40,13 +37,6 @@ export class CreditLimitGuardService {
       return;
     }
 
-    const isUsageBased = await this.isUsageBasedSubscriptionUseCase.execute(
-      new IsUsageBasedSubscriptionQuery(orgId),
-    );
-    if (!isUsageBased) {
-      return;
-    }
-
     if (personalCreditLimit !== null) {
       await this.ensurePersonalLimitNotExceeded(
         orgId,
@@ -55,13 +45,21 @@ export class CreditLimitGuardService {
       );
     }
 
-    // Checked sequentially on purpose: the first exhausted team throws, so we
-    // never issue usage queries for the remaining teams.
-    for (const teamCreditLimit of teamCreditLimits) {
-      await this.ensureTeamLimitNotExceeded(
+    if (teamCreditLimits.length === 0) {
+      return;
+    }
+
+    const usageByTeam = await this.getMonthlyCreditUsageForTeamsUseCase.execute(
+      new GetMonthlyCreditUsageForTeamsQuery(
         orgId,
+        teamCreditLimits.map(({ teamId }) => teamId),
+      ),
+    );
+    for (const teamCreditLimit of teamCreditLimits) {
+      this.ensureTeamLimitNotExceeded(
         teamCreditLimit.teamId,
         teamCreditLimit.monthlyCredits,
+        usageByTeam.get(teamCreditLimit.teamId) ?? 0,
       );
     }
   }
@@ -95,16 +93,11 @@ export class CreditLimitGuardService {
     });
   }
 
-  private async ensureTeamLimitNotExceeded(
-    orgId: UUID,
+  private ensureTeamLimitNotExceeded(
     teamId: UUID,
     monthlyCreditLimit: number,
-  ): Promise<void> {
-    const { creditsUsed } =
-      await this.getMonthlyCreditUsageForTeamUseCase.execute(
-        new GetMonthlyCreditUsageForTeamQuery(orgId, teamId),
-      );
-
+    creditsUsed: number,
+  ): void {
     if (creditsUsed < monthlyCreditLimit) {
       return;
     }

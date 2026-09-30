@@ -16,10 +16,11 @@ import { SendMessageRequestValidator } from './presenters/http/validation/send-m
 import { BackendToolAdapter } from './application/agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from './application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
+import { CreditGateHookFactory } from './application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
-import { RuntimeModelProviderDecorator } from './application/agent-runtime/runtime-model-provider.decorator';
+import { ModelCallObservabilityHookFactory } from './application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { CompleteTurnSelector } from './application/agent-runtime/complete-turn-selector';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
@@ -53,6 +54,8 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { GetThreadSourceCitationUseCase } from './application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
+import { ThreadSourceCitationsController } from './presenters/http/thread-source-citations.controller';
 
 @Module({
   imports: [
@@ -78,19 +81,25 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
     WorkspacesModule,
     KnowledgeBasesModule,
   ],
-  controllers: [RunsController, ThreadAiContextController],
+  controllers: [
+    RunsController,
+    ThreadAiContextController,
+    ThreadSourceCitationsController,
+  ],
   providers: [
     ExecuteRunUseCase,
     GetThreadAiContextUseCase,
+    GetThreadSourceCitationUseCase,
     BackendToolAdapter,
     PersistenceHookFactory,
+    CreditGateHookFactory,
     UsageHookFactory,
     ToolUsageHookFactory,
     SkillActivationHookFactory,
     ContextBudgetHookFactory,
     CompleteTurnSelector,
     RuntimeHistoryMaterializer,
-    RuntimeModelProviderDecorator,
+    ModelCallObservabilityHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,

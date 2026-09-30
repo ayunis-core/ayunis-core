@@ -159,6 +159,16 @@ const SUPPRESSIONS = [
     exceptionType: 'UND_ERR_HEADERS_TIMEOUT',
   },
   {
+    id: 'transport-body-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-948',
+    reason:
+      'Response body stalled. Classified as PROVIDER_UNAVAILABLE_TIMEOUT_* ' +
+      'at provider boundaries; the raw undici exception duplicates the ' +
+      'classified failure (incident #489). Classified timeout reporting remains enabled.',
+    exceptionType: 'UND_ERR_BODY_TIMEOUT',
+  },
+  {
     id: 'transport-dns-again',
     lever: 'ignoreErrors',
     ticket: 'AYC-616',
@@ -177,6 +187,17 @@ const SUPPRESSIONS = [
       'PROVIDER_UNAVAILABLE_CONNECTION_* with one setup retry; the raw span ' +
       'exception is a duplicate (incident #387).',
     exceptionType: 'ECONNRESET',
+  },
+  {
+    id: 'transport-socket-closed',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-997',
+    reason:
+      'Undici reports a peer closing an outbound provider socket as ' +
+      'UND_ERR_SOCKET. Provider boundaries classify the failure as ' +
+      'PROVIDER_UNAVAILABLE_CONNECTION_*; the raw instrumentation exception ' +
+      'is a duplicate (incident #626).',
+    exceptionType: 'UND_ERR_SOCKET',
   },
   {
     id: 'transport-connection-aborted',

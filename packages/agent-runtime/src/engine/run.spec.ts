@@ -125,6 +125,54 @@ describe('re-entrancy and child runs', () => {
     expect(childStatuses).toEqual(['completed']);
   });
 
+  it('lets individual hooks opt out of child runs without changing the default', async () => {
+    const inheritedDepths: number[] = [];
+    const rootOnlyDepths: number[] = [];
+    const childStatuses: string[] = [];
+    const inherited: Hook = {
+      name: 'inherited',
+      runStart: (ctx) => {
+        inheritedDepths.push(ctx.context.depth);
+      },
+    };
+    const rootOnly: Hook = {
+      name: 'root-only',
+      inheritToChildRuns: false,
+      runStart: (ctx) => {
+        rootOnlyDepths.push(ctx.context.depth);
+      },
+    };
+    const childModel = new MockProvider([textTurn('child')]);
+    const spawningTool = echoTool({
+      name: 'spawn',
+      execute: async (_input, ctx) => {
+        for await (const event of ctx.runChild({
+          instructions: '',
+          model: childModel,
+          messages: [userMessage('Go')],
+        })) {
+          if (event.type === 'run_end') childStatuses.push(event.status);
+        }
+        return 'done';
+      },
+    });
+    const parentModel = new MockProvider([
+      toolCallTurn({ id: 'c1', name: 'spawn', input: {} }),
+      textTurn('parent done'),
+    ]);
+
+    await collectEvents(
+      baseInput(parentModel, {
+        tools: [spawningTool],
+        hooks: [inherited, rootOnly],
+      }),
+    );
+
+    expect(inheritedDepths).toEqual([0, 1]);
+    expect(rootOnlyDepths).toEqual([0]);
+    expect(childStatuses).toEqual(['completed']);
+  });
+
   it('reads parent context values from the child run', async () => {
     const seen: unknown[] = [];
     const childStatuses: string[] = [];

@@ -43,6 +43,7 @@ import dataSource from 'src/db/datasource';
 import { SecurityHeadersMiddleware } from 'src/common/middleware/security-headers.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { serveFrontendOptions } from './presenters/http/serve-frontend.options';
 import type { RedisConfig } from 'src/config/redis.config';
 import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
@@ -55,6 +56,7 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from 'src/integrations/integrations.module';
+import { QueueInspectionModule } from 'src/integrations/queue-inspection/queue-inspection.module';
 import { LoggingModule } from 'src/common/logger/logging.module';
 
 @Module({
@@ -82,9 +84,9 @@ import { LoggingModule } from 'src/common/logger/logging.module';
       ],
     }),
     ScheduleModule.forRoot(),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'frontend'),
-    }),
+    ServeStaticModule.forRoot(
+      serveFrontendOptions(join(__dirname, '..', '..', 'frontend')),
+    ),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) =>
@@ -150,6 +152,7 @@ import { LoggingModule } from 'src/common/logger/logging.module';
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
+    QueueInspectionModule,
   ],
   controllers: [AppController],
   providers: [

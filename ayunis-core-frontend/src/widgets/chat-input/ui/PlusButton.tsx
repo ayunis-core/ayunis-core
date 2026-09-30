@@ -25,12 +25,12 @@ import { useNavigate } from '@tanstack/react-router';
 import {
   separateFilesByType,
   createFileListFromFiles,
+  ACCEPTED_FILE_PICKER_TYPES,
 } from '@/widgets/chat-input/utils/fileHandlers';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { useIsKnowledgeBasesEnabled } from '@/features/feature-toggles';
 import { IntegrationsSubmenu } from './IntegrationsSubmenu';
 
 interface PlusButtonProps {
@@ -57,13 +57,12 @@ export default function PlusButton({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation('common');
-  const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
   const {
     knowledgeBases,
     isLoading: isLoadingKBs,
     error: kbsError,
   } = useKnowledgeBases({
-    enabled: !!onKnowledgeBaseSelect && knowledgeBasesEnabled,
+    enabled: !!onKnowledgeBaseSelect,
   });
 
   // Single entry point for all uploads. Splits the selection by type and routes
@@ -129,7 +128,7 @@ export default function PlusButton({
               <span>{t('chatInput.uploadFile')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          {onKnowledgeBaseSelect && knowledgeBasesEnabled && (
+          {onKnowledgeBaseSelect && (
             <DropdownMenuGroup>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
@@ -198,7 +197,7 @@ export default function PlusButton({
         type="file"
         hidden
         multiple
-        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.odt,.odp,.txt,.md,.eml,.mp3,.m4a,.wav,.webm"
+        accept={ACCEPTED_FILE_PICKER_TYPES}
         onChange={(e) => handleFileChange(e.target.files)}
         ref={fileInputRef}
       />

@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { SkillContext } from 'src/domain/skills/application/models/skill-context';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
@@ -14,6 +13,7 @@ import {
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { FindOneSkillQuery } from './find-one-skill.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindOneSkillUseCase {
@@ -64,8 +64,7 @@ export class FindOneSkillUseCase {
   }
 
   private requireUserId(): UUID {
-    const userId = this.context.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
+    const { userId } = getRequiredUserContext(this.context);
     return userId;
   }
 }

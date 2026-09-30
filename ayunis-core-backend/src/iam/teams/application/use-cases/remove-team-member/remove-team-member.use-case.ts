@@ -7,8 +7,8 @@ import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { TeamMemberNotFoundError } from 'src/iam/teams/application/team-members.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Transactional } from '@nestjs-cls/transactional';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class RemoveTeamMemberUseCase {
@@ -22,11 +22,7 @@ export class RemoveTeamMemberUseCase {
 
   @Transactional()
   async execute(command: RemoveTeamMemberCommand): Promise<void> {
-    const orgId = this.contextService.get('orgId');
-
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     this.logger.log(
       {

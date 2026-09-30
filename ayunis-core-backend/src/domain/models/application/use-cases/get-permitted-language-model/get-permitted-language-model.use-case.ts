@@ -12,6 +12,7 @@ import { PermittedModelsRepository } from 'src/domain/models/application/ports/p
 import { GetEffectiveLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.query';
 import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 import { GetPermittedLanguageModelQuery } from './get-permitted-language-model.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class GetPermittedLanguageModelUseCase {
@@ -45,10 +46,7 @@ export class GetPermittedLanguageModelUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
     const { models } = await this.getEffectiveLanguageModelsUseCase.execute(
       new GetEffectiveLanguageModelsQuery(model.orgId, userId),
     );

@@ -10,6 +10,7 @@ import {
 } from 'src/iam/invites/application/invites.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
 @Injectable()
 export class CreateInviteWithSeatReservationUseCase {
@@ -17,14 +18,23 @@ export class CreateInviteWithSeatReservationUseCase {
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
     private readonly createInvite: CreateInviteUseCase,
     private readonly contextService: ContextService,
+    private readonly publishInviteCreated: InviteCreatedEventPublisher,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
-  @Transactional()
   async execute(
     command: CreateInviteCommand,
   ): Promise<Awaited<ReturnType<CreateInviteUseCase['execute']>>> {
     this.assertTenantAdmin(command);
+    const result = await this.reserveInvite(command);
+    this.publishInviteCreated.publish(result.invite);
+    return result;
+  }
+
+  @Transactional()
+  private async reserveInvite(
+    command: CreateInviteCommand,
+  ): Promise<Awaited<ReturnType<CreateInviteUseCase['execute']>>> {
     await this.acquireAllocationLock.execute(command.orgId);
     return this.createInvite.execute(command);
   }

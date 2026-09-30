@@ -26,6 +26,7 @@ export class OrgSsoConnectionMapper {
       zitadelIdpId: record.zitadelIdpId,
       enabled: record.enabled,
       jitProvisioningEnabled: record.jitProvisioningEnabled,
+      localPasswordLoginEnabled: record.localPasswordLoginEnabled,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -51,6 +52,7 @@ export class OrgSsoConnectionMapper {
     record.zitadelIdpId = connection.zitadelIdpId;
     record.enabled = connection.enabled;
     record.jitProvisioningEnabled = connection.jitProvisioningEnabled;
+    record.localPasswordLoginEnabled = connection.localPasswordLoginEnabled;
     record.createdAt = connection.createdAt;
     record.updatedAt = connection.updatedAt;
     return record;

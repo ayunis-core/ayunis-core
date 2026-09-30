@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import type { UseFormReturn } from 'react-hook-form';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useSuperAdminLanguageCatalogModelsControllerUpdateLanguageModel,
@@ -11,8 +12,13 @@ import {
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
-import { resolveModelErrorToastKey } from '../lib/resolveModelErrorToastKey';
-export function useUpdateLanguageModel(onSuccess?: () => void) {
+import { resolveModelErrorToastKey } from '@/pages/super-admin-settings/models-catalog/lib/resolveModelErrorToastKey';
+import type { LanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
+import { setValidationErrors } from '@/shared/lib/set-validation-errors';
+export function useUpdateLanguageModel(
+  form: UseFormReturn<LanguageModelFormData>,
+  onSuccess?: () => void,
+) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -41,10 +47,15 @@ export function useUpdateLanguageModel(onSuccess?: () => void) {
           onSuccess?.();
         },
         onError: (error: unknown) => {
-          console.error('Update language model failed:', error);
           try {
-            const { code } = extractErrorData(error);
-            showError(t(resolveModelErrorToastKey(code, 'models.updateError')));
+            const { code, errors } = extractErrorData(error);
+            if (code === 'VALIDATION_ERROR' && errors?.length) {
+              setValidationErrors(form, errors, t, 'models.catalog.validation');
+            } else {
+              showError(
+                t(resolveModelErrorToastKey(code, 'models.updateError')),
+              );
+            }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('models.updateError'));

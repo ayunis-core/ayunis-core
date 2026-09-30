@@ -62,6 +62,20 @@ export class WorkspaceResponseDto {
 
   @ApiPropertyOptional({
     description:
+      'Number of skills owned by the workspace (list responses only)',
+    example: 2,
+  })
+  skillCount?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Number of knowledge bases owned by the workspace (list responses only)',
+    example: 4,
+  })
+  knowledgeBaseCount?: number;
+
+  @ApiPropertyOptional({
+    description:
       'Later of the last edit and the most recent chat activity (list responses only)',
     example: '2026-08-11T10:30:00.000Z',
   })

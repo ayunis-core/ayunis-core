@@ -4,8 +4,8 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import type { UUID } from 'crypto';
 import { FindArtifactWithVersionsUseCase } from './find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from './find-artifact-with-versions.query';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
-import { ArtifactNotFoundError } from '../../artifacts.errors';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
+import { ArtifactNotFoundError } from 'src/domain/artifacts/application/artifacts.errors';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -16,6 +16,8 @@ describe('FindArtifactWithVersionsUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -33,6 +35,7 @@ describe('FindArtifactWithVersionsUseCase', () => {
     const mockContextService = {
       get: jest.fn((key: string) => {
         if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
         return undefined;
       }),
     } as unknown as jest.Mocked<ContextService>;

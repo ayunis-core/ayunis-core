@@ -5,17 +5,10 @@ import { ChatContextSidePanel } from './ChatContextSidePanel';
 const mocks = vi.hoisted(() => ({
   useThreadAiContext: vi.fn(),
   refetch: vi.fn(),
-  skillsEnabled: true,
-  knowledgeBasesEnabled: true,
 }));
 
 vi.mock('@/pages/chat/api/useThreadAiContext', () => ({
   useThreadAiContext: mocks.useThreadAiContext,
-}));
-
-vi.mock('@/features/feature-toggles', () => ({
-  useIsSkillsEnabled: () => mocks.skillsEnabled,
-  useIsKnowledgeBasesEnabled: () => mocks.knowledgeBasesEnabled,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -28,8 +21,6 @@ vi.mock('react-i18next', () => ({
 describe('ChatContextSidePanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.skillsEnabled = true;
-    mocks.knowledgeBasesEnabled = true;
     mocks.useThreadAiContext.mockReturnValue({
       context: {
         skills: [
@@ -65,28 +56,6 @@ describe('ChatContextSidePanel', () => {
       error: null,
       refetch: mocks.refetch,
     });
-  });
-
-  it('hides the skills section when skills are disabled', () => {
-    mocks.skillsEnabled = false;
-
-    render(<ChatContextSidePanel threadId="thread-id" />);
-
-    expect(screen.queryByTestId('chat-context-section-skills')).toBeNull();
-    expect(
-      screen.getByTestId('chat-context-section-knowledge-bases'),
-    ).not.toBeNull();
-  });
-
-  it('hides the knowledge-base section when knowledge bases are disabled', () => {
-    mocks.knowledgeBasesEnabled = false;
-
-    render(<ChatContextSidePanel threadId="thread-id" />);
-
-    expect(
-      screen.queryByTestId('chat-context-section-knowledge-bases'),
-    ).toBeNull();
-    expect(screen.getByTestId('chat-context-section-skills')).not.toBeNull();
   });
 
   it('renders exactly the skills and knowledge-base sections without deduplicating names', () => {

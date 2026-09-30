@@ -10,7 +10,7 @@ import {
   workspaceContextControllerUpdateInstruction,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateSkillDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { showError } from '@/shared/lib/toast';
+import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 
 type WorkspaceSkillInput = Omit<
@@ -72,6 +72,7 @@ export function useWorkspaceContextActions(workspaceId: string) {
         queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
       });
       void invalidateContext();
+      showSuccess(t('context.instructions.saveSuccess', { ns: 'workspace' }));
     },
     onError: () =>
       showError(t('context.instructions.saveError', { ns: 'workspace' })),

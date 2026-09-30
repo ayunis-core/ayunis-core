@@ -21,6 +21,8 @@ describe('RevertArtifactUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -59,6 +61,7 @@ describe('RevertArtifactUseCase', () => {
     const mockContextService = {
       get: jest.fn((key: string) => {
         if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
         return undefined;
       }),
     } as unknown as jest.Mocked<ContextService>;

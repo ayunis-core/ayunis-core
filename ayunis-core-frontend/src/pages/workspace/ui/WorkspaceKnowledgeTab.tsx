@@ -19,6 +19,7 @@ import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import { useWorkspaceKnowledgeBaseActions } from '@/pages/workspace/api/useWorkspaceKnowledgeBaseActions';
 import { KnowledgeBaseCreateDialog } from '@/widgets/resource-create-dialog';
 import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 export function WorkspaceKnowledgeTab({
   workspaceId,
@@ -42,20 +43,22 @@ export function WorkspaceKnowledgeTab({
   } = useWorkspaceKnowledgeBaseActions(workspaceId);
 
   const createButton = (
-    <KnowledgeBaseCreateDialog
-      buttonText={t('context.knowledge.create')}
-      buttonTestId="workspace-knowledge-create"
-      onCreate={async (formData) => {
-        const knowledgeBase = await createKnowledgeBase({
-          name: formData.name,
-          description: formData.description ?? '',
-        });
-        await navigate({
-          to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
-          params: { workspaceId, knowledgeBaseId: knowledgeBase.id },
-        });
-      }}
-    />
+    <OnboardingTourTarget name={TOUR_TARGET.workspaceKnowledge}>
+      <KnowledgeBaseCreateDialog
+        buttonText={t('context.knowledge.create')}
+        buttonTestId="workspace-knowledge-create"
+        onCreate={async (formData) => {
+          const knowledgeBase = await createKnowledgeBase({
+            name: formData.name,
+            description: formData.description ?? '',
+          });
+          await navigate({
+            to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
+            params: { workspaceId, knowledgeBaseId: knowledgeBase.id },
+          });
+        }}
+      />
+    </OnboardingTourTarget>
   );
   return (
     <section className="space-y-3">

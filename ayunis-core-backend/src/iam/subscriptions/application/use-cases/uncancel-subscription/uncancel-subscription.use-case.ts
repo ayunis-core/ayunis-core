@@ -123,6 +123,13 @@ export class UncancelSubscriptionUseCase {
    * Usage-based: can uncancel if cancelled in the current calendar month.
    */
   private canUncancel(subscription: Subscription): boolean {
+    // Nothing has elapsed for a subscription that has not started, so it cannot
+    // have expired. Both checks below answer "is it still serving", which is a
+    // different question and is false for a scheduled subscription.
+    if (new Date() < subscription.startsAt) {
+      return true;
+    }
+
     if (isUsageBased(subscription)) {
       const now = new Date();
       const cancelledAt = subscription.cancelledAt!;

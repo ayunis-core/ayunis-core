@@ -190,7 +190,7 @@ export class MinioObjectStorageProvider
       await this.client.statObject(bucketName, storageUrl.objectName);
       return true;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
+      if (isMissingObjectError(error)) {
         return false;
       }
       throw error;

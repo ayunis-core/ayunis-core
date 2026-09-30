@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { RunAbortedError } from '../contracts/errors';
-import type { Hook, ModelCallInterruptedContext } from '../contracts/hook';
+import type { Hook } from '../contracts/hook';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -139,6 +139,8 @@ describe('tool-call argument integrity', () => {
     expect(events.find((event) => event.type === 'run_end')?.usage).toEqual({
       inputTokens: 15,
       outputTokens: 12,
+      cacheReadInputTokens: 0,
+      cacheWriteInputTokens: 0,
     });
   });
 
@@ -180,14 +182,12 @@ describe('tool-call argument integrity', () => {
 
   it('rejects tool calls hallucinated by the tool-disabled fallback', async () => {
     const execute = vi.fn(() => 'created');
-    const afterModelCall = vi.fn();
-    const interruptions: string[] = [];
+    const callOutputs: string[] = [];
     const observer: Hook = {
       name: 'fallback-observer',
-      afterModelCall,
-      modelCallInterrupted: (ctx) => {
-        interruptions.push(
-          ctx.message.content
+      afterModelCall: (ctx) => {
+        callOutputs.push(
+          ctx.outcome.message.content
             .filter((content) => content.type === 'text')
             .map((content) => content.text)
             .join(''),
@@ -234,9 +234,8 @@ describe('tool-call argument integrity', () => {
         toolCall: expect.objectContaining({ id: 'fallback_call' }),
       }),
     );
-    expect(afterModelCall).not.toHaveBeenCalled();
-    expect(interruptions).toHaveLength(4);
-    expect(interruptions.at(-1)).toBe('I cannot safely complete this action.');
+    expect(callOutputs).toHaveLength(4);
+    expect(callOutputs.at(-1)).toBe('I cannot safely complete this action.');
     expect(execute).not.toHaveBeenCalled();
   });
 
@@ -291,6 +290,8 @@ describe('tool-call argument integrity', () => {
     expect(events.find((event) => event.type === 'run_end')?.usage).toEqual({
       inputTokens: 4,
       outputTokens: 3,
+      cacheReadInputTokens: 0,
+      cacheWriteInputTokens: 0,
     });
   });
 
@@ -318,16 +319,17 @@ describe('tool-call argument integrity', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('fires modelCallInterrupted so intact text of the malformed turn can be persisted', async () => {
+  it('exposes intact text from a terminal malformed call to afterModelCall', async () => {
     const interruptions: { reason: string; text: string }[] = [];
     const observer: Hook = {
       name: 'observer',
-      modelCallInterrupted: (ctx: ModelCallInterruptedContext) => {
-        const text = ctx.message.content
+      afterModelCall: (ctx) => {
+        if (ctx.outcome.type !== 'rejected') return;
+        const text = ctx.outcome.message.content
           .filter((content) => content.type === 'text')
           .map((content) => content.text)
           .join('');
-        interruptions.push({ reason: ctx.reason, text });
+        interruptions.push({ reason: ctx.outcome.reason, text });
       },
     };
     const provider = new MockProvider([
@@ -345,7 +347,7 @@ describe('tool-call argument integrity', () => {
     // The turn's streamed text must reach the interruption hook — it is what
     // persists partial display content when a model call fails (AYC-613).
     expect(interruptions).toEqual([
-      { reason: 'error', text: 'Ich erstelle jetzt das Dokument.' },
+      { reason: 'malformed', text: 'Ich erstelle jetzt das Dokument.' },
     ]);
     expect(provider.requests).toHaveLength(1);
     const error = events.find((event) => event.type === 'error');
@@ -376,10 +378,12 @@ describe('tool-call argument integrity', () => {
     );
   });
 
-  it('honors an abort requested by the interruption hook', async () => {
+  it('honors an abort requested by the terminal call hook', async () => {
     const abortingHook: Hook = {
       name: 'abort-on-interruption',
-      modelCallInterrupted: (ctx) => ctx.abort('stop recovery'),
+      afterModelCall: (ctx) => {
+        if (ctx.outcome.type === 'rejected') ctx.abort('stop recovery');
+      },
     };
     const provider = new MockProvider([
       malformedDocumentTurn(),

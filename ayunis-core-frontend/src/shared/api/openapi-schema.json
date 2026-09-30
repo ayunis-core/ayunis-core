@@ -1314,6 +1314,107 @@
         "tags": ["invites"]
       }
     },
+    "/super-admin/orgs/{orgId}/invites": {
+      "get": {
+        "operationId": "SuperAdminInvitesController_getInvites",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search invites by email",
+            "schema": {
+              "example": "john@example.com",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of invites to return",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of invites to skip",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns pending invites for the selected organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedInvitesListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List pending invites in an organization",
+        "tags": ["Super Admin Invites"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/invites/bulk": {
+      "post": {
+        "description": "Create invitations for a selected organization, including team assignments applied when each user joins.",
+        "operationId": "SuperAdminInvitesController_createBulk",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBulkInvitesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The invites have been processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBulkInvitesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create multiple invites in an organization",
+        "tags": ["Super Admin Invites"]
+      }
+    },
     "/super-admin/orgs": {
       "post": {
         "description": "Create a new organization in the system. Only accessible to users with the super admin system role.",
@@ -1610,6 +1711,45 @@
         },
         "summary": "Get the current price per seat monthly",
         "tags": ["subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}/history": {
+      "get": {
+        "description": "Return every subscription belonging to the organization, newest first, with lifecycle status. Super admins only. Does not change or constrain existing subscriptions.",
+        "operationId": "SuperAdminSubscriptionsController_getSubscriptionHistory",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to list subscriptions for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved subscription history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSubscriptionsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List an organization's subscription history",
+        "tags": ["Super Admin Subscriptions"]
       }
     },
     "/super-admin/subscriptions/{orgId}": {
@@ -5529,6 +5669,35 @@
         "tags": ["skills"]
       }
     },
+    "/skills/marketplace/{identifier}": {
+      "get": {
+        "operationId": "SkillsController_findInstalledFromMarketplace",
+        "parameters": [
+          {
+            "name": "identifier",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstalledMarketplaceSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Find the personal skill installed from a marketplace entry",
+        "tags": ["skills"]
+      }
+    },
     "/skills/{id}": {
       "get": {
         "operationId": "SkillsController_findOne",
@@ -7117,6 +7286,7 @@
         "tags": ["Super Admin Anonymization Whitelist"]
       },
       "post": {
+        "description": "Words already on the whitelist for the category are skipped and returned as duplicates.",
         "operationId": "SuperAdminAnonymizationWhitelistController_add",
         "parameters": [],
         "requestBody": {
@@ -7124,7 +7294,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddGlobalPiiWhitelistWordRequestDto"
+                "$ref": "#/components/schemas/AddGlobalPiiWhitelistWordsRequestDto"
               }
             }
           }
@@ -7135,22 +7305,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GlobalPiiWhitelistWordDto"
+                  "$ref": "#/components/schemas/AddGlobalPiiWhitelistWordsResponseDto"
                 }
               }
             }
           },
           "400": {
-            "description": "Empty or invalid word"
+            "description": "Empty or invalid words"
           },
           "401": {
             "description": "Not authorized as super admin"
-          },
-          "409": {
-            "description": "Word already on the whitelist for this category"
           }
         },
-        "summary": "Add a word to the global anonymization whitelist",
+        "summary": "Add words to the global anonymization whitelist",
         "tags": ["Super Admin Anonymization Whitelist"]
       }
     },
@@ -8938,6 +9105,48 @@
           }
         },
         "summary": "Get the AI resources available in a thread",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{threadId}/source-chunks/{chunkId}": {
+      "get": {
+        "operationId": "ThreadSourceCitationsController_getSourceCitation",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "chunkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the cited chunk and source metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCitationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Citation not found"
+          }
+        },
+        "summary": "Get a source citation in a thread",
         "tags": ["threads"]
       }
     },
@@ -11448,6 +11657,49 @@
         "tags": ["Super Admin SSO Connections"]
       }
     },
+    "/super-admin/orgs/{orgId}/sso/local-password-login": {
+      "patch": {
+        "operationId": "SuperAdminSsoConnectionsController_setLocalPasswordLoginEnabled",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgLocalPasswordLoginEnabledRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSsoConnectionResourceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin"
+          }
+        },
+        "summary": "Allow or disallow local password login",
+        "tags": ["Super Admin SSO Connections"]
+      }
+    },
     "/super-admin/orgs/{orgId}/sso/idp": {
       "patch": {
         "operationId": "SuperAdminSsoConnectionsController_setIdp",
@@ -11653,40 +11905,7 @@
       },
       "FeatureTogglesResponseDto": {
         "type": "object",
-        "properties": {
-          "knowledgeBasesEnabled": {
-            "type": "boolean",
-            "description": "Whether the standalone knowledge bases feature is enabled",
-            "example": true
-          },
-          "letterheadsEnabled": {
-            "type": "boolean",
-            "description": "Whether the letterheads feature is enabled",
-            "example": false
-          },
-          "skillsEnabled": {
-            "type": "boolean",
-            "description": "Whether the skills feature is enabled",
-            "example": false
-          },
-          "workspacesEnabled": {
-            "type": "boolean",
-            "description": "Whether the workspaces feature is enabled",
-            "example": false
-          },
-          "ssoLoginEnabled": {
-            "type": "boolean",
-            "description": "Whether employee-facing SSO login is enabled",
-            "example": false
-          }
-        },
-        "required": [
-          "knowledgeBasesEnabled",
-          "letterheadsEnabled",
-          "skillsEnabled",
-          "workspacesEnabled",
-          "ssoLoginEnabled"
-        ]
+        "properties": {}
       },
       "UserResponseDto": {
         "type": "object",
@@ -12149,6 +12368,15 @@
             "description": "Role to assign to the invited user",
             "enum": ["admin", "manager", "user"],
             "example": "user"
+          },
+          "teamNames": {
+            "description": "Names of teams to assign after the invited user joins the organization",
+            "example": ["Research", "Operations"],
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": ["email", "role"]
@@ -12355,10 +12583,20 @@
             "description": "Date when the invite was accepted (if applicable)",
             "example": "2023-12-02T15:30:00Z"
           },
+          "orgId": {
+            "type": "string",
+            "description": "Organization the invitation belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
           "organizationName": {
             "type": "string",
             "description": "Name of the organization",
             "example": "Acme Corporation"
+          },
+          "localPasswordLoginEnabled": {
+            "type": "boolean",
+            "description": "Whether this organization accepts local password login"
           }
         },
         "required": [
@@ -12368,7 +12606,9 @@
           "status",
           "sentDate",
           "expiresAt",
-          "organizationName"
+          "orgId",
+          "organizationName",
+          "localPasswordLoginEnabled"
         ]
       },
       "AcceptInviteDto": {
@@ -13004,6 +13244,140 @@
         "type": "object",
         "properties": {}
       },
+      "OrgSubscriptionHistoryItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the subscription",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription was created",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription was last updated",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "cancelledAt": {
+            "type": "object",
+            "description": "Date when the subscription was cancelled (if applicable)",
+            "example": "2023-12-15T10:00:00Z"
+          },
+          "startsAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription becomes active",
+            "example": "2026-07-01T00:00:00Z"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID associated with the subscription",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "description": "Subscription type",
+            "enum": ["SEAT_BASED", "USAGE_BASED"],
+            "example": "SEAT_BASED"
+          },
+          "noOfSeats": {
+            "type": "number",
+            "description": "Number of seats in the subscription (seat-based only)",
+            "example": 10
+          },
+          "pricePerSeat": {
+            "type": "number",
+            "description": "Price per seat in the subscription (seat-based only)",
+            "example": 29.99
+          },
+          "renewalCycle": {
+            "type": "string",
+            "description": "Renewal cycle of the subscription (seat-based only)",
+            "enum": ["monthly", "yearly"],
+            "example": "monthly"
+          },
+          "renewalCycleAnchor": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date that serves as the anchor for renewal cycles (seat-based only)",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget (usage-based only)",
+            "example": 1000
+          },
+          "availableSeats": {
+            "type": "number",
+            "description": "Number of available seats (total seats minus invites, seat-based only)",
+            "example": 3,
+            "nullable": true
+          },
+          "nextRenewalDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date of the next renewal",
+            "example": "2024-01-01T10:00:00Z"
+          },
+          "billingInfo": {
+            "description": "Billing information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionBillingInfoResponseDto"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of this subscription record",
+            "enum": ["ACTIVE", "SCHEDULED", "CANCELLED", "HISTORICAL"],
+            "example": "ACTIVE"
+          },
+          "isLatest": {
+            "type": "boolean",
+            "description": "Whether this is the newest subscription for the organization",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "startsAt",
+          "orgId",
+          "type",
+          "nextRenewalDate",
+          "billingInfo",
+          "status",
+          "isLatest"
+        ]
+      },
+      "OrgSubscriptionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "subscriptions": {
+            "description": "All subscriptions belonging to the organization, newest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrgSubscriptionHistoryItemDto"
+            }
+          },
+          "activeCount": {
+            "type": "number",
+            "description": "How many subscriptions are currently serving access (including cancelled seat-based records still inside their paid period)",
+            "example": 1
+          }
+        },
+        "required": ["subscriptions", "activeCount"]
+      },
       "UpdateSeatsDto": {
         "type": "object",
         "properties": {}
@@ -13066,6 +13440,12 @@
           "canVision": {
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)"
+          },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.",
+            "minimum": 1,
+            "maximum": 2147483647
           },
           "isPermitted": {
             "type": "boolean",
@@ -13232,6 +13612,13 @@
           "canVision": {
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)"
+          },
+          "contextWindowSize": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 2147483647,
+            "description": "Maximum context window size in tokens"
           },
           "hasProviderFault": {
             "type": "boolean",
@@ -13559,6 +13946,13 @@
             "description": "Whether the model supports vision (image processing)",
             "example": false
           },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens",
+            "example": 128000,
+            "minimum": 1,
+            "maximum": 2147483647
+          },
           "hasProviderFault": {
             "type": "boolean",
             "description": "Whether the upstream provider currently has a known fault for this model",
@@ -13818,6 +14212,14 @@
             "description": "Whether the model supports vision (image processing)",
             "example": false
           },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens",
+            "example": 128000,
+            "minimum": 1,
+            "maximum": 2147483647,
+            "nullable": true
+          },
           "isArchived": {
             "type": "boolean",
             "description": "Whether the model is archived",
@@ -13916,6 +14318,14 @@
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)",
             "example": false
+          },
+          "contextWindowSize": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens",
+            "example": 128000,
+            "minimum": 1,
+            "maximum": 2147483647,
+            "nullable": true
           },
           "isArchived": {
             "type": "boolean",
@@ -14807,6 +15217,17 @@
           "isReasoning"
         ]
       },
+      "SourceProcessingErrorCode": {
+        "type": "string",
+        "enum": [
+          "DOCUMENT_UNREADABLE",
+          "DOCUMENT_EMPTY",
+          "DOCUMENT_PAGE_LIMIT_EXCEEDED",
+          "PROCESSING_TIMEOUT",
+          "PROCESSING_UNAVAILABLE",
+          "PROCESSING_FAILED"
+        ]
+      },
       "SourceResponseDto": {
         "type": "object",
         "properties": {
@@ -14839,7 +15260,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -14893,7 +15322,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -14959,7 +15396,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -15024,7 +15469,15 @@
           },
           "processingError": {
             "type": "string",
-            "description": "Error message if processing failed"
+            "description": "Deprecated generic failure message. Use processingErrorCode for localization.",
+            "deprecated": true
+          },
+          "processingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -15860,6 +16313,18 @@
         },
         "required": ["data", "pagination"]
       },
+      "InstalledMarketplaceSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID of the current user's personal skill installed from this marketplace entry, or null when it is not installed."
+          }
+        },
+        "required": ["skillId"]
+      },
       "UpdateSkillDto": {
         "type": "object",
         "properties": {
@@ -16366,6 +16831,19 @@
             "minLength": 1,
             "maxLength": 255
           },
+          "serverUrl": {
+            "type": "string",
+            "description": "Custom MCP server URL",
+            "example": "https://my-mcp-server.example.com/mcp"
+          },
+          "configSchema": {
+            "description": "Header configuration for a custom MCP integration",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomMcpConfigSchemaDto"
+              }
+            ]
+          },
           "credentials": {
             "type": "string",
             "description": "Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.",
@@ -16867,6 +17345,16 @@
             "description": "Number of chats filed under the workspace (list responses only)",
             "example": 3
           },
+          "skillCount": {
+            "type": "number",
+            "description": "Number of skills owned by the workspace (list responses only)",
+            "example": 2
+          },
+          "knowledgeBaseCount": {
+            "type": "number",
+            "description": "Number of knowledge bases owned by the workspace (list responses only)",
+            "example": 4
+          },
           "lastActivityAt": {
             "type": "string",
             "description": "Later of the last edit and the most recent chat activity (list responses only)",
@@ -17144,7 +17632,7 @@
             "description": "Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.",
             "example": ".*@muster-stadt\\.de",
             "nullable": true,
-            "maxLength": 200
+            "maxLength": 1000
           }
         },
         "required": ["category", "pattern"]
@@ -17206,7 +17694,7 @@
         },
         "required": ["id", "category", "word", "createdByEmail", "createdAt"]
       },
-      "AddGlobalPiiWhitelistWordRequestDto": {
+      "AddGlobalPiiWhitelistWordsRequestDto": {
         "type": "object",
         "properties": {
           "category": {
@@ -17216,13 +17704,36 @@
               }
             ]
           },
-          "word": {
-            "type": "string",
-            "description": "Plain word to exempt from anonymization (no patterns)",
-            "maxLength": 200
+          "words": {
+            "description": "Plain words to exempt from anonymization (no patterns)",
+            "maxItems": 1000,
+            "example": ["Mitarbeitende", "Bürgeramt"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
-        "required": ["category", "word"]
+        "required": ["category", "words"]
+      },
+      "AddGlobalPiiWhitelistWordsResponseDto": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlobalPiiWhitelistWordDto"
+            }
+          },
+          "duplicates": {
+            "description": "Submitted words that were already on the whitelist",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["added", "duplicates"]
       },
       "CreateSkillTemplateDto": {
         "type": "object",
@@ -18574,6 +19085,57 @@
           }
         },
         "required": ["skills", "knowledgeBases"]
+      },
+      "SourceCitationChunkResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string",
+            "description": "Exact extracted chunk text shown to the model"
+          },
+          "startLine": {
+            "type": "number",
+            "nullable": true
+          },
+          "endLine": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": ["id", "content", "startLine", "endLine"]
+      },
+      "SourceCitationSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "name", "url"]
+      },
+      "SourceCitationResponseDto": {
+        "type": "object",
+        "properties": {
+          "chunk": {
+            "$ref": "#/components/schemas/SourceCitationChunkResponseDto"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceCitationSourceResponseDto"
+          }
+        },
+        "required": ["chunk", "source"]
       },
       "SuperAdminTrialResponseDto": {
         "type": "object",
@@ -20230,6 +20792,9 @@
           },
           "jitProvisioningEnabled": {
             "type": "boolean"
+          },
+          "localPasswordLoginEnabled": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -20239,7 +20804,8 @@
           "zitadelOrgId",
           "zitadelIdpId",
           "enabled",
-          "jitProvisioningEnabled"
+          "jitProvisioningEnabled",
+          "localPasswordLoginEnabled"
         ]
       },
       "OrgSsoConnectionResourceDto": {
@@ -20318,6 +20884,35 @@
         },
         "required": ["enabled"]
       },
+      "SetOrgLocalPasswordLoginEnabledRequestDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "description": "Confirms the SSO-only lockout impact was reviewed"
+          },
+          "reviewedEmailDomains": {
+            "example": ["stadt.example", "vhs.example"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewedZitadelOrgId": {
+            "type": "string",
+            "example": "385820595704561666"
+          },
+          "reviewedZitadelIdpId": {
+            "type": "string",
+            "nullable": true,
+            "example": "388145187060187138"
+          }
+        },
+        "required": ["enabled"]
+      },
       "SetOrgSsoIdpRequestDto": {
         "type": "object",
         "properties": {
@@ -20349,6 +20944,9 @@
           "orgId": {
             "type": "string",
             "format": "uuid"
+          },
+          "localPasswordLoginEnabled": {
+            "type": "boolean"
           }
         },
         "required": ["available"]

@@ -32,7 +32,8 @@ import type {
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
-  AddGlobalPiiWhitelistWordRequestDto,
+  AddGlobalPiiWhitelistWordsRequestDto,
+  AddGlobalPiiWhitelistWordsResponseDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
   AddonStatusResponseDto,
@@ -107,6 +108,7 @@ import type {
   ImageGenerationModelResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
+  InstalledMarketplaceSkillResponseDto,
   InviteDetailResponseDto,
   InvitesControllerGetInvitesParams,
   IpAllowlistResponseDto,
@@ -143,6 +145,7 @@ import type {
   OrgChatSettingsResponseDto,
   OrgMfaRequirementResponseDto,
   OrgSsoConnectionResourceDto,
+  OrgSubscriptionsResponseDto,
   OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedOrgCertificateStatusesResponseDto,
@@ -186,6 +189,7 @@ import type {
   SetImageFairUseLimitRequestDto,
   SetKnowledgeBaseActivationRequestDto,
   SetOrgDefaultModelDto,
+  SetOrgLocalPasswordLoginEnabledRequestDto,
   SetOrgSsoEnabledRequestDto,
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
@@ -202,6 +206,7 @@ import type {
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
   SkillsControllerFindAllParams,
+  SourceCitationResponseDto,
   SsoAuthorizationResponseDto,
   SsoBackchannelLogoutRequestDto,
   SsoDiscoveryResponseDto,
@@ -210,6 +215,7 @@ import type {
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
   SuperAdminAcademyChapterResponseDto,
+  SuperAdminInvitesControllerGetInvitesParams,
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
@@ -2929,6 +2935,177 @@ export const useInvitesControllerDeleteInvite = <TError = void,
     }
 
 /**
+ * @summary List pending invites in an organization
+ */
+export const superAdminInvitesControllerGetInvites = (
+    orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<PaginatedInvitesListResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminInvitesControllerGetInvitesQueryKey = (orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams,) => {
+    return [
+    `/super-admin/orgs/${orgId}/invites`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminInvitesControllerGetInvitesQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>> = ({ signal }) => superAdminInvitesControllerGetInvites(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminInvitesControllerGetInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>>
+export type SuperAdminInvitesControllerGetInvitesQueryError = unknown
+
+
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminInvitesControllerGetInvitesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List pending invites in an organization
+ */
+
+export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminInvitesControllerGetInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminInvitesControllerGetInvitesQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Create invitations for a selected organization, including team assignments applied when each user joins.
+ * @summary Create multiple invites in an organization
+ */
+export const superAdminInvitesControllerCreateBulk = (
+    orgId: string,
+    createBulkInvitesDto: CreateBulkInvitesDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<CreateBulkInvitesResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createBulkInvitesDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminInvitesControllerCreateBulkMutationKey = () => ['superAdminInvitesControllerCreateBulk'] as const;
+
+export const getSuperAdminInvitesControllerCreateBulkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, TError,SuperAdminInvitesControllerCreateBulkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, TError,SuperAdminInvitesControllerCreateBulkMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminInvitesControllerCreateBulkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, SuperAdminInvitesControllerCreateBulkMutationVariables> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminInvitesControllerCreateBulk(orgId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminInvitesControllerCreateBulkMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>>
+    export type SuperAdminInvitesControllerCreateBulkMutationBody = CreateBulkInvitesDto
+    export type SuperAdminInvitesControllerCreateBulkMutationError = unknown
+    export type SuperAdminInvitesControllerCreateBulkMutationVariables = {orgId: string;data: CreateBulkInvitesDto}
+
+    /**
+ * @summary Create multiple invites in an organization
+ */
+export const useSuperAdminInvitesControllerCreateBulk = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>, TError,SuperAdminInvitesControllerCreateBulkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminInvitesControllerCreateBulk>>,
+        TError,
+        SuperAdminInvitesControllerCreateBulkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminInvitesControllerCreateBulkMutationOptions(options), queryClient);
+    }
+
+/**
  * Create a new organization in the system. Only accessible to users with the super admin system role.
  * @summary Create a new organization
  */
@@ -3685,6 +3862,100 @@ export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<Return
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSubscriptionsControllerGetCurrentPriceQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return every subscription belonging to the organization, newest first, with lifecycle status. Super admins only. Does not change or constrain existing subscriptions.
+ * @summary List an organization's subscription history
+ */
+export const superAdminSubscriptionsControllerGetSubscriptionHistory = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OrgSubscriptionsResponseDto>(
+      {url: `/super-admin/subscriptions/${orgId}/history`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/subscriptions/${orgId}/history`
+    ] as const;
+    }
+
+
+export const getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>> = ({ signal }) => superAdminSubscriptionsControllerGetSubscriptionHistory(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>>
+export type SuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryError = void
+
+
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List an organization's subscription history
+ */
+
+export function useSuperAdminSubscriptionsControllerGetSubscriptionHistory<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscriptionHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryOptions(orgId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -11178,6 +11449,99 @@ export function useSkillsControllerFindAll<TData = Awaited<ReturnType<typeof ski
 
 
 /**
+ * @summary Find the personal skill installed from a marketplace entry
+ */
+export const skillsControllerFindInstalledFromMarketplace = (
+    identifier: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<InstalledMarketplaceSkillResponseDto>(
+      {url: `/skills/marketplace/${identifier}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillsControllerFindInstalledFromMarketplaceQueryKey = (identifier: string,) => {
+    return [
+    `/skills/marketplace/${identifier}`
+    ] as const;
+    }
+
+
+export const getSkillsControllerFindInstalledFromMarketplaceQueryOptions = <TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillsControllerFindInstalledFromMarketplaceQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>> = ({ signal }) => skillsControllerFindInstalledFromMarketplace(identifier, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillsControllerFindInstalledFromMarketplaceQueryResult = NonNullable<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>>
+export type SkillsControllerFindInstalledFromMarketplaceQueryError = unknown
+
+
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Find the personal skill installed from a marketplace entry
+ */
+
+export function useSkillsControllerFindInstalledFromMarketplace<TData = Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerFindInstalledFromMarketplace>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillsControllerFindInstalledFromMarketplaceQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Get a skill by ID
  */
 export const skillsControllerFindOne = (
@@ -14877,18 +15241,19 @@ export function useSuperAdminAnonymizationWhitelistControllerList<TData = Awaite
 
 
 /**
- * @summary Add a word to the global anonymization whitelist
+ * Words already on the whitelist for the category are skipped and returned as duplicates.
+ * @summary Add words to the global anonymization whitelist
  */
 export const superAdminAnonymizationWhitelistControllerAdd = (
-    addGlobalPiiWhitelistWordRequestDto: AddGlobalPiiWhitelistWordRequestDto,
+    addGlobalPiiWhitelistWordsRequestDto: AddGlobalPiiWhitelistWordsRequestDto,
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<GlobalPiiWhitelistWordDto>(
+      return customAxiosInstance<AddGlobalPiiWhitelistWordsResponseDto>(
       {url: `/super-admin/anonymization-whitelist`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: addGlobalPiiWhitelistWordRequestDto, signal
+      data: addGlobalPiiWhitelistWordsRequestDto, signal
     },
       );
     }
@@ -14926,12 +15291,12 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SuperAdminAnonymizationWhitelistControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>>
-    export type SuperAdminAnonymizationWhitelistControllerAddMutationBody = AddGlobalPiiWhitelistWordRequestDto
+    export type SuperAdminAnonymizationWhitelistControllerAddMutationBody = AddGlobalPiiWhitelistWordsRequestDto
     export type SuperAdminAnonymizationWhitelistControllerAddMutationError = void
-    export type SuperAdminAnonymizationWhitelistControllerAddMutationVariables = {data: AddGlobalPiiWhitelistWordRequestDto}
+    export type SuperAdminAnonymizationWhitelistControllerAddMutationVariables = {data: AddGlobalPiiWhitelistWordsRequestDto}
 
     /**
- * @summary Add a word to the global anonymization whitelist
+ * @summary Add words to the global anonymization whitelist
  */
 export const useSuperAdminAnonymizationWhitelistControllerAdd = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>, TError,SuperAdminAnonymizationWhitelistControllerAddMutationVariables, TContext>, }
@@ -18582,6 +18947,106 @@ export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnT
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getThreadAiContextControllerGetAiContextQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get a source citation in a thread
+ */
+export const threadSourceCitationsControllerGetSourceCitation = (
+    threadId: string,
+    chunkId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceCitationResponseDto>(
+      {url: `/threads/${threadId}/source-chunks/${chunkId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryKey = (threadId: string,
+    chunkId: string,) => {
+    return [
+    `/threads/${threadId}/source-chunks/${chunkId}`
+    ] as const;
+    }
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryOptions = <TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadSourceCitationsControllerGetSourceCitationQueryKey(threadId,chunkId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>> = ({ signal }) => threadSourceCitationsControllerGetSourceCitation(threadId,chunkId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined && chunkId !== null && chunkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadSourceCitationsControllerGetSourceCitationQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>>
+export type ThreadSourceCitationsControllerGetSourceCitationQueryError = void
+
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a source citation in a thread
+ */
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadSourceCitationsControllerGetSourceCitationQueryOptions(threadId,chunkId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -24578,6 +25043,75 @@ export const useSuperAdminSsoConnectionsControllerSetJitProvisioning = <TError =
         TContext
       > => {
       return useMutation(getSuperAdminSsoConnectionsControllerSetJitProvisioningMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Allow or disallow local password login
+ */
+export const superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled = (
+    orgId: string,
+    setOrgLocalPasswordLoginEnabledRequestDto: SetOrgLocalPasswordLoginEnabledRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso/local-password-login`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgLocalPasswordLoginEnabledRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationKey = () => ['superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled'] as const;
+
+export const getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled(orgId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>>
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationBody = SetOrgLocalPasswordLoginEnabledRequestDto
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationError = void
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables = {orgId: string;data: SetOrgLocalPasswordLoginEnabledRequestDto}
+
+    /**
+ * @summary Allow or disallow local password login
+ */
+export const useSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>,
+        TError,
+        SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationOptions(options), queryClient);
     }
 
 /**

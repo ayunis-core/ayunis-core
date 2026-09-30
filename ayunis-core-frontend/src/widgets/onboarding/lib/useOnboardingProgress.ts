@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import {
   ONBOARDING_CATEGORIES,
   type OnboardingCategory,
-} from '../config/categories';
+} from '@/widgets/onboarding/config/categories';
 
 export interface OnboardingProgress {
   visibleCategories: OnboardingCategory[];

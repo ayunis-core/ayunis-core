@@ -1,3 +1,4 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { ApplicationError } from './base.error';
 import {
   ProviderConnectionError,
@@ -94,6 +95,55 @@ describe('wrapProviderFailure', () => {
   it('leaves unrecognized errors alone', () => {
     expect(wrapProviderFailure(new Error('boom'), source)).toBeUndefined();
   });
+
+  it.each([
+    ['connection', ProviderConnectionError],
+    ['timeout', ProviderTimeoutError],
+    ['server', ProviderServerError],
+    ['rate_limit', ProviderRequestRejectedError],
+  ] as const)(
+    'maps portable %s failures using the backend provider identity',
+    (kind, expectedError) => {
+      const wrapped = wrapProviderFailure(
+        new ModelProviderError({
+          kind,
+          stage: 'stream_establishment',
+          upstreamStatus: kind === 'rate_limit' ? 429 : undefined,
+          upstreamRequestId: 'req_portable_123',
+          retryAfterMs: kind === 'rate_limit' ? 2_000 : undefined,
+          transportCode: kind === 'connection' ? 'ENETRESET' : undefined,
+          host: kind === 'connection' ? 'api.example.com' : undefined,
+          cause: new Error('raw provider failure with resident data'),
+        }),
+        { provider: 'scaleway', modelId: 'llama-3.3-70b' },
+      );
+
+      expect(wrapped).toBeInstanceOf(expectedError);
+      expect(wrapped?.context).toMatchObject({
+        provider: 'scaleway',
+        modelId: 'llama-3.3-70b',
+        upstreamRequestId: 'req_portable_123',
+        ...(kind === 'connection' && {
+          underlyingCode: 'ENETRESET',
+          host: 'api.example.com',
+        }),
+      });
+      expect(JSON.stringify(wrapped?.metadata)).not.toContain('resident data');
+    },
+  );
+
+  it.each(['rejection', 'abort', 'unknown'] as const)(
+    'leaves portable %s failures to the application boundary',
+    (kind) => {
+      const error = new ModelProviderError({
+        kind,
+        stage: 'stream_establishment',
+        cause: new Error('provider failure'),
+      });
+
+      expect(wrapProviderFailure(error, source)).toBeUndefined();
+    },
+  );
 
   it('prefers the transport classification over an attached upstream status', () => {
     // An SDK error can carry both a transport code and a synthesized status;

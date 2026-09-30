@@ -11,7 +11,11 @@
       "neverExpires": "Never expires",
       "revokedAt": "Revoked {{date}}",
       "revokedBadge": "Revoked",
-      "actionsAriaLabel": "Actions for {{name}}"
+      "expiredAt": "Expired {{date}}",
+      "expiredBadge": "Expired",
+      "actionsAriaLabel": "Actions for {{name}}",
+      "noActiveKeys": "No active API keys. Revoked and expired keys are listed in the archive.",
+      "archiveTitle": "Archive ({{count}})"
     },
     "createDialog": {
       "title": "Create API Key",

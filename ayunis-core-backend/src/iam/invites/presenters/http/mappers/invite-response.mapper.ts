@@ -6,7 +6,7 @@ import {
   InviteDetailResponseDto,
   AcceptInviteResponseDto,
   PaginatedInvitesListResponseDto,
-} from '../dtos/invite-response.dto';
+} from 'src/iam/invites/presenters/http/dtos/invite-response.dto';
 import { InviteWithOrgDetails } from 'src/iam/invites/application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -42,6 +42,7 @@ export class InviteResponseMapper {
   toDetailDto(inviteWithOrg: InviteWithOrgDetails): InviteDetailResponseDto {
     return {
       id: inviteWithOrg.id,
+      orgId: inviteWithOrg.orgId,
       email: inviteWithOrg.email,
       role: inviteWithOrg.role,
       status: inviteWithOrg.status,
@@ -49,6 +50,7 @@ export class InviteResponseMapper {
       expiresAt: inviteWithOrg.expiresAt,
       acceptedAt: inviteWithOrg.acceptedAt,
       organizationName: inviteWithOrg.organizationName,
+      localPasswordLoginEnabled: inviteWithOrg.localPasswordLoginEnabled,
     };
   }
 

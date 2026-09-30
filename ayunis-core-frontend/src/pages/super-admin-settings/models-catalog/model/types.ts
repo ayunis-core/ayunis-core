@@ -18,6 +18,7 @@ export interface LanguageModelFormData extends ModelPricingFormData {
   canStream: boolean;
   canUseTools: boolean;
   canVision: boolean;
+  contextWindowSize?: number;
   isReasoning: boolean;
   isArchived: boolean;
   hasProviderFault: boolean;

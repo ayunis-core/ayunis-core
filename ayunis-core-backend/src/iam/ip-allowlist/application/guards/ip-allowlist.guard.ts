@@ -57,6 +57,13 @@ export class IpAllowlistGuard
       return true;
     }
 
+    return this.canActivateRequest(request, user);
+  }
+
+  async canActivateRequest(
+    request: Request,
+    user: ActiveUser,
+  ): Promise<boolean> {
     const orgId = user.orgId;
     const cidrs = await this.getCidrs(orgId);
 

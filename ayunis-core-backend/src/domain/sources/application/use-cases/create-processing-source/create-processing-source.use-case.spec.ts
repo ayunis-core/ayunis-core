@@ -25,7 +25,7 @@ describe('CreateProcessingSourceUseCase', () => {
     useCase = module.get(CreateProcessingSourceUseCase);
   });
 
-  it('should create a FileSource with PROCESSING status for PDF', async () => {
+  it('keeps a queued PDF out of stale-processing cleanup until a worker claims it', async () => {
     const command = new CreateProcessingSourceCommand({
       fileType: 'application/pdf',
       fileName: 'Stadtratsbeschluss_2025.pdf',
@@ -37,7 +37,7 @@ describe('CreateProcessingSourceUseCase', () => {
     expect(result.name).toBe('Stadtratsbeschluss_2025.pdf');
     expect(result.fileType).toBe(FileType.PDF);
     expect(result.textType).toBe(TextType.FILE);
-    expect(result.processingStartedAt).toBeInstanceOf(Date);
+    expect(result.processingStartedAt).toBeNull();
     expect(mockSourceRepository.save).toHaveBeenCalledTimes(1);
   });
 
@@ -95,7 +95,7 @@ describe('CreateProcessingSourceUseCase', () => {
       expect(result.fileType).toBe(FileType.AUDIO);
       expect(result.textType).toBe(TextType.FILE);
       expect(result.status).toBe(SourceStatus.PROCESSING);
-      expect(result.processingStartedAt).toBeInstanceOf(Date);
+      expect(result.processingStartedAt).toBeNull();
     },
   );
 

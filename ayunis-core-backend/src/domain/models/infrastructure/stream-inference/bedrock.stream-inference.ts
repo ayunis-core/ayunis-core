@@ -7,7 +7,7 @@ import { RuntimeStreamInferenceHandler } from 'src/domain/models/infrastructure/
 import type { Model } from 'src/domain/models/domain/model.entity';
 import {
   CLAUDE_MAX_OUTPUT_TOKENS,
-  INFERENCE_MAX_RETRIES,
+  STREAMING_PROVIDER_MAX_RETRIES,
 } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class BedrockStreamInferenceHandler extends RuntimeStreamInferenceHandler
   protected createProvider(model: Model): ModelProvider {
     return bedrock({
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: STREAMING_PROVIDER_MAX_RETRIES,
       maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
       awsRegion: this.configService.get<string>('models.bedrock.awsRegion'),
       awsAccessKey: this.configService.get<string>(

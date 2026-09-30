@@ -1,0 +1,16 @@
+name: Start MinIO
+description: Start the pinned MinIO test service and wait until it is healthy.
+
+runs:
+  using: composite
+  steps:
+    - name: Start MinIO
+      shell: bash
+      run: |
+        docker run -d \
+          --name minio \
+          -p 9000:9000 \
+          -e MINIO_ROOT_USER=ayunis-ci \
+          -e MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret \
+          ghcr.io/coollabsio/minio:RELEASE.2025-10-15T17-29-55Z@sha256:69b55a1c1c5dc285ce04db96689f5b2102317fc77a50680a1874ca6efd1c87f9 server /data
+        timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'

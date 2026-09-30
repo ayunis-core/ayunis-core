@@ -21,11 +21,13 @@ Create and list are owner-discriminated while retaining one behavioral contract:
 - Invalid combinations are rejected by DTO validation.
 - Omitted search and pagination return the complete owner scope with deterministic name ordering; either scope uses the same paginated path when search or pagination is supplied.
 - Creation honors `isActive` for either owner type and defaults it to `true` when omitted.
+- `GET /skills/marketplace/:identifier` answers per user whether the caller already installed a marketplace entry (`FindInstalledMarketplaceSkillUseCase` over `SkillRepository.findPersonalByMarketplaceIdentifier`). It returns the oldest matching personal skill's ID or `null`; the chat install card uses it to link to the existing skill instead of creating a numbered duplicate.
 
 | Method          | Path                                                | Description                                           |
 | --------------- | --------------------------------------------------- | ----------------------------------------------------- |
 | POST            | `/skills`                                           | Create in a personal or workspace owner scope         |
 | GET             | `/skills`                                           | Paginated list in a personal or workspace owner scope |
+| GET             | `/skills/marketplace/:identifier`                   | Caller's skill installed from a marketplace entry     |
 | GET             | `/skills/:id`                                       | Read a skill using persisted-owner authorization      |
 | PUT             | `/skills/:id`                                       | Update a skill                                        |
 | DELETE          | `/skills/:id`                                       | Delete a skill                                        |
@@ -53,7 +55,7 @@ File source creation authorizes the skill before external processing starts, enf
 
 ## Runtime orchestration
 
-`GetWorkspaceSkillsUseCase`, `ActivateWorkspaceSkillByNameUseCase`, `GetWorkspaceAiContextUseCase`, and `BuildWorkspaceRunContextUseCase` remain. Workspace skills are activation candidates; trusted activation derives workspace scope from the persisted thread. `FindActivatableSkillUseCase` resolves personal or workspace activation access, while `SkillActivationService` attaches sources, knowledge bases, and MCP integrations.
+`GetWorkspaceSkillsUseCase`, `ActivateWorkspaceSkillByNameUseCase`, `GetWorkspaceAiContextUseCase`, and `BuildWorkspaceRunContextUseCase` remain. Workspace skills are activation candidates; trusted activation derives workspace scope from the persisted thread. `FindActivatableSkillUseCase` resolves personal or workspace activation access, while `SkillActivationService` attaches sources, knowledge bases, and MCP integrations. `FindOneSkillUseCase` is exported so cross-module consumers such as citation retrieval can reauthorize a persisted skill reference before exposing its resources.
 
 ## Main structure
 

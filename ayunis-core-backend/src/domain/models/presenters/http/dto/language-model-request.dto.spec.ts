@@ -53,3 +53,57 @@ describe('language model provider fault request validation', () => {
     },
   );
 });
+
+describe('language model context window request validation', () => {
+  it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
+    '%s accepts an omitted context window size',
+    async (Dto) => {
+      const dto = plainToInstance(Dto, validInput);
+
+      await expect(validate(dto)).resolves.toHaveLength(0);
+      expect(dto).toHaveProperty('contextWindowSize', undefined);
+    },
+  );
+
+  it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
+    '%s accepts a positive integer context window size',
+    async (Dto) => {
+      const dto = plainToInstance(Dto, {
+        ...validInput,
+        contextWindowSize: 128_000,
+      });
+
+      await expect(validate(dto)).resolves.toHaveLength(0);
+      expect(dto).toHaveProperty('contextWindowSize', 128_000);
+    },
+  );
+
+  it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
+    '%s normalizes a null context window size to undefined',
+    async (Dto) => {
+      const dto = plainToInstance(Dto, {
+        ...validInput,
+        contextWindowSize: null,
+      });
+
+      await expect(validate(dto)).resolves.toHaveLength(0);
+      expect(dto).toHaveProperty('contextWindowSize', undefined);
+    },
+  );
+
+  it.each([0, -1, 1.5, 2_147_483_648, '128000'])(
+    'rejects an invalid context window size of %p',
+    async (contextWindowSize) => {
+      const dto = plainToInstance(UpdateLanguageModelRequestDto, {
+        ...validInput,
+        contextWindowSize,
+      });
+
+      const errors = await validate(dto);
+
+      expect(errors.map(({ property }) => property)).toContain(
+        'contextWindowSize',
+      );
+    },
+  );
+});

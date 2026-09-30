@@ -1,4 +1,9 @@
+import type {
+  ProviderFailureStage,
+  ProviderTimeoutSource,
+} from '@ayunis/inference';
 import { ApplicationError } from './base.error';
+import type { ProviderErrorReason } from './extract-provider-error-diagnostics.helper';
 
 /**
  * Failure classes for external provider (LLM / embeddings / OCR) outages.
@@ -27,10 +32,19 @@ export interface ProviderErrorContext {
   underlyingCode?: string;
   /** HTTP status the provider responded with, when it responded at all */
   upstreamStatus?: number;
+  /** Privacy-safe provider diagnostics retained without raw response bodies. */
+  upstreamCode?: string;
+  upstreamType?: string;
+  upstreamParam?: string;
+  upstreamReason?: ProviderErrorReason;
   /** Provider-assigned request id safe to share with support. */
   upstreamRequestId?: string;
   /** Pause the provider asked for before resending a rate-limited request. */
   retryAfterMs?: number;
+  /** Provider lifecycle phase in which the failure surfaced. */
+  failureStage?: ProviderFailureStage;
+  /** Deadline category when the provider reports a timeout. */
+  timeoutSource?: ProviderTimeoutSource;
 }
 
 export const PROVIDER_UNAVAILABLE_PREFIX = 'PROVIDER_UNAVAILABLE';

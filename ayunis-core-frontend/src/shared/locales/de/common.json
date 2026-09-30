@@ -135,6 +135,15 @@
     "tryAgain": "Erneut versuchen"
   },
   "sources": {
+    "removeFile": "Datei {{name}} entfernen",
+    "processingErrors": {
+      "failed": "Die Datei konnte nicht verarbeitet werden. Entfernen Sie sie und laden Sie sie in diesem Chat erneut hoch. Falls der Fehler weiterhin auftritt, wenden Sie sich an den Support.",
+      "unreadable": "Diese PDF konnte nicht gelesen werden. Entfernen Sie die Datei und laden Sie sie erneut hoch.",
+      "empty": "Aus dem Dokument konnte kein Text gelesen werden. Verwenden Sie eine besser lesbare Version und laden Sie sie in diesem Chat erneut hoch.",
+      "timeout": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Entfernen Sie die Datei und laden Sie sie in diesem Chat erneut hoch. Bei großen Dokumenten kann eine Aufteilung helfen.",
+      "tooManyPages": "Das Dokument hat zu viele Seiten. Teilen Sie es in kleinere Dateien auf und laden Sie diese in diesem Chat hoch.",
+      "unavailable": "Der Dokumentenverarbeitungsdienst ist vorübergehend nicht verfügbar. Entfernen Sie die Datei und laden Sie sie später in diesem Chat erneut hoch."
+    },
     "failedToAdd": "Fehler beim Hochladen der Datei",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",

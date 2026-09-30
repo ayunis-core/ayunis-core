@@ -6,4 +6,7 @@ export class SsoDiscoveryResponseDto {
 
   @ApiProperty({ format: 'uuid', required: false })
   orgId?: string;
+
+  @ApiProperty({ required: false })
+  localPasswordLoginEnabled?: boolean;
 }

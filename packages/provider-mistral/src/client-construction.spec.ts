@@ -15,7 +15,10 @@ describe('mistral client construction', () => {
     mistral({ apiKey: 'mistral-key', model: 'mistral-large-latest' });
 
     expect(mistralCtor).toHaveBeenCalledWith(
-      expect.objectContaining({ timeoutMs: DEFAULT_TIMEOUT_MS }),
+      expect.objectContaining({
+        timeoutMs: DEFAULT_TIMEOUT_MS,
+        retryConfig: { strategy: 'none' },
+      }),
     );
   });
 
@@ -30,13 +33,32 @@ describe('mistral client construction', () => {
       expect.objectContaining({ timeoutMs: 60_000 }),
     );
   });
+
+  it('keeps retries configurable for direct non-streaming adapters', () => {
+    mistral({
+      apiKey: 'mistral-key',
+      model: 'mistral-large-latest',
+      maxRetries: 3,
+    });
+
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        retryConfig: expect.objectContaining({ strategy: 'backoff' }),
+      }),
+    );
+  });
 });
 
 describe('request deadline', () => {
   const streamOptions = async (
     request: Partial<Parameters<ReturnType<typeof mistral>['stream']>[0]>,
   ) => {
-    const stream = vi.fn().mockResolvedValue([]);
+    const stream = vi.fn().mockResolvedValue({
+      next: vi.fn().mockResolvedValue({ done: true, value: undefined }),
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    });
     // A regular function, not an arrow: the SDK client is built with `new`.
     mistralCtor.mockImplementation(function () {
       return { chat: { stream } };

@@ -84,6 +84,25 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     await this.repository.delete({ integrationId });
   }
 
+  async removeKeysByIntegrationId(
+    integrationId: UUID,
+    keys: string[],
+  ): Promise<void> {
+    if (keys.length === 0) return;
+
+    this.logger.log({ integrationId, keys }, 'removeKeysByIntegrationId');
+    await this.repository
+      .createQueryBuilder()
+      .update()
+      .set({
+        configValues: () => '"config_values" - :keys::text[]',
+        updatedAt: () => 'CURRENT_TIMESTAMP',
+      })
+      .where('"integration_id" = :integrationId', { integrationId })
+      .setParameter('keys', keys)
+      .execute();
+  }
+
   private toRecord(
     entity: McpIntegrationUserConfig,
   ): McpIntegrationUserConfigRecord {

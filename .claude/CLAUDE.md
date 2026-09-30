@@ -65,9 +65,15 @@ Lead with the solution a senior engineer would reach for, not the first mechanis
 
 Watch for complexity creep. When a fix keeps growing — extra parameters, a watchdog, a budget, stall-reason plumbing — stop and name the tradeoff: *is the added complexity justified, or is a plainer approach enough?* Surface that question proactively rather than accreting machinery across iterations and waiting for the user to ask "is this worth it?". Often the right move is to challenge the constraint itself (e.g. "does a 300s ceiling even matter here?") instead of engineering around it.
 
-### 7. A Submitted PR Is Not Complete
+### 7. Implementation Delivery and PR Completion
 
-When work creates or updates a PR, submitting it is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
+Unless the user explicitly asks to keep changes local, a request to implement or fix code includes committing the validated change and creating or updating its PR through the repository's `git-workflow`. Use the provided ticket ID. For a small unticketed maintenance, tooling, documentation, or agent-workflow fix, use `AYC-000` without asking. Features, product bugs, customer work, and ambiguous changes require a real ticket ID; ask rather than inventing one.
+
+Before declaring implementation complete, apply the Proportional Workflow's runtime and review-evidence requirements. Use `e2e` for durable browser-journey and system-boundary regression coverage when lower-level tests are insufficient. Use `qa` for explicitly requested or PR-specific live verification, including behaviors, visuals, and edge cases that automated coverage does not prove. QA may supplement but does not replace required E2E coverage. For a visually meaningful frontend change, capture the required QA views and load `pr-media` when publishing them materially helps review. Do not create screenshots for backend-only or non-visual changes.
+
+Submitting a PR is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
+
+For code-backed Linear issues, PR completion or merge is not ticket completion. The merge integration should move the issue to the team's release-pending state (`Merged` for AYC); only the release process may move it to `Done` after a production release contains the change. Never set `Done` during implementation or reopen a completed issue without checking its state history first: restore the release-pending state only when `Done` occurred before the containing release.
 
 ### 8. Absolute Imports
 
@@ -94,6 +100,21 @@ For access-control regressions, the test must preserve the causal order: verify 
 Validation-first does not mean running every available check for every change. Use the lightest workflow that produces credible evidence for the change's actual failure modes. Classify by blast radius, reversibility, and observability — not by diff size, estimated effort, or urgency. A five-line authorization fix is high-risk; a larger isolated copy-and-layout change may use the Fast Path.
 
 If a change matches more than one level, use the highest. If it is unclear whether an ordinary low-risk change qualifies for the Fast Path, use the Standard Path. If uncertainty involves security, data integrity, infrastructure, reversibility, or the boundary between Standard and High-Risk, use the High-Risk Path.
+
+#### Classification Checkpoint
+
+Classify the change **before implementation**, record the selected path and the trigger for it in the working notes, and carry that classification into the PR description. Do not infer the workflow level from diff size after the code is written. Scan every High-Risk trigger explicitly; any match selects the High-Risk Path.
+
+Before changing behavior, write a compact failure-mode matrix for the affected contract. Cover the states and transitions that could produce a materially different result, not only the happy path. At minimum, consider:
+
+- unchanged and no-op requests;
+- partial updates and omitted optional properties;
+- create, change, remove, and remove-then-recreate lifecycles;
+- validation failure and rollback or preservation of prior state;
+- authorization, authentication, tenant, and provider variants that take different code paths;
+- secrets or persisted values that must be preserved, cleared, masked, or invalidated.
+
+Trace each relevant transition across the full ownership path — UI, transport contract, application/domain logic, persistence, related per-user or organization data, and caches — and assign an observable check to every credible failure mode. If a layer does not participate, record that rather than silently omitting it.
 
 #### Fast Path
 
@@ -136,14 +157,17 @@ Use for authentication, authorization, sharing, tenant isolation, migrations or 
 Required:
 
 - Follow all applicable specialized skills and their safety checks.
+- Include the classification trigger, failure-mode matrix, ownership trace, and validation evidence in the PR description.
 - Validate configuration and integration behavior against the actual named environment.
 - Exercise affected behavior end-to-end when it has a user-facing or system-boundary path.
 - Run the full relevant validation suite, including distinct-principal tests for access control.
+- Run a full affected-package type-check after changing a port, interface, DTO, generated contract, or other shared type boundary; staged-file checks and transpile-only tests are not sufficient evidence.
+- Test destructive and omission-sensitive transitions at the system boundary, including removal followed by recreation when stale persisted data could reappear.
 - Report the exact environment and commands used as evidence.
 
 #### Pull Requests
 
-The workflow level controls local implementation and validation breadth. It does not weaken **A Submitted PR Is Not Complete**: once a PR is created or updated, CI and Cursor Bugbot must still be clean on the latest submitted revision.
+The workflow level controls local implementation and validation breadth. It does not weaken **Implementation Delivery and PR Completion**: once a PR is created or updated, CI and Cursor Bugbot must still be clean on the latest submitted revision.
 
 ### 11. Feature Flags Have Two Contracts
 

@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
+import { MistralError } from '@mistralai/mistralai/models/errors';
 import { TranscriptionPort } from 'src/domain/transcriptions/application/ports/transcription.port';
-import { TranscriptionFailedError } from 'src/domain/transcriptions/application/transcription.errors';
+import {
+  InvalidAudioFileError,
+  TranscriptionFailedError,
+} from 'src/domain/transcriptions/application/transcription.errors';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
@@ -76,6 +80,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
       if (providerError) {
         throw providerError;
       }
+      if (isUndecodableAudioError(error)) throw new InvalidAudioFileError();
 
       throw new TranscriptionFailedError(
         `Mistral transcription failed: ${
@@ -117,5 +122,25 @@ export class MistralTranscriptionService extends TranscriptionPort {
       );
     }
     return isTransient;
+  }
+}
+
+function isUndecodableAudioError(error: unknown): boolean {
+  if (!(error instanceof MistralError) || error.statusCode !== 400) {
+    return false;
+  }
+
+  try {
+    const body: unknown = JSON.parse(error.body);
+    if (typeof body !== 'object' || body === null) return false;
+    const details = body as Record<string, unknown>;
+    return (
+      details.type === 'invalid_request_file' &&
+      details.code === '3310' &&
+      typeof details.message === 'string' &&
+      details.message.trim() === 'Audio input could not be decoded.'
+    );
+  } catch {
+    return false;
   }
 }

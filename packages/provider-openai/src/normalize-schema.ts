@@ -21,6 +21,29 @@ const OPENAI_SUPPORTED_FORMATS = new Set([
   'uuid',
 ]);
 
+const NON_STRICT_SCHEMA_KEYWORDS = new Set([
+  'allOf',
+  'contains',
+  'dependencies',
+  'dependentRequired',
+  'dependentSchemas',
+  'if',
+  'maxContains',
+  'minContains',
+  'not',
+  'patternProperties',
+  'prefixItems',
+  'then',
+  'else',
+  'unevaluatedItems',
+  'unevaluatedProperties',
+]);
+
+const SCHEMA_MAP_KEYS = ['properties', '$defs', 'definitions'] as const;
+const SCHEMA_LIST_KEYS = ['anyOf', 'oneOf', 'items'] as const;
+
+const nonStrictWalker = new SchemaWalker((node) => node);
+
 const walker = new SchemaWalker((node) => {
   if (
     typeof node.format === 'string' &&
@@ -31,6 +54,7 @@ const walker = new SchemaWalker((node) => {
   convertOneOfToAnyOf(node);
   delete node.minProperties;
   delete node.maxProperties;
+  delete node.propertyNames;
   convertDraft04ExclusiveBoundsNode(node);
   normalizeObjectType(node);
   return node;
@@ -47,7 +71,11 @@ function convertOneOfToAnyOf(schema: MutableSchema): void {
 // Strict mode treats any schema declaring `properties` as an object, even when
 // an explicit `type: 'object'` is omitted (common in MCP-style schemas).
 function isObjectSchema(schema: MutableSchema): boolean {
-  return schema.type === 'object' || 'properties' in schema;
+  return (
+    schema.type === 'object' ||
+    (Array.isArray(schema.type) && schema.type.includes('object')) ||
+    'properties' in schema
+  );
 }
 
 function normalizeObjectType(schema: MutableSchema): void {
@@ -162,6 +190,83 @@ function extendTypeAndEnumWithNull(copy: MutableSchema): boolean {
     changed = true;
   }
   return changed;
+}
+
+export function canNormalizeSchemaForOpenAIStrictMode(
+  schema: JsonSchema,
+): boolean {
+  let compatible = true;
+  new SchemaWalker((node) => {
+    if (requiresNonStrictMode(node)) compatible = false;
+    return node;
+  }).walk(schema);
+  return compatible;
+}
+
+function requiresNonStrictMode(schema: MutableSchema): boolean {
+  const openProperties = schema.additionalProperties;
+  if (
+    openProperties === true ||
+    isRecord(openProperties) ||
+    'propertyNames' in schema
+  ) {
+    return true;
+  }
+  if (hasUnsupportedKeyword(schema) || hasBooleanSubschema(schema)) return true;
+  if (
+    schemaAllowsArray(schema) &&
+    !isRecord(schema.items) &&
+    !Array.isArray(schema.items)
+  ) {
+    return true;
+  }
+  return !hasSchemaConstraint(schema);
+}
+
+function hasUnsupportedKeyword(schema: MutableSchema): boolean {
+  return [...NON_STRICT_SCHEMA_KEYWORDS].some((key) => key in schema);
+}
+
+function hasBooleanSubschema(schema: MutableSchema): boolean {
+  const mapHasBoolean = SCHEMA_MAP_KEYS.some((key) => {
+    const value = schema[key];
+    return isRecord(value) && Object.values(value).some(isBoolean);
+  });
+  const listHasBoolean = SCHEMA_LIST_KEYS.some((key) => {
+    const value = schema[key];
+    return Array.isArray(value) && value.some(isBoolean);
+  });
+  return mapHasBoolean || listHasBoolean;
+}
+
+function isBoolean(value: JsonValue): boolean {
+  return typeof value === 'boolean';
+}
+
+function schemaAllowsArray(schema: MutableSchema): boolean {
+  return (
+    schema.type === 'array' ||
+    (Array.isArray(schema.type) && schema.type.includes('array'))
+  );
+}
+
+function hasSchemaConstraint(schema: MutableSchema): boolean {
+  return [
+    'type',
+    'properties',
+    '$ref',
+    'anyOf',
+    'oneOf',
+    'allOf',
+    'enum',
+    'const',
+  ].some((key) => key in schema);
+}
+
+export function normalizeSchemaForOpenAINonStrictMode(
+  schema: JsonSchema,
+): JsonSchema {
+  return nonStrictWalker.walk(schema);
 }
 
 export function normalizeSchemaForOpenAI(schema: JsonSchema): JsonSchema {

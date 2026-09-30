@@ -113,10 +113,10 @@ describe('validateEnv', () => {
       ).toThrow(/INTERNET_SEARCH_PROVIDER/);
     });
 
-    it('rejects a non-boolean feature flag', () => {
+    it('accepts a leftover retired feature flag', () => {
       expect(() =>
-        validateEnv(baseEnv({ FEATURE_SKILLS_ENABLED: 'yes' })),
-      ).toThrow(/FEATURE_SKILLS_ENABLED/);
+        validateEnv(baseEnv({ FEATURE_SKILLS_ENABLED: 'false' })),
+      ).not.toThrow();
     });
 
     it('rejects a non-boolean webhook disable flag', () => {

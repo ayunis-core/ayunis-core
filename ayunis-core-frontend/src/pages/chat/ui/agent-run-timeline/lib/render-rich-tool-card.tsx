@@ -5,6 +5,7 @@ import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
+import InstallMarketplaceSkillWidget from '@/pages/chat/ui/chat-widgets/InstallMarketplaceSkillWidget';
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
 import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
 import { renderArtifactToolWidget } from '@/pages/chat/ui/chat-widgets/renderArtifactToolWidget';
@@ -43,9 +44,29 @@ export function renderRichToolCard({
         />
       );
     case 'create_skill':
-      return <CreateSkillWidget content={toolUse} isStreaming={isStreaming} />;
+      return (
+        <CreateSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
     case 'edit_skill':
-      return <EditSkillWidget content={toolUse} isStreaming={isStreaming} />;
+      return (
+        <EditSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
+    case 'install_marketplace_skill':
+      return (
+        <InstallMarketplaceSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
     case 'bar_chart':
       return <BarChartWidget content={toolUse} isStreaming={isStreaming} />;
     case 'line_chart':

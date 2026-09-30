@@ -33,7 +33,6 @@ import {
 } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
@@ -42,6 +41,7 @@ import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity
 import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
 import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
 import { deanonymizeText } from 'src/common/anonymization/domain/deanonymize-text';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -73,10 +73,7 @@ export class ExportArtifactUseCase {
       'Exporting artifact',
     );
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     const artifact = await this.loadExportableArtifact(
       command.artifactId,

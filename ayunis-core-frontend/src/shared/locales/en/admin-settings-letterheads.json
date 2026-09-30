@@ -35,7 +35,8 @@
       "invalidPdf": "This PDF could not be read. Please upload an unprotected PDF — password or permission protection prevents processing.",
       "pdfNotSinglePage": "This file has more than one page. Please upload a single-page PDF, and use a separate file for the following pages.",
       "invalidPageMargins": "Please enter valid non-negative page margins.",
-      "pdfPreviewError": "Could not render PDF preview."
+      "pdfPreviewError": "Could not render PDF preview.",
+      "pdfPreviewLoading": "Loading PDF preview…"
     },
     "editDialog": {
       "title": "Edit Letterhead",

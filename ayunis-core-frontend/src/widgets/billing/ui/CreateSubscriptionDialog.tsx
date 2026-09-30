@@ -407,6 +407,7 @@ function StartDateField({
                     }}
                     disabled={(date) => date < new Date()}
                     captionLayout="dropdown"
+                    endMonth={new Date(new Date().getFullYear() + 1, 11)}
                   />
                 </PopoverContent>
               </Popover>

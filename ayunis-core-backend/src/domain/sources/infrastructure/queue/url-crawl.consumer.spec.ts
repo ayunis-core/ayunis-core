@@ -28,6 +28,7 @@ import { UrlCrawlConsumer } from './url-crawl.consumer';
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 const USER_ID = '00000000-0000-0000-0000-000000000020' as UUID;
+const KNOWLEDGE_BASE_ID = '00000000-0000-0000-0000-000000000030' as UUID;
 
 function makeJobData(): UrlCrawlJobData {
   return {
@@ -77,8 +78,12 @@ const crawlUrlUseCase = {
     ),
 };
 
+interface MockSplitResult {
+  chunks: { text: string; metadata: Record<string, unknown> }[];
+}
+
 const splitTextUseCase = {
-  execute: jest.fn((command: { text: string }) => ({
+  execute: jest.fn<MockSplitResult, [{ text: string }]>((command) => ({
     chunks: [{ text: command.text, metadata: { start: 0 } }],
   })),
 };
@@ -86,6 +91,7 @@ const splitTextUseCase = {
 const sourceRepository = {
   findById: jest.fn(),
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
+  refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
   saveTextSource: jest
     .fn()
     .mockImplementation((s: unknown) => Promise.resolve(s)),
@@ -126,6 +132,68 @@ describe('UrlCrawlConsumer', () => {
     ).toEqual(['https://acme.test/', 'https://acme.test/about']);
   });
 
+  it('stores chunk offsets in the concatenated source coordinate space', async () => {
+    const rootContent = 'Overview line 1\nOverview line 2\n';
+    const documentContent = 'Policy heading\nPolicy answer';
+    crawlUrlUseCase.execute.mockResolvedValueOnce(
+      new UrlCrawlResult([
+        new UrlCrawlPage('https://acme.test/', rootContent, 'Acme Home'),
+        new UrlCrawlPage(
+          'https://acme.test/policy.pdf',
+          documentContent,
+          'Policy',
+        ),
+      ]),
+    );
+    splitTextUseCase.execute
+      .mockReturnValueOnce({
+        chunks: [
+          {
+            text: rootContent,
+            metadata: {
+              startCharOffset: 0,
+              endCharOffset: rootContent.length,
+              startLine: 1,
+              endLine: 2,
+            },
+          },
+        ],
+      })
+      .mockReturnValueOnce({
+        chunks: [
+          {
+            text: documentContent,
+            metadata: {
+              startCharOffset: 0,
+              endCharOffset: documentContent.length,
+              startLine: 1,
+              endLine: 2,
+            },
+          },
+        ],
+      });
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const [, content] = sourceRepository.saveTextSource.mock.calls[0];
+    expect(content.text).toBe(`${rootContent}\n\n${documentContent}`);
+    expect(content.chunks[0].meta).toMatchObject({
+      startCharOffset: 0,
+      endCharOffset: rootContent.length,
+      startLine: 1,
+      endLine: 2,
+    });
+    expect(content.chunks[1].meta).toMatchObject({
+      url: 'https://acme.test/policy.pdf',
+      startCharOffset: rootContent.length + 2,
+      endCharOffset: rootContent.length + 2 + documentContent.length,
+      startLine: 5,
+      endLine: 6,
+    });
+  });
+
   it("updates the source name to the root page's title", async () => {
     const source = makeSource();
     sourceRepository.findById.mockResolvedValue(source);
@@ -150,6 +218,45 @@ describe('UrlCrawlConsumer', () => {
       SourceStatus.READY,
       { processingError: null },
     );
+  });
+
+  it('refreshes the heartbeat with a targeted update instead of saving the loaded record', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.refreshProcessingHeartbeat).toHaveBeenCalledWith(
+      SOURCE_ID,
+    );
+    expect(sourceRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('writes content against the freshly loaded source so a collection assigned after the load is kept', async () => {
+    const assigned = makeSource();
+    assigned.knowledgeBaseId = KNOWLEDGE_BASE_ID;
+    // AddUrlToKnowledgeBase assigns the collection right after enqueueing, so
+    // the worker's first read may predate it.
+    sourceRepository.findById
+      .mockResolvedValueOnce(makeSource())
+      .mockResolvedValueOnce(assigned);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    expect(savedSource.knowledgeBaseId).toBe(KNOWLEDGE_BASE_ID);
+    expect(savedSource.name).toBe('Acme Home');
+  });
+
+  it('skips the crawl when the heartbeat finds the source gone or no longer processing', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValueOnce(false);
+
+    await consumer.process(makeJob());
+
+    expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
+    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
   });
 
   it('skips writing content when the source is deleted mid-crawl', async () => {

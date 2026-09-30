@@ -37,12 +37,11 @@ interface WorkspaceResourceFixtures {
 /**
  * Seeds the org's workspaces ("Projekte"), owned by the org admin, plus demo
  * context for AYC-701: project instructions, workspace-owned skills and
- * knowledge bases. The rows are invisible until
- * FEATURE_WORKSPACES_ENABLED is on.
+ * knowledge bases.
  *
- * Sidebar pin state and order are favorites rows, not workspace columns. The
- * app favorites a new workspace inside CreateWorkspaceUseCase; the seeder
- * inserts rows directly, so pinned fixtures get their favorite row explicitly.
+ * Sidebar pin state and order are favorites rows, not workspace columns.
+ * Pinned demo fixtures get explicit favorite rows; application-created
+ * workspaces are not automatically favorited.
  * Positions append after the admin's existing favorites (the favorites table
  * enforces user/position uniqueness) and follow the fixture order.
  */

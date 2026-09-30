@@ -47,6 +47,8 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
     canVision: false,
     isArchived: false,
     tier: ModelTier.MEDIUM,
+    inputTokenCost: 2,
+    outputTokenCost: 8,
   });
 
   const permitted = new PermittedLanguageModel({
@@ -85,7 +87,9 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
 
     inferenceUsageGuard = {
       preflight: jest.fn().mockResolvedValue(undefined),
+      ensureModelCallAllowed: jest.fn().mockResolvedValue(undefined),
       collectUsage: jest.fn(),
+      collectUsageCritical: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<InferenceUsageGuard>;
 
     fileContentService = {
@@ -125,11 +129,71 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         total_tokens: 15,
       });
       expect(inferenceUsageGuard.preflight).toHaveBeenCalledTimes(1);
+      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledWith(
+        principal,
+        model,
+      );
       expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
         model,
         { inputTokens: 10, outputTokens: 5 },
         expect.any(String),
       );
+    });
+
+    it.each([
+      [{ inputTokens: 10 }, { inputTokens: 10, outputTokens: 0 }],
+      [{ outputTokens: 5 }, { inputTokens: 0, outputTokens: 5 }],
+    ])(
+      'records every reported usage dimension when meta is %o',
+      async (meta, expectedUsage) => {
+        getInferenceUseCase.execute.mockResolvedValue(
+          new InferenceResponse([new TextMessageContent('Answer')], meta),
+        );
+
+        await useCase.executeNonStreaming(baseCommand());
+
+        expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
+          model,
+          expectedUsage,
+          expect.any(String),
+        );
+      },
+    );
+
+    it('gates immediately before the direct inference call', async () => {
+      const order: string[] = [];
+      inferenceUsageGuard.preflight.mockImplementation(async () => {
+        order.push('preflight');
+      });
+      inferenceUsageGuard.ensureModelCallAllowed.mockImplementation(
+        async () => {
+          order.push('gate');
+        },
+      );
+      getInferenceUseCase.execute.mockImplementation(async () => {
+        order.push('inference');
+        return new InferenceResponse([new TextMessageContent('answer')], {});
+      });
+
+      await useCase.executeNonStreaming(baseCommand());
+
+      expect(order).toEqual(['preflight', 'gate', 'inference']);
+    });
+
+    it('does not call inference when the call-boundary gate rejects', async () => {
+      const rejected = new QuotaExceededError(
+        QuotaType.FAIR_USE_MESSAGES_MEDIUM,
+        100,
+        3600_000,
+        60,
+      );
+      inferenceUsageGuard.ensureModelCallAllowed.mockRejectedValue(rejected);
+
+      await expect(useCase.executeNonStreaming(baseCommand())).rejects.toBe(
+        rejected,
+      );
+      expect(getInferenceUseCase.execute).not.toHaveBeenCalled();
+      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
     });
 
     it('passes extracted inline file text to inference', async () => {
@@ -268,18 +332,6 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
   });
 
   describe('executeStreaming', () => {
-    function chunkWithUsage(
-      input: number,
-      output: number,
-    ): StreamInferenceResponseChunk {
-      return new StreamInferenceResponseChunk({
-        thinkingDelta: null,
-        textContentDelta: null,
-        toolCallsDelta: [],
-        usage: { inputTokens: input, outputTokens: output },
-      });
-    }
-
     it('passes extracted inline file text to streaming inference', async () => {
       fileContentService.expand.mockResolvedValueOnce({
         model: 'gpt-4o',
@@ -328,68 +380,189 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       });
     });
 
-    it('sums usage across chunks via finalize', async () => {
+    it('marks the first visible chunk as assistant after an invisible usage frame', async () => {
       const subject = new Subject<StreamInferenceResponseChunk>();
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
-
       const result$ = await useCase.executeStreaming(
         baseCommand({ stream: true }),
       );
-      const collected: unknown[] = [];
-      const sub = result$.subscribe({
-        next: (c) => collected.push(c),
-      });
+      const visible: unknown[] = [];
+      result$.subscribe((chunk) => visible.push(chunk));
 
-      subject.next(StreamInferenceResponseChunk.text('Hello'));
-      subject.next(chunkWithUsage(10, 0));
-      subject.next(StreamInferenceResponseChunk.text(' world'));
-      subject.next(chunkWithUsage(5, 8));
-      subject.complete();
-      sub.unsubscribe();
-
-      expect(collected.length).toBeGreaterThan(0);
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledTimes(1);
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
-        model,
-        { inputTokens: 15, outputTokens: 8 },
-        expect.any(String),
+      subject.next(
+        new StreamInferenceResponseChunk({
+          thinkingDelta: null,
+          textContentDelta: null,
+          toolCallsDelta: [],
+          usage: { inputTokens: 4, outputTokens: 1 },
+        }),
       );
+      subject.next(StreamInferenceResponseChunk.text('recovered'));
+
+      expect(visible).toEqual([
+        expect.objectContaining({
+          choices: [
+            expect.objectContaining({
+              delta: { role: 'assistant', content: 'recovered' },
+            }),
+          ],
+        }),
+      ]);
+      subject.complete();
     });
 
-    it('records partial usage when the client disconnects mid-stream (unsubscribe)', async () => {
+    it('gates every runtime-owned stream attempt at the call boundary', async () => {
       const subject = new Subject<StreamInferenceResponseChunk>();
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
 
-      const result$ = await useCase.executeStreaming(
-        baseCommand({ stream: true }),
+      await useCase.executeStreaming(baseCommand({ stream: true }));
+      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledTimes(
+        1,
       );
-      const sub = result$.subscribe();
+      const lifecycle =
+        streamInferenceUseCase.execute.mock.calls[0][0].attemptLifecycle;
 
-      subject.next(chunkWithUsage(7, 3));
-      // Simulate client disconnect — finalize must fire.
-      sub.unsubscribe();
+      await lifecycle?.onAttemptStart({ requestId: randomUUID() });
+      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledTimes(
+        1,
+      );
 
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledTimes(1);
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
+      await lifecycle?.onAttemptStart({ requestId: randomUUID() });
+      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledTimes(
+        2,
+      );
+      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledWith(
+        principal,
         model,
-        { inputTokens: 7, outputTokens: 3 },
-        expect.any(String),
       );
-    });
-
-    it('does not record usage when the stream produced no token counts', async () => {
-      const subject = new Subject<StreamInferenceResponseChunk>();
-      streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
-
-      const result$ = await useCase.executeStreaming(
-        baseCommand({ stream: true }),
-      );
-      const sub = result$.subscribe();
-      subject.next(StreamInferenceResponseChunk.text('partial'));
-      subject.complete();
-      sub.unsubscribe();
-
       expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      subject.complete();
+    });
+
+    it('rejects the initial streaming gate before dispatching the SSE source', async () => {
+      const rejected = new QuotaExceededError(
+        QuotaType.FAIR_USE_MESSAGES_MEDIUM,
+        100,
+        3600_000,
+        60,
+      );
+      inferenceUsageGuard.ensureModelCallAllowed.mockRejectedValue(rejected);
+
+      await expect(
+        useCase.executeStreaming(baseCommand({ stream: true })),
+      ).rejects.toMatchObject({ statusCode: 429 });
+      expect(streamInferenceUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it.each(['completed', 'failed', 'aborted'] as const)(
+      'critically records usage for a %s attempt',
+      async (outcome) => {
+        const subject = new Subject<StreamInferenceResponseChunk>();
+        streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+        const requestId = randomUUID();
+
+        await useCase.executeStreaming(baseCommand({ stream: true }));
+        const lifecycle =
+          streamInferenceUseCase.execute.mock.calls[0][0].attemptLifecycle;
+        await lifecycle?.onAttemptTerminal({
+          requestId,
+          outcome,
+          usage: { inputTokens: 15, outputTokens: 8 },
+          outputEmitted: outcome === 'completed',
+        });
+
+        expect(inferenceUsageGuard.collectUsageCritical).toHaveBeenCalledWith(
+          model,
+          { inputTokens: 15, outputTokens: 8 },
+          requestId,
+        );
+        subject.complete();
+      },
+    );
+
+    it('awaits critical usage persistence before resolving the terminal callback', async () => {
+      const subject = new Subject<StreamInferenceResponseChunk>();
+      streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+      let release!: () => void;
+      const persistence = new Promise<void>((resolve) => (release = resolve));
+      inferenceUsageGuard.collectUsageCritical.mockReturnValue(persistence);
+
+      await useCase.executeStreaming(baseCommand({ stream: true }));
+      const lifecycle =
+        streamInferenceUseCase.execute.mock.calls[0][0].attemptLifecycle;
+      let settled = false;
+      const terminal = Promise.resolve(
+        lifecycle?.onAttemptTerminal({
+          requestId: randomUUID(),
+          outcome: 'completed',
+          usage: { inputTokens: 9, outputTokens: 4 },
+          outputEmitted: true,
+        }),
+      ).then(() => (settled = true));
+      await Promise.resolve();
+      expect(settled).toBe(false);
+
+      release();
+      await terminal;
+      expect(settled).toBe(true);
+      subject.complete();
+    });
+
+    it.each([true, false])(
+      'fails a completed paid attempt without usage when outputEmitted is %s',
+      async (outputEmitted) => {
+        const subject = new Subject<StreamInferenceResponseChunk>();
+        streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+
+        await useCase.executeStreaming(baseCommand({ stream: true }));
+        const lifecycle =
+          streamInferenceUseCase.execute.mock.calls[0][0].attemptLifecycle;
+
+        await expect(
+          lifecycle?.onAttemptTerminal({
+            requestId: randomUUID(),
+            outcome: 'completed',
+            outputEmitted,
+          }),
+        ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
+        expect(inferenceUsageGuard.collectUsageCritical).not.toHaveBeenCalled();
+        subject.complete();
+      },
+    );
+
+    it('allows a free model to complete without provider usage', async () => {
+      const freeModel = new LanguageModel({
+        name: 'open-source-free',
+        provider: ModelProvider.OLLAMA,
+        displayName: 'Open Source Free',
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: false,
+        isArchived: false,
+        tier: ModelTier.LOW,
+      });
+      getPermittedLanguageModelsUseCase.execute.mockResolvedValue([
+        new PermittedLanguageModel({ model: freeModel, orgId }),
+      ]);
+      const subject = new Subject<StreamInferenceResponseChunk>();
+      streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+
+      await useCase.executeStreaming(
+        baseCommand({ model: freeModel.name, stream: true }),
+      );
+      const lifecycle =
+        streamInferenceUseCase.execute.mock.calls[0][0].attemptLifecycle;
+
+      await expect(
+        lifecycle?.onAttemptTerminal({
+          requestId: randomUUID(),
+          outcome: 'completed',
+          outputEmitted: true,
+        }),
+      ).resolves.toBeUndefined();
+      expect(inferenceUsageGuard.collectUsageCritical).not.toHaveBeenCalled();
+      subject.complete();
     });
 
     it('forwards the orgId from principal into StreamInferenceInput', async () => {

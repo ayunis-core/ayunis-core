@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { ChatContextHint } from '@/pages/chat/ui/ChatContextHint';
@@ -10,15 +10,17 @@ import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
 import ProviderFaultNotice from './ProviderFaultNotice';
 import type { Thread } from '@/pages/chat/model/openapi';
+import { useThreadSubmissionState } from '@/pages/chat/hooks/useThreadSubmissionState';
+import type { ThreadSubmission } from '@/pages/chat/model/pending-submissions';
 import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
-import { useDeleteThread } from '@/features/thread-run';
+import { useDeleteThread, useIsThreadRunActive } from '@/features/thread-run';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import type { RunSessionResponseDto, RunThreadResponseDto } from '@/shared/api';
+import type { RunThreadResponseDto } from '@/shared/api';
 import { PiiMaskProvider } from '@/widgets/markdown';
 import type { PiiMaskEntry } from '@/widgets/markdown';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
@@ -47,6 +49,7 @@ import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
+import SourceCitationController from './SourceCitationController';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -69,7 +72,7 @@ export default function ChatPage({
     isLoading: isLoadingModels,
     error: isModelsError,
   } = usePermittedModels();
-  const [isStreaming, setIsStreaming] = useState(false);
+  const isStreaming = useIsThreadRunActive(initialThread.id);
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -101,9 +104,6 @@ export default function ChatPage({
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
   const artifactPanelRef = useRef<ArtifactPanelHandle>(null);
-  const lastSubmissionRef = useRef<{ text: string; images?: File[] } | null>(
-    null,
-  );
 
   const {
     messages,
@@ -116,12 +116,6 @@ export default function ChatPage({
     handleMasks,
   } = useChatThreadState(thread, isStreaming);
 
-  useEffect(() => {
-    lastSubmissionRef.current = null;
-  }, [thread.id]);
-  const [pendingSubmission, setPendingSubmission] = useState<string | null>(
-    null,
-  );
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const sidePanelState = useChatSidePanelState(thread.id, initialArtifactId);
   const {
@@ -196,21 +190,31 @@ export default function ChatPage({
 
   const handleError = useRunErrorHandler(thread.id);
 
-  const restoreFailedSubmission = useCallback(() => {
-    const last = lastSubmissionRef.current;
-    if (!last) return;
-    // false = a follow-up draft blocked restore; warn instead of dropping silently.
-    const restored = chatInputRef.current?.restoreFailedSubmission(
-      last.text,
-      last.images ?? [],
-    );
-    if (restored === false) showError(t('chat.errorRestoreFailedSubmission'));
-  }, [t]);
-
-  const handleSession = useCallback((session: RunSessionResponseDto) => {
-    if (session.streaming === true) setIsStreaming(true);
-    if (session.streaming === false) setIsStreaming(false);
-  }, []);
+  const restoreFailedSubmission = useCallback(
+    (submission: ThreadSubmission) =>
+      chatInputRef.current?.restoreFailedSubmission(
+        submission.text,
+        submission.images ?? [],
+      ),
+    [],
+  );
+  const handleRestoreBlocked = useCallback(
+    () => showError(t('chat.errorRestoreFailedSubmission')),
+    [t],
+  );
+  const {
+    pendingSubmission,
+    startSubmission,
+    clearPendingSubmission,
+    completeSubmission,
+    failSubmission,
+    resetSubmission,
+  } = useThreadSubmissionState({
+    threadId: thread.id,
+    isStreaming,
+    restoreFailedSubmission,
+    onRestoreBlocked: handleRestoreBlocked,
+  });
 
   const handleThread = useCallback(
     (thread: RunThreadResponseDto) => {
@@ -224,24 +228,16 @@ export default function ChatPage({
 
   const { sendTextMessage, abort } = useMessageSend({
     threadId: thread.id,
-    onMessageEvent: (data) => {
-      setPendingSubmission(null);
-      handleMessage(data.message);
-    },
+    onMessageReceived: () => clearPendingSubmission(thread.id),
+    onMessageEvent: (data) => handleMessage(data.message),
     onErrorEvent: handleError,
-    onSessionEvent: handleSession,
     onThreadEvent: handleThread,
     onMasksEvent: handleMasks,
     onError: (error) => {
       console.error('Error in useMessageSend:', error);
       showError(t('chat.errorSendMessage'));
     },
-    onComplete: (failed) => {
-      if (failed) restoreFailedSubmission();
-      lastSubmissionRef.current = null;
-      setIsStreaming(false);
-      setPendingSubmission(null);
-    },
+    onComplete: (failed) => completeSubmission(thread.id, failed),
   });
 
   const hasProcessingSources = thread.sources.some(
@@ -250,11 +246,11 @@ export default function ChatPage({
 
   usePendingMessage({
     sendTextMessage,
-    onSendStart: (text, images) => {
-      lastSubmissionRef.current = { text, images: images?.map((i) => i.file) };
-      setPendingSubmission(text);
-      setIsStreaming(true);
-    },
+    onSendStart: (text, images) =>
+      startSubmission(thread.id, {
+        text,
+        images: images?.map((i) => i.file),
+      }),
   });
 
   // Send is gated while a fresh upload is in flight or while server-side
@@ -269,12 +265,10 @@ export default function ChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
   ) {
     try {
-      lastSubmissionRef.current = {
+      startSubmission(thread.id, {
         text: message,
         images: imageFiles?.map((img) => img.file),
-      };
-      setPendingSubmission(message);
-      setIsStreaming(true);
+      });
       chatInputRef.current?.setMessage('');
 
       const images: PendingImage[] | undefined =
@@ -292,14 +286,12 @@ export default function ChatPage({
     } catch {
       // Run errors arrive as SSE/HTTP events (handled in useMessageSend's
       // onErrorEvent/onError); this only catches a rejected send promise.
-      restoreFailedSubmission();
+      failSubmission(thread.id);
     }
   }
 
   function resetRunState() {
-    lastSubmissionRef.current = null;
-    setIsStreaming(false);
-    setPendingSubmission(null);
+    resetSubmission(thread.id);
   }
 
   function removePendingToolCalls() {
@@ -398,7 +390,7 @@ export default function ChatPage({
       <p className="text-xs text-muted-foreground text-center mb-2">
         {t('chat.inputDisclaimer')}
       </p>
-      {thread.isLongChat && <LongChatWarning />}
+      {thread.isLongChat && <LongChatWarning key={thread.id} />}
       <AcademyGateNotice className="mb-2" />
       {selectedModel?.hasProviderFault && (
         <ProviderFaultNotice modelName={selectedModel.displayName} />
@@ -457,13 +449,15 @@ export default function ChatPage({
   return (
     <AppLayout>
       <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
-        <ChatInterfaceLayout
-          chatHeader={chatHeader}
-          chatContent={chatContent}
-          chatInput={chatInput}
-          resetKey={thread.id}
-          sidePanel={sidePanel}
-        />
+        <SourceCitationController key={thread.id} threadId={thread.id}>
+          <ChatInterfaceLayout
+            chatHeader={chatHeader}
+            chatContent={chatContent}
+            chatInput={chatInput}
+            resetKey={thread.id}
+            sidePanel={sidePanel}
+          />
+        </SourceCitationController>
       </PiiMaskProvider>
       <RenameThreadDialog
         open={renameDialogOpen}

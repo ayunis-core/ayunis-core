@@ -4,7 +4,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   detectFileType,
   getCanonicalMimeType,
@@ -36,6 +35,7 @@ import { AddSourceToSkillUseCase } from 'src/domain/skills/application/use-cases
 import { AddSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.command';
 import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class AddFileSourceToSkillUseCase {
@@ -150,8 +150,7 @@ export class AddFileSourceToSkillUseCase {
   }
 
   private async deleteCreatedSources(sources: Source[]): Promise<void> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) throw new UnauthorizedAccessError();
+    const orgId = getRequiredOrgId(this.contextService);
     await this.deleteSourcesUseCase.execute(
       new DeleteSourcesCommand(
         sources.map((source) => source.id),

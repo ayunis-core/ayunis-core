@@ -54,13 +54,13 @@ describe('abort handling', () => {
     });
   });
 
-  it('preserves a classified provider failure when cancellation races with it', async () => {
+  it('treats host cancellation as authoritative when it races with a provider failure', async () => {
     const controller = new AbortController();
-    const interruptionReasons: string[] = [];
+    const callOutcomes: string[] = [];
     const observer: Hook = {
       name: 'observer',
-      modelCallInterrupted: (ctx) => {
-        interruptionReasons.push(ctx.reason);
+      afterModelCall: (ctx) => {
+        callOutcomes.push(ctx.outcome.type);
       },
     };
     const model = new MockProvider([]);
@@ -78,13 +78,11 @@ describe('abort handling', () => {
       baseInput(model, { hooks: [observer], signal: controller.signal }),
     );
 
-    expect(interruptionReasons).toEqual(['error']);
-    expect(events.find((event) => event.type === 'error')).toMatchObject({
-      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
-    });
+    expect(callOutcomes).toEqual(['aborted']);
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
-      status: 'error',
+      status: 'aborted',
     });
   });
 
@@ -109,6 +107,41 @@ describe('abort handling', () => {
       status: 'aborted',
     });
     expect(model.requests).toHaveLength(1);
+  });
+
+  it('reports an active tool rejection caused by cancellation as aborted', async () => {
+    const controller = new AbortController();
+    let toolOutcome: string | undefined;
+    const abortingTool = echoTool({
+      execute: async (_input, ctx) => {
+        if (!ctx.signal) throw new Error('Expected a tool cancellation signal');
+        controller.abort();
+        throw ctx.signal.reason;
+      },
+    });
+    const observer: Hook = {
+      name: 'tool-outcome-observer',
+      afterToolCall: (ctx) => {
+        toolOutcome = ctx.outcome;
+      },
+    };
+    const model = new MockProvider([
+      toolCallTurn({ id: 'c1', name: 'echo', input: { value: 'x' } }),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, {
+        tools: [abortingTool],
+        hooks: [observer],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(toolOutcome).toBe('aborted');
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
+    });
   });
 
   it('stops before the model call when a beforeModelCall hook aborts', async () => {
@@ -152,10 +185,12 @@ describe('abort handling', () => {
       baseInput(model, { tools: [observingTool], signal: controller.signal }),
     );
 
-    expect(seenSignal).toBe(controller.signal);
+    expect(seenSignal?.aborted).toBe(false);
+    controller.abort();
+    expect(seenSignal?.aborted).toBe(true);
   });
 
-  it('passes the signal through to the provider request', async () => {
+  it('passes a call-scoped signal to the provider request', async () => {
     const controller = new AbortController();
     let seenSignal: AbortSignal | undefined;
     const model = new MockProvider([textTurn('Hi')]);
@@ -166,7 +201,9 @@ describe('abort handling', () => {
     };
     await collectEvents(baseInput(model, { signal: controller.signal }));
 
-    expect(seenSignal).toBe(controller.signal);
+    expect(seenSignal).toBeDefined();
+    expect(seenSignal).not.toBe(controller.signal);
+    expect(seenSignal?.aborted).toBe(false);
   });
 
   it('does not execute the tool when a beforeToolCall hook aborts', async () => {
@@ -248,7 +285,7 @@ describe('abort handling', () => {
     });
   });
 
-  it('persists a completed turn when the signal aborts as its stream closes', async () => {
+  it('finalizes the call as aborted when the signal fires as its stream closes', async () => {
     const controller = new AbortController();
     const afterModelCall = vi.fn();
     const model = new MockProvider([textTurn('Final answer')]);
@@ -268,15 +305,22 @@ describe('abort handling', () => {
     expect(afterModelCall).toHaveBeenCalledTimes(1);
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
-      status: 'completed',
+      status: 'aborted',
     });
   });
 
-  it('completes a final turn when the external signal aborts after the model call', async () => {
+  it('aborts before accepting a final turn when the external signal fires after the call', async () => {
     const controller = new AbortController();
+    const turnOutcomes: Array<{ type: string; callType?: string }> = [];
     const disconnectAfterFinalTurn: Hook = {
       name: 'disconnect-after-final-turn',
       afterModelCall: () => controller.abort(),
+      afterModelTurn: (ctx) => {
+        turnOutcomes.push({
+          type: ctx.outcome.type,
+          callType: 'call' in ctx.outcome ? ctx.outcome.call?.type : undefined,
+        });
+      },
     };
     const model = new MockProvider([textTurn('Final answer')]);
     const events = await collectEvents(
@@ -286,9 +330,48 @@ describe('abort handling', () => {
       }),
     );
 
+    expect(turnOutcomes).toEqual([{ type: 'aborted', callType: 'accepted' }]);
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
-      status: 'completed',
+      status: 'aborted',
+    });
+  });
+
+  it('does not emit accepted output when external cancellation arrives during afterModelTurn', async () => {
+    const controller = new AbortController();
+    let startFinalization: () => void = () => undefined;
+    const finalizationStarted = new Promise<void>((resolve) => {
+      startFinalization = resolve;
+    });
+    let releaseFinalization: () => void = () => undefined;
+    const finalizationRelease = new Promise<void>((resolve) => {
+      releaseFinalization = resolve;
+    });
+    const delayedFinalizer: Hook = {
+      name: 'delayed-finalizer',
+      afterModelTurn: async () => {
+        startFinalization();
+        await finalizationRelease;
+      },
+    };
+    const pending = collectEvents(
+      baseInput(new MockProvider([textTurn('Final answer')]), {
+        hooks: [delayedFinalizer],
+        signal: controller.signal,
+      }),
+    );
+    await finalizationStarted;
+
+    controller.abort();
+    releaseFinalization();
+    const events = await pending;
+
+    expect(
+      events.find((event) => event.type === 'assistant_message'),
+    ).toBeUndefined();
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
     });
   });
 

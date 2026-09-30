@@ -20,7 +20,6 @@ import { EditorToolbar } from './EditorToolbar';
 import { VersionHistory } from './VersionHistory';
 import { ExportButtons } from './ExportButtons';
 import { LetterheadPicker } from './LetterheadPicker';
-import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
@@ -56,7 +55,6 @@ export const ArtifactEditor = forwardRef<
 ) {
   const { t } = useTranslation('artifacts');
   const { confirm } = useConfirmation();
-  const isLetterheadsEnabled = useIsLetterheadsEnabled();
 
   const currentVersion = artifact.versions?.find(
     (v) => v.versionNumber === artifact.currentVersionNumber,
@@ -142,7 +140,7 @@ export const ArtifactEditor = forwardRef<
         actions={
           <>
             <ExportButtons onExport={handleExport} isExporting={isExporting} />
-            {isLetterheadsEnabled && onLetterheadChange && (
+            {onLetterheadChange && (
               <LetterheadPicker
                 letterheadId={artifact.letterheadId}
                 onLetterheadChange={onLetterheadChange}

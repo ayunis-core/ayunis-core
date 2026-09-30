@@ -51,6 +51,7 @@ export function createMockRefreshTokensRepository(): jest.Mocked<RefreshTokensRe
     revokeAllForUser: jest.fn().mockResolvedValue(undefined),
     revokeByZitadelSessionId: jest.fn().mockResolvedValue(undefined),
     revokeSsoForUser: jest.fn().mockResolvedValue(undefined),
+    revokePasswordSessionsForOrg: jest.fn().mockResolvedValue(undefined),
     revokeAllForUserExceptFamily: jest.fn().mockResolvedValue(undefined),
     deleteExpired: jest.fn().mockResolvedValue(0),
   };

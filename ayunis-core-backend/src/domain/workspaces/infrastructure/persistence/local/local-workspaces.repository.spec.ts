@@ -106,4 +106,58 @@ describe('LocalWorkspacesRepository', () => {
       where: { workspaceId },
     });
   });
+
+  it('aggregates chat, skill and knowledge base stats in one statement', async () => {
+    const workspaceId = randomUUID();
+    const lastActivityAt = new Date('2026-08-05T10:00:00.000Z');
+    const query = jest.fn().mockResolvedValue([
+      {
+        workspaceId,
+        chatCount: 3,
+        lastActivityAt,
+        skillCount: 1,
+        knowledgeBaseCount: 2,
+      },
+    ]);
+    const repository = new LocalWorkspacesRepository(
+      { manager: { query } } as unknown as Repository<WorkspaceRecord>,
+      {} as Repository<SkillRecord>,
+      {} as Repository<KnowledgeBaseRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      {} as WorkspaceMapper,
+    );
+
+    await expect(repository.getListStats([workspaceId])).resolves.toEqual(
+      new Map([
+        [
+          workspaceId,
+          {
+            chatCount: 3,
+            lastActivityAt,
+            skillCount: 1,
+            knowledgeBaseCount: 2,
+          },
+        ],
+      ]),
+    );
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('FROM workspaces w'),
+      [[workspaceId]],
+    );
+  });
+
+  it('skips the stats query for an empty page', async () => {
+    const query = jest.fn();
+    const repository = new LocalWorkspacesRepository(
+      { manager: { query } } as unknown as Repository<WorkspaceRecord>,
+      {} as Repository<SkillRecord>,
+      {} as Repository<KnowledgeBaseRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      {} as WorkspaceMapper,
+    );
+
+    await expect(repository.getListStats([])).resolves.toEqual(new Map());
+    expect(query).not.toHaveBeenCalled();
+  });
 });

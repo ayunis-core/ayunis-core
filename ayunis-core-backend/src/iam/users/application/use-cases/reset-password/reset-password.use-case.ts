@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ResetPasswordCommand } from './reset-password.command';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
@@ -15,6 +16,9 @@ import type { PasswordSetToken } from 'src/iam/users/domain/password-set-token.e
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
 import { RevokeAllSessionsForUserCommand } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.command';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class ResetPasswordUseCase {
@@ -27,6 +31,7 @@ export class ResetPasswordUseCase {
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly usersRepository: UsersRepository,
     private readonly revokeAllSessionsForUserUseCase: RevokeAllSessionsForUserUseCase,
+    private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
@@ -58,17 +63,12 @@ export class ResetPasswordUseCase {
     ) {
       throw new InvalidTokenError('Invalid token');
     }
-
+    await this.assertLocalPasswordLoginEnabled(user);
     const newHashedPassword = await this.hashTextUseCase.execute(
       new HashTextCommand(command.newPassword),
     );
 
-    // Atomic single-use gate: a concurrent duplicate submit loses the
-    // conditional update and never writes the password a second time.
-    await this.consumeToken(token);
-
-    user.passwordHash = newHashedPassword;
-    await this.usersRepository.update(user);
+    await this.persistPassword(user, token, newHashedPassword);
 
     // A reset happens while logged out (via an email link), so revoke every
     // session — any that survive would be an attacker's.
@@ -77,6 +77,30 @@ export class ResetPasswordUseCase {
     );
 
     this.logger.debug({ userId: user.id }, 'Password reset successfully');
+  }
+
+  @Transactional()
+  private async persistPassword(
+    user: User,
+    token: PasswordSetToken,
+    newHashedPassword: string,
+  ): Promise<void> {
+    await this.assertLocalPasswordLoginEnabled(user, true);
+    await this.consumeToken(token);
+    user.passwordHash = newHashedPassword;
+    await this.usersRepository.update(user);
+  }
+
+  private async assertLocalPasswordLoginEnabled(
+    user: User,
+    lockForSessionIssuance = false,
+  ): Promise<void> {
+    const policy = await this.getOrgAuthenticationPolicy.execute(
+      new GetOrgAuthenticationPolicyQuery(user.orgId, lockForSessionIssuance),
+    );
+    if (!policy.localPasswordLoginEnabled) {
+      throw new InvalidTokenError('Invalid token');
+    }
   }
 
   private assertPasswordsAcceptable(command: ResetPasswordCommand): void {

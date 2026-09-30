@@ -21,11 +21,15 @@ import { Input } from '@ayunis/ui/components/input';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 import { Button } from '@ayunis/ui/components/button';
-import type { McpIntegration, UpdateIntegrationFormData } from '../model/types';
-import { useUpdateIntegration } from '../api/useUpdateIntegration';
+import type {
+  McpIntegration,
+  UpdateIntegrationFormData,
+} from '@/pages/admin-settings/integrations-settings/model/types';
+import { useUpdateIntegration } from '@/pages/admin-settings/integrations-settings/api/useUpdateIntegration';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
 import { EditOAuthClientFields } from './edit-oauth-client-fields';
+import { EditCustomIntegrationDialog } from './edit-custom-integration-dialog';
 
 interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
@@ -148,15 +152,13 @@ function buildUpdatePayload({
 
 function OptionalOAuthClientFields({
   enabled,
-  form,
   disabled,
 }: Readonly<{
   enabled: boolean;
-  form: UseFormReturn<UpdateIntegrationFormData>;
   disabled: boolean;
 }>) {
   if (!enabled) return null;
-  return <EditOAuthClientFields form={form} disabled={disabled} />;
+  return <EditOAuthClientFields disabled={disabled} />;
 }
 
 function useResetEditForm(
@@ -180,6 +182,30 @@ function useResetEditForm(
 }
 
 export function EditIntegrationDialog({
+  integration,
+  open,
+  onOpenChange,
+}: Readonly<EditIntegrationDialogProps>) {
+  if (integration?.type === 'custom') {
+    return (
+      <EditCustomIntegrationDialog
+        integration={integration}
+        open={open}
+        onOpenChange={onOpenChange}
+      />
+    );
+  }
+
+  return (
+    <LegacyEditIntegrationDialog
+      integration={integration}
+      open={open}
+      onOpenChange={onOpenChange}
+    />
+  );
+}
+
+function LegacyEditIntegrationDialog({
   integration,
   open,
   onOpenChange,
@@ -333,7 +359,6 @@ export function EditIntegrationDialog({
 
               <OptionalOAuthClientFields
                 enabled={hasStaticOAuthClient}
-                form={form}
                 disabled={isUpdating}
               />
 

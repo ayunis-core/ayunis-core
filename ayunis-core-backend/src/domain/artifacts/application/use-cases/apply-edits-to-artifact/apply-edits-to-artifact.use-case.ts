@@ -16,7 +16,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
 import { UpdateArtifactCommand } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.command';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class ApplyEditsToArtifactUseCase {
@@ -40,10 +40,7 @@ export class ApplyEditsToArtifactUseCase {
       'Applying edits to artifact',
     );
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     // Fetch artifact with versions to get current content
     const artifact = await this.artifactsRepository.findByIdWithVersions(

@@ -18,6 +18,7 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
   let workspaceReadAccess: jest.Mocked<AssertWorkspaceReadAccessUseCase>;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const orgId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
   const workspaceId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
   const threadId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -26,7 +27,7 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
       findByWorkspaceId: jest.fn(),
     } as unknown as jest.Mocked<ArtifactsRepository>;
     const context = {
-      get: jest.fn((key: string) => (key === 'userId' ? userId : undefined)),
+      get: jest.fn((key: string) => ({ userId, orgId })[key]),
     } as unknown as jest.Mocked<ContextService>;
     const workspaceReadAccessMock = {
       execute: jest.fn().mockResolvedValue({}),

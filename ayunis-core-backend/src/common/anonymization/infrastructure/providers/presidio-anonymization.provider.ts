@@ -6,6 +6,7 @@ import {
 } from 'src/common/anonymization/application/anonymization.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import {
+  classifyTransportError,
   isRetryableProviderTimeoutFailure,
   SETUP_RETRY_BACKOFF_MS,
 } from 'src/common/errors/provider-transport-error.classifier';
@@ -109,13 +110,14 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       } catch (error) {
         if (
           attempt >= MAX_DETECTION_ATTEMPTS ||
-          !isRetryableProviderTimeoutFailure(error)
+          (!isRetryableProviderTimeoutFailure(error) &&
+            classifyTransportError(error)?.code !== 'ECONNREFUSED')
         ) {
           throw error;
         }
         this.logger.warn(
           { textLength, attempt, maxAttempts: MAX_DETECTION_ATTEMPTS },
-          'PII detection timed out before a response; retrying once',
+          'PII detection temporarily unavailable before a response; retrying once',
         );
         await backoff(SETUP_RETRY_BACKOFF_MS);
       }

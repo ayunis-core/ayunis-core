@@ -2,8 +2,6 @@ import { queryOptions } from '@tanstack/react-query';
 import {
   knowledgeBasesControllerFindOne,
   getKnowledgeBasesControllerFindOneQueryKey,
-  appControllerFeatureToggles,
-  getAppControllerFeatureTogglesQueryKey,
   sharesControllerGetShares,
   getSharesControllerGetSharesQueryKey,
   teamsControllerListMyTeams,
@@ -47,13 +45,6 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient }, params: { id } }) => {
-    const featureToggles = await queryClient.fetchQuery({
-      queryKey: getAppControllerFeatureTogglesQueryKey(),
-      queryFn: () => appControllerFeatureToggles(),
-    });
-    if (!featureToggles.knowledgeBasesEnabled) {
-      throw redirect({ to: '/chat' });
-    }
     const knowledgeBase = await queryClient.fetchQuery(
       knowledgeBaseQueryOptions(id),
     );

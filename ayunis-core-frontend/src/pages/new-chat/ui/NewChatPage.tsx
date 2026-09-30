@@ -18,7 +18,6 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
@@ -74,7 +73,6 @@ export default function NewChatPage({
   const queryClient = useQueryClient();
   const router = useRouter();
   const chatInputRef = useRef<ChatInputRef>(null);
-  const isWorkspacesEnabled = useIsWorkspacesEnabled();
 
   useEffect(() => {
     if (initialPrompt) {
@@ -322,14 +320,12 @@ export default function NewChatPage({
               onSkillRemove={handleSkillRemove}
             />
 
-            {isWorkspacesEnabled && (
-              <div className="mt-1.5 flex justify-start">
-                <WorkspacePicker
-                  workspaceId={workspaceId}
-                  onWorkspaceChange={handleWorkspaceChange}
-                />
-              </div>
-            )}
+            <div className="mt-1.5 flex justify-start">
+              <WorkspacePicker
+                workspaceId={workspaceId}
+                onWorkspaceChange={handleWorkspaceChange}
+              />
+            </div>
           </div>
 
           <div

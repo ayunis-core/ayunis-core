@@ -8,11 +8,9 @@ import {
   getSharesControllerGetSharesQueryKey,
   teamsControllerListMyTeams,
   getTeamsControllerListMyTeamsQueryKey,
-  appControllerFeatureToggles,
-  getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { CreateSkillShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { SkillPage } from '@/pages/skill';
 import { z } from 'zod';
 
@@ -54,13 +52,6 @@ export const Route = createFileRoute('/_authenticated/skills/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient }, params: { id } }) => {
-    const featureToggles = await queryClient.fetchQuery({
-      queryKey: getAppControllerFeatureTogglesQueryKey(),
-      queryFn: () => appControllerFeatureToggles(),
-    });
-    if (!featureToggles.skillsEnabled) {
-      throw redirect({ to: '/chat' });
-    }
     const skill = await queryClient.fetchQuery(skillQueryOptions(id));
     const isEmbeddingModelEnabled = await queryClient.fetchQuery(
       queryIsEmbeddingModelEnabledOptions(),

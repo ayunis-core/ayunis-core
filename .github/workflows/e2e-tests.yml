@@ -27,6 +27,7 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/e2e-tests.yml'
       - '.github/actions/setup-node-pnpm/action.yml'
+      - '.github/actions/start-minio/action.yml'
   push:
     branches: [main]
 
@@ -184,14 +185,7 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Start MinIO
-        run: |
-          docker run -d \
-            --name minio \
-            -p 9000:9000 \
-            -e MINIO_ROOT_USER=ayunis-ci \
-            -e MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret \
-            quay.io/minio/minio:latest server /data
-          timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
+        uses: ./.github/actions/start-minio
 
       - name: Download backend build artifact
         uses: actions/download-artifact@v4
@@ -215,9 +209,6 @@ jobs:
           # seed script while keeping production-only validations off.
           PORT=3000
           MOCK_INFERENCE=true
-          FEATURE_SKILLS_ENABLED=true
-          FEATURE_WORKSPACES_ENABLED=true
-          FEATURE_LETTERHEADS_ENABLED=true
 
           # Database
           POSTGRES_HOST=localhost
@@ -235,6 +226,13 @@ jobs:
           # Legal acceptances created during registration
           TERMS_OF_SERVICE_VERSION=e2e-terms-v1
           PRIVACY_POLICY_VERSION=e2e-privacy-v1
+
+          # Seat-based subscriptions. Creating one reads the YEARLY value (the
+          # factory always builds seat-based subscriptions on a yearly cycle);
+          # without it every seat-based create fails with "Price per seat not
+          # configured". MONTHLY backs GET /subscriptions/price.
+          SUBSCRIPTIONS_PRICE_PER_SEAT_MONTHLY=20
+          SUBSCRIPTIONS_PRICE_PER_SEAT_YEARLY=18
 
           # Deterministic model availability. MOCK_INFERENCE handles requests,
           # but the app still hides providers without configured credentials.

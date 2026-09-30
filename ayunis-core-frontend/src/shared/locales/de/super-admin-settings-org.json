@@ -85,6 +85,36 @@
     "changeErrorTooManyUsedSeats": "Zu viele Nutzer sind bereits in dieser Organisation. Wählen Sie mehr Plätze für das neue Abonnement.",
     "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
   },
+  "subscriptionHistory": {
+    "title": "Abo-Verlauf",
+    "description": "Alle Abonnements dieser Organisation, einschließlich älterer und gekündigter Einträge.",
+    "latest": "Aktuell",
+    "notCancelled": "—",
+    "multipleActive": "{{count}} Abonnements sind derzeit für diese Organisation wirksam. Diese Ansicht zeigt alle, statt eines stillschweigend auszuwählen.",
+    "status": {
+      "ACTIVE": "Aktiv",
+      "SCHEDULED": "Geplant",
+      "CANCELLED": "Gekündigt",
+      "HISTORICAL": "Historisch"
+    },
+    "types": {
+      "SEAT_BASED": "Platzbasiert",
+      "USAGE_BASED": "Nutzungsbasiert"
+    },
+    "columns": {
+      "type": "Typ",
+      "status": "Status",
+      "createdAt": "Erstellt",
+      "startsAt": "Start",
+      "cancelledAt": "Gekündigt",
+      "details": "Details"
+    },
+    "details": {
+      "seats": "{{count}} Plätze",
+      "credits": "{{count}} monatliche Credits",
+      "none": "—"
+    }
+  },
   "licenseSeats": {
     "title": "Lizenzplätze",
     "usedSeats": "Verwendete Plätze",
@@ -286,7 +316,7 @@
     "emailDomains": "Verifizierte E-Mail-Domains",
     "zitadelOrgId": "Zitadel-Organisations-ID",
     "domainVerified": "Ich habe die Inhaberschaft aller Domains verifiziert und die Zitadel-Einrichtung abgeschlossen.",
-    "mappingLocked": "Deaktivieren Sie SSO, bevor Sie die Domains oder Zitadel-Organisationszuordnung ändern.",
+    "mappingLocked": "Sie können verifizierte Domains bei aktivem SSO hinzufügen. Bestehende Domains und die Zitadel-Organisation sind gesperrt. Speichern Sie Änderungen am Identitätsanbieter separat, bevor Sie Domains hinzufügen.",
     "loadError": "Die SSO-Verbindung konnte nicht geladen werden.",
     "cancel": "Abbrechen",
     "status": {
@@ -315,6 +345,19 @@
       "description": "Beim ersten gültigen kommunalen SSO-Login einen Ayunis-Benutzer erstellen.",
       "success": "JIT-Bereitstellung aktualisiert."
     },
+    "passwordLogin": {
+      "requireSsoLabel": "SSO für diese Organisation verpflichtend machen",
+      "requireSsoDescription": "Wenn aktiviert, können sich Benutzer nur über das konfigurierte Organisations-SSO anmelden.",
+      "confirmTitle": "SSO für alle Benutzer verpflichtend machen?",
+      "confirmDescription": "Bestätigen Sie, dass der Kunde SSO erfolgreich getestet hat und die aktive Zuordnung vollständig ist.",
+      "passwordImpact": "Passwort-Anmeldung und Passwort-Zurücksetzung sind für diese Organisation nicht mehr verfügbar.",
+      "sessionImpact": "Bestehende Passwort-Sitzungen können nicht mehr verlängert werden; bereits ausgestellte Zugriffe bleiben bis zum Ablauf gültig.",
+      "domainImpact": "Benutzer außerhalb der konfigurierten Domains können sich nicht mit einem Passwort anmelden.",
+      "confirm": "Ich habe Domains und Identitätsanbieter geprüft, und der Kunde hat SSO erfolgreich getestet.",
+      "confirmButton": "SSO verpflichtend machen",
+      "requireSsoSuccess": "SSO ist jetzt für diese Organisation verpflichtend.",
+      "restoreSuccess": "Lokale Passwort-Anmeldung wiederhergestellt."
+    },
     "enable": {
       "button": "SSO aktivieren",
       "title": "Diese SSO-Verbindung aktivieren?",
@@ -325,7 +368,8 @@
     },
     "disable": {
       "button": "SSO deaktivieren",
-      "success": "SSO deaktiviert. Die lokale Anmeldung bleibt verfügbar."
+      "success": "SSO deaktiviert. Die lokale Anmeldung bleibt verfügbar.",
+      "requiresPasswordLogin": "Stellen Sie die lokale Passwort-Anmeldung wieder her, bevor Sie SSO deaktivieren."
     },
     "validation": {
       "emailDomains": {
@@ -357,10 +401,13 @@
     },
     "errors": {
       "conflict": "Eine dieser Domains oder die Zitadel-Organisation ist bereits einer anderen Organisation zugeordnet.",
+      "domainAccountConflict": "Konten mit diesen E-Mail-Domains gehören zu einer anderen Core-Organisation. Klären Sie deren Organisationszugehörigkeit, bevor Sie SSO vorschreiben oder diese Domains hinzufügen.",
       "mustDisable": "Deaktivieren Sie SSO, bevor Sie die Routing-Zuordnung ändern.",
       "changed": "Die Verbindung wurde während der Prüfung geändert. Laden Sie neu und versuchen Sie es erneut.",
       "notFound": "Für diese Organisation ist keine SSO-Verbindung vorhanden.",
       "invalid": "Die SSO-Verbindung ist unvollständig oder ungültig.",
+      "mustRestorePasswordLogin": "Stellen Sie die lokale Passwort-Anmeldung wieder her, bevor Sie SSO deaktivieren.",
+      "passwordlessUsersExist": "SSO kann nicht deaktiviert werden, da mindestens ein Benutzer kein Passwort hat. Legen Sie Passwörter fest oder lassen Sie SSO aktiviert.",
       "unexpected": "Die SSO-Verbindung konnte nicht aktualisiert werden."
     }
   },
@@ -531,6 +578,8 @@
         "provider": "Anbieter",
         "providerPlaceholder": "Anbieter auswählen",
         "displayName": "Anzeigename",
+        "contextWindowSize": "Kontextfenstergröße",
+        "contextWindowSizePlaceholder": "z. B. 128000",
         "archived": "Archiviert",
         "providerFault": "Bekannte Störung beim Upstream-Provider",
         "cancel": "Abbrechen",
@@ -555,6 +604,14 @@
         "embeddingDisplayNamePlaceholder": "z. B. Text Embedding 3 Small",
         "imageGenerationNamePlaceholder": "z. B. gpt-image-1",
         "imageGenerationDisplayNamePlaceholder": "z. B. GPT Image 1"
+      },
+      "validation": {
+        "contextWindowSize": {
+          "isInt": "Die Kontextfenstergröße muss eine ganze Zahl sein",
+          "min": "Die Kontextfenstergröße muss mindestens 1 betragen",
+          "invalid": "Geben Sie eine gültige Kontextfenstergröße ein"
+        },
+        "invalid": "Überprüfen Sie die eingegebenen Modelldaten"
       }
     }
   }

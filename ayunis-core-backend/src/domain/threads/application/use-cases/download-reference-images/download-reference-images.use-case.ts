@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { streamToBuffer } from 'src/common/util/stream-to-buffer.util';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
@@ -20,6 +19,7 @@ import {
   DownloadReferenceImagesQuery,
   UploadedImageRef,
 } from './download-reference-images.query';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 export interface ReferenceImageDownload {
   data: Buffer;
@@ -58,10 +58,7 @@ export class DownloadReferenceImagesUseCase {
       'Downloading reference images',
     );
 
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     const thread = await this.threadsRepository.findOne(
       query.threadId,

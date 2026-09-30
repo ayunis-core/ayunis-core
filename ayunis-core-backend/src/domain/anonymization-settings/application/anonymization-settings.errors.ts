@@ -7,7 +7,6 @@ export enum AnonymizationSettingsErrorCode {
   DUPLICATE_CATEGORY = 'DUPLICATE_CATEGORY',
   UNEXPECTED_ERROR = 'UNEXPECTED_ANONYMIZATION_SETTINGS_ERROR',
   EMPTY_GLOBAL_WHITELIST_WORD = 'EMPTY_GLOBAL_WHITELIST_WORD',
-  DUPLICATE_GLOBAL_WHITELIST_WORD = 'DUPLICATE_GLOBAL_WHITELIST_WORD',
   GLOBAL_WHITELIST_WORD_NOT_FOUND = 'GLOBAL_WHITELIST_WORD_NOT_FOUND',
   UNEXPECTED_GLOBAL_WHITELIST_ERROR = 'UNEXPECTED_GLOBAL_ANONYMIZATION_WHITELIST_ERROR',
 }
@@ -19,17 +18,6 @@ export class EmptyGlobalWhitelistWordError extends ApplicationError {
       AnonymizationSettingsErrorCode.EMPTY_GLOBAL_WHITELIST_WORD,
       400,
       metadata,
-    );
-  }
-}
-
-export class DuplicateGlobalWhitelistWordError extends ApplicationError {
-  constructor(category: PiiCategory, word: string, metadata?: ErrorMetadata) {
-    super(
-      `The word "${word}" is already on the global whitelist for category ${category}`,
-      AnonymizationSettingsErrorCode.DUPLICATE_GLOBAL_WHITELIST_WORD,
-      409,
-      { category, word, ...metadata },
     );
   }
 }

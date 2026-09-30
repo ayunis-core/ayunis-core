@@ -14,6 +14,7 @@ export enum RunErrorCode {
   RUN_ANONYMIZATION_UNAVAILABLE = 'RUN_ANONYMIZATION_UNAVAILABLE',
   UNEXPECTED_RUN_ERROR = 'UNEXPECTED_RUN_ERROR',
   RUN_CONTEXT_BUDGET_EXCEEDED = 'RUN_CONTEXT_BUDGET_EXCEEDED',
+  SOURCE_CITATION_NOT_FOUND = 'SOURCE_CITATION_NOT_FOUND',
 }
 
 /**
@@ -33,6 +34,16 @@ export abstract class RunError extends ApplicationError {
 /**
  * Error thrown when run execution fails
  */
+export class SourceCitationNotFoundError extends RunError {
+  constructor() {
+    super(
+      'Source citation not found',
+      RunErrorCode.SOURCE_CITATION_NOT_FOUND,
+      404,
+    );
+  }
+}
+
 export class RunExecutionFailedError extends RunError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -40,6 +51,15 @@ export class RunExecutionFailedError extends RunError {
       RunErrorCode.RUN_EXECUTION_FAILED,
       500,
       metadata,
+    );
+  }
+}
+
+export class RunUsageAccountingFailedError extends RunExecutionFailedError {
+  constructor(modelTurn?: number) {
+    super(
+      'Agent runtime failed',
+      modelTurn === undefined ? undefined : { modelTurn },
     );
   }
 }

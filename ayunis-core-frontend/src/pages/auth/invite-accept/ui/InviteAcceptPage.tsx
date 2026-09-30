@@ -10,12 +10,13 @@ import {
 import { Input } from '@ayunis/ui/components/input';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
-import type { Invite } from '../model/openapi';
-import { useInviteAccept } from '../api';
+import type { Invite } from '@/pages/auth/invite-accept/model/openapi';
+import { useInviteAccept } from '@/pages/auth/invite-accept/api';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@ayunis/ui/components/label';
 import { Checkbox } from '@ayunis/ui/components/checkbox';
 import { DepartmentField } from '@/shared/ui/department-field';
+import { beginSso } from '@/features/sso';
 
 interface InviteAcceptPageProps {
   invite: Invite;
@@ -24,6 +25,41 @@ interface InviteAcceptPageProps {
 }
 
 export default function InviteAcceptPage({
+  invite,
+  inviteToken,
+  isCloud,
+}: Readonly<InviteAcceptPageProps>) {
+  const { t } = useTranslation('auth');
+
+  if (!invite.localPasswordLoginEnabled) {
+    return (
+      <OnboardingLayout
+        title={t('inviteAccept.title')}
+        description={t('inviteAccept.ssoDescription', {
+          organizationName: invite.organizationName,
+        })}
+      >
+        <Button
+          className="w-full"
+          data-testid="invite-accept-sso"
+          onClick={() => beginSso(invite.orgId)}
+        >
+          {t('inviteAccept.acceptWithSso')}
+        </Button>
+      </OnboardingLayout>
+    );
+  }
+
+  return (
+    <PasswordInviteAcceptForm
+      invite={invite}
+      inviteToken={inviteToken}
+      isCloud={isCloud}
+    />
+  );
+}
+
+function PasswordInviteAcceptForm({
   invite,
   inviteToken,
   isCloud,
@@ -53,7 +89,9 @@ export default function InviteAcceptPage({
                   <Input
                     placeholder={t('inviteAccept.emailPlaceholder')}
                     type="email"
-                    disabled
+                    autoComplete="username"
+                    className="bg-muted"
+                    readOnly
                     {...field}
                   />
                 </FormControl>
@@ -70,6 +108,7 @@ export default function InviteAcceptPage({
                 <FormControl>
                   <Input
                     data-testid="invite-accept-name"
+                    autoComplete="name"
                     placeholder={t('inviteAccept.namePlaceholder')}
                     {...field}
                   />
@@ -87,6 +126,7 @@ export default function InviteAcceptPage({
                 <FormControl>
                   <PasswordInput
                     data-testid="invite-accept-password"
+                    autoComplete="new-password"
                     placeholder={t('inviteAccept.passwordPlaceholder')}
                     {...field}
                   />

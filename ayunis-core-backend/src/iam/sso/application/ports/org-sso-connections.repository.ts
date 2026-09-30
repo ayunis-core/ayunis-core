@@ -17,7 +17,14 @@ export class SsoConnectionUniqueConstraintError extends Error {
 }
 
 export abstract class OrgSsoConnectionsRepository {
+  abstract acquireMutationLock(orgId: UUID): Promise<boolean>;
   abstract findByOrgId(orgId: UUID): Promise<OrgSsoConnection | null>;
+  abstract findLocalPasswordLoginEnabledByOrgId(
+    orgId: UUID,
+  ): Promise<boolean | null>;
+  abstract findLocalPasswordLoginEnabledByOrgIdForSessionIssuance(
+    orgId: UUID,
+  ): Promise<boolean | null>;
   abstract findByOrgIdWithDomainState(
     orgId: UUID,
   ): Promise<OrgSsoConnectionDomainState | null>;
@@ -28,7 +35,7 @@ export abstract class OrgSsoConnectionsRepository {
     emailDomains: string[],
   ): Promise<UUID[]>;
   abstract save(connection: OrgSsoConnection): Promise<OrgSsoConnection>;
-  abstract updateConfigurationIfDisabled(
+  abstract updateConfigurationIfUnchanged(
     connection: OrgSsoConnection,
     expected: OrgSsoConnection,
   ): Promise<OrgSsoConnection | null>;
@@ -37,6 +44,10 @@ export abstract class OrgSsoConnectionsRepository {
     enabled: boolean,
   ): Promise<OrgSsoConnection | null>;
   abstract setJitProvisioningEnabledIfMappingMatches(
+    expected: OrgSsoConnection,
+    enabled: boolean,
+  ): Promise<OrgSsoConnection | null>;
+  abstract setLocalPasswordLoginEnabledIfMappingMatches(
     expected: OrgSsoConnection,
     enabled: boolean,
   ): Promise<OrgSsoConnection | null>;

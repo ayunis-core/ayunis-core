@@ -7,7 +7,7 @@ import type {
 } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { useCallback, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import config from '@/shared/config';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -17,6 +17,7 @@ import {
   getThreadAiContextControllerGetAiContextQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import {
+  abortActiveThreadRun,
   registerActiveThreadRun,
   unregisterActiveThreadRun,
 } from '@/features/thread-run';
@@ -41,6 +42,7 @@ interface SendToolResultInput {
 interface UseMessageSendParams {
   threadId: string;
   onMessageEvent?: (data: RunMessageResponseDto) => void;
+  onMessageReceived?: () => void;
   onSessionEvent?: (data: RunSessionResponseDto) => void;
   onThreadEvent?: (data: RunThreadResponseDto) => void;
   onMasksEvent?: (data: RunMasksResponseDto) => void;
@@ -48,6 +50,8 @@ interface UseMessageSendParams {
   onError?: (error: Error) => void;
   onComplete?: (failed: boolean) => void;
 }
+
+const mountedParamsByThread = new Map<string, UseMessageSendParams>();
 
 interface SendMessagePayload {
   threadId: string;
@@ -62,27 +66,30 @@ interface SendMessagePayload {
 export function useMessageSend(params: UseMessageSendParams) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const isLoadingRef = useRef(false);
-  const wasAbortedRef = useRef(false);
-  const hadErrorRef = useRef(false);
+  const currentParamsRef = useRef(params);
+  useLayoutEffect(() => {
+    currentParamsRef.current = params;
+    mountedParamsByThread.set(params.threadId, params);
+    return () => {
+      if (mountedParamsByThread.get(params.threadId) === params) {
+        mountedParamsByThread.delete(params.threadId);
+      }
+    };
+  }, [params]);
 
   const sendMessage = useCallback(
     // eslint-disable-next-line sonarjs/cognitive-complexity
     async (payload: SendMessagePayload) => {
       let requestController: AbortController | null = null;
+      let wasAborted = false;
+      let hadError = false;
+      const requestThreadId = payload.threadId;
+      const requestParams = currentParamsRef.current;
+      const getCurrentParams = () =>
+        mountedParamsByThread.get(requestThreadId) ?? null;
       try {
-        // Clean up any existing connection
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        }
-
-        isLoadingRef.current = true;
-        wasAbortedRef.current = false;
-        hadErrorRef.current = false;
         requestController = new AbortController();
-        abortControllerRef.current = requestController;
-        registerActiveThreadRun(params.threadId, requestController);
+        registerActiveThreadRun(requestThreadId, requestController);
         const signal = requestController.signal;
 
         const url = `${config.api.baseUrl}/runs/send-message`;
@@ -155,20 +162,27 @@ export function useMessageSend(params: UseMessageSendParams) {
             const data = JSON.parse(line.slice(6)) as { type?: string };
             switch (data.type) {
               case 'session':
-                params.onSessionEvent?.(data as RunSessionResponseDto);
+                getCurrentParams()?.onSessionEvent?.(
+                  data as RunSessionResponseDto,
+                );
                 break;
               case 'message':
-                params.onMessageEvent?.(data as RunMessageResponseDto);
+                requestParams.onMessageReceived?.();
+                getCurrentParams()?.onMessageEvent?.(
+                  data as RunMessageResponseDto,
+                );
                 break;
               case 'thread':
-                params.onThreadEvent?.(data as RunThreadResponseDto);
+                getCurrentParams()?.onThreadEvent?.(
+                  data as RunThreadResponseDto,
+                );
                 break;
               case 'masks':
-                params.onMasksEvent?.(data as RunMasksResponseDto);
+                getCurrentParams()?.onMasksEvent?.(data as RunMasksResponseDto);
                 break;
               case 'error':
-                hadErrorRef.current = true;
-                params.onErrorEvent?.(data as RunErrorResponseDto);
+                hadError = true;
+                requestParams.onErrorEvent?.(data as RunErrorResponseDto);
                 break;
               case undefined:
               default:
@@ -218,11 +232,11 @@ export function useMessageSend(params: UseMessageSendParams) {
         console.error('Error in sendMessage', error);
 
         if (error instanceof Error && error.name === 'AbortError') {
-          wasAbortedRef.current = true;
+          wasAborted = true;
           return;
         }
 
-        hadErrorRef.current = true;
+        hadError = true;
 
         if (error instanceof Error) {
           // Handle specific error status codes
@@ -249,27 +263,25 @@ export function useMessageSend(params: UseMessageSendParams) {
           } else if (error.message.includes('403')) {
             showError(t('chat.upgradeToProError'));
           } else {
-            params.onError?.(error);
+            requestParams.onError?.(error);
           }
         }
       } finally {
         if (requestController) {
-          unregisterActiveThreadRun(params.threadId, requestController);
+          unregisterActiveThreadRun(requestThreadId, requestController);
         }
-        isLoadingRef.current = false;
 
         // Only invalidate queries if the request completed normally (not aborted)
         // When aborted, we keep the optimistic local state to avoid race conditions
         // with the backend's async save operation
-        if (!wasAbortedRef.current) {
-          params.onComplete?.(hadErrorRef.current);
+        if (!wasAborted) {
+          requestParams.onComplete?.(hadError);
           // Cancel any in-flight thread refetch (e.g. an active refetchInterval
           // poll) so its older response can't land after ours and shorten the
           // displayed assistant text. Then await the refetch so the cache
           // holds the post-save server state before sendMessage resolves.
-          const threadQueryKey = getThreadsControllerFindOneQueryKey(
-            params.threadId,
-          );
+          const threadQueryKey =
+            getThreadsControllerFindOneQueryKey(requestThreadId);
           await queryClient.cancelQueries({
             queryKey: threadQueryKey,
             exact: true,
@@ -281,8 +293,8 @@ export function useMessageSend(params: UseMessageSendParams) {
 
           [
             getThreadsControllerFindAllQueryKey(),
-            getArtifactsControllerFindByThreadQueryKey(params.threadId),
-            getThreadAiContextControllerGetAiContextQueryKey(params.threadId),
+            getArtifactsControllerFindByThreadQueryKey(requestThreadId),
+            getThreadAiContextControllerGetAiContextQueryKey(requestThreadId),
           ].forEach((queryKey) => {
             void queryClient.invalidateQueries({
               queryKey,
@@ -302,12 +314,9 @@ export function useMessageSend(params: UseMessageSendParams) {
             },
           });
         }
-
-        // Reset the abort flag for next request
-        wasAbortedRef.current = false;
       }
     },
-    [params, t, queryClient],
+    [t, queryClient],
   );
 
   const sendTextMessage = useCallback(
@@ -347,16 +356,13 @@ export function useMessageSend(params: UseMessageSendParams) {
   );
 
   const abort = useCallback(() => {
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = null;
-    isLoadingRef.current = false;
-    wasAbortedRef.current = true;
+    abortActiveThreadRun(params.threadId);
 
     // Don't invalidate queries immediately on abort
     // The backend will save the message asynchronously, and we'll get the update
     // through normal query invalidation in the finally block
     // This prevents race conditions where we refetch before backend finishes saving
-  }, []);
+  }, [params.threadId]);
 
   return {
     sendTextMessage,

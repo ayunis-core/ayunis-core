@@ -7,7 +7,6 @@ import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/ge
 import { UpsertUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.use-case';
 import { UpsertUserSystemPromptCommand } from 'src/domain/chat-settings/application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { PersonalizedSystemPromptGenerationError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
@@ -16,6 +15,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 /**
  * Synthetic thread ID used for one-shot inference calls that are not part of
@@ -45,15 +45,7 @@ export class GeneratePersonalizedSystemPromptUseCase {
   async execute(
     command: GeneratePersonalizedSystemPromptCommand,
   ): Promise<GeneratePersonalizedSystemPromptResult> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
     this.logger.log({ userId }, 'execute');
 

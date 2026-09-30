@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { TeamRecord } from './schema/team.record';
 import { TeamMemberRecord } from './schema/team-member.record';
 import { TeamMapper } from './mappers/team.mapper';
@@ -13,11 +14,18 @@ export class LocalTeamsRepository extends TeamsRepository {
   private readonly logger = new Logger(LocalTeamsRepository.name);
 
   constructor(
-    @InjectRepository(TeamRecord)
-    private readonly teamRepository: Repository<TeamRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
     this.logger.log('constructor');
+  }
+
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get teamRepository(): Repository<TeamRecord> {
+    return this.getManager().getRepository(TeamRecord);
   }
 
   async findById(id: UUID): Promise<Team | null> {
@@ -45,6 +53,14 @@ export class LocalTeamsRepository extends TeamsRepository {
     });
 
     this.logger.debug({ orgId, count: teamRecords.length }, 'Teams found');
+    return teamRecords.map((record) => TeamMapper.toDomain(record));
+  }
+
+  async findByIdsAndOrgId(ids: UUID[], orgId: UUID): Promise<Team[]> {
+    if (ids.length === 0) return [];
+    const teamRecords = await this.teamRepository.find({
+      where: { id: In(ids), orgId },
+    });
     return teamRecords.map((record) => TeamMapper.toDomain(record));
   }
 

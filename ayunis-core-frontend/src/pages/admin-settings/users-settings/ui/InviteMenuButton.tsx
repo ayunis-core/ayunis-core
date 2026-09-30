@@ -8,8 +8,8 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, UserPlus, Users } from 'lucide-react';
+import { BulkInviteDialog } from '@/features/bulk-user-invite';
 import SingleInviteDialog from './SingleInviteDialog';
-import BulkInviteDialog from './BulkInviteDialog';
 
 export default function InviteMenuButton() {
   const { t } = useTranslation('admin-settings-users');
@@ -20,7 +20,7 @@ export default function InviteMenuButton() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm">
+          <Button size="sm" data-testid="invite-menu-trigger">
             {t('inviteDialog.inviteUser')}
             <ChevronDown className="h-4 w-4" />
           </Button>
@@ -30,7 +30,10 @@ export default function InviteMenuButton() {
             <UserPlus />
             {t('inviteMenu.inviteOne')}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setBulkInviteOpen(true)}>
+          <DropdownMenuItem
+            onClick={() => setBulkInviteOpen(true)}
+            data-testid="bulk-invite-menu-item"
+          >
             <Users />
             {t('inviteMenu.inviteMany')}
           </DropdownMenuItem>

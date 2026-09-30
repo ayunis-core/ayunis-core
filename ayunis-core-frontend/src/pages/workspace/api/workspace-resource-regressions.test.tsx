@@ -22,15 +22,16 @@ import {
   workspaceSkillListParams,
 } from '@/shared/api/skill-scopes';
 
-const { request, showError, invalidate } = vi.hoisted(() => ({
+const { request, showError, showSuccess, invalidate } = vi.hoisted(() => ({
   request: vi.fn(),
   showError: vi.fn(),
+  showSuccess: vi.fn(),
   invalidate: vi.fn(),
 }));
 vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
 vi.mock('@/shared/lib/toast', () => ({
   showError,
-  showSuccess: vi.fn(),
+  showSuccess,
   showInfo: vi.fn(),
 }));
 vi.mock('@tanstack/react-router', () => ({
@@ -284,6 +285,21 @@ describe('workspace resource regressions', () => {
       await waitFor(() => expect(showError).toHaveBeenCalledOnce());
     },
   );
+
+  it('confirms a saved workspace instruction', async () => {
+    request.mockResolvedValue({ instruction: 'Be concise.' });
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useWorkspaceContextActions('project'), {
+      wrapper,
+    });
+
+    await act(() => result.current.updateInstruction('Be concise.'));
+
+    expect(showSuccess).toHaveBeenCalledWith(
+      'context.instructions.saveSuccess',
+    );
+    expect(showError).not.toHaveBeenCalled();
+  });
 
   it('invalidates canonical workspace caches without expiring other scopes', async () => {
     const { client, wrapper } = setup();

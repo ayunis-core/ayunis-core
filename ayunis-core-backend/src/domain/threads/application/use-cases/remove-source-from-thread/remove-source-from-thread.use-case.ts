@@ -9,7 +9,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class RemoveSourceFromThreadUseCase {
@@ -43,8 +43,7 @@ export class RemoveSourceFromThreadUseCase {
         throw new SourceNotFoundError(command.sourceId);
       }
 
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) throw new UnauthorizedAccessError();
+      const orgId = getRequiredOrgId(this.contextService);
       await this.deleteSourceUseCase.execute(
         new DeleteSourceCommand(assignmentToRemove.source.id, orgId),
       );

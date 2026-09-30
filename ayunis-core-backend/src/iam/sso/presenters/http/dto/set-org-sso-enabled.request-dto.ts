@@ -3,11 +3,11 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   ArrayUnique,
+  Equals,
   IsArray,
   IsBoolean,
   IsDefined,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -27,8 +27,9 @@ export class SetOrgSsoEnabledRequestDto {
     required: false,
     description: 'Confirms the broker mapping was reviewed before enablement',
   })
-  @IsOptional()
-  @IsBoolean()
+  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled === true)
+  @IsDefined()
+  @Equals(true)
   confirmed?: boolean;
 
   @ApiProperty({
@@ -36,7 +37,7 @@ export class SetOrgSsoEnabledRequestDto {
     type: [String],
     example: ['stadt.example', 'vhs.example'],
   })
-  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled)
+  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled === true)
   @IsDefined()
   @IsArray()
   @ArrayMinSize(1)
@@ -50,7 +51,7 @@ export class SetOrgSsoEnabledRequestDto {
   reviewedEmailDomains?: string[];
 
   @ApiProperty({ required: false, example: '385820595704561666' })
-  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled)
+  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled === true)
   @IsDefined()
   @IsString()
   @IsNotEmpty()

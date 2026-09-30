@@ -19,10 +19,6 @@ vi.mock('@/features/workspaces', () => ({
   useWorkspaces: () => ({ workspaces: [] }),
 }));
 
-vi.mock('@/features/feature-toggles', () => ({
-  useIsWorkspacesEnabled: () => false,
-}));
-
 vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
   default: ({ action }: { action: ReactNode }) => <header>{action}</header>,
 }));

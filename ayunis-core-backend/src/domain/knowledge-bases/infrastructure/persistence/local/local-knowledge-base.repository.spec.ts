@@ -4,7 +4,7 @@ import type { Repository } from 'typeorm';
 import type { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import type { KnowledgeBaseRecord } from './schema/knowledge-base.record';
 import type { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
-import type { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { LocalKnowledgeBaseRepository } from './local-knowledge-base.repository';
 import type { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
 
@@ -260,6 +260,7 @@ describe('LocalKnowledgeBaseRepository', () => {
   it('queries only active knowledge bases accessible to the user', async () => {
     const userId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
     const orgId = '850e8400-e29b-41d4-a716-446655440003' as UUID;
+    const sourceId = '950e8400-e29b-41d4-a716-446655440004' as UUID;
     const records = [
       { id: firstKnowledgeBaseId, name: 'Municipal regulations' },
     ] as KnowledgeBaseRecord[];
@@ -308,13 +309,24 @@ describe('LocalKnowledgeBaseRepository', () => {
       { tx: undefined } as never,
     );
 
-    const result = await repository.findActiveAccessible(userId, orgId);
+    const result = await repository.findActiveAccessible(
+      userId,
+      orgId,
+      firstKnowledgeBaseId,
+      sourceId,
+    );
 
     expect(result).toEqual(records);
     expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
       expect.any(Function),
       'activation',
       expect.stringContaining('activation.userId = :userId'),
+    );
+    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
+      SourceRecord,
+      'activeSource',
+      expect.stringContaining('activeSource.knowledgeBaseId'),
+      { sourceId },
     );
     expect(queryBuilder.setParameters).toHaveBeenCalledWith(
       expect.objectContaining({ userId, orgId }),
@@ -327,6 +339,10 @@ describe('LocalKnowledgeBaseRepository', () => {
       'knowledgeBase.orgId = :orgId',
     );
     const accessBrackets = queryBuilder.andWhere.mock.calls[1][0] as Brackets;
+    expect(queryBuilder.andWhere.mock.calls[2]).toEqual([
+      'knowledgeBase.id = :knowledgeBaseId',
+      { knowledgeBaseId: firstKnowledgeBaseId },
+    ]);
     const accessQuery = {
       where: jest.fn().mockReturnThis(),
       orWhere: jest.fn().mockReturnThis(),

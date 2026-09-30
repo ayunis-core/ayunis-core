@@ -5,6 +5,8 @@ import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adap
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { LocalSourceRepository } from './local-source.repository';
 import { SourceRecord } from './schema/source.record';
@@ -14,11 +16,48 @@ import type {
 } from './schema/source.record';
 import { TextSourceDetailsRecord } from './schema/text-source-details.record';
 import type { CSVDataSourceDetailsRecord } from './schema/data-source-details.record';
-import type { SourceContentChunkRecord } from './schema/source-content-chunk.record';
+import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import type { SourceMapper } from './mappers/source.mapper';
 import type { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 
 describe('LocalSourceRepository', () => {
+  it('clears failure metadata in the same guarded update that makes a source ready', async () => {
+    const qb = {
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+    const manager = {
+      getRepository: jest
+        .fn()
+        .mockReturnValue({ createQueryBuilder: () => qb }),
+    } as unknown as EntityManager;
+    const repository = new LocalSourceRepository(
+      {} as Repository<SourceRecord>,
+      {} as SourceMapper,
+      {} as SourceContentChunkMapper,
+      { tx: manager } as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+    const id = randomUUID();
+    await expect(
+      repository.updateStatusConditionally(
+        id,
+        SourceStatus.PROCESSING,
+        SourceStatus.READY,
+      ),
+    ).resolves.toBe(true);
+    expect(qb.set).toHaveBeenCalledWith({
+      status: SourceStatus.READY,
+      processingError: null,
+      processingErrorCode: null,
+    });
+    expect(qb.where).toHaveBeenCalledWith('id = :id AND status = :fromStatus', {
+      id,
+      fromStatus: SourceStatus.PROCESSING,
+    });
+  });
+
   it('uses the default repository outside an active transaction', async () => {
     const sourceRepository = {
       findOne: jest.fn().mockResolvedValue(null),
@@ -144,5 +183,71 @@ describe('LocalSourceRepository', () => {
     expect(txSourceRepository.save).toHaveBeenCalledWith(sourceRecord);
     expect(txDetailsRepository.save).toHaveBeenCalledWith(detailsRecord);
     expect(txChunkRepository.save).toHaveBeenCalledWith(chunks);
+  });
+
+  it('loads a citation chunk and source metadata without extracted full text', async () => {
+    const chunkId = randomUUID();
+    const sourceId = randomUUID();
+    const chunk = new TextSourceContentChunk({
+      id: chunkId,
+      content: 'Council approved the mobility plan.',
+      meta: { startLine: 21, endLine: 22 },
+    });
+    const record = {
+      id: chunkId,
+      content: chunk.content,
+      meta: chunk.meta,
+      source: {
+        text: '# Mobility plan\n\nCouncil approved the mobility plan.',
+        source: {
+          id: sourceId,
+          name: 'Mobility plan.pdf',
+          createdBy: SourceCreator.USER,
+          status: SourceStatus.READY,
+          knowledgeBaseId: null,
+          url: null,
+        },
+      },
+    } as SourceContentChunkRecord;
+    const queryBuilder = {
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(record),
+    };
+    const chunkRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    };
+    const manager = {
+      getRepository: jest.fn((target: unknown) =>
+        target === SourceContentChunkRecord ? chunkRepository : {},
+      ),
+    } as unknown as EntityManager;
+    const chunkMapper = {
+      toDomain: jest.fn().mockReturnValue(chunk),
+    } as unknown as SourceContentChunkMapper;
+    const repository = new LocalSourceRepository(
+      {} as Repository<SourceRecord>,
+      {} as SourceMapper,
+      chunkMapper,
+      { tx: manager } as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+
+    await expect(repository.findCitationTarget(chunkId)).resolves.toEqual({
+      chunk,
+      source: {
+        id: sourceId,
+        name: 'Mobility plan.pdf',
+        createdBy: SourceCreator.USER,
+        status: SourceStatus.READY,
+        knowledgeBaseId: null,
+        url: null,
+      },
+    });
+    expect(chunkRepository.createQueryBuilder).toHaveBeenCalledTimes(1);
+    expect(queryBuilder.select).toHaveBeenCalledWith(
+      expect.not.arrayContaining(['details.text']),
+    );
+    expect(queryBuilder.getOne).toHaveBeenCalledTimes(1);
   });
 });

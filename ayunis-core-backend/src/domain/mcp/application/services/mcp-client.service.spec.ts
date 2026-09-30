@@ -42,6 +42,7 @@ class MockUserConfigRepository extends McpIntegrationUserConfigRepositoryPort {
   findByIntegrationAndUser = jest.fn();
   findByIntegrationIdsAndUser = jest.fn();
   deleteByIntegrationId = jest.fn();
+  removeKeysByIntegrationId = jest.fn();
 }
 
 describe('McpClientService', () => {

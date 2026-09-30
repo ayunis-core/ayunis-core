@@ -11,6 +11,7 @@ import {
 } from '@ayunis/ui/components/empty';
 import {
   isFavorite,
+  sortFavoritesFirst,
   useFavorites,
   useToggleFavorite,
 } from '@/features/favorites';
@@ -40,6 +41,8 @@ export function WorkspaceChatsTab({
   const { t } = useTranslation('workspace');
   const { t: tChats } = useTranslation('chats');
   const { confirm } = useConfirmation();
+  const { favorites } = useFavorites();
+  const sortedChats = sortFavoritesFirst(chats, favorites, 'thread');
   const totalPages = Math.ceil(
     (chatPagination.total ?? 0) / chatPagination.limit,
   );
@@ -75,7 +78,7 @@ export function WorkspaceChatsTab({
       {chats.length === 0 ? (
         <p className="text-muted-foreground">{t('page.noChatResults')}</p>
       ) : null}
-      {chats.map((chat) => (
+      {sortedChats.map((chat) => (
         <WorkspaceChatRow key={chat.id} chat={chat} onDelete={handleDelete} />
       ))}
       <SearchPagination

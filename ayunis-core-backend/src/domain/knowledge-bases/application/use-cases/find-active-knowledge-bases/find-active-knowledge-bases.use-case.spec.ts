@@ -4,6 +4,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { FindActiveKnowledgeBasesQuery } from './find-active-knowledge-bases.query';
 import { FindActiveKnowledgeBasesUseCase } from './find-active-knowledge-bases.use-case';
 
 const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -39,6 +40,27 @@ describe(FindActiveKnowledgeBasesUseCase.name, () => {
     expect(repository.findActiveAccessible).toHaveBeenCalledWith(
       USER_ID,
       ORG_ID,
+      undefined,
+      undefined,
+    );
+  });
+
+  it('limits the active lookup to a requested knowledge base source', async () => {
+    const knowledgeBaseId = '33333333-3333-3333-3333-333333333333' as UUID;
+    const sourceId = '44444444-4444-4444-4444-444444444444' as UUID;
+    const { useCase, repository } = await setup();
+    repository.findActiveAccessible.mockResolvedValue([]);
+
+    await expect(
+      useCase.execute(
+        new FindActiveKnowledgeBasesQuery({ knowledgeBaseId, sourceId }),
+      ),
+    ).resolves.toEqual([]);
+    expect(repository.findActiveAccessible).toHaveBeenCalledWith(
+      USER_ID,
+      ORG_ID,
+      knowledgeBaseId,
+      sourceId,
     );
   });
 

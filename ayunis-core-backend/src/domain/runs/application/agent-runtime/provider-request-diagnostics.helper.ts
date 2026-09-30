@@ -1,4 +1,8 @@
-import type { ProviderRequest, ToolSchema } from '@ayunis/inference';
+import type {
+  ProviderRequest,
+  ReadonlySnapshot,
+  ToolSchema,
+} from '@ayunis/agent-runtime';
 import { createHash } from 'crypto';
 import type { ToolUseIntegration } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 
@@ -20,7 +24,7 @@ interface ProviderRequestDiagnostics {
 }
 
 export function buildProviderRequestDiagnostics(
-  request: ProviderRequest,
+  request: ReadonlySnapshot<ProviderRequest>,
   integrations?: ToolIntegrationLookup,
 ): ProviderRequestDiagnostics {
   const serializedTools = JSON.stringify(request.tools);
@@ -34,7 +38,7 @@ export function buildProviderRequestDiagnostics(
 }
 
 function buildToolDiagnostic(
-  tool: ToolSchema,
+  tool: ReadonlySnapshot<ToolSchema>,
   integration: ToolUseIntegration | undefined,
 ): ProviderToolDiagnostic {
   return {

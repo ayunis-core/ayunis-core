@@ -1,3 +1,9 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ValidateUserUseCase } from './validate-user.use-case';
@@ -11,12 +17,17 @@ import {
   UserUnexpectedError,
 } from 'src/iam/users/application/users.errors';
 import { ConfigService } from '@nestjs/config';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
 
 describe('ValidateUserUseCase', () => {
   let useCase: ValidateUserUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
   let mockCompareHashUseCase: Partial<CompareHashUseCase>;
   let mockConfigService: { get: jest.Mock };
+  let mockGetOrgAuthenticationPolicy: {
+    execute: jest.Mock;
+  };
 
   beforeAll(async () => {
     mockUsersRepository = {
@@ -29,6 +40,9 @@ describe('ValidateUserUseCase', () => {
     mockConfigService = {
       get: jest.fn((_key: string, defaultValue: unknown) => defaultValue),
     };
+    mockGetOrgAuthenticationPolicy = {
+      execute: jest.fn().mockResolvedValue({ localPasswordLoginEnabled: true }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -36,6 +50,10 @@ describe('ValidateUserUseCase', () => {
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: CompareHashUseCase, useValue: mockCompareHashUseCase },
         { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: GetOrgAuthenticationPolicyUseCase,
+          useValue: mockGetOrgAuthenticationPolicy,
+        },
       ],
     }).compile();
 
@@ -46,6 +64,9 @@ describe('ValidateUserUseCase', () => {
     mockConfigService.get.mockImplementation(
       (_key: string, defaultValue: unknown) => defaultValue,
     );
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: true,
+    });
   });
 
   afterEach(() => jest.useRealTimers());
@@ -99,6 +120,47 @@ describe('ValidateUserUseCase', () => {
       UserAuthenticationFailedError,
     );
     expect(mockUsersRepository.registerFailedLoginAttempt).toHaveBeenCalled();
+  });
+
+  it('rejects SSO-only password attempts without recording a failure', async () => {
+    const user = aUser({ email: 'mitarbeiter@stadt.example' });
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: false,
+    });
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toBeInstanceOf(UserAuthenticationFailedError);
+
+    expect(mockCompareHashUseCase.execute).not.toHaveBeenCalled();
+    expect(mockGetOrgAuthenticationPolicy.execute).toHaveBeenCalledWith(
+      new GetOrgAuthenticationPolicyQuery(user.orgId),
+    );
+    expect(
+      mockUsersRepository.registerFailedLoginAttempt,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('does not record a failure when SSO-only activation wins the race', async () => {
+    const user = aUser({ email: 'mitarbeiter@stadt.example' });
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    jest.spyOn(mockCompareHashUseCase, 'execute').mockResolvedValue(false);
+    mockGetOrgAuthenticationPolicy.execute
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: true })
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: false });
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toBeInstanceOf(UserAuthenticationFailedError);
+
+    expect(mockGetOrgAuthenticationPolicy.execute).toHaveBeenNthCalledWith(
+      2,
+      new GetOrgAuthenticationPolicyQuery(user.orgId, true),
+    );
+    expect(
+      mockUsersRepository.registerFailedLoginAttempt,
+    ).not.toHaveBeenCalled();
   });
 
   it('surfaces a hash comparison failure as an unexpected user error', async () => {

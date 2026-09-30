@@ -12,18 +12,7 @@ export interface IsCloudResponseDto {
   isRegistrationDisabled: boolean;
 }
 
-export interface FeatureTogglesResponseDto {
-  /** Whether the standalone knowledge bases feature is enabled */
-  knowledgeBasesEnabled: boolean;
-  /** Whether the letterheads feature is enabled */
-  letterheadsEnabled: boolean;
-  /** Whether the skills feature is enabled */
-  skillsEnabled: boolean;
-  /** Whether the workspaces feature is enabled */
-  workspacesEnabled: boolean;
-  /** Whether employee-facing SSO login is enabled */
-  ssoLoginEnabled: boolean;
-}
+export interface FeatureTogglesResponseDto { [key: string]: unknown }
 
 /**
  * User role
@@ -327,6 +316,11 @@ export interface CreateBulkInviteItemDto {
   email: string;
   /** Role to assign to the invited user */
   role: CreateBulkInviteItemDtoRole;
+  /**
+     * Names of teams to assign after the invited user joins the organization
+     * @maxItems 50
+     */
+  teamNames?: string[];
 }
 
 export interface CreateBulkInvitesDto {
@@ -472,8 +466,12 @@ export interface InviteDetailResponseDto {
   expiresAt: string;
   /** Date when the invite was accepted (if applicable) */
   acceptedAt?: string;
+  /** Organization the invitation belongs to */
+  orgId: string;
   /** Name of the organization */
   organizationName: string;
+  /** Whether this organization accepts local password login */
+  localPasswordLoginEnabled: boolean;
 }
 
 export interface AcceptInviteDto {
@@ -831,6 +829,93 @@ export interface UpdateStartDateDto {
 
 export interface UpdateMonthlyCreditsDto { [key: string]: unknown }
 
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type OrgSubscriptionHistoryItemDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Subscription type
+ */
+export type OrgSubscriptionHistoryItemDtoType = typeof OrgSubscriptionHistoryItemDtoType[keyof typeof OrgSubscriptionHistoryItemDtoType];
+
+
+export const OrgSubscriptionHistoryItemDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * Renewal cycle of the subscription (seat-based only)
+ */
+export type OrgSubscriptionHistoryItemDtoRenewalCycle = typeof OrgSubscriptionHistoryItemDtoRenewalCycle[keyof typeof OrgSubscriptionHistoryItemDtoRenewalCycle];
+
+
+export const OrgSubscriptionHistoryItemDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+/**
+ * Lifecycle status of this subscription record
+ */
+export type OrgSubscriptionHistoryItemDtoStatus = typeof OrgSubscriptionHistoryItemDtoStatus[keyof typeof OrgSubscriptionHistoryItemDtoStatus];
+
+
+export const OrgSubscriptionHistoryItemDtoStatus = {
+  ACTIVE: 'ACTIVE',
+  SCHEDULED: 'SCHEDULED',
+  CANCELLED: 'CANCELLED',
+  HISTORICAL: 'HISTORICAL',
+} as const;
+
+export interface OrgSubscriptionHistoryItemDto {
+  /** Unique identifier of the subscription */
+  id: string;
+  /** Date when the subscription was created */
+  createdAt: string;
+  /** Date when the subscription was last updated */
+  updatedAt: string;
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: OrgSubscriptionHistoryItemDtoCancelledAt;
+  /** Date when the subscription becomes active */
+  startsAt: string;
+  /** Organization ID associated with the subscription */
+  orgId: string;
+  /** Subscription type */
+  type: OrgSubscriptionHistoryItemDtoType;
+  /** Number of seats in the subscription (seat-based only) */
+  noOfSeats?: number;
+  /** Price per seat in the subscription (seat-based only) */
+  pricePerSeat?: number;
+  /** Renewal cycle of the subscription (seat-based only) */
+  renewalCycle?: OrgSubscriptionHistoryItemDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles (seat-based only) */
+  renewalCycleAnchor?: string;
+  /** Monthly credit budget (usage-based only) */
+  monthlyCredits?: number;
+  /**
+     * Number of available seats (total seats minus invites, seat-based only)
+     * @nullable
+     */
+  availableSeats?: number | null;
+  /** Date of the next renewal */
+  nextRenewalDate: string;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
+  /** Lifecycle status of this subscription record */
+  status: OrgSubscriptionHistoryItemDtoStatus;
+  /** Whether this is the newest subscription for the organization */
+  isLatest: boolean;
+}
+
+export interface OrgSubscriptionsResponseDto {
+  /** All subscriptions belonging to the organization, newest first */
+  subscriptions: OrgSubscriptionHistoryItemDto[];
+  /** How many subscriptions are currently serving access (including cancelled seat-based records still inside their paid period) */
+  activeCount: number;
+}
+
 export interface UpdateSeatsDto { [key: string]: unknown }
 
 /**
@@ -903,6 +988,12 @@ export interface ModelWithConfigResponseDto {
   canUseTools: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.
+     * @minimum 1
+     * @maximum 2147483647
+     */
+  contextWindowSize?: number;
   /** Whether the model is permitted to be used */
   isPermitted: boolean;
   /** Whether the model is the default model */
@@ -1042,6 +1133,13 @@ export interface PermittedLanguageModelResponseDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     * @nullable
+     */
+  contextWindowSize?: number | null;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** Whether this is the default model */
@@ -1269,6 +1367,12 @@ export interface LanguageModelResponseDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     */
+  contextWindowSize?: number;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** The date the model was created */
@@ -1445,6 +1549,13 @@ export interface CreateLanguageModelRequestDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     * @nullable
+     */
+  contextWindowSize?: number | null;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
@@ -1517,6 +1628,13 @@ export interface UpdateLanguageModelRequestDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /**
+     * Maximum context window size in tokens
+     * @minimum 1
+     * @maximum 2147483647
+     * @nullable
+     */
+  contextWindowSize?: number | null;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
@@ -2104,6 +2222,18 @@ export interface ModelResponseDto {
   isReasoning: boolean;
 }
 
+export type SourceProcessingErrorCode = typeof SourceProcessingErrorCode[keyof typeof SourceProcessingErrorCode];
+
+
+export const SourceProcessingErrorCode = {
+  DOCUMENT_UNREADABLE: 'DOCUMENT_UNREADABLE',
+  DOCUMENT_EMPTY: 'DOCUMENT_EMPTY',
+  DOCUMENT_PAGE_LIMIT_EXCEEDED: 'DOCUMENT_PAGE_LIMIT_EXCEEDED',
+  PROCESSING_TIMEOUT: 'PROCESSING_TIMEOUT',
+  PROCESSING_UNAVAILABLE: 'PROCESSING_UNAVAILABLE',
+  PROCESSING_FAILED: 'PROCESSING_FAILED',
+} as const;
+
 /**
  * Type of source
  */
@@ -2152,8 +2282,12 @@ export interface SourceResponseDto {
   createdBy: SourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: SourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2236,8 +2370,12 @@ export interface FileSourceResponseDto {
   createdBy: FileSourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: FileSourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2307,8 +2445,12 @@ export interface UrlSourceResponseDto {
   createdBy: UrlSourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: UrlSourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2387,8 +2529,12 @@ export interface CSVDataSourceResponseDto {
   createdBy: CSVDataSourceResponseDtoCreatedBy;
   /** Processing status of the source */
   status: CSVDataSourceResponseDtoStatus;
-  /** Error message if processing failed */
+  /**
+     * Deprecated generic failure message. Use processingErrorCode for localization.
+     * @deprecated
+     */
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2846,6 +2992,14 @@ export interface SkillListResponseDto {
   pagination: PaginationDto;
 }
 
+export interface InstalledMarketplaceSkillResponseDto {
+  /**
+     * ID of the current user's personal skill installed from this marketplace entry, or null when it is not installed.
+     * @nullable
+     */
+  skillId: string | null;
+}
+
 export interface UpdateSkillDto {
   /**
      * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
@@ -3170,6 +3324,10 @@ export interface UpdateMcpIntegrationDto {
      * @maxLength 255
      */
   name?: string;
+  /** Custom MCP server URL */
+  serverUrl?: string;
+  /** Header configuration for a custom MCP integration */
+  configSchema?: CustomMcpConfigSchemaDto;
   /** Authentication credentials (will be encrypted). Provide to rotate the stored secret/token. */
   credentials?: string;
   /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
@@ -3457,6 +3615,10 @@ export interface WorkspaceResponseDto {
   updatedAt: string;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
+  /** Number of skills owned by the workspace (list responses only) */
+  skillCount?: number;
+  /** Number of knowledge bases owned by the workspace (list responses only) */
+  knowledgeBaseCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */
   lastActivityAt?: string;
 }
@@ -3575,7 +3737,7 @@ export interface PiiWhitelistEntryDto {
   category: PiiCategory;
   /**
      * Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.
-     * @maxLength 200
+     * @maxLength 1000
      * @nullable
      */
   pattern: string | null;
@@ -3607,13 +3769,19 @@ export interface GlobalPiiWhitelistWordDto {
   createdAt: string;
 }
 
-export interface AddGlobalPiiWhitelistWordRequestDto {
+export interface AddGlobalPiiWhitelistWordsRequestDto {
   category: PiiCategory;
   /**
-     * Plain word to exempt from anonymization (no patterns)
-     * @maxLength 200
+     * Plain words to exempt from anonymization (no patterns)
+     * @maxItems 1000
      */
-  word: string;
+  words: string[];
+}
+
+export interface AddGlobalPiiWhitelistWordsResponseDto {
+  added: GlobalPiiWhitelistWordDto[];
+  /** Submitted words that were already on the whitelist */
+  duplicates: string[];
 }
 
 /**
@@ -4396,6 +4564,28 @@ export interface ThreadAiContextKnowledgeBaseResponseDto {
 export interface ThreadAiContextResponseDto {
   skills: ThreadAiContextSkillResponseDto[];
   knowledgeBases: ThreadAiContextKnowledgeBaseResponseDto[];
+}
+
+export interface SourceCitationChunkResponseDto {
+  id: string;
+  /** Exact extracted chunk text shown to the model */
+  content: string;
+  /** @nullable */
+  startLine: number | null;
+  /** @nullable */
+  endLine: number | null;
+}
+
+export interface SourceCitationSourceResponseDto {
+  id: string;
+  name: string;
+  /** @nullable */
+  url: string | null;
+}
+
+export interface SourceCitationResponseDto {
+  chunk: SourceCitationChunkResponseDto;
+  source: SourceCitationSourceResponseDto;
 }
 
 export interface SuperAdminTrialResponseDto {
@@ -5213,6 +5403,7 @@ export interface OrgSsoConnectionResponseDto {
   zitadelIdpId: string | null;
   enabled: boolean;
   jitProvisioningEnabled: boolean;
+  localPasswordLoginEnabled: boolean;
 }
 
 export interface OrgSsoConnectionResourceDto {
@@ -5245,6 +5436,16 @@ export interface SetOrgSsoStateRequestDto {
   enabled: boolean;
 }
 
+export interface SetOrgLocalPasswordLoginEnabledRequestDto {
+  enabled: boolean;
+  /** Confirms the SSO-only lockout impact was reviewed */
+  confirmed?: boolean;
+  reviewedEmailDomains?: string[];
+  reviewedZitadelOrgId?: string;
+  /** @nullable */
+  reviewedZitadelIdpId?: string | null;
+}
+
 export interface SetOrgSsoIdpRequestDto {
   /**
      * Broker identity provider ID, or null to show the broker login page
@@ -5260,6 +5461,7 @@ export interface DiscoverSsoDto {
 export interface SsoDiscoveryResponseDto {
   available: boolean;
   orgId?: string;
+  localPasswordLoginEnabled?: boolean;
 }
 
 export interface SsoAuthorizationResponseDto {
@@ -5350,6 +5552,21 @@ search?: string;
 limit?: number;
 /**
  * Number of invites to skip (default: 0)
+ */
+offset?: number;
+};
+
+export type SuperAdminInvitesControllerGetInvitesParams = {
+/**
+ * Search invites by email
+ */
+search?: string;
+/**
+ * Maximum number of invites to return
+ */
+limit?: number;
+/**
+ * Number of invites to skip
  */
 offset?: number;
 };

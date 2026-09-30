@@ -7,6 +7,7 @@ import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
 import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
+import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
@@ -29,7 +30,8 @@ export function isExternallyHandledTool(tool: Tool): boolean {
     tool instanceof SendEmailTool ||
     tool instanceof CreateCalendarEventTool ||
     tool instanceof CreateSkillTool ||
-    tool instanceof EditSkillTool
+    tool instanceof EditSkillTool ||
+    tool instanceof InstallMarketplaceSkillTool
   );
 }
 
