@@ -10,6 +10,8 @@ export enum SourceErrorCode {
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
   UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
+  SOURCE_REINDEX_NOT_SUPPORTED = 'SOURCE_REINDEX_NOT_SUPPORTED',
+  SOURCE_NOT_READY_FOR_REINDEX = 'SOURCE_NOT_READY_FOR_REINDEX',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -120,6 +122,28 @@ export class UnsupportedSourceFileTypeError extends SourceError {
       `Unsupported file type: '${mimeType}'`,
       SourceErrorCode.UNSUPPORTED_SOURCE_FILE_TYPE,
       400,
+      metadata,
+    );
+  }
+}
+
+export class SourceReindexNotSupportedError extends SourceError {
+  constructor(sourceId: string, metadata?: ErrorMetadata) {
+    super(
+      `Source '${sourceId}' cannot be re-indexed; only URL sources can`,
+      SourceErrorCode.SOURCE_REINDEX_NOT_SUPPORTED,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class SourceNotReadyForReindexError extends SourceError {
+  constructor(sourceId: string, status: string, metadata?: ErrorMetadata) {
+    super(
+      `Source '${sourceId}' is ${status}; only a ready source can be re-indexed`,
+      SourceErrorCode.SOURCE_NOT_READY_FOR_REINDEX,
+      409,
       metadata,
     );
   }

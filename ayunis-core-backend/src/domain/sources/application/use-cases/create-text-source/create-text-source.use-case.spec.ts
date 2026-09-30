@@ -85,4 +85,18 @@ describe('CreateTextSourceUseCase', () => {
       contentReplacement.commit.mock.invocationCallOrder[0],
     );
   });
+
+  it('stamps when the synchronously created content went live', async () => {
+    const createdAfter = new Date();
+
+    const created = await useCase.execute(
+      new CreateUrlSourceCommand({
+        url: 'https://www.stadt.example/buergerbuero',
+      }),
+    );
+
+    expect(created.lastIndexedAt!.getTime()).toBeGreaterThanOrEqual(
+      createdAfter.getTime(),
+    );
+  });
 });

@@ -6,6 +6,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
 import { UrlSourceExtractor } from 'src/domain/sources/application/services/url-source-extractor.service';
 import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import { SourceIngestionKind } from 'src/domain/sources/application/models/source-ingestion-kind.enum';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
@@ -23,8 +24,9 @@ export class UrlCrawlConsumer extends WorkerHost {
 
   async process(job: Job<UrlCrawlJobData>): Promise<void> {
     const { sourceId, orgId, userId, rootUrl, maxDepth } = job.data;
+    const kind = job.data.kind ?? SourceIngestionKind.INITIAL;
     this.logger.log(
-      { jobId: job.id, sourceId, url: rootUrl },
+      { jobId: job.id, sourceId, kind, url: rootUrl },
       'Crawling URL source',
     );
 
@@ -33,6 +35,7 @@ export class UrlCrawlConsumer extends WorkerHost {
       await this.ingestion.ingest({
         sourceId,
         orgId,
+        kind,
         extractor: this.urlSourceExtractor,
         input: { rootUrl, orgId, maxDepth },
         classifyFailure: (error) => classifyJobFailure(job, error),

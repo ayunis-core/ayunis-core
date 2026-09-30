@@ -138,7 +138,7 @@ describe('DocumentProcessingConsumer', () => {
       SOURCE_ID,
       SourceStatus.PROCESSING,
       SourceStatus.READY,
-      { processingError: null },
+      { processingError: null, lastIndexedAt: expect.any(Date) },
     );
     expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({ objectName: MINIO_PATH }),

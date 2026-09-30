@@ -25,6 +25,7 @@ import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -224,7 +225,7 @@ export class LocalSourceRepository extends SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{ processingError: string | null; lastIndexedAt: Date }>,
   ): Promise<boolean> {
     this.logger.log(
       {
@@ -248,6 +249,9 @@ export class LocalSourceRepository extends SourceRepository {
         ...(updates?.processingError !== undefined
           ? { processingError: updates.processingError }
           : {}),
+        ...(updates?.lastIndexedAt
+          ? { lastIndexedAt: updates.lastIndexedAt }
+          : {}),
       })
       .where('id = :id AND status = :fromStatus', {
         id: sourceId,
@@ -265,6 +269,31 @@ export class LocalSourceRepository extends SourceRepository {
       .where('id = :id AND status = :status', {
         id: sourceId,
         status: SourceStatus.PROCESSING,
+      })
+      .execute();
+    return (result.affected ?? 0) > 0;
+  }
+
+  async recordRunFailure(
+    sourceId: UUID,
+    failure: {
+      failedAt: Date;
+      error: string;
+      errorCode: SourceProcessingErrorCode;
+    },
+  ): Promise<boolean> {
+    this.logger.log({ sourceId }, 'recordRunFailure');
+    const result = await this.sourceRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        lastRunFailedAt: failure.failedAt,
+        lastRunError: failure.error,
+        lastRunErrorCode: failure.errorCode,
+      })
+      .where('id = :id AND status = :status', {
+        id: sourceId,
+        status: SourceStatus.READY,
       })
       .execute();
     return (result.affected ?? 0) > 0;

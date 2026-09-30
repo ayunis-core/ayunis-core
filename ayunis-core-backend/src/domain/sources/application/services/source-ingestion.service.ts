@@ -2,14 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import type { PreparedTextSourceContent } from 'src/domain/sources/application/models/prepared-text-source-content';
+import { SourceIngestionKind } from 'src/domain/sources/application/models/source-ingestion-kind.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { classifySourceProcessingError } from './classify-source-processing-error';
 import { SourceContentReplacementService } from './source-content-replacement.service';
 import { SourceProcessingHelper } from './source-processing-helper.service';
 import type { TextSourceExtractor } from './text-source-extractor';
 
 export interface IngestionFailureOutcome {
-  /** No further attempt will run, so the source must be settled as FAILED. */
+  /** No further attempt will run, so the run's failure must be settled. */
   final: boolean;
   /** What to rethrow, or null to end the attempt without an error. */
   rethrow: Error | null;
@@ -18,6 +20,7 @@ export interface IngestionFailureOutcome {
 export interface TextSourceIngestionRun<TInput> {
   sourceId: UUID;
   orgId: UUID;
+  kind: SourceIngestionKind;
   extractor: TextSourceExtractor<TInput>;
   input: TInput;
   /** Supplied by the queue, which alone knows whether a retry follows. */
@@ -25,9 +28,11 @@ export interface TextSourceIngestionRun<TInput> {
 }
 
 /**
- * Runs one ingestion attempt of a PROCESSING text source: claim, extract,
- * embed, commit the content against a fresh read, mark ready — or settle
- * the source as FAILED once no retry follows.
+ * Runs one ingestion attempt of a text source: claim, extract, embed, commit
+ * the content against a fresh read. An initial run claims a PROCESSING
+ * source and settles it as READY or FAILED. A re-index claims a READY source
+ * and never changes its status: the commit swaps content atomically, and a
+ * failed run is only recorded, leaving the previous content searchable.
  */
 @Injectable()
 export class SourceIngestionService {
@@ -48,10 +53,7 @@ export class SourceIngestionService {
       this.logger.error({ sourceId, err: error as Error }, 'Ingestion failed');
       const { final, rethrow } = run.classifyFailure(error);
       settled = final;
-      if (final) {
-        await this.helper.markFailed(sourceId, error);
-        await this.helper.cleanupIndex(sourceId);
-      }
+      if (final) await this.settleFailure(run.kind, sourceId, error);
       if (rethrow) throw rethrow;
     } finally {
       if (settled) await extractor.release?.(input);
@@ -61,8 +63,8 @@ export class SourceIngestionService {
   private async runAttempt<TInput>(
     run: TextSourceIngestionRun<TInput>,
   ): Promise<void> {
-    const { sourceId, orgId, extractor, input } = run;
-    if (!(await this.claim(sourceId))) return;
+    const { sourceId, orgId, kind, extractor, input } = run;
+    if (!(await this.claim(sourceId, kind))) return;
 
     const extracted = await extractor.extract(input);
     const content = await this.contentReplacement.prepare({
@@ -71,27 +73,33 @@ export class SourceIngestionService {
       text: extracted.text,
       chunks: extracted.chunks,
     });
-    if (!(await this.commit(sourceId, extracted.name, content))) return;
-    await this.markReady(sourceId);
+    if (!(await this.commit(sourceId, kind, extracted.name, content))) return;
+    if (kind === SourceIngestionKind.INITIAL) await this.markReady(sourceId);
 
     this.logger.log(
-      { sourceId, chunks: extracted.chunks.length },
+      { sourceId, kind, chunks: extracted.chunks.length },
       'Ingestion complete',
     );
   }
 
-  private async claim(sourceId: UUID): Promise<boolean> {
+  private async claim(
+    sourceId: UUID,
+    kind: SourceIngestionKind,
+  ): Promise<boolean> {
     const source = await this.sourceRepository.findById(sourceId);
-    if (source?.status !== SourceStatus.PROCESSING) {
+    if (source?.status !== claimableStatus(kind)) {
       this.logger.warn(
-        { sourceId, found: !!source },
-        'Source missing or no longer processing, skipping',
+        { sourceId, kind, found: !!source, status: source?.status },
+        'Source missing or not in the status this run claims, skipping',
       );
       return false;
     }
     if (!(source instanceof TextSource)) {
       throw new Error(`Source ${sourceId} is not a TextSource`);
     }
+    // A re-index keeps the source READY, so the stale-processing cleanup —
+    // and with it the heartbeat — never applies to it.
+    if (kind === SourceIngestionKind.REINDEX) return true;
 
     // Resets processingStartedAt on every attempt so the stale-cleanup cron
     // doesn't race with retries of long-running jobs. UPDATE-only: saving
@@ -106,6 +114,7 @@ export class SourceIngestionService {
   /** Returns false, having written nothing, when the source is gone. */
   private async commit(
     sourceId: UUID,
+    kind: SourceIngestionKind,
     name: string | undefined,
     content: PreparedTextSourceContent,
   ): Promise<boolean> {
@@ -116,7 +125,7 @@ export class SourceIngestionService {
     const source = await this.sourceRepository.findById(sourceId);
     if (
       !(source instanceof TextSource) ||
-      source.status !== SourceStatus.PROCESSING
+      source.status !== claimableStatus(kind)
     ) {
       this.logger.warn(
         { sourceId, found: !!source },
@@ -126,6 +135,9 @@ export class SourceIngestionService {
     }
 
     if (name) source.name = name;
+    // Written with the content, so a re-index's new content and its run
+    // state go live together. An initial run stamps it with the READY flip.
+    if (kind === SourceIngestionKind.REINDEX) source.recordIndexed(new Date());
     if (await this.contentReplacement.commit(source, content)) return true;
 
     this.logger.warn({ sourceId }, 'Source deleted before commit, skipping');
@@ -137,7 +149,7 @@ export class SourceIngestionService {
       sourceId,
       SourceStatus.PROCESSING,
       SourceStatus.READY,
-      { processingError: null },
+      { processingError: null, lastIndexedAt: new Date() },
     );
     if (!updated) {
       this.logger.warn(
@@ -147,4 +159,51 @@ export class SourceIngestionService {
       await this.helper.cleanupIndex(sourceId);
     }
   }
+
+  private async settleFailure(
+    kind: SourceIngestionKind,
+    sourceId: UUID,
+    error: unknown,
+  ): Promise<void> {
+    if (kind === SourceIngestionKind.REINDEX) {
+      await this.recordRunFailure(sourceId, error);
+      return;
+    }
+    await this.helper.markFailed(sourceId, error);
+    // The commit is atomic, so a failure before or inside it leaves no index
+    // entries; this clears the ones a commit left when marking the source
+    // READY failed afterwards, so a FAILED source is never searchable.
+    await this.helper.cleanupIndex(sourceId);
+  }
+
+  private async recordRunFailure(
+    sourceId: UUID,
+    error: unknown,
+  ): Promise<void> {
+    try {
+      const recorded = await this.sourceRepository.recordRunFailure(sourceId, {
+        failedAt: new Date(),
+        error:
+          error instanceof Error ? error.message : 'Unknown processing error',
+        errorCode: classifySourceProcessingError(error),
+      });
+      if (!recorded) {
+        this.logger.warn(
+          { sourceId },
+          'Source deleted or no longer ready, run failure not recorded',
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        { sourceId, err: err as Error },
+        'Failed to record re-index failure',
+      );
+    }
+  }
+}
+
+function claimableStatus(kind: SourceIngestionKind): SourceStatus {
+  return kind === SourceIngestionKind.REINDEX
+    ? SourceStatus.READY
+    : SourceStatus.PROCESSING;
 }

@@ -32,6 +32,7 @@ import { EnqueueDataSourceProcessingUseCase } from './application/use-cases/enqu
 import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
+import { EnqueueSourceReindexUseCase } from './application/use-cases/enqueue-source-reindex/enqueue-source-reindex.use-case';
 import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
 import { SourceContentReplacementService } from './application/services/source-content-replacement.service';
@@ -72,6 +73,7 @@ import { SourceContentReplacementService } from './application/services/source-c
     FindUnreferencedSourceIdsUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
+    EnqueueSourceReindexUseCase,
     StartUrlCrawlUseCase,
     SourceContentReplacementService,
   ],
@@ -102,6 +104,7 @@ import { SourceContentReplacementService } from './application/services/source-c
     FindUnreferencedSourceIdsUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
+    EnqueueSourceReindexUseCase,
     StartUrlCrawlUseCase,
   ],
 })
