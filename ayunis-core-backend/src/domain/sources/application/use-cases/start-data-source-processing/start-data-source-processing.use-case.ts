@@ -110,7 +110,7 @@ export class StartDataSourceProcessingUseCase {
       throw new EmptyFileDataError(command.fileName);
     }
 
-    const baseFileName = command.fileName.replace(/\.(xlsx|xls)$/i, '');
+    const baseFileName = command.fileName.replace(/\.(xlsx|xls|ods)$/i, '');
     return sheetNames.map((sheetName) => ({
       sheetName,
       name:

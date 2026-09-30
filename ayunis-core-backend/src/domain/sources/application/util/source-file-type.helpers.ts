@@ -15,6 +15,11 @@ const FILE_TYPE_BY_MIME_TYPE: Record<string, FileType> = {
   [MIME_TYPES.ODP]: FileType.ODP,
   [MIME_TYPES.TXT]: FileType.TXT,
   [MIME_TYPES.EML]: FileType.EML,
+  // Tables are flattened to text on ingestion, so they persist as text files.
+  [MIME_TYPES.CSV]: FileType.TXT,
+  [MIME_TYPES.XLSX]: FileType.TXT,
+  [MIME_TYPES.XLS]: FileType.TXT,
+  [MIME_TYPES.ODS]: FileType.TXT,
   [MIME_TYPES.MP3]: FileType.AUDIO,
   [MIME_TYPES.M4A]: FileType.AUDIO,
   [MIME_TYPES.WAV]: FileType.AUDIO,

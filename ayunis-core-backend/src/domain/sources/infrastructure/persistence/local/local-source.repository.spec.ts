@@ -143,7 +143,10 @@ describe('LocalSourceRepository', () => {
       type: TextType.FILE,
       status: SourceStatus.READY,
     });
-    const sourceRecord = { id: source.id } as TextSourceRecord;
+    const sourceRecord = {
+      id: source.id,
+      knowledgeBaseId: null,
+    } as TextSourceRecord;
     const detailsRecord = { source: sourceRecord } as TextSourceDetailsRecord;
     const chunks = [{ id: randomUUID() }] as SourceContentChunkRecord[];
     const txSourceRepository = {
@@ -181,6 +184,9 @@ describe('LocalSourceRepository', () => {
       repository.saveTextSource(source, { text: 'Policy', chunks: [] }),
     ).resolves.toBe(source);
     expect(txSourceRepository.save).toHaveBeenCalledWith(sourceRecord);
+    expect(txSourceRepository.save.mock.calls[0][0]).not.toHaveProperty(
+      'knowledgeBaseId',
+    );
     expect(txDetailsRepository.save).toHaveBeenCalledWith(detailsRecord);
     expect(txChunkRepository.save).toHaveBeenCalledWith(chunks);
   });
