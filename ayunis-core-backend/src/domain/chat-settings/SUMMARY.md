@@ -6,7 +6,7 @@ Chat configuration at user and organization scope. Contains the **user system pr
 
 - **`UserSystemPrompt`** — A user's custom system prompt (`id`, `userId`, `systemPrompt`, `createdAt`, `updatedAt`). One per user, upsert semantics.
 - **`OrgSystemPrompt`** — An organization-wide system prompt (`id`, `orgId`, `systemPrompt`, `createdAt`, `updatedAt`). One per org, upsert semantics.
-- **`OrgChatSettings`** — Organization-wide chat configuration (`id`, `orgId`, `internetSearchEnabled`, `createdAt`, `updatedAt`). One per org, upsert semantics. `internetSearchEnabled` defaults to `true` (internet access on); when `false`, the runs module omits the web search and website content tools from all of the org's conversations.
+- **`OrgChatSettings`** — Organization-wide chat configuration (`id`, `orgId`, `internetSearchEnabled`, `anonymousModeByDefault`, `createdAt`, `updatedAt`). One per org, atomic partial upsert semantics. `anonymousModeByDefault` defaults to `false`; admins can enable it and users can opt out per new chat. Existing threads are unchanged. `internetSearchEnabled` defaults to `true` (internet access on); when `false`, the runs module omits the web search and website content tools from all of the org's conversations.
 
 ## Ports
 
@@ -23,7 +23,7 @@ Chat configuration at user and organization scope. Contains the **user system pr
 - **`UpsertOrgSystemPromptUseCase`** — Creates or replaces the org's system prompt
 - **`DeleteOrgSystemPromptUseCase`** — Deletes the org's system prompt (idempotent)
 - **`GetOrgChatSettingsUseCase`** — Retrieves the org chat settings for the current org from context; returns a default (internet access enabled) entity when nothing is stored
-- **`UpsertOrgChatSettingsUseCase`** — Creates or replaces the org chat settings (internet access toggle)
+- **`UpsertOrgChatSettingsUseCase`** — Creates or partially updates org chat settings, preserving omitted fields even under concurrent updates
 - **`GeneratePersonalizedSystemPromptUseCase`** — Generates a personalized system prompt and welcome message via LLM inference based on user preferences, then upserts the generated system prompt
 
 ## Infrastructure
@@ -40,19 +40,20 @@ Chat configuration at user and organization scope. Contains the **user system pr
 
 ## HTTP API
 
-Controllers: `ChatSettingsController` (user self-service), `OrgSystemPromptController` and `OrgChatSettingsController` (admin-only org routes) — all base path `/chat-settings`, tag `Chat Settings`
+Controllers: `ChatSettingsController` (user self-service), `OrgSystemPromptController` (admin-only org routes), and `OrgChatSettingsController` (member-readable chat-start defaults and admin-only org settings) — all base path `/chat-settings`, tag `Chat Settings`
 
-| Method | Path                                                  | Description                                              |
-| ------ | ----------------------------------------------------- | -------------------------------------------------------- |
-| GET    | `/chat-settings/system-prompt`                        | Get user's system prompt                                 |
-| PUT    | `/chat-settings/system-prompt`                        | Set/update user's system prompt                          |
-| DELETE | `/chat-settings/system-prompt`                        | Delete user's system prompt                              |
-| GET    | `/chat-settings/org-system-prompt`                    | Get org-wide system prompt (org admin only)              |
-| PUT    | `/chat-settings/org-system-prompt`                    | Set/update org-wide system prompt (org admin only)       |
-| DELETE | `/chat-settings/org-system-prompt`                    | Delete org-wide system prompt (org admin only)           |
-| GET    | `/chat-settings/org-chat-settings`                    | Get org-wide chat settings (org admin only)              |
-| PUT    | `/chat-settings/org-chat-settings`                    | Set/update org-wide chat settings (org admin only)       |
-| POST   | `/chat-settings/generate-personalized-system-prompt`  | Generate and save a personalized system prompt           |
+| Method | Path                                                 | Description                                                  |
+| ------ | ---------------------------------------------------- | ------------------------------------------------------------ |
+| GET    | `/chat-settings/system-prompt`                       | Get user's system prompt                                     |
+| PUT    | `/chat-settings/system-prompt`                       | Set/update user's system prompt                              |
+| DELETE | `/chat-settings/system-prompt`                       | Delete user's system prompt                                  |
+| GET    | `/chat-settings/org-system-prompt`                   | Get org-wide system prompt (org admin only)                  |
+| PUT    | `/chat-settings/org-system-prompt`                   | Set/update org-wide system prompt (org admin only)           |
+| DELETE | `/chat-settings/org-system-prompt`                   | Delete org-wide system prompt (org admin only)               |
+| GET    | `/chat-settings/chat-start-defaults`                 | Read only anonymous-mode default (authenticated org members) |
+| GET    | `/chat-settings/org-chat-settings`                   | Get org-wide chat settings (org admin only)                  |
+| PUT    | `/chat-settings/org-chat-settings`                   | Set/update org-wide chat settings (org admin only)           |
+| POST   | `/chat-settings/generate-personalized-system-prompt` | Generate and save a personalized system prompt               |
 
 ## Exports
 
