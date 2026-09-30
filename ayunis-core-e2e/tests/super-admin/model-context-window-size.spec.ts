@@ -5,18 +5,9 @@ import {
   deleteCatalogModel,
 } from '../../src/clients/api/models.client';
 import { test, expect } from '../../src/fixtures/test';
+import { loginThroughUi } from '../../src/flows/auth.flow';
 
 test.use({ storageState: { cookies: [], origins: [] } });
-
-async function loginThroughUi(page: Page): Promise<void> {
-  await page.goto('/login');
-  await page.getByTestId('email').fill('admin@demo.local');
-  const continueButton = page.getByTestId('login-continue');
-  if (await continueButton.isVisible()) await continueButton.click();
-  await page.getByTestId('password').fill('admin');
-  await page.getByTestId('submit').click();
-  await expect(page).not.toHaveURL(/\/login/);
-}
 
 async function openEditDialog(
   page: Page,
@@ -46,7 +37,7 @@ test('super admin can set, change, and clear a model context window', async ({
   });
 
   try {
-    await loginThroughUi(page);
+    await loginThroughUi(page, 'admin@demo.local', 'admin');
     await page.goto('/super-admin-settings/models-catalog');
 
     let dialog = await openEditDialog(page, catalogModel.id);
