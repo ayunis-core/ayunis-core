@@ -14,6 +14,7 @@ import {
   echoTool,
   userMessage,
 } from './test-helpers';
+import { IdleTimeoutError } from './model-call-scope';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -202,6 +203,13 @@ describe('provider retry policy', () => {
 });
 
 describe('per-call cancellation and idle timeout', () => {
+  it('marks the internal idle signal with a stable telemetry code', () => {
+    expect(new IdleTimeoutError(180_000)).toMatchObject({
+      code: 'MODEL_CALL_IDLE_TIMEOUT',
+      idleTimeoutMs: 180_000,
+    });
+  });
+
   it('retries an idle call before output and closes its iterator', async () => {
     vi.useFakeTimers();
     let calls = 0;
