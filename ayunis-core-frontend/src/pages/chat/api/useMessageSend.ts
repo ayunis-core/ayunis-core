@@ -9,7 +9,7 @@ import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import config from '@/shared/config';
-import { useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
@@ -21,6 +21,7 @@ import {
   registerActiveThreadRun,
   unregisterActiveThreadRun,
 } from '@/features/thread-run';
+import { redirectToLogin } from '@/shared/lib/redirect-to-login';
 
 export interface PendingImage {
   file: File;
@@ -63,6 +64,40 @@ interface SendMessagePayload {
   streaming?: boolean;
 }
 
+async function refreshThreadQueriesAfterRun(
+  queryClient: QueryClient,
+  threadId: string,
+): Promise<void> {
+  // Cancel any in-flight thread refetch (e.g. an active refetchInterval
+  // poll) so its older response can't land after ours and shorten the
+  // displayed assistant text, then await the refetch so the cache holds the
+  // post-save server state before sendMessage resolves.
+  const threadQueryKey = getThreadsControllerFindOneQueryKey(threadId);
+  await queryClient.cancelQueries({ queryKey: threadQueryKey, exact: true });
+  await queryClient.refetchQueries({ queryKey: threadQueryKey, exact: true });
+
+  [
+    getThreadsControllerFindAllQueryKey(),
+    getArtifactsControllerFindByThreadQueryKey(threadId),
+    getThreadAiContextControllerGetAiContextQueryKey(threadId),
+  ].forEach((queryKey) => {
+    void queryClient.invalidateQueries({ queryKey });
+  });
+
+  // Individual artifact queries are keyed outside the thread, so the editor
+  // panel only refreshes after an AI edit if they are invalidated too.
+  void queryClient.invalidateQueries({
+    predicate: (query) => {
+      const key = query.queryKey[0];
+      return (
+        typeof key === 'string' &&
+        key.startsWith('/artifacts/') &&
+        !key.startsWith('/artifacts/thread/')
+      );
+    },
+  });
+}
+
 export function useMessageSend(params: UseMessageSendParams) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
@@ -83,6 +118,7 @@ export function useMessageSend(params: UseMessageSendParams) {
       let requestController: AbortController | null = null;
       let wasAborted = false;
       let hadError = false;
+      let sessionExpired = false;
       const requestThreadId = payload.threadId;
       const requestParams = currentParamsRef.current;
       const getCurrentParams = () =>
@@ -138,6 +174,13 @@ export function useMessageSend(params: UseMessageSendParams) {
           body: formData,
           signal,
         });
+
+        if (response.status === 401) {
+          sessionExpired = true;
+          hadError = true;
+          redirectToLogin();
+          return;
+        }
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -276,43 +319,11 @@ export function useMessageSend(params: UseMessageSendParams) {
         // with the backend's async save operation
         if (!wasAborted) {
           requestParams.onComplete?.(hadError);
-          // Cancel any in-flight thread refetch (e.g. an active refetchInterval
-          // poll) so its older response can't land after ours and shorten the
-          // displayed assistant text. Then await the refetch so the cache
-          // holds the post-save server state before sendMessage resolves.
-          const threadQueryKey =
-            getThreadsControllerFindOneQueryKey(requestThreadId);
-          await queryClient.cancelQueries({
-            queryKey: threadQueryKey,
-            exact: true,
-          });
-          await queryClient.refetchQueries({
-            queryKey: threadQueryKey,
-            exact: true,
-          });
-
-          [
-            getThreadsControllerFindAllQueryKey(),
-            getArtifactsControllerFindByThreadQueryKey(requestThreadId),
-            getThreadAiContextControllerGetAiContextQueryKey(requestThreadId),
-          ].forEach((queryKey) => {
-            void queryClient.invalidateQueries({
-              queryKey,
-            });
-          });
-
-          // Invalidate individual artifact queries so the editor panel
-          // refreshes after AI updates/edits an artifact during the run.
-          void queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey[0];
-              return (
-                typeof key === 'string' &&
-                key.startsWith('/artifacts/') &&
-                !key.startsWith('/artifacts/thread/')
-              );
-            },
-          });
+          if (!sessionExpired) {
+            // Await the post-save server state unless navigation is already
+            // handing an expired session back to login.
+            await refreshThreadQueriesAfterRun(queryClient, requestThreadId);
+          }
         }
       }
     },
