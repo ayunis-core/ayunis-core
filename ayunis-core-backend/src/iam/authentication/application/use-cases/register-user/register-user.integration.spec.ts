@@ -12,6 +12,7 @@ import { RegisterUserCommand } from './register-user.command';
 import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import type { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import type { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
+import type { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
 import type { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { CreateOrgUseCase } from 'src/iam/orgs/application/use-cases/create-org/create-org.use-case';
 import { CreateOrgCommand } from 'src/iam/orgs/application/use-cases/create-org/create-org.command';
@@ -131,6 +132,7 @@ describe('RegisterUserUseCase transaction', () => {
           return false;
         }),
       } as unknown as ConfigService,
+      { publish: jest.fn() } as unknown as UserCreatedEventPublisher,
     );
   });
 

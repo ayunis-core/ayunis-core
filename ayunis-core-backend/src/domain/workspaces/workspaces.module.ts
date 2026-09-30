@@ -3,7 +3,9 @@ import { FavoritesModule } from 'src/domain/favorites/favorites.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
+import { WorkspaceTutorialUserCreatedListener } from './application/listeners/workspace-tutorial-user-created.listener';
 import { WorkspaceAccessService } from './application/services/workspace-access.service';
+import { WorkspaceTutorialProvisioningService } from './application/services/workspace-tutorial-provisioning.service';
 import { WorkspacesRepository } from './application/ports/workspaces-repository.port';
 import { AssertWorkspaceExecutionAccessUseCase } from './application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import { AssertWorkspaceReadAccessUseCase } from './application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
@@ -47,6 +49,8 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     UpdateWorkspaceInstructionUseCase,
     GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
+    WorkspaceTutorialProvisioningService,
+    WorkspaceTutorialUserCreatedListener,
     WorkspaceAccessService,
     AssertWorkspaceReadAccessUseCase,
     AssertWorkspaceWriteAccessUseCase,
@@ -66,6 +70,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     DeleteWorkspaceUseCase,
     GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
+    WorkspaceTutorialProvisioningService,
   ],
 })
 export class WorkspacesModule {}

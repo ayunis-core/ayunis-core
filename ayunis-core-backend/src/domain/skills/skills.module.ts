@@ -161,6 +161,8 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     SkillKnowledgeBasesController,
   ],
   exports: [
+    CreateSkillUseCase,
+    AssignKnowledgeBaseToSkillUseCase,
     ActivateWorkspaceSkillByNameUseCase,
     GetWorkspaceSkillsUseCase,
     SkillRepository,

@@ -25,7 +25,7 @@ describe('CreateAdminUserUseCase', () => {
       execute: jest.fn(),
     };
     mockCreateUserUseCase = {
-      execute: jest.fn(),
+      createWithoutPublishing: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,13 +71,15 @@ describe('CreateAdminUserUseCase', () => {
     jest
       .spyOn(mockHashTextUseCase, 'execute')
       .mockResolvedValue('hashedPassword');
-    jest.spyOn(mockCreateUserUseCase, 'execute').mockResolvedValue(mockUser);
+    jest
+      .spyOn(mockCreateUserUseCase, 'createWithoutPublishing')
+      .mockResolvedValue(mockUser);
 
     const result = await useCase.execute(command);
 
     expect(result).toBe(mockUser);
-    expect(mockCreateUserUseCase.execute).toHaveBeenCalled();
-    expect(mockCreateUserUseCase.execute).toHaveBeenCalled();
+    expect(mockCreateUserUseCase.createWithoutPublishing).toHaveBeenCalled();
+    expect(mockCreateUserUseCase.createWithoutPublishing).toHaveBeenCalled();
   });
 
   it('should pass department from command to create-user use case', async () => {
@@ -106,12 +108,14 @@ describe('CreateAdminUserUseCase', () => {
     jest
       .spyOn(mockHashTextUseCase, 'execute')
       .mockResolvedValue('hashedPassword');
-    jest.spyOn(mockCreateUserUseCase, 'execute').mockResolvedValue(mockUser);
+    jest
+      .spyOn(mockCreateUserUseCase, 'createWithoutPublishing')
+      .mockResolvedValue(mockUser);
 
     const result = await useCase.execute(command);
 
     expect(result.department).toBe('other:Wasserwerk');
-    expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith(
+    expect(mockCreateUserUseCase.createWithoutPublishing).toHaveBeenCalledWith(
       expect.objectContaining({ department: 'other:Wasserwerk' }),
     );
   });
@@ -127,7 +131,7 @@ describe('CreateAdminUserUseCase', () => {
     });
 
     jest
-      .spyOn(mockCreateUserUseCase, 'execute')
+      .spyOn(mockCreateUserUseCase, 'createWithoutPublishing')
       .mockRejectedValue(new UserAlreadyExistsError('User already exists'));
 
     await expect(useCase.execute(command)).rejects.toThrow(

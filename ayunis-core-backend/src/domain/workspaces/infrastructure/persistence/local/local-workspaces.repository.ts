@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
 import {
@@ -6,7 +8,7 @@ import {
   type WorkspaceContextRefs,
   type WorkspaceListStats,
 } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import { In, Repository, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
@@ -24,7 +26,7 @@ import type {
 export class LocalWorkspacesRepository extends WorkspacesRepository {
   constructor(
     @InjectRepository(WorkspaceRecord)
-    private readonly repo: Repository<WorkspaceRecord>,
+    private readonly defaultWorkspaceRepository: Repository<WorkspaceRecord>,
     @InjectRepository(SkillRecord)
     private readonly skillsRepo: Repository<SkillRecord>,
     @InjectRepository(KnowledgeBaseRecord)
@@ -32,8 +34,16 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     @InjectRepository(KnowledgeBaseActivationRecord)
     private readonly knowledgeBaseActivationsRepo: Repository<KnowledgeBaseActivationRecord>,
     private readonly mapper: WorkspaceMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repo(): Repository<WorkspaceRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(WorkspaceRecord) ?? this.defaultWorkspaceRepository
+    );
   }
 
   async findAllByUserId(
