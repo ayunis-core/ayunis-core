@@ -1,16 +1,25 @@
-import type { SubscriptionEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
+import type {
+  UsageBasedSubscriptionEventData,
+  SubscriptionEventData,
+} from 'src/iam/subscriptions/application/events/subscription-event-data.types';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import type {
   SubscriptionWebhookPayload,
   SeatBasedWebhookPayload,
   UsageBasedWebhookPayload,
-} from '../domain/subscription-webhook-payload.types';
+} from 'src/integrations/webhooks/domain/subscription-webhook-payload.types';
 
 /**
  * Maps domain-level {@link SubscriptionEventData} to the webhook-specific
  * {@link SubscriptionWebhookPayload}. The main difference is that domain
  * types use `Date` objects while webhook payloads use ISO 8601 strings.
  */
+export function mapSubscriptionToWebhookPayload(
+  data: UsageBasedSubscriptionEventData,
+): UsageBasedWebhookPayload;
+export function mapSubscriptionToWebhookPayload(
+  data: SubscriptionEventData,
+): SubscriptionWebhookPayload;
 export function mapSubscriptionToWebhookPayload(
   data: SubscriptionEventData,
 ): SubscriptionWebhookPayload {

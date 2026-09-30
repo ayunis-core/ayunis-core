@@ -1,3 +1,4 @@
+import { TransactionHost } from '@nestjs-cls/transactional';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ParentChildIndexerRepository } from './parent-child-index.repository';
@@ -18,6 +19,7 @@ describe('ParentChildIndexerRepository', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: TransactionHost, useValue: { tx: undefined } },
         ParentChildIndexerRepository,
         {
           provide: getRepositoryToken(ParentChunkRecord),

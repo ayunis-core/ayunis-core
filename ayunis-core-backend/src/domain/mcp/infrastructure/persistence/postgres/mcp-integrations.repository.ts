@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -21,16 +24,48 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
 
   constructor(
     @InjectRepository(McpIntegrationRecord)
-    private readonly repository: Repository<McpIntegrationRecord>,
+    private readonly defaultRepository: Repository<McpIntegrationRecord>,
     @InjectRepository(McpIntegrationAuthRecord)
-    private readonly authRepository: Repository<McpIntegrationAuthRecord>,
+    private readonly defaultAuthRepository: Repository<McpIntegrationAuthRecord>,
     @InjectRepository(PredefinedMcpIntegrationRecord)
-    private readonly predefinedRepository: Repository<PredefinedMcpIntegrationRecord>,
+    private readonly defaultPredefinedRepository: Repository<PredefinedMcpIntegrationRecord>,
     @InjectRepository(MarketplaceMcpIntegrationRecord)
-    private readonly marketplaceRepository: Repository<MarketplaceMcpIntegrationRecord>,
+    private readonly defaultMarketplaceRepository: Repository<MarketplaceMcpIntegrationRecord>,
     private readonly mcpIntegrationMapper: McpIntegrationMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repository(): Repository<McpIntegrationRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(McpIntegrationRecord) ?? this.defaultRepository
+    );
+  }
+
+  private get authRepository(): Repository<McpIntegrationAuthRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(McpIntegrationAuthRecord) ??
+      this.defaultAuthRepository
+    );
+  }
+
+  private get predefinedRepository(): Repository<PredefinedMcpIntegrationRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(PredefinedMcpIntegrationRecord) ??
+      this.defaultPredefinedRepository
+    );
+  }
+
+  private get marketplaceRepository(): Repository<MarketplaceMcpIntegrationRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(MarketplaceMcpIntegrationRecord) ??
+      this.defaultMarketplaceRepository
+    );
   }
 
   async save<T extends McpIntegration>(integration: T): Promise<T> {

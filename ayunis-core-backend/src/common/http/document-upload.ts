@@ -4,7 +4,9 @@ import * as fs from 'fs';
 import {
   detectFileType,
   getCanonicalMimeType,
+  isCSVFile,
   isDocumentSourceFile,
+  isSpreadsheetFile,
 } from 'src/common/util/file-type';
 import {
   SOURCE_FILE_UPLOAD_OPTIONS,
@@ -51,7 +53,8 @@ export function resolveDocumentUploadMimeType(params: {
     params.file.mimetype,
     params.file.originalname,
   );
-  if (!isDocumentSourceFile(detectedType)) {
+  const isTable = isCSVFile(detectedType) || isSpreadsheetFile(detectedType);
+  if (!isDocumentSourceFile(detectedType) && !isTable) {
     throw new BadRequestException(
       params.errorMessage('unsupported', detectedType),
     );

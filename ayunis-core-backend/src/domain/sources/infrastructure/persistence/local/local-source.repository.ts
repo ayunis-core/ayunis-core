@@ -149,6 +149,9 @@ export class LocalSourceRepository extends SourceRepository {
       },
       'Saving text source record',
     );
+    // Uploads assign the knowledge base after enqueueing, so a job's copy of
+    // the source can predate the link — saving it must not null the column.
+    delete (sourceRecord as Partial<TextSourceRecord>).knowledgeBaseId;
     const savedSource = await this.sourceRepository.save(sourceRecord);
     this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
     const savedDetails = await this.textSourceDetailsRepository.save(details);

@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,10 +18,16 @@ export class LocalLetterheadsRepository extends LetterheadsRepository {
 
   constructor(
     @InjectRepository(LetterheadRecord)
-    private readonly repo: Repository<LetterheadRecord>,
+    private readonly defaultRepo: Repository<LetterheadRecord>,
     private readonly mapper: LetterheadMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repo(): Repository<LetterheadRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(LetterheadRecord) ?? this.defaultRepo;
   }
 
   async findAllByOrgId(orgId: UUID): Promise<Letterhead[]> {

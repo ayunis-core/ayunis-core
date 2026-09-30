@@ -4846,14 +4846,23 @@ export interface UpsertOrgSystemPromptDto {
   systemPrompt: string;
 }
 
+export interface ChatStartDefaultsResponseDto {
+  /** Whether new chats start in anonymous mode; users may opt out */
+  anonymousModeByDefault: boolean;
+}
+
 export interface OrgChatSettingsResponseDto {
   /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
   internetSearchEnabled: boolean;
+  /** Whether new chats start in anonymous mode */
+  anonymousModeByDefault: boolean;
 }
 
 export interface UpsertOrgChatSettingsDto {
-  /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
-  internetSearchEnabled: boolean;
+  /** Whether internet access is available to the AI assistant */
+  internetSearchEnabled?: boolean;
+  /** Whether new chats start in anonymous mode; users can opt out */
+  anonymousModeByDefault?: boolean;
 }
 
 export interface RetentionPolicyResponseDto {

@@ -6,6 +6,8 @@ import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
 import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
+import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-monthly-credits-updated.event';
+import { SubscriptionMonthlyCreditsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-monthly-credits-updated.webhook-event';
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
@@ -118,6 +120,18 @@ export class WebhookDispatchListener {
     await this.dispatchSubscription(
       event.orgId,
       new SubscriptionCreatedWebhookEvent(
+        mapSubscriptionToWebhookPayload(event.payload),
+      ),
+    );
+  }
+
+  @OnEvent(SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME)
+  async handleSubscriptionMonthlyCreditsUpdated(
+    event: SubscriptionMonthlyCreditsUpdatedEvent,
+  ): Promise<void> {
+    await this.dispatchSubscription(
+      event.orgId,
+      new SubscriptionMonthlyCreditsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
     );

@@ -1,4 +1,16 @@
 {
+  "anonymousModeDefault": {
+    "title": "Anonymous mode",
+    "description": "Choose how new chats start. This applies to all users in your organization.",
+    "label": "Start new chats in anonymous mode",
+    "hint": "Users can turn anonymous mode off for individual chats. To require it, enable it for the respective model under “Models”.",
+    "saved": "Anonymous mode setting saved.",
+    "loading": "Loading anonymous mode settings",
+    "loadError": "The anonymous mode setting could not be loaded.",
+    "saveError": "The anonymous mode setting could not be saved.",
+    "unauthorized": "You do not have permission to change this setting.",
+    "retry": "Retry"
+  },
   "piiWhitelist": {
     "heading": "Anonymization exceptions",
     "description": "In anonymous mode, Ayunis Core replaces detected personal data with placeholders before it is sent to the language model. Here you can exempt individual data types (e.g. names or emails) from anonymization — either entirely or only for specific values you define. Everything else is still masked.",

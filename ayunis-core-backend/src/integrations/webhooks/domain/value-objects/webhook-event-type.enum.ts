@@ -4,6 +4,7 @@ export enum WebhookEventType {
   USER_INVITED = 'user.invited',
   USER_UPDATED = 'user.updated',
   USER_DELETED = 'user.deleted',
+  SUBSCRIPTION_MONTHLY_CREDITS_UPDATED = 'subscription.monthly_credits_updated',
   SUBSCRIPTION_CREATED = 'subscription.created',
   SUBSCRIPTION_CANCELLED = 'subscription.cancelled',
   SUBSCRIPTION_UNCANCELLED = 'subscription.uncancelled',

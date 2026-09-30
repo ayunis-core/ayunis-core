@@ -59,7 +59,7 @@ Layers only depend on layers to their right. Never import upward.
 
 ### Check demonstrated conventions before deciding placement
 
-The FSD rules above are the theory; **this repo's actual conventions are the tie-breaker.** Before deciding where a slice or component lives — feature vs widget vs page, which page a route maps to, whether something is "shared enough" to promote a layer — grep how comparable cases are already structured and follow that, rather than reasoning from FSD principles alone.
+The FSD rules above are the theory; **this repo's actual conventions are the tie-breaker.** Before deciding where a slice or component lives — feature vs widget vs page, which page a route maps to, whether something is "shared enough" to promote a layer — grep how comparable cases are already structured and follow that, rather than reasoning from FSD principles alone. Before adding any frontend file or introducing a new slice segment, inspect the target slice's existing directories and the two closest analogues.
 
 - The abstract heuristics ("used in ≥2 pages → widget", "used from more than one slice → promote") are necessary but not sufficient. They routinely disagree with how the codebase actually draws its boundaries when viewed across the whole repo instead of a single branch.
 - Concrete convention that has bitten before: **pages map one slice per route** — e.g. a list route and its detail route are separate page slices (`skills.index` vs `skill.$id`), not one page reused across two routes. Check the route files and `src/pages/` before assuming a shared placement.
@@ -93,13 +93,14 @@ Each page module can have these subdirectories:
 
 ```text
 src/pages/<page-name>/
-├── ui/       # Components — state, hooks, JSX only
+├── ui/       # Components — component-local state/hooks and JSX
+├── hooks/    # Standalone React behavior hooks, when the slice uses this segment
 ├── api/      # Mutation hooks (one per operation)
 ├── model/    # Types, constants, schemas
-└── lib/      # Pure helper functions (formatting, URL building, data transforms)
+└── lib/      # Pure helpers and established reusable behavior hooks
 ```
 
-Keep `ui/` components focused on component logic. Extract pure functions that don't depend on React state or hooks into `lib/`.
+Keep `ui/` components focused on component logic. Calling hooks inside a component does not make `ui/` the home for standalone `use*.ts` files. Put standalone interaction or presentation behavior hooks in the slice's established `hooks/` or `lib/` segment, choosing between them from the target slice and its two closest analogues; keep server operations in `api/` and state/domain concerns in `model/` when that is the slice convention. A component-specific hook may stay colocated only when comparable components in that slice already follow that pattern.
 
 ## API Client
 

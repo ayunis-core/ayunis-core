@@ -2,10 +2,11 @@ import { Controller, Get, Put, Body } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetOrgChatSettingsUseCase } from '../../application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
-import { UpsertOrgChatSettingsUseCase } from '../../application/use-cases/upsert-org-chat-settings/upsert-org-chat-settings.use-case';
-import { UpsertOrgChatSettingsCommand } from '../../application/use-cases/upsert-org-chat-settings/upsert-org-chat-settings.command';
+import { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
+import { UpsertOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/upsert-org-chat-settings/upsert-org-chat-settings.use-case';
+import { UpsertOrgChatSettingsCommand } from 'src/domain/chat-settings/application/use-cases/upsert-org-chat-settings/upsert-org-chat-settings.command';
 import { UpsertOrgChatSettingsDto } from './dtos/upsert-org-chat-settings.dto';
+import { ChatStartDefaultsResponseDto } from './dtos/chat-start-defaults-response.dto';
 import { OrgChatSettingsResponseDto } from './dtos/org-chat-settings-response.dto';
 
 @ApiTags('Chat Settings')
@@ -15,6 +16,17 @@ export class OrgChatSettingsController {
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
     private readonly upsertOrgChatSettingsUseCase: UpsertOrgChatSettingsUseCase,
   ) {}
+
+  @Get('chat-start-defaults')
+  @ApiOperation({
+    summary:
+      'Get chat-start defaults for the authenticated organization member',
+  })
+  @ApiResponse({ status: 200, type: ChatStartDefaultsResponseDto })
+  async getChatStartDefaults(): Promise<ChatStartDefaultsResponseDto> {
+    const result = await this.getOrgChatSettingsUseCase.execute();
+    return { anonymousModeByDefault: result.anonymousModeByDefault };
+  }
 
   @Get('org-chat-settings')
   @Roles(UserRole.ADMIN)
@@ -37,6 +49,7 @@ export class OrgChatSettingsController {
 
     return {
       internetSearchEnabled: result.internetSearchEnabled,
+      anonymousModeByDefault: result.anonymousModeByDefault,
     };
   }
 
@@ -45,7 +58,7 @@ export class OrgChatSettingsController {
   @ApiOperation({
     summary: 'Set or update the organization-wide chat settings',
     description:
-      'Creates or replaces the organization-wide chat settings. When internet access is disabled, web search and website content tools are not offered to the AI assistant in any of the org users conversations. Admin only.',
+      'Creates or partially updates the organization-wide chat settings. Omitted settings are preserved. When internet access is disabled, web search and website content tools are not offered to the AI assistant in any of the org users conversations. Admin only.',
   })
   @ApiBody({ type: UpsertOrgChatSettingsDto })
   @ApiResponse({
@@ -65,11 +78,12 @@ export class OrgChatSettingsController {
   async upsertOrgChatSettings(
     @Body() dto: UpsertOrgChatSettingsDto,
   ): Promise<OrgChatSettingsResponseDto> {
-    const command = new UpsertOrgChatSettingsCommand(dto.internetSearchEnabled);
+    const command = new UpsertOrgChatSettingsCommand(dto);
     const result = await this.upsertOrgChatSettingsUseCase.execute(command);
 
     return {
       internetSearchEnabled: result.internetSearchEnabled,
+      anonymousModeByDefault: result.anonymousModeByDefault,
     };
   }
 }

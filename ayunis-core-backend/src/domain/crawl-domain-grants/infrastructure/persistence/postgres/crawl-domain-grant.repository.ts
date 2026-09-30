@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,9 +16,17 @@ export class PostgresCrawlDomainGrantRepository extends CrawlDomainGrantReposito
 
   constructor(
     @InjectRepository(CrawlDomainGrantRecord)
-    private readonly repository: Repository<CrawlDomainGrantRecord>,
+    private readonly defaultRepository: Repository<CrawlDomainGrantRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repository(): Repository<CrawlDomainGrantRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(CrawlDomainGrantRecord) ?? this.defaultRepository
+    );
   }
 
   async findByDomain(domain: string): Promise<CrawlDomainGrant | null> {

@@ -1,3 +1,4 @@
+import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
 import { WorkspacePage } from '@/pages/workspace';
@@ -37,6 +38,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
       deps: { search, page = 1 },
       context: { queryClient },
     }) => {
+      await queryClient.fetchQuery(anonymousModeDefaultQueryOptions());
       const chatsParams = {
         workspaceId,
         search: search || undefined,

@@ -20,9 +20,9 @@ describe(SuperAdminInvitesSection.name, () => {
   it('shows pending invitations for the selected organization', () => {
     render(<SuperAdminInvitesSection invites={[invite]} total={1} />);
 
-    expect(
-      screen.getByTestId(`super-admin-invite-row-${invite.id}`),
-    ).toBeTruthy();
+    const row = screen.getByTestId(`super-admin-invite-row-${invite.id}`);
+    expect(row).toBeTruthy();
+    expect(row.querySelector('[data-slot="badge"]')).toBeTruthy();
     expect(screen.getByText(invite.email)).toBeTruthy();
     expect(screen.getByText('users.user')).toBeTruthy();
   });

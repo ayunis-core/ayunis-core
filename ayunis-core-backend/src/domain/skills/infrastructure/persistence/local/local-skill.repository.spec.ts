@@ -285,7 +285,9 @@ describe('LocalSkillRepository', () => {
     const repository = new LocalSkillRepository(
       skillRepository,
       mapper,
-      new LocalSkillAccessiblePageFinder(skillRepository),
+      new LocalSkillAccessiblePageFinder(skillRepository, {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>),
       new LocalSkillKnowledgeBaseIdsFinder(),
       {
         tx: mockManager,
@@ -335,7 +337,9 @@ describe('LocalSkillRepository', () => {
     const skillRepository = {
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     } as unknown as Repository<SkillRecord>;
-    const finder = new LocalSkillAccessiblePageFinder(skillRepository);
+    const finder = new LocalSkillAccessiblePageFinder(skillRepository, {
+      tx: undefined,
+    } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
 
     finder.buildQuery(userId, undefined, [], { limit: 20, offset: 0 });
 

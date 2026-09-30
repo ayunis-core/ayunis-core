@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
@@ -16,13 +19,35 @@ export class LocalThreadAssignmentsRepository {
 
   constructor(
     @InjectRepository(ThreadRecord)
-    private readonly threadRepository: Repository<ThreadRecord>,
+    private readonly defaultThreadRepository: Repository<ThreadRecord>,
     @InjectRepository(ThreadSourceAssignmentRecord)
-    private readonly threadSourceAssignmentRepository: Repository<ThreadSourceAssignmentRecord>,
+    private readonly defaultThreadSourceAssignmentRepository: Repository<ThreadSourceAssignmentRecord>,
     @InjectRepository(ThreadKnowledgeBaseAssignmentRecord)
-    private readonly threadKbAssignmentRepository: Repository<ThreadKnowledgeBaseAssignmentRecord>,
+    private readonly defaultThreadKbAssignmentRepository: Repository<ThreadKnowledgeBaseAssignmentRecord>,
     private readonly sourceAssignmentMapper: ThreadSourceAssignmentMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
+
+  private get threadRepository(): Repository<ThreadRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(ThreadRecord) ?? this.defaultThreadRepository;
+  }
+
+  private get threadSourceAssignmentRepository(): Repository<ThreadSourceAssignmentRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ThreadSourceAssignmentRecord) ??
+      this.defaultThreadSourceAssignmentRepository
+    );
+  }
+
+  private get threadKbAssignmentRepository(): Repository<ThreadKnowledgeBaseAssignmentRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ThreadKnowledgeBaseAssignmentRecord) ??
+      this.defaultThreadKbAssignmentRepository
+    );
+  }
 
   async findSourceAssignmentsByThreadId(
     threadId: UUID,

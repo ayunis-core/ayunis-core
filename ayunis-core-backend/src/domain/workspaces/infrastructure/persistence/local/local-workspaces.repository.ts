@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
@@ -24,16 +27,43 @@ import type {
 export class LocalWorkspacesRepository extends WorkspacesRepository {
   constructor(
     @InjectRepository(WorkspaceRecord)
-    private readonly repo: Repository<WorkspaceRecord>,
+    private readonly defaultRepo: Repository<WorkspaceRecord>,
     @InjectRepository(SkillRecord)
-    private readonly skillsRepo: Repository<SkillRecord>,
+    private readonly defaultSkillsRepo: Repository<SkillRecord>,
     @InjectRepository(KnowledgeBaseRecord)
-    private readonly knowledgeBasesRepo: Repository<KnowledgeBaseRecord>,
+    private readonly defaultKnowledgeBasesRepo: Repository<KnowledgeBaseRecord>,
     @InjectRepository(KnowledgeBaseActivationRecord)
-    private readonly knowledgeBaseActivationsRepo: Repository<KnowledgeBaseActivationRecord>,
+    private readonly defaultKnowledgeBaseActivationsRepo: Repository<KnowledgeBaseActivationRecord>,
     private readonly mapper: WorkspaceMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repo(): Repository<WorkspaceRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(WorkspaceRecord) ?? this.defaultRepo;
+  }
+
+  private get skillsRepo(): Repository<SkillRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(SkillRecord) ?? this.defaultSkillsRepo;
+  }
+
+  private get knowledgeBasesRepo(): Repository<KnowledgeBaseRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(KnowledgeBaseRecord) ??
+      this.defaultKnowledgeBasesRepo
+    );
+  }
+
+  private get knowledgeBaseActivationsRepo(): Repository<KnowledgeBaseActivationRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(KnowledgeBaseActivationRecord) ??
+      this.defaultKnowledgeBaseActivationsRepo
+    );
   }
 
   async findAllByUserId(

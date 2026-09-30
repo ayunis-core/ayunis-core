@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
@@ -9,8 +12,14 @@ import { SkillRecord } from './schema/skill.record';
 export class LocalSkillAccessiblePageFinder {
   constructor(
     @InjectRepository(SkillRecord)
-    private readonly skillRepository: Repository<SkillRecord>,
+    private readonly defaultSkillRepository: Repository<SkillRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
+
+  private get skillRepository(): Repository<SkillRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(SkillRecord) ?? this.defaultSkillRepository;
+  }
 
   buildQuery(
     userId: UUID,
