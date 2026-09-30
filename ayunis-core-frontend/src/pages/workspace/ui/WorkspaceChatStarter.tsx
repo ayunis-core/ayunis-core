@@ -7,6 +7,7 @@ import {
   type SourceUploadStatus,
 } from '@/features/chat-initiation';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { showError } from '@/shared/lib/toast';
@@ -72,7 +73,8 @@ export function WorkspaceChatStarter({
   const { setPendingImages, setPendingSkillId } = useChatContext();
 
   const [modelId, setModelId] = useState(selectedModelId);
-  const [isAnonymous, setIsAnonymous] = useState(false);
+  const { isAnonymousByDefault } = useAnonymousModeDefault();
+  const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
   const [sources, setSources] = useState<LocalSource[]>([]);
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
