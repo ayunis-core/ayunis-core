@@ -6,7 +6,6 @@ import { CreateInviteUseCase } from './create-invite.use-case';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
-import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -42,7 +41,6 @@ describe('single invite team assignments', () => {
           useValue: { generateInviteToken: () => 'token' },
         },
         { provide: GetActiveSubscriptionUseCase, useValue: {} },
-        { provide: UpdateSeatsUseCase, useValue: {} },
         { provide: SendInvitationEmailUseCase, useValue: {} },
         {
           provide: FindUserByEmailUseCase,

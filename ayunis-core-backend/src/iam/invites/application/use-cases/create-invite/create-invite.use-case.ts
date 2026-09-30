@@ -11,8 +11,6 @@ import { InviteJwtService } from 'src/iam/invites/application/services/invite-jw
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
-import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
-import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
 import {
   EmailNotAvailableError,
   InvalidSeatsError,
@@ -42,7 +40,6 @@ export class CreateInviteUseCase {
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
-    private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     private readonly configService: ConfigService,
@@ -177,21 +174,7 @@ export class CreateInviteUseCase {
       });
     }
     if (subscription.availableSeats === 0) {
-      if (
-        this.configService.get<boolean>(
-          'features.externalSubscriptionsEnabled',
-          false,
-        ) === true
-      ) {
-        throw new InsufficientSeatsError(1, subscription.availableSeats);
-      }
-      await this.updateSeatsUseCase.execute(
-        new UpdateSeatsCommand({
-          orgId,
-          requestingUserId: userId,
-          noOfSeats: sub.noOfSeats + 1,
-        }),
-      );
+      throw new InsufficientSeatsError(1, subscription.availableSeats);
     }
   }
 
