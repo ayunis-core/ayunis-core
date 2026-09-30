@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThanOrEqual, Not, Repository } from 'typeorm';
@@ -12,9 +15,17 @@ import { PasswordSetTokenMapper } from './mappers/password-set-token.mapper';
 export class LocalPasswordSetTokensRepository extends PasswordSetTokensRepository {
   constructor(
     @InjectRepository(PasswordSetTokenRecord)
-    private readonly repository: Repository<PasswordSetTokenRecord>,
+    private readonly defaultRepository: Repository<PasswordSetTokenRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repository(): Repository<PasswordSetTokenRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(PasswordSetTokenRecord) ?? this.defaultRepository
+    );
   }
 
   async replaceForUser(

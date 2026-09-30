@@ -101,3 +101,5 @@ artifacts/
 - Thread ownership verification when creating artifacts
 - Workspace artifact listings ignore unsupported legacy discriminator values
 - Retry-on-conflict logic for version number uniqueness (unique constraint + up to 3 retries)
+
+Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.

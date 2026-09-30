@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import { LocalWorkspacesRepository } from './local-workspaces.repository';
@@ -41,6 +43,9 @@ describe('LocalWorkspacesRepository', () => {
       {} as Repository<KnowledgeBaseRecord>,
       {} as Repository<KnowledgeBaseActivationRecord>,
       mapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await repository.findAllByUserId(randomUUID(), {
@@ -84,6 +89,9 @@ describe('LocalWorkspacesRepository', () => {
       knowledgeBaseRepository,
       activationRepository,
       {} as WorkspaceMapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await expect(repository.getContextRefs(workspaceId)).resolves.toEqual({
@@ -125,6 +133,9 @@ describe('LocalWorkspacesRepository', () => {
       {} as Repository<KnowledgeBaseRecord>,
       {} as Repository<KnowledgeBaseActivationRecord>,
       {} as WorkspaceMapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await expect(repository.getListStats([workspaceId])).resolves.toEqual(
@@ -155,6 +166,9 @@ describe('LocalWorkspacesRepository', () => {
       {} as Repository<KnowledgeBaseRecord>,
       {} as Repository<KnowledgeBaseActivationRecord>,
       {} as WorkspaceMapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await expect(repository.getListStats([])).resolves.toEqual(new Map());

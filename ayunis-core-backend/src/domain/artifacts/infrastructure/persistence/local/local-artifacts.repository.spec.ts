@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { LocalArtifactsRepository } from './local-artifacts.repository';
@@ -34,6 +36,9 @@ describe('LocalArtifactsRepository', () => {
       versionRepository,
       artifactMapper,
       versionMapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await repository.findByWorkspaceId(

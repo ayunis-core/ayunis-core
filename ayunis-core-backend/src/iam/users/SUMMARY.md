@@ -18,3 +18,5 @@ Public forgot-password keeps its generic response and consults the organization 
 `CountUsersByOrgIdUseCase` provides a context-free `COUNT(*)` boundary for transactional capacity checks without loading member records.
 
 `HasUsersOutsideOrgWithEmailDomainsUseCase` checks whether existing accounts with any supplied exact email domain belong to another organization. SSO uses this boolean preflight before enforcing SSO-only or adding domains to an enforced connection; it does not expose account details or constrain future account creation.
+
+Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.

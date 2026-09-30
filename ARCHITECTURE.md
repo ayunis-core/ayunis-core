@@ -235,3 +235,5 @@ the admin-settings sidebar + route guard. The backend still 403s regardless.
 - **Understanding authentication end to end**: [Authentication architecture](docs/architecture/authentication.md)
 - **Understanding authorization**: [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) + [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md) (RBAC — see "Authorization & RBAC" above)
 - **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
+
+Backend transaction enrollment and review checklist: [TRANSACTIONS.md](ayunis-core-backend/TRANSACTIONS.md).
