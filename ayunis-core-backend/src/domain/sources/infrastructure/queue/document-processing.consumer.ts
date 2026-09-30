@@ -56,16 +56,18 @@ export class DocumentProcessingConsumer extends WorkerHost {
       this.validateAndSetContext(orgId, userId);
 
       try {
-        const source = await this.loadSourceOrSkip(sourceId, minioPath);
-        if (!source) return;
+        if (!(await this.claimSourceOrSkip(sourceId, minioPath))) return;
 
         const { text, chunks } = await this.downloadAndExtractText(job.data);
 
-        // Guard: re-check the source still exists and is PROCESSING
-        // before writing content. Prevents resurrection of deleted sources.
-        if (!(await this.isSourceStillProcessing(sourceId, minioPath))) return;
+        // Save against a fresh read, never the pre-extraction copy:
+        // AddDocumentToKnowledgeBaseUseCase assigns the knowledge base only
+        // after enqueueing, and the re-check also keeps a deleted source from
+        // being resurrected.
+        const source = await this.reloadIfStillProcessing(sourceId, minioPath);
+        if (!source) return;
 
-        await this.updateSourceWithContent(source, text, chunks);
+        await this.sourceRepository.saveTextSource(source, { text, chunks });
         await this.helper.index(sourceId, orgId, chunks);
         await this.markSourceReady(sourceId, minioPath);
 
@@ -110,10 +112,10 @@ export class DocumentProcessingConsumer extends WorkerHost {
     this.contextService.set('userId', userId);
   }
 
-  private async loadSourceOrSkip(
+  private async claimSourceOrSkip(
     sourceId: UUID,
     minioPath: string,
-  ): Promise<TextSource | null> {
+  ): Promise<boolean> {
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
       this.logger.warn(
@@ -121,24 +123,22 @@ export class DocumentProcessingConsumer extends WorkerHost {
         'Source missing or no longer processing, skipping',
       );
       await this.cleanupMinioFile(minioPath);
-      return null;
+      return false;
     }
 
     if (!(source instanceof TextSource)) {
       throw new Error(`Source ${sourceId} is not a TextSource`);
     }
 
-    const processingStartedAt = new Date();
     const alive =
       await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
     if (!alive) {
       this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
       await this.cleanupMinioFile(minioPath);
-      return null;
+      return false;
     }
-    source.processingStartedAt = processingStartedAt;
 
-    return source;
+    return true;
   }
 
   private async downloadAndExtractText(
@@ -173,12 +173,15 @@ export class DocumentProcessingConsumer extends WorkerHost {
     return { text, chunks };
   }
 
-  private async isSourceStillProcessing(
+  private async reloadIfStillProcessing(
     sourceId: UUID,
     minioPath: string,
-  ): Promise<boolean> {
+  ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
-    if (source?.status !== SourceStatus.PROCESSING) {
+    if (
+      !(source instanceof TextSource) ||
+      source.status !== SourceStatus.PROCESSING
+    ) {
       this.logger.warn(
         {
           sourceId,
@@ -187,17 +190,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
         'Source deleted or status changed mid-processing',
       );
       await this.cleanupMinioFile(minioPath);
-      return false;
+      return null;
     }
-    return true;
-  }
-
-  private async updateSourceWithContent(
-    source: TextSource,
-    text: string,
-    chunks: TextSourceContentChunk[],
-  ): Promise<void> {
-    await this.sourceRepository.saveTextSource(source, { text, chunks });
+    return source;
   }
 
   private async markSourceReady(
