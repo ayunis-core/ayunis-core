@@ -15,7 +15,11 @@ import {
 import { useTranslation } from 'react-i18next';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useUserDefaultModel } from '@/pages/settings/chat-settings/api/useUserDefaultModel';
-import { ModelSelectOptions } from '@/widgets/model-select-options';
+import {
+  ModelSelectOptions,
+  getModeFromValue,
+  useModeSelection,
+} from '@/widgets/model-select-options';
 import { SettingsFieldRow } from '@/pages/settings/settings-layout';
 
 export function ChatSettingsCard() {
@@ -23,21 +27,27 @@ export function ChatSettingsCard() {
   const { models: permittedModels, isLoading: modelsLoading } =
     usePermittedModels();
 
-  const { userDefaultModel, manageUserDefaultModel, deleteUserDefaultModel } =
-    useUserDefaultModel({ allModels: permittedModels });
+  const {
+    userDefaultModel,
+    manageUserDefaultModel,
+    deleteUserDefaultModel,
+    isSaving,
+  } = useUserDefaultModel({ allModels: permittedModels });
+
+  const { selectedValue, select } = useModeSelection(
+    userDefaultModel?.id ?? 'null',
+    isSaving,
+  );
 
   const handleDefaultSettingChange = (value: string) => {
+    select(value);
+    if (getModeFromValue(value)) return;
     if (value === 'null') {
-      // Delete the default model (set to null)
       deleteUserDefaultModel();
     } else {
-      // Set/update the default model
       manageUserDefaultModel(value);
     }
   };
-
-  // Get current selected value
-  const selectedValue = userDefaultModel?.id ?? 'null';
 
   return (
     <Card>
@@ -75,6 +85,7 @@ export function ChatSettingsCard() {
                 models={permittedModels}
                 showFlag
                 showHeading={false}
+                showModes
               />
             </SelectContent>
           </Select>

@@ -129,6 +129,7 @@ export function ChatInputActionBar({
           <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
             <ModelSelector
               isDisabled={isModelChangeDisabled ?? false}
+              isAnonymous={isAnonymous}
               selectedModelId={modelId}
               onModelChange={onModelChange}
             />

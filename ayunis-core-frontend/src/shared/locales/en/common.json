@@ -157,6 +157,23 @@
   },
   "models": {
     "availableHeading": "Available models",
+    "modes": {
+      "heading": "Mode",
+      "current": "Currently:",
+      "adminHint": "Ayunis Core picks from your enabled models.",
+      "otherModelsHeading": "Other available models",
+      "auto": {
+        "label": "Auto",
+        "description": "Ayunis Core picks the model with the best balance of performance, speed and usage. If a model is disrupted, Ayunis Core automatically switches to another one.",
+        "hint": "Best balance"
+      },
+      "max": {
+        "label": "Max mode",
+        "description": "Ayunis Core picks the most capable model available for demanding tasks such as analyses or long documents. Usage is higher.",
+        "hint": "Highest performance"
+      },
+      "moreModels": "More models"
+    },
     "providerFaultWarning": "This model currently has a known provider issue and may not work reliably.",
     "category": {
       "zero": "Very weak",

@@ -18,8 +18,13 @@ import { useMemo } from 'react';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import {
   ModelSelectOptions,
+  getModeFromValue,
+  getModeValue,
+  resolveModeModel,
+  useModeSelection,
   type ModelOption,
 } from '@/widgets/model-select-options';
+import { ProviderFlag } from '@/shared/ui/provider-flag';
 
 interface OrgDefaultModelCardWidgetProps {
   models: ModelWithConfigResponseDto[];
@@ -39,6 +44,7 @@ export function OrgDefaultModelCardWidget({
   translationNamespace = 'admin-settings-models',
 }: Readonly<OrgDefaultModelCardWidgetProps>) {
   const { t } = useTranslation(translationNamespace);
+  const { t: tCommon } = useTranslation('common');
 
   const permittedModels = useMemo(
     () =>
@@ -58,13 +64,28 @@ export function OrgDefaultModelCardWidget({
         displayName: model.displayName,
         tier: model.tier,
         description: model.description,
+        anonymousOnly: model.anonymousOnly ?? false,
       })),
     [permittedModels],
   );
 
   const isDisabled = isLoading || isSaving || permittedModels.length === 0;
 
+  const fallbackValue = resolveModeModel('auto', modelOptions)
+    ? getModeValue('auto')
+    : undefined;
+  const { selectedValue, select } = useModeSelection(
+    defaultModel?.permittedModelId ?? fallbackValue,
+    isSaving,
+  );
+  const selectedMode = getModeFromValue(selectedValue);
+  const modeModel = selectedMode
+    ? resolveModeModel(selectedMode, modelOptions)
+    : undefined;
+
   const handleChange = (value: string) => {
+    select(value);
+    if (getModeFromValue(value)) return;
     if (value === defaultModel?.permittedModelId) {
       return;
     }
@@ -92,7 +113,7 @@ export function OrgDefaultModelCardWidget({
             tooltip={t('models.defaultModel.empty')}
           >
             <Select
-              value={defaultModel?.permittedModelId ?? undefined}
+              value={selectedValue}
               onValueChange={handleChange}
               disabled={isDisabled}
             >
@@ -110,11 +131,22 @@ export function OrgDefaultModelCardWidget({
                   models={modelOptions}
                   showFlag
                   showHeading={false}
+                  showModes
                 />
               </SelectContent>
             </Select>
           </TooltipIf>
         </div>
+        {modeModel && (
+          <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+            {tCommon('models.modes.adminHint')}
+            <span className="inline-flex items-center gap-1.5">
+              {tCommon('models.modes.current')}
+              <ProviderFlag provider={modeModel.provider} />
+              <span className="text-foreground">{modeModel.displayName}</span>
+            </span>
+          </p>
+        )}
         {permittedModels.length === 0 && !isLoading && (
           <div className="text-sm text-muted-foreground">
             {t('models.defaultModel.empty')}

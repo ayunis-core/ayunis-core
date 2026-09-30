@@ -10,7 +10,7 @@ import type {
   SetUserDefaultModelDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useQueryClient } from '@tanstack/react-query';
-import type { UserDefaultModel } from '../model/openapi';
+import type { UserDefaultModel } from '@/pages/settings/chat-settings/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -148,6 +148,9 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   }
 
   return {
+    isSaving:
+      manageUserDefaultModelMutation.isPending ||
+      deleteUserDefaultModelMutation.isPending,
     userDefaultModel: userDefaultModelResponse?.permittedLanguageModel ?? null,
     error,
     manageError: manageUserDefaultModelMutation.error as Error | null,

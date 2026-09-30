@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import ModelsCatalogList from './ModelsCatalogList';
 import { ModelsCatalogTabs } from './ModelsCatalogTabs';
 import { CreateLanguageModelDialog } from './CreateLanguageModelDialog';
@@ -22,8 +22,11 @@ import type {
   EmbeddingModelResponseDto,
   ImageGenerationModelResponseDto,
 } from '@/shared/api';
-import { useDeleteModel } from '../api/useDeleteModel';
+import { useDeleteModel } from '@/pages/super-admin-settings/models-catalog/api/useDeleteModel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
+import { isLanguageModel } from '@/features/models';
+import { MODEL_MODES } from '@/widgets/model-select-options';
+import { ModeModelList } from './ModeModelList';
 
 export default function ModelsCatalogPage({
   models,
@@ -97,14 +100,23 @@ export default function ModelsCatalogPage({
         activeCount={activeModels.length}
         archivedCount={archivedModels.length}
         renderActiveContent={() => (
-          <ModelsCatalogList
-            models={activeModels}
-            onEditLanguageModel={setEditLanguageModel}
-            onEditEmbeddingModel={setEditEmbeddingModel}
-            onEditImageGenerationModel={setEditImageGenerationModel}
-            onDeleteModel={handleDeleteModel}
-            isDeleting={isDeleting}
-          />
+          <div className="space-y-6">
+            {MODEL_MODES.map((mode) => (
+              <ModeModelList
+                key={mode}
+                mode={mode}
+                languageModels={activeModels.filter(isLanguageModel)}
+              />
+            ))}
+            <ModelsCatalogList
+              models={activeModels}
+              onEditLanguageModel={setEditLanguageModel}
+              onEditEmbeddingModel={setEditEmbeddingModel}
+              onEditImageGenerationModel={setEditImageGenerationModel}
+              onDeleteModel={handleDeleteModel}
+              isDeleting={isDeleting}
+            />
+          </div>
         )}
         renderArchivedContent={() => (
           <ModelsCatalogList

@@ -110,8 +110,10 @@ test('team model access follows the explicit override allowlist', async ({
 
     await memberPage.goto('/chat');
     await memberPage.getByTestId('chat-model-selector').click();
-    await expect(memberPage.getByRole('option')).toHaveCount(1);
-    await memberPage.getByRole('option').click();
+    await memberPage.getByTestId('chat-model-selector-more-models').click();
+    const modelItems = memberPage.getByTestId('chat-model-selector-model');
+    await expect(modelItems).toHaveCount(1);
+    await modelItems.click();
     await sendMessage(memberPage, 'Nutze das Teammodell');
     await expect(
       memberPage.getByTestId('assistant-message').last(),

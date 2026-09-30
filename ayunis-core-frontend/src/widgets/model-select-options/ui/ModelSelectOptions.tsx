@@ -9,46 +9,32 @@ import {
   SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectSeparator,
 } from '@ayunis/ui/components/select';
-import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
+import {
+  MODEL_MODES,
+  compareModels,
+  getModeValue,
+  resolveModeModel,
+  type ModelMode,
+} from '@/widgets/model-select-options/lib/model-modes';
+import { stripProviderSuffix } from '@/widgets/model-select-options/lib/model-display-name';
+import ModelModeIcon from './ModelModeIcon';
+import ModelModeInfoCard from './ModelModeInfoCard';
 import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
 import ModelProviderFaultIndicator from './ModelProviderFaultIndicator';
 
 export type ModelOption = ModelInfoModel & { id: string };
 
-const TIER_RANK: Record<string, number> = {
-  high: 3,
-  medium: 2,
-  low: 1,
-  zero: 0,
-};
-
-function compareModels(a: ModelOption, b: ModelOption): number {
-  const hostingA = getHostingPriority(a.provider);
-  const hostingB = getHostingPriority(b.provider);
-  if (hostingA !== hostingB) return hostingA - hostingB;
-
-  const tierA = TIER_RANK[a.tier ?? ''] ?? -1;
-  const tierB = TIER_RANK[b.tier ?? ''] ?? -1;
-  if (tierA !== tierB) return tierB - tierA;
-
-  return a.displayName.localeCompare(b.displayName);
-}
-
-function stripProviderSuffix(displayName: string): string {
-  const openIndex = displayName.lastIndexOf('(');
-  if (openIndex > 0 && displayName.trimEnd().endsWith(')')) {
-    return displayName.slice(0, openIndex).trimEnd();
-  }
-  return displayName;
-}
+type HoveredOption = ModelOption | ModelMode;
 
 interface ModelSelectOptionsProps {
   models: ModelOption[];
   showFlag?: boolean;
   showHeading?: boolean;
   showProviderFault?: boolean;
+  showModes?: boolean;
 }
 
 export default function ModelSelectOptions({
@@ -56,11 +42,16 @@ export default function ModelSelectOptions({
   showFlag = false,
   showHeading = true,
   showProviderFault = false,
+  showModes = false,
 }: Readonly<ModelSelectOptionsProps>) {
   const { t } = useTranslation('common');
-  const [hoveredModel, setHoveredModel] = useState<ModelOption | null>(null);
+  const [hovered, setHovered] = useState<HoveredOption | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const sortedModels = [...models].sort(compareModels);
+  const availableModes = MODEL_MODES.filter(
+    (mode) => resolveModeModel(mode, models) !== undefined,
+  );
+  const hasModes = showModes && availableModes.length > 0;
 
   const cancelScheduledClose = () => {
     if (closeTimerRef.current !== null) {
@@ -72,29 +63,58 @@ export default function ModelSelectOptions({
   // Grace period so the cursor can travel from the list into the card
   const scheduleClose = () => {
     cancelScheduledClose();
-    closeTimerRef.current = window.setTimeout(() => setHoveredModel(null), 150);
+    closeTimerRef.current = window.setTimeout(() => setHovered(null), 150);
+  };
+
+  const showCardFor = (option: HoveredOption) => {
+    cancelScheduledClose();
+    setHovered(option);
   };
 
   useEffect(() => cancelScheduledClose, []);
 
   return (
-    <Popover open={!!hoveredModel}>
+    <Popover open={!!hovered}>
       <PopoverAnchor asChild>
         <div onMouseLeave={scheduleClose}>
           <SelectGroup>
-            {showHeading && (
+            {showHeading && !hasModes && (
               <SelectLabel>{t('models.availableHeading')}</SelectLabel>
+            )}
+            {hasModes && (
+              <>
+                {availableModes.map((mode) => (
+                  <SelectItem
+                    key={mode}
+                    value={getModeValue(mode)}
+                    className="cursor-pointer"
+                    onMouseEnter={() => showCardFor(mode)}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <ModelModeIcon mode={mode} />
+                      {t(`models.modes.${mode}.label`)}
+                    </span>
+                    <span className="text-muted-foreground text-xs [[data-slot=select-value]_&]:hidden">
+                      {t(`models.modes.${mode}.hint`)}
+                    </span>
+                  </SelectItem>
+                ))}
+                <SelectSeparator />
+                {showHeading && (
+                  <SelectLabel>
+                    {t('models.modes.otherModelsHeading')}
+                  </SelectLabel>
+                )}
+              </>
             )}
             {sortedModels.map((model) => {
               const name = stripProviderSuffix(model.displayName);
               return (
                 <SelectItem
                   key={model.id}
+                  className="cursor-pointer"
                   value={model.id}
-                  onMouseEnter={() => {
-                    cancelScheduledClose();
-                    setHoveredModel(model);
-                  }}
+                  onMouseEnter={() => showCardFor(model)}
                 >
                   {showFlag ? (
                     <span className="inline-flex items-center gap-1.5">
@@ -132,7 +152,15 @@ export default function ModelSelectOptions({
         onMouseEnter={cancelScheduledClose}
         onMouseLeave={scheduleClose}
       >
-        {hoveredModel && <ModelInfoCard model={hoveredModel} />}
+        {typeof hovered === 'string' && (
+          <ModelModeInfoCard
+            mode={hovered}
+            resolvedModel={resolveModeModel(hovered, models)}
+          />
+        )}
+        {hovered && typeof hovered !== 'string' && (
+          <ModelInfoCard model={hovered} />
+        )}
       </PopoverContent>
     </Popover>
   );
