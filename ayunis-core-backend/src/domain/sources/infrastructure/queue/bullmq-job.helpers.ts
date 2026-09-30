@@ -20,6 +20,17 @@ export const STANDARD_JOB_OPTIONS: JobsOptions = {
 };
 
 /**
+ * Options for a source's ingestion run. Job ids are generated per run: a
+ * fixed id (the source id) made BullMQ silently drop every later run while
+ * an earlier job with that id was still retained. Deduplicating by source id
+ * instead drops a new run only while one is waiting, delayed or active — the
+ * key is released when a job completes, fails for good or is removed.
+ */
+export function sourceJobOptions(sourceId: UUID): JobsOptions {
+  return { ...STANDARD_JOB_OPTIONS, deduplication: { id: sourceId } };
+}
+
+/**
  * True when no BullMQ retry will follow this attempt. When opts.attempts is
  * unset, BullMQ runs the job exactly once, so the first attempt is final.
  */
@@ -168,8 +179,9 @@ function shouldScheduleRetry(
 }
 
 /**
- * Best-effort cancellation of a queued job keyed by its source id. Active jobs
- * cannot be removed — the consumer's PROCESSING guard handles those instead.
+ * Best-effort cancellation of the run enqueued with `sourceJobOptions`,
+ * found through its deduplication key. Active jobs cannot be removed — the
+ * consumer's PROCESSING guard handles those instead.
  */
 export async function cancelQueueJob(
   queue: Queue,
@@ -177,7 +189,8 @@ export async function cancelQueueJob(
   logger: Logger,
 ): Promise<void> {
   try {
-    const job = await queue.getJob(sourceId);
+    const jobId = await queue.getDeduplicationJobId(sourceId);
+    const job = jobId ? await queue.getJob(jobId) : undefined;
     if (!job) {
       logger.debug({ sourceId }, 'No job found to cancel');
       return;
@@ -190,7 +203,7 @@ export async function cancelQueueJob(
     }
 
     await job.remove();
-    logger.log({ sourceId, state }, 'Cancelled queued job');
+    logger.log({ sourceId, jobId, state }, 'Cancelled queued job');
   } catch (err) {
     logger.warn(
       {

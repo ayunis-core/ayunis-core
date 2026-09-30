@@ -8,6 +8,8 @@ import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/p
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
 import { SourceContentReplacementService } from 'src/domain/sources/application/services/source-content-replacement.service';
+import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
+import { UrlSourceExtractor } from 'src/domain/sources/application/services/url-source-extractor.service';
 import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { UrlCrawlProducer } from './url-crawl.producer';
@@ -34,6 +36,8 @@ import { UrlCrawlConsumer } from './url-crawl.consumer';
     MarkSourceFailedUseCase,
     SourceProcessingHelper,
     SourceContentReplacementService,
+    SourceIngestionService,
+    UrlSourceExtractor,
   ],
   exports: [UrlCrawlProcessingPort],
 })

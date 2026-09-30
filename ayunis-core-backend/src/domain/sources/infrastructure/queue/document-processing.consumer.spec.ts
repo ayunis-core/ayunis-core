@@ -1,36 +1,49 @@
+const mockIncrementCounter = jest.fn();
+
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: {
+    client: {
+      metrics: jest.fn(() => ({ incrementCounter: mockIncrementCounter })),
+    },
+  },
+}));
+
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
+import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { TextType } from 'src/domain/sources/domain/source-type.enum';
-import { FileType } from 'src/domain/sources/domain/source-type.enum';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
+import { FileSourceExtractor } from 'src/domain/sources/application/services/file-source-extractor.service';
 import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
 
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 const USER_ID = '00000000-0000-0000-0000-000000000020' as UUID;
-const KNOWLEDGE_BASE_ID = '00000000-0000-0000-0000-000000000030' as UUID;
 const MINIO_PATH = `${ORG_ID}/processing/${SOURCE_ID}/doc.pdf`;
 
-function makeJobData(
-  overrides?: Partial<DocumentProcessingJobData>,
-): DocumentProcessingJobData {
+function makeJob(
+  overrides?: Partial<Job<DocumentProcessingJobData>>,
+): Job<DocumentProcessingJobData> {
   return {
-    sourceId: SOURCE_ID,
-    orgId: ORG_ID,
-    userId: USER_ID,
-    minioPath: MINIO_PATH,
-    fileName: 'doc.pdf',
-    fileType: 'application/pdf',
+    data: {
+      sourceId: SOURCE_ID,
+      orgId: ORG_ID,
+      userId: USER_ID,
+      minioPath: MINIO_PATH,
+      fileName: 'doc.pdf',
+      fileType: 'application/pdf',
+    },
+    id: '17',
+    attemptsMade: 0,
+    opts: { attempts: 3 },
     ...overrides,
-  };
+  } as unknown as Job<DocumentProcessingJobData>;
 }
 
 function makeSource(status = SourceStatus.PROCESSING): FileSource {
@@ -45,114 +58,122 @@ function makeSource(status = SourceStatus.PROCESSING): FileSource {
   });
 }
 
-function makeJob(
-  overrides?: Partial<Job<DocumentProcessingJobData>>,
-): Job<DocumentProcessingJobData> {
-  return {
-    data: makeJobData(),
-    id: 'job-1',
-    attemptsMade: 0,
-    opts: { attempts: 3 },
-    ...overrides,
-  } as unknown as Job<DocumentProcessingJobData>;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Mocks                                                              */
-/* ------------------------------------------------------------------ */
-
-const contextService = {
-  run: jest.fn((fn: () => Promise<void>) => fn()),
-  set: jest.fn(),
-};
-
-const retrieveFileContentUseCase = {
-  execute: jest.fn().mockResolvedValue({ pages: [{ text: 'hello world' }] }),
-};
-
-const splitTextUseCase = {
-  execute: jest.fn().mockReturnValue({
-    chunks: [{ text: 'hello world', metadata: { start: 0 } }],
-  }),
-};
-
-const downloadObjectUseCase = {
-  execute: jest.fn().mockResolvedValue(
-    (async function* () {
-      yield Buffer.from('pdf-bytes');
-    })(),
-  ),
-};
-
-const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
-
-const sourceRepository = {
-  findById: jest.fn(),
-  save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
-  refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
-  updateStatusConditionally: jest.fn(),
-};
-
-const contentReplacement = {
-  prepare: jest.fn(
-    async (params: {
-      sourceId: UUID;
-      text: string;
-      chunks: TextSourceContentChunk[];
-    }) => ({
-      text: params.text,
-      chunks: params.chunks,
-      index: { documentId: params.sourceId },
-    }),
-  ),
-  commit: jest.fn<Promise<FileSource | null>, [FileSource, unknown]>(
-    async (source) => source,
-  ),
-};
-
-const helper = {
-  markFailed: jest.fn().mockResolvedValue(undefined),
-  cleanupIndex: jest.fn().mockResolvedValue(undefined),
-};
-
-/* ------------------------------------------------------------------ */
-/*  Tests                                                              */
-/* ------------------------------------------------------------------ */
-
 describe('DocumentProcessingConsumer', () => {
+  const contextService = {
+    run: jest.fn((fn: () => Promise<void>) => fn()),
+    set: jest.fn(),
+  };
+  const retrieveFileContentUseCase = { execute: jest.fn() };
+  const downloadObjectUseCase = { execute: jest.fn() };
+  const deleteObjectUseCase = { execute: jest.fn() };
+  const splitTextUseCase = {
+    execute: jest.fn(() => ({
+      chunks: [{ text: 'hello world', metadata: { start: 0 } }],
+    })),
+  };
+  const contentReplacement = {
+    prepare: jest.fn(
+      async (params: {
+        sourceId: UUID;
+        text: string;
+        chunks: TextSourceContentChunk[];
+      }) => ({
+        text: params.text,
+        chunks: params.chunks,
+        index: { documentId: params.sourceId },
+      }),
+    ),
+    commit: jest.fn(async (source: FileSource) => source),
+  };
+  const helper = {
+    markFailed: jest.fn().mockResolvedValue(undefined),
+    cleanupIndex: jest.fn().mockResolvedValue(undefined),
+  };
+  let sourceRepository: ReturnType<typeof createMockSourceRepository>;
   let consumer: DocumentProcessingConsumer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
+    retrieveFileContentUseCase.execute.mockResolvedValue({
+      pages: [{ text: 'hello world' }],
+    });
+    downloadObjectUseCase.execute.mockImplementation(async () =>
+      (async function* () {
+        yield Buffer.from('pdf-bytes');
+      })(),
+    );
+    deleteObjectUseCase.execute.mockResolvedValue(undefined);
+    sourceRepository = createMockSourceRepository();
+    sourceRepository.findById.mockResolvedValue(makeSource());
 
     consumer = new DocumentProcessingConsumer(
       contextService as never,
-      retrieveFileContentUseCase as never,
-      splitTextUseCase as never,
-      downloadObjectUseCase as never,
-      deleteObjectUseCase as never,
-      sourceRepository as never,
-      contentReplacement as never,
-      helper as never,
+      new SourceIngestionService(
+        sourceRepository,
+        contentReplacement as never,
+        helper as never,
+      ),
+      new FileSourceExtractor(
+        downloadObjectUseCase as never,
+        deleteObjectUseCase as never,
+        retrieveFileContentUseCase as never,
+        splitTextUseCase as never,
+      ),
     );
   });
 
-  it('skips processing when the queued source can no longer be claimed', async () => {
-    const source = makeSource(SourceStatus.PROCESSING);
-    sourceRepository.findById.mockResolvedValue(source);
+  it('ingests the staged file in the job owner context and marks the source ready', async () => {
+    await consumer.process(makeJob());
+
+    expect(contextService.set).toHaveBeenCalledWith('orgId', ORG_ID);
+    expect(contextService.set).toHaveBeenCalledWith('userId', USER_ID);
+    expect(retrieveFileContentUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fileName: 'doc.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
+    expect(contentReplacement.commit).toHaveBeenCalled();
+    expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
+      SOURCE_ID,
+      SourceStatus.PROCESSING,
+      SourceStatus.READY,
+      { processingError: null },
+    );
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ objectName: MINIO_PATH }),
+    );
+  });
+
+  it('refuses a job without an org before touching the source', async () => {
+    const job = makeJob();
+    job.data.orgId = undefined as unknown as UUID;
+
+    await expect(consumer.process(job)).rejects.toThrow('orgId is required');
+    expect(sourceRepository.findById).not.toHaveBeenCalled();
+  });
+
+  it('deletes the staged file when the source can no longer be claimed', async () => {
     sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(false);
 
     await consumer.process(makeJob());
 
     expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
+  });
+
+  it('deletes the staged file when the source is deleted mid-processing', async () => {
+    sourceRepository.findById
+      .mockResolvedValueOnce(makeSource())
+      .mockResolvedValueOnce(null);
+
+    await consumer.process(makeJob());
+
     expect(contentReplacement.commit).not.toHaveBeenCalled();
     expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
-  it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {
-    const source = makeSource(SourceStatus.PROCESSING);
-    sourceRepository.findById.mockResolvedValue(source);
+  it('rethrows as JobRetryScheduledError and keeps the staged file when retries remain', async () => {
     downloadObjectUseCase.execute.mockRejectedValueOnce(
       new Error('MinIO object not found'),
     );
@@ -162,27 +183,29 @@ describe('DocumentProcessingConsumer', () => {
       message: 'MinIO object not found',
     });
     expect(helper.markFailed).not.toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('rethrows the original error on the final attempt', async () => {
-    const source = makeSource(SourceStatus.PROCESSING);
-    sourceRepository.findById.mockResolvedValue(source);
+  it('rethrows the original error, marks the source failed and deletes the staged file on the final attempt', async () => {
     downloadObjectUseCase.execute.mockRejectedValueOnce(
       new Error('MinIO object not found'),
     );
 
     await expect(
-      consumer.process(makeJob({ attemptsMade: 2 } as never)),
+      consumer.process(makeJob({ attemptsMade: 2 })),
     ).rejects.toMatchObject({
       name: 'Error',
       message: 'MinIO object not found',
     });
-    expect(helper.markFailed).toHaveBeenCalled();
+    expect(helper.markFailed).toHaveBeenCalledWith(
+      SOURCE_ID,
+      expect.objectContaining({ message: 'MinIO object not found' }),
+    );
+    expect(helper.cleanupIndex).toHaveBeenCalledWith(SOURCE_ID);
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
   it('completes without throwing when the file itself is the problem', async () => {
-    const source = makeSource(SourceStatus.PROCESSING);
-    sourceRepository.findById.mockResolvedValue(source);
     retrieveFileContentUseCase.execute.mockRejectedValueOnce(
       new FileTooLargeError(),
     );
@@ -193,144 +216,25 @@ describe('DocumentProcessingConsumer', () => {
     expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
-  it('should skip saving and clean up when source is deleted mid-processing', async () => {
-    const source = makeSource(SourceStatus.PROCESSING);
+  it('counts an unavailable provider only once the job settles as failed', async () => {
+    const timeout = new ProviderTimeoutError({ provider: 'mistral' });
+    retrieveFileContentUseCase.execute
+      .mockRejectedValueOnce(timeout)
+      .mockRejectedValueOnce(timeout);
 
-    // First findById (loadSourceOrSkip) returns the source
-    // Second findById (reloadIfStillProcessing) returns null — deleted
-    sourceRepository.findById
-      .mockResolvedValueOnce(source)
-      .mockResolvedValueOnce(null);
+    await expect(consumer.process(makeJob())).rejects.toMatchObject({
+      name: 'JobRetryScheduledError',
+    });
+    expect(mockIncrementCounter).not.toHaveBeenCalled();
 
-    await consumer.process(makeJob());
-
-    // Nothing is committed — we aborted before writing
-    expect(contentReplacement.commit).not.toHaveBeenCalled();
-    // updateStatusConditionally should never be called either
-    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
-    // MinIO file should be cleaned up
-    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
-  });
-
-  it('writes content against the freshly loaded source so a knowledge base assigned after the load is kept', async () => {
-    const assigned = makeSource(SourceStatus.PROCESSING);
-    assigned.knowledgeBaseId = KNOWLEDGE_BASE_ID;
-    // AddDocumentToKnowledgeBase assigns the knowledge base right after
-    // enqueueing, so the worker's first read may predate it.
-    sourceRepository.findById
-      .mockResolvedValueOnce(makeSource(SourceStatus.PROCESSING))
-      .mockResolvedValueOnce(assigned);
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
-    const [savedSource] = contentReplacement.commit.mock.calls[0];
-    expect(savedSource.knowledgeBaseId).toBe(KNOWLEDGE_BASE_ID);
-  });
-
-  it('should skip saving and clean up when the source status changes mid-processing', async () => {
-    sourceRepository.findById
-      .mockResolvedValueOnce(makeSource(SourceStatus.PROCESSING))
-      .mockResolvedValueOnce(makeSource(SourceStatus.FAILED));
-
-    await consumer.process(makeJob());
-
-    expect(contentReplacement.commit).not.toHaveBeenCalled();
-    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
-    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
-  });
-
-  it('does not mark the source ready when it is deleted before the commit', async () => {
-    sourceRepository.findById.mockResolvedValue(
-      makeSource(SourceStatus.PROCESSING),
+    await expect(consumer.process(makeJob({ attemptsMade: 2 }))).rejects.toBe(
+      timeout,
     );
-    contentReplacement.commit.mockResolvedValueOnce(null);
-
-    await consumer.process(makeJob());
-
-    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
-    expect(helper.markFailed).not.toHaveBeenCalled();
-    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
-  });
-
-  it('should skip marking ready when conditional update returns false', async () => {
-    const source = makeSource(SourceStatus.PROCESSING);
-
-    // Both findById calls return the source (still processing)
-    sourceRepository.findById.mockResolvedValue(source);
-    // But the conditional update fails — source was deleted between check and update
-    sourceRepository.updateStatusConditionally.mockResolvedValue(false);
-
-    await consumer.process(makeJob());
-
-    // Content was committed (source was still processing at check time)
-    expect(contentReplacement.commit).toHaveBeenCalled();
-    // Conditional update was attempted
-    expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
-      SOURCE_ID,
-      SourceStatus.PROCESSING,
-      SourceStatus.READY,
-      { processingError: null },
+    expect(mockIncrementCounter).toHaveBeenCalledTimes(1);
+    expect(mockIncrementCounter).toHaveBeenCalledWith(
+      'provider_unavailable_count',
+      1,
+      { provider: 'mistral' },
     );
-    // Partial index should be cleaned up since update failed
-    expect(helper.cleanupIndex).toHaveBeenCalledWith(SOURCE_ID);
-  });
-
-  it('should process normally when source exists throughout', async () => {
-    const source = makeSource(SourceStatus.PROCESSING);
-
-    sourceRepository.findById.mockResolvedValue(source);
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
-    expect(contentReplacement.prepare).toHaveBeenCalledTimes(1);
-    const [prepareParams] = contentReplacement.prepare.mock.calls[0];
-    expect(prepareParams.sourceId).toBe(SOURCE_ID);
-    expect(prepareParams).toMatchObject({ orgId: ORG_ID, text: 'hello world' });
-    expect(prepareParams.chunks.map((chunk) => chunk.content)).toEqual([
-      'hello world',
-    ]);
-    const prepared = await contentReplacement.prepare.mock.results[0].value;
-    expect(contentReplacement.commit).toHaveBeenCalledWith(source, prepared);
-    expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
-      SOURCE_ID,
-      SourceStatus.PROCESSING,
-      SourceStatus.READY,
-      { processingError: null },
-    );
-  });
-
-  it('embeds before re-reading the source, so the commit uses a copy read right before it', async () => {
-    sourceRepository.findById.mockResolvedValue(
-      makeSource(SourceStatus.PROCESSING),
-    );
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
-    const reloadOrder = sourceRepository.findById.mock.invocationCallOrder[1];
-    expect(contentReplacement.prepare.mock.invocationCallOrder[0]).toBeLessThan(
-      reloadOrder,
-    );
-    expect(
-      contentReplacement.commit.mock.invocationCallOrder[0],
-    ).toBeGreaterThan(reloadOrder);
-  });
-
-  it('marks the source failed without committing when embedding fails on the final attempt', async () => {
-    sourceRepository.findById.mockResolvedValue(
-      makeSource(SourceStatus.PROCESSING),
-    );
-    contentReplacement.prepare.mockRejectedValueOnce(
-      new Error('embedding provider unavailable'),
-    );
-
-    await expect(
-      consumer.process(makeJob({ attemptsMade: 2 } as never)),
-    ).rejects.toThrow('embedding provider unavailable');
-
-    expect(contentReplacement.commit).not.toHaveBeenCalled();
-    expect(helper.markFailed).toHaveBeenCalled();
   });
 });

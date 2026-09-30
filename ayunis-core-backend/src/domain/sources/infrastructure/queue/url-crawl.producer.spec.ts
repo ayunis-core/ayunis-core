@@ -1,23 +1,22 @@
 import type { UUID } from 'crypto';
 import type { Queue } from 'bullmq';
-import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
-import { DocumentProcessingProducer } from './document-processing.producer';
+import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import { UrlCrawlProducer } from './url-crawl.producer';
 
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 
-function makeJobData(): DocumentProcessingJobData {
+function makeJobData(): UrlCrawlJobData {
   return {
     sourceId: SOURCE_ID,
     orgId: '00000000-0000-0000-0000-000000000010',
     userId: '00000000-0000-0000-0000-000000000020',
-    minioPath: 'org/processing/src/doc.pdf',
-    fileName: 'doc.pdf',
-    fileType: 'application/pdf',
+    rootUrl: 'https://www.stadt.example/',
+    maxDepth: 1,
   };
 }
 
-describe('DocumentProcessingProducer', () => {
-  let producer: DocumentProcessingProducer;
+describe('UrlCrawlProducer', () => {
+  let producer: UrlCrawlProducer;
   let queue: jest.Mocked<
     Pick<Queue, 'add' | 'getJob' | 'getDeduplicationJobId'>
   >;
@@ -28,9 +27,7 @@ describe('DocumentProcessingProducer', () => {
       getJob: jest.fn(),
       getDeduplicationJobId: jest.fn().mockResolvedValue(null),
     };
-    producer = new DocumentProcessingProducer(
-      queue as unknown as Queue<DocumentProcessingJobData>,
-    );
+    producer = new UrlCrawlProducer(queue as unknown as Queue<UrlCrawlJobData>);
   });
 
   it('deduplicates runs by source id instead of fixing the job id', async () => {
@@ -38,24 +35,23 @@ describe('DocumentProcessingProducer', () => {
     await producer.enqueue(data);
 
     const [name, payload, options] = queue.add.mock.calls[0];
-    expect(name).toBe('process-document');
+    expect(name).toBe('crawl-url');
     expect(payload).toBe(data);
     expect(options).toMatchObject({ deduplication: { id: SOURCE_ID } });
     expect(options).not.toHaveProperty('jobId');
   });
 
   it('cancels the run currently registered for the source', async () => {
-    const waitingJob = {
-      getState: jest.fn().mockResolvedValue('waiting'),
+    const delayedJob = {
+      getState: jest.fn().mockResolvedValue('delayed'),
       remove: jest.fn().mockResolvedValue(undefined),
     };
-    queue.getDeduplicationJobId.mockResolvedValue('7');
-    queue.getJob.mockResolvedValue(waitingJob as never);
+    queue.getDeduplicationJobId.mockResolvedValue('12');
+    queue.getJob.mockResolvedValue(delayedJob as never);
 
     await producer.cancelJob(SOURCE_ID);
 
-    expect(queue.getDeduplicationJobId).toHaveBeenCalledWith(SOURCE_ID);
-    expect(queue.getJob).toHaveBeenCalledWith('7');
-    expect(waitingJob.remove).toHaveBeenCalled();
+    expect(queue.getJob).toHaveBeenCalledWith('12');
+    expect(delayedJob.remove).toHaveBeenCalled();
   });
 });

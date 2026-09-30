@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
 
 // p-limit is ESM-only — mock the dynamic import so Jest (CJS) doesn't choke.
-// (Pulled in transitively via UrlCrawlConsumer → CrawlUrlUseCase.)
+// (Pulled in transitively via UrlSourceExtractor → CrawlUrlUseCase.)
 jest.mock('p-limit', () => ({
   __esModule: true,
   default:
@@ -24,24 +24,31 @@ import {
 } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
+import { UrlSourceExtractor } from 'src/domain/sources/application/services/url-source-extractor.service';
 import { UrlCrawlConsumer } from './url-crawl.consumer';
 
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 const USER_ID = '00000000-0000-0000-0000-000000000020' as UUID;
-const KNOWLEDGE_BASE_ID = '00000000-0000-0000-0000-000000000030' as UUID;
 
-function makeJobData(): UrlCrawlJobData {
+function makeJob(attemptsMade = 0): Job<UrlCrawlJobData> {
   return {
-    sourceId: SOURCE_ID,
-    orgId: ORG_ID,
-    userId: USER_ID,
-    rootUrl: 'https://acme.test/',
-    maxDepth: 1,
-  };
+    data: {
+      sourceId: SOURCE_ID,
+      orgId: ORG_ID,
+      userId: USER_ID,
+      rootUrl: 'https://acme.test/',
+      maxDepth: 1,
+    },
+    id: '42',
+    attemptsMade,
+    opts: { attempts: 3 },
+  } as unknown as Job<UrlCrawlJobData>;
 }
 
-function makeSource(status = SourceStatus.PROCESSING): UrlSource {
+function makeSource(): UrlSource {
   return new UrlSource({
     id: SOURCE_ID,
     name: 'acme.test',
@@ -49,186 +56,86 @@ function makeSource(status = SourceStatus.PROCESSING): UrlSource {
     url: 'https://acme.test/',
     maxDepth: 1,
     knowledgeBaseId: null,
-    status,
+    status: SourceStatus.PROCESSING,
     processingStartedAt: new Date(),
   });
 }
 
-function makeJob(): Job<UrlCrawlJobData> {
-  return {
-    data: makeJobData(),
-    id: 'job-1',
-    attemptsMade: 0,
-    opts: { attempts: 3 },
-  } as unknown as Job<UrlCrawlJobData>;
-}
-
-const contextService = {
-  run: jest.fn((fn: () => Promise<void>) => fn()),
-  set: jest.fn(),
-};
-
-const crawlUrlUseCase = {
-  execute: jest
-    .fn()
-    .mockResolvedValue(
-      new UrlCrawlResult([
-        new UrlCrawlPage('https://acme.test/', 'root content', 'Acme Home'),
-        new UrlCrawlPage('https://acme.test/about', 'about content', 'About'),
-      ]),
-    ),
-};
-
-interface MockSplitResult {
-  chunks: { text: string; metadata: Record<string, unknown> }[];
-}
-
-const splitTextUseCase = {
-  execute: jest.fn<MockSplitResult, [{ text: string }]>((command) => ({
-    chunks: [{ text: command.text, metadata: { start: 0 } }],
-  })),
-};
-
-const sourceRepository = {
-  findById: jest.fn(),
-  save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
-  refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
-  updateStatusConditionally: jest.fn(),
-};
-
-const contentReplacement = {
-  prepare: jest.fn(
-    async (params: {
-      sourceId: UUID;
-      text: string;
-      chunks: TextSourceContentChunk[];
-    }) => ({
-      text: params.text,
-      chunks: params.chunks,
-      index: { documentId: params.sourceId },
-    }),
-  ),
-  commit: jest.fn<
-    Promise<UrlSource | null>,
-    [UrlSource, { text: string; chunks: TextSourceContentChunk[] }]
-  >(async (source) => source),
-};
-
-const indexer = {
-  cleanupIndex: jest.fn().mockResolvedValue(undefined),
-  markFailed: jest.fn().mockResolvedValue(undefined),
-};
-
 describe('UrlCrawlConsumer', () => {
+  const contextService = {
+    run: jest.fn((fn: () => Promise<void>) => fn()),
+    set: jest.fn(),
+  };
+  const crawlUrlUseCase = { execute: jest.fn() };
+  const splitTextUseCase = {
+    execute: jest.fn((command: { text: string }) => ({
+      chunks: [{ text: command.text, metadata: { start: 0 } }],
+    })),
+  };
+  const contentReplacement = {
+    prepare: jest.fn(
+      async (params: {
+        sourceId: UUID;
+        text: string;
+        chunks: TextSourceContentChunk[];
+      }) => ({
+        text: params.text,
+        chunks: params.chunks,
+        index: { documentId: params.sourceId },
+      }),
+    ),
+    commit: jest.fn<
+      Promise<UrlSource | null>,
+      [UrlSource, { text: string; chunks: TextSourceContentChunk[] }]
+    >(async (source) => source),
+  };
+  const helper = {
+    cleanupIndex: jest.fn().mockResolvedValue(undefined),
+    markFailed: jest.fn().mockResolvedValue(undefined),
+  };
+  let sourceRepository: ReturnType<typeof createMockSourceRepository>;
   let consumer: UrlCrawlConsumer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    consumer = new UrlCrawlConsumer(
-      contextService as never,
-      crawlUrlUseCase as never,
-      splitTextUseCase as never,
-      sourceRepository as never,
-      contentReplacement as never,
-      indexer as never,
-    );
-  });
-
-  it('aggregates crawled pages and tags each chunk with its origin url', async () => {
-    const source = makeSource();
-    sourceRepository.findById.mockResolvedValue(source);
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
-    const [, content] = contentReplacement.commit.mock.calls[0];
-    expect(content.text).toBe('root content\n\nabout content');
-    expect(content.chunks.map((c) => c.meta.url)).toEqual([
-      'https://acme.test/',
-      'https://acme.test/about',
-    ]);
-  });
-
-  it('stores chunk offsets in the concatenated source coordinate space', async () => {
-    const rootContent = 'Overview line 1\nOverview line 2\n';
-    const documentContent = 'Policy heading\nPolicy answer';
-    crawlUrlUseCase.execute.mockResolvedValueOnce(
+    crawlUrlUseCase.execute.mockResolvedValue(
       new UrlCrawlResult([
-        new UrlCrawlPage('https://acme.test/', rootContent, 'Acme Home'),
-        new UrlCrawlPage(
-          'https://acme.test/policy.pdf',
-          documentContent,
-          'Policy',
-        ),
+        new UrlCrawlPage('https://acme.test/', 'root content', 'Acme Home'),
+        new UrlCrawlPage('https://acme.test/about', 'about content', 'About'),
       ]),
     );
-    splitTextUseCase.execute
-      .mockReturnValueOnce({
-        chunks: [
-          {
-            text: rootContent,
-            metadata: {
-              startCharOffset: 0,
-              endCharOffset: rootContent.length,
-              startLine: 1,
-              endLine: 2,
-            },
-          },
-        ],
-      })
-      .mockReturnValueOnce({
-        chunks: [
-          {
-            text: documentContent,
-            metadata: {
-              startCharOffset: 0,
-              endCharOffset: documentContent.length,
-              startLine: 1,
-              endLine: 2,
-            },
-          },
-        ],
-      });
+    sourceRepository = createMockSourceRepository();
     sourceRepository.findById.mockResolvedValue(makeSource());
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
 
-    await consumer.process(makeJob());
-
-    const [, content] = contentReplacement.commit.mock.calls[0];
-    expect(content.text).toBe(`${rootContent}\n\n${documentContent}`);
-    expect(content.chunks[0].meta).toMatchObject({
-      startCharOffset: 0,
-      endCharOffset: rootContent.length,
-      startLine: 1,
-      endLine: 2,
-    });
-    expect(content.chunks[1].meta).toMatchObject({
-      url: 'https://acme.test/policy.pdf',
-      startCharOffset: rootContent.length + 2,
-      endCharOffset: rootContent.length + 2 + documentContent.length,
-      startLine: 5,
-      endLine: 6,
-    });
+    consumer = new UrlCrawlConsumer(
+      contextService as never,
+      new SourceIngestionService(
+        sourceRepository,
+        contentReplacement as never,
+        helper as never,
+      ),
+      new UrlSourceExtractor(
+        crawlUrlUseCase as never,
+        splitTextUseCase as never,
+      ),
+    );
   });
 
-  it("updates the source name to the root page's title", async () => {
-    const source = makeSource();
-    sourceRepository.findById.mockResolvedValue(source);
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
+  it('crawls the job root url in the job owner context and marks the source ready', async () => {
     await consumer.process(makeJob());
 
-    const [savedSource] = contentReplacement.commit.mock.calls[0];
-    expect(savedSource.name).toBe('Acme Home');
-  });
-
-  it('marks the source ready after a successful crawl', async () => {
-    const source = makeSource();
-    sourceRepository.findById.mockResolvedValue(source);
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
+    expect(contextService.set).toHaveBeenCalledWith('orgId', ORG_ID);
+    expect(contextService.set).toHaveBeenCalledWith('userId', USER_ID);
+    expect(crawlUrlUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'https://acme.test/',
+        orgId: ORG_ID,
+        maxDepth: 1,
+      }),
+    );
+    const [committed, content] = contentReplacement.commit.mock.calls[0];
+    expect(committed.name).toBe('Acme Home');
+    expect(content.text).toBe('root content\n\nabout content');
     expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
       SOURCE_ID,
       SourceStatus.PROCESSING,
@@ -237,127 +144,31 @@ describe('UrlCrawlConsumer', () => {
     );
   });
 
-  it('refreshes the heartbeat with a targeted update instead of saving the loaded record', async () => {
-    sourceRepository.findById.mockResolvedValue(makeSource());
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
-    expect(sourceRepository.refreshProcessingHeartbeat).toHaveBeenCalledWith(
-      SOURCE_ID,
-    );
-    expect(sourceRepository.save).not.toHaveBeenCalled();
-  });
-
-  it('writes content against the freshly loaded source so a collection assigned after the load is kept', async () => {
-    const assigned = makeSource();
-    assigned.knowledgeBaseId = KNOWLEDGE_BASE_ID;
-    // AddUrlToKnowledgeBase assigns the collection right after enqueueing, so
-    // the worker's first read may predate it.
-    sourceRepository.findById
-      .mockResolvedValueOnce(makeSource())
-      .mockResolvedValueOnce(assigned);
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
-    const [savedSource] = contentReplacement.commit.mock.calls[0];
-    expect(savedSource.knowledgeBaseId).toBe(KNOWLEDGE_BASE_ID);
-    expect(savedSource.name).toBe('Acme Home');
-  });
-
-  it('embeds before re-reading the source, so the commit uses a copy read right before it', async () => {
-    sourceRepository.findById.mockResolvedValue(makeSource());
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
-
-    await consumer.process(makeJob());
-
-    const reloadOrder = sourceRepository.findById.mock.invocationCallOrder[1];
-    expect(contentReplacement.prepare.mock.invocationCallOrder[0]).toBeLessThan(
-      reloadOrder,
-    );
-    expect(
-      contentReplacement.commit.mock.invocationCallOrder[0],
-    ).toBeGreaterThan(reloadOrder);
-    const [prepareParams] = contentReplacement.prepare.mock.calls[0];
-    expect(prepareParams).toMatchObject({ sourceId: SOURCE_ID, orgId: ORG_ID });
-  });
-
-  it('skips the crawl when the heartbeat finds the source gone or no longer processing', async () => {
-    sourceRepository.findById.mockResolvedValue(makeSource());
-    sourceRepository.refreshProcessingHeartbeat.mockResolvedValueOnce(false);
-
-    await consumer.process(makeJob());
-
-    expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
-    expect(contentReplacement.commit).not.toHaveBeenCalled();
-  });
-
-  it('skips writing content when the source is deleted mid-crawl', async () => {
-    const source = makeSource();
-    // load returns the source; the still-processing guard returns null.
-    sourceRepository.findById
-      .mockResolvedValueOnce(source)
-      .mockResolvedValueOnce(null);
-
-    await consumer.process(makeJob());
-
-    expect(contentReplacement.commit).not.toHaveBeenCalled();
-    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
-  });
-
-  it('does not mark the source ready when it is deleted before the commit', async () => {
-    sourceRepository.findById.mockResolvedValue(makeSource());
-    contentReplacement.commit.mockResolvedValueOnce(null);
-
-    await consumer.process(makeJob());
-
-    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
-    expect(indexer.markFailed).not.toHaveBeenCalled();
-  });
-
   it('marks the source failed on the last attempt when the crawl throws', async () => {
-    const source = makeSource();
-    sourceRepository.findById.mockResolvedValue(source);
     crawlUrlUseCase.execute.mockRejectedValueOnce(
       new Error('root unreachable'),
     );
 
-    const job = {
-      data: makeJobData(),
-      id: 'job-1',
-      attemptsMade: 2,
-      opts: { attempts: 3 },
-    } as unknown as Job<UrlCrawlJobData>;
-
-    await expect(consumer.process(job)).rejects.toThrow('root unreachable');
-    expect(indexer.markFailed).toHaveBeenCalled();
+    await expect(consumer.process(makeJob(2))).rejects.toThrow(
+      'root unreachable',
+    );
+    expect(helper.markFailed).toHaveBeenCalled();
+    expect(helper.cleanupIndex).toHaveBeenCalledWith(SOURCE_ID);
   });
 
   it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {
-    const source = makeSource();
-    sourceRepository.findById.mockResolvedValue(source);
     crawlUrlUseCase.execute.mockRejectedValueOnce(
       new Error('root unreachable'),
     );
 
-    const job = {
-      data: makeJobData(),
-      id: 'job-1',
-      attemptsMade: 0,
-      opts: { attempts: 3 },
-    } as unknown as Job<UrlCrawlJobData>;
-
-    await expect(consumer.process(job)).rejects.toMatchObject({
+    await expect(consumer.process(makeJob())).rejects.toMatchObject({
       name: 'JobRetryScheduledError',
       message: 'root unreachable',
     });
-    expect(indexer.markFailed).not.toHaveBeenCalled();
+    expect(helper.markFailed).not.toHaveBeenCalled();
   });
 
   it('completes without throwing when the crawl fails for a user-caused reason', async () => {
-    const source = makeSource();
-    sourceRepository.findById.mockResolvedValue(source);
     crawlUrlUseCase.execute.mockRejectedValueOnce(
       new UrlRetrieverUnsupportedContentTypeError(
         'https://acme.test/',
@@ -365,36 +176,20 @@ describe('UrlCrawlConsumer', () => {
       ),
     );
 
-    const job = {
-      data: makeJobData(),
-      id: 'job-1',
-      attemptsMade: 0,
-      opts: { attempts: 3 },
-    } as unknown as Job<UrlCrawlJobData>;
-
     // Completing rather than throwing is what keeps it out of AppSignal.
-    await expect(consumer.process(job)).resolves.toBeUndefined();
-    expect(indexer.markFailed).toHaveBeenCalled();
-    expect(indexer.cleanupIndex).toHaveBeenCalled();
+    await expect(consumer.process(makeJob())).resolves.toBeUndefined();
+    expect(helper.markFailed).toHaveBeenCalled();
+    expect(helper.cleanupIndex).toHaveBeenCalled();
   });
 
   it('still retries a crawl timeout, which may succeed on a later attempt', async () => {
-    const source = makeSource();
-    sourceRepository.findById.mockResolvedValue(source);
     crawlUrlUseCase.execute.mockRejectedValueOnce(
       new UrlRetrieverTimeoutError('https://acme.test/', 5000),
     );
 
-    const job = {
-      data: makeJobData(),
-      id: 'job-1',
-      attemptsMade: 0,
-      opts: { attempts: 3 },
-    } as unknown as Job<UrlCrawlJobData>;
-
-    await expect(consumer.process(job)).rejects.toMatchObject({
+    await expect(consumer.process(makeJob())).rejects.toMatchObject({
       name: 'JobRetryScheduledError',
     });
-    expect(indexer.markFailed).not.toHaveBeenCalled();
+    expect(helper.markFailed).not.toHaveBeenCalled();
   });
 });
