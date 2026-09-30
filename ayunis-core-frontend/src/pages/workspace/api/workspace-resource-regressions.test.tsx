@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { AxiosError } from 'axios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -393,15 +394,107 @@ describe('workspace resource regressions', () => {
       { wrapper },
     );
 
-    await act(() => result.current.addUrlAsync?.('https://example.com', 1));
+    await act(() =>
+      result.current.addUrlAsync?.({
+        url: 'https://example.com',
+        maxDepth: 1,
+        reindexInterval: { value: 2, unit: 'weeks' },
+      }),
+    );
 
     expect(result.current.documents).toEqual([document]);
     expect(request).toHaveBeenCalledWith(
       expect.objectContaining({
         url: '/knowledge-bases/knowledge/urls',
         method: 'POST',
-        data: { url: 'https://example.com', maxDepth: 1 },
+        data: {
+          url: 'https://example.com',
+          maxDepth: 1,
+          reindexInterval: { value: 2, unit: 'weeks' },
+        },
       }),
     );
+  });
+
+  it('sets and removes a document re-index schedule through the canonical endpoint', async () => {
+    const document = {
+      id: 'waste-calendar',
+      name: 'Abfallkalender',
+      status: 'ready',
+      textType: 'web',
+    } as KnowledgeBaseDocumentResponseDto;
+    request.mockImplementation(({ method }: { method: string }) =>
+      Promise.resolve(
+        method === 'PATCH'
+          ? { ...document, reindexInterval: null }
+          : { data: [document] },
+      ),
+    );
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () =>
+        useWorkspaceKnowledgeBaseDocuments('project', 'knowledge', {
+          data: [document],
+        }),
+      { wrapper },
+    );
+
+    await act(() =>
+      result.current.setReindexScheduleAsync?.('waste-calendar', null),
+    );
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/knowledge-bases/knowledge/documents/waste-calendar/reindex-schedule',
+        method: 'PATCH',
+        data: { reindexInterval: null },
+      }),
+    );
+    expect(showSuccess).toHaveBeenCalledWith(
+      'detail.documents.reindex.removed',
+    );
+  });
+
+  it('leaves interval validation errors to the dialog instead of a toast', async () => {
+    const document = {
+      id: 'waste-calendar',
+      name: 'Abfallkalender',
+      status: 'ready',
+      textType: 'web',
+    } as KnowledgeBaseDocumentResponseDto;
+    const validationError = new AxiosError('Bad Request');
+    validationError.response = {
+      data: {
+        code: 'VALIDATION_ERROR',
+        errors: [
+          { field: 'reindexInterval.value', constraints: ['maxForUnit'] },
+        ],
+      },
+      status: 400,
+    } as AxiosError['response'];
+    request.mockImplementation(({ method }: { method: string }) =>
+      method === 'PATCH'
+        ? Promise.reject(validationError)
+        : Promise.resolve({ data: [document] }),
+    );
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () =>
+        useWorkspaceKnowledgeBaseDocuments('project', 'knowledge', {
+          data: [document],
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await expect(
+        result.current.setReindexScheduleAsync?.('waste-calendar', {
+          value: 13,
+          unit: 'months',
+        }),
+      ).rejects.toBe(validationError);
+    });
+
+    expect(showError).not.toHaveBeenCalled();
   });
 });

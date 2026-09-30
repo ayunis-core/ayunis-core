@@ -176,7 +176,60 @@
       "removeSuccess": "Dokument erfolgreich entfernt!",
       "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
       "removeNotFound": "Das Dokument wurde bereits aus dieser Wissenssammlung entfernt.",
-      "urlDialogCancel": "Abbrechen"
+      "urlDialogCancel": "Abbrechen",
+      "reindex": {
+        "action": "Neuindexierung planen",
+        "enabledLabel": "Automatisch neu indexieren",
+        "enabledHint": "Hält die Inhalte mit der Website aktuell. Ohne diese Einstellung wird die Website nur einmal indexiert.",
+        "every": "Alle",
+        "valueLabel": "Intervall",
+        "unitLabel": "Einheit",
+        "units": {
+          "weeks": "Wochen",
+          "months": "Monate"
+        },
+        "interval": {
+          "weeks_one": "jede Woche",
+          "weeks_other": "alle {{count}} Wochen",
+          "months_one": "jeden Monat",
+          "months_other": "alle {{count}} Monate"
+        },
+        "summary": "Neuindexierung {{interval}} · nächste am {{date}}",
+        "dialogTitle": "Neuindexierung planen",
+        "dialogDescription": "Legen Sie fest, wie oft „{{name}}“ automatisch neu indexiert wird.",
+        "nextRun": "Nächste Neuindexierung: {{date}}",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "saved": "Zeitplan für die Neuindexierung gespeichert.",
+        "removed": "Automatische Neuindexierung ausgeschaltet.",
+        "error": "Der Zeitplan konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+        "notFound": "Dieses Dokument ist nicht mehr in der Wissenssammlung vorhanden.",
+        "notSupported": "Nur Websites können automatisch neu indexiert werden.",
+        "failedWarning": "Letzte Neuindexierung am {{failedAt}} fehlgeschlagen – Inhalt vom {{indexedAt}}.",
+        "failedWarningNeverIndexed": "Letzte Neuindexierung am {{failedAt}} fehlgeschlagen.",
+        "failureReason": {
+          "contentDegraded": "Die Website lieferte deutlich weniger Seiten als zuvor, daher wurde der bisherige Inhalt beibehalten.",
+          "generic": "Der bisherige Inhalt bleibt erhalten; der nächste geplante Lauf versucht es erneut."
+        }
+      },
+      "validation": {
+        "url": {
+          "isUrl": "Geben Sie eine gültige URL ein, die mit http:// oder https:// beginnt.",
+          "invalid": "Geben Sie eine gültige URL ein, die mit http:// oder https:// beginnt."
+        },
+        "maxDepth": {
+          "invalid": "Wählen Sie eine Linktiefe zwischen 0 und 2."
+        },
+        "reindexInterval": {
+          "value": {
+            "invalid": "Geben Sie 1–52 Wochen oder 1–12 Monate ein."
+          },
+          "unit": {
+            "invalid": "Wählen Sie Wochen oder Monate."
+          }
+        },
+        "invalid": "Bitte überprüfen Sie Ihre Eingabe."
+      }
     }
   },
   "sources": {

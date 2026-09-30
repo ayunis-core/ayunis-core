@@ -176,7 +176,60 @@
       "removeSuccess": "Document removed successfully!",
       "removeError": "Failed to remove document. Please try again.",
       "removeNotFound": "The document was already removed from this knowledge base.",
-      "urlDialogCancel": "Cancel"
+      "urlDialogCancel": "Cancel",
+      "reindex": {
+        "action": "Re-index schedule",
+        "enabledLabel": "Re-index automatically",
+        "enabledHint": "Keeps the content up to date with the website. Without it, the website is indexed only once.",
+        "every": "Every",
+        "valueLabel": "Interval",
+        "unitLabel": "Unit",
+        "units": {
+          "weeks": "weeks",
+          "months": "months"
+        },
+        "interval": {
+          "weeks_one": "every week",
+          "weeks_other": "every {{count}} weeks",
+          "months_one": "every month",
+          "months_other": "every {{count}} months"
+        },
+        "summary": "Re-indexed {{interval}} · next on {{date}}",
+        "dialogTitle": "Re-index schedule",
+        "dialogDescription": "Choose how often “{{name}}” is re-indexed automatically.",
+        "nextRun": "Next re-index: {{date}}",
+        "save": "Save",
+        "cancel": "Cancel",
+        "saved": "Re-index schedule saved.",
+        "removed": "Automatic re-indexing turned off.",
+        "error": "Failed to save the re-index schedule. Please try again.",
+        "notFound": "This document no longer exists in the knowledge base.",
+        "notSupported": "Only websites can be re-indexed automatically.",
+        "failedWarning": "Last re-index failed on {{failedAt}} — content is from {{indexedAt}}.",
+        "failedWarningNeverIndexed": "Last re-index failed on {{failedAt}}.",
+        "failureReason": {
+          "contentDegraded": "The website returned far fewer pages than before, so the previous content was kept.",
+          "generic": "The previous content was kept; the next scheduled run tries again."
+        }
+      },
+      "validation": {
+        "url": {
+          "isUrl": "Enter a valid URL starting with http:// or https://.",
+          "invalid": "Enter a valid URL starting with http:// or https://."
+        },
+        "maxDepth": {
+          "invalid": "Choose a link depth between 0 and 2."
+        },
+        "reindexInterval": {
+          "value": {
+            "invalid": "Enter 1–52 weeks or 1–12 months."
+          },
+          "unit": {
+            "invalid": "Choose weeks or months."
+          }
+        },
+        "invalid": "Please check your input."
+      }
     }
   },
   "sources": {

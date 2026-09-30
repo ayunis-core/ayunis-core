@@ -185,6 +185,7 @@ import type {
   SetAppAlertRequestDto,
   SetCreditLimitDto,
   SetCreditsPerEuroRequestDto,
+  SetDocumentReindexScheduleRequestDto,
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
   SetKnowledgeBaseActivationRequestDto,
@@ -10853,6 +10854,76 @@ export const useKnowledgeBasesControllerAddUrl = <TError = void,
         TContext
       > => {
       return useMutation(getKnowledgeBasesControllerAddUrlMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Set, change or remove the automatic re-index schedule of a web source
+ */
+export const knowledgeBasesControllerSetDocumentReindexSchedule = (
+    id: string,
+    documentId: string,
+    setDocumentReindexScheduleRequestDto: SetDocumentReindexScheduleRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
+      {url: `/knowledge-bases/${id}/documents/${documentId}/reindex-schedule`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setDocumentReindexScheduleRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBasesControllerSetDocumentReindexScheduleMutationKey = () => ['knowledgeBasesControllerSetDocumentReindexSchedule'] as const;
+
+export const getKnowledgeBasesControllerSetDocumentReindexScheduleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerSetDocumentReindexSchedule>>, TError,KnowledgeBasesControllerSetDocumentReindexScheduleMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerSetDocumentReindexSchedule>>, TError,KnowledgeBasesControllerSetDocumentReindexScheduleMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBasesControllerSetDocumentReindexScheduleMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerSetDocumentReindexSchedule>>, KnowledgeBasesControllerSetDocumentReindexScheduleMutationVariables> = (props) => {
+          const {id,documentId,data} = props ?? {};
+
+          return  knowledgeBasesControllerSetDocumentReindexSchedule(id,documentId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBasesControllerSetDocumentReindexScheduleMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerSetDocumentReindexSchedule>>>
+    export type KnowledgeBasesControllerSetDocumentReindexScheduleMutationBody = SetDocumentReindexScheduleRequestDto
+    export type KnowledgeBasesControllerSetDocumentReindexScheduleMutationError = void
+    export type KnowledgeBasesControllerSetDocumentReindexScheduleMutationVariables = {id: string;documentId: string;data: SetDocumentReindexScheduleRequestDto}
+
+    /**
+ * @summary Set, change or remove the automatic re-index schedule of a web source
+ */
+export const useKnowledgeBasesControllerSetDocumentReindexSchedule = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerSetDocumentReindexSchedule>>, TError,KnowledgeBasesControllerSetDocumentReindexScheduleMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBasesControllerSetDocumentReindexSchedule>>,
+        TError,
+        KnowledgeBasesControllerSetDocumentReindexScheduleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBasesControllerSetDocumentReindexScheduleMutationOptions(options), queryClient);
     }
 
 /**

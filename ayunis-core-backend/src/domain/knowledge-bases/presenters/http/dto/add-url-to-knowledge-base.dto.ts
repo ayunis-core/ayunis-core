@@ -1,12 +1,16 @@
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsInt,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsUrl,
   Max,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import { ReindexIntervalDto } from './reindex-interval.dto';
 
 export class AddUrlToKnowledgeBaseDto {
   @ApiProperty({
@@ -32,4 +36,16 @@ export class AddUrlToKnowledgeBaseDto {
   @Min(0)
   @Max(2)
   maxDepth?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'How often the web source is re-indexed automatically. ' +
+      'Omit for no automatic re-indexing.',
+    type: ReindexIntervalDto,
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => ReindexIntervalDto)
+  reindexInterval?: ReindexIntervalDto;
 }

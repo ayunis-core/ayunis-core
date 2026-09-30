@@ -11,10 +11,19 @@ import {
   knowledgeBasesControllerAddDocument,
   knowledgeBasesControllerAddUrl,
   knowledgeBasesControllerRemoveDocument,
+  knowledgeBasesControllerSetDocumentReindexSchedule,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { KnowledgeBaseDocumentListResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  KnowledgeBaseDocumentListResponseDto,
+  ReindexIntervalDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { KnowledgeBaseDocumentsController } from '@/widgets/knowledge-base-documents-card';
+import {
+  isDocumentFormFieldError,
+  reindexScheduleErrorKey,
+} from '@/widgets/knowledge-base-documents-card/lib/document-form-errors';
+import type { AddUrlInput } from '@/widgets/knowledge-base-documents-card/model/types';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
@@ -116,13 +125,19 @@ function addUrlErrorKey(error: unknown) {
 function useAddUrl(knowledgeBaseId: string, refresh: () => Promise<void>) {
   const { t } = useTranslation('knowledge-bases');
   const mutation = useMutation({
-    mutationFn: ({ url, maxDepth }: { url: string; maxDepth: number }) =>
-      knowledgeBasesControllerAddUrl(knowledgeBaseId, { url, maxDepth }),
+    mutationFn: ({ url, maxDepth, reindexInterval }: AddUrlInput) =>
+      knowledgeBasesControllerAddUrl(knowledgeBaseId, {
+        url,
+        maxDepth,
+        reindexInterval: reindexInterval ?? undefined,
+      }),
     onSuccess: async () => {
       await refresh();
       showSuccess(t('detail.documents.addUrlSuccess'));
     },
     onError: (error) => {
+      // The dialog shows these on its fields.
+      if (isDocumentFormFieldError(error)) return;
       try {
         showError(t(addUrlErrorKey(error)));
       } catch {
@@ -131,9 +146,51 @@ function useAddUrl(knowledgeBaseId: string, refresh: () => Promise<void>) {
     },
   });
   return {
-    addUrlAsync: (url: string, maxDepth: number) =>
-      mutation.mutateAsync({ url, maxDepth }),
+    addUrlAsync: mutation.mutateAsync,
     isAddingUrl: mutation.isPending,
+  };
+}
+
+function useSetReindexSchedule(
+  knowledgeBaseId: string,
+  refresh: () => Promise<void>,
+) {
+  const { t } = useTranslation('knowledge-bases');
+  const mutation = useMutation({
+    mutationFn: ({
+      documentId,
+      reindexInterval,
+    }: {
+      documentId: string;
+      reindexInterval: ReindexIntervalDto | null;
+    }) =>
+      knowledgeBasesControllerSetDocumentReindexSchedule(
+        knowledgeBaseId,
+        documentId,
+        { reindexInterval },
+      ),
+    onSuccess: async (document) => {
+      await refresh();
+      showSuccess(
+        t(
+          document.reindexInterval
+            ? 'detail.documents.reindex.saved'
+            : 'detail.documents.reindex.removed',
+        ),
+      );
+    },
+    onError: (error) => {
+      // The dialog shows these on its fields.
+      if (isDocumentFormFieldError(error)) return;
+      showError(t(reindexScheduleErrorKey(error)));
+    },
+  });
+  return {
+    setReindexScheduleAsync: (
+      documentId: string,
+      reindexInterval: ReindexIntervalDto | null,
+    ) => mutation.mutateAsync({ documentId, reindexInterval }),
+    isSettingReindexSchedule: mutation.isPending,
   };
 }
 
@@ -150,6 +207,7 @@ export function useWorkspaceKnowledgeBaseDocuments(
   const upload = useUploadDocument(knowledgeBaseId, refresh);
   const remove = useRemoveDocument(knowledgeBaseId, refresh);
   const addUrl = useAddUrl(knowledgeBaseId, refresh);
+  const reindexSchedule = useSetReindexSchedule(knowledgeBaseId, refresh);
   return {
     documents: response.data.map((document) => ({
       ...document,
@@ -159,5 +217,6 @@ export function useWorkspaceKnowledgeBaseDocuments(
     ...upload,
     ...remove,
     ...addUrl,
+    ...reindexSchedule,
   };
 }
