@@ -15,6 +15,7 @@ import { DocumentProcessingConsumer } from './document-processing.consumer';
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 const USER_ID = '00000000-0000-0000-0000-000000000020' as UUID;
+const KNOWLEDGE_BASE_ID = '00000000-0000-0000-0000-000000000030' as UUID;
 const MINIO_PATH = `${ORG_ID}/processing/${SOURCE_ID}/doc.pdf`;
 
 function makeJobData(
@@ -181,7 +182,7 @@ describe('DocumentProcessingConsumer', () => {
     const source = makeSource(SourceStatus.PROCESSING);
 
     // First findById (loadSourceOrSkip) returns the source
-    // Second findById (isSourceStillProcessing) returns null — deleted
+    // Second findById (reloadIfStillProcessing) returns null — deleted
     sourceRepository.findById
       .mockResolvedValueOnce(source)
       .mockResolvedValueOnce(null);
@@ -193,6 +194,34 @@ describe('DocumentProcessingConsumer', () => {
     // updateStatusConditionally should never be called either
     expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
     // MinIO file should be cleaned up
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
+  });
+
+  it('writes content against the freshly loaded source so a knowledge base assigned after the load is kept', async () => {
+    const assigned = makeSource(SourceStatus.PROCESSING);
+    assigned.knowledgeBaseId = KNOWLEDGE_BASE_ID;
+    // AddDocumentToKnowledgeBase assigns the knowledge base right after
+    // enqueueing, so the worker's first read may predate it.
+    sourceRepository.findById
+      .mockResolvedValueOnce(makeSource(SourceStatus.PROCESSING))
+      .mockResolvedValueOnce(assigned);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    expect(savedSource.knowledgeBaseId).toBe(KNOWLEDGE_BASE_ID);
+  });
+
+  it('should skip saving and clean up when the source status changes mid-processing', async () => {
+    sourceRepository.findById
+      .mockResolvedValueOnce(makeSource(SourceStatus.PROCESSING))
+      .mockResolvedValueOnce(makeSource(SourceStatus.FAILED));
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
     expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
