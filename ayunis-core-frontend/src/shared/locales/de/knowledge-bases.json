@@ -148,7 +148,7 @@
     },
     "documents": {
       "title": "Dokumente",
-      "description": "Verwalten Sie die Dokumente in dieser Wissenssammlung. Unterstützte Formate: PDF, DOCX, PPTX, ODT, ODP, TXT, EML und Audio.",
+      "description": "Verwalten Sie die Dokumente in dieser Wissenssammlung. Unterstützte Formate: PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML und Audio.",
       "upload": "Hochladen",
       "empty": "Noch keine Dokumente hochgeladen. Laden Sie eine PDF-, DOCX- oder ODT-Datei hoch, um zu beginnen.",
       "uploadSuccess": "Dokument erfolgreich hochgeladen!",
