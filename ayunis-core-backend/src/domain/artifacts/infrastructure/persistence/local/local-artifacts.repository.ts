@@ -1,5 +1,7 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
-import { Transactional } from '@nestjs-cls/transactional';
+import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -24,19 +26,38 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 export class LocalArtifactsRepository extends ArtifactsRepository {
   private readonly logger = new Logger(LocalArtifactsRepository.name);
 
-  // TypeORM and mapper dependencies are injected individually by NestJS.
-
   constructor(
     @InjectRepository(ArtifactRecord)
-    private readonly artifactRepo: Repository<ArtifactRecord>,
+    private readonly defaultArtifactRepo: Repository<ArtifactRecord>,
     @InjectRepository(DocumentArtifactRecord)
-    private readonly documentArtifactRepo: Repository<DocumentArtifactRecord>,
+    private readonly defaultDocumentArtifactRepo: Repository<DocumentArtifactRecord>,
     @InjectRepository(ArtifactVersionRecord)
-    private readonly versionRepo: Repository<ArtifactVersionRecord>,
+    private readonly defaultVersionRepo: Repository<ArtifactVersionRecord>,
     private readonly artifactMapper: ArtifactMapper,
     private readonly versionMapper: ArtifactVersionMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get artifactRepo(): Repository<ArtifactRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(ArtifactRecord) ?? this.defaultArtifactRepo;
+  }
+
+  private get documentArtifactRepo(): Repository<DocumentArtifactRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(DocumentArtifactRecord) ??
+      this.defaultDocumentArtifactRepo
+    );
+  }
+
+  private get versionRepo(): Repository<ArtifactVersionRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ArtifactVersionRecord) ?? this.defaultVersionRepo
+    );
   }
 
   async create(artifact: Artifact): Promise<Artifact> {

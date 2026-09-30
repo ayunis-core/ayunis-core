@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
 
@@ -25,6 +27,9 @@ describe('LocalThreadsRepository', () => {
       threadRepository,
       threadMapper,
       assignments,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
     const threadId = randomUUID();
     const userId = randomUUID();
@@ -68,6 +73,9 @@ describe('LocalThreadsRepository', () => {
       threadRepository,
       {} as ThreadMapper,
       {} as LocalThreadAssignmentsRepository,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
     const threadId = randomUUID();
 
@@ -95,6 +103,9 @@ describe('LocalThreadsRepository', () => {
       threadRepository,
       {} as ThreadMapper,
       {} as LocalThreadAssignmentsRepository,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await expect(
@@ -126,6 +137,9 @@ describe('LocalThreadsRepository', () => {
       threadRepository,
       threadMapper,
       assignments,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     const thread = await repository.findOne(randomUUID(), randomUUID());
@@ -156,6 +170,9 @@ describe('LocalThreadsRepository', () => {
       threadRepository,
       {} as ThreadMapper,
       {} as LocalThreadAssignmentsRepository,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
     await expect(repository.findContextRefs(threadId, userId)).resolves.toEqual(

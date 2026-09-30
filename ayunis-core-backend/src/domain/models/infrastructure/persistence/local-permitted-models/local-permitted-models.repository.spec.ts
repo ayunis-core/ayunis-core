@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
 import { QueryFailedError, type EntityManager, type Repository } from 'typeorm';
 import {
   DuplicateTeamPermittedModelError,
@@ -70,11 +72,17 @@ describe('LocalPermittedModelsRepository', () => {
     const finder = new PermittedModelFinder(
       permittedModelRepository,
       permittedModelMapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
     repository = new LocalPermittedModelsRepository(
       permittedModelRepository,
       permittedModelMapper,
       finder,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
   });
 

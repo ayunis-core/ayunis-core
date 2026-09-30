@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
 import { randomUUID, type UUID } from 'crypto';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
@@ -86,6 +88,9 @@ describe('LocalThreadAssignmentsRepository', () => {
       sourceAssignmentRepo as unknown as Repository<ThreadSourceAssignmentRecord>,
       kbAssignmentRepo,
       mapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
   });
 

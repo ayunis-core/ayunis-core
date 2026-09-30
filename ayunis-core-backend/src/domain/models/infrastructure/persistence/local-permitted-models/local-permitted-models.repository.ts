@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -10,8 +12,7 @@ import {
   PermittedLanguageModel,
   PermittedModel,
 } from 'src/domain/models/domain/permitted-model.entity';
-import type { EntityManager, FindOptionsWhere } from 'typeorm';
-import { Repository } from 'typeorm';
+import { Repository, type EntityManager, type FindOptionsWhere } from 'typeorm';
 import { PermittedModelRecord } from './schema/permitted-model.record';
 import { UUID } from 'crypto';
 import { PermittedModelMapper } from './mappers/permitted-model.mapper';
@@ -43,11 +44,17 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
 
   constructor(
     @InjectRepository(PermittedModelRecord)
-    private readonly permittedModelRepository: Repository<PermittedModelRecord>,
+    private readonly defaultRepo: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,
     private readonly finder: PermittedModelFinder,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get permittedModelRepository(): Repository<PermittedModelRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(PermittedModelRecord) ?? this.defaultRepo;
   }
 
   async findAll(
@@ -75,12 +82,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findOrgDefaultLanguage(
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null> {
-    this.logger.log(
-      {
-        orgId,
-      },
-      'findDefault',
-    );
+    this.logger.log({ orgId }, 'findDefault');
     const permittedModel = await this.permittedModelRepository.findOne({
       where: {
         orgId,
