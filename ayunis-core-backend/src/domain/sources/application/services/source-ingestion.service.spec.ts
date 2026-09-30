@@ -6,6 +6,7 @@ import {
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import type { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import type { PreparedTextSourceContent } from 'src/domain/sources/application/models/prepared-text-source-content';
+import { SourceIngestionKind } from 'src/domain/sources/application/models/source-ingestion-kind.enum';
 import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import type { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
@@ -108,14 +109,22 @@ describe('SourceIngestionService', () => {
 
   function ingest(
     classifyFailure: (error: unknown) => IngestionFailureOutcome = retryable,
+    kind = SourceIngestionKind.INITIAL,
   ): Promise<void> {
     return service.ingest({
       sourceId: SOURCE_ID,
       orgId: ORG_ID,
+      kind,
       extractor,
       input: INPUT,
       classifyFailure,
     });
+  }
+
+  function reindex(
+    classifyFailure: (error: unknown) => IngestionFailureOutcome = retryable,
+  ): Promise<void> {
+    return ingest(classifyFailure, SourceIngestionKind.REINDEX);
   }
 
   beforeEach(() => {
@@ -170,7 +179,7 @@ describe('SourceIngestionService', () => {
         SOURCE_ID,
         SourceStatus.PROCESSING,
         SourceStatus.READY,
-        { processingError: null },
+        { processingError: null, lastIndexedAt: expect.any(Date) },
       );
     });
 
@@ -406,6 +415,167 @@ describe('SourceIngestionService', () => {
 
       expect(extractor.extract).not.toHaveBeenCalled();
       expect(markSourceFailedUseCase.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('re-run of a ready source', () => {
+    const PREVIOUS_FAILURE = {
+      lastIndexedAt: new Date('2026-09-01T06:00:00.000Z'),
+      lastRunFailedAt: new Date('2026-09-15T06:00:00.000Z'),
+      lastRunError: 'getaddrinfo ENOTFOUND www.stadt.example',
+      lastRunErrorCode: SourceProcessingErrorCode.PROCESSING_FAILED,
+    };
+
+    function readySource(): UrlSource {
+      const source = makeSource(SourceStatus.READY);
+      Object.assign(source, { processingStartedAt: null }, PREVIOUS_FAILURE);
+      return source;
+    }
+
+    beforeEach(() => {
+      sourceRepository.findById.mockImplementation(async () => readySource());
+    });
+
+    it('commits the new content onto the still-ready source, stamping lastIndexedAt and clearing the previous failure', async () => {
+      const startedAt = new Date();
+
+      await reindex();
+
+      const [committed] = contentReplacement.commit.mock.calls[0];
+      expect(committed.status).toBe(SourceStatus.READY);
+      expect(committed.lastIndexedAt!.getTime()).toBeGreaterThanOrEqual(
+        startedAt.getTime(),
+      );
+      expect(committed).toMatchObject({
+        lastRunFailedAt: null,
+        lastRunError: null,
+        lastRunErrorCode: null,
+      });
+    });
+
+    it('never moves the source to PROCESSING, so the stale-processing cleanup cannot see it', async () => {
+      await reindex();
+
+      expect(
+        sourceRepository.refreshProcessingHeartbeat,
+      ).not.toHaveBeenCalled();
+      expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+      expect(sourceRepository.save).not.toHaveBeenCalled();
+      expect(extractor.release).toHaveBeenCalledWith(INPUT);
+    });
+
+    it.each([
+      ['is missing', null],
+      [
+        'is still processing its first run',
+        makeSource(SourceStatus.PROCESSING),
+      ],
+      ['has failed its first run', makeSource(SourceStatus.FAILED)],
+    ])(
+      'skips without extracting or writing when the source %s',
+      async (_case, found) => {
+        sourceRepository.findById.mockResolvedValue(found);
+
+        await reindex();
+
+        expect(extractor.extract).not.toHaveBeenCalled();
+        expect(contentReplacement.commit).not.toHaveBeenCalled();
+        expect(sourceRepository.recordRunFailure).not.toHaveBeenCalled();
+        expect(extractor.release).toHaveBeenCalledWith(INPUT);
+      },
+    );
+
+    it.each([
+      ['is deleted', null],
+      ['is no longer ready', makeSource(SourceStatus.FAILED)],
+    ])(
+      'writes nothing when the source %s before the commit re-read',
+      async (_case, reloaded) => {
+        sourceRepository.findById
+          .mockResolvedValueOnce(readySource())
+          .mockResolvedValueOnce(reloaded);
+
+        await reindex();
+
+        expect(contentReplacement.commit).not.toHaveBeenCalled();
+        expect(sourceRepository.recordRunFailure).not.toHaveBeenCalled();
+        expect(
+          sourceRepository.updateStatusConditionally,
+        ).not.toHaveBeenCalled();
+        expect(extractor.release).toHaveBeenCalledWith(INPUT);
+      },
+    );
+
+    it('writes nothing else when the source is deleted before the commit takes its lock', async () => {
+      contentReplacement.commit.mockResolvedValueOnce(null);
+
+      await reindex();
+
+      expect(sourceRepository.recordRunFailure).not.toHaveBeenCalled();
+      expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+      expect(deleteContentUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('records nothing and keeps the input when a retry follows', async () => {
+      extractor.extract.mockRejectedValueOnce(new Error('fetch failed'));
+
+      await expect(reindex(retryable)).rejects.toBe(retryScheduled);
+
+      expect(sourceRepository.recordRunFailure).not.toHaveBeenCalled();
+      expect(markSourceFailedUseCase.execute).not.toHaveBeenCalled();
+      expect(deleteContentUseCase.execute).not.toHaveBeenCalled();
+      expect(extractor.release).not.toHaveBeenCalled();
+    });
+
+    it('records the failed run on the final attempt and leaves status and index alone', async () => {
+      const failure = new Error('getaddrinfo ENOTFOUND www.stadt.example');
+      extractor.extract.mockRejectedValueOnce(failure);
+      const startedAt = new Date();
+
+      await expect(reindex(finalRethrowingOriginal)).rejects.toBe(failure);
+
+      expect(sourceRepository.recordRunFailure).toHaveBeenCalledWith(
+        SOURCE_ID,
+        {
+          failedAt: expect.any(Date),
+          error: 'getaddrinfo ENOTFOUND www.stadt.example',
+          errorCode: SourceProcessingErrorCode.PROCESSING_FAILED,
+        },
+      );
+      const [, { failedAt }] = sourceRepository.recordRunFailure.mock.calls[0];
+      expect(failedAt.getTime()).toBeGreaterThanOrEqual(startedAt.getTime());
+      expect(markSourceFailedUseCase.execute).not.toHaveBeenCalled();
+      expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+      expect(deleteContentUseCase.execute).not.toHaveBeenCalled();
+      expect(contentReplacement.commit).not.toHaveBeenCalled();
+      expect(extractor.release).toHaveBeenCalledWith(INPUT);
+    });
+
+    it('classifies the failed run with the same codes as a failed first run', async () => {
+      extractor.extract.mockRejectedValueOnce(
+        new ProviderTimeoutError({ provider: 'mistral' }),
+      );
+
+      await reindex(finalExpected);
+
+      expect(sourceRepository.recordRunFailure).toHaveBeenCalledWith(
+        SOURCE_ID,
+        expect.objectContaining({
+          errorCode: SourceProcessingErrorCode.PROCESSING_TIMEOUT,
+        }),
+      );
+    });
+
+    it('still ends the run with the classified outcome when recording the failure fails', async () => {
+      const failure = new Error('getaddrinfo ENOTFOUND www.stadt.example');
+      extractor.extract.mockRejectedValueOnce(failure);
+      sourceRepository.recordRunFailure.mockRejectedValueOnce(
+        new Error('connection terminated'),
+      );
+
+      await expect(reindex(finalRethrowingOriginal)).rejects.toBe(failure);
+
+      expect(extractor.release).toHaveBeenCalledWith(INPUT);
     });
   });
 });

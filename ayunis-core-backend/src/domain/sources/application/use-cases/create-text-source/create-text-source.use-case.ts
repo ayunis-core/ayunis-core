@@ -96,6 +96,7 @@ export class CreateTextSourceUseCase {
     source: TextSource,
     content: PreparedTextSourceContent,
   ): Promise<TextSource> {
+    source.recordIndexed(new Date());
     await this.sourceRepository.save(source);
     const saved = await this.contentReplacement.commit(source, content);
     if (!saved) {

@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { SourceIngestionKind } from 'src/domain/sources/application/models/source-ingestion-kind.enum';
 
 export interface UrlCrawlJobData {
   sourceId: UUID;
@@ -6,6 +7,8 @@ export interface UrlCrawlJobData {
   userId: UUID;
   rootUrl: string;
   maxDepth: number;
+  /** Absent on jobs enqueued before re-indexing existed; those are initial runs. */
+  kind?: SourceIngestionKind;
 }
 
 /**

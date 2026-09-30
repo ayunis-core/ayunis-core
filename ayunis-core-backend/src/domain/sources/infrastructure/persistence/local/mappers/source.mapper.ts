@@ -27,6 +27,23 @@ import {
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+
+interface SourceRunState {
+  lastIndexedAt: Date | null;
+  lastRunFailedAt: Date | null;
+  lastRunError: string | null;
+  lastRunErrorCode: SourceProcessingErrorCode | null;
+}
+
+function runStateOf(from: SourceRunState): SourceRunState {
+  return {
+    lastIndexedAt: from.lastIndexedAt,
+    lastRunFailedAt: from.lastRunFailedAt,
+    lastRunError: from.lastRunError,
+    lastRunErrorCode: from.lastRunErrorCode,
+  };
+}
 
 @Injectable()
 export class SourceMapper {
@@ -61,6 +78,7 @@ export class SourceMapper {
           status: record.status,
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
+          ...runStateOf(record),
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -77,6 +95,7 @@ export class SourceMapper {
           status: record.status,
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
+          ...runStateOf(record),
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -97,6 +116,7 @@ export class SourceMapper {
       status: record.status,
       processingError: record.processingError,
       processingStartedAt: record.processingStartedAt,
+      ...runStateOf(record),
       createdBy: record.createdBy,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -159,6 +179,7 @@ export class SourceMapper {
     record.status = source.status;
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
+    Object.assign(record, runStateOf(source));
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.processingErrorCode = source.processingErrorCode;
     record.textType = source.textType;
@@ -239,6 +260,7 @@ export class SourceMapper {
     record.status = source.status;
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
+    Object.assign(record, runStateOf(source));
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.processingErrorCode = source.processingErrorCode;
     record.dataType = source.dataType;

@@ -6,6 +6,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
 import { FileSourceExtractor } from 'src/domain/sources/application/services/file-source-extractor.service';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import { SourceIngestionKind } from 'src/domain/sources/application/models/source-ingestion-kind.enum';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
@@ -34,6 +35,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await this.ingestion.ingest({
         sourceId,
         orgId,
+        kind: SourceIngestionKind.INITIAL,
         extractor: this.fileSourceExtractor,
         input: { minioPath, fileName, fileType },
         classifyFailure: (error) => classifyJobFailure(job, error),

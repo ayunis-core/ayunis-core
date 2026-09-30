@@ -24,6 +24,7 @@ import {
 } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import { SourceIngestionKind } from 'src/domain/sources/application/models/source-ingestion-kind.enum';
 import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
 import { UrlSourceExtractor } from 'src/domain/sources/application/services/url-source-extractor.service';
@@ -33,7 +34,10 @@ const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 const USER_ID = '00000000-0000-0000-0000-000000000020' as UUID;
 
-function makeJob(attemptsMade = 0): Job<UrlCrawlJobData> {
+function makeJob(
+  attemptsMade = 0,
+  kind?: SourceIngestionKind,
+): Job<UrlCrawlJobData> {
   return {
     data: {
       sourceId: SOURCE_ID,
@@ -41,6 +45,7 @@ function makeJob(attemptsMade = 0): Job<UrlCrawlJobData> {
       userId: USER_ID,
       rootUrl: 'https://acme.test/',
       maxDepth: 1,
+      ...(kind ? { kind } : {}),
     },
     id: '42',
     attemptsMade,
@@ -48,7 +53,7 @@ function makeJob(attemptsMade = 0): Job<UrlCrawlJobData> {
   } as unknown as Job<UrlCrawlJobData>;
 }
 
-function makeSource(): UrlSource {
+function makeSource(status = SourceStatus.PROCESSING): UrlSource {
   return new UrlSource({
     id: SOURCE_ID,
     name: 'acme.test',
@@ -56,7 +61,7 @@ function makeSource(): UrlSource {
     url: 'https://acme.test/',
     maxDepth: 1,
     knowledgeBaseId: null,
-    status: SourceStatus.PROCESSING,
+    status,
     processingStartedAt: new Date(),
   });
 }
@@ -121,7 +126,7 @@ describe('UrlCrawlConsumer', () => {
     );
   });
 
-  it('crawls the job root url in the job owner context and marks the source ready', async () => {
+  it('crawls the job root url in the job owner context and marks the source ready, treating a job without a run kind as the initial run', async () => {
     await consumer.process(makeJob());
 
     expect(contextService.set).toHaveBeenCalledWith('orgId', ORG_ID);
@@ -140,7 +145,7 @@ describe('UrlCrawlConsumer', () => {
       SOURCE_ID,
       SourceStatus.PROCESSING,
       SourceStatus.READY,
-      { processingError: null },
+      { processingError: null, lastIndexedAt: expect.any(Date) },
     );
   });
 
@@ -191,5 +196,38 @@ describe('UrlCrawlConsumer', () => {
       name: 'JobRetryScheduledError',
     });
     expect(helper.markFailed).not.toHaveBeenCalled();
+  });
+
+  describe('re-index job', () => {
+    beforeEach(() => {
+      sourceRepository.findById.mockResolvedValue(
+        makeSource(SourceStatus.READY),
+      );
+    });
+
+    it('replaces the content of the ready source without changing its status', async () => {
+      await consumer.process(makeJob(0, SourceIngestionKind.REINDEX));
+
+      const [committed] = contentReplacement.commit.mock.calls[0];
+      expect(committed.status).toBe(SourceStatus.READY);
+      expect(committed.lastIndexedAt).toBeInstanceOf(Date);
+      expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+    });
+
+    it('records the failed run on the last attempt instead of failing the source', async () => {
+      crawlUrlUseCase.execute.mockRejectedValueOnce(
+        new Error('root unreachable'),
+      );
+
+      await expect(
+        consumer.process(makeJob(2, SourceIngestionKind.REINDEX)),
+      ).rejects.toThrow('root unreachable');
+      expect(sourceRepository.recordRunFailure).toHaveBeenCalledWith(
+        SOURCE_ID,
+        expect.objectContaining({ error: 'root unreachable' }),
+      );
+      expect(helper.markFailed).not.toHaveBeenCalled();
+      expect(helper.cleanupIndex).not.toHaveBeenCalled();
+    });
   });
 });

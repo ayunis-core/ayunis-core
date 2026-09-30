@@ -6,6 +6,7 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 import type { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
   abstract findByIds(ids: UUID[]): Promise<Source[]>;
@@ -30,7 +31,7 @@ export abstract class SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{ processingError: string | null; lastIndexedAt: Date }>,
   ): Promise<boolean>;
   /**
    * Refreshes processingStartedAt so the stale-processing cron leaves a
@@ -39,6 +40,19 @@ export abstract class SourceRepository {
    * when the source is gone or no longer processing.
    */
   abstract refreshProcessingHeartbeat(sourceId: UUID): Promise<boolean>;
+  /**
+   * Records a failed re-index of a READY source, leaving its status and
+   * content untouched. UPDATE-only and guarded on READY; returns false when
+   * the source is gone or no longer ready.
+   */
+  abstract recordRunFailure(
+    sourceId: UUID,
+    failure: {
+      failedAt: Date;
+      error: string;
+      errorCode: SourceProcessingErrorCode;
+    },
+  ): Promise<boolean>;
   /**
    * Writes a CSV source's parsed data. UPDATE-only — returns false instead of
    * resurrecting the row when the source was deleted mid-processing.
