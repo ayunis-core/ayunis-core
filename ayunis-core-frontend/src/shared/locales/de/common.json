@@ -142,7 +142,8 @@
       "empty": "Aus dem Dokument konnte kein Text gelesen werden. Verwenden Sie eine besser lesbare Version und laden Sie sie in diesem Chat erneut hoch.",
       "timeout": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Entfernen Sie die Datei und laden Sie sie in diesem Chat erneut hoch. Bei großen Dokumenten kann eine Aufteilung helfen.",
       "tooManyPages": "Das Dokument hat zu viele Seiten. Teilen Sie es in kleinere Dateien auf und laden Sie diese in diesem Chat hoch.",
-      "unavailable": "Der Dokumentenverarbeitungsdienst ist vorübergehend nicht verfügbar. Entfernen Sie die Datei und laden Sie sie später in diesem Chat erneut hoch."
+      "unavailable": "Der Dokumentenverarbeitungsdienst ist vorübergehend nicht verfügbar. Entfernen Sie die Datei und laden Sie sie später in diesem Chat erneut hoch.",
+      "contentDegraded": "Bei der Aktualisierung wurden deutlich weniger Seiten gefunden als beim letzten Index, daher wurde der bisherige Inhalt beibehalten. Die nächste geplante Aktualisierung versucht es erneut."
     },
     "failedToAdd": "Fehler beim Hochladen der Datei",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",

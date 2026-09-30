@@ -18,6 +18,7 @@ import type { DocumentProcessingJobData } from 'src/domain/sources/application/p
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
+import { SourceContentDegradationGuard } from 'src/domain/sources/application/services/source-content-degradation-guard.service';
 import { FileSourceExtractor } from 'src/domain/sources/application/services/file-source-extractor.service';
 import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
@@ -112,6 +113,7 @@ describe('DocumentProcessingConsumer', () => {
         sourceRepository,
         contentReplacement as never,
         helper as never,
+        new SourceContentDegradationGuard(sourceRepository),
       ),
       new FileSourceExtractor(
         downloadObjectUseCase as never,

@@ -5,4 +5,6 @@ export enum SourceProcessingErrorCode {
   PROCESSING_TIMEOUT = 'PROCESSING_TIMEOUT',
   PROCESSING_UNAVAILABLE = 'PROCESSING_UNAVAILABLE',
   PROCESSING_FAILED = 'PROCESSING_FAILED',
+  /** A re-index found far fewer pages than the content it would replace. */
+  CONTENT_DEGRADED = 'CONTENT_DEGRADED',
 }

@@ -13,9 +13,14 @@ import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import {
+  ReindexInterval,
+  ReindexIntervalUnit,
+} from 'src/domain/sources/domain/reindex-interval';
 import { SourceIngestionService } from './source-ingestion.service';
 import type { IngestionFailureOutcome } from './source-ingestion.service';
 import { SourceProcessingHelper } from './source-processing-helper.service';
+import { SourceContentDegradationGuard } from './source-content-degradation-guard.service';
 import {
   type ExtractedTextSourceContent,
   TextSourceExtractor,
@@ -32,6 +37,19 @@ class PageExtractor extends TextSourceExtractor<string> {
       text,
       chunks: contents.map(
         (content) => new TextSourceContentChunk({ content, meta: {} }),
+      ),
+    }));
+  }
+
+  servesPages(...pageUrls: string[]): void {
+    this.extract.mockImplementationOnce(async () => ({
+      text: pageUrls.join('\n\n'),
+      chunks: pageUrls.map(
+        (url) =>
+          new TextSourceContentChunk({
+            content: `Inhalt ${url}`,
+            meta: { url },
+          }),
       ),
     }));
   }
@@ -68,6 +86,7 @@ describe('Source ingestion run state (Postgres)', () => {
         deleteContent as unknown as DeleteContentUseCase,
         markSourceFailed as unknown as MarkSourceFailedUseCase,
       ),
+      new SourceContentDegradationGuard(harness.sourceRepository),
     );
   });
 
@@ -190,6 +209,61 @@ describe('Source ingestion run state (Postgres)', () => {
     expect(row!.lastIndexedAt!.getTime()).toBeGreaterThan(
       indexedBefore.getTime(),
     );
+  });
+
+  it('keeps the previous content and records a degraded run when a re-index finds far fewer pages', async () => {
+    const sourceId = await readySource();
+    extractor.servesPages(
+      `${ROOT_URL}`,
+      `${ROOT_URL}/restmuell`,
+      `${ROOT_URL}/biotonne`,
+      `${ROOT_URL}/sperrmuell`,
+    );
+    await run(sourceId, SourceIngestionKind.REINDEX);
+    const contentBefore = await harness.storedContent(sourceId);
+    const rowBefore = await storedRow(sourceId);
+    extractor.servesPages(`${ROOT_URL}`);
+
+    await run(sourceId, SourceIngestionKind.REINDEX);
+
+    await expect(harness.storedContent(sourceId)).resolves.toEqual(
+      contentBefore,
+    );
+    expect(await storedRow(sourceId)).toMatchObject({
+      status: SourceStatus.READY,
+      lastIndexedAt: rowBefore!.lastIndexedAt,
+      lastRunErrorCode: SourceProcessingErrorCode.CONTENT_DEGRADED,
+    });
+  });
+
+  it('keeps a schedule change made between the run reading the source and committing its content', async () => {
+    const sourceId = await readySource();
+    const nextReindexAt = new Date('2026-10-30T06:00:00.000Z');
+    const commit = harness.contentReplacement.commit.bind(
+      harness.contentReplacement,
+    );
+    jest
+      .spyOn(harness.contentReplacement, 'commit')
+      .mockImplementationOnce(async (source, content) => {
+        await harness.sourceRepository.updateReindexSchedule(sourceId, {
+          interval: new ReindexInterval(1, ReindexIntervalUnit.MONTHS),
+          nextReindexAt,
+        });
+        return commit(source, content);
+      });
+    extractor.serves('Abfuhr 2026', 'Restmüll 2026');
+
+    await run(sourceId, SourceIngestionKind.REINDEX);
+
+    const row = await storedRow(sourceId);
+    expect(row).toMatchObject({
+      reindexIntervalValue: 1,
+      reindexIntervalUnit: ReindexIntervalUnit.MONTHS,
+      nextReindexAt,
+    });
+    expect((await harness.storedContent(sourceId)).texts).toEqual([
+      'Abfuhr 2026',
+    ]);
   });
 
   it('leaves a re-indexing source READY, out of reach of the stale-processing cleanup', async () => {

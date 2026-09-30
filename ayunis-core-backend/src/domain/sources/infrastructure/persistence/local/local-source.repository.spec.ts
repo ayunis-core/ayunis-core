@@ -9,11 +9,8 @@ import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { LocalSourceRepository } from './local-source.repository';
-import { SourceRecord } from './schema/source.record';
-import type {
-  DataSourceRecord,
-  TextSourceRecord,
-} from './schema/source.record';
+import { SourceRecord, TextSourceRecord } from './schema/source.record';
+import type { DataSourceRecord } from './schema/source.record';
 import { TextSourceDetailsRecord } from './schema/text-source-details.record';
 import type { CSVDataSourceDetailsRecord } from './schema/data-source-details.record';
 import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
@@ -143,8 +140,10 @@ describe('LocalSourceRepository', () => {
       type: TextType.FILE,
       status: SourceStatus.READY,
     });
-    const sourceRecord = { id: source.id } as TextSourceRecord;
-    const detailsRecord = { source: sourceRecord } as TextSourceDetailsRecord;
+    const lockedRecord = Object.assign(new TextSourceRecord(), {
+      id: source.id,
+    });
+    const detailsRecord = {} as TextSourceDetailsRecord;
     const chunks = [{ id: randomUUID() }] as SourceContentChunkRecord[];
     const writes: string[] = [];
     const deleteDetails = {
@@ -156,21 +155,16 @@ describe('LocalSourceRepository', () => {
         return { affected: 1 };
       }),
     };
-    const lockSource = {
-      select: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      setLock: jest.fn().mockReturnThis(),
-      getRawOne: jest.fn(async () => {
-        writes.push('lock source');
-        return { id: source.id };
-      }),
-    };
     const txSourceRepository = {
-      createQueryBuilder: jest.fn(() => lockSource),
-      save: jest.fn(async () => {
-        writes.push('save source');
-        return sourceRecord;
+      findOne: jest.fn(async () => {
+        writes.push('lock source');
+        return lockedRecord;
       }),
+      update: jest.fn(async () => {
+        writes.push('update source run columns');
+        return { affected: 1 };
+      }),
+      save: jest.fn(),
     };
     const txDetailsRepository = {
       createQueryBuilder: jest.fn(() => deleteDetails),
@@ -194,7 +188,7 @@ describe('LocalSourceRepository', () => {
     } as unknown as EntityManager;
     const mapper = {
       toTextSourceRecord: jest.fn().mockReturnValue({
-        source: sourceRecord,
+        source: {},
         details: detailsRecord,
         contentChunks: chunks,
       }),
@@ -213,14 +207,18 @@ describe('LocalSourceRepository', () => {
     expect(deleteDetails.where).toHaveBeenCalledWith('"sourceId" = :sourceId', {
       sourceId: source.id,
     });
-    expect(lockSource.setLock).toHaveBeenCalledWith('pessimistic_write');
+    expect(txSourceRepository.findOne).toHaveBeenCalledWith({
+      where: { id: source.id },
+      lock: { mode: 'pessimistic_write' },
+    });
     expect(writes).toEqual([
       'lock source',
       'delete details',
-      'save source',
+      'update source run columns',
       'save details',
       'save chunks',
     ]);
+    expect(txSourceRepository.save).not.toHaveBeenCalled();
     expect(txChunkRepository.save).toHaveBeenCalledWith(chunks);
   });
 
@@ -231,14 +229,9 @@ describe('LocalSourceRepository', () => {
       type: TextType.FILE,
       status: SourceStatus.PROCESSING,
     });
-    const lockSource = {
-      select: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      setLock: jest.fn().mockReturnThis(),
-      getRawOne: jest.fn().mockResolvedValue(undefined),
-    };
     const txSourceRepository = {
-      createQueryBuilder: jest.fn(() => lockSource),
+      findOne: jest.fn().mockResolvedValue(null),
+      update: jest.fn(),
       save: jest.fn(),
     };
     const txDetailsRepository = {
@@ -271,7 +264,7 @@ describe('LocalSourceRepository', () => {
       repository.replaceTextSource(source, { text: 'Policy', chunks: [] }),
     ).resolves.toBeNull();
     expect(txDetailsRepository.createQueryBuilder).not.toHaveBeenCalled();
-    expect(txSourceRepository.save).not.toHaveBeenCalled();
+    expect(txSourceRepository.update).not.toHaveBeenCalled();
     expect(txDetailsRepository.save).not.toHaveBeenCalled();
     expect(txChunkRepository.save).not.toHaveBeenCalled();
   });

@@ -78,6 +78,18 @@ describe('EnqueueSourceReindexUseCase', () => {
     });
   });
 
+  it('enqueues a system-initiated re-index without a requesting user', async () => {
+    sourceRepository.findById.mockResolvedValue(urlSource());
+
+    await useCase.execute(
+      new EnqueueSourceReindexCommand({ sourceId: SOURCE_ID, orgId: ORG_ID }),
+    );
+
+    const [job] = urlCrawlProcessing.enqueue.mock.calls[0];
+    expect(job).toMatchObject({ sourceId: SOURCE_ID, orgId: ORG_ID });
+    expect(job.userId).toBeUndefined();
+  });
+
   it('rejects a source that does not exist', async () => {
     await expect(useCase.execute(command)).rejects.toThrow(SourceNotFoundError);
     expect(urlCrawlProcessing.enqueue).not.toHaveBeenCalled();

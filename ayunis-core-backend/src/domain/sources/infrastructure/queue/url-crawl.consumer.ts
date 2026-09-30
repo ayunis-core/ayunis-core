@@ -31,7 +31,7 @@ export class UrlCrawlConsumer extends WorkerHost {
     );
 
     await this.contextService.run(async () => {
-      this.validateAndSetContext(orgId, userId);
+      this.validateAndSetContext(kind, orgId, userId);
       await this.ingestion.ingest({
         sourceId,
         orgId,
@@ -43,13 +43,21 @@ export class UrlCrawlConsumer extends WorkerHost {
     });
   }
 
+  /**
+   * Scheduled re-indexes are system-initiated and carry no user; nothing on
+   * the crawl and embedding path reads one (the org alone selects models and
+   * crawl grants), so they run in the org context only.
+   */
   private validateAndSetContext(
+    kind: SourceIngestionKind,
     orgId: UUID | undefined,
     userId: UUID | undefined,
   ): void {
     if (!orgId) throw new Error('orgId is required');
-    if (!userId) throw new Error('userId is required');
+    if (!userId && kind === SourceIngestionKind.INITIAL) {
+      throw new Error('userId is required');
+    }
     this.contextService.set('orgId', orgId);
-    this.contextService.set('userId', userId);
+    if (userId) this.contextService.set('userId', userId);
   }
 }

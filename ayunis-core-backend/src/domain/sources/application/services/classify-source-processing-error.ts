@@ -10,6 +10,7 @@ import {
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import {
   EmptyFileDataError,
+  SourceContentDegradedError,
   SpreadsheetParseTimeoutError,
 } from 'src/domain/sources/application/sources.errors';
 import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
@@ -34,5 +35,6 @@ export function classifySourceProcessingError(error: unknown): Code {
     error instanceof DocumentConversionUnavailableError
   )
     return Code.PROCESSING_UNAVAILABLE;
+  if (error instanceof SourceContentDegradedError) return Code.CONTENT_DEGRADED;
   return Code.PROCESSING_FAILED;
 }

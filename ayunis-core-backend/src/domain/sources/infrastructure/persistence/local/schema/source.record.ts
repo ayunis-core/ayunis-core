@@ -1,4 +1,5 @@
 import {
+  Check,
   ChildEntity,
   Column,
   Entity,
@@ -19,12 +20,19 @@ import {
 } from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { ReindexIntervalUnit } from 'src/domain/sources/domain/reindex-interval';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Entity('sources')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
+// Keeps the scheduler's due-source claim to the scheduled rows.
+@Index(['nextReindexAt'], { where: '"nextReindexAt" IS NOT NULL' })
+// A schedule is either complete or absent, so a due row always has an interval.
+@Check(
+  `("reindexIntervalValue" IS NULL) = ("reindexIntervalUnit" IS NULL) AND ("reindexIntervalValue" IS NULL) = ("nextReindexAt" IS NULL)`,
+)
 export abstract class SourceRecord extends BaseRecord {
   @Column()
   name: string;
@@ -63,6 +71,18 @@ export abstract class SourceRecord extends BaseRecord {
 
   @Column({ type: 'varchar', nullable: true })
   lastRunErrorCode: SourceProcessingErrorCode | null;
+
+  @Column({ type: 'int', nullable: true })
+  reindexIntervalValue: number | null;
+
+  @Column({ type: 'enum', enum: ReindexIntervalUnit, nullable: true })
+  reindexIntervalUnit: ReindexIntervalUnit | null;
+
+  // With time zone, unlike the run-state columns: it is compared against the
+  // database's now() and written from both SQL and the application, which a
+  // zone-less column would skew by the process' time-zone offset.
+  @Column({ type: 'timestamptz', nullable: true })
+  nextReindexAt: Date | null;
 
   @Index()
   @Column({ nullable: true })

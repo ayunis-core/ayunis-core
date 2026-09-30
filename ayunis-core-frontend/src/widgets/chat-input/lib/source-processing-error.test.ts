@@ -10,6 +10,7 @@ describe('getSourceProcessingErrorKey', () => {
     [Code.DOCUMENT_PAGE_LIMIT_EXCEEDED, 'tooManyPages'],
     [Code.PROCESSING_UNAVAILABLE, 'unavailable'],
     [Code.PROCESSING_FAILED, 'failed'],
+    [Code.CONTENT_DEGRADED, 'contentDegraded'],
     [undefined, 'failed'],
     ['FUTURE_CODE' as Code, 'failed'],
     ['__proto__' as Code, 'failed'],

@@ -9,6 +9,7 @@ import {
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import {
   EmptyFileDataError,
+  SourceContentDegradedError,
   SpreadsheetParseTimeoutError,
 } from 'src/domain/sources/application/sources.errors';
 import {
@@ -24,6 +25,13 @@ describe('classifySourceProcessingError', () => {
     ],
     [new EmptyOcrResultError(), Code.DOCUMENT_EMPTY],
     [new EmptyFileDataError('invoices.csv'), Code.DOCUMENT_EMPTY],
+    [
+      new SourceContentDegradedError('0b1e6f2a-4c3d-4e5f-8a9b-1c2d3e4f5a6b', {
+        previous: 12,
+        current: 1,
+      }),
+      Code.CONTENT_DEGRADED,
+    ],
     [
       new TooManyPagesError({ pageCount: 120, maxPages: 100 }),
       Code.DOCUMENT_PAGE_LIMIT_EXCEEDED,

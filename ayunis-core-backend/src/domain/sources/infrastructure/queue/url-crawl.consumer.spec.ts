@@ -27,6 +27,7 @@ import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-c
 import { SourceIngestionKind } from 'src/domain/sources/application/models/source-ingestion-kind.enum';
 import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { SourceIngestionService } from 'src/domain/sources/application/services/source-ingestion.service';
+import { SourceContentDegradationGuard } from 'src/domain/sources/application/services/source-content-degradation-guard.service';
 import { UrlSourceExtractor } from 'src/domain/sources/application/services/url-source-extractor.service';
 import { UrlCrawlConsumer } from './url-crawl.consumer';
 
@@ -118,6 +119,7 @@ describe('UrlCrawlConsumer', () => {
         sourceRepository,
         contentReplacement as never,
         helper as never,
+        new SourceContentDegradationGuard(sourceRepository),
       ),
       new UrlSourceExtractor(
         crawlUrlUseCase as never,
@@ -229,5 +231,27 @@ describe('UrlCrawlConsumer', () => {
       expect(helper.markFailed).not.toHaveBeenCalled();
       expect(helper.cleanupIndex).not.toHaveBeenCalled();
     });
+
+    it('runs a scheduled re-index without a requesting user in the org context alone', async () => {
+      const job = makeJob(0, SourceIngestionKind.REINDEX);
+      delete (job.data as Partial<UrlCrawlJobData>).userId;
+
+      await consumer.process(job);
+
+      expect(contextService.set).toHaveBeenCalledWith('orgId', ORG_ID);
+      expect(contextService.set).not.toHaveBeenCalledWith(
+        'userId',
+        expect.anything(),
+      );
+      expect(contentReplacement.commit).toHaveBeenCalled();
+    });
+  });
+
+  it('still rejects an initial crawl without a requesting user', async () => {
+    const job = makeJob();
+    delete (job.data as Partial<UrlCrawlJobData>).userId;
+
+    await expect(consumer.process(job)).rejects.toThrow('userId is required');
+    expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
   });
 });

@@ -28,6 +28,7 @@ import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import { ReindexInterval } from 'src/domain/sources/domain/reindex-interval';
 
 interface SourceRunState {
   lastIndexedAt: Date | null;
@@ -42,6 +43,33 @@ function runStateOf(from: SourceRunState): SourceRunState {
     lastRunFailedAt: from.lastRunFailedAt,
     lastRunError: from.lastRunError,
     lastRunErrorCode: from.lastRunErrorCode,
+  };
+}
+
+function scheduleToDomain(record: SourceRecord): {
+  reindexInterval: ReindexInterval | null;
+  nextReindexAt: Date | null;
+} {
+  // `??` also covers records loaded with a partial column selection.
+  const value = record.reindexIntervalValue ?? null;
+  const unit = record.reindexIntervalUnit ?? null;
+  return {
+    reindexInterval:
+      value !== null && unit !== null ? new ReindexInterval(value, unit) : null,
+    nextReindexAt: record.nextReindexAt ?? null,
+  };
+}
+
+function scheduleToRecord(
+  source: Source,
+): Pick<
+  SourceRecord,
+  'reindexIntervalValue' | 'reindexIntervalUnit' | 'nextReindexAt'
+> {
+  return {
+    reindexIntervalValue: source.reindexInterval?.value ?? null,
+    reindexIntervalUnit: source.reindexInterval?.unit ?? null,
+    nextReindexAt: source.nextReindexAt,
   };
 }
 
@@ -79,6 +107,7 @@ export class SourceMapper {
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
           ...runStateOf(record),
+          ...scheduleToDomain(record),
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -96,6 +125,7 @@ export class SourceMapper {
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
           ...runStateOf(record),
+          ...scheduleToDomain(record),
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -179,7 +209,7 @@ export class SourceMapper {
     record.status = source.status;
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
-    Object.assign(record, runStateOf(source));
+    Object.assign(record, runStateOf(source), scheduleToRecord(source));
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.processingErrorCode = source.processingErrorCode;
     record.textType = source.textType;

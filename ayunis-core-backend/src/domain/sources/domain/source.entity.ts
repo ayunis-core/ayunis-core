@@ -4,6 +4,7 @@ import type { SourceType } from './source-type.enum';
 import { SourceCreator } from './source-creator.enum';
 import { SourceStatus } from './source-status.enum';
 import type { SourceProcessingErrorCode } from './source-processing-error-code.enum';
+import type { ReindexInterval } from './reindex-interval';
 
 /**
  * Outcome of the source's ingestion runs, kept apart from `status`: a failed
@@ -15,6 +16,12 @@ export interface SourceRunStateParams {
   lastRunFailedAt?: Date | null;
   lastRunError?: string | null;
   lastRunErrorCode?: SourceProcessingErrorCode | null;
+}
+
+/** Null interval (the default) means the source is never re-indexed automatically. */
+export interface SourceReindexScheduleParams {
+  reindexInterval?: ReindexInterval | null;
+  nextReindexAt?: Date | null;
 }
 
 export abstract class Source {
@@ -31,6 +38,8 @@ export abstract class Source {
   lastRunFailedAt: Date | null;
   lastRunError: string | null;
   lastRunErrorCode: SourceProcessingErrorCode | null;
+  reindexInterval: ReindexInterval | null;
+  nextReindexAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -47,7 +56,8 @@ export abstract class Source {
       processingStartedAt?: Date | null;
       createdAt?: Date;
       updatedAt?: Date;
-    } & SourceRunStateParams,
+    } & SourceRunStateParams &
+      SourceReindexScheduleParams,
   ) {
     this.id = params.id ?? randomUUID();
     this.type = params.type;
@@ -62,6 +72,8 @@ export abstract class Source {
     this.lastRunFailedAt = params.lastRunFailedAt ?? null;
     this.lastRunError = params.lastRunError ?? null;
     this.lastRunErrorCode = params.lastRunErrorCode ?? null;
+    this.reindexInterval = params.reindexInterval ?? null;
+    this.nextReindexAt = params.nextReindexAt ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
@@ -71,5 +83,17 @@ export abstract class Source {
     this.lastRunFailedAt = null;
     this.lastRunError = null;
     this.lastRunErrorCode = null;
+  }
+
+  /**
+   * The next run is due one interval after the last successful index, or
+   * after now when there was none. A due date already in the past is kept:
+   * the next scheduler sweep picks the source up.
+   */
+  scheduleReindex(interval: ReindexInterval | null, now: Date): void {
+    this.reindexInterval = interval;
+    this.nextReindexAt = interval
+      ? interval.addTo(this.lastIndexedAt ?? now)
+      : null;
   }
 }

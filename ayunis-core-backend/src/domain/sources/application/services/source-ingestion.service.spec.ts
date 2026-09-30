@@ -19,6 +19,7 @@ import {
   UrlSource,
 } from 'src/domain/sources/domain/sources/text-source.entity';
 import { SourceProcessingHelper } from './source-processing-helper.service';
+import { SourceContentDegradationGuard } from './source-content-degradation-guard.service';
 import {
   type IngestionFailureOutcome,
   SourceIngestionService,
@@ -157,6 +158,7 @@ describe('SourceIngestionService', () => {
         deleteContentUseCase as never,
         markSourceFailedUseCase as never,
       ),
+      new SourceContentDegradationGuard(sourceRepository),
     );
   });
 
@@ -244,6 +246,15 @@ describe('SourceIngestionService', () => {
         contentReplacement.commit.mock.invocationCallOrder[0],
       ).toBeGreaterThan(reloadOrder);
     });
+  });
+
+  it('never compares a first run with previous content', async () => {
+    sourceRepository.countIndexedPages.mockResolvedValue(12);
+
+    await ingest();
+
+    expect(sourceRepository.countIndexedPages).not.toHaveBeenCalled();
+    expect(contentReplacement.commit).toHaveBeenCalled();
   });
 
   describe('skipped run', () => {
@@ -562,6 +573,24 @@ describe('SourceIngestionService', () => {
         SOURCE_ID,
         expect.objectContaining({
           errorCode: SourceProcessingErrorCode.PROCESSING_TIMEOUT,
+        }),
+      );
+    });
+
+    it('fails a re-index that finds far fewer pages than the content it would replace, before embedding it', async () => {
+      sourceRepository.countIndexedPages.mockResolvedValue(12);
+
+      await reindex(finalExpected);
+
+      expect(sourceRepository.countIndexedPages).toHaveBeenCalledWith(
+        SOURCE_ID,
+      );
+      expect(contentReplacement.prepare).not.toHaveBeenCalled();
+      expect(contentReplacement.commit).not.toHaveBeenCalled();
+      expect(sourceRepository.recordRunFailure).toHaveBeenCalledWith(
+        SOURCE_ID,
+        expect.objectContaining({
+          errorCode: SourceProcessingErrorCode.CONTENT_DEGRADED,
         }),
       );
     });

@@ -132,6 +132,12 @@ async function createSchemaDataSource(schemaName: string): Promise<DataSource> {
   const dataSource = new DataSource({
     ...(typeormConfigRaw as PostgresConnectionOptions),
     schema: schemaName,
+    // Raw-SQL repository methods name tables unqualified; resolve them in the
+    // throwaway schema, and pgvector's type in public.
+    extra: {
+      ...((typeormConfigRaw as PostgresConnectionOptions).extra as object),
+      options: `-c search_path=${schemaName},public`,
+    },
     entities,
     migrations: [],
     migrationsRun: false,

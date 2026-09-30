@@ -15225,7 +15225,8 @@
           "DOCUMENT_PAGE_LIMIT_EXCEEDED",
           "PROCESSING_TIMEOUT",
           "PROCESSING_UNAVAILABLE",
-          "PROCESSING_FAILED"
+          "PROCESSING_FAILED",
+          "CONTENT_DEGRADED"
         ]
       },
       "SourceResponseDto": {

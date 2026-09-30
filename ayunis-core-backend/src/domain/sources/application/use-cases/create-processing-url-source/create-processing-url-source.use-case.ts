@@ -31,6 +31,7 @@ export class CreateProcessingUrlSourceUseCase {
         // up the job, so a source waiting in the queue is not reaped by the
         // stale-processing cleanup before its crawl has even started.
       });
+      source.scheduleReindex(command.reindexInterval, new Date());
 
       return (await this.sourceRepository.save(source)) as UrlSource;
     } catch (error) {

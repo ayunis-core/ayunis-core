@@ -26,6 +26,10 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
 import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import type { SourceReindexSchedule } from 'src/domain/sources/application/models/source-reindex-schedule';
+import type { DueSourceReindex } from 'src/domain/sources/application/models/due-source-reindex';
+import { claimDueReindexes } from './queries/claim-due-reindexes.db-query';
+import { countIndexedPages } from './queries/count-indexed-pages.db-query';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -137,29 +141,22 @@ export class LocalSourceRepository extends SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource | null> {
-    this.logger.log({ sourceId: source.id }, 'replaceTextSource');
-    const {
-      source: sourceRecord,
-      details,
-      contentChunks,
-    } = this.mapper.toTextSourceRecord(source, content);
-    this.logger.debug(
-      {
-        sourceId: sourceRecord.id,
-        chunksCount: contentChunks.length,
-      },
-      'Saving text source record',
+    this.logger.log(
+      { sourceId: source.id, chunksCount: content.chunks.length },
+      'replaceTextSource',
+    );
+    const { details, contentChunks } = this.mapper.toTextSourceRecord(
+      source,
+      content,
     );
     // Serialises overlapping replacements of one source: the waiting one then
     // sees the committed rows and replaces them instead of merging with them.
     // Requires a transaction; TypeORM rejects the lock outside of one.
-    const locked = await this.sourceRepository
-      .createQueryBuilder('source')
-      .select('source.id')
-      .where('source.id = :sourceId', { sourceId: source.id })
-      .setLock('pessimistic_write')
-      .getRawOne<{ source_id: UUID }>();
-    if (!locked) {
+    const locked = await this.sourceRepository.findOne({
+      where: { id: source.id },
+      lock: { mode: 'pessimistic_write' },
+    });
+    if (!(locked instanceof TextSourceRecord)) {
       this.logger.warn({ sourceId: source.id }, 'Source gone, content skipped');
       return null;
     }
@@ -171,14 +168,20 @@ export class LocalSourceRepository extends SourceRepository {
       .from(TextSourceDetailsRecord)
       .where('"sourceId" = :sourceId', { sourceId: source.id })
       .execute();
-    const savedSource = await this.sourceRepository.save(sourceRecord);
-    this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
-    const savedDetails = await this.textSourceDetailsRepository.save(details);
-    const savedContentChunks =
-      await this.sourceContentChunkRepository.save(contentChunks);
-    savedSource.textSourceDetails = savedDetails;
-    savedDetails.contentChunks = savedContentChunks;
-    return this.mapper.toDomain(savedSource);
+    // Only the columns a run owns: `source` was read before the lock, so its
+    // other fields (knowledge base, schedule) may already be stale.
+    const runColumns = {
+      name: source.name,
+      lastIndexedAt: source.lastIndexedAt,
+      lastRunFailedAt: source.lastRunFailedAt,
+      lastRunError: source.lastRunError,
+      lastRunErrorCode: source.lastRunErrorCode,
+    };
+    await this.sourceRepository.update({ id: source.id }, runColumns);
+    Object.assign(locked, runColumns);
+    await this.textSourceDetailsRepository.save(details);
+    await this.sourceContentChunkRepository.save(contentChunks);
+    return this.mapper.toDomain(locked);
   }
 
   async findStaleProcessingSourceIds(
@@ -297,6 +300,47 @@ export class LocalSourceRepository extends SourceRepository {
       })
       .execute();
     return (result.affected ?? 0) > 0;
+  }
+
+  async updateReindexSchedule(
+    sourceId: UUID,
+    schedule: SourceReindexSchedule,
+  ): Promise<boolean> {
+    this.logger.log({ sourceId }, 'updateReindexSchedule');
+    const result = await this.sourceRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        reindexIntervalValue: schedule.interval?.value ?? null,
+        reindexIntervalUnit: schedule.interval?.unit ?? null,
+        nextReindexAt: schedule.nextReindexAt,
+      })
+      .where('id = :id', { id: sourceId })
+      .execute();
+    return (result.affected ?? 0) > 0;
+  }
+
+  async claimDueReindexes(limit: number): Promise<DueSourceReindex[]> {
+    const claimed = await claimDueReindexes(this.getManager(), limit);
+    this.logger.log({ claimed: claimed.length }, 'claimDueReindexes');
+    return claimed;
+  }
+
+  async releaseReindexClaim(claim: DueSourceReindex): Promise<void> {
+    this.logger.log({ sourceId: claim.sourceId }, 'releaseReindexClaim');
+    await this.sourceRepository
+      .createQueryBuilder()
+      .update()
+      .set({ nextReindexAt: claim.dueAt })
+      .where('id = :id AND "nextReindexAt" = :nextDueAt', {
+        id: claim.sourceId,
+        nextDueAt: claim.nextDueAt,
+      })
+      .execute();
+  }
+
+  countIndexedPages(sourceId: UUID): Promise<number> {
+    return countIndexedPages(this.getManager(), sourceId);
   }
 
   async updateCsvSourceData(

@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import {
   Source,
+  type SourceReindexScheduleParams,
   type SourceRunStateParams,
 } from 'src/domain/sources/domain/source.entity';
 import type { FileType } from 'src/domain/sources/domain/source-type.enum';
@@ -28,7 +29,8 @@ export abstract class TextSource extends Source {
       createdBy?: SourceCreator;
       createdAt?: Date;
       updatedAt?: Date;
-    } & SourceRunStateParams,
+    } & SourceRunStateParams &
+      SourceReindexScheduleParams,
   ) {
     super({ ...params, type: SourceType.TEXT });
     this.textType = params.type;
@@ -52,7 +54,8 @@ export class FileSource extends TextSource {
       createdBy?: SourceCreator;
       createdAt?: Date;
       updatedAt?: Date;
-    } & SourceRunStateParams,
+    } & SourceRunStateParams &
+      SourceReindexScheduleParams,
   ) {
     super({ ...params, type: TextType.FILE });
     this.fileType = params.fileType;
@@ -79,7 +82,8 @@ export class UrlSource extends TextSource {
       createdBy?: SourceCreator;
       createdAt?: Date;
       updatedAt?: Date;
-    } & SourceRunStateParams,
+    } & SourceRunStateParams &
+      SourceReindexScheduleParams,
   ) {
     super({ ...params, type: TextType.WEB });
     this.url = params.url;

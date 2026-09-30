@@ -4,7 +4,8 @@ import type { SourceIngestionKind } from 'src/domain/sources/application/models/
 export interface UrlCrawlJobData {
   sourceId: UUID;
   orgId: UUID;
-  userId: UUID;
+  /** Absent on system-initiated (scheduled) re-index jobs. */
+  userId?: UUID;
   rootUrl: string;
   maxDepth: number;
   /** Absent on jobs enqueued before re-indexing existed; those are initial runs. */
