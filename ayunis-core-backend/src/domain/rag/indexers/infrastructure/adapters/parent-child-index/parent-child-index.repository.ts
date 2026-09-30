@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ParentChunkRecord } from './infrastructure/persistence/schema/parent-chunk.record';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ParentChunk } from './domain/parent-chunk.entity';
 import { UUID } from 'crypto';
 import { ParentChildIndexerRepositoryPort } from './application/ports/parent-child-indexer-repository.port';
@@ -20,10 +22,21 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
 
   constructor(
     @InjectRepository(ParentChunkRecord)
-    private readonly parentChunkRepository: Repository<ParentChunkRecord>,
+    private readonly defaultParentChunkRepository: Repository<ParentChunkRecord>,
     private readonly parentChildIndexerMapper: ParentChildIndexerMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private getManager(): EntityManager {
+    // Scheduled and background callers can run without an active CLS context.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return this.txHost.tx ?? this.defaultParentChunkRepository.manager;
+  }
+
+  private get parentChunkRepository(): Repository<ParentChunkRecord> {
+    return this.getManager().getRepository(ParentChunkRecord);
   }
 
   async save(parentChunk: ParentChunk) {

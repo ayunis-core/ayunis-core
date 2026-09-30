@@ -136,7 +136,7 @@ describe('LocalSourceRepository', () => {
     expect(saveInTransaction).toHaveBeenCalledTimes(2);
   });
 
-  it('saves text source rows through the ambient transaction', async () => {
+  it('replaces text source rows through the ambient transaction, locking the source and dropping the previous details first', async () => {
     const source = new FileSource({
       name: 'Waste policy.pdf',
       fileType: FileType.PDF,
@@ -146,14 +146,44 @@ describe('LocalSourceRepository', () => {
     const sourceRecord = { id: source.id } as TextSourceRecord;
     const detailsRecord = { source: sourceRecord } as TextSourceDetailsRecord;
     const chunks = [{ id: randomUUID() }] as SourceContentChunkRecord[];
+    const writes: string[] = [];
+    const deleteDetails = {
+      delete: jest.fn().mockReturnThis(),
+      from: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn(async () => {
+        writes.push('delete details');
+        return { affected: 1 };
+      }),
+    };
+    const lockSource = {
+      select: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      setLock: jest.fn().mockReturnThis(),
+      getRawOne: jest.fn(async () => {
+        writes.push('lock source');
+        return { id: source.id };
+      }),
+    };
     const txSourceRepository = {
-      save: jest.fn().mockResolvedValue(sourceRecord),
+      createQueryBuilder: jest.fn(() => lockSource),
+      save: jest.fn(async () => {
+        writes.push('save source');
+        return sourceRecord;
+      }),
     };
     const txDetailsRepository = {
-      save: jest.fn().mockResolvedValue(detailsRecord),
+      createQueryBuilder: jest.fn(() => deleteDetails),
+      save: jest.fn(async () => {
+        writes.push('save details');
+        return detailsRecord;
+      }),
     };
     const txChunkRepository = {
-      save: jest.fn().mockResolvedValue(chunks),
+      save: jest.fn(async () => {
+        writes.push('save chunks');
+        return chunks;
+      }),
     };
     const manager = {
       getRepository: jest.fn((target: unknown) => {
@@ -178,11 +208,72 @@ describe('LocalSourceRepository', () => {
     );
 
     await expect(
-      repository.saveTextSource(source, { text: 'Policy', chunks: [] }),
+      repository.replaceTextSource(source, { text: 'Policy', chunks: [] }),
     ).resolves.toBe(source);
-    expect(txSourceRepository.save).toHaveBeenCalledWith(sourceRecord);
-    expect(txDetailsRepository.save).toHaveBeenCalledWith(detailsRecord);
+    expect(deleteDetails.where).toHaveBeenCalledWith('"sourceId" = :sourceId', {
+      sourceId: source.id,
+    });
+    expect(lockSource.setLock).toHaveBeenCalledWith('pessimistic_write');
+    expect(writes).toEqual([
+      'lock source',
+      'delete details',
+      'save source',
+      'save details',
+      'save chunks',
+    ]);
     expect(txChunkRepository.save).toHaveBeenCalledWith(chunks);
+  });
+
+  it('writes nothing and returns null when the locked source row is gone', async () => {
+    const source = new FileSource({
+      name: 'Waste policy.pdf',
+      fileType: FileType.PDF,
+      type: TextType.FILE,
+      status: SourceStatus.PROCESSING,
+    });
+    const lockSource = {
+      select: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      setLock: jest.fn().mockReturnThis(),
+      getRawOne: jest.fn().mockResolvedValue(undefined),
+    };
+    const txSourceRepository = {
+      createQueryBuilder: jest.fn(() => lockSource),
+      save: jest.fn(),
+    };
+    const txDetailsRepository = {
+      createQueryBuilder: jest.fn(),
+      save: jest.fn(),
+    };
+    const txChunkRepository = { save: jest.fn() };
+    const manager = {
+      getRepository: jest.fn((target: unknown) => {
+        if (target === SourceRecord) return txSourceRepository;
+        if (target === TextSourceDetailsRecord) return txDetailsRepository;
+        return txChunkRepository;
+      }),
+    } as unknown as EntityManager;
+    const mapper = {
+      toTextSourceRecord: jest.fn().mockReturnValue({
+        source: { id: source.id },
+        details: {},
+        contentChunks: [],
+      }),
+    } as unknown as SourceMapper;
+    const repository = new LocalSourceRepository(
+      {} as Repository<SourceRecord>,
+      mapper,
+      {} as SourceContentChunkMapper,
+      { tx: manager } as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+
+    await expect(
+      repository.replaceTextSource(source, { text: 'Policy', chunks: [] }),
+    ).resolves.toBeNull();
+    expect(txDetailsRepository.createQueryBuilder).not.toHaveBeenCalled();
+    expect(txSourceRepository.save).not.toHaveBeenCalled();
+    expect(txDetailsRepository.save).not.toHaveBeenCalled();
+    expect(txChunkRepository.save).not.toHaveBeenCalled();
   });
 
   it('loads a citation chunk and source metadata without extracted full text', async () => {
