@@ -12,6 +12,9 @@ on:
     branches: [main]
     paths:
       - 'ayunis-core-backend/**'
+      # Seeds the shared ESLint cache below: pull requests can only restore
+      # caches saved on main, and the cache key includes the lockfile hash.
+      - 'pnpm-lock.yaml'
 
 permissions:
   contents: read
@@ -40,8 +43,25 @@ jobs:
       - name: Run TypeScript type check
         run: pnpm exec tsc --noEmit
 
+      # Type-aware ESLint over the whole backend takes ~4.5 minutes cold. The
+      # cache re-lints only files whose content changed, so a type change in
+      # one file does not re-lint its importers. The pre-commit hook and the
+      # cold run after any lockfile/config change remain the full backstop.
+      # The key covers everything that changes lint results without changing
+      # the linted file: dependency versions, the ESLint and TypeScript
+      # config, and the Prettier config that eslint-plugin-prettier reads at
+      # runtime. No broader fallback: ESLint's own per-entry hash covers only
+      # its config and version, not tsconfig or Prettier options.
+      - name: Restore ESLint cache
+        uses: actions/cache@v4
+        with:
+          path: ayunis-core-backend/.eslintcache
+          key: eslint-backend-${{ hashFiles('pnpm-lock.yaml', 'ayunis-core-backend/.prettierrc', 'ayunis-core-backend/.prettierignore', 'ayunis-core-backend/eslint.config.mjs', 'ayunis-core-backend/tsconfig.json') }}-${{ github.sha }}
+          restore-keys: |
+            eslint-backend-${{ hashFiles('pnpm-lock.yaml', 'ayunis-core-backend/.prettierrc', 'ayunis-core-backend/.prettierignore', 'ayunis-core-backend/eslint.config.mjs', 'ayunis-core-backend/tsconfig.json') }}-
+
       - name: Run linter
-        run: pnpm run lint
+        run: pnpm run lint --cache --cache-location .eslintcache --cache-strategy content
 
   test:
     runs-on: ubuntu-latest
