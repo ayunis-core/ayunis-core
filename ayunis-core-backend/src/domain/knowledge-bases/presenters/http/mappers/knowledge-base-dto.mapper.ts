@@ -48,6 +48,7 @@ export class KnowledgeBaseDtoMapper {
       createdAt: source.createdAt.toISOString(),
       updatedAt: source.updatedAt.toISOString(),
       status: source.status,
+      ...this.toRunStateDto(source),
     };
 
     if (source.processingError) {
@@ -63,5 +64,27 @@ export class KnowledgeBaseDtoMapper {
     }
 
     return dto;
+  }
+
+  private toRunStateDto(
+    source: Source,
+  ): Pick<
+    KnowledgeBaseDocumentResponseDto,
+    | 'reindexInterval'
+    | 'nextReindexAt'
+    | 'lastIndexedAt'
+    | 'lastRunFailedAt'
+    | 'lastRunErrorCode'
+  > {
+    return {
+      reindexInterval: source.reindexInterval && {
+        value: source.reindexInterval.value,
+        unit: source.reindexInterval.unit,
+      },
+      nextReindexAt: source.nextReindexAt?.toISOString() ?? null,
+      lastIndexedAt: source.lastIndexedAt?.toISOString() ?? null,
+      lastRunFailedAt: source.lastRunFailedAt?.toISOString() ?? null,
+      lastRunErrorCode: source.lastRunErrorCode,
+    };
   }
 }

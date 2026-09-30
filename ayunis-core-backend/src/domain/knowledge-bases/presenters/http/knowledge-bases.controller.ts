@@ -53,6 +53,8 @@ import { RemoveDocumentFromKnowledgeBaseUseCase } from 'src/domain/knowledge-bas
 import { RemoveDocumentFromKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
 import { ListKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { ListKnowledgeBaseDocumentsQuery } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
+import { SetDocumentReindexScheduleUseCase } from 'src/domain/knowledge-bases/application/use-cases/set-document-reindex-schedule/set-document-reindex-schedule.use-case';
+import { SetDocumentReindexScheduleCommand } from 'src/domain/knowledge-bases/application/use-cases/set-document-reindex-schedule/set-document-reindex-schedule.command';
 import { MissingFileError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 
@@ -62,6 +64,8 @@ import { toKnowledgeBaseOwner } from './dto/knowledge-base-owner.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
 import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
 import { SetKnowledgeBaseActivationRequestDto } from './dto/set-knowledge-base-activation.request-dto';
+import { SetDocumentReindexScheduleRequestDto } from './dto/set-document-reindex-schedule.request-dto';
+import { toReindexInterval } from './dto/reindex-interval.dto';
 import {
   KnowledgeBaseResponseDto,
   KnowledgeBaseListResponseDto,
@@ -77,6 +81,13 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 const KB_ID_PARAM: ApiParamOptions = {
   name: 'id',
   description: 'The UUID of the knowledge base',
+  type: 'string',
+  format: 'uuid',
+};
+
+const DOCUMENT_ID_PARAM: ApiParamOptions = {
+  name: 'documentId',
+  description: 'The UUID of the document',
   type: 'string',
   format: 'uuid',
 };
@@ -116,6 +127,7 @@ export class KnowledgeBasesController {
     private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
+    private readonly setDocumentReindexScheduleUseCase: SetDocumentReindexScheduleUseCase,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
@@ -182,12 +194,7 @@ export class KnowledgeBasesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a knowledge base by ID' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the knowledge base',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiParam(KB_ID_PARAM)
   @ApiResponse({
     status: 200,
     description: 'Returns the knowledge base',
@@ -283,12 +290,7 @@ export class KnowledgeBasesController {
   @ApiOperation({
     summary: 'List all documents in a knowledge base',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the knowledge base',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiParam(KB_ID_PARAM)
   @ApiResponse({
     status: 200,
     description: 'Returns the documents in the knowledge base',
@@ -379,12 +381,7 @@ export class KnowledgeBasesController {
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post(':id/urls')
   @ApiOperation({ summary: 'Add a URL source to a knowledge base' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the knowledge base',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiParam(KB_ID_PARAM)
   @ApiBody({ type: AddUrlToKnowledgeBaseDto })
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
@@ -403,6 +400,7 @@ export class KnowledgeBasesController {
         knowledgeBaseId: id,
         url: dto.url,
         maxDepth: dto.maxDepth,
+        reindexInterval: dto.reindexInterval,
       },
       'addUrl',
     );
@@ -411,6 +409,7 @@ export class KnowledgeBasesController {
         knowledgeBaseId: id,
         url: dto.url,
         maxDepth: dto.maxDepth,
+        reindexInterval: toReindexInterval(dto.reindexInterval),
       }),
     );
 
@@ -418,20 +417,52 @@ export class KnowledgeBasesController {
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
+  @Patch(':id/documents/:documentId/reindex-schedule')
+  @ApiOperation({
+    summary:
+      'Set, change or remove the automatic re-index schedule of a web source',
+  })
+  @ApiParam(KB_ID_PARAM)
+  @ApiParam(DOCUMENT_ID_PARAM)
+  @ApiBody({ type: SetDocumentReindexScheduleRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The schedule has been set; returns the updated document',
+    type: KnowledgeBaseDocumentResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Invalid interval, or the document is not a web source that can be re-indexed',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Knowledge base or document not found',
+  })
+  async setDocumentReindexSchedule(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Param('documentId', ParseUUIDPipe) documentId: UUID,
+    @Body() dto: SetDocumentReindexScheduleRequestDto,
+  ): Promise<KnowledgeBaseDocumentResponseDto> {
+    this.logger.log(
+      { knowledgeBaseId: id, documentId, interval: dto.reindexInterval },
+      'setDocumentReindexSchedule',
+    );
+    const source = await this.setDocumentReindexScheduleUseCase.execute(
+      new SetDocumentReindexScheduleCommand({
+        knowledgeBaseId: id,
+        documentId,
+        reindexInterval: toReindexInterval(dto.reindexInterval),
+      }),
+    );
+    return this.knowledgeBaseDtoMapper.toDocumentDto(source);
+  }
+
+  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Delete(':id/documents/:documentId')
   @ApiOperation({ summary: 'Remove a document from a knowledge base' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the knowledge base',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'documentId',
-    description: 'The UUID of the document to remove',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiParam(KB_ID_PARAM)
+  @ApiParam(DOCUMENT_ID_PARAM)
   @ApiResponse({
     status: 204,
     description: 'The document has been removed from the knowledge base',

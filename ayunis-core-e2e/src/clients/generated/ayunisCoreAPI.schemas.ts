@@ -2232,6 +2232,7 @@ export const SourceProcessingErrorCode = {
   PROCESSING_TIMEOUT: 'PROCESSING_TIMEOUT',
   PROCESSING_UNAVAILABLE: 'PROCESSING_UNAVAILABLE',
   PROCESSING_FAILED: 'PROCESSING_FAILED',
+  CONTENT_DEGRADED: 'CONTENT_DEGRADED',
 } as const;
 
 /**
@@ -2760,6 +2761,28 @@ export interface SetKnowledgeBaseActivationRequestDto {
 }
 
 /**
+ * Unit of the interval
+ */
+export type ReindexIntervalUnit = typeof ReindexIntervalUnit[keyof typeof ReindexIntervalUnit];
+
+
+export const ReindexIntervalUnit = {
+  weeks: 'weeks',
+  months: 'months',
+} as const;
+
+export interface ReindexIntervalDto {
+  /**
+     * Number of units between automatic re-index runs (1-52 weeks or 1-12 months)
+     * @minimum 1
+     * @maximum 52
+     */
+  value: number;
+  /** Unit of the interval */
+  unit: ReindexIntervalUnit;
+}
+
+/**
  * The type of the source
  */
 export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
@@ -2826,6 +2849,28 @@ export interface KnowledgeBaseDocumentResponseDto {
   textType?: KnowledgeBaseDocumentResponseDtoTextType;
   /** The URL of the source (only for web sources) */
   url?: string;
+  /**
+     * How often the web source is re-indexed automatically; null when it is not
+     * @nullable
+     */
+  reindexInterval: ReindexIntervalDto | null;
+  /**
+     * When the next automatic re-index is due; null when unscheduled
+     * @nullable
+     */
+  nextReindexAt: string | null;
+  /**
+     * When the content was last indexed successfully; the indexed content is from this date
+     * @nullable
+     */
+  lastIndexedAt: string | null;
+  /**
+     * When the last run failed; a failure later than lastIndexedAt means the source still serves the content from lastIndexedAt
+     * @nullable
+     */
+  lastRunFailedAt: string | null;
+  /** Why the last run failed; null unless lastRunFailedAt is set */
+  lastRunErrorCode: SourceProcessingErrorCode | null;
 }
 
 export interface KnowledgeBaseDocumentListResponseDto {
@@ -2842,6 +2887,16 @@ export interface AddUrlToKnowledgeBaseDto {
      * @maximum 2
      */
   maxDepth?: number;
+  /** How often the web source is re-indexed automatically. Omit for no automatic re-indexing. */
+  reindexInterval?: ReindexIntervalDto;
+}
+
+export interface SetDocumentReindexScheduleRequestDto {
+  /**
+     * How often the web source is re-indexed automatically; null stops automatic re-indexing
+     * @nullable
+     */
+  reindexInterval: ReindexIntervalDto | null;
 }
 
 /**

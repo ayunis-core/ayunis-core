@@ -9,7 +9,9 @@ export enum ReindexIntervalUnit {
  * At most a year between runs: a content refresh rarer than that is not a
  * schedule anyone relies on, and the bound keeps typos like "100 months" out.
  */
-const MAX_VALUE: Record<ReindexIntervalUnit, number> = {
+export const REINDEX_INTERVAL_MAX_VALUE: Readonly<
+  Record<ReindexIntervalUnit, number>
+> = {
   [ReindexIntervalUnit.WEEKS]: 52,
   [ReindexIntervalUnit.MONTHS]: 12,
 };
@@ -23,7 +25,11 @@ export class ReindexInterval {
     if (!Object.values(ReindexIntervalUnit).includes(unit)) {
       throw new InvalidReindexIntervalError(value, unit);
     }
-    if (!Number.isInteger(value) || value < 1 || value > MAX_VALUE[unit]) {
+    if (
+      !Number.isInteger(value) ||
+      value < 1 ||
+      value > REINDEX_INTERVAL_MAX_VALUE[unit]
+    ) {
       throw new InvalidReindexIntervalError(value, unit);
     }
     this.value = value;

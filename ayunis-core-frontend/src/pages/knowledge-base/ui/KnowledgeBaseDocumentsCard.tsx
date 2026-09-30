@@ -2,6 +2,7 @@ import {
   useAddUrl,
   useKnowledgeBaseDocuments,
   useRemoveDocument,
+  useSetReindexSchedule,
   useUploadDocument,
 } from '@/pages/knowledge-base/api';
 import { KnowledgeBaseDocumentsCard as SharedKnowledgeBaseDocumentsCard } from '@/widgets/knowledge-base-documents-card';
@@ -14,6 +15,7 @@ export default function KnowledgeBaseDocumentsCard({
   const upload = useUploadDocument(knowledgeBaseId);
   const remove = useRemoveDocument(knowledgeBaseId);
   const addUrl = useAddUrl(knowledgeBaseId);
+  const reindexSchedule = useSetReindexSchedule(knowledgeBaseId);
 
   return (
     <SharedKnowledgeBaseDocumentsCard
@@ -23,6 +25,7 @@ export default function KnowledgeBaseDocumentsCard({
         ...upload,
         ...remove,
         ...addUrl,
+        ...reindexSchedule,
       }}
     />
   );

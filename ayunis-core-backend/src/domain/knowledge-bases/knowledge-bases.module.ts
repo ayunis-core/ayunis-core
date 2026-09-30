@@ -32,6 +32,7 @@ import { ListKnowledgeBasesUseCase } from './application/use-cases/list-knowledg
 import { AddDocumentToKnowledgeBaseUseCase } from './application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
 import { AddUrlToKnowledgeBaseUseCase } from './application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
+import { SetDocumentReindexScheduleUseCase } from './application/use-cases/set-document-reindex-schedule/set-document-reindex-schedule.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { GetKnowledgeBaseDocumentTextUseCase } from './application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
@@ -72,6 +73,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     AddDocumentToKnowledgeBaseUseCase,
     AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
+    SetDocumentReindexScheduleUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,

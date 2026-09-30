@@ -33,6 +33,9 @@ export class AddUrlToKnowledgeBaseUseCase {
         knowledgeBaseId: command.knowledgeBaseId,
         url: command.url,
         maxDepth: command.maxDepth,
+        reindexInterval: command.reindexInterval && {
+          ...command.reindexInterval,
+        },
       },
       'Adding URL to knowledge base (async)',
     );
@@ -41,6 +44,7 @@ export class AddUrlToKnowledgeBaseUseCase {
       new StartUrlCrawlCommand({
         url: command.url,
         maxDepth: command.maxDepth,
+        reindexInterval: command.reindexInterval,
       }),
     );
     await this.repository.assignSourceToKnowledgeBase(

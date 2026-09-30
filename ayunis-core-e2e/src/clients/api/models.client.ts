@@ -146,3 +146,16 @@ export async function permitFirstLanguageModelAsDefault(
 
   return { name: model.name, provider: model.provider };
 }
+
+export async function permitFirstEmbeddingModel(
+  api: APIRequestContext,
+): Promise<void> {
+  const [model] =
+    await generatedApi.modelsControllerGetAvailableEmbeddingModels({ api });
+  if (!model) throw new Error('No embedding model is available');
+  if (model.permittedModelId) return;
+  await generatedApi.modelsControllerCreatePermittedModel(
+    { modelId: model.modelId },
+    { api },
+  );
+}

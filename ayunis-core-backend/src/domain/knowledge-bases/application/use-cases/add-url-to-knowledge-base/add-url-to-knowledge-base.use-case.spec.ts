@@ -14,6 +14,10 @@ import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowl
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { StartUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.use-case';
+import {
+  ReindexInterval,
+  ReindexIntervalUnit,
+} from 'src/domain/sources/domain/reindex-interval';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.command';
@@ -135,6 +139,48 @@ describe(AddUrlToKnowledgeBaseUseCase.name, () => {
     expect(writeAccess.requireWrite).toHaveBeenCalledWith(knowledgeBase);
     expect(crawl.execute).not.toHaveBeenCalled();
     expect(repository.assignSourceToKnowledgeBase).not.toHaveBeenCalled();
+  });
+
+  it('passes the re-index interval through to the crawl', async () => {
+    const knowledgeBase = new PersonalKnowledgeBase({
+      name: 'Permit guidance',
+      userId: USER_ID,
+      orgId: ORG_ID,
+    });
+    const { useCase, crawl } = await setup(knowledgeBase);
+    const everySixMonths = new ReindexInterval(6, ReindexIntervalUnit.MONTHS);
+
+    await useCase.execute(
+      new AddUrlToKnowledgeBaseCommand({
+        knowledgeBaseId: knowledgeBase.id,
+        url: 'https://stadt.example/permit-guidance',
+        maxDepth: 1,
+        reindexInterval: everySixMonths,
+      }),
+    );
+
+    expect(crawl.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'https://stadt.example/permit-guidance',
+        maxDepth: 1,
+        reindexInterval: everySixMonths,
+      }),
+    );
+  });
+
+  it('starts an unscheduled crawl when no interval is given', async () => {
+    const knowledgeBase = new PersonalKnowledgeBase({
+      name: 'Permit guidance',
+      userId: USER_ID,
+      orgId: ORG_ID,
+    });
+    const { useCase, crawl } = await setup(knowledgeBase);
+
+    await useCase.execute(command(knowledgeBase.id));
+
+    expect(crawl.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ reindexInterval: null }),
+    );
   });
 
   it('does not crawl when the persisted knowledge base is at capacity', async () => {
