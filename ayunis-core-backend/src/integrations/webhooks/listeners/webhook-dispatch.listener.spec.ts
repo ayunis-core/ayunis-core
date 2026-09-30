@@ -4,6 +4,7 @@ import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
 import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
+import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-monthly-credits-updated.event';
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
@@ -270,6 +271,33 @@ describe('WebhookDispatchListener', () => {
       expect(command.event.data).not.toHaveProperty('userName');
     });
   });
+
+  it.each([10000, 0])(
+    'dispatches monthly credit updates including %s credits',
+    async (monthlyCredits) => {
+      const base = makeSeatBasedPayload();
+      await listener.handleSubscriptionMonthlyCreditsUpdated(
+        new SubscriptionMonthlyCreditsUpdatedEvent(ORG_ID, {
+          ...base,
+          type: SubscriptionType.USAGE_BASED,
+          monthlyCredits,
+        }),
+      );
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: expect.objectContaining({
+            eventType: 'subscription.monthly_credits_updated',
+            data: expect.objectContaining({
+              orgId: ORG_ID,
+              type: 'USAGE_BASED',
+              monthlyCredits,
+              startsAt: base.startsAt.toISOString(),
+            }),
+          }),
+        }),
+      );
+    },
+  );
 
   describe('handleSubscriptionCreated', () => {
     it('should dispatch SubscriptionCreatedWebhookEvent with mapped payload', async () => {
