@@ -16,6 +16,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { InviteResponseDto, InviteResponseDtoRole } from '@/shared/api';
 import { formatDate } from '@/shared/lib/format-date';
+import { InviteStatusBadge } from '@/shared/ui/invite-status-badge';
 
 interface SuperAdminInvitesSectionProps {
   invites: InviteResponseDto[];
@@ -87,7 +88,9 @@ function InvitesTable({ invites, roleLabels, t }: Readonly<InvitesTableProps>) {
           >
             <TableCell className="font-medium">{invite.email}</TableCell>
             <TableCell>{roleLabels[invite.role]}</TableCell>
-            <TableCell>{t(`users.${invite.status}`)}</TableCell>
+            <TableCell>
+              <InviteStatusBadge status={invite.status} />
+            </TableCell>
             <TableCell>{formatDate(invite.sentDate)}</TableCell>
           </TableRow>
         ))}
