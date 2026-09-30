@@ -138,7 +138,13 @@
       "activate_skill": "Fähigkeit aktivieren",
       "knowledge_query": "Wissen abrufen",
       "knowledge_get_text": "Wissen abrufen",
-      "read_document": "Dokument lesen",
+      "read_document": {
+        "title": "Dokument",
+        "reading": "Dokument wird gelesen…",
+        "available": "Dokument verfügbar",
+        "unavailable": "Dokument konnte nicht geöffnet werden",
+        "openInEditor": "Im Editor öffnen"
+      },
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",
