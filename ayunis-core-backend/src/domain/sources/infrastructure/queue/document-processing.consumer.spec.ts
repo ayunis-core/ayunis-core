@@ -94,6 +94,11 @@ const sourceRepository = {
   updateStatusConditionally: jest.fn(),
 };
 
+const spreadsheetParser = {
+  parseWorkbook: jest.fn(),
+  parseCsv: jest.fn(),
+};
+
 const helper = {
   index: jest.fn().mockResolvedValue(undefined),
   markFailed: jest.fn().mockResolvedValue(undefined),
@@ -119,6 +124,7 @@ describe('DocumentProcessingConsumer', () => {
       deleteObjectUseCase as never,
       sourceRepository as never,
       helper as never,
+      spreadsheetParser as never,
     );
   });
 
@@ -242,5 +248,52 @@ describe('DocumentProcessingConsumer', () => {
     expect(indexedOrgId).toBe(ORG_ID);
     expect(indexedChunks).toHaveLength(1);
     expect(indexedChunks[0].content).toBe('hello world');
+  });
+
+  it('flattens a workbook to text and never calls the file retriever', async () => {
+    sourceRepository.findById.mockResolvedValue(
+      makeSource(SourceStatus.PROCESSING),
+    );
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+    spreadsheetParser.parseWorkbook.mockResolvedValue([
+      { sheetName: 'Fees', headers: ['Permit', 'Cost'], rows: [['Use', '50']] },
+      { sheetName: 'Rooms', headers: ['Room'], rows: [['A1']] },
+    ]);
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({
+          fileName: 'fees.xlsx',
+          fileType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      }),
+    );
+
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(splitTextUseCase.execute.mock.calls[0][0].text).toBe(
+      '## Fees\nPermit: Use | Cost: 50\n\n## Rooms\nRoom: A1',
+    );
+  });
+
+  it('flattens CSV without a sheet title', async () => {
+    sourceRepository.findById.mockResolvedValue(
+      makeSource(SourceStatus.PROCESSING),
+    );
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+    spreadsheetParser.parseCsv.mockResolvedValue({
+      headers: ['Permit', 'Cost'],
+      rows: [['Use', '50']],
+    });
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({ fileName: 'fees.csv', fileType: 'text/csv' }),
+      }),
+    );
+
+    expect(splitTextUseCase.execute.mock.calls[0][0].text).toBe(
+      'Permit: Use | Cost: 50',
+    );
   });
 });

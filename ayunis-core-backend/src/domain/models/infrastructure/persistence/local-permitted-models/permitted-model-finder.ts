@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
@@ -23,9 +26,18 @@ export class PermittedModelFinder {
 
   constructor(
     @InjectRepository(PermittedModelRecord)
-    private readonly permittedModelRepository: Repository<PermittedModelRecord>,
+    private readonly defaultPermittedModelRepository: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
+
+  private get permittedModelRepository(): Repository<PermittedModelRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(PermittedModelRecord) ??
+      this.defaultPermittedModelRepository
+    );
+  }
 
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
     this.logger.debug({ orgId }, 'findOneEmbedding');

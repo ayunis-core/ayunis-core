@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   extractErrorData: vi.fn(),
   getEffectiveDefaultModel: vi.fn(),
   getSystemPrompt: vi.fn(),
+  getChatStartDefaults: vi.fn(),
   hasActiveSubscription: vi.fn(),
   isEmbeddingModelEnabled: vi.fn(),
 }));
@@ -14,6 +15,10 @@ vi.mock('@/pages/new-chat', () => ({
   NewChatPageNoModelError: () => null,
 }));
 vi.mock('@/shared/api', () => ({
+  orgChatSettingsControllerGetChatStartDefaults: mocks.getChatStartDefaults,
+  getOrgChatSettingsControllerGetChatStartDefaultsQueryKey: () => [
+    'chat-start-defaults',
+  ],
   chatSettingsControllerGetSystemPrompt: mocks.getSystemPrompt,
   getChatSettingsControllerGetSystemPromptQueryKey: () => ['system-prompt'],
   getModelsControllerIsEmbeddingModelEnabledQueryKey: () => [
@@ -65,6 +70,9 @@ describe('new chat route', () => {
       permittedLanguageModel: { id: 'sol' },
     });
     mocks.getSystemPrompt.mockResolvedValue({});
+    mocks.getChatStartDefaults.mockResolvedValue({
+      anonymousModeByDefault: false,
+    });
     mocks.hasActiveSubscription.mockResolvedValue({
       hasActiveSubscription: true,
     });
@@ -98,6 +106,25 @@ describe('new chat route', () => {
     mocks.getEffectiveDefaultModel.mockRejectedValue(error);
     mocks.extractErrorData.mockReturnValue({ code: 'NO_DEFAULT_MODEL_FOUND' });
 
+    await expect(runLoader(appQueryClient())).rejects.toBe(error);
+  });
+  it('loads the current organization default before opening the composer', async () => {
+    const queryClient = appQueryClient();
+    queryClient.setQueryData(['chat-start-defaults'], {
+      anonymousModeByDefault: false,
+    });
+    mocks.getChatStartDefaults.mockResolvedValue({
+      anonymousModeByDefault: true,
+    });
+    await runLoader(queryClient);
+    expect(queryClient.getQueryData(['chat-start-defaults'])).toEqual({
+      anonymousModeByDefault: true,
+    });
+  });
+
+  it('does not open a new chat with an unverified default when settings cannot be loaded', async () => {
+    const error = new Error('settings unavailable');
+    mocks.getChatStartDefaults.mockRejectedValue(error);
     await expect(runLoader(appQueryClient())).rejects.toBe(error);
   });
 });

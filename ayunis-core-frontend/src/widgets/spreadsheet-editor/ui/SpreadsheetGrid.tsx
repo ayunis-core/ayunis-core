@@ -10,13 +10,14 @@ import type {
 import { useTranslation } from 'react-i18next';
 import { Empty, EmptyDescription } from '@ayunis/ui/components/empty';
 import './spreadsheet-grid.css';
-import type { RowOperation } from '../model/spreadsheet-grid-operations';
+import type { RowOperation } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-operations';
 import {
   isFormulaValue,
   isSpreadsheetErrorValue,
-} from '../model/formula-values';
-import type { GridRow } from '../model/spreadsheet-grid-state';
-import { columnKey } from '../model/spreadsheet-grid-state';
+} from '@/widgets/spreadsheet-editor/model/formula-values';
+import type { GridRow } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
+import { columnKey } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
+import { columnIndexToLetter } from '@/widgets/spreadsheet-editor/model/formula-references';
 
 const DISPLAY_VALUES_KEY = Symbol('spreadsheetDisplayValues');
 
@@ -234,7 +235,7 @@ export function SpreadsheetGrid({
     () =>
       columns.map((label, index) => ({
         prop: columnKey(index),
-        name: label,
+        name: `${columnIndexToLetter(index)} · ${label}`,
         size: columnWidths[columnKey(index)] ?? 160,
         minSize: 60,
         cellTemplate: Template(FormulaCell as Parameters<typeof Template>[0]),

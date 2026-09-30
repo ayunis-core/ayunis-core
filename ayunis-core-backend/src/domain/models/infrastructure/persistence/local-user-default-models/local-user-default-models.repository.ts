@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -13,10 +16,19 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
 
   constructor(
     @InjectRepository(UserDefaultModelRecord)
-    private readonly userDefaultModelRepository: Repository<UserDefaultModelRecord>,
+    private readonly defaultUserDefaultModelRepository: Repository<UserDefaultModelRecord>,
     private readonly userDefaultModelMapper: UserDefaultModelMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get userDefaultModelRepository(): Repository<UserDefaultModelRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(UserDefaultModelRecord) ??
+      this.defaultUserDefaultModelRepository
+    );
   }
 
   async findByUserId(userId: UUID): Promise<PermittedLanguageModel | null> {

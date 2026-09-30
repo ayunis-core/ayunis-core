@@ -16,6 +16,14 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import { tableToText } from 'src/domain/sources/application/util/table-to-text';
+import {
+  detectFileType,
+  isCSVFile,
+  isSpreadsheetFile,
+} from 'src/common/util/file-type';
+import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import {
@@ -35,6 +43,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly helper: SourceProcessingHelper,
+    private readonly spreadsheetParser: SpreadsheetParserPort,
   ) {
     super();
   }
@@ -147,14 +156,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     const { minioPath, fileName, fileType } = jobData;
 
     const fileBuffer = await this.downloadFile(minioPath);
-    const result = await this.retrieveFileContentUseCase.execute(
-      new RetrieveFileContentCommand({
-        fileData: fileBuffer,
-        fileName,
-        fileType,
-      }),
-    );
-    const text = result.pages.map((page) => page.text).join('\n');
+    const text = await this.extractText(fileBuffer, fileName, fileType);
 
     const splitResult = this.splitTextUseCase.execute(
       new SplitTextCommand(text, SplitterType.RECURSIVE, {
@@ -171,6 +173,40 @@ export class DocumentProcessingConsumer extends WorkerHost {
     );
 
     return { text, chunks };
+  }
+
+  private async extractText(
+    fileBuffer: Buffer,
+    fileName: string,
+    fileType: string,
+  ): Promise<string> {
+    const detected = detectFileType(fileType, fileName);
+    if (isCSVFile(detected)) {
+      const csv = await this.spreadsheetParser.parseCsv(
+        fileBuffer.toString('utf8').replace(/^\uFEFF/, ''),
+      );
+      return this.requireRows(
+        tableToText([{ sheetName: '', ...csv }], false),
+        fileName,
+      );
+    }
+    if (isSpreadsheetFile(detected)) {
+      const sheets = await this.spreadsheetParser.parseWorkbook(fileBuffer);
+      return this.requireRows(tableToText(sheets, sheets.length > 1), fileName);
+    }
+    const result = await this.retrieveFileContentUseCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: fileBuffer,
+        fileName,
+        fileType,
+      }),
+    );
+    return result.pages.map((page) => page.text).join('\n');
+  }
+
+  private requireRows(text: string, fileName: string): string {
+    if (text === '') throw new EmptyFileDataError(fileName);
+    return text;
   }
 
   private async isSourceStillProcessing(

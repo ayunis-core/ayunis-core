@@ -1,25 +1,42 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
-import { SharesRepository } from '../../application/ports/shares-repository.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ShareRecord } from './schema/share.record';
 import { ShareMapper } from './mappers/share.mapper';
-import { Share } from '../../domain/share.entity';
+import { Share } from 'src/domain/shares/domain/share.entity';
 import { UUID } from 'crypto';
-import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeRecord } from './schema/share-scope.record';
-import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 
 @Injectable()
 export class PostgresSharesRepository extends SharesRepository {
   constructor(
     @InjectRepository(ShareRecord)
-    private readonly shareRepository: Repository<ShareRecord>,
+    private readonly defaultShareRepository: Repository<ShareRecord>,
     @InjectRepository(ShareScopeRecord)
-    private readonly shareScopeRepositry: Repository<ShareScopeRecord>,
+    private readonly defaultShareScopeRepositry: Repository<ShareScopeRecord>,
     private readonly mapper: ShareMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get shareRepository(): Repository<ShareRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(ShareRecord) ?? this.defaultShareRepository;
+  }
+
+  private get shareScopeRepositry(): Repository<ShareScopeRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ShareScopeRecord) ??
+      this.defaultShareScopeRepositry
+    );
   }
 
   async create(share: Share): Promise<void> {

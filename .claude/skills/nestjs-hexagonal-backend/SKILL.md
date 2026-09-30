@@ -179,6 +179,14 @@ For schema changes, use the `typeorm-migrations` skill. Never write migrations b
 
 When creating or modifying repositories, finders, QueryBuilder code, or database calls in loops, load the `persistence-query-review` skill when it is available. Count the complete call path's database round trips and prefer an atomic database operation when it preserves the same behavior.
 
+## CLS transaction enrollment
+
+Repositories and finders reached from `@Transactional()` methods must resolve
+reads and writes through the ambient transaction host at operation time. Review
+all records, subtype repositories, QueryBuilders, raw SQL and synchronous
+collaborators using [the enrollment checklist](../../../ayunis-core-backend/TRANSACTIONS.md).
+Use a real PostgreSQL rollback test for multi-statement atomicity.
+
 ## Completion Checklist
 
 - [ ] `pnpm exec eslint <touched-files>` passes (avoid `pnpm run lint` — it's wired with `--fix`)
