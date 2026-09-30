@@ -47,6 +47,7 @@ describe('GetOrgChatSettingsUseCase', () => {
     expect(result).toBeInstanceOf(OrgChatSettings);
     expect(result.orgId).toBe(orgId);
     expect(result.internetSearchEnabled).toBe(true);
+    expect(result).toHaveProperty('anonymousModeByDefault', false);
   });
 
   it('should get the orgId from the context service', async () => {

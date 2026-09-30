@@ -9793,6 +9793,26 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/chat-settings/chat-start-defaults": {
+      "get": {
+        "operationId": "OrgChatSettingsController_getChatStartDefaults",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatStartDefaultsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get chat-start defaults for the authenticated organization member",
+        "tags": ["Chat Settings"]
+      }
+    },
     "/chat-settings/org-chat-settings": {
       "get": {
         "description": "Returns the organization-wide chat settings for the admin's organization. Defaults to internet access enabled when not configured. Admin only.",
@@ -9817,7 +9837,7 @@
         "tags": ["Chat Settings"]
       },
       "put": {
-        "description": "Creates or replaces the organization-wide chat settings. When internet access is disabled, web search and website content tools are not offered to the AI assistant in any of the org users conversations. Admin only.",
+        "description": "Creates or partially updates the organization-wide chat settings. Omitted settings are preserved. When internet access is disabled, web search and website content tools are not offered to the AI assistant in any of the org users conversations. Admin only.",
         "operationId": "OrgChatSettingsController_upsertOrgChatSettings",
         "parameters": [],
         "requestBody": {
@@ -19602,6 +19622,17 @@
         },
         "required": ["systemPrompt"]
       },
+      "ChatStartDefaultsResponseDto": {
+        "type": "object",
+        "properties": {
+          "anonymousModeByDefault": {
+            "type": "boolean",
+            "description": "Whether new chats start in anonymous mode; users may opt out",
+            "example": false
+          }
+        },
+        "required": ["anonymousModeByDefault"]
+      },
       "OrgChatSettingsResponseDto": {
         "type": "object",
         "properties": {
@@ -19609,20 +19640,29 @@
             "type": "boolean",
             "description": "Whether internet access (web search and website content tools) is available to the AI assistant in chats",
             "example": true
+          },
+          "anonymousModeByDefault": {
+            "type": "boolean",
+            "description": "Whether new chats start in anonymous mode",
+            "example": false
           }
         },
-        "required": ["internetSearchEnabled"]
+        "required": ["internetSearchEnabled", "anonymousModeByDefault"]
       },
       "UpsertOrgChatSettingsDto": {
         "type": "object",
         "properties": {
           "internetSearchEnabled": {
             "type": "boolean",
-            "description": "Whether internet access (web search and website content tools) is available to the AI assistant in chats",
+            "description": "Whether internet access is available to the AI assistant",
             "example": true
+          },
+          "anonymousModeByDefault": {
+            "type": "boolean",
+            "description": "Whether new chats start in anonymous mode; users can opt out",
+            "example": false
           }
-        },
-        "required": ["internetSearchEnabled"]
+        }
       },
       "RetentionPolicyResponseDto": {
         "type": "object",

@@ -15,4 +15,6 @@ export class OrgChatSettingsRecord extends BaseRecord {
 
   @Column({ type: 'boolean', nullable: false, default: true })
   internetSearchEnabled: boolean;
+  @Column({ type: 'boolean', nullable: false, default: false })
+  anonymousModeByDefault: boolean;
 }
