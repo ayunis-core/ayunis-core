@@ -1,6 +1,6 @@
 import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum InvitesErrorCode {
   INVITE_NOT_FOUND = 'INVITE_NOT_FOUND',
@@ -12,12 +12,17 @@ export enum InvitesErrorCode {
   UNAUTHORIZED_INVITE_ACCESS = 'UNAUTHORIZED_INVITE_ACCESS',
   INVITE_ROLE_ERROR = 'INVITE_ROLE_ERROR',
   INVALID_SEATS = 'INVALID_SEATS',
+  SEAT_LIMIT_REACHED = 'SEAT_LIMIT_REACHED',
   INVALID_PASSWORD = 'INVALID_PASSWORD',
   INVITE_EMAIL_SENDING_FAILED = 'INVITE_EMAIL_SENDING_FAILED',
   EMAIL_NOT_AVAILABLE = 'EMAIL_NOT_AVAILABLE',
   USER_ALREADY_EXISTS = 'USER_ALREADY_EXISTS',
   UNEXPECTED_INVITE_ERROR = 'UNEXPECTED_INVITE_ERROR',
   BULK_INVITE_VALIDATION_FAILED = 'BULK_INVITE_VALIDATION_FAILED',
+}
+
+function withReason(message: string, reason?: string): string {
+  return reason ? `${message}: ${reason}` : message;
 }
 
 /**
@@ -111,7 +116,7 @@ export class InviteRoleError extends InviteError {
 export class InvalidInviteTokenError extends InviteError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Invalid invite token${reason ? `: ${reason}` : ''}`,
+      withReason('Invalid invite token', reason),
       InvitesErrorCode.INVALID_INVITE_TOKEN,
       400,
       metadata,
@@ -142,10 +147,26 @@ export class InvalidSeatsError extends InviteError {
   }
 }
 
+/**
+ * Error thrown when an invite would exceed the seats the organization ordered.
+ * Seats are only ever changed through the super-admin flow: automatically
+ * ordering additional seats would breach our contracts (EVB-IT Anlage 3).
+ */
+export class SeatLimitReachedError extends InviteError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Seat limit reached',
+      InvitesErrorCode.SEAT_LIMIT_REACHED,
+      409,
+      metadata,
+    );
+  }
+}
+
 export class InvalidPasswordError extends InviteError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Invalid password${reason ? `: ${reason}` : ''}`,
+      withReason('Invalid password', reason),
       InvitesErrorCode.INVALID_PASSWORD,
       400,
       metadata,
@@ -156,7 +177,7 @@ export class InvalidPasswordError extends InviteError {
 export class EmailNotAvailableError extends InviteError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Email not available${reason ? `: ${reason}` : ''}`,
+      withReason('Email not available', reason),
       InvitesErrorCode.EMAIL_NOT_AVAILABLE,
       400,
       metadata,
@@ -167,7 +188,7 @@ export class EmailNotAvailableError extends InviteError {
 export class UserAlreadyExistsError extends InviteError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `User already exists${reason ? `: ${reason}` : ''}`,
+      withReason('User already exists', reason),
       InvitesErrorCode.USER_ALREADY_EXISTS,
       400,
       metadata,
@@ -181,7 +202,7 @@ export class UserAlreadyExistsError extends InviteError {
 export class InviteEmailSendingFailedError extends InviteError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Failed to send invitation email${reason ? `: ${reason}` : ''}`,
+      withReason('Failed to send invitation email', reason),
       InvitesErrorCode.INVITE_EMAIL_SENDING_FAILED,
       500,
       metadata,

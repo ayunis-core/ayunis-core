@@ -62,3 +62,20 @@ describe('bulk invite success pluralization', () => {
     ).toBe('Alle 3 Einladungen erfolgreich erstellt!');
   });
 });
+
+describe('seat limit copy', () => {
+  afterAll(async () => {
+    await i18n.changeLanguage('de');
+  });
+
+  it.each(['de', 'en'])('is translated for %s', async (language) => {
+    await i18n.changeLanguage(language);
+
+    for (const key of [
+      'inviteCreate.seatLimitReached',
+      'bulkInvite.seatLimitReached',
+    ]) {
+      expect(i18n.t(key, { ns: 'admin-settings-users' })).not.toBe(key);
+    }
+  });
+});

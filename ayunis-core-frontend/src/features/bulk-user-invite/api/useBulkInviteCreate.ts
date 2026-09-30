@@ -46,6 +46,9 @@ export function useBulkInviteCreate(
         if (code === 'BULK_INVITE_VALIDATION_FAILED') {
           showError(t('bulkInvite.validationFailed'));
           onError?.(validationErrorsFrom(metadata));
+        } else if (code === 'SEAT_LIMIT_REACHED') {
+          showError(t('bulkInvite.seatLimitReached'));
+          onError?.([]);
         } else {
           showError(t('bulkInvite.error'));
           onError?.([]);

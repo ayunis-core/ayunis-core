@@ -92,10 +92,10 @@ describe('UpdateSeatsUseCase', () => {
     );
   });
 
-  // Seat updates are also driven by the org-admin invite auto-bump, which
-  // derives the new count from the serving subscription. Resolving them to the
-  // newest record instead would raise a future contract's seats while leaving
-  // the serving licence full, letting invites past the licensed count.
+  // A seat change applies to the licence currently in force. Resolving it to
+  // the newest record instead would raise a future contract's seats while
+  // leaving the serving licence full, so invites would stay blocked at the old
+  // count.
   it('updates the serving subscription, not a newer scheduled one', async () => {
     const serving = createSeatBased(10, new Date('2026-01-01T00:00:00.000Z'));
     const scheduled = createSeatBased(50, new Date('2099-01-01T00:00:00.000Z'));

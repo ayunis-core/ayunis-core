@@ -3,7 +3,7 @@ import {
   useInvitesControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { InviteCreateData } from '../model/openapi';
+import type { InviteCreateData } from '@/pages/admin-settings/users-settings/model/openapi';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';
@@ -31,6 +31,9 @@ export function useInviteCreate(
               break;
             case 'EMAIL_NOT_AVAILABLE':
               showError(t('inviteCreate.emailNotAvailable'));
+              break;
+            case 'SEAT_LIMIT_REACHED':
+              showError(t('inviteCreate.seatLimitReached'));
               break;
             case 'USER_EMAIL_PROVIDER_BLACKLISTED':
               showError(t('inviteCreate.emailProviderBlacklisted'));
