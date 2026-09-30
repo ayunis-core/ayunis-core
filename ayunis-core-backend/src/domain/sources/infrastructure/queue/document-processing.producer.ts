@@ -7,7 +7,7 @@ import {
   type DocumentProcessingJobData,
 } from 'src/domain/sources/application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
-import { STANDARD_JOB_OPTIONS, cancelQueueJob } from './bullmq-job.helpers';
+import { cancelQueueJob, sourceJobOptions } from './bullmq-job.helpers';
 
 @Injectable()
 export class DocumentProcessingProducer extends DocumentProcessingPort {
@@ -29,10 +29,11 @@ export class DocumentProcessingProducer extends DocumentProcessingPort {
       'Enqueuing document processing job',
     );
 
-    await this.queue.add('process-document', data, {
-      jobId: data.sourceId,
-      ...STANDARD_JOB_OPTIONS,
-    });
+    await this.queue.add(
+      'process-document',
+      data,
+      sourceJobOptions(data.sourceId),
+    );
   }
 
   async cancelJob(sourceId: UUID): Promise<void> {

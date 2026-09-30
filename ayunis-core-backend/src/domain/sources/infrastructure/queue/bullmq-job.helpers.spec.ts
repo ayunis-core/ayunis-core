@@ -1,9 +1,12 @@
 import { Appsignal } from '@appsignal/nodejs';
-import type { Job } from 'bullmq';
+import type { Logger } from '@nestjs/common';
+import type { Job, Queue } from 'bullmq';
+import type { UUID } from 'crypto';
 import {
   isFinalAttempt,
   isExpectedFailure,
   classifyJobFailure,
+  cancelQueueJob,
   JobRetryScheduledError,
 } from './bullmq-job.helpers';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -266,5 +269,77 @@ describe('classifyJobFailure', () => {
         expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
       },
     );
+  });
+});
+
+describe('cancelQueueJob', () => {
+  const sourceId = '00000000-0000-0000-0000-000000000001' as UUID;
+  const logger = {
+    debug: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
+  } as unknown as Logger;
+  let queue: jest.Mocked<Pick<Queue, 'getJob' | 'getDeduplicationJobId'>>;
+
+  function jobIn(state: string) {
+    return {
+      getState: jest.fn().mockResolvedValue(state),
+      remove: jest.fn().mockResolvedValue(undefined),
+    };
+  }
+
+  beforeEach(() => {
+    queue = {
+      getJob: jest.fn(),
+      getDeduplicationJobId: jest.fn().mockResolvedValue('31'),
+    };
+  });
+
+  it.each(['waiting', 'delayed'])(
+    'removes the %s run registered for the source',
+    async (state) => {
+      const job = jobIn(state);
+      queue.getJob.mockResolvedValue(job as never);
+
+      await cancelQueueJob(queue as unknown as Queue, sourceId, logger);
+
+      expect(queue.getDeduplicationJobId).toHaveBeenCalledWith(sourceId);
+      expect(queue.getJob).toHaveBeenCalledWith('31');
+      expect(job.remove).toHaveBeenCalled();
+    },
+  );
+
+  it('leaves an active run to the consumer, which skips a deleted source', async () => {
+    const job = jobIn('active');
+    queue.getJob.mockResolvedValue(job as never);
+
+    await cancelQueueJob(queue as unknown as Queue, sourceId, logger);
+
+    expect(queue.getJob).toHaveBeenCalledWith('31');
+    expect(job.remove).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when no run is registered for the source', async () => {
+    queue.getDeduplicationJobId.mockResolvedValue(null);
+
+    await cancelQueueJob(queue as unknown as Queue, sourceId, logger);
+
+    expect(queue.getJob).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when the registered run is already gone', async () => {
+    queue.getJob.mockResolvedValue(undefined);
+
+    await expect(
+      cancelQueueJob(queue as unknown as Queue, sourceId, logger),
+    ).resolves.toBeUndefined();
+  });
+
+  it('swallows queue errors, since cancellation is best-effort', async () => {
+    queue.getDeduplicationJobId.mockRejectedValue(new Error('Redis down'));
+
+    await expect(
+      cancelQueueJob(queue as unknown as Queue, sourceId, logger),
+    ).resolves.toBeUndefined();
   });
 });

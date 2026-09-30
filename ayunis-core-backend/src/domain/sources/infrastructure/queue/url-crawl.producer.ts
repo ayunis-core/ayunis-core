@@ -7,7 +7,7 @@ import {
   type UrlCrawlJobData,
 } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
-import { STANDARD_JOB_OPTIONS, cancelQueueJob } from './bullmq-job.helpers';
+import { cancelQueueJob, sourceJobOptions } from './bullmq-job.helpers';
 
 @Injectable()
 export class UrlCrawlProducer extends UrlCrawlProcessingPort {
@@ -30,10 +30,7 @@ export class UrlCrawlProducer extends UrlCrawlProcessingPort {
       'Enqueuing URL crawl job',
     );
 
-    await this.queue.add('crawl-url', data, {
-      jobId: data.sourceId,
-      ...STANDARD_JOB_OPTIONS,
-    });
+    await this.queue.add('crawl-url', data, sourceJobOptions(data.sourceId));
   }
 
   async cancelJob(sourceId: UUID): Promise<void> {
