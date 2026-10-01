@@ -1,3 +1,4 @@
+import { ToolApprovalBrokerService } from 'src/domain/runs/application/services/tool-approval-broker.service';
 import type { PersonalSkill as BackendSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import {
   MockProvider,
@@ -417,6 +418,7 @@ function realBackendToolAdapter(executeTool: jest.Mock): BackendToolAdapter {
   return new BackendToolAdapter(
     { execute: executeTool } as never,
     { execute: jest.fn() } as never,
+    new ToolApprovalBrokerService(),
   );
 }
 
@@ -1231,6 +1233,7 @@ describe('ExecuteRunUseCase', () => {
       id: integrationId,
       name: 'Municipal Records',
       logoUrl: 'https://example.com/municipal-records.svg',
+      requiresApproval: true,
     };
     const backendTool = new McpIntegrationTool(
       new McpTool(
@@ -1288,6 +1291,7 @@ describe('ExecuteRunUseCase', () => {
       id: integrationId,
       name: 'Procurement System',
       logoUrl: 'https://example.com/procurement-system.svg',
+      requiresApproval: true,
     };
     const activateBackendTool = {
       name: 'activate_skill',

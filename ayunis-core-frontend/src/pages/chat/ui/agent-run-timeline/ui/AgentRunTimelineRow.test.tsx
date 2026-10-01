@@ -1,11 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import type { TimelineStep } from '../model/types';
+import type { TimelineStep } from '@/pages/chat/ui/agent-run-timeline/model/types';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) =>
+      typeof options?.tool === 'string' ? `${key}:${options.tool}` : key,
+  }),
 }));
 
 vi.mock('@/widgets/markdown', () => ({
@@ -45,5 +48,60 @@ describe('AgentRunTimelineRow', () => {
     fireEvent.click(screen.getByText('chat.timeline.invalidToolCall'));
 
     expect(screen.getByText('{"query":"part')).toBeTruthy();
+  });
+
+  it('labels a call that waits for the user approval', () => {
+    render(
+      <AgentRunTimelineRow
+        step={{
+          kind: 'tool',
+          key: 'tool-2',
+          status: 'awaiting_approval',
+          toolUse: {
+            type: 'tool_use',
+            id: 'tool-2',
+            name: 'mcp__tool__create_document__b0eb63cb',
+            params: { title: 'Notes' },
+            integration: {
+              id: 'int',
+              name: 'Outline',
+              logoUrl: null,
+              requiresApproval: true,
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId('timeline-step-label').textContent).toBe(
+      'chat.timeline.awaitingApproval:Create Document',
+    );
+    expect(
+      screen.getByTestId('timeline-step').getAttribute('data-step-status'),
+    ).toBe('awaiting_approval');
+  });
+
+  it('labels a declined call as declined', () => {
+    render(
+      <AgentRunTimelineRow
+        step={{
+          kind: 'tool',
+          key: 'tool-3',
+          status: 'done',
+          result: 'The user declined this tool call.',
+          resultOutcome: 'declined',
+          toolUse: {
+            type: 'tool_use',
+            id: 'tool-3',
+            name: 'mcp__tool__create_document__b0eb63cb',
+            params: {},
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId('timeline-step-label').textContent).toBe(
+      'chat.timeline.declinedToolCall:Create Document',
+    );
   });
 });

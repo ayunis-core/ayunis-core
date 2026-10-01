@@ -9,6 +9,12 @@ interface AssistantContentBlock {
   id?: string;
   name?: string;
   params?: Record<string, unknown>;
+  integration?: {
+    id: string;
+    name: string;
+    logoUrl: null;
+    requiresApproval?: boolean;
+  };
   stream?: {
     status: 'streaming' | 'invalid';
     argumentsJson: string;
@@ -41,17 +47,24 @@ function assistantMessage(blocks: AssistantContentBlock[]): Message {
         name: block.name,
         params: block.params ?? {},
         stream: block.stream,
+        integration: block.integration,
       };
     }),
     createdAt: new Date().toISOString(),
   } as unknown as Message;
 }
 
-function toolResultMessage(toolId: string, result: string): Message {
+function toolResultMessage(
+  toolId: string,
+  result: string,
+  outcome?: 'declined',
+): Message {
   return {
     id: nextId(),
     role: 'tool',
-    content: [{ type: 'tool_result', toolId, toolName: 'noop', result }],
+    content: [
+      { type: 'tool_result', toolId, toolName: 'noop', result, outcome },
+    ],
     createdAt: new Date().toISOString(),
   } as unknown as Message;
 }
@@ -1158,5 +1171,105 @@ describe('groupMessagesIntoRuns', () => {
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
     expect(run.blocks).toHaveLength(0);
     expect(run.isStreaming).toBe(true);
+  });
+
+  describe('tool approval', () => {
+    const outline = {
+      id: 'int-1',
+      name: 'Outline',
+      logoUrl: null,
+      requiresApproval: true,
+    };
+
+    function toolStep(units: ReturnType<typeof groupMessagesIntoRuns>) {
+      const run = units.find((unit) => unit.kind === 'agent-run');
+      const block = run?.blocks.find(
+        (candidate) => candidate.kind === 'activity',
+      );
+      const step = block?.steps.find((candidate) => candidate.kind === 'tool');
+      if (step?.kind !== 'tool') throw new Error('no tool step');
+      return step;
+    }
+
+    it('marks a complete integration call without result as awaiting approval while streaming', () => {
+      const messages = [
+        userMessage('create it'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 't1',
+            name: 'mcp__tool__create_document__b0eb63cb',
+            integration: outline,
+          },
+        ]),
+      ];
+
+      expect(
+        toolStep(groupMessagesIntoRuns(messages, { isStreaming: true })).status,
+      ).toBe('awaiting_approval');
+    });
+
+    it('keeps a still-streaming approval call in progress', () => {
+      const messages = [
+        userMessage('create it'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 't1',
+            name: 'mcp__tool__create_document__b0eb63cb',
+            integration: outline,
+            stream: { status: 'streaming', argumentsJson: '{' },
+          },
+        ]),
+      ];
+
+      expect(
+        toolStep(groupMessagesIntoRuns(messages, { isStreaming: true })).status,
+      ).toBe('in_progress');
+    });
+
+    it('does not wait for approval on tools that do not require it', () => {
+      const messages = [
+        userMessage('search'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 't1',
+            name: 'mcp__tool__search__b0eb63cb',
+            integration: { ...outline, requiresApproval: false },
+          },
+        ]),
+      ];
+
+      expect(
+        toolStep(groupMessagesIntoRuns(messages, { isStreaming: true })).status,
+      ).toBe('in_progress');
+    });
+
+    it('carries the declined outcome of a tool result onto the step', () => {
+      const messages = [
+        userMessage('create it'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 't1',
+            name: 'mcp__tool__create_document__b0eb63cb',
+            integration: outline,
+          },
+        ]),
+        toolResultMessage(
+          't1',
+          'The user declined this tool call.',
+          'declined',
+        ),
+      ];
+
+      const step = toolStep(
+        groupMessagesIntoRuns(messages, { isStreaming: false }),
+      );
+
+      expect(step.status).toBe('done');
+      expect(step.resultOutcome).toBe('declined');
+    });
   });
 });

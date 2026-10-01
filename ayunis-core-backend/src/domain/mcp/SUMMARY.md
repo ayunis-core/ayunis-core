@@ -78,3 +78,5 @@ The MCP module manages connections to external Model Context Protocol servers at
 
 - **agents** — Uses MCP integration assignment for agent tool access
 - **tools** — Wraps discovered MCP tools, resources, and prompts as executable tool entities
+
+`McpTool` keeps the server's MCP tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) from `tools/list`; `isReadOnly` is true only for an explicit `readOnlyHint`, and the runs module uses it to decide which MCP calls need user approval.

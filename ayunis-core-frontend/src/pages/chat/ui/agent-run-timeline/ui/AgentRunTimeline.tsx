@@ -13,9 +13,11 @@ import type {
   AgentRunBlock,
   AgentRunUnit,
   InlineToolRunBlock,
+  StepStatus,
 } from '@/pages/chat/ui/agent-run-timeline/model/types';
 import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
+import ToolApprovalCard from '@/pages/chat/ui/chat-widgets/ToolApprovalCard';
 import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
 import { getArtifactToolTarget } from '@/pages/chat/ui/agent-run-timeline/lib/tool-classification';
 
@@ -59,11 +61,15 @@ export default function AgentRunTimeline({
   );
 }
 
+function isActiveStatus(status: StepStatus): boolean {
+  return status === 'in_progress' || status === 'awaiting_approval';
+}
+
 function hasInProgressStep(block: AgentRunBlock): boolean {
   if (block.kind === 'activity' || block.kind === 'rich-tool') {
-    return block.steps.some((step) => step.status === 'in_progress');
+    return block.steps.some((step) => isActiveStatus(step.status));
   }
-  return block.kind === 'pending-tool' && block.step.status === 'in_progress';
+  return block.kind === 'pending-tool' && isActiveStatus(block.step.status);
 }
 
 interface RunBlockProps {
@@ -82,7 +88,13 @@ function RunBlock({
   onOpenArtifact,
 }: Readonly<RunBlockProps>) {
   if (block.kind === 'activity') {
-    return <ActivityBlock block={block} hasFollowingText={hasFollowingText} />;
+    return (
+      <ActivityBlock
+        block={block}
+        hasFollowingText={hasFollowingText}
+        threadId={threadId}
+      />
+    );
   }
   if (block.kind === 'rich-tool' || block.kind === 'pending-tool') {
     return (
@@ -106,9 +118,19 @@ function RunBlock({
 function ActivityBlock({
   block,
   hasFollowingText,
-}: Readonly<{ block: ActivityRunBlock; hasFollowingText: boolean }>) {
+  threadId,
+}: Readonly<{
+  block: ActivityRunBlock;
+  hasFollowingText: boolean;
+  threadId?: string;
+}>) {
   const { t } = useTranslation('chat');
-  const isActive = block.steps.some((step) => step.status === 'in_progress');
+  const isActive = block.steps.some((step) => isActiveStatus(step.status));
+  // Rendered outside the collapsible so a collapsed block never hides the
+  // decision the run is waiting for.
+  const awaitingApproval = block.steps.filter(
+    (step) => step.kind === 'tool' && step.status === 'awaiting_approval',
+  );
   const [userOpen, setUserOpen] = useState<boolean | null>(null);
   const [previousHasFollowingText, setPreviousHasFollowingText] =
     useState(hasFollowingText);
@@ -122,33 +144,47 @@ function ActivityBlock({
     : t('chat.timeline.summary', { count: block.steps.length });
 
   return (
-    <Collapsible open={open} onOpenChange={setUserOpen}>
-      <div className="rounded-lg border border-border bg-muted/30">
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex items-center justify-between gap-2 w-full px-3 py-2 text-left"
-          >
-            <span
-              className={cn(
-                'text-sm text-muted-foreground',
-                isActive && 'animate-pulse',
-              )}
+    <div className="flex flex-col gap-2">
+      <Collapsible open={open} onOpenChange={setUserOpen}>
+        <div className="rounded-lg border border-border bg-muted/30">
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center justify-between gap-2 w-full px-3 py-2 text-left"
+              data-testid="timeline-activity-toggle"
             >
-              {headerLabel}
-            </span>
-            <ActivityChevron open={open} />
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="px-3 pb-3 pt-1">
-            {block.steps.map((step) => (
-              <AgentRunTimelineRow key={step.key} step={step} />
-            ))}
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
+              <span
+                className={cn(
+                  'text-sm text-muted-foreground',
+                  isActive && 'animate-pulse',
+                )}
+              >
+                {headerLabel}
+              </span>
+              <ActivityChevron open={open} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-3 pb-3 pt-1">
+              {block.steps.map((step) => (
+                <AgentRunTimelineRow key={step.key} step={step} />
+              ))}
+            </div>
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
+      {awaitingApproval.map(
+        (step) =>
+          step.kind === 'tool' &&
+          threadId !== undefined && (
+            <ToolApprovalCard
+              key={`${step.key}-approval`}
+              step={step}
+              threadId={threadId}
+            />
+          ),
+      )}
+    </div>
   );
 }
 

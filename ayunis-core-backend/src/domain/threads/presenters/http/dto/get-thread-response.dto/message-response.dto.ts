@@ -47,6 +47,13 @@ export class ToolUseIntegrationDto {
     nullable: true,
   })
   logoUrl: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'True when the user must approve each call of this integration tool before it runs',
+    example: true,
+  })
+  requiresApproval?: boolean;
 }
 
 export class ToolUseStreamDto {
@@ -117,6 +124,14 @@ export class ToolResultMessageContentResponseDto extends MessageContentResponseD
       'The current temperature in New York is 22°C with partly cloudy skies.',
   })
   result: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Set when the call was well-formed but produced no real result, e.g. the user declined it',
+    enum: ['declined'],
+    example: 'declined',
+  })
+  outcome?: 'declined';
 }
 
 export class ThinkingMessageContentResponseDto extends MessageContentResponseDto {

@@ -2,6 +2,7 @@ import type { ToolUseIntegration } from 'src/domain/messages/domain/message-cont
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { requiresUserApproval } from './runtime-tool-policy';
 
 export class RuntimeToolIntegrationRegistry {
   private readonly integrations = new Map<string, ToolUseIntegration>();
@@ -21,6 +22,7 @@ export class RuntimeToolIntegrationRegistry {
           id: tool.integrationId,
           name: tool.integrationName,
           logoUrl: tool.integrationLogoUrl,
+          requiresApproval: requiresUserApproval(tool),
         });
       }
     }

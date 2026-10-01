@@ -22,6 +22,7 @@ import {
 } from 'src/domain/runs/application/agent-runtime/message-id';
 import { toBackendAssistantMessage } from 'src/domain/runs/application/agent-runtime/inference-message.mapper';
 import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { wasToolCallDeclined } from 'src/domain/runs/application/agent-runtime/tool-call-outcomes';
 
 /** Per-run RunContext key for tool results awaiting a grouped flush. */
 const PENDING_TOOL_RESULTS = Symbol('ayunis:pendingToolResults');
@@ -72,6 +73,9 @@ export class PersistenceHookFactory {
             ctx.toolCall.id,
             ctx.toolCall.name,
             ctx.result,
+            wasToolCallDeclined(ctx.context, ctx.toolCall.id)
+              ? 'declined'
+              : undefined,
           ),
         );
         ctx.context.set(PENDING_TOOL_RESULTS, pending);

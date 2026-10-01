@@ -27,9 +27,22 @@ import {
   isAcknowledgementOnlyTool,
   isExternallyHandledTool,
   isHybridArtifactTool,
+  requiresUserApproval,
 } from './runtime-tool-policy';
+import {
+  ToolApprovalBrokerService,
+  type ToolApprovalOutcome,
+} from 'src/domain/runs/application/services/tool-approval-broker.service';
+import {
+  recordDeclinedToolCall,
+  TOOL_CALL_DECLINED_EVENT,
+} from './tool-call-outcomes';
 
 const DISPLAY_ACK = 'Tool has been displayed successfully';
+const USER_DECLINED =
+  'The user declined this tool call, so it was not executed. Do not retry it unless the user asks you to.';
+const APPROVAL_TIMED_OUT =
+  'The user did not approve this tool call in time, so it was not executed. Ask the user whether to try again.';
 
 interface ToolExecutionOutcome {
   result: string;
@@ -50,6 +63,7 @@ export class BackendToolAdapter {
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
+    private readonly approvalBroker: ToolApprovalBrokerService,
   ) {}
 
   toRuntimeTools(tools: BackendTool[]): RuntimeTool[] {
@@ -72,6 +86,15 @@ export class BackendToolAdapter {
     if (isExternallyHandledTool(tool)) {
       return { ...schema, validateInput: this.buildInputValidator(tool) };
     }
+    if (requiresUserApproval(tool)) {
+      // Validated before the user is asked, so nobody approves a call that
+      // would fail on its input anyway.
+      return {
+        ...schema,
+        validateInput: this.buildInputValidator(tool),
+        execute: (input, ctx) => this.executeWithApproval(tool, input, ctx),
+      };
+    }
     return {
       ...schema,
       execute: (input, ctx) =>
@@ -93,6 +116,29 @@ export class BackendToolAdapter {
         );
       }
     };
+  }
+
+  private async executeWithApproval(
+    tool: BackendTool,
+    input: Record<string, unknown>,
+    ctx: RuntimeToolContext,
+  ): Promise<RuntimeToolResult> {
+    const outcome = await this.approvalBroker.awaitDecision({
+      threadId: ctx.context.get<UUID>('threadId')!,
+      toolCallId: ctx.toolCallId,
+      userId: ctx.context.get<UUID>('userId')!,
+      signal: ctx.signal,
+    });
+    if (outcome === 'approved') {
+      return this.execute(tool, input, ctx, false);
+    }
+    recordDeclinedToolCall(ctx.context, ctx.toolCallId);
+    ctx.emit({
+      name: TOOL_CALL_DECLINED_EVENT,
+      data: { toolCallId: ctx.toolCallId },
+    });
+    // Not an error: the model should move on, not treat the tool as broken.
+    return { result: declinedResultText(outcome), isError: false };
   }
 
   private async execute(
@@ -183,4 +229,10 @@ export class BackendToolAdapter {
       };
     }
   }
+}
+
+function declinedResultText(
+  outcome: Exclude<ToolApprovalOutcome, 'approved'>,
+): string {
+  return outcome === 'timed_out' ? APPROVAL_TIMED_OUT : USER_DECLINED;
 }

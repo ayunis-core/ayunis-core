@@ -1,3 +1,4 @@
+import type { McpToolAnnotations } from 'src/domain/mcp/domain/mcp-tool-annotations';
 /**
  * Configuration for connecting to an MCP server
  */
@@ -33,6 +34,7 @@ export interface McpTool {
     properties?: Record<string, unknown>;
     required?: string[];
   };
+  annotations?: McpToolAnnotations;
 }
 
 /**

@@ -44,6 +44,34 @@ describe('McpIntegrationTool', () => {
     expect(tool.name).toHaveLength(64);
   });
 
+  it('requires approval unless the server marks the tool read-only', () => {
+    const integrationId = randomUUID();
+    const writeTool = new McpIntegrationTool(
+      new McpTool(
+        'create_document',
+        undefined,
+        { type: 'object' },
+        integrationId,
+      ),
+      false,
+      'Outline',
+      null,
+    );
+    const readTool = new McpIntegrationTool(
+      new McpTool('search', undefined, { type: 'object' }, integrationId, {
+        readOnlyHint: true,
+      }),
+      false,
+      'Outline',
+      null,
+    );
+
+    expect(writeTool.requiresApproval).toBe(true);
+    expect(writeTool.description).toContain('must approve');
+    expect(readTool.requiresApproval).toBe(false);
+    expect(readTool.description).not.toContain('must approve');
+  });
+
   it('keeps the canonical name stable when the integration is renamed', () => {
     const integrationId = randomUUID();
 

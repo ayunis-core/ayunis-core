@@ -15,6 +15,7 @@ export enum RunErrorCode {
   UNEXPECTED_RUN_ERROR = 'UNEXPECTED_RUN_ERROR',
   RUN_CONTEXT_BUDGET_EXCEEDED = 'RUN_CONTEXT_BUDGET_EXCEEDED',
   SOURCE_CITATION_NOT_FOUND = 'SOURCE_CITATION_NOT_FOUND',
+  RUN_TOOL_APPROVAL_NOT_FOUND = 'RUN_TOOL_APPROVAL_NOT_FOUND',
 }
 
 /**
@@ -40,6 +41,17 @@ export class SourceCitationNotFoundError extends RunError {
       'Source citation not found',
       RunErrorCode.SOURCE_CITATION_NOT_FOUND,
       404,
+    );
+  }
+}
+
+export class ToolApprovalNotFoundError extends RunError {
+  constructor(toolCallId: string) {
+    super(
+      `No tool call with ID ${toolCallId} is waiting for approval`,
+      RunErrorCode.RUN_TOOL_APPROVAL_NOT_FOUND,
+      404,
+      { toolCallId },
     );
   }
 }

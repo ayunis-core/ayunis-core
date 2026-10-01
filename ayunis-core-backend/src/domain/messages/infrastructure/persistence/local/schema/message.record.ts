@@ -23,6 +23,7 @@ interface ToolUseMessageContentData {
     id: string;
     name: string;
     logoUrl: string | null;
+    requiresApproval?: boolean;
   };
 }
 
@@ -31,6 +32,7 @@ interface ToolResultMessageContentData {
   toolId: string;
   toolName: string;
   result: string;
+  outcome?: 'declined';
 }
 
 interface ThinkingMessageContentData {
@@ -47,7 +49,7 @@ interface ImageMessageContentData {
   altText?: string;
 }
 
-type MessageContentData =
+export type MessageContentData =
   | TextMessageContentData
   | ToolUseMessageContentData
   | ToolResultMessageContentData

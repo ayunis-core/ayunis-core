@@ -1,5 +1,5 @@
-import { MessageContent } from '../message-content.entity';
-import { MessageContentType } from '../value-objects/message-content-type.object';
+import { MessageContent } from 'src/domain/messages/domain/message-content.entity';
+import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { sanitizeObject } from 'src/common/util/unicode-sanitizer';
 import type { ProviderMetadata } from './provider-metadata.type';
 
@@ -7,6 +7,8 @@ export interface ToolUseIntegration {
   id: string;
   name: string;
   logoUrl: string | null;
+  /** The user must approve each call of this integration tool before it runs. */
+  requiresApproval?: boolean;
 }
 
 export interface ToolUseStream {

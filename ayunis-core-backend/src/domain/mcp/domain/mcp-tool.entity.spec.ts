@@ -72,4 +72,22 @@ describe('McpTool', () => {
       'The name parameter',
     );
   });
+
+  it('is read-only only when the server says so', () => {
+    const integrationId = randomUUID();
+    const schema = { type: 'object' };
+
+    expect(new McpTool('a', undefined, schema, integrationId).isReadOnly).toBe(
+      false,
+    );
+    expect(
+      new McpTool('b', undefined, schema, integrationId, {
+        readOnlyHint: false,
+      }).isReadOnly,
+    ).toBe(false);
+    expect(
+      new McpTool('c', undefined, schema, integrationId, { readOnlyHint: true })
+        .isReadOnly,
+    ).toBe(true);
+  });
 });

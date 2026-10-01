@@ -1,3 +1,6 @@
+import { ToolApprovalsController } from './presenters/http/tool-approvals.controller';
+import { ToolApprovalBrokerService } from './application/services/tool-approval-broker.service';
+import { DecideToolApprovalUseCase } from './application/use-cases/decide-tool-approval/decide-tool-approval.use-case';
 import { Module } from '@nestjs/common';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { ToolsModule } from 'src/domain/tools/tools.module';
@@ -83,6 +86,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
   ],
   controllers: [
     RunsController,
+    ToolApprovalsController,
     ThreadAiContextController,
     ThreadSourceCitationsController,
   ],
@@ -111,6 +115,8 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ArtifactToolAssemblerService,
     McpToolAssemblerService,
     ToolResultCollectorService,
+    ToolApprovalBrokerService,
+    DecideToolApprovalUseCase,
     MessageCleanupService,
     CreditBudgetGuardService,
     CreditLimitGuardService,

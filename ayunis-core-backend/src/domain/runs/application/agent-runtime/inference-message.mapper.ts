@@ -70,11 +70,18 @@ export function toBackendToolResultMessage(
   message: InferenceMessage,
   threadId: UUID,
   id: UUID = randomUUID(),
+  isDeclined: (toolCallId: string) => boolean = () => false,
 ): ToolResultMessage {
   const content = message.content
     .filter((c) => c.type === 'tool_result')
     .map(
-      (c) => new ToolResultMessageContent(c.toolCallId, c.toolName, c.result),
+      (c) =>
+        new ToolResultMessageContent(
+          c.toolCallId,
+          c.toolName,
+          c.result,
+          isDeclined(c.toolCallId) ? 'declined' : undefined,
+        ),
     );
   return new ToolResultMessage({ id, threadId, content });
 }

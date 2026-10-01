@@ -10,6 +10,7 @@ import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.ent
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
@@ -33,6 +34,11 @@ export function isExternallyHandledTool(tool: Tool): boolean {
     tool instanceof EditSkillTool ||
     tool instanceof InstallMarketplaceSkillTool
   );
+}
+
+/** The call pauses until the user approves it in the chat. */
+export function requiresUserApproval(tool: Tool): tool is McpIntegrationTool {
+  return tool instanceof McpIntegrationTool && tool.requiresApproval;
 }
 
 export function isHybridArtifactTool(tool: Tool): boolean {

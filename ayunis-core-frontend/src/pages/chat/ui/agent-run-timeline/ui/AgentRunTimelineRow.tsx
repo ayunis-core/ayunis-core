@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Ban,
   ChevronRight,
   CheckCircle2,
+  CircleHelp,
   Loader2,
   AlertCircle,
   Sparkles,
@@ -14,8 +16,12 @@ import {
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
 import { PiiText } from '@/widgets/markdown';
-import type { TimelineStep, StepStatus } from '../model/types';
-import { getToolActionLabel } from '../lib/get-tool-action-label';
+import type {
+  TimelineStep,
+  StepStatus,
+} from '@/pages/chat/ui/agent-run-timeline/model/types';
+import { getToolActionLabel } from '@/pages/chat/ui/agent-run-timeline/lib/get-tool-action-label';
+import { formatToolName } from '@/pages/chat/lib/format-tool-name';
 
 interface AgentRunTimelineRowProps {
   step: TimelineStep;
@@ -31,17 +37,26 @@ export default function AgentRunTimelineRow({
   const integration =
     step.kind === 'tool' ? step.toolUse.integration : undefined;
   const header = (
-    <div className="flex items-center gap-2 py-1 text-sm text-muted-foreground">
+    <div
+      className="flex items-center gap-2 py-1 text-sm text-muted-foreground"
+      data-testid="timeline-step"
+      data-step-status={step.status}
+      data-tool-name={step.kind === 'tool' ? step.toolUse.name : undefined}
+    >
       {step.kind === 'skill_instruction' ? (
         <Sparkles className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       ) : (
         <StatusIcon
           status={step.status}
+          declined={step.kind === 'tool' && step.resultOutcome === 'declined'}
           logoUrl={integration?.logoUrl ?? undefined}
           logoAlt={integration?.name}
         />
       )}
-      <span className={cn(step.status === 'in_progress' && 'animate-pulse')}>
+      <span
+        className={cn(step.status === 'in_progress' && 'animate-pulse')}
+        data-testid="timeline-step-label"
+      >
         {label}
       </span>
       {expandable && (
@@ -76,11 +91,17 @@ export default function AgentRunTimelineRow({
 
 interface StatusIconProps {
   status: StepStatus;
+  declined?: boolean;
   logoUrl?: string;
   logoAlt?: string;
 }
 
-function StatusIcon({ status, logoUrl, logoAlt }: Readonly<StatusIconProps>) {
+function StatusIcon({
+  status,
+  declined,
+  logoUrl,
+  logoAlt,
+}: Readonly<StatusIconProps>) {
   if (status === 'in_progress') {
     return (
       <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin text-muted-foreground" />
@@ -88,6 +109,12 @@ function StatusIcon({ status, logoUrl, logoAlt }: Readonly<StatusIconProps>) {
   }
   if (status === 'error') {
     return <AlertCircle className="h-4 w-4 flex-shrink-0 text-destructive" />;
+  }
+  if (status === 'awaiting_approval') {
+    return <CircleHelp className="h-4 w-4 flex-shrink-0 text-primary" />;
+  }
+  if (declined) {
+    return <Ban className="h-4 w-4 flex-shrink-0 text-muted-foreground" />;
   }
   if (logoUrl) {
     return (
@@ -149,6 +176,16 @@ function getStepView(
   }
   if (step.status === 'error') {
     label = t('chat.timeline.invalidToolCall');
+  }
+  if (step.status === 'awaiting_approval') {
+    label = t('chat.timeline.awaitingApproval', {
+      tool: formatToolName(step.toolUse.name),
+    });
+  }
+  if (step.resultOutcome === 'declined') {
+    label = t('chat.timeline.declinedToolCall', {
+      tool: formatToolName(step.toolUse.name),
+    });
   }
   const params = step.toolUse.params as Record<string, unknown> | undefined;
   const hasParams = params !== undefined && Object.keys(params).length > 0;

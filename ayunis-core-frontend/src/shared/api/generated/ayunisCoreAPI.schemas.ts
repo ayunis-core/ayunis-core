@@ -2064,6 +2064,8 @@ export interface ToolUseIntegrationDto {
      * @nullable
      */
   logoUrl?: string | null;
+  /** True when the user must approve each call of this integration tool before it runs */
+  requiresApproval?: boolean;
 }
 
 /**
@@ -2162,6 +2164,16 @@ export const ToolResultMessageContentResponseDtoType = {
   image: 'image',
 } as const;
 
+/**
+ * Set when the call was well-formed but produced no real result, e.g. the user declined it
+ */
+export type ToolResultMessageContentResponseDtoOutcome = typeof ToolResultMessageContentResponseDtoOutcome[keyof typeof ToolResultMessageContentResponseDtoOutcome];
+
+
+export const ToolResultMessageContentResponseDtoOutcome = {
+  declined: 'declined',
+} as const;
+
 export interface ToolResultMessageContentResponseDto {
   /** Type of the message content */
   type: ToolResultMessageContentResponseDtoType;
@@ -2171,6 +2183,8 @@ export interface ToolResultMessageContentResponseDto {
   toolName: string;
   /** The result returned by the tool */
   result: string;
+  /** Set when the call was well-formed but produced no real result, e.g. the user declined it */
+  outcome?: ToolResultMessageContentResponseDtoOutcome;
 }
 
 export interface ToolResultMessageResponseDto {
@@ -4543,6 +4557,22 @@ export interface SendMessageDto {
   skillId?: string;
   /** Enable streaming mode for real-time response updates */
   streaming?: boolean;
+}
+
+/**
+ * Whether the waiting tool call may run
+ */
+export type DecideToolApprovalDtoDecision = typeof DecideToolApprovalDtoDecision[keyof typeof DecideToolApprovalDtoDecision];
+
+
+export const DecideToolApprovalDtoDecision = {
+  approved: 'approved',
+  declined: 'declined',
+} as const;
+
+export interface DecideToolApprovalDto {
+  /** Whether the waiting tool call may run */
+  decision: DecideToolApprovalDtoDecision;
 }
 
 export interface ThreadAiContextSkillResponseDto {

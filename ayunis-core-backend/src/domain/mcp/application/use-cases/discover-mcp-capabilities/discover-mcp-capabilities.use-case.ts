@@ -195,6 +195,7 @@ export class DiscoverMcpCapabilitiesUseCase {
       sdkTool.description,
       sdkTool.inputSchema,
       integrationId,
+      sdkTool.annotations ?? null,
     );
   }
 

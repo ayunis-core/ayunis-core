@@ -96,6 +96,16 @@
       "summary_one": "{{count}} Schritt",
       "summary_other": "{{count}} Schritte",
       "errorStep": "Abgebrochen",
+      "awaitingApproval": "Wartet auf Ihre Freigabe: {{tool}}",
+      "declinedToolCall": "Abgelehnt: {{tool}}",
+      "approval": {
+        "title": "{{integration}} möchte „{{tool}}“ ausführen",
+        "description": "Diese Aktion ändert Daten außerhalb von Ayunis. Prüfen Sie die Anfrage und entscheiden Sie, ob sie ausgeführt werden darf.",
+        "approve": "Freigeben",
+        "decline": "Ablehnen",
+        "notPending": "Diese Anfrage wartet nicht mehr auf eine Entscheidung.",
+        "error": "Ihre Entscheidung konnte nicht gesendet werden."
+      },
       "actions": {
         "create_document": "Dokument erstellt",
         "update_document": "Dokument aktualisiert",

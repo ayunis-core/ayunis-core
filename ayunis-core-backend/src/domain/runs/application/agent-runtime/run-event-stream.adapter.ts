@@ -25,6 +25,7 @@ import {
   toBackendToolResultMessage,
 } from './inference-message.mapper';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
+import { TOOL_CALL_DECLINED_EVENT } from './tool-call-outcomes';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 import { reconstructRuntimeModelError } from './runtime-model-error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
@@ -51,6 +52,7 @@ export async function* adaptRunEventsToStream(
   models?: RuntimeModelRegistry,
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
+  const declinedToolCalls = new Set<string>();
   let pendingError: ApplicationError | null = null;
   let outcome: RunExecutionOutcome | undefined;
 
@@ -65,8 +67,7 @@ export async function* adaptRunEventsToStream(
       event,
       threadId,
       assistant.lastCompletedIteration(),
-      logger,
-      models,
+      { logger, models, declinedToolCalls },
     );
     if (side instanceof ApplicationError) {
       pendingError = side;
@@ -151,21 +152,32 @@ class AssistantTurnAccumulator {
   }
 }
 
+interface SideStreamDeps {
+  logger: Logger;
+  models?: RuntimeModelRegistry;
+  /** Filled from the declined-call event, which precedes the tool result. */
+  declinedToolCalls: Set<string>;
+}
+
 function toSideStreamItem(
   event: RunEvent,
   threadId: UUID,
   iteration: number,
-  logger: Logger,
-  models?: RuntimeModelRegistry,
+  { logger, models, declinedToolCalls }: SideStreamDeps,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'tool_result_message') {
     return toBackendToolResultMessage(
       event.message,
       threadId,
       toolResultMessageId(event.runId, iteration),
+      (toolCallId) => declinedToolCalls.has(toolCallId),
     );
   }
   if (event.type === 'custom') {
+    if (event.name === TOOL_CALL_DECLINED_EVENT) {
+      declinedToolCalls.add((event.data as { toolCallId: string }).toolCallId);
+      return null;
+    }
     return event.name === THREAD_PII_MASKS_EVENT
       ? new RunPiiMasksUpdate(event.data as ThreadPiiMask[])
       : null;

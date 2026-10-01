@@ -36,6 +36,12 @@ vi.mock('./AgentRunTimelineRow', () => ({
   ),
 }));
 
+vi.mock('@/pages/chat/ui/chat-widgets/ToolApprovalCard', () => ({
+  default: ({ step }: { step: { key: string } }) => (
+    <div data-testid={`approval-${step.key}`} />
+  ),
+}));
+
 vi.mock('../lib/render-rich-tool-card', () => ({
   renderRichToolCard: vi.fn(() => <div data-testid="rich-card" />),
 }));
@@ -382,6 +388,38 @@ describe('AgentRunTimeline', () => {
 
     render(<AgentRunTimeline unit={activeToolUnit} />);
 
+    expect(screen.queryByTestId('response-start-orb')).toBeNull();
+  });
+
+  it('renders an approval card next to an activity block that waits for the user', () => {
+    const awaiting: AgentRunUnit = {
+      kind: 'agent-run',
+      key: 'run-approval',
+      isStreaming: true,
+      blocks: [
+        {
+          kind: 'activity',
+          key: 'activity-1',
+          steps: [
+            {
+              kind: 'tool',
+              key: 'tool-1',
+              status: 'awaiting_approval',
+              toolUse: {
+                type: 'tool_use',
+                id: 'tool-1',
+                name: 'mcp__tool__create_document__b0eb63cb',
+                params: {},
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    render(<AgentRunTimeline unit={awaiting} threadId="thread-1" />);
+
+    expect(screen.getByTestId('approval-tool-1')).toBeTruthy();
     expect(screen.queryByTestId('response-start-orb')).toBeNull();
   });
 });

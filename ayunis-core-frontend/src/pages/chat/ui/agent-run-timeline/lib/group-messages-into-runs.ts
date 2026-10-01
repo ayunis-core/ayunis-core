@@ -10,6 +10,7 @@ import type {
   AgentRunUnit,
   TimelineStep,
   StepStatus,
+  ToolResultOutcome,
   ToolTimelineStep,
   RichToolRunBlock,
 } from '@/pages/chat/ui/agent-run-timeline/model/types';
@@ -101,15 +102,23 @@ function findActiveAssistantMessageIndex(messages: readonly Message[]): number {
   return -1;
 }
 
+interface IndexedToolResult {
+  result: string;
+  outcome?: ToolResultOutcome;
+}
+
 function indexToolResults(
   messages: readonly Message[],
-): Readonly<Record<string, string>> {
-  const results: Record<string, string> = {};
+): Readonly<Record<string, IndexedToolResult>> {
+  const results: Record<string, IndexedToolResult> = {};
   for (const message of messages) {
     if (message.role !== 'tool') continue;
     for (const content of message.content) {
       if (content.type === 'tool_result') {
-        results[content.toolId] = content.result;
+        results[content.toolId] = {
+          result: content.result,
+          outcome: content.outcome,
+        };
       }
     }
   }
@@ -134,7 +143,7 @@ function collectSkillInstructionSteps(message: Message): TimelineStep[] {
 
 interface AppendOptions {
   isActiveAssistantMessage: boolean;
-  toolResultsByToolId: Readonly<Record<string, string>>;
+  toolResultsByToolId: Readonly<Record<string, IndexedToolResult>>;
 }
 
 function getToolStatus(
@@ -143,7 +152,15 @@ function getToolStatus(
   isStreaming: boolean,
 ): StepStatus {
   if (toolUse.stream?.status === 'invalid') return 'error';
-  return hasResult || !isStreaming ? 'done' : 'in_progress';
+  if (hasResult || !isStreaming) return 'done';
+  // The run pauses on a complete call that needs the user's approval; the
+  // backend only resumes it once the user decides.
+  // A finalized call carries no stream state; while arguments still stream
+  // the call is not yet waiting on anyone.
+  if (toolUse.integration?.requiresApproval && toolUse.stream === undefined) {
+    return 'awaiting_approval';
+  }
+  return 'in_progress';
 }
 
 function appendAssistantMessage(
@@ -185,7 +202,7 @@ function appendAssistantMessage(
     if (block.type === 'tool_use') {
       const toolUse = block as ToolUseMessageContent;
       const hasResult = toolUse.id in toolResultsByToolId;
-      const result = hasResult ? toolResultsByToolId[toolUse.id] : undefined;
+      const indexed = hasResult ? toolResultsByToolId[toolUse.id] : undefined;
       const status = getToolStatus(
         toolUse,
         hasResult,
@@ -195,7 +212,8 @@ function appendAssistantMessage(
         kind: 'tool',
         key: `${message.id}-tool-${toolUse.id}`,
         toolUse,
-        result,
+        result: indexed?.result,
+        resultOutcome: indexed?.outcome,
         status,
       });
       return;

@@ -90,6 +90,7 @@ import type {
   CreateWorkspaceDto,
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
+  DecideToolApprovalDto,
   DeleteAllPendingInvitesResponseDto,
   DiscoverSsoDto,
   EmbeddingModelEnabledResponseDto,
@@ -18865,6 +18866,77 @@ export const useRunsControllerSendMessage = <TError = void,
         TContext
       > => {
       return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
+    }
+
+/**
+ * Resumes the running chat turn that paused on this tool call. Only the user whose run is waiting can decide.
+ * @summary Approve or decline a tool call that is waiting for the user
+ */
+export const toolApprovalsControllerDecide = (
+    threadId: string,
+    toolCallId: string,
+    decideToolApprovalDto: DecideToolApprovalDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/threads/${threadId}/tool-approvals/${toolCallId}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: decideToolApprovalDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getToolApprovalsControllerDecideMutationKey = () => ['toolApprovalsControllerDecide'] as const;
+
+export const getToolApprovalsControllerDecideMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolApprovalsControllerDecide>>, TError,ToolApprovalsControllerDecideMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof toolApprovalsControllerDecide>>, TError,ToolApprovalsControllerDecideMutationVariables, TContext> => {
+
+const mutationKey = getToolApprovalsControllerDecideMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolApprovalsControllerDecide>>, ToolApprovalsControllerDecideMutationVariables> = (props) => {
+          const {threadId,toolCallId,data} = props ?? {};
+
+          return  toolApprovalsControllerDecide(threadId,toolCallId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ToolApprovalsControllerDecideMutationResult = NonNullable<Awaited<ReturnType<typeof toolApprovalsControllerDecide>>>
+    export type ToolApprovalsControllerDecideMutationBody = DecideToolApprovalDto
+    export type ToolApprovalsControllerDecideMutationError = void
+    export type ToolApprovalsControllerDecideMutationVariables = {threadId: string;toolCallId: string;data: DecideToolApprovalDto}
+
+    /**
+ * @summary Approve or decline a tool call that is waiting for the user
+ */
+export const useToolApprovalsControllerDecide = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolApprovalsControllerDecide>>, TError,ToolApprovalsControllerDecideMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof toolApprovalsControllerDecide>>,
+        TError,
+        ToolApprovalsControllerDecideMutationVariables,
+        TContext
+      > => {
+      return useMutation(getToolApprovalsControllerDecideMutationOptions(options), queryClient);
     }
 
 /**

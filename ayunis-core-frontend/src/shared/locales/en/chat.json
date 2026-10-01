@@ -96,6 +96,16 @@
       "summary_one": "{{count}} step",
       "summary_other": "{{count}} steps",
       "errorStep": "Stopped",
+      "awaitingApproval": "Waiting for your approval: {{tool}}",
+      "declinedToolCall": "Declined: {{tool}}",
+      "approval": {
+        "title": "{{integration}} wants to run “{{tool}}”",
+        "description": "This action changes data outside Ayunis. Review the request and decide whether it may run.",
+        "approve": "Approve",
+        "decline": "Decline",
+        "notPending": "This request is no longer waiting for a decision.",
+        "error": "Your decision could not be sent."
+      },
       "actions": {
         "create_document": "Created document",
         "update_document": "Updated document",

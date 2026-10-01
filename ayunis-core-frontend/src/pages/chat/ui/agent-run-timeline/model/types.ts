@@ -4,7 +4,10 @@ import type {
   TextMessageContent,
 } from '@/pages/chat/model/openapi';
 
-export type StepStatus = 'in_progress' | 'done' | 'error';
+export type StepStatus = 'in_progress' | 'awaiting_approval' | 'done' | 'error';
+
+/** Why a well-formed tool call produced no real result. */
+export type ToolResultOutcome = 'declined';
 
 export type TimelineStep =
   | {
@@ -18,6 +21,7 @@ export type TimelineStep =
       key: string;
       toolUse: ToolUseMessageContent;
       result?: string;
+      resultOutcome?: ToolResultOutcome;
       status: StepStatus;
     }
   | {

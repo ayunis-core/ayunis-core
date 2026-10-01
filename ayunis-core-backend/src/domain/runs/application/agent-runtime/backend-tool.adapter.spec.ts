@@ -23,6 +23,10 @@ import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import { BackendToolAdapter } from './backend-tool.adapter';
+import { ToolApprovalBrokerService } from 'src/domain/runs/application/services/tool-approval-broker.service';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { wasToolCallDeclined } from './tool-call-outcomes';
 
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -46,15 +50,102 @@ function toolCtx(isAnonymous = false): ToolExecutionContext {
 describe('BackendToolAdapter', () => {
   let execute: jest.Mock;
   let anonymize: jest.Mock;
+  let broker: ToolApprovalBrokerService;
   let adapter: BackendToolAdapter;
 
   beforeEach(() => {
     execute = jest.fn();
     anonymize = jest.fn();
+    broker = new ToolApprovalBrokerService();
     adapter = new BackendToolAdapter(
       { execute } as unknown as ExecuteToolUseCase,
       { execute: anonymize } as unknown as AnonymizeTextForThreadUseCase,
+      broker,
     );
+  });
+
+  describe('tools that require user approval', () => {
+    const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    function mcpTool(readOnly = false): McpIntegrationTool {
+      return new McpIntegrationTool(
+        new McpTool(
+          'create_document',
+          'Create a document',
+          { type: 'object' },
+          '423e4567-e89b-12d3-a456-426614174000',
+          readOnly ? { readOnlyHint: true } : null,
+        ),
+        false,
+        'Outline',
+        null,
+      );
+    }
+
+    function approvalCtx(toolCallId: string): ToolExecutionContext {
+      return {
+        context: RunContext.create({ orgId, threadId, userId }),
+        toolCallId,
+        emit: jest.fn(),
+      } as unknown as ToolExecutionContext;
+    }
+
+    it('runs the tool once the user approves', async () => {
+      execute.mockResolvedValue('created');
+      const [runtimeTool] = adapter.toRuntimeTools([mcpTool()]);
+      const ctx = approvalCtx('approve-1');
+
+      const pending = runtimeTool.execute!({ title: 'Notes' }, ctx);
+      await Promise.resolve();
+      expect(execute).not.toHaveBeenCalled();
+      broker.decide({
+        threadId,
+        toolCallId: 'approve-1',
+        userId,
+        decision: 'approved',
+      });
+
+      await expect(pending).resolves.toEqual({
+        result: 'created',
+        isError: false,
+      });
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(wasToolCallDeclined(ctx.context, 'approve-1')).toBe(false);
+    });
+
+    it('skips execution and records the decline when the user declines', async () => {
+      const [runtimeTool] = adapter.toRuntimeTools([mcpTool()]);
+      const ctx = approvalCtx('decline-1');
+
+      const pending = runtimeTool.execute!({ title: 'Notes' }, ctx);
+      broker.decide({
+        threadId,
+        toolCallId: 'decline-1',
+        userId,
+        decision: 'declined',
+      });
+      const result = await pending;
+
+      expect(execute).not.toHaveBeenCalled();
+      expect(result).toMatchObject({ isError: false });
+      expect((result as { result: string }).result).toContain('declined');
+      expect(wasToolCallDeclined(ctx.context, 'decline-1')).toBe(true);
+    });
+
+    it('validates input before asking the user', () => {
+      const [runtimeTool] = adapter.toRuntimeTools([mcpTool()]);
+
+      expect(runtimeTool.validateInput).toBeDefined();
+    });
+
+    it('runs read-only MCP tools without approval', async () => {
+      execute.mockResolvedValue('found');
+      const [runtimeTool] = adapter.toRuntimeTools([mcpTool(true)]);
+
+      await expect(
+        runtimeTool.execute!({}, approvalCtx('read-1')),
+      ).resolves.toEqual({ result: 'found', isError: false });
+    });
   });
 
   it('runs an executable tool in-loop and returns its result', async () => {

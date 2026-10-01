@@ -6,6 +6,25 @@ import type { UUID } from 'crypto';
 import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { buildMcpCanonicalName } from 'src/domain/tools/domain/value-objects/mcp-canonical-name';
 
+function buildDescription(
+  mcpTool: McpTool,
+  integrationName: string,
+  requiresApproval: boolean,
+): string {
+  const lines = [
+    `Use the "${mcpTool.name}" tool from MCP integration "${integrationName}".`,
+  ];
+  if (requiresApproval) {
+    lines.push(
+      'The user must approve each call of this tool in the chat before it runs.',
+    );
+  }
+  if (mcpTool.description) {
+    lines.push(mcpTool.description);
+  }
+  return lines.join('\n');
+}
+
 /**
  * Ephemeral tool entity representing an MCP tool.
  * These tools are not persisted to the database but are dynamically loaded
@@ -15,6 +34,7 @@ export class McpIntegrationTool extends Tool {
   public readonly integrationId: UUID;
   public readonly integrationName: string;
   public readonly originalName: string;
+  public readonly requiresApproval: boolean;
   public readonly integrationLogoUrl: string | null;
   private readonly _returnsPii: boolean;
 
@@ -24,15 +44,17 @@ export class McpIntegrationTool extends Tool {
     integrationName: string,
     integrationLogoUrl: string | null,
   ) {
+    const requiresApproval = !mcpTool.isReadOnly;
     super({
       name: buildMcpCanonicalName('tool', mcpTool.name, mcpTool.integrationId),
-      description: `Use the "${mcpTool.name}" tool from MCP integration "${integrationName}".\n${mcpTool.description ?? ''}`,
+      description: buildDescription(mcpTool, integrationName, requiresApproval),
       parameters: mcpTool.inputSchema,
       type: ToolType.MCP_TOOL,
     });
     this.integrationId = mcpTool.integrationId;
     this.integrationName = integrationName;
     this.originalName = mcpTool.name;
+    this.requiresApproval = requiresApproval;
     this.integrationLogoUrl = integrationLogoUrl;
     this._returnsPii = returnsPii;
   }
