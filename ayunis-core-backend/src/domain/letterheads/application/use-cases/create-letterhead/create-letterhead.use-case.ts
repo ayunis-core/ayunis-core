@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID, type UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { UnexpectedLetterheadError } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
@@ -18,7 +18,7 @@ export class CreateLetterheadUseCase {
   constructor(
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly letterheadPdfService: LetterheadPdfService,
   ) {}
 
@@ -49,8 +49,12 @@ export class CreateLetterheadUseCase {
       letterheadId,
       'first-page.pdf',
     );
-    await this.uploadObjectUseCase.execute(
-      new UploadObjectCommand(firstPagePath, command.firstPagePdfBuffer),
+    await this.uploadOrgObjectUseCase.execute(
+      new UploadOrgObjectCommand(
+        orgId,
+        firstPagePath,
+        command.firstPagePdfBuffer,
+      ),
     );
     const continuationPagePath = await this.uploadContinuationPage(
       orgId,
@@ -100,8 +104,8 @@ export class CreateLetterheadUseCase {
       letterheadId,
       'continuation.pdf',
     );
-    await this.uploadObjectUseCase.execute(
-      new UploadObjectCommand(path, buffer),
+    await this.uploadOrgObjectUseCase.execute(
+      new UploadOrgObjectCommand(orgId, path, buffer),
     );
     return path;
   }

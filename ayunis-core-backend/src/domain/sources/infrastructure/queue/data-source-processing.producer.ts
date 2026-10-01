@@ -1,3 +1,5 @@
+import { Transactional } from '@nestjs-cls/transactional';
+import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -13,13 +15,16 @@ export class DataSourceProcessingProducer extends DataSourceProcessingPort {
   private readonly logger = new Logger(DataSourceProcessingProducer.name);
 
   constructor(
+    private readonly orgAccess: AssertOrgActiveUseCase,
     @InjectQueue(DATA_SOURCE_PROCESSING_QUEUE)
     private readonly queue: Queue<DataSourceProcessingJobData>,
   ) {
     super();
   }
 
+  @Transactional()
   async enqueue(data: DataSourceProcessingJobData): Promise<void> {
+    await this.orgAccess.execute({ orgId: data.orgId, lockForLifecycle: true });
     this.logger.log(
       {
         fileName: data.fileName,

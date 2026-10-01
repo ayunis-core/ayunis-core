@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
+import { Badge } from '@ayunis/ui/components/badge';
 import {
   Table,
   TableBody,
@@ -51,6 +52,7 @@ export default function OrgsTable({
             <TableHeader>
               <TableRow>
                 <TableHead>{t('table.name')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
                 <TableHead>{t('table.createdAt')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -58,6 +60,7 @@ export default function OrgsTable({
               {orgs.map((org) => (
                 <TableRow
                   key={org.id}
+                  data-testid={`org-row-${org.id}`}
                   className="cursor-pointer"
                   onClick={() => {
                     void router.navigate({
@@ -67,6 +70,13 @@ export default function OrgsTable({
                   }}
                 >
                   <TableCell className="font-medium">{org.name}</TableCell>
+                  <TableCell>
+                    <Badge variant={org.archived ? 'secondary' : 'outline'}>
+                      {t(
+                        org.archived ? 'statuses.archived' : 'statuses.active',
+                      )}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{formatDate(org.createdAt)}</TableCell>
                 </TableRow>
               ))}

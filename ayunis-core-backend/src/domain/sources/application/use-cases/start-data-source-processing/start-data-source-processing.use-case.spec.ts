@@ -14,7 +14,7 @@ import { createMockSourceRepository } from 'src/domain/sources/application/testi
 import type { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import type { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import type { EnqueueDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
-import type { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import type { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
@@ -33,7 +33,7 @@ describe('StartDataSourceProcessingUseCase', () => {
   let sourceRepository: jest.Mocked<SourceRepository>;
   let parser: jest.Mocked<SpreadsheetParserPort>;
   let markSourceFailed: jest.Mocked<MarkSourceFailedUseCase>;
-  let uploadObject: jest.Mocked<UploadObjectUseCase>;
+  let uploadObject: jest.Mocked<UploadOrgObjectUseCase>;
   let deleteObject: jest.Mocked<DeleteObjectUseCase>;
   let enqueue: jest.Mocked<EnqueueDataSourceProcessingUseCase>;
   let useCase: StartDataSourceProcessingUseCase;
@@ -48,7 +48,7 @@ describe('StartDataSourceProcessingUseCase', () => {
     } as unknown as jest.Mocked<MarkSourceFailedUseCase>;
     uploadObject = {
       execute: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<UploadObjectUseCase>;
+    } as unknown as jest.Mocked<UploadOrgObjectUseCase>;
     deleteObject = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<DeleteObjectUseCase>;
@@ -132,6 +132,9 @@ describe('StartDataSourceProcessingUseCase', () => {
     expect(sources.map((source) => source.id)).not.toContain(uploadId);
     expect(minioPath).toBe(`${orgId}/processing/${uploadId}/haushalt.xlsx`);
     expect(uploadObject.execute).toHaveBeenCalledTimes(1);
+    expect(uploadObject.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId }),
+    );
   });
 
   it('rejects an over-capacity workbook via the callback before creating anything', async () => {

@@ -11,14 +11,29 @@ describe(LocalPasswordLoginPolicyService.name, () => {
   const user = aUser({ orgId });
   const getPolicy = { execute: jest.fn() };
   const findUser = { execute: jest.fn() };
+  const assertOrgActive = { execute: jest.fn() };
   const service = new LocalPasswordLoginPolicyService(
     getPolicy as unknown as GetOrgAuthenticationPolicyUseCase,
     findUser as unknown as FindUserByIdUseCase,
+    assertOrgActive as never,
   );
 
   beforeEach(() => {
     jest.clearAllMocks();
     findUser.execute.mockResolvedValue(user);
+    assertOrgActive.execute.mockResolvedValue({ sessionVersion: 0 });
+  });
+
+  it.each([
+    SessionAuthenticationMethod.PASSWORD,
+    SessionAuthenticationMethod.SSO,
+  ])('rejects archived organisations for %s sessions', async (method) => {
+    assertOrgActive.execute.mockRejectedValue(
+      new Error('Organisation is not active'),
+    );
+    await expect(
+      service.assertSessionIssuanceAllowed(orgId, method),
+    ).rejects.toThrow('Organisation is not active');
   });
 
   it('rejects password authentication when the organization requires SSO', async () => {

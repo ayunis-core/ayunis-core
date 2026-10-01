@@ -1,15 +1,21 @@
+import OrgStatusFilter from './OrgStatusFilter';
 import { useTranslation } from 'react-i18next';
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import CreateOrgDialog from './CreateOrgDialog';
 import OrgsTable from './OrgsTable';
 import OrgsPagination from './OrgsPagination';
 import OrgsSearch from './OrgsSearch';
-import type { SuperAdminOrgResponseDto, PaginationDto } from '@/shared/api';
+import type {
+  SuperAdminOrgResponseDto,
+  PaginationDto,
+  SuperAdminOrgsControllerGetAllOrgsStatus,
+} from '@/shared/api';
 
 interface SuperAdminOrgsPageProps {
   orgs: SuperAdminOrgResponseDto[];
   pagination?: PaginationDto;
   search?: string;
+  status: SuperAdminOrgsControllerGetAllOrgsStatus;
   currentPage: number;
 }
 
@@ -17,6 +23,7 @@ export default function SuperAdminOrgsPage({
   orgs,
   pagination,
   search,
+  status,
   currentPage,
 }: Readonly<SuperAdminOrgsPageProps>) {
   const { t } = useTranslation('super-admin-settings-layout');
@@ -30,11 +37,20 @@ export default function SuperAdminOrgsPage({
       action={<CreateOrgDialog />}
     >
       <div className="space-y-4">
-        <OrgsTable orgs={orgs} searchSlot={<OrgsSearch search={search} />} />
+        <OrgsTable
+          orgs={orgs}
+          searchSlot={
+            <div className="flex flex-wrap gap-2">
+              <OrgsSearch search={search} />
+              <OrgStatusFilter status={status} />
+            </div>
+          }
+        />
         <OrgsPagination
           currentPage={currentPage}
           totalPages={totalPages}
           search={search}
+          status={status}
         />
       </div>
     </SuperAdminSettingsLayout>

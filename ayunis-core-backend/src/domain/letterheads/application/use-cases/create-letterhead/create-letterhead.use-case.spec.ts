@@ -7,7 +7,7 @@ import { CreateLetterheadCommand } from './create-letterhead.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   LetterheadInvalidPdfError,
@@ -33,7 +33,7 @@ async function createMultiPagePdf(pages: number): Promise<Buffer> {
 describe('CreateLetterheadUseCase', () => {
   let useCase: CreateLetterheadUseCase;
   let letterheadsRepository: jest.Mocked<LetterheadsRepository>;
-  let uploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
+  let uploadObjectUseCase: jest.Mocked<UploadOrgObjectUseCase>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -66,13 +66,13 @@ describe('CreateLetterheadUseCase', () => {
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: mockUploadObjectUseCase },
       ],
     }).compile();
 
     useCase = module.get(CreateLetterheadUseCase);
     letterheadsRepository = module.get(LetterheadsRepository);
-    uploadObjectUseCase = module.get(UploadObjectUseCase);
+    uploadObjectUseCase = module.get(UploadOrgObjectUseCase);
 
     letterheadsRepository.save.mockImplementation(async (l) => l);
   });
@@ -101,6 +101,9 @@ describe('CreateLetterheadUseCase', () => {
     expect(result.firstPageStoragePath).toContain('first-page.pdf');
     expect(result.continuationPageStoragePath).toBeNull();
     expect(uploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(uploadObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: mockOrgId }),
+    );
   });
 
   it('should create a letterhead with both first-page and continuation PDFs', async () => {
@@ -181,7 +184,7 @@ describe('CreateLetterheadUseCase', () => {
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: UploadObjectUseCase, useValue: uploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: uploadObjectUseCase },
       ],
     }).compile();
 

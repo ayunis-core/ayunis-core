@@ -23,7 +23,10 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
     this.logger.log('constructor');
   }
 
-  generateAccessToken(user: ActiveUser): Promise<string> {
+  generateAccessToken(
+    user: ActiveUser,
+    orgSessionVersion = 0,
+  ): Promise<string> {
     this.logger.log(
       {
         userId: user.id,
@@ -33,7 +36,7 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
       'generateAccessToken',
     );
     try {
-      return Promise.resolve(this.signAccessToken(user));
+      return Promise.resolve(this.signAccessToken(user, orgSessionVersion));
     } catch (error) {
       return Promise.reject(
         error instanceof Error ? error : new Error(String(error)),
@@ -41,7 +44,7 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
     }
   }
 
-  private signAccessToken(user: ActiveUser): string {
+  private signAccessToken(user: ActiveUser, orgSessionVersion: number): string {
     const jwtConfig = this.configService.get<JwtConfig>('auth.jwt');
     if (!jwtConfig) {
       throw new Error('JWT configuration is missing');
@@ -53,6 +56,7 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
         emailVerified: user.emailVerified,
         sub: user.id,
         orgId: user.orgId,
+        orgSessionVersion,
         role: user.role,
         systemRole: user.systemRole,
         name: user.name,

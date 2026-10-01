@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
@@ -23,7 +23,7 @@ export class UpdateLetterheadUseCase {
   constructor(
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly letterheadPdfService: LetterheadPdfService,
   ) {}
@@ -152,8 +152,8 @@ export class UpdateLetterheadUseCase {
       letterheadId,
       fileName,
     );
-    await this.uploadObjectUseCase.execute(
-      new UploadObjectCommand(path, buffer),
+    await this.uploadOrgObjectUseCase.execute(
+      new UploadOrgObjectCommand(orgId, path, buffer),
     );
     return path;
   }

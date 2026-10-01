@@ -13,7 +13,6 @@ import {
   OrgNotFoundError,
   OrgCreationFailedError,
   OrgUpdateFailedError,
-  OrgDeletionFailedError,
   OrgRetrievalFailedError,
 } from 'src/iam/orgs/application/orgs.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -39,12 +38,15 @@ export class LocalOrgsRepository extends OrgsRepository {
     return this.getManager().getRepository(OrgRecord);
   }
 
-  async findById(id: UUID): Promise<Org> {
+  async findById(id: UUID, lockForLifecycle = false): Promise<Org> {
     this.logger.log({ id }, 'findById');
 
     try {
       const orgEntity = await this.orgRepository.findOne({
         where: { id },
+        ...(lockForLifecycle
+          ? { lock: { mode: 'pessimistic_read' as const } }
+          : {}),
       });
       if (!orgEntity) {
         this.logger.warn({ id }, 'Organization not found');
@@ -61,7 +63,7 @@ export class LocalOrgsRepository extends OrgsRepository {
 
       const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error({ err, id }, 'Error finding organization');
-      throw new OrgNotFoundError(id);
+      throw new OrgRetrievalFailedError(err.message);
     }
   }
 
@@ -105,6 +107,12 @@ export class LocalOrgsRepository extends OrgsRepository {
         .createQueryBuilder('org')
         .leftJoinAndSelect('org.users', 'users')
         .orderBy('org.createdAt', 'DESC');
+
+      if (filters?.status !== 'all') {
+        queryBuilder.andWhere('org.archived = :archived', {
+          archived: filters?.status === 'archived',
+        });
+      }
 
       // Apply search filter (case-insensitive)
       if (filters?.search) {
@@ -226,36 +234,30 @@ export class LocalOrgsRepository extends OrgsRepository {
     }
   }
 
-  async delete(id: UUID): Promise<void> {
-    this.logger.log({ id }, 'delete');
+  async updateArchived(id: UUID, archived: boolean): Promise<Org> {
+    const result = await this.orgRepository
+      .createQueryBuilder()
+      .update(OrgRecord)
+      .set({
+        archived,
+        sessionVersion: () =>
+          archived
+            ? '"sessionVersion" + CASE WHEN "archived" = false THEN 1 ELSE 0 END'
+            : '"sessionVersion"',
+      })
+      .where('id = :id', { id })
+      .returning('*')
+      .execute();
+    const record = (result.raw as OrgRecord[]).at(0);
+    if (!record) throw new OrgNotFoundError(id);
+    return OrgMapper.toDomain(record);
+  }
 
-    try {
-      // Verify org exists
-      const existingOrg = await this.orgRepository.findOne({
-        where: { id },
-      });
-
-      if (!existingOrg) {
-        this.logger.warn(
-          {
-            id,
-          },
-          'Attempted to delete non-existent organization',
-        );
-        throw new OrgNotFoundError(id);
-      }
-
-      await this.orgRepository.delete(id);
-      this.logger.debug({ id }, 'Organization deleted successfully');
-    } catch (error) {
-      if (error instanceof OrgNotFoundError) {
-        // Already logged and correctly typed, just rethrow
-        throw error;
-      }
-
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error({ err, id }, 'Error deleting organization');
-      throw new OrgDeletionFailedError(id, err.message);
-    }
+  async delete(id: UUID, confirmationName?: string): Promise<void> {
+    const result = await this.orgRepository.delete({
+      id,
+      ...(confirmationName !== undefined ? { name: confirmationName } : {}),
+    });
+    if (!result.affected) throw new OrgNotFoundError(id);
   }
 }

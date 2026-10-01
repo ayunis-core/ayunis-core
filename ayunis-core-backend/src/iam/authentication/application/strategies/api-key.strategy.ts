@@ -1,3 +1,4 @@
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-http-bearer';
@@ -20,7 +21,10 @@ export interface ApiKeyPrincipal {
 export class ApiKeyStrategy extends PassportStrategy(Strategy, 'api-key') {
   private readonly logger = new Logger(ApiKeyStrategy.name);
 
-  constructor(private readonly validateApiKey: ValidateApiKeyUseCase) {
+  constructor(
+    private readonly validateApiKey: ValidateApiKeyUseCase,
+    private readonly assertOrgActive: AssertCachedOrgActiveUseCase,
+  ) {
     super();
   }
 
@@ -29,6 +33,7 @@ export class ApiKeyStrategy extends PassportStrategy(Strategy, 'api-key') {
       const apiKey = await this.validateApiKey.execute(
         new ValidateApiKeyCommand(token),
       );
+      await this.assertOrgActive.execute({ orgId: apiKey.orgId });
       return { apiKeyId: apiKey.id, orgId: apiKey.orgId };
     } catch (error) {
       if (

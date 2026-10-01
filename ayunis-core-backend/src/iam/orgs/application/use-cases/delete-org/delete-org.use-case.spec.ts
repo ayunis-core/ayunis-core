@@ -4,7 +4,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeleteOrgUseCase } from './delete-org.use-case';
 import { DeleteOrgCommand } from './delete-org.command';
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
-import { OrgDeletionFailedError } from 'src/iam/orgs/application/orgs.errors';
+import {
+  OrgErrorCode,
+  UnexpectedOrgError,
+} from 'src/iam/orgs/application/orgs.errors';
 import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
 import type { UUID } from 'crypto';
 
@@ -88,9 +91,30 @@ describe('DeleteOrgUseCase', () => {
     mockOrgsRepository.delete.mockRejectedValue(new Error('Database error'));
 
     await expect(useCase.execute(new DeleteOrgCommand(orgId))).rejects.toThrow(
-      OrgDeletionFailedError,
+      UnexpectedOrgError,
     );
     expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('reports failed required cleanup as a server error after row deletion', async () => {
+    eventEmitter.emitAsync.mockImplementation(
+      (_name: string, event: OrgDeletionRequestedEvent) => {
+        event.deferCleanup('purge', () =>
+          Promise.reject(new Error('storage unavailable')),
+        );
+        return Promise.resolve([]);
+      },
+    );
+    await expect(
+      useCase.execute(new DeleteOrgCommand(orgId, 'Stadt Musterhausen', true)),
+    ).rejects.toMatchObject({
+      statusCode: 500,
+      code: OrgErrorCode.ORG_DELETION_FAILED,
+    });
+    expect(mockOrgsRepository.delete).toHaveBeenCalledWith(
+      orgId,
+      'Stadt Musterhausen',
+    );
   });
 
   it('should swallow deferred cleanup failures after a successful delete', async () => {
@@ -109,11 +133,11 @@ describe('DeleteOrgUseCase', () => {
     expect(mockOrgsRepository.delete).toHaveBeenCalledWith(orgId);
   });
 
-  it('should throw OrgDeletionFailedError for unexpected errors', async () => {
+  it('should throw UnexpectedOrgError for unexpected errors', async () => {
     mockOrgsRepository.delete.mockRejectedValue(new Error('Database error'));
 
     await expect(useCase.execute(new DeleteOrgCommand(orgId))).rejects.toThrow(
-      OrgDeletionFailedError,
+      UnexpectedOrgError,
     );
   });
 });

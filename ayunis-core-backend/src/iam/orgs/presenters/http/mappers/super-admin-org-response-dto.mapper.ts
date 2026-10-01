@@ -3,7 +3,7 @@ import { Org } from 'src/iam/orgs/domain/org.entity';
 import {
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
-} from '../dtos/super-admin-org-response.dto';
+} from 'src/iam/orgs/presenters/http/dtos/super-admin-org-response.dto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
@@ -12,6 +12,7 @@ export class SuperAdminOrgResponseDtoMapper {
     return {
       id: org.id,
       name: org.name,
+      archived: org.archived,
       createdAt: org.createdAt,
     };
   }

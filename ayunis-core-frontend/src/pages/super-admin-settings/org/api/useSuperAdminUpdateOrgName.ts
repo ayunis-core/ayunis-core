@@ -1,4 +1,5 @@
 import {
+  OrgErrorCode,
   getSuperAdminOrgsControllerGetAllOrgsQueryKey,
   getSuperAdminOrgsControllerGetOrgByIdQueryKey,
   useSuperAdminOrgsControllerUpdateOrg,
@@ -48,10 +49,10 @@ export default function useSuperAdminUpdateOrgName({
           }
 
           switch (code) {
-            case 'ORG_NOT_FOUND':
+            case OrgErrorCode.ORG_NOT_FOUND:
               showError(t('orgDetails.rename.errorNotFound'));
               break;
-            case 'ORG_UPDATE_FAILED':
+            case OrgErrorCode.ORG_UPDATE_FAILED:
               showError(t('orgDetails.rename.errorRejected'));
               break;
             default:

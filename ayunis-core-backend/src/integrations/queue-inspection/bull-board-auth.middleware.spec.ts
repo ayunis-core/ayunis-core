@@ -6,6 +6,8 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { IpAllowlistGuard } from 'src/iam/ip-allowlist/application/guards/ip-allowlist.guard';
 import { IpNotAllowedError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
+import type { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
+import { OrgAccessError } from 'src/iam/orgs/application/orgs.errors';
 
 const JWT_SECRET = 'queue-inspection-test-secret';
 
@@ -48,11 +50,15 @@ describe('BullBoardAuthMiddleware', () => {
   const ipAllowlistGuard = {
     canActivateRequest: jest.fn().mockResolvedValue(true),
   } as unknown as IpAllowlistGuard;
+  const assertOrgActive = {
+    execute: jest.fn().mockResolvedValue(undefined),
+  } as unknown as AssertCachedOrgActiveUseCase;
   const configService = new ConfigService();
   const middleware = new BullBoardAuthMiddleware(
     jwtService,
     ipAllowlistGuard,
     configService,
+    assertOrgActive,
   );
   let response: Response;
   let next: NextFunction;
@@ -106,6 +112,10 @@ describe('BullBoardAuthMiddleware', () => {
         systemRole: SystemRole.SUPER_ADMIN,
       }),
     );
+    expect(assertOrgActive.execute).toHaveBeenCalledWith({
+      orgId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+      sessionVersion: 0,
+    });
     expect(response.status).not.toHaveBeenCalled();
   });
 
@@ -117,6 +127,7 @@ describe('BullBoardAuthMiddleware', () => {
       jwtService,
       ipAllowlistGuard,
       customConfigService,
+      assertOrgActive,
     );
     const token = signToken(jwtService, SystemRole.SUPER_ADMIN);
 
@@ -139,6 +150,37 @@ describe('BullBoardAuthMiddleware', () => {
 
     expect(response.status).toHaveBeenCalledWith(401);
     expect(ipAllowlistGuard.canActivateRequest).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('rejects a super admin session whose organisation is no longer active', async () => {
+    jest
+      .mocked(assertOrgActive.execute)
+      .mockRejectedValueOnce(new OrgAccessError());
+    const token = signToken(jwtService, SystemRole.SUPER_ADMIN, {
+      orgSessionVersion: 3,
+    });
+
+    await middleware.use(createRequest(token), response, next);
+
+    expect(assertOrgActive.execute).toHaveBeenCalledWith({
+      orgId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+      sessionVersion: 3,
+    });
+    expect(response.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('propagates an unexpected organisation lookup failure', async () => {
+    const error = new Error('database unavailable');
+    jest.mocked(assertOrgActive.execute).mockRejectedValueOnce(error);
+    const token = signToken(jwtService, SystemRole.SUPER_ADMIN);
+
+    await expect(
+      middleware.use(createRequest(token), response, next),
+    ).rejects.toBe(error);
+
+    expect(response.status).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
 
