@@ -25,6 +25,7 @@ import { extractTextFromEml } from 'src/common/util/eml';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
+import { MsgParserPort } from 'src/domain/retrievers/file-retrievers/application/ports/msg-parser.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
@@ -37,6 +38,7 @@ export class RetrieveFileContentUseCase {
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly contextService: ContextService,
     private readonly documentConverter: DocumentConverterPort,
+    private readonly msgParser: MsgParserPort,
     private readonly transcribeUseCase: TranscribeUseCase,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
@@ -63,6 +65,11 @@ export class RetrieveFileContentUseCase {
 
     if (fileType === 'eml') {
       const text = await extractTextFromEml(command.fileData);
+      return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
+    }
+
+    if (fileType === 'msg') {
+      const text = await this.msgParser.extractText(command.fileData);
       return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
     }
 

@@ -148,7 +148,7 @@ export class CreateTextSourceUseCase {
       // This is a programming error - caller should validate/route file types before calling this use case
       throw new Error(
         `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
-          `This use case only handles PDF, DOCX, PPTX, ODT, ODP, TXT, EML, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
+          `This use case only handles PDF, DOCX, PPTX, ODT, ODP, TXT, EML, MSG, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
       );
     }
     return fileType;

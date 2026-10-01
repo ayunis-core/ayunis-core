@@ -112,6 +112,18 @@ describe('CreateProcessingSourceUseCase', () => {
     expect(result.status).toBe(SourceStatus.PROCESSING);
   });
 
+  it('should persist an Outlook MSG as an email FileSource', async () => {
+    const result = await useCase.execute(
+      new CreateProcessingSourceCommand({
+        fileType: 'application/vnd.ms-outlook',
+        fileName: 'Anfrage.msg',
+      }),
+    );
+
+    expect(result.fileType).toBe(FileType.EML);
+    expect(result.status).toBe(SourceStatus.PROCESSING);
+  });
+
   it('should throw UnsupportedSourceFileTypeError for unsupported file types', async () => {
     const command = new CreateProcessingSourceCommand({
       fileType: 'image/jpeg',

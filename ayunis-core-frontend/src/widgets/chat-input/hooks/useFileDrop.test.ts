@@ -68,6 +68,8 @@ describe('useFileDrop', () => {
     'recording.wav',
     'recording.webm',
     'notes.md',
+    'anfrage.eml',
+    'anfrage.msg',
   ])('attaches a dropped %s', (fileName) => {
     renderFileDrop();
     const file = new File(['data'], fileName);
