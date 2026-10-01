@@ -26,6 +26,11 @@ export type ProviderErrorReason =
   (typeof ProviderErrorReason)[keyof typeof ProviderErrorReason];
 
 const SAFE_SCALAR = /^[a-zA-Z0-9_$.[\]:-]+$/;
+const RATE_LIMIT_DIAGNOSTICS = new Set([
+  'no_capacity',
+  'rate_limit_exceeded',
+  'too_many_requests',
+]);
 const REASON_PATTERNS: ReadonlyArray<readonly [ProviderErrorReason, RegExp]> = [
   [
     ProviderErrorReason.INVALID_TOOL_SCHEMA,
@@ -49,6 +54,16 @@ const REASON_PATTERNS: ReadonlyArray<readonly [ProviderErrorReason, RegExp]> = [
     /authentication|unauthorized|invalid api key/i,
   ],
 ];
+
+export function hasRateLimitDiagnostics(
+  diagnostics: ProviderErrorDiagnostics,
+): boolean {
+  return (
+    diagnostics.upstreamStatus === 429 ||
+    RATE_LIMIT_DIAGNOSTICS.has(diagnostics.upstreamCode ?? '') ||
+    RATE_LIMIT_DIAGNOSTICS.has(diagnostics.upstreamType ?? '')
+  );
+}
 
 export function extractProviderErrorDiagnostics(
   error: unknown,
