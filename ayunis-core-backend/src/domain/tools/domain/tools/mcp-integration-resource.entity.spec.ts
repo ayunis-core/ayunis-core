@@ -25,6 +25,7 @@ describe('McpIntegrationResource', () => {
     );
     expect(tool.description).toContain('Project README');
     expect(tool.description).toContain('Municipal Documents');
+    expect(tool.originalName).toBe('Project README');
     expect(tool.integrationName).toBe('Municipal Documents');
     expect(tool.integrationLogoUrl).toBe(
       'https://cdn.example.com/municipal-documents.svg',

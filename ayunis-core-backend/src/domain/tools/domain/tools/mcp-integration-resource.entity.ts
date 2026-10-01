@@ -34,6 +34,7 @@ function getDescription(
 export class McpIntegrationResource extends Tool {
   public readonly integrationId: UUID;
   public readonly integrationName: string;
+  public readonly originalName: string;
   public readonly integrationLogoUrl: string | null;
   private readonly _returnsPii: boolean;
 
@@ -55,6 +56,7 @@ export class McpIntegrationResource extends Tool {
     });
     this.integrationId = mcpResource.integrationId;
     this.integrationName = integrationName;
+    this.originalName = mcpResource.name;
     this.integrationLogoUrl = integrationLogoUrl;
     this._returnsPii = returnsPii;
   }

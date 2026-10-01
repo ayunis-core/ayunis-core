@@ -36,6 +36,7 @@ import {
   truncateToolResult,
 } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
+import { resolveToolForCall } from 'src/domain/runs/application/services/resolve-tool-for-call.helper';
 
 const DISPLAY_ACK = 'Tool has been displayed successfully';
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
@@ -141,17 +142,24 @@ export class ToolResultCollectorService {
     input: RunToolResultInput,
     context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
-    const tool = tools.find((t) => t.name === content.name);
-    if (!tool) {
+    const resolution = resolveToolForCall(tools, content.name);
+    if (resolution.tool === null) {
       return {
         content: new ToolResultMessageContent(
           content.id,
           content.name,
-          `A tool with the name ${content.name} was not found. Only use tools that are available in your given list of tools.`,
+          resolution.modelFeedback,
         ),
         succeeded: false,
         piiMasks: null,
       };
+    }
+    const { tool } = resolution;
+    if (resolution.viaLegacyName) {
+      this.logger.log(
+        { requestedName: content.name, resolvedName: tool.name },
+        'Resolved legacy MCP tool name',
+      );
     }
 
     this.emitToolUsedEvent(context.orgId, content);

@@ -18,6 +18,8 @@ import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.even
 import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
 import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 import { ToolResultCollectorService } from './tool-result-collector.service';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 
 const orgId = randomUUID();
 const userId = randomUUID();
@@ -63,6 +65,23 @@ function threadWith(...contents: ToolUseMessageContent[]): Thread {
     id: randomUUID(),
     getLastMessage: () => message,
   } as unknown as Thread;
+}
+
+function mcpTool(
+  upstreamName: string,
+  integrationName: string,
+): McpIntegrationTool {
+  return new McpIntegrationTool(
+    new McpTool(
+      upstreamName,
+      'Upstream tool',
+      { type: 'object' },
+      randomUUID(),
+    ),
+    false,
+    integrationName,
+    null,
+  );
 }
 
 function chartParams(): Record<string, unknown> {
@@ -137,6 +156,61 @@ describe('ToolResultCollectorService', () => {
     expect(toolResult.startsWith(retainedResult)).toBe(true);
     expect(toolResult.endsWith('[result truncated]')).toBe(true);
     expect(toolResult).not.toContain('discarded');
+  });
+
+  it('resolves a legacy upstream MCP tool name when one integration provides it', async () => {
+    const outline = mcpTool('search_documents', 'Outline');
+    const thread = threadWith(toolUse('legacy-1', 'search_documents'));
+
+    const result = await collect(service, thread, [
+      new CreateDocumentTool(),
+      outline,
+    ]);
+
+    expect(executeTool).toHaveBeenCalledTimes(1);
+    expect(executeTool.mock.calls[0][0].tool).toBe(outline);
+    expect(result.contents[0].result).toBe('backend result');
+  });
+
+  it('prefers the built-in over an MCP tool with the same upstream name', async () => {
+    const builtIn = new CreateDocumentTool();
+    const thread = threadWith(
+      toolUse('builtin-1', builtIn.name, {
+        title: 'Notes',
+        content: '<p>Notes</p>',
+      }),
+    );
+
+    await collect(service, thread, [
+      builtIn,
+      mcpTool('create_document', 'Outline'),
+    ]);
+
+    expect(executeTool).toHaveBeenCalledTimes(1);
+    expect(executeTool.mock.calls[0][0].tool).toBe(builtIn);
+  });
+
+  it('hands the model the qualified names when several integrations provide a legacy name', async () => {
+    const outline = mcpTool('search', 'Outline');
+    const records = mcpTool('search', 'Records');
+    const thread = threadWith(toolUse('legacy-2', 'search'));
+
+    const result = await collect(service, thread, [outline, records]);
+
+    expect(executeTool).not.toHaveBeenCalled();
+    expect(result.contents[0].result).toContain(`"${outline.name}"`);
+    expect(result.contents[0].result).toContain(`"${records.name}"`);
+  });
+
+  it('still reports an unknown tool name to the model', async () => {
+    const thread = threadWith(toolUse('unknown-1', 'nonexistent_tool'));
+
+    const result = await collect(service, thread, [
+      mcpTool('search', 'Outline'),
+    ]);
+
+    expect(executeTool).not.toHaveBeenCalled();
+    expect(result.contents[0].result).toContain('was not found');
   });
 
   it('executes a hybrid artifact once and exposes the acknowledgement', async () => {
