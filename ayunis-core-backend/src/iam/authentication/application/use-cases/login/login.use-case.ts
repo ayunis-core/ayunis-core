@@ -39,10 +39,11 @@ export class LoginUseCase {
     const user = await this.authorizeUserLoginUseCase.execute(
       new AuthorizeUserLoginCommand(command.user.id),
     );
-    await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
-      user.orgId,
-      command.authenticationMethod,
-    );
+    const sessionVersion =
+      await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
+        user.orgId,
+        command.authenticationMethod,
+      );
     const session = await this.createSessionUseCase.execute(
       new CreateSessionCommand(
         user.id,
@@ -52,6 +53,7 @@ export class LoginUseCase {
     );
     const accessToken = await this.authRepository.generateAccessToken(
       this.toActiveUser(user),
+      sessionVersion,
     );
     return new AuthTokens(accessToken, session.refreshToken);
   }

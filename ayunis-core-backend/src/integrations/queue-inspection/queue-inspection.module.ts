@@ -11,6 +11,7 @@ import {
 } from './queue-inspection.constants';
 import { SafeBullMQAdapter } from './safe-bullmq.adapter';
 import { CookieParserMiddleware } from 'src/common/middleware/cookie-parser.middleware';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
 
 const queueRegistrations = QUEUE_INSPECTION_QUEUE_NAMES.map((name) => ({
   name,
@@ -24,7 +25,7 @@ const queueBoardRegistrations = QUEUE_INSPECTION_QUEUE_NAMES.map((name) => ({
 @Module({
   imports: [
     BullBoardModule.forRootAsync({
-      imports: [JwtConfigModule, IpAllowlistModule],
+      imports: [JwtConfigModule, IpAllowlistModule, OrgsModule],
       useFactory: () => ({
         route: BULL_BOARD_PATH,
         adapter: ExpressAdapter,

@@ -7,7 +7,7 @@ import { UpdateLetterheadCommand } from './update-letterhead.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
@@ -36,7 +36,7 @@ async function createMultiPagePdf(pages: number): Promise<Buffer> {
 describe('UpdateLetterheadUseCase', () => {
   let useCase: UpdateLetterheadUseCase;
   let letterheadsRepository: jest.Mocked<LetterheadsRepository>;
-  let uploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
+  let uploadObjectUseCase: jest.Mocked<UploadOrgObjectUseCase>;
   let deleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -86,14 +86,14 @@ describe('UpdateLetterheadUseCase', () => {
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: mockUploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
       ],
     }).compile();
 
     useCase = module.get(UpdateLetterheadUseCase);
     letterheadsRepository = module.get(LetterheadsRepository);
-    uploadObjectUseCase = module.get(UploadObjectUseCase);
+    uploadObjectUseCase = module.get(UploadOrgObjectUseCase);
     deleteObjectUseCase = module.get(DeleteObjectUseCase);
 
     letterheadsRepository.save.mockImplementation(async (l) => l);
@@ -151,6 +151,9 @@ describe('UpdateLetterheadUseCase', () => {
 
     expect(result.firstPageStoragePath).toContain('first-page.pdf');
     expect(uploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(uploadObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: mockOrgId }),
+    );
   });
 
   it('should add a continuation PDF when provided', async () => {
@@ -302,7 +305,7 @@ describe('UpdateLetterheadUseCase', () => {
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: UploadObjectUseCase, useValue: uploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: uploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: deleteObjectUseCase },
       ],
     }).compile();

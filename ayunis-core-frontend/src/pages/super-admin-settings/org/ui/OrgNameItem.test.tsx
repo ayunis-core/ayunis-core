@@ -21,6 +21,7 @@ vi.mock(
 const org = {
   id: '11111111-1111-1111-1111-111111111111',
   name: 'Acme Corporation',
+  archived: false,
   createdAt: '2026-08-30T10:00:00.000Z',
 };
 

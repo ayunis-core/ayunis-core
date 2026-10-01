@@ -1,3 +1,4 @@
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -24,6 +25,12 @@ describe('ApiKeyStrategy', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApiKeyStrategy,
+        {
+          provide: AssertCachedOrgActiveUseCase,
+          useValue: {
+            execute: jest.fn().mockResolvedValue({ sessionVersion: 0 }),
+          },
+        },
         { provide: ValidateApiKeyUseCase, useValue: mockValidateApiKey },
       ],
     }).compile();

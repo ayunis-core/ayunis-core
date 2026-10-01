@@ -1,3 +1,4 @@
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
@@ -19,6 +20,7 @@ interface JwtPayload {
   orgId: UUID;
   name: string;
   type?: string;
+  orgSessionVersion?: number;
 }
 
 @Injectable()
@@ -28,6 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
     @Inject(JWT_SECRET) secret: string,
+    private readonly assertOrgActive: AssertCachedOrgActiveUseCase,
   ) {
     super({
       jwtFromRequest: (req: Request) => {
@@ -46,7 +49,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): ActiveUser | null {
+  async validate(payload: JwtPayload): Promise<ActiveUser | null> {
     // Special-purpose tokens (e.g. MFA pending) share the same secret and
     // carry a `type` claim; they must never authenticate as a session.
     if (payload.type !== undefined) {
@@ -63,6 +66,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       return null;
     }
 
+    await this.assertOrgActive.execute({
+      orgId: payload.orgId,
+      sessionVersion: payload.orgSessionVersion ?? 0,
+    });
     return new ActiveUser({
       id: payload.sub,
       email: payload.email,

@@ -8,7 +8,7 @@ import { CreateUserMessageCommand } from './create-user-message.command';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
 import { randomUUID } from 'crypto';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedException } from '@nestjs/common';
@@ -18,7 +18,7 @@ import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/
 describe('CreateUserMessageUseCase', () => {
   let useCase: CreateUserMessageUseCase;
   let mockMessagesRepository: Partial<MessagesRepository>;
-  let mockUploadObjectUseCase: Partial<UploadObjectUseCase>;
+  let mockUploadObjectUseCase: Partial<UploadOrgObjectUseCase>;
   let mockDeleteObjectUseCase: Partial<DeleteObjectUseCase>;
   let mockContextService: Partial<ContextService>;
   let mockEventEmitter: { emitAsync: jest.Mock };
@@ -50,7 +50,7 @@ describe('CreateUserMessageUseCase', () => {
       providers: [
         CreateUserMessageUseCase,
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: mockUploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
@@ -121,6 +121,9 @@ describe('CreateUserMessageUseCase', () => {
 
       // Assert
       expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(mockUploadObjectUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ orgId: mockOrgId }),
+      );
       expect(mockMessagesRepository.create).toHaveBeenCalledWith(
         expect.any(UserMessage),
       );

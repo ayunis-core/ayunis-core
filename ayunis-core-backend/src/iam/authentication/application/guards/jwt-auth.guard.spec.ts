@@ -5,6 +5,11 @@ import type { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import type { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
+import {
+  OrgAccessError,
+  OrgRetrievalFailedError,
+} from 'src/iam/orgs/application/orgs.errors';
 
 interface GuardContext {
   context: ExecutionContext;
@@ -69,7 +74,9 @@ describe('JwtAuthGuard', () => {
     const { context, response } = createContext({
       refresh_token: 'expired-refresh-token',
     });
-    refreshTokenUseCase.execute.mockRejectedValue(new Error('expired'));
+    refreshTokenUseCase.execute.mockRejectedValue(
+      new InvalidTokenError('refresh token expired'),
+    );
 
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       UnauthorizedException,
@@ -93,5 +100,41 @@ describe('JwtAuthGuard', () => {
     await expect(guard.canActivate(context)).resolves.toBe(true);
     expect(request.cookies.access_token).toBe('renewed-access-token');
     expect(response.cookie).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves the session when access validation fails unexpectedly', async () => {
+    const lookupFailure = new OrgRetrievalFailedError('database unavailable');
+    const { context, response } = createContext({
+      refresh_token: 'valid-refresh-token',
+    });
+    parentCanActivate.mockRejectedValue(lookupFailure);
+
+    await expect(guard.canActivate(context)).rejects.toBe(lookupFailure);
+    expect(refreshTokenUseCase.execute).not.toHaveBeenCalled();
+    expect(response.clearCookie).not.toHaveBeenCalled();
+  });
+
+  it('preserves the session when token refresh fails unexpectedly', async () => {
+    const lookupFailure = new OrgRetrievalFailedError('database unavailable');
+    const { context, response } = createContext({
+      refresh_token: 'valid-refresh-token',
+    });
+    refreshTokenUseCase.execute.mockRejectedValue(lookupFailure);
+
+    await expect(guard.canActivate(context)).rejects.toBe(lookupFailure);
+    expect(response.clearCookie).not.toHaveBeenCalled();
+  });
+
+  it('clears an inactive organisation session', async () => {
+    const { context, response } = createContext({
+      refresh_token: 'revoked-refresh-token',
+    });
+    parentCanActivate.mockRejectedValue(new OrgAccessError());
+    refreshTokenUseCase.execute.mockRejectedValue(new OrgAccessError());
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(response.clearCookie).toHaveBeenCalledTimes(3);
   });
 });
