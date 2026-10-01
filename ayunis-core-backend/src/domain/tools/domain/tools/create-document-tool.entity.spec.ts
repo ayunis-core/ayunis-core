@@ -1,5 +1,5 @@
 import { CreateDocumentTool } from './create-document-tool.entity';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 describe('CreateDocumentTool', () => {
   let tool: CreateDocumentTool;
@@ -11,6 +11,11 @@ describe('CreateDocumentTool', () => {
   it('should have the correct tool type and name', () => {
     expect(tool.type).toBe(ToolType.CREATE_DOCUMENT);
     expect(tool.name).toBe('create_document');
+  });
+
+  it('tells the model it creates an in-chat Ayunis document rather than one in an external system', () => {
+    expect(tool.description).toContain('in-chat Ayunis document editor');
+    expect(tool.description).toContain('connected integration');
   });
 
   describe('validateParams', () => {

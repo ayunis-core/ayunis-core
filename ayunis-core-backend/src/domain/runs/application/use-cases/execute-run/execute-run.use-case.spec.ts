@@ -1226,7 +1226,7 @@ describe('ExecuteRunUseCase', () => {
   });
 
   it('includes MCP integration metadata in streamed and persisted tool calls', async () => {
-    const toolName = 'search_municipal_records';
+    const originalToolName = 'search_municipal_records';
     const integration = {
       id: integrationId,
       name: 'Municipal Records',
@@ -1234,7 +1234,7 @@ describe('ExecuteRunUseCase', () => {
     };
     const backendTool = new McpIntegrationTool(
       new McpTool(
-        toolName,
+        originalToolName,
         'Search municipal records',
         { type: 'object' },
         integrationId,
@@ -1243,6 +1243,7 @@ describe('ExecuteRunUseCase', () => {
       integration.name,
       integration.logoUrl,
     );
+    const toolName = backendTool.name;
     const runtimeTool = {
       name: toolName,
       description: 'Search municipal records',
@@ -1282,7 +1283,7 @@ describe('ExecuteRunUseCase', () => {
   });
 
   it('includes metadata for an MCP tool added by skill activation', async () => {
-    const toolName = 'search_procurement_system';
+    const originalToolName = 'search_procurement_system';
     const integration = {
       id: integrationId,
       name: 'Procurement System',
@@ -1293,7 +1294,7 @@ describe('ExecuteRunUseCase', () => {
     } as unknown as BackendTool;
     const activatedBackendTool = new McpIntegrationTool(
       new McpTool(
-        toolName,
+        originalToolName,
         'Search procurement notices',
         { type: 'object' },
         integrationId,
@@ -1302,6 +1303,7 @@ describe('ExecuteRunUseCase', () => {
       integration.name,
       integration.logoUrl,
     );
+    const toolName = activatedBackendTool.name;
     const activateRuntimeTool = {
       name: 'activate_skill',
       description: 'Activate a skill',

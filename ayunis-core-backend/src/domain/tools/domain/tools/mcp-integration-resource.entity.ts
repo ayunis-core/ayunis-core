@@ -1,9 +1,10 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { Tool } from '../tool.entity';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import type { UUID } from 'crypto';
 import type { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
+import { buildMcpCanonicalName } from 'src/domain/tools/domain/value-objects/mcp-canonical-name';
 
 const mcpResourceToolParameters = {
   type: 'object' as const,
@@ -15,11 +16,14 @@ const mcpResourceToolParameters = {
 
 type McpResourceToolParameters = FromSchema<typeof mcpResourceToolParameters>;
 
-function getDescription(mcpResource: McpResource): string {
+function getDescription(
+  mcpResource: McpResource,
+  integrationName: string,
+): string {
   const argumentList = mcpResource.arguments
     ?.map((arg) => `${arg.name}: ${arg.description}`)
     .join(', ');
-  return `Retrieve this resource from the MCP integration: ${mcpResource.name}.\nDescription: ${mcpResource.description ?? ''}\nURI: ${mcpResource.uri}\nArguments: ${argumentList}`;
+  return `Retrieve "${mcpResource.name}" from MCP integration "${integrationName}".\nDescription: ${mcpResource.description ?? ''}\nURI: ${mcpResource.uri}\nArguments: ${argumentList}`;
 }
 
 /**
@@ -40,8 +44,12 @@ export class McpIntegrationResource extends Tool {
     integrationLogoUrl: string | null,
   ) {
     super({
-      name: mcpResource.name,
-      description: getDescription(mcpResource),
+      name: buildMcpCanonicalName(
+        'resource',
+        mcpResource.name,
+        mcpResource.integrationId,
+      ),
+      description: getDescription(mcpResource, integrationName),
       parameters: mcpResourceToolParameters,
       type: ToolType.MCP_RESOURCE,
     });
