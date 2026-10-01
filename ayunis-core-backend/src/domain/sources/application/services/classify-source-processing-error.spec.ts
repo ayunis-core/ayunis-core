@@ -15,6 +15,10 @@ import {
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
+import {
+  StorageUnavailableError,
+  UploadFailedError,
+} from 'src/domain/storage/application/storage.errors';
 
 describe('classifySourceProcessingError', () => {
   it.each([
@@ -41,6 +45,13 @@ describe('classifySourceProcessingError', () => {
       new DocumentConversionUnavailableError('invoice.docx'),
       Code.PROCESSING_UNAVAILABLE,
     ],
+    [
+      new StorageUnavailableError({
+        diagnostics: { upstreamCode: 'SlowDown' },
+      }),
+      Code.PROCESSING_UNAVAILABLE,
+    ],
+    [new UploadFailedError(), Code.PROCESSING_FAILED],
     [new FileRetrieverUnauthorizedError(), Code.PROCESSING_FAILED],
     [new Error('The document could not be processed'), Code.PROCESSING_FAILED],
     ['Processing timed out', Code.PROCESSING_FAILED],
