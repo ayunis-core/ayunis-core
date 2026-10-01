@@ -5,6 +5,7 @@ import type {
 } from 'src/common/errors/base.error';
 import {
   extractProviderErrorDiagnostics,
+  hasRateLimitDiagnostics,
   type ProviderErrorDiagnostics,
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import {
@@ -109,17 +110,13 @@ function mapProviderFailure(
   });
 }
 
-const RATE_LIMIT_DIAGNOSTICS = new Set([
-  'no_capacity',
-  'rate_limit_exceeded',
-  'too_many_requests',
-]);
-
 function classifyKnownRateLimit(
   failure: ProviderFailureFacts,
   diagnostics: ProviderErrorDiagnostics,
 ): ProviderFailureFacts {
-  if (failure.kind !== 'unknown' || !isRateLimit(diagnostics)) return failure;
+  if (failure.kind !== 'unknown' || !hasRateLimitDiagnostics(diagnostics)) {
+    return failure;
+  }
   return {
     ...failure,
     kind: 'rate_limit',
@@ -128,14 +125,6 @@ function classifyKnownRateLimit(
       failure.upstreamRequestId ?? diagnostics.upstreamRequestId,
     retryAfterMs: failure.retryAfterMs ?? diagnostics.upstreamRetryAfterMs,
   };
-}
-
-function isRateLimit(diagnostics: ProviderErrorDiagnostics): boolean {
-  return (
-    diagnostics.upstreamStatus === 429 ||
-    RATE_LIMIT_DIAGNOSTICS.has(diagnostics.upstreamCode ?? '') ||
-    RATE_LIMIT_DIAGNOSTICS.has(diagnostics.upstreamType ?? '')
-  );
 }
 
 function collectProviderErrorDiagnostics(

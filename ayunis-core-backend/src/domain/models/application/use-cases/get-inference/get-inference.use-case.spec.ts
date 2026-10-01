@@ -10,6 +10,7 @@ import {
 } from 'src/domain/models/application/models.errors';
 import {
   ProviderConnectionError,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
@@ -104,6 +105,31 @@ describe('GetInferenceUseCase error mapping', () => {
     await expect(
       useCaseWithFailingHandler(upstream).execute(makeCommand()),
     ).rejects.toBeInstanceOf(ProviderTimeoutError);
+  });
+
+  it('classifies a portable rate limit retained only in provider diagnostics', async () => {
+    const rateLimit = new ModelProviderError({
+      kind: 'unknown',
+      stage: 'stream_consumption',
+      retryAfterMs: 8_538,
+      cause: Object.assign(new Error('sensitive provider response'), {
+        code: 'rate_limit_exceeded',
+        type: 'too_many_requests',
+      }),
+    });
+
+    const result = useCaseWithFailingHandler(rateLimit).execute(makeCommand());
+
+    await expect(result).rejects.toBeInstanceOf(ProviderRequestRejectedError);
+    await expect(result).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_REJECTED_MISTRAL',
+      context: expect.objectContaining({
+        upstreamStatus: 429,
+        upstreamCode: 'rate_limit_exceeded',
+        upstreamType: 'too_many_requests',
+        retryAfterMs: 8_538,
+      }),
+    });
   });
 
   it('keeps upstream 4xx responses as InferenceFailedError — potentially our bug', async () => {
