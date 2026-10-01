@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.46.0](https://github.com/ayunis-core/ayunis-core/compare/v2.45.0...v2.46.0) (2026-10-01)
+
+
+### Features
+
+* **chat:** search message content alongside titles (AYC-298) ([#1823](https://github.com/ayunis-core/ayunis-core/issues/1823)) ([23c9e34](https://github.com/ayunis-core/ayunis-core/commit/23c9e3407838e5552b48d2b16ae7d05a00a4b90c))
+
+
+### Bug Fixes
+
+* **chat:** keep undo after paste and transcription (AYC-1024) ([#1816](https://github.com/ayunis-core/ayunis-core/issues/1816)) ([871119f](https://github.com/ayunis-core/ayunis-core/commit/871119f44ad499ab64c50ae43784e1758eba71dd))
+* **models:** classify statusless provider rate limits (AYC-1065) ([#1824](https://github.com/ayunis-core/ayunis-core/issues/1824)) ([f785a78](https://github.com/ayunis-core/ayunis-core/commit/f785a787047d5fa66b0d3dacf2334434a7f9adb2))
+* **observability:** suppress raw model idle signals (AYC-1064) ([#1819](https://github.com/ayunis-core/ayunis-core/issues/1819)) ([b6926a4](https://github.com/ayunis-core/ayunis-core/commit/b6926a4716d9f45562d052738aa8354e7dd87502))
+* **runs:** fall back to the upstream MCP tool name on replay (AYC-1102) ([#1829](https://github.com/ayunis-core/ayunis-core/issues/1829)) ([a4abe2a](https://github.com/ayunis-core/ayunis-core/commit/a4abe2a3b5bbb5fa85a6737189dbca1d6d54485b))
+* **tools:** namespace MCP capabilities by integration (AYC-1102) ([#1826](https://github.com/ayunis-core/ayunis-core/issues/1826)) ([af8e760](https://github.com/ayunis-core/ayunis-core/commit/af8e760d7a40085cec34575a7b962e1b6629b2b4))
+
+
+### Miscellaneous
+
+* **deps:** patch @xhmikosr/decompress path traversal advisory (AYC-000) ([#1827](https://github.com/ayunis-core/ayunis-core/issues/1827)) ([f19d215](https://github.com/ayunis-core/ayunis-core/commit/f19d2156a4b577f1fb51d4062404f3d3266626e8))
+
+
+### CI/CD
+
+* cache backend lint, parallelize frontend checks, and raise e2e workers (AYC-0000) ([#1757](https://github.com/ayunis-core/ayunis-core/issues/1757)) ([376d75d](https://github.com/ayunis-core/ayunis-core/commit/376d75d8b0e7a91ebb868b12f30db6a9c71982a1))
+
 ## [2.45.0](https://github.com/ayunis-core/ayunis-core/compare/v2.44.1...v2.45.0) (2026-09-30)
 
 
