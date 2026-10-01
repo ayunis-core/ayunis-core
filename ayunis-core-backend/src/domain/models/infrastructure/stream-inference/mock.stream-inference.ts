@@ -18,6 +18,10 @@ import { TextMessageContent } from 'src/domain/messages/domain/message-contents/
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import type { Model } from 'src/domain/models/domain/model.entity';
+import {
+  mcpApprovalResponse,
+  parseMcpApprovalTitle,
+} from './mock-mcp-approval.response';
 
 /**
  * Mock streaming inference handler for testing environments.
@@ -98,6 +102,10 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
           return providerTextResponse(
             `research-complete::${defaultResponseText}`,
           );
+        }
+        const approvalTitle = parseMcpApprovalTitle(lastUserText);
+        if (approvalTitle !== null) {
+          return mcpApprovalResponse(request, approvalTitle);
         }
         if (lastUserText === MALFORMED_TOOL_CALL_RETRY_PROMPT) {
           if (!malformedAttemptEmitted) {

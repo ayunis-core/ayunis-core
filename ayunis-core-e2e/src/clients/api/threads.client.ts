@@ -54,3 +54,15 @@ export async function deleteThread(
 ): Promise<void> {
   await generatedApi.threadsControllerDelete(threadId, { api });
 }
+
+export async function addMcpIntegrationToThread(
+  api: APIRequestContext,
+  threadId: string,
+  integrationId: string,
+): Promise<void> {
+  await generatedApi.threadMcpIntegrationsControllerAddMcpIntegration(
+    threadId,
+    integrationId,
+    { api },
+  );
+}

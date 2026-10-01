@@ -414,4 +414,72 @@ describe('MockStreamInferenceHandler runtime provider', () => {
       outputTokens: 0,
     });
   });
+
+  describe('MCP approval scenario', () => {
+    const approvalRequest = (
+      messages: ProviderRequest['messages'],
+    ): ProviderRequest => ({
+      instructions: '',
+      messages,
+      tools: [
+        { name: 'create_document', description: '', parameters: {} },
+        {
+          name: 'mcp__tool__create_document__b0eb63cb',
+          description: '',
+          parameters: {},
+        },
+      ],
+    });
+    const userTurn = {
+      role: 'user' as const,
+      content: [
+        { type: 'text' as const, text: 'E2E trigger mcp approval: Notes' },
+      ],
+    };
+
+    it('calls the namespaced integration tool while the built-in is also offered', async () => {
+      const provider = new MockStreamInferenceHandler().resolveProvider(model);
+
+      const chunks = await collect(
+        provider.stream(approvalRequest([userTurn])),
+      );
+
+      expect(chunks[0].toolCallDeltas).toEqual([
+        {
+          index: 0,
+          id: 'mock-mcp-approval-call',
+          name: 'mcp__tool__create_document__b0eb63cb',
+          argumentsDelta: '{"title":"Notes"}',
+        },
+      ]);
+      expect(chunks.at(-1)?.finishReason).toBe('tool_calls');
+    });
+
+    it('echoes the tool result once the call was settled', async () => {
+      const provider = new MockStreamInferenceHandler().resolveProvider(model);
+
+      const chunks = await collect(
+        provider.stream(
+          approvalRequest([
+            userTurn,
+            {
+              role: 'tool_result',
+              content: [
+                {
+                  type: 'tool_result',
+                  toolCallId: 'mock-mcp-approval-call',
+                  toolName: 'mcp__tool__create_document__b0eb63cb',
+                  result: 'stub create_document ok',
+                },
+              ],
+            },
+          ]),
+        ),
+      );
+
+      expect(chunks.map((chunk) => chunk.textDelta ?? '').join('')).toBe(
+        'mcp-approval-complete::stub create_document ok',
+      );
+    });
+  });
 });
