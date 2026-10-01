@@ -159,6 +159,11 @@ describe('exceptionTypeOf', () => {
 // A real instance of each error an `ignoreErrors` entry claims to suppress.
 // Keyed by suppression id so an entry cannot be added without one.
 const ERROR_SAMPLES: Record<string, () => Error> = {
+  // IdleTimeoutError is runtime-internal; its package test pins this shape.
+  'runtime-model-idle-timeout': () =>
+    Object.assign(new Error('Model provider stream was idle'), {
+      code: 'MODEL_CALL_IDLE_TIMEOUT',
+    }),
   // The exact object Node mints for AbortController.abort(): name
   // 'AbortError', numeric code 20 — exceptionType stringifies to '20'.
   'abort-signal-cancellation': () =>
@@ -304,11 +309,14 @@ describe('SUPPRESSIONS registry', () => {
       expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
     });
 
-    it('leaves the classified provider taxonomy reporting', () => {
+    it('suppresses the runtime idle signal but leaves its classified timeout reporting', () => {
+      const idleSignal = ERROR_SAMPLES['runtime-model-idle-timeout']();
       const classified = new ProviderTimeoutError({
         provider: 'openai',
         underlyingCode: 'ERR_SOCKET_TIMEOUT',
       });
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(idleSignal));
       expect(exceptionTypeOf(classified)).toBe(
         'PROVIDER_UNAVAILABLE_TIMEOUT_OPENAI',
       );
