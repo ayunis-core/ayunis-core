@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { Tool } from '../tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 const editDocumentToolParameters = {
   type: 'object' as const,
@@ -50,7 +50,7 @@ export class EditDocumentTool extends Tool {
     super({
       name: ToolType.EDIT_DOCUMENT,
       description:
-        'Apply targeted edits to an existing document using search-and-replace operations. Use this for small, surgical changes like fixing typos, updating a section, or inserting text.',
+        'Apply targeted edits to an existing document using search-and-replace operations. Use this for small, surgical changes like fixing typos, updating a section, or inserting text. This is the in-chat Ayunis document editor, not a document in an external system such as a wiki or document management tool; for those, use the tools of the connected integration.',
       descriptionLong:
         'Use edit_document for targeted changes to existing documents: fixing typos, updating specific sections, inserting paragraphs, or making other small edits. ' +
         'This tool applies search-and-replace edits sequentially to the current document content. ' +
