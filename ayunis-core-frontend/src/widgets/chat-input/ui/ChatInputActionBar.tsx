@@ -13,6 +13,7 @@ import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
+import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
 
 interface ChatInputActionBarProps {
   isSubmitting: boolean;
@@ -47,14 +48,23 @@ function appendTranscription(
   textareaRef: RefObject<HTMLTextAreaElement | null>,
   text: string,
 ): void {
+  const textarea = textareaRef.current;
+  const inserted =
+    textarea !== null &&
+    insertTextPreservingUndo(
+      textarea,
+      textarea.value ? ` ${text}` : text,
+      'end',
+    );
+  if (inserted) return;
+
   setMessage((prev) => (prev ? `${prev} ${text}` : text));
   setTimeout(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.focus();
-      const length = textarea.value.length;
-      textarea.setSelectionRange(length, length);
-    }
+    const node = textareaRef.current;
+    if (!node) return;
+    node.focus();
+    const length = node.value.length;
+    node.setSelectionRange(length, length);
   }, 0);
 }
 

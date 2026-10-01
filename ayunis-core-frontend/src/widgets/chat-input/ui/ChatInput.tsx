@@ -24,6 +24,7 @@ import {
 import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
 import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
 import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
+import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
 import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
 import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
@@ -288,32 +289,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const hasPendingImages = pendingImages.length > 0;
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
-      // Ensure emojis are preserved when pasting
-      // Get the pasted text from clipboard
       const pastedText = e.clipboardData.getData('text/plain');
-
-      // If there's no text or it's empty, let default behavior handle it
       if (!pastedText) return;
 
-      // Prevent default to handle paste manually
-      e.preventDefault();
-
-      const target = e.currentTarget;
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-
-      // Insert the pasted text at cursor position, preserving emojis
-      const newValue =
-        message.substring(0, start) + pastedText + message.substring(end);
-
-      setMessage(newValue);
-
-      // Set cursor position after pasted content
-      // Need to wait for React to update
-      setTimeout(() => {
-        const newCursorPos = start + pastedText.length;
-        target.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
+      if (insertTextPreservingUndo(e.currentTarget, pastedText)) {
+        e.preventDefault();
+      }
     }
 
     return (
