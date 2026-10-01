@@ -27,6 +27,7 @@ import {
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { toWellFormedText } from 'src/common/util/unicode-sanitizer';
 
 @Injectable()
 export class SourceMapper {
@@ -247,7 +248,7 @@ export class SourceMapper {
 
     const details = new CSVDataSourceDetailsRecord();
     details.id = source.id;
-    details.data = source.data;
+    details.data = this.toStoredCsvData(source.data);
     details.source = record;
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
@@ -256,5 +257,20 @@ export class SourceMapper {
     record.dataSourceDetails = details;
 
     return { source: record, details };
+  }
+
+  /**
+   * PostgreSQL rejects NUL and lone UTF-16 surrogates inside jsonb (22P05),
+   * so every write of CSV cells — full saves and the processing update —
+   * goes through here instead of trusting the caller.
+   */
+  toStoredCsvData(data: { headers: string[]; rows: string[][] }): {
+    headers: string[];
+    rows: string[][];
+  } {
+    return {
+      headers: data.headers.map(toWellFormedText),
+      rows: data.rows.map((row) => row.map(toWellFormedText)),
+    };
   }
 }
