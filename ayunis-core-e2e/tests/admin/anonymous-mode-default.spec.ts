@@ -61,7 +61,7 @@ test("admin default reaches members, preserves settings, and permits per-chat op
       internetSearchEnabled: false,
     });
     expect(await readDefault()).toEqual({ anonymousModeByDefault: false });
-    await expect(readDefault(unauthenticatedApi)).rejects.toThrow("HTTP 403");
+    await expect(readDefault(unauthenticatedApi)).rejects.toThrow("HTTP 401");
     await expect(
       update({ anonymousModeByDefault: true }, memberApi),
     ).rejects.toThrow("HTTP 403");
