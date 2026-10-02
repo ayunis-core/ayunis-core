@@ -19,7 +19,7 @@
     "install:browsers": "playwright install chromium"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.0",
     "axios": "^1.13.2",
