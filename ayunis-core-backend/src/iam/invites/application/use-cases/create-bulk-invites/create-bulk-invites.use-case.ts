@@ -11,6 +11,7 @@ import { BulkInviteTeamResolverService } from 'src/iam/invites/application/servi
 import {
   BulkInviteValidationFailedError,
   InvalidSeatsError,
+  SeatLimitReachedError,
   UnexpectedInviteError,
 } from 'src/iam/invites/application/invites.errors';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
@@ -21,8 +22,6 @@ import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/sub
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
-import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
-import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { InviteCreatedEventPublisher } from 'src/iam/invites/application/services/invite-created-event-publisher.service';
 
@@ -40,7 +39,6 @@ export class CreateBulkInvitesUseCase {
   constructor(
     private readonly invitesRepository: InvitesRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
-    private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly configService: ConfigService,
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
     private readonly validator: BulkInviteValidatorService,
@@ -104,7 +102,7 @@ export class CreateBulkInvitesUseCase {
       throw new BulkInviteValidationFailedError(validationErrors);
     }
 
-    await this.handleSeatsForBulkInvites(command);
+    await this.ensureCloudSeatsAvailable(command);
     const invites = this.buildInvites(command, teamResolution.teamIdsByInvite);
     await this.invitesRepository.createMany(invites);
     this.logger.debug(
@@ -136,7 +134,7 @@ export class CreateBulkInvitesUseCase {
     );
   }
 
-  private async handleSeatsForBulkInvites(
+  private async ensureCloudSeatsAvailable(
     command: CreateBulkInvitesCommand,
   ): Promise<void> {
     const isCloud = this.configService.get<boolean>('app.isCloudHosted', false);
@@ -163,15 +161,12 @@ export class CreateBulkInvitesUseCase {
       subscription.availableSeats !== null &&
       subscription.availableSeats < command.invites.length
     ) {
-      const additionalSeats =
-        command.invites.length - subscription.availableSeats;
-      await this.updateSeatsUseCase.execute(
-        new UpdateSeatsCommand({
-          orgId: command.orgId,
-          requestingUserId: command.userId,
-          noOfSeats: subscription.subscription.noOfSeats + additionalSeats,
-        }),
-      );
+      throw new SeatLimitReachedError({
+        orgId: command.orgId,
+        noOfSeats: subscription.subscription.noOfSeats,
+        availableSeats: subscription.availableSeats,
+        requestedSeats: command.invites.length,
+      });
     }
   }
 

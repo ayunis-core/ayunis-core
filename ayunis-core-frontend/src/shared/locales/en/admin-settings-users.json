@@ -92,7 +92,8 @@
     "emailNotAvailable": "Invite not possible.",
     "userAlreadyExists": "This email address is already registered as a user in your organization.",
     "emailProviderBlacklisted": "Private email addresses (e.g. Gmail, GMX, Web.de, t-online) are not allowed for security reasons. Please use a work email address.",
-    "rateLimitExceeded": "You've created a lot of invitations in a short time. Please wait a few minutes before creating more."
+    "rateLimitExceeded": "You've created a lot of invitations in a short time. Please wait a few minutes before creating more.",
+    "seatLimitReached": "All seats in your subscription are taken. Please contact us to add more seats."
   },
   "inviteResend": {
     "success": "Invite resent successfully!",
@@ -180,6 +181,7 @@
     "close": "Close",
     "error": "Failed to create invites. Please try again.",
     "validationFailed": "Some invites failed validation. Please check the errors.",
+    "seatLimitReached": "Your subscription does not have enough available seats for this import. No invites were created. Please contact us to add more seats.",
     "parseError": "Failed to parse CSV file. Please check the format.",
     "invalidHeaders": "Invalid CSV headers. Expected: email,role or email,role,teams",
     "invalidRowFormat": "Invalid row format",

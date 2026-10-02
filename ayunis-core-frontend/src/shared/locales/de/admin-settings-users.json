@@ -93,7 +93,8 @@
     "emailNotAvailable": "Einladung nicht möglich.",
     "userAlreadyExists": "Diese E-Mail-Adresse ist bereits als Benutzer in Ihrer Organisation registriert.",
     "emailProviderBlacklisted": "Private E-Mail-Adressen (z. B. Gmail, GMX, Web.de, t-online) sind aus Sicherheitsgründen nicht erlaubt. Bitte verwenden Sie eine geschäftliche E-Mail-Adresse.",
-    "rateLimitExceeded": "Sie haben in kurzer Zeit viele Einladungen erstellt. Bitte warten Sie einige Minuten, bevor Sie weitere erstellen."
+    "rateLimitExceeded": "Sie haben in kurzer Zeit viele Einladungen erstellt. Bitte warten Sie einige Minuten, bevor Sie weitere erstellen.",
+    "seatLimitReached": "Alle Plätze Ihres Abonnements sind belegt. Bitte kontaktieren Sie uns, um weitere Plätze hinzuzufügen."
   },
   "inviteResend": {
     "success": "Einladung erfolgreich erneut gesendet!",
@@ -181,6 +182,7 @@
     "close": "Schließen",
     "error": "Fehler beim Erstellen der Einladungen. Bitte versuchen Sie es erneut.",
     "validationFailed": "Einige Einladungen haben die Validierung nicht bestanden. Bitte überprüfen Sie die Fehler.",
+    "seatLimitReached": "Ihr Abonnement hat nicht genügend freie Plätze für diesen Import. Es wurde keine Einladung erstellt. Bitte kontaktieren Sie uns, um weitere Plätze hinzuzufügen.",
     "parseError": "CSV-Datei konnte nicht gelesen werden. Bitte überprüfen Sie das Format.",
     "invalidHeaders": "Ungültige CSV-Spalten. Erwartet: email,role oder email,role,teams",
     "invalidRowFormat": "Ungültiges Zeilenformat",
