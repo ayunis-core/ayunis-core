@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
@@ -8,6 +15,7 @@ import {
   SubscriptionNotFoundError,
   SubscriptionNotCancelledError,
   SubscriptionExpiredError,
+  SubscriptionAccessOverlapError,
 } from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
@@ -19,6 +27,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 const mockOrgId = randomUUID();
 const mockUserId = randomUUID();
@@ -80,6 +89,7 @@ describe('UncancelSubscriptionUseCase', () => {
           provide: SubscriptionRepository,
           useValue: {
             findLatestByOrgId: jest.fn(),
+            findByOrgId: jest.fn().mockResolvedValue([]),
             update: jest.fn(),
           },
         },
@@ -90,6 +100,10 @@ describe('UncancelSubscriptionUseCase', () => {
         {
           provide: ContextService,
           useValue: { get: jest.fn() },
+        },
+        {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: { execute: jest.fn() },
         },
       ],
     }).compile();
@@ -107,6 +121,7 @@ describe('UncancelSubscriptionUseCase', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-06-15T12:00:00.000Z'));
 
+    subscriptionRepository.findByOrgId.mockResolvedValue([]);
     contextService.get.mockImplementation((key) => {
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
@@ -173,6 +188,27 @@ describe('UncancelSubscriptionUseCase', () => {
         }),
       }),
     );
+  });
+
+  it('rejects uncancelling when it would overlap another access period', async () => {
+    const subscription = createUsageBased({
+      startsAt: new Date('2025-06-01T00:00:00.000Z'),
+      cancelledAt: new Date('2025-06-10T00:00:00.000Z'),
+    });
+    const existing = createSeatBased({
+      startsAt: new Date('2025-01-01T00:00:00.000Z'),
+    });
+    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([
+      existing,
+      subscription,
+    ]);
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      SubscriptionAccessOverlapError,
+    );
+
+    expect(subscriptionRepository.update).not.toHaveBeenCalled();
   });
 
   it('should reject uncancelling a seat-based subscription past its billing period', async () => {

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
@@ -14,6 +15,9 @@ import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappe
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
 import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
+import { accessPeriodsOverlap } from 'src/iam/subscriptions/application/util/access-periods-overlap';
+import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 @Injectable()
 export class CreateSubscriptionUseCase {
@@ -24,8 +28,10 @@ export class CreateSubscriptionUseCase {
     private readonly subscriptionFactory: SubscriptionFactory,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: CreateSubscriptionCommand): Promise<Subscription> {
     try {
       validateSubscriptionAccess(
@@ -33,10 +39,10 @@ export class CreateSubscriptionUseCase {
         command.requestingUserId,
         command.orgId,
       );
-
-      await this.ensureNoExistingSubscription(command.orgId);
+      await this.acquireAllocationLock.execute(command.orgId);
 
       const subscription = await this.subscriptionFactory.build(command);
+      await this.ensureNoOverlappingSubscription(subscription);
 
       const createdSubscription =
         await this.subscriptionRepository.create(subscription);
@@ -91,19 +97,29 @@ export class CreateSubscriptionUseCase {
       });
   }
 
-  private async ensureNoExistingSubscription(
-    orgId: Subscription['orgId'],
+  private async ensureNoOverlappingSubscription(
+    candidate: Subscription,
   ): Promise<void> {
-    const subscriptions = await this.subscriptionRepository.findByOrgId(orgId);
-    const hasNonCancelled = subscriptions.some((s) => !s.cancelledAt);
-    if (hasNonCancelled) {
+    const subscriptions = await this.subscriptionRepository.findByOrgId(
+      candidate.orgId,
+    );
+    const hasOverlap = subscriptions.some((subscription) => {
+      return accessPeriodsOverlap(
+        {
+          startsAt: subscription.startsAt,
+          accessEndsAt: getEffectiveAccessEnd(subscription),
+        },
+        candidate,
+      );
+    });
+    if (hasOverlap) {
       this.logger.warn(
         {
-          orgId,
+          orgId: candidate.orgId,
         },
         'Subscription already exists for organization',
       );
-      throw new SubscriptionAlreadyExistsError(orgId);
+      throw new SubscriptionAlreadyExistsError(candidate.orgId);
     }
   }
 }

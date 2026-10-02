@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
 import { isActive } from './is-active';
-import { SeatBasedSubscription } from '../../domain/seat-based-subscription.entity';
-import { UsageBasedSubscription } from '../../domain/usage-based-subscription.entity';
-import { SubscriptionBillingInfo } from '../../domain/subscription-billing-info.entity';
-import { RenewalCycle } from '../../domain/value-objects/renewal-cycle.enum';
+import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
+import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
@@ -19,6 +19,7 @@ function createBillingInfo(): SubscriptionBillingInfo {
 function createSeatBased(
   overrides: Partial<{
     cancelledAt: Date | null;
+    accessEndsAt: Date | null;
     renewalCycleAnchor: Date;
     startsAt: Date;
   }> = {},
@@ -31,6 +32,7 @@ function createSeatBased(
     renewalCycle: RenewalCycle.MONTHLY,
     renewalCycleAnchor: anchor,
     cancelledAt: overrides.cancelledAt ?? null,
+    accessEndsAt: overrides.accessEndsAt ?? null,
     startsAt: overrides.startsAt ?? anchor,
     billingInfo: createBillingInfo(),
   });
@@ -39,6 +41,7 @@ function createSeatBased(
 function createUsageBased(
   overrides: Partial<{
     cancelledAt: Date | null;
+    accessEndsAt: Date | null;
     startsAt: Date;
   }> = {},
 ): UsageBasedSubscription {
@@ -46,6 +49,7 @@ function createUsageBased(
     orgId: randomUUID(),
     monthlyCredits: 1000,
     cancelledAt: overrides.cancelledAt ?? null,
+    accessEndsAt: overrides.accessEndsAt ?? null,
     startsAt: overrides.startsAt ?? new Date('2025-01-01'),
     billingInfo: createBillingInfo(),
   });
@@ -70,6 +74,30 @@ describe('isActive', () => {
 
   it('should return true for a non-cancelled usage-based subscription', () => {
     expect(isActive(createUsageBased())).toBe(true);
+  });
+
+  it('stops serving before cancellation when access ended explicitly', () => {
+    expect(
+      isActive(
+        createSeatBased({
+          cancelledAt: new Date('2025-06-20T00:00:00.000Z'),
+          accessEndsAt: new Date('2025-06-01T00:00:00.000Z'),
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it('serves until but not including its explicit access end', () => {
+    const subscription = createUsageBased({
+      cancelledAt: new Date('2025-06-01T00:00:00.000Z'),
+      accessEndsAt: new Date('2025-06-15T12:00:00.000Z'),
+    });
+
+    jest.setSystemTime(new Date('2025-06-15T11:59:59.999Z'));
+    expect(isActive(subscription)).toBe(true);
+
+    jest.setSystemTime(subscription.accessEndsAt!);
+    expect(isActive(subscription)).toBe(false);
   });
 
   it('should return false for a cancelled usage-based subscription', () => {
