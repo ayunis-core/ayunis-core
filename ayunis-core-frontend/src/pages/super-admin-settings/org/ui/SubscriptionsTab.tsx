@@ -72,6 +72,7 @@ export default function SubscriptionsTab({
         orgId={orgId}
       />
       <SubscriptionHistorySection
+        orgId={orgId}
         subscriptions={subscriptionHistory}
         activeCount={activeSubscriptionCount}
       />

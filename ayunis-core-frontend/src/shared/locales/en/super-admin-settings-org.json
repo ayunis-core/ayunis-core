@@ -90,6 +90,7 @@
     "description": "Every subscription belonging to this organization, including older and cancelled records.",
     "latest": "Latest",
     "notCancelled": "—",
+    "noAccessEnd": "Open-ended",
     "multipleActive": "{{count}} subscriptions are currently serving this organization. This view lists all of them instead of picking one.",
     "status": {
       "ACTIVE": "Active",
@@ -107,12 +108,37 @@
       "createdAt": "Created",
       "startsAt": "Starts",
       "cancelledAt": "Cancelled",
+      "accessEndsAt": "Access ends",
       "details": "Details"
     },
     "details": {
       "seats": "{{count}} seats",
       "credits": "{{count}} monthly credits",
       "none": "—"
+    }
+  },
+  "subscriptionOverlap": {
+    "action": "Resolve overlap",
+    "title": "Resolve subscription overlap",
+    "description": "Select the subscription that should remain authoritative, set the exact access end for every conflicting subscription, and record why this correction is required.",
+    "authoritative": "Authoritative subscription",
+    "authoritativePlaceholder": "Select the subscription that remains active",
+    "subscriptionLabel": "{{type}}, starts {{date}}",
+    "accessEnd": "Access end for {{subscription}}",
+    "reason": "Correction reason",
+    "reasonPlaceholder": "Reference the contract transition or support case",
+    "cancel": "Cancel",
+    "confirm": "Apply correction",
+    "resolving": "Applying...",
+    "success": "Subscription overlap resolved",
+    "invalidCorrection": "The correction does not resolve the current overlap. Refresh the page and verify every date.",
+    "unauthorized": "You are not authorized to correct subscription access.",
+    "error": "The subscription overlap could not be resolved.",
+    "validation": {
+      "required": "This field is required",
+      "notFuture": "The access end cannot be in the future",
+      "maxLength": "Use 500 characters or fewer",
+      "invalid": "Check the selected subscription, dates, and reason"
     }
   },
   "licenseSeats": {

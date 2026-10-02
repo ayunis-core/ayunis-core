@@ -1,5 +1,9 @@
 import type { TFunction } from 'i18next';
-import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+} from '@ayunis/ui/components/alert';
 import { Badge } from '@ayunis/ui/components/badge';
 import {
   Card,
@@ -24,13 +28,16 @@ import {
   shouldShowSubscriptionHistory,
   subscriptionHistoryBadgeVariant,
 } from '@/pages/super-admin-settings/org/lib/subscription-history';
+import ResolveSubscriptionOverlapDialog from './ResolveSubscriptionOverlapDialog';
 
 interface SubscriptionHistorySectionProps {
+  orgId: string;
   subscriptions: SubscriptionHistoryItem[];
   activeCount: number;
 }
 
 export default function SubscriptionHistorySection({
+  orgId,
   subscriptions,
   activeCount,
 }: Readonly<SubscriptionHistorySectionProps>) {
@@ -51,6 +58,12 @@ export default function SubscriptionHistorySection({
           <AlertDescription>
             {t('subscriptionHistory.multipleActive', { count: activeCount })}
           </AlertDescription>
+          <AlertAction>
+            <ResolveSubscriptionOverlapDialog
+              orgId={orgId}
+              subscriptions={subscriptions}
+            />
+          </AlertAction>
         </Alert>
       )}
       <Card data-testid="subscription-history">
@@ -74,6 +87,9 @@ export default function SubscriptionHistorySection({
                 </TableHead>
                 <TableHead>
                   {t('subscriptionHistory.columns.cancelledAt')}
+                </TableHead>
+                <TableHead>
+                  {t('subscriptionHistory.columns.accessEndsAt')}
                 </TableHead>
                 <TableHead>
                   {t('subscriptionHistory.columns.details')}
@@ -126,6 +142,11 @@ function SubscriptionHistoryRow({
         {subscription.cancelledAt
           ? formatDate(subscription.cancelledAt)
           : t('subscriptionHistory.notCancelled')}
+      </TableCell>
+      <TableCell>
+        {subscription.accessEndsAt
+          ? formatDate(subscription.accessEndsAt)
+          : t('subscriptionHistory.noAccessEnd')}
       </TableCell>
       <TableCell>{subscriptionDetails(subscription, t)}</TableCell>
     </TableRow>

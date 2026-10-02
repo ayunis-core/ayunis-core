@@ -20,8 +20,15 @@ export interface SubscriptionHistoryItem {
   createdAt: string;
   startsAt: string;
   cancelledAt?: string | null;
+  accessEndsAt: string | null;
   noOfSeats?: number;
   monthlyCredits?: number;
+}
+
+export interface ResolveSubscriptionOverlapFormData {
+  authoritativeSubscriptionId: string;
+  accessEndsAtBySubscriptionId: Record<string, string>;
+  reason: string;
 }
 
 export interface UpdateOrgNameFormData {

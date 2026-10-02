@@ -3,7 +3,7 @@ import {
   useInvitesControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { InviteCreateData } from '../model/openapi';
+import type { InviteCreateData } from '@/pages/admin-settings/users-settings/model/openapi';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';
@@ -37,6 +37,9 @@ export function useInviteCreate(
               break;
             case 'RATE_LIMIT_EXCEEDED':
               showError(t('inviteCreate.rateLimitExceeded'));
+              break;
+            case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+              showError(t('inviteCreate.multipleActiveSubscriptions'));
               break;
             default:
               showError(t('inviteCreate.error'));
