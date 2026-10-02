@@ -7,6 +7,8 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import type { DataSourceProcessingTarget } from 'src/domain/sources/application/ports/data-source-processing.port';
@@ -150,6 +152,7 @@ export class StartDataSourceProcessingUseCase {
       await this.tryMarkSourcesFailed(
         sources,
         'Failed to upload file to storage',
+        classifySourceProcessingError(error),
       );
       throw error;
     }
@@ -221,6 +224,7 @@ export class StartDataSourceProcessingUseCase {
   private async tryMarkSourcesFailed(
     sources: CSVDataSource[],
     errorMessage: string,
+    errorCode?: SourceProcessingErrorCode,
   ): Promise<void> {
     for (const source of sources) {
       try {
@@ -228,6 +232,7 @@ export class StartDataSourceProcessingUseCase {
           new MarkSourceFailedCommand({
             sourceId: source.id,
             errorMessage,
+            errorCode,
           }),
         );
       } catch (err) {

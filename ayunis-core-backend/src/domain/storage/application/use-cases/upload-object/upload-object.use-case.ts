@@ -8,8 +8,8 @@ import {
   BucketNotFoundError,
   InvalidObjectNameError,
   StoragePermissionDeniedError,
-  UploadFailedError,
 } from 'src/domain/storage/application/storage.errors';
+import { wrapUploadFailure } from 'src/domain/storage/application/util/wrap-upload-failure.helper';
 import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 
 @Injectable()
@@ -74,7 +74,7 @@ export class UploadObjectUseCase {
         { err: error as Error, fileName: command.objectName },
         'Failed to upload object',
       );
-      throw new UploadFailedError();
+      throw wrapUploadFailure(error);
     }
   }
 

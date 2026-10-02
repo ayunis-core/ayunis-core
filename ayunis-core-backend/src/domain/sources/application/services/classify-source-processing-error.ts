@@ -13,6 +13,7 @@ import {
   SpreadsheetParseTimeoutError,
 } from 'src/domain/sources/application/sources.errors';
 import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import { StorageUnavailableError } from 'src/domain/storage/application/storage.errors';
 
 export function classifySourceProcessingError(error: unknown): Code {
   if (error instanceof TooManyPagesError)
@@ -31,7 +32,8 @@ export function classifySourceProcessingError(error: unknown): Code {
     return Code.PROCESSING_TIMEOUT;
   if (
     error instanceof ProviderUnavailableError ||
-    error instanceof DocumentConversionUnavailableError
+    error instanceof DocumentConversionUnavailableError ||
+    error instanceof StorageUnavailableError
   )
     return Code.PROCESSING_UNAVAILABLE;
   return Code.PROCESSING_FAILED;

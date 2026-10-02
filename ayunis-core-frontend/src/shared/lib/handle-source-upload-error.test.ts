@@ -24,4 +24,14 @@ describe('handleSourceUploadError', () => {
 
     expect(showError).toHaveBeenCalledWith('sources.fileSourceUnreadableError');
   });
+
+  it('shows the service-busy message when object storage is temporarily unavailable', () => {
+    extractErrorData.mockReturnValue({ code: 'STORAGE_UNAVAILABLE' });
+
+    handleSourceUploadError(new Error('upload failed'), t);
+
+    expect(showError).toHaveBeenCalledWith(
+      'sources.fileSourceServiceBusyError',
+    );
+  });
 });

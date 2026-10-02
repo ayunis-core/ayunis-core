@@ -19,6 +19,8 @@ import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cas
 import type { ContextService } from 'src/common/context/services/context.service';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import { StorageUnavailableError } from 'src/domain/storage/application/storage.errors';
 import {
   EmptyFileDataError,
   UnexpectedSourceError,
@@ -200,6 +202,24 @@ describe('StartDataSourceProcessingUseCase', () => {
     );
     expect(markSourceFailed.execute).toHaveBeenCalledTimes(2);
     expect(enqueue.execute).not.toHaveBeenCalled();
+  });
+
+  it('marks every sheet source unavailable, not failed, when object storage is down', async () => {
+    parser.listDataSheets.mockResolvedValue(['A', 'B']);
+    const storageOutage = new StorageUnavailableError({
+      diagnostics: { upstreamCode: 'SlowDown' },
+    });
+    uploadObject.execute.mockRejectedValue(storageOutage);
+
+    await expect(useCase.execute(spreadsheetCommand())).rejects.toBe(
+      storageOutage,
+    );
+    expect(markSourceFailed.execute).toHaveBeenCalledTimes(2);
+    for (const [command] of markSourceFailed.execute.mock.calls) {
+      expect(command.errorCode).toBe(
+        SourceProcessingErrorCode.PROCESSING_UNAVAILABLE,
+      );
+    }
   });
 
   it('marks sources FAILED and removes the uploaded file when enqueueing fails', async () => {

@@ -16,6 +16,11 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import {
+  StorageUnavailableError,
+  UploadFailedError,
+} from 'src/domain/storage/application/storage.errors';
 
 describe('StartDocumentProcessingUseCase', () => {
   let useCase: StartDocumentProcessingUseCase;
@@ -151,9 +156,7 @@ describe('StartDocumentProcessingUseCase', () => {
   });
 
   it('should mark source as FAILED when MinIO upload fails', async () => {
-    mockUploadObjectUseCase.execute.mockRejectedValue(
-      new Error('MinIO connection refused'),
-    );
+    mockUploadObjectUseCase.execute.mockRejectedValue(new UploadFailedError());
 
     const command = new StartDocumentProcessingCommand({
       fileData: Buffer.from('fake pdf content'),
@@ -167,11 +170,35 @@ describe('StartDocumentProcessingUseCase', () => {
     expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         errorMessage: 'Failed to upload file to storage',
+        errorCode: SourceProcessingErrorCode.PROCESSING_FAILED,
       }),
     );
 
     // MinIO file should NOT be cleaned up (upload failed, nothing to clean)
     expect(mockDeleteObjectUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('marks the source unavailable, not failed, when object storage is down', async () => {
+    const storageOutage = new StorageUnavailableError({
+      diagnostics: { upstreamCode: 'ECONNREFUSED' },
+    });
+    mockUploadObjectUseCase.execute.mockRejectedValue(storageOutage);
+
+    await expect(
+      useCase.execute(
+        new StartDocumentProcessingCommand({
+          fileData: Buffer.from('fake pdf content'),
+          fileName: 'Protokoll.pdf',
+          fileType: 'application/pdf',
+        }),
+      ),
+    ).rejects.toBe(storageOutage);
+
+    expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorCode: SourceProcessingErrorCode.PROCESSING_UNAVAILABLE,
+      }),
+    );
   });
 
   it('should mark source as FAILED and clean up MinIO when enqueue fails', async () => {
