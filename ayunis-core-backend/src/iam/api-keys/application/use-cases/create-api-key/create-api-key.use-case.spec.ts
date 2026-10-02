@@ -109,6 +109,20 @@ describe('CreateApiKeyUseCase', () => {
     expect(apiKey.name).toBe('staging deploy bot');
   });
 
+  it('stores a trimmed description and treats a blank one as none', async () => {
+    apiKeysRepository.create.mockImplementation(async (key) => key);
+
+    const described = await useCase.execute(
+      new CreateApiKeyCommand('CI bot', null, '  Deploys the portal  '),
+    );
+    const blank = await useCase.execute(
+      new CreateApiKeyCommand('CI bot', null, '   '),
+    );
+
+    expect(described.apiKey.description).toBe('Deploys the portal');
+    expect(blank.apiKey.description).toBeNull();
+  });
+
   it('rejects an empty/whitespace-only name with ApiKeyInvalidInputError', async () => {
     await expect(
       useCase.execute(new CreateApiKeyCommand('   ', null)),
