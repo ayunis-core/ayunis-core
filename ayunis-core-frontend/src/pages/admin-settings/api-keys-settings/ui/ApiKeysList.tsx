@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Ban, ChevronRight, Coins, MoreHorizontal, Trash2 } from 'lucide-react';
+import {
+  Ban,
+  ChevronRight,
+  Coins,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -34,6 +41,7 @@ import type {
   ApiKeyCreditLimit,
 } from '@/pages/admin-settings/api-keys-settings/model/types';
 import { ApiKeysEmptyState } from './ApiKeysEmptyState';
+import { EditApiKeyDialog } from './EditApiKeyDialog';
 import { SetApiKeyCreditLimitDialog } from './SetApiKeyCreditLimitDialog';
 
 interface ApiKeysListProps {
@@ -49,6 +57,7 @@ export function ApiKeysList({
 }: Readonly<ApiKeysListProps>) {
   const { t } = useTranslation('admin-settings-api-keys');
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
+  const [editingApiKey, setEditingApiKey] = useState<ApiKey | null>(null);
   if (apiKeys.length === 0) return <ApiKeysEmptyState />;
 
   const now = new Date();
@@ -76,6 +85,7 @@ export function ApiKeysList({
             creditLimit={limitsByApiKey.get(apiKey.id)}
             canManageCreditLimits={canManageCreditLimits}
             onManageCreditLimit={() => setSelectedApiKey(apiKey)}
+            onEdit={() => setEditingApiKey(apiKey)}
           />
         ))}
       </div>
@@ -87,6 +97,10 @@ export function ApiKeysList({
         }
         open={selectedApiKey !== null}
         onOpenChange={(open) => !open && setSelectedApiKey(null)}
+      />
+      <EditApiKeyDialog
+        apiKey={editingApiKey}
+        onOpenChange={(open) => !open && setEditingApiKey(null)}
       />
     </>
   );
@@ -135,6 +149,7 @@ interface ApiKeyListItemProps {
   creditLimit?: ApiKeyCreditLimit;
   canManageCreditLimits: boolean;
   onManageCreditLimit: () => void;
+  onEdit?: () => void;
 }
 
 function ApiKeyListItem({
@@ -143,6 +158,7 @@ function ApiKeyListItem({
   creditLimit,
   canManageCreditLimits,
   onManageCreditLimit,
+  onEdit,
 }: Readonly<ApiKeyListItemProps>) {
   const { t } = useTranslation('admin-settings-api-keys');
   const { removeApiKeyCreditLimit, isRemoving } = useRemoveApiKeyCreditLimit();
@@ -162,6 +178,14 @@ function ApiKeyListItem({
             <Badge variant="secondary">{t('apiKeys.list.expiredBadge')}</Badge>
           )}
         </div>
+        {apiKey.description && (
+          <p
+            className="text-sm text-foreground/80 whitespace-pre-line break-words"
+            data-testid="api-key-description"
+          >
+            {apiKey.description}
+          </p>
+        )}
         <ApiKeyDetails
           apiKey={apiKey}
           status={status}
@@ -185,6 +209,16 @@ function ApiKeyListItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {onEdit && (
+                <DropdownMenuItem
+                  onClick={onEdit}
+                  disabled={isLoading}
+                  data-testid="api-key-edit"
+                >
+                  <Pencil />
+                  {t('apiKeys.editDialog.menuItem')}
+                </DropdownMenuItem>
+              )}
               {canManageCreditLimits && (
                 <DropdownMenuItem
                   onClick={onManageCreditLimit}

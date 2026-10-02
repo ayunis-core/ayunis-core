@@ -4697,8 +4697,32 @@ export interface CreateApiKeyDto {
      * @maxLength 100
      */
   name: string;
+  /**
+     * Optional plain-text description of what the key is used for
+     * @maxLength 500
+     */
+  description?: string;
   /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
   expiresAt?: string;
+}
+
+export interface UpdateApiKeyDto {
+  /**
+     * New name for the API key. Omit to keep the current name.
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Plain-text description of what the key is used for. Omit to keep it, send null or an empty string to remove it.
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * New expiry date (ISO 8601, must be in the future). Omit to keep it, send null to let the key never expire.
+     * @nullable
+     */
+  expiresAt?: string | null;
 }
 
 export interface ApiKeyResponseDto {
@@ -4706,6 +4730,11 @@ export interface ApiKeyResponseDto {
   id: string;
   /** Human-readable name for the API key */
   name: string;
+  /**
+     * Plain-text description of what the key is used for
+     * @nullable
+     */
+  description: string | null;
   /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
   prefixPreview: string;
   /**
@@ -4732,6 +4761,11 @@ export interface CreateApiKeyResponseDto {
   id: string;
   /** Human-readable name for the API key */
   name: string;
+  /**
+     * Plain-text description of what the key is used for
+     * @nullable
+     */
+  description: string | null;
   /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
   prefixPreview: string;
   /**

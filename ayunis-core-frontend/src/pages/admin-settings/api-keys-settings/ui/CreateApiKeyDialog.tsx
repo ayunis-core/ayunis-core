@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { CalendarIcon, XIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,19 +20,14 @@ import {
 } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
-import { Calendar } from '@ayunis/ui/components/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@ayunis/ui/components/popover';
-import { cn } from '@ayunis/ui/lib/cn';
-import { formatDate } from '@/shared/lib/format-date';
-import { useCreateApiKey } from '../api/useCreateApiKey';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { toEndOfLocalDay } from '@/pages/admin-settings/api-keys-settings/lib/to-end-of-local-day';
+import { ExpiresAtFormItem } from '@/pages/admin-settings/api-keys-settings/ui/ExpiresAtFormItem';
+import { useCreateApiKey } from '@/pages/admin-settings/api-keys-settings/api/useCreateApiKey';
 import {
   createApiKeyFormSchema,
   type CreateApiKeyFormValues,
-} from '../model/createApiKeyFormSchema';
+} from '@/pages/admin-settings/api-keys-settings/model/createApiKeyFormSchema';
 import type { CreateApiKeyResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface CreateApiKeyDialogProps {
@@ -43,32 +36,18 @@ interface CreateApiKeyDialogProps {
   onCreated: (response: CreateApiKeyResponseDto) => void;
 }
 
-// Calendar default UTC-midnight semantics would expire a "31 Dec" key hours
-// before the user's local 31 Dec ends. Anchor to local end-of-day instead.
-function toEndOfLocalDay(date: Date): Date {
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    23,
-    59,
-    59,
-    999,
-  );
-}
-
 export function CreateApiKeyDialog({
   open,
   onOpenChange,
   onCreated,
 }: Readonly<CreateApiKeyDialogProps>) {
   const { t } = useTranslation('admin-settings-api-keys');
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const form = useForm<CreateApiKeyFormValues>({
     resolver: zodResolver(createApiKeyFormSchema(t)),
     defaultValues: {
       name: '',
+      description: '',
       expiresAt: undefined,
     },
   });
@@ -88,7 +67,7 @@ export function CreateApiKeyDialog({
     const expiresAt = data.expiresAt
       ? toEndOfLocalDay(data.expiresAt).toISOString()
       : undefined;
-    createApiKey({ name: data.name, expiresAt });
+    createApiKey({ name: data.name, description: data.description, expiresAt });
   };
 
   return (
@@ -121,69 +100,33 @@ export function CreateApiKeyDialog({
               />
               <FormField
                 control={form.control}
-                name="expiresAt"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t('apiKeys.createDialog.expiresAtLabel')}
+                      {t('apiKeys.createDialog.descriptionLabel')}
                     </FormLabel>
-                    <div className="flex items-center gap-2">
-                      <Popover
-                        open={datePickerOpen}
-                        onOpenChange={setDatePickerOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className={cn(
-                                'w-full justify-start font-normal',
-                                !field.value && 'text-muted-foreground',
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value
-                                ? formatDate(field.value.toISOString())
-                                : t(
-                                    'apiKeys.createDialog.expiresAtPlaceholder',
-                                  )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={(date) => {
-                              field.onChange(date);
-                              setDatePickerOpen(false);
-                            }}
-                            disabled={(date) =>
-                              date < new Date(new Date().setHours(0, 0, 0, 0))
-                            }
-                            captionLayout="dropdown"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {field.value && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          onClick={() => field.onChange(undefined)}
-                          aria-label={t('apiKeys.createDialog.expiresAtClear')}
-                        >
-                          <XIcon className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <FormDescription>
-                      {t('apiKeys.createDialog.expiresAtHelper')}
-                    </FormDescription>
+                    <FormControl>
+                      <Textarea
+                        rows={3}
+                        placeholder={t(
+                          'apiKeys.editDialog.descriptionPlaceholder',
+                        )}
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="expiresAt"
+                render={({ field }) => (
+                  <ExpiresAtFormItem
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </div>

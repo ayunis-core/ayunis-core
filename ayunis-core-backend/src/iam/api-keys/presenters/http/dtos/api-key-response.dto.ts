@@ -16,6 +16,14 @@ export class ApiKeyResponseDto {
   name: string;
 
   @ApiProperty({
+    description: 'Plain-text description of what the key is used for',
+    example: 'OptiGov connector, server portal-01',
+    type: String,
+    nullable: true,
+  })
+  description: string | null;
+
+  @ApiProperty({
     description:
       'Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.',
     example: 'ayk_live_abc123def456...',

@@ -2,10 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
+import {
+  ApiKeysRepository,
+  type ApiKeyMetadataChanges,
+} from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { ApiKeyRecord } from './schema/api-key.record';
-import { ApiKeyMapper } from './mappers/api-key.mapper';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
+import { ApiKeyMapper } from 'src/iam/api-keys/infrastructure/repositories/local/mappers/api-key.mapper';
 
 @Injectable()
 export class LocalApiKeysRepository extends ApiKeysRepository {
@@ -67,5 +70,28 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
       .set({ revokedAt: () => 'NOW()' })
       .where('id = :id AND revoked_at IS NULL', { id })
       .execute();
+  }
+
+  // The active check lives in the UPDATE itself so a concurrent revoke or an
+  // expiry between read and write cannot be overwritten with new metadata.
+  // clock_timestamp() instead of NOW(): NOW() is fixed at transaction start
+  // and would miss an expiry that passes while the UPDATE waits for a lock.
+  async updateMetadataIfActive(
+    id: UUID,
+    orgId: UUID,
+    changes: ApiKeyMetadataChanges,
+  ): Promise<boolean> {
+    this.logger.log({ id, orgId }, 'updateMetadataIfActive');
+
+    const result = await this.apiKeyRepository
+      .createQueryBuilder()
+      .update(ApiKeyRecord)
+      .set(changes)
+      .where('id = :id', { id })
+      .andWhere('org_id = :orgId', { orgId })
+      .andWhere('revoked_at IS NULL')
+      .andWhere('(expires_at IS NULL OR expires_at > clock_timestamp())')
+      .execute();
+    return (result.affected ?? 0) > 0;
   }
 }
