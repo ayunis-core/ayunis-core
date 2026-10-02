@@ -12,18 +12,22 @@ import {
   type UserUsageParams,
   type UsageStatsParams,
   type UserUsageResult,
+  type ApiKeyUsageParams,
+  ApiKeyUsageItem,
 } from 'src/domain/usage/application/ports/usage.repository';
 import { Paginated } from 'src/common/pagination';
 import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
 import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
 import { UsageRecord } from './schema/usage.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
 import { UsageMapper } from './mappers/usage.mapper';
 import { getProviderStats } from './queries/get-provider-stats.db-query';
 import { getModelStats } from './queries/get-model-stats.db-query';
 import { getTopModels } from './queries/get-top-models.db-query';
 import { getProviderTimeSeries as queryProviderTimeSeries } from './queries/get-provider-time-series.db-query';
 import { getUserUsageRows } from './queries/get-user-usage-rows.db-query';
+import { getApiKeyUsageRows } from './queries/get-api-key-usage-rows.db-query';
 import { countUsersForUserUsage } from './queries/count-users-for-user-usage.db-query';
 import { sumCreditsForOrg } from './queries/sum-credits-for-org.db-query';
 import { findUsageRecordsByOrganization } from './queries/find-usage-records-by-organization.db-query';
@@ -43,6 +47,8 @@ export class LocalUsageRepository extends UsageRepository {
     private readonly usageRepository: Repository<UsageRecord>,
     @InjectRepository(UserRecord)
     private readonly userRepository: Repository<UserRecord>,
+    @InjectRepository(ApiKeyRecord)
+    private readonly apiKeyRepository: Repository<ApiKeyRecord>,
     private readonly usageMapper: UsageMapper,
     private readonly usageQueryMapper: UsageQueryMapper,
   ) {
@@ -200,6 +206,16 @@ export class LocalUsageRepository extends UsageRepository {
       }),
       totalCredits,
     };
+  }
+
+  async getApiKeyUsage(params: ApiKeyUsageParams): Promise<ApiKeyUsageItem[]> {
+    const rows = await getApiKeyUsageRows({
+      apiKeyRepository: this.apiKeyRepository,
+      organizationId: params.organizationId,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
+    return rows.map((row) => this.usageQueryMapper.mapApiKeyUsageRow(row));
   }
 
   private mapUserStatsToItems(

@@ -1,14 +1,5 @@
 import type { ApiKey } from '@/pages/admin-settings/api-keys-settings/model/types';
-
-export type ApiKeyStatus = 'active' | 'revoked' | 'expired';
-
-export function getApiKeyStatus(apiKey: ApiKey, now: Date): ApiKeyStatus {
-  if (apiKey.revokedAt !== null) return 'revoked';
-  if (apiKey.expiresAt !== null && new Date(apiKey.expiresAt) <= now) {
-    return 'expired';
-  }
-  return 'active';
-}
+import { getApiKeyStatus } from '@/shared/lib/api-key-status';
 
 export function partitionApiKeys(
   apiKeys: ApiKey[],

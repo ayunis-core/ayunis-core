@@ -18,6 +18,7 @@ export function createMockUsageRepository(): jest.Mocked<UsageRepository> {
     getProviderUsage: jest.fn().mockResolvedValue([]),
     getModelDistribution: jest.fn().mockResolvedValue([]),
     getUserUsage: jest.fn(),
+    getApiKeyUsage: jest.fn().mockResolvedValue([]),
     getUsageStats: jest.fn(),
     getUsageCount: jest.fn().mockResolvedValue(0),
     getMonthlyCreditUsage: jest.fn().mockResolvedValue(0),

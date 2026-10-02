@@ -3,11 +3,12 @@ import type {
   UsageOverviewHooks,
   CreditUsageView,
 } from '@/widgets/usage-overview';
-import { useSuperAdminUsageStats } from '../api/useSuperAdminUsageStats';
-import { useSuperAdminModelDistribution } from '../api/useSuperAdminModelDistribution';
-import { useSuperAdminProviderUsageChart } from '../api/useSuperAdminProviderUsageChart';
-import { useSuperAdminUserUsage } from '../api/useSuperAdminUserUsage';
-import useSuperAdminCreditUsage from '../api/useSuperAdminCreditUsage';
+import { useSuperAdminUsageStats } from '@/pages/super-admin-settings/org/api/useSuperAdminUsageStats';
+import { useSuperAdminModelDistribution } from '@/pages/super-admin-settings/org/api/useSuperAdminModelDistribution';
+import { useSuperAdminProviderUsageChart } from '@/pages/super-admin-settings/org/api/useSuperAdminProviderUsageChart';
+import { useSuperAdminUserUsage } from '@/pages/super-admin-settings/org/api/useSuperAdminUserUsage';
+import { useSuperAdminApiKeyUsage } from '@/pages/super-admin-settings/org/api/useSuperAdminApiKeyUsage';
+import useSuperAdminCreditUsage from '@/pages/super-admin-settings/org/api/useSuperAdminCreditUsage';
 import { useSuperAdminPermittedModelsControllerGetPermittedModels } from '@/shared/api';
 
 function useSuperAdminCreditUsageView(orgId: string): CreditUsageView {
@@ -48,6 +49,7 @@ export function createSuperAdminUsageHooks(orgId: string): UsageOverviewHooks {
     useProviderUsageChart: (params) =>
       useSuperAdminProviderUsageChart(orgId, params),
     useUserUsage: (params) => useSuperAdminUserUsage(orgId, params),
+    useApiKeyUsage: (params) => useSuperAdminApiKeyUsage(orgId, params),
     usePermittedModels: () =>
       useSuperAdminPermittedModelsControllerGetPermittedModels(orgId),
   };
