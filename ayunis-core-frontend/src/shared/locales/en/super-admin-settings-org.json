@@ -58,6 +58,8 @@
     "cancelError": "An unexpected error occurred",
     "uncancelErrorSubscriptionNotFound": "Subscription not found",
     "uncancelError": "An unexpected error occurred",
+    "uncancelErrorAccessOverlap": "Reactivating this subscription would overlap another subscription's access period.",
+    "multipleActiveSubscriptions": "Several subscriptions are currently serving this organization. Resolve the overlap in the subscription history first.",
     "edit": "Edit",
     "startsAtLabel": "Start date",
     "startsAtPlaceholder": "Select a start date",
@@ -69,6 +71,7 @@
     "updateStartDateSuccess": "Start date updated successfully",
     "updateStartDateErrorSubscriptionNotFound": "Subscription not found",
     "updateStartDateErrorSubscriptionAlreadyCancelled": "Cancelled subscriptions cannot be edited",
+    "updateStartDateErrorAccessOverlap": "The new start date would overlap another subscription's access period.",
     "updateStartDateErrorUnexpected": "An unexpected error occurred",
     "scheduled": "Scheduled",
     "scheduledDescription": "This subscription is scheduled to start on {{date}}.",
@@ -83,6 +86,7 @@
     "changeSuccess": "Subscription changed successfully",
     "changeErrorSubscriptionNotFound": "No active subscription to change",
     "changeErrorTooManyUsedSeats": "Too many users are already in this organization. Choose more seats for the new subscription.",
+    "changeErrorAccessOverlap": "The new subscription would overlap another subscription's access period. Adjust its start date or end the other subscription first.",
     "changeErrorUnexpected": "An unexpected error occurred"
   },
   "subscriptionHistory": {
@@ -90,6 +94,7 @@
     "description": "Every subscription belonging to this organization, including older and cancelled records.",
     "latest": "Latest",
     "notCancelled": "—",
+    "noAccessEnd": "Open-ended",
     "multipleActive": "{{count}} subscriptions are currently serving this organization. This view lists all of them instead of picking one.",
     "status": {
       "ACTIVE": "Active",
@@ -107,12 +112,36 @@
       "createdAt": "Created",
       "startsAt": "Starts",
       "cancelledAt": "Cancelled",
+      "accessEndsAt": "Access ends",
       "details": "Details"
     },
     "details": {
       "seats": "{{count}} seats",
       "credits": "{{count}} monthly credits",
       "none": "—"
+    }
+  },
+  "subscriptionOverlap": {
+    "action": "Resolve overlap",
+    "title": "Resolve subscription overlap",
+    "description": "Select the subscription that should remain authoritative and record why this correction is required.",
+    "authoritative": "Authoritative subscription",
+    "authoritativePlaceholder": "Select the subscription that remains active",
+    "subscriptionLabel": "{{type}}, starts {{date}}",
+    "automaticAccessEnd": "Access for every other subscription will end automatically when it first overlaps the authoritative subscription.",
+    "reason": "Correction reason",
+    "reasonPlaceholder": "Reference the contract transition or support case",
+    "cancel": "Cancel",
+    "confirm": "Apply correction",
+    "resolving": "Applying...",
+    "success": "Subscription overlap resolved",
+    "invalidCorrection": "The correction does not resolve the current overlap. Refresh the page and verify the selected subscription.",
+    "unauthorized": "You are not authorized to correct subscription access.",
+    "error": "The subscription overlap could not be resolved.",
+    "validation": {
+      "required": "This field is required",
+      "maxLength": "Use 500 characters or fewer",
+      "invalid": "Check the selected subscription and reason"
     }
   },
   "licenseSeats": {
