@@ -15,6 +15,8 @@ const FILE_TYPE_BY_MIME_TYPE: Record<string, FileType> = {
   [MIME_TYPES.ODP]: FileType.ODP,
   [MIME_TYPES.TXT]: FileType.TXT,
   [MIME_TYPES.EML]: FileType.EML,
+  // FileType.EML stands for any email message; .msg needs no enum value of its own.
+  [MIME_TYPES.MSG]: FileType.EML,
   // Tables are flattened to text on ingestion, so they persist as text files.
   [MIME_TYPES.CSV]: FileType.TXT,
   [MIME_TYPES.XLSX]: FileType.TXT,

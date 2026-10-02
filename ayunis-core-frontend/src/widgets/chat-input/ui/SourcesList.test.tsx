@@ -58,8 +58,8 @@ describe('SourcesList', () => {
       const tooltip = await screen.findByRole('tooltip');
       expect(tooltip.textContent).toContain(
         language === 'de'
-          ? 'Diese PDF konnte nicht gelesen werden. Entfernen Sie die Datei und laden Sie sie erneut hoch.'
-          : 'Couldn’t read this PDF. Remove it and try uploading it again.',
+          ? 'Diese Datei konnte nicht gelesen werden. Entfernen Sie sie und laden Sie sie erneut hoch.'
+          : 'Couldn’t read this file. Remove it and try uploading it again.',
       );
       expect(tooltip.textContent).not.toContain(
         'The document could not be processed',

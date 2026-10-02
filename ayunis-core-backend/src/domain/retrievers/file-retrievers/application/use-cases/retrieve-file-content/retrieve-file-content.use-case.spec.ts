@@ -21,6 +21,7 @@ import {
   UnprocessableDocumentError,
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
+import { MsgParserPort } from 'src/domain/retrievers/file-retrievers/application/ports/msg-parser.port';
 
 describe('RetrieveFileContentUseCase', () => {
   let useCase: RetrieveFileContentUseCase;
@@ -30,6 +31,7 @@ describe('RetrieveFileContentUseCase', () => {
   let mockContextService: Partial<ContextService>;
   let mockDocumentConverter: Partial<DocumentConverterPort>;
   let mockTranscribeUseCase: Partial<TranscribeUseCase>;
+  const mockMsgParser = { extractText: jest.fn<Promise<string>, [Buffer]>() };
 
   const mockRetrievalConfig = {
     mistral: {
@@ -64,6 +66,7 @@ describe('RetrieveFileContentUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         { provide: DocumentConverterPort, useValue: mockDocumentConverter },
         { provide: TranscribeUseCase, useValue: mockTranscribeUseCase },
+        { provide: MsgParserPort, useValue: mockMsgParser },
         { provide: retrievalConfig.KEY, useValue: mockRetrievalConfig },
       ],
     }).compile();
@@ -159,6 +162,40 @@ describe('RetrieveFileContentUseCase', () => {
     expect(result.pages[0].text).toContain('Subject: Anfrage');
     expect(result.pages[0].text).toContain('Inhalt der E-Mail.');
     expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
+  });
+
+  it('should extract text from an Outlook MSG file as a single page', async () => {
+    const msg = Buffer.from('msg bytes');
+    mockMsgParser.extractText.mockResolvedValue('Subject: Anfrage');
+
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: msg,
+        fileName: 'anfrage.msg',
+        fileType: 'application/vnd.ms-outlook',
+      }),
+    );
+
+    expect(mockMsgParser.extractText).toHaveBeenCalledWith(msg);
+    expect(result.pages).toHaveLength(1);
+    expect(result.pages[0].text).toBe('Subject: Anfrage');
+    expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
+  });
+
+  it('propagates an unreadable MSG file as an unprocessable document', async () => {
+    mockMsgParser.extractText.mockRejectedValue(
+      new UnprocessableDocumentError('The Outlook message could not be read'),
+    );
+
+    await expect(
+      useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: Buffer.from('kaputt'),
+          fileName: 'kaputt.msg',
+          fileType: 'application/octet-stream',
+        }),
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableDocumentError);
   });
 
   it('should process PDF file successfully', async () => {

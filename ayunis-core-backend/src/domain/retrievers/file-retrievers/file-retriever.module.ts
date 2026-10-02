@@ -8,6 +8,8 @@ import { FileRetrieverType } from './domain/value-objects/file-retriever-type.en
 import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-pdf-parse-file-retriever.handler';
 import { GotenbergConverterService } from './infrastructure/adapters/gotenberg-converter.service';
 import { DocumentConverterPort } from './application/ports/document-converter.port';
+import { MsgParserPort } from './application/ports/msg-parser.port';
+import { PiscinaMsgParserAdapter } from './infrastructure/adapters/piscina-msg-parser.adapter';
 import retrievalConfig from 'src/config/retrieval.config';
 import { gotenbergConfig } from 'src/config/gotenberg.config';
 import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.module';
@@ -29,6 +31,7 @@ import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.m
       provide: DocumentConverterPort,
       useExisting: GotenbergConverterService,
     },
+    { provide: MsgParserPort, useClass: PiscinaMsgParserAdapter },
     {
       provide: FileRetrieverRegistry,
       useFactory: (

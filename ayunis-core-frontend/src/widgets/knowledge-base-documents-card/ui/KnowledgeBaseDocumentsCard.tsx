@@ -59,6 +59,7 @@ const ACCEPTED_EXTENSIONS = [
   '.txt',
   '.md',
   '.eml',
+  '.msg',
   '.mp3',
   '.m4a',
   '.wav',
