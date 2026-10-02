@@ -105,7 +105,7 @@
   bottom: 0;
   left: 8%;
   width: 118%;
-  height: 72%;
+  height: 32rem;
   transform: scale(var(--new-chat-backdrop-scale));
   transform-origin: 85% 100%;
 }
