@@ -36,7 +36,11 @@ export type {
   ToolChoice,
   Usage,
 } from './provider';
-export { ModelProviderError, normalizeProviderError } from './provider-error';
+export {
+  isProviderRateLimitDiagnostic,
+  ModelProviderError,
+  normalizeProviderError,
+} from './provider-error';
 export { normalizeProviderStreamErrors } from './provider-stream-error';
 export type {
   ModelProviderErrorDetails,

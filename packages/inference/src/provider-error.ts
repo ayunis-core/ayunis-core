@@ -128,6 +128,12 @@ const TIMEOUT_NAMES = new Set([
 
 const ABORT_NAMES = new Set(['AbortError', 'APIUserAbortError']);
 
+const RATE_LIMIT_DIAGNOSTICS = new Set([
+  'no_capacity',
+  'rate_limit_exceeded',
+  'too_many_requests',
+]);
+
 const REQUEST_ID_HEADERS = [
   'x-request-id',
   'request-id',
@@ -198,7 +204,30 @@ function classifyFailure(
   if (chain.some((node) => nodeHasName(node, ABORT_NAMES))) {
     return { kind: 'abort' };
   }
-  return { kind: 'unknown' };
+  return hasRateLimitEvidence(chain)
+    ? { kind: 'rate_limit' }
+    : { kind: 'unknown' };
+}
+
+export function isProviderRateLimitDiagnostic(value: unknown): boolean {
+  return typeof value === 'string' && RATE_LIMIT_DIAGNOSTICS.has(value);
+}
+
+function hasRateLimitEvidence(
+  chain: readonly Record<string, unknown>[],
+): boolean {
+  return chain.some((record) => {
+    const body = asRecord(record.error);
+    const nestedBody = asRecord(body?.error);
+    return [
+      record.code,
+      record.type,
+      body?.code,
+      body?.type,
+      nestedBody?.code,
+      nestedBody?.type,
+    ].some(isProviderRateLimitDiagnostic);
+  });
 }
 
 function signalCausedAbort(
