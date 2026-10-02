@@ -15,6 +15,17 @@ cd ayunis-core-frontend
 
 Before modifying any layer, read its `SUMMARY.md` in `src/[layer]/SUMMARY.md`. The top-level `src/SUMMARY.md` provides an overview.
 
+## Concise UI Copy
+
+Give users enough information to choose confidently, with minimal repetition.
+
+- Use short, specific action verbs for buttons: **Archive**, **Restore**, **Delete**. Include the target when the control would otherwise be ambiguous on its own.
+- Let nearby titles identify the subject and descriptions explain the consequence. When an action row already says **Archive organisation** and explains its effect, its button can simply say **Archive**.
+- Apply the same approach inside confirmation modals: keep the subject and consequences in the title and body, and use the action verb for the confirmation button. Avoid generic **Yes**, **OK**, or **Confirm** when a specific verb is clearer.
+- Preserve information that changes the decision: what is affected, whether the action is reversible, and any required confirmation. Concision must not weaken destructive-action warnings or remove the resource name needed to confirm deletion.
+- Prefer one useful explanation over repeated helper text. Keep implementation details out of product copy unless they help the user decide or recover from an error.
+- Review the rendered copy in each affected locale. Short labels must remain clear in context; do not impose word limits that make translations unnatural.
+
 ## Validation Sequence
 
 Choose validation breadth using the repository's Proportional Workflow.
@@ -68,7 +79,7 @@ The FSD rules above are the theory; **this repo's actual conventions are the tie
 
 ### Confirm placement before mutating a stacked PR chain
 
-Do not execute structural moves and amend commits across a stacked-PR chain (e.g. `gt modify` a parent, then check out and amend the child) off a *preliminary* placement conclusion. Settle the placement against repo conventions first, then move — reverting a wrong move across stacked branches means restoring exact pre-session SHAs from the reflog.
+Do not execute structural moves and amend commits across a stacked-PR chain (e.g. `gt modify` a parent, then check out and amend the child) off a _preliminary_ placement conclusion. Settle the placement against repo conventions first, then move — reverting a wrong move across stacked branches means restoring exact pre-session SHAs from the reflog.
 
 ## Shared UI Package — Registry-Managed Primitives
 
