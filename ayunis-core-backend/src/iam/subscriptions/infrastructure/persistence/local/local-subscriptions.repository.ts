@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
-import { UUID } from 'crypto';
+import { DataSource, EntityManager, Repository } from 'typeorm';
+import { randomUUID, UUID } from 'crypto';
 import {
+  ApplyAccessEndAdjustmentsParams,
   ReplaceSubscriptionParams,
   SubscriptionRepository,
 } from 'src/iam/subscriptions/application/ports/subscription.repository';
@@ -18,6 +19,7 @@ import { SubscriptionMapper } from './mappers/subscription.mapper';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { SubscriptionBillingInfoRecord } from './schema/subscription-billing-info.record';
 import { SubscriptionBillingInfoMapper } from './mappers/subscription-billing-info.mapper';
+import { SubscriptionAccessAdjustmentRecord } from './schema/subscription-access-adjustment.record';
 
 @Injectable()
 export class LocalSubscriptionsRepository extends SubscriptionRepository {
@@ -120,7 +122,10 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         .where('subscription.type = :type', {
           type: SubscriptionType.USAGE_BASED,
         })
-        .andWhere('subscription.cancelledAt IS NULL')
+        .andWhere(
+          '((subscription.accessEndsAt IS NULL AND subscription.cancelledAt IS NULL) OR subscription.accessEndsAt > :now)',
+          { now },
+        )
         .andWhere('subscription.startsAt <= :now', { now })
         .getRawMany<{ orgId: UUID }>();
 
@@ -129,6 +134,40 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       this.logger.error(
         { err: error as Error },
         'Failed to find orgs with active usage-based subscriptions',
+      );
+      throw error;
+    }
+  }
+
+  async applyAccessEndAdjustments(
+    params: ApplyAccessEndAdjustmentsParams,
+  ): Promise<void> {
+    try {
+      for (const { subscription } of params.adjustments) {
+        await this.subscriptions.update(
+          { id: subscription.id, orgId: params.orgId },
+          {
+            accessEndsAt: subscription.accessEndsAt,
+            cancelledAt: subscription.cancelledAt,
+          },
+        );
+      }
+      await this.getManager().insert(
+        SubscriptionAccessAdjustmentRecord,
+        params.adjustments.map(({ subscription, previousAccessEndsAt }) => ({
+          id: randomUUID(),
+          subscriptionId: subscription.id,
+          orgId: params.orgId,
+          changedByUserId: params.requestingUserId,
+          previousAccessEndsAt,
+          accessEndsAt: subscription.accessEndsAt!,
+          reason: params.reason,
+        })),
+      );
+    } catch (error) {
+      this.logger.error(
+        { err: error as Error, orgId: params.orgId },
+        'Failed to apply subscription access end adjustments',
       );
       throw error;
     }
@@ -159,7 +198,13 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
   }
 
   async replace(params: ReplaceSubscriptionParams): Promise<Subscription> {
-    const { oldSubscriptionId, disposition, newSubscription } = params;
+    const {
+      oldSubscriptionId,
+      disposition,
+      oldAccessEndsAt,
+      oldCancelledAt,
+      newSubscription,
+    } = params;
     try {
       const record = this.subscriptionMapper.toRecord(newSubscription);
 
@@ -169,14 +214,10 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         if (disposition === OldSubscriptionDisposition.DELETE) {
           await manager.delete(SubscriptionRecord, oldSubscriptionId);
         } else {
-          // Only stamp cancelledAt when not already cancelled, so replacing an
-          // already-cancelled subscription preserves its original cancellation
-          // timestamp (kept for billing/audit history).
-          await manager.update(
-            SubscriptionRecord,
-            { id: oldSubscriptionId, cancelledAt: IsNull() },
-            { cancelledAt: new Date() },
-          );
+          await manager.update(SubscriptionRecord, oldSubscriptionId, {
+            cancelledAt: oldCancelledAt ?? new Date(),
+            accessEndsAt: oldAccessEndsAt,
+          });
         }
         await this.insertSubscriptionWithBilling(manager, record);
       });

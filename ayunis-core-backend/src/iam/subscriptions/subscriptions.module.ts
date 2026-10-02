@@ -37,6 +37,9 @@ import { PostgresSeatAllocationLock } from 'src/iam/subscriptions/infrastructure
 import { AssertSeatAvailableUseCase } from 'src/iam/subscriptions/application/use-cases/assert-seat-available/assert-seat-available.use-case';
 import { UpdateSeatsWithAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats-with-allocation-lock/update-seats-with-allocation-lock.use-case';
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
+import { ResolveSubscriptionOverlapUseCase } from 'src/iam/subscriptions/application/use-cases/resolve-subscription-overlap/resolve-subscription-overlap.use-case';
+import { SubscriptionAccessAdjustmentRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-access-adjustment.record';
+import { SuperAdminSubscriptionOverlapController } from 'src/iam/subscriptions/presenters/http/super-admin-subscription-overlap.controller';
 
 @Module({
   imports: [
@@ -45,11 +48,16 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
       SeatBasedSubscriptionRecord,
       UsageBasedSubscriptionRecord,
       SubscriptionBillingInfoRecord,
+      SubscriptionAccessAdjustmentRecord,
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => InvitesModule),
   ],
-  controllers: [SubscriptionsController, SuperAdminSubscriptionsController],
+  controllers: [
+    SubscriptionsController,
+    SuperAdminSubscriptionsController,
+    SuperAdminSubscriptionOverlapController,
+  ],
   providers: [
     {
       provide: SubscriptionRepository,
@@ -82,6 +90,7 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
     AssertSeatAvailableUseCase,
     UpdateSeatsWithAllocationLockUseCase,
     AcquireSeatAllocationLockUseCase,
+    ResolveSubscriptionOverlapUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,

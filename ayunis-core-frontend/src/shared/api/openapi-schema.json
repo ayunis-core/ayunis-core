@@ -2303,6 +2303,48 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
+    "/super-admin/subscriptions/{orgId}/resolve-overlap": {
+      "post": {
+        "description": "Selects the authoritative serving subscription and atomically ends access for every conflicting subscription while preserving history. Super admins only.",
+        "operationId": "SuperAdminSubscriptionOverlapController_resolveSubscriptionOverlap",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID whose subscription overlap will be resolved",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveSubscriptionOverlapDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Subscription overlap resolved"
+          },
+          "400": {
+            "description": "The requested correction does not resolve the overlap"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          }
+        },
+        "summary": "Resolve an organization's overlapping subscription access",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
     "/models/available/language": {
       "get": {
         "operationId": "ModelsController_getAvailableLanguageModels",
@@ -2424,6 +2466,9 @@
           },
           "400": {
             "description": "Invalid model input"
+          },
+          "409": {
+            "description": "Model already permitted for this organization"
           },
           "500": {
             "description": "Internal server error"
@@ -13161,6 +13206,13 @@
             "description": "Date when the subscription becomes active",
             "example": "2026-07-01T00:00:00Z"
           },
+          "accessEndsAt": {
+            "type": "string",
+            "description": "Exclusive date when this subscription stops controlling product access",
+            "example": "2026-08-01T00:00:00Z",
+            "format": "date-time",
+            "nullable": true
+          },
           "orgId": {
             "type": "string",
             "description": "Organization ID associated with the subscription",
@@ -13226,6 +13278,7 @@
           "createdAt",
           "updatedAt",
           "startsAt",
+          "accessEndsAt",
           "orgId",
           "type",
           "nextRenewalDate",
@@ -13503,6 +13556,13 @@
             "description": "Date when the subscription becomes active",
             "example": "2026-07-01T00:00:00Z"
           },
+          "accessEndsAt": {
+            "type": "string",
+            "description": "Exclusive date when this subscription stops controlling product access",
+            "example": "2026-08-01T00:00:00Z",
+            "format": "date-time",
+            "nullable": true
+          },
           "orgId": {
             "type": "string",
             "description": "Organization ID associated with the subscription",
@@ -13579,6 +13639,7 @@
           "createdAt",
           "updatedAt",
           "startsAt",
+          "accessEndsAt",
           "orgId",
           "type",
           "nextRenewalDate",
@@ -13608,6 +13669,44 @@
       "UpdateSeatsDto": {
         "type": "object",
         "properties": {}
+      },
+      "SubscriptionAccessEndAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accessEndsAt": {
+            "type": "string",
+            "description": "Exclusive end of product access for this subscription",
+            "example": "2026-08-01T00:00:00.000Z"
+          }
+        },
+        "required": ["subscriptionId", "accessEndsAt"]
+      },
+      "ResolveSubscriptionOverlapDto": {
+        "type": "object",
+        "properties": {
+          "authoritativeSubscriptionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionAccessEndAdjustmentDto"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "Audit reason for correcting the subscription access periods",
+            "example": "AYC-1158: usage contract replaced seat contract",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": ["authoritativeSubscriptionId", "adjustments", "reason"]
       },
       "ModelWithConfigResponseDto": {
         "type": "object",

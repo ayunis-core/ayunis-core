@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UncancelSubscriptionCommand } from './uncancel-subscription.command';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
-  SubscriptionNotFoundError,
   SubscriptionNotCancelledError,
   SubscriptionExpiredError,
+  SubscriptionAccessOverlapError,
   UnexpectedSubscriptionError,
 } from 'src/iam/subscriptions/application/subscription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -16,6 +17,10 @@ import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/ut
 import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
+import { accessPeriodsOverlap } from 'src/iam/subscriptions/application/util/access-periods-overlap';
+import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
+import { selectManageableSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
 
 @Injectable()
 export class UncancelSubscriptionUseCase {
@@ -25,8 +30,10 @@ export class UncancelSubscriptionUseCase {
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: UncancelSubscriptionCommand): Promise<void> {
     this.logger.log(
       {
@@ -43,9 +50,19 @@ export class UncancelSubscriptionUseCase {
         command.orgId,
       );
 
-      const subscription = await this.findSubscription(command.orgId);
+      await this.acquireAllocationLock.execute(command.orgId);
+      const subscriptions = await this.subscriptionRepository.findByOrgId(
+        command.orgId,
+      );
+      const subscription = selectManageableSubscription(
+        subscriptions,
+        command.orgId,
+        true,
+      );
       this.ensureCanUncancel(command.orgId, subscription);
       subscription.cancelledAt = null;
+      subscription.accessEndsAt = null;
+      this.ensureNoAccessOverlap(subscription, subscriptions);
       await this.subscriptionRepository.update(subscription);
       this.logger.debug(
         { subscriptionId: subscription.id, orgId: command.orgId },
@@ -68,19 +85,6 @@ export class UncancelSubscriptionUseCase {
     }
   }
 
-  private async findSubscription(
-    orgId: UncancelSubscriptionCommand['orgId'],
-  ): Promise<Subscription> {
-    this.logger.debug('Finding subscription');
-    const subscription =
-      await this.subscriptionRepository.findLatestByOrgId(orgId);
-    if (!subscription) {
-      this.logger.warn({ orgId }, 'Subscription not found');
-      throw new SubscriptionNotFoundError(orgId);
-    }
-    return subscription;
-  }
-
   private ensureCanUncancel(
     orgId: UncancelSubscriptionCommand['orgId'],
     subscription: Subscription,
@@ -95,6 +99,23 @@ export class UncancelSubscriptionUseCase {
         'Subscription has expired and cannot be uncancelled',
       );
       throw new SubscriptionExpiredError(orgId);
+    }
+  }
+
+  private ensureNoAccessOverlap(
+    candidate: Subscription,
+    subscriptions: Subscription[],
+  ): void {
+    const overlaps = subscriptions
+      .filter(({ id }) => id !== candidate.id)
+      .some((subscription) =>
+        accessPeriodsOverlap(candidate, {
+          startsAt: subscription.startsAt,
+          accessEndsAt: getEffectiveAccessEnd(subscription),
+        }),
+      );
+    if (overlaps) {
+      throw new SubscriptionAccessOverlapError(candidate.orgId);
     }
   }
 

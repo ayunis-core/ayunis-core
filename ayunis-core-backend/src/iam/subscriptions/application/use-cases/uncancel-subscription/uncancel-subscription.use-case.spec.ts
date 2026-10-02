@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
@@ -8,6 +15,7 @@ import {
   SubscriptionNotFoundError,
   SubscriptionNotCancelledError,
   SubscriptionExpiredError,
+  SubscriptionAccessOverlapError,
 } from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
@@ -19,6 +27,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 const mockOrgId = randomUUID();
 const mockUserId = randomUUID();
@@ -39,11 +48,13 @@ function createSeatBased(
     cancelledAt: Date | null;
     renewalCycleAnchor: Date;
     startsAt: Date;
+    createdAt: Date;
   }> = {},
 ): SeatBasedSubscription {
   const anchor = overrides.renewalCycleAnchor ?? new Date('2025-01-01');
   return new SeatBasedSubscription({
     orgId: mockOrgId,
+    createdAt: overrides.createdAt,
     noOfSeats: 10,
     pricePerSeat: 9.99,
     renewalCycle: RenewalCycle.MONTHLY,
@@ -55,10 +66,15 @@ function createSeatBased(
 }
 
 function createUsageBased(
-  overrides: Partial<{ cancelledAt: Date | null; startsAt: Date }> = {},
+  overrides: Partial<{
+    cancelledAt: Date | null;
+    startsAt: Date;
+    createdAt: Date;
+  }> = {},
 ): UsageBasedSubscription {
   return new UsageBasedSubscription({
     orgId: mockOrgId,
+    createdAt: overrides.createdAt,
     monthlyCredits: 1000,
     startsAt: overrides.startsAt ?? new Date('2025-01-01'),
     cancelledAt: overrides.cancelledAt ?? null,
@@ -79,7 +95,7 @@ describe('UncancelSubscriptionUseCase', () => {
         {
           provide: SubscriptionRepository,
           useValue: {
-            findLatestByOrgId: jest.fn(),
+            findByOrgId: jest.fn().mockResolvedValue([]),
             update: jest.fn(),
           },
         },
@@ -90,6 +106,10 @@ describe('UncancelSubscriptionUseCase', () => {
         {
           provide: ContextService,
           useValue: { get: jest.fn() },
+        },
+        {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: { execute: jest.fn() },
         },
       ],
     }).compile();
@@ -107,6 +127,7 @@ describe('UncancelSubscriptionUseCase', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-06-15T12:00:00.000Z'));
 
+    subscriptionRepository.findByOrgId.mockResolvedValue([]);
     contextService.get.mockImplementation((key) => {
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
@@ -126,7 +147,7 @@ describe('UncancelSubscriptionUseCase', () => {
   });
 
   it('should throw SubscriptionNotFoundError when no subscription exists', async () => {
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(null);
+    subscriptionRepository.findByOrgId.mockResolvedValue([]);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionNotFoundError,
@@ -135,9 +156,9 @@ describe('UncancelSubscriptionUseCase', () => {
   });
 
   it('should throw SubscriptionNotCancelledError when subscription is not cancelled', async () => {
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(
+    subscriptionRepository.findByOrgId.mockResolvedValue([
       createSeatBased({ cancelledAt: null }),
-    );
+    ]);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionNotCancelledError,
@@ -155,7 +176,7 @@ describe('UncancelSubscriptionUseCase', () => {
       cancelledAt,
       renewalCycleAnchor: anchor,
     });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     subscriptionRepository.update.mockResolvedValue(subscription);
 
     await useCase.execute(command);
@@ -175,12 +196,61 @@ describe('UncancelSubscriptionUseCase', () => {
     );
   });
 
+  it('rejects uncancelling when it would overlap another access period', async () => {
+    const existing = createSeatBased({
+      startsAt: new Date('2025-01-01T00:00:00.000Z'),
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+    });
+    const subscription = createUsageBased({
+      startsAt: new Date('2099-01-01T00:00:00.000Z'),
+      cancelledAt: new Date('2025-06-10T00:00:00.000Z'),
+      createdAt: new Date('2025-06-01T00:00:00.000Z'),
+    });
+    subscriptionRepository.findByOrgId.mockResolvedValue([
+      existing,
+      subscription,
+    ]);
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      SubscriptionAccessOverlapError,
+    );
+
+    expect(subscriptionRepository.update).not.toHaveBeenCalled();
+  });
+
+  // Overlap recovery ends the newer record without touching the older one, so
+  // the cancelled subscription that still serves must stay reachable.
+  it('reactivates the serving cancelled subscription when a newer record has ended', async () => {
+    const now = new Date();
+    const anchor = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+    );
+    const serving = createSeatBased({
+      cancelledAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      renewalCycleAnchor: anchor,
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+    });
+    const ended = createUsageBased({
+      startsAt: new Date('2025-05-01T00:00:00.000Z'),
+      createdAt: new Date('2025-05-01T00:00:00.000Z'),
+    });
+    ended.accessEndsAt = new Date('2025-06-01T00:00:00.000Z');
+    subscriptionRepository.findByOrgId.mockResolvedValue([serving, ended]);
+    subscriptionRepository.update.mockResolvedValue(serving);
+
+    await useCase.execute(command);
+
+    expect(serving.cancelledAt).toBeNull();
+    expect(subscriptionRepository.update).toHaveBeenCalledWith(serving);
+    expect(ended.accessEndsAt).toEqual(new Date('2025-06-01T00:00:00.000Z'));
+  });
+
   it('should reject uncancelling a seat-based subscription past its billing period', async () => {
     const subscription = createSeatBased({
       cancelledAt: new Date('2024-01-15'),
       renewalCycleAnchor: new Date('2024-01-01'),
     });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionExpiredError,
@@ -194,7 +264,7 @@ describe('UncancelSubscriptionUseCase', () => {
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
     );
     const subscription = createUsageBased({ cancelledAt });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     subscriptionRepository.update.mockResolvedValue(subscription);
 
     await useCase.execute(command);
@@ -220,7 +290,7 @@ describe('UncancelSubscriptionUseCase', () => {
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 15),
     );
     const subscription = createUsageBased({ cancelledAt: previousMonth });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionExpiredError,
@@ -237,7 +307,7 @@ describe('UncancelSubscriptionUseCase', () => {
       renewalCycleAnchor: startsAt,
       cancelledAt: new Date(),
     });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     await useCase.execute(
       new UncancelSubscriptionCommand({
@@ -255,7 +325,7 @@ describe('UncancelSubscriptionUseCase', () => {
       startsAt: new Date('2099-01-01T00:00:00.000Z'),
       cancelledAt: new Date('2026-01-15T00:00:00.000Z'),
     });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     await useCase.execute(
       new UncancelSubscriptionCommand({
