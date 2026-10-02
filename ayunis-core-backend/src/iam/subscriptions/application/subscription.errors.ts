@@ -5,6 +5,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum SubscriptionErrorCode {
   SUBSCRIPTION_NOT_FOUND = 'SUBSCRIPTION_NOT_FOUND',
   MULTIPLE_ACTIVE_SUBSCRIPTIONS = 'MULTIPLE_ACTIVE_SUBSCRIPTIONS',
+  SUBSCRIPTION_ACCESS_OVERLAP = 'SUBSCRIPTION_ACCESS_OVERLAP',
   SUBSCRIPTION_ALREADY_EXISTS = 'SUBSCRIPTION_ALREADY_EXISTS',
   SUBSCRIPTION_ALREADY_CANCELLED = 'SUBSCRIPTION_ALREADY_CANCELLED',
   SUBSCRIPTION_NOT_CANCELLED = 'SUBSCRIPTION_NOT_CANCELLED',
@@ -53,8 +54,6 @@ export class SubscriptionNotFoundError extends SubscriptionError {
 
 /**
  * Error thrown when there are multiple active subscriptions for an organization
-/**
- * Error thrown when there are multiple active subscriptions for an organization
  */
 export class MultipleActiveSubscriptionsError extends SubscriptionError {
   constructor(orgId: UUID, metadata?: ErrorMetadata) {
@@ -73,6 +72,17 @@ export class MultipleActiveSubscriptionsError extends SubscriptionError {
 /**
  * Error thrown when a subscription already exists for an organization
  */
+export class SubscriptionAccessOverlapError extends SubscriptionError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Subscription access periods overlap for organization '${orgId}'`,
+      SubscriptionErrorCode.SUBSCRIPTION_ACCESS_OVERLAP,
+      409,
+      { orgId, ...metadata },
+    );
+  }
+}
+
 export class SubscriptionAlreadyExistsError extends SubscriptionError {
   constructor(orgId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -143,8 +153,6 @@ export class InsufficientSeatsError extends SubscriptionError {
   }
 }
 
-/**
- * Error thrown when there are too many used seats
 /**
  * Error thrown when there are too many used seats
  */

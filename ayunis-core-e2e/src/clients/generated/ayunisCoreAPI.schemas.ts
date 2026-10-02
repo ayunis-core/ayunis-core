@@ -674,6 +674,11 @@ export interface SubscriptionResponseDto {
   cancelledAt?: SubscriptionResponseDtoCancelledAt;
   /** Date when the subscription becomes active */
   startsAt: string;
+  /**
+     * Exclusive date when this subscription stops controlling product access
+     * @nullable
+     */
+  accessEndsAt: string | null;
   /** Organization ID associated with the subscription */
   orgId: string;
   /** Subscription type */
@@ -880,6 +885,11 @@ export interface OrgSubscriptionHistoryItemDto {
   cancelledAt?: OrgSubscriptionHistoryItemDtoCancelledAt;
   /** Date when the subscription becomes active */
   startsAt: string;
+  /**
+     * Exclusive date when this subscription stops controlling product access
+     * @nullable
+     */
+  accessEndsAt: string | null;
   /** Organization ID associated with the subscription */
   orgId: string;
   /** Subscription type */
@@ -917,6 +927,23 @@ export interface OrgSubscriptionsResponseDto {
 }
 
 export interface UpdateSeatsDto { [key: string]: unknown }
+
+export interface SubscriptionAccessEndAdjustmentDto {
+  subscriptionId: string;
+  /** Exclusive end of product access for this subscription */
+  accessEndsAt: string;
+}
+
+export interface ResolveSubscriptionOverlapDto {
+  authoritativeSubscriptionId: string;
+  adjustments: SubscriptionAccessEndAdjustmentDto[];
+  /**
+     * Audit reason for correcting the subscription access periods
+     * @minLength 1
+     * @maxLength 500
+     */
+  reason: string;
+}
 
 /**
  * The provider of the model

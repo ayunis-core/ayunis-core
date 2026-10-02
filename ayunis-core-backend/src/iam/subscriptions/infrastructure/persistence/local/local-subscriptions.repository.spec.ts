@@ -33,12 +33,15 @@ describe('LocalSubscriptionsRepository ambient transaction', () => {
   }
 
   function build(isActive: boolean) {
+    const subscriptionRecords = {
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
     const manager = {
       save: jest.fn().mockImplementation((r: unknown) => Promise.resolve(r)),
       insert: jest.fn().mockResolvedValue({}),
       delete: jest.fn().mockResolvedValue({}),
       update: jest.fn().mockResolvedValue({}),
-      getRepository: jest.fn().mockReturnValue({}),
+      getRepository: jest.fn().mockReturnValue(subscriptionRecords),
     } as unknown as EntityManager;
 
     const dataSourceTransaction = jest
@@ -57,7 +60,12 @@ describe('LocalSubscriptionsRepository ambient transaction', () => {
       } as never,
     );
 
-    return { repository, dataSourceTransaction, manager };
+    return {
+      repository,
+      dataSourceTransaction,
+      manager,
+      subscriptionRecords,
+    };
   }
 
   it('opens its own transaction when no transaction is active', async () => {
@@ -76,5 +84,34 @@ describe('LocalSubscriptionsRepository ambient transaction', () => {
     expect(dataSourceTransaction).not.toHaveBeenCalled();
     // the write still happened, just on the caller's manager
     expect(manager.save).toHaveBeenCalled();
+  });
+
+  it('persists access-end corrections and their audit records together', async () => {
+    const { repository, manager, subscriptionRecords } = build(true);
+    const subscription = aSubscription();
+    subscription.accessEndsAt = new Date('2026-08-01T00:00:00.000Z');
+    const requestingUserId = randomUUID();
+
+    await repository.applyAccessEndAdjustments({
+      orgId,
+      requestingUserId,
+      reason: 'AYC-1158 contract transition correction',
+      adjustments: [{ subscription, previousAccessEndsAt: null }],
+    });
+
+    expect(subscriptionRecords.update).toHaveBeenCalledWith(
+      { id: subscription.id, orgId },
+      { accessEndsAt: subscription.accessEndsAt },
+    );
+    expect(manager.insert).toHaveBeenCalledWith(expect.any(Function), [
+      expect.objectContaining({
+        subscriptionId: subscription.id,
+        orgId,
+        changedByUserId: requestingUserId,
+        previousAccessEndsAt: null,
+        accessEndsAt: subscription.accessEndsAt,
+        reason: 'AYC-1158 contract transition correction',
+      }),
+    ]);
   });
 });

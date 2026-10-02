@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CancelSubscriptionCommand } from './cancel-subscription.command';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
@@ -14,6 +15,8 @@ import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/ut
 import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { findManageableSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
+import { getCancellationAccessEnd } from 'src/iam/subscriptions/application/util/get-cancellation-access-end';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 @Injectable()
 export class CancelSubscriptionUseCase {
@@ -23,8 +26,10 @@ export class CancelSubscriptionUseCase {
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: CancelSubscriptionCommand): Promise<void> {
     this.logger.log(
       { orgId: command.orgId, requestingUserId: command.requestingUserId },
@@ -36,6 +41,7 @@ export class CancelSubscriptionUseCase {
         command.requestingUserId,
         command.orgId,
       );
+      await this.acquireAllocationLock.execute(command.orgId);
       const subscription = await this.findSubscription(command);
       await this.cancelSubscription(command, subscription);
     } catch (error) {
@@ -78,12 +84,17 @@ export class CancelSubscriptionUseCase {
     // usage-based subscription.
     const wasServing = isActive(subscription);
     subscription.cancelledAt = new Date();
+    subscription.accessEndsAt = getCancellationAccessEnd(
+      subscription,
+      subscription.cancelledAt,
+    );
     await this.subscriptionRepository.update(subscription);
     this.logger.debug(
       {
         subscriptionId: subscription.id,
         orgId: command.orgId,
         cancelledAt: subscription.cancelledAt,
+        accessEndsAt: subscription.accessEndsAt,
       },
       'Subscription cancelled successfully',
     );
