@@ -2,9 +2,21 @@ import { describe, expect, it } from 'vitest';
 import {
   shouldShowSubscriptionHistory,
   subscriptionHistoryBadgeVariant,
+  toLocalDateTime,
   toSubscriptionHistoryItem,
 } from './subscription-history';
 import type { OrgSubscriptionHistoryItemDto } from '@/shared/api';
+
+describe('toLocalDateTime', () => {
+  it('preserves millisecond precision in a local date-time input value', () => {
+    const instant = new Date('2026-08-01T00:00:00.347Z');
+
+    const value = toLocalDateTime(instant);
+
+    expect(value).toMatch(/\.347$/);
+    expect(new Date(value).getTime()).toBe(instant.getTime());
+  });
+});
 
 describe('shouldShowSubscriptionHistory', () => {
   it('hides the history table when there is at most one subscription', () => {
@@ -33,6 +45,7 @@ describe('toSubscriptionHistoryItem', () => {
       createdAt: '2025-06-01T00:00:00.000Z',
       updatedAt: '2025-06-01T00:00:00.000Z',
       cancelledAt: '2025-07-01T00:00:00.000Z',
+      accessEndsAt: '2025-08-01T00:00:00.000Z',
       startsAt: '2025-06-01T00:00:00.000Z',
       orgId: '11111111-1111-1111-1111-111111111111',
       type: 'SEAT_BASED',
@@ -58,6 +71,7 @@ describe('toSubscriptionHistoryItem', () => {
       createdAt: item.createdAt,
       startsAt: item.startsAt,
       cancelledAt: '2025-07-01T00:00:00.000Z',
+      accessEndsAt: '2025-08-01T00:00:00.000Z',
       noOfSeats: 8,
       monthlyCredits: undefined,
     });

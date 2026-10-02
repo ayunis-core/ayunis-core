@@ -18,6 +18,11 @@ const HISTORY_STATUSES = Object.keys(
   STATUS_BADGE_VARIANT,
 ) as SubscriptionHistoryStatus[];
 
+export function toLocalDateTime(date: Date): string {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 23);
+}
+
 export function shouldShowSubscriptionHistory(count: number): boolean {
   return count > 1;
 }
@@ -39,6 +44,7 @@ export function toSubscriptionHistoryItem(
     createdAt: item.createdAt,
     startsAt: item.startsAt,
     cancelledAt: cancelledAtIso(item.cancelledAt),
+    accessEndsAt: item.accessEndsAt ?? null,
     noOfSeats: item.noOfSeats,
     monthlyCredits: item.monthlyCredits,
   };

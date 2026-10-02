@@ -90,6 +90,7 @@
     "description": "Alle Abonnements dieser Organisation, einschließlich älterer und gekündigter Einträge.",
     "latest": "Aktuell",
     "notCancelled": "—",
+    "noAccessEnd": "Unbefristet",
     "multipleActive": "{{count}} Abonnements sind derzeit für diese Organisation wirksam. Diese Ansicht zeigt alle, statt eines stillschweigend auszuwählen.",
     "status": {
       "ACTIVE": "Aktiv",
@@ -107,12 +108,37 @@
       "createdAt": "Erstellt",
       "startsAt": "Start",
       "cancelledAt": "Gekündigt",
+      "accessEndsAt": "Zugriff endet",
       "details": "Details"
     },
     "details": {
       "seats": "{{count}} Plätze",
       "credits": "{{count}} monatliche Credits",
       "none": "—"
+    }
+  },
+  "subscriptionOverlap": {
+    "action": "Überschneidung beheben",
+    "title": "Abo-Überschneidung beheben",
+    "description": "Wählen Sie das maßgebliche Abonnement, legen Sie das genaue Zugriffsende für alle anderen wirksamen Abonnements fest und dokumentieren Sie den Grund der Korrektur.",
+    "authoritative": "Maßgebliches Abonnement",
+    "authoritativePlaceholder": "Verbleibendes Abonnement auswählen",
+    "subscriptionLabel": "{{type}}, Start {{date}}",
+    "accessEnd": "Zugriffsende für {{subscription}}",
+    "reason": "Korrekturgrund",
+    "reasonPlaceholder": "Vertragswechsel oder Supportfall angeben",
+    "cancel": "Abbrechen",
+    "confirm": "Korrektur anwenden",
+    "resolving": "Wird angewendet...",
+    "success": "Abo-Überschneidung behoben",
+    "invalidCorrection": "Die Korrektur behebt die aktuelle Überschneidung nicht. Aktualisieren Sie die Seite und prüfen Sie alle Daten.",
+    "unauthorized": "Sie sind nicht berechtigt, den Abo-Zugriff zu korrigieren.",
+    "error": "Die Abo-Überschneidung konnte nicht behoben werden.",
+    "validation": {
+      "required": "Dieses Feld ist erforderlich",
+      "notFuture": "Das Zugriffsende darf nicht in der Zukunft liegen",
+      "maxLength": "Verwenden Sie höchstens 500 Zeichen",
+      "invalid": "Prüfen Sie das ausgewählte Abonnement, die Daten und den Grund"
     }
   },
   "licenseSeats": {

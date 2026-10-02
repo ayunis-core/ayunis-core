@@ -26,7 +26,10 @@ export default function InviteMenuButton() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setSingleInviteOpen(true)}>
+          <DropdownMenuItem
+            onClick={() => setSingleInviteOpen(true)}
+            data-testid="single-invite-menu-item"
+          >
             <UserPlus />
             {t('inviteMenu.inviteOne')}
           </DropdownMenuItem>

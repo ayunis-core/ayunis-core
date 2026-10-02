@@ -11,7 +11,10 @@ import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/
 import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  MultipleActiveSubscriptionsError,
+  SubscriptionNotFoundError,
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
@@ -242,6 +245,22 @@ describe('CreateInviteUseCase', () => {
       expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
       expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.create).toHaveBeenCalled();
+    });
+
+    it('should preserve the multiple-subscriptions error on cloud instances', async () => {
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+      const overlapError = new MultipleActiveSubscriptionsError(mockOrgId);
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      configService.get.mockReturnValueOnce([]).mockReturnValueOnce(true);
+      getActiveSubscriptionUseCase.execute.mockRejectedValue(overlapError);
+
+      await expect(useCase.execute(command)).rejects.toBe(overlapError);
+      expect(invitesRepository.create).not.toHaveBeenCalled();
     });
 
     it('should create invite when no active subscription is found in cloud instance', async () => {
