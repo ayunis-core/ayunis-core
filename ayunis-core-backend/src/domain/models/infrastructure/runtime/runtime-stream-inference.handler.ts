@@ -1,11 +1,7 @@
 import type { ModelProvider } from '@ayunis/inference';
-import { Logger } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import type { Subscriber } from 'rxjs';
 import { Observable } from 'rxjs';
 import type {
-  StreamInferenceAttemptTerminalContext,
-  StreamInferenceAttemptUsage,
   StreamInferenceInput,
   StreamInferenceResponseChunk,
 } from 'src/domain/models/application/ports/stream-inference.handler';
@@ -17,165 +13,14 @@ import { toStreamChunk } from './chunk.mapper';
 import type { ChunkTransform } from './chunk-transform';
 import { applyChunkTransform } from './chunk-transform';
 import {
+  failedCallOutcome,
+  InferenceCallTracker,
+} from './inference-call-tracker';
+import {
   StreamIdleWatchdog,
   STREAM_IDLE_TIMEOUT_MS,
 } from 'src/common/streaming/stream-idle-watchdog';
-import {
-  isRetryableProviderRateLimitFailure,
-  isRetryableProviderServerFailure,
-  isRetryableProviderTimeoutFailure,
-  isRetryableSetupFailure,
-  rateLimitRetryDelayMs,
-  SETUP_RETRY_BACKOFF_MS,
-} from 'src/common/errors/provider-transport-error.classifier';
 import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
-
-/**
- * Bounded retries, and only when the failed attempt emitted nothing: once a
- * chunk reaches the subscriber it may already be persisted downstream, so
- * another attempt would duplicate content.
- */
-const MAX_SETUP_ATTEMPTS = 2;
-const MAX_SERVER_ATTEMPTS = 3;
-
-type ProviderStreamRequest = Parameters<ModelProvider['stream']>[0];
-type AttemptOutcome = StreamInferenceAttemptTerminalContext['outcome'];
-
-type StreamAttemptResult =
-  | { readonly type: 'completed' }
-  | {
-      readonly type: 'failed';
-      readonly error: unknown;
-      readonly outputEmitted: boolean;
-    };
-
-interface StreamAttemptParams {
-  input: StreamInferenceInput;
-  provider: ModelProvider;
-  request: ProviderStreamRequest;
-  subscriber: Subscriber<StreamInferenceResponseChunk>;
-  controller: AbortController;
-  watchdog: StreamIdleWatchdog;
-}
-
-interface RetryableStreamFailure {
-  readonly error: Error;
-  readonly maxAttempts: number;
-  readonly reason: 'transport' | 'timeout' | 'server' | 'rate_limit';
-}
-
-function retryableStreamFailure(error: Error): RetryableStreamFailure | null {
-  if (isRetryableSetupFailure(error)) {
-    return { error, maxAttempts: MAX_SETUP_ATTEMPTS, reason: 'transport' };
-  }
-  if (isRetryableProviderTimeoutFailure(error)) {
-    return { error, maxAttempts: MAX_SETUP_ATTEMPTS, reason: 'timeout' };
-  }
-  if (isRetryableProviderServerFailure(error)) {
-    return { error, maxAttempts: MAX_SERVER_ATTEMPTS, reason: 'server' };
-  }
-  if (isRetryableProviderRateLimitFailure(error)) {
-    return { error, maxAttempts: MAX_SERVER_ATTEMPTS, reason: 'rate_limit' };
-  }
-  return null;
-}
-
-/** Undefined means the failure is not worth another attempt at this point. */
-function retryDelayMs(
-  failure: RetryableStreamFailure,
-  attempt: number,
-): number | undefined {
-  if (attempt >= failure.maxAttempts) return undefined;
-  return failure.reason === 'rate_limit'
-    ? rateLimitRetryDelayMs(failure.error, attempt)
-    : SETUP_RETRY_BACKOFF_MS * attempt;
-}
-
-function backoff(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-class AttemptUsageAccumulator {
-  private inputTokens?: number;
-  private outputTokens?: number;
-  private cacheReadInputTokens?: number;
-  private cacheWriteInputTokens?: number;
-  private available = false;
-
-  add(usage: StreamInferenceResponseChunk['usage']): void {
-    if (!usage || !this.hasReportedDimension(usage)) return;
-    this.available = true;
-    if (usage.inputTokens !== undefined) this.inputTokens = usage.inputTokens;
-    if (usage.outputTokens !== undefined)
-      this.outputTokens = usage.outputTokens;
-    if (usage.cacheReadInputTokens !== undefined)
-      this.cacheReadInputTokens = usage.cacheReadInputTokens;
-    if (usage.cacheWriteInputTokens !== undefined)
-      this.cacheWriteInputTokens = usage.cacheWriteInputTokens;
-  }
-
-  result(): StreamInferenceAttemptUsage | undefined {
-    if (!this.available) return undefined;
-    return {
-      inputTokens:
-        (this.inputTokens ?? 0) +
-        (this.cacheReadInputTokens ?? 0) +
-        (this.cacheWriteInputTokens ?? 0),
-      outputTokens: this.outputTokens ?? 0,
-    };
-  }
-
-  private hasReportedDimension(
-    usage: NonNullable<StreamInferenceResponseChunk['usage']>,
-  ): boolean {
-    return (
-      usage.inputTokens !== undefined ||
-      usage.outputTokens !== undefined ||
-      usage.cacheReadInputTokens !== undefined ||
-      usage.cacheWriteInputTokens !== undefined
-    );
-  }
-}
-
-function emitsOutput(chunk: StreamInferenceResponseChunk): boolean {
-  return Boolean(
-    chunk.textContentDelta ||
-    chunk.thinkingDelta ||
-    chunk.toolCallsDelta.length > 0,
-  );
-}
-
-function failedAttemptResult(
-  error: unknown,
-  controller: AbortController,
-  outputEmitted: boolean,
-): Extract<StreamAttemptResult, { type: 'failed' }> {
-  const reason: unknown = controller.signal.reason;
-  return {
-    type: 'failed',
-    error: reason instanceof InferenceStreamStalledError ? reason : error,
-    outputEmitted,
-  };
-}
-
-function attemptOutcome(
-  error: unknown,
-  controller: AbortController,
-): AttemptOutcome {
-  const reason: unknown = controller.signal.reason;
-  if (reason instanceof InferenceStreamStalledError) return 'failed';
-  if (controller.signal.aborted) return 'aborted';
-  if (error instanceof Error && error.name === 'AbortError') return 'aborted';
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'kind' in error &&
-    error.kind === 'abort'
-  ) {
-    return 'aborted';
-  }
-  return 'failed';
-}
 
 /**
  * Streaming inference handler backed by a `@ayunis` ModelProvider. Concrete
@@ -191,7 +36,6 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
     string,
     { revision: number; provider: ModelProvider }
   >();
-  protected readonly logger = new Logger(RuntimeStreamInferenceHandler.name);
 
   protected constructor(
     protected readonly imageContentService: ImageContentService,
@@ -253,6 +97,10 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
     });
   }
 
+  /**
+   * Makes exactly one provider call. Retrying is the caller's decision: a
+   * hidden retry here would multiply billable upstream calls per request.
+   */
   private async streamResponse(
     input: StreamInferenceInput,
     subscriber: Subscriber<StreamInferenceResponseChunk>,
@@ -262,29 +110,8 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
       controller.abort(new InferenceStreamStalledError(STREAM_IDLE_TIMEOUT_MS)),
     );
     try {
-      const request = await toProviderRequest(input, this.imageContentService);
-      const provider = this.getProvider(input.model);
-      for (let attempt = 1; ; attempt++) {
-        const result = await this.streamAttempt({
-          input,
-          provider,
-          request,
-          subscriber,
-          controller,
-          watchdog,
-        });
-        if (result.type === 'completed') {
-          subscriber.complete();
-          return;
-        }
-        const setupFailure = this.retryableFailure(result, controller);
-        if (!setupFailure) throw result.error;
-        const delayMs = retryDelayMs(setupFailure, attempt);
-        if (delayMs === undefined) throw result.error;
-        await backoff(delayMs);
-        if (controller.signal.aborted) throw result.error;
-        this.logRetry(input, attempt, setupFailure);
-      }
+      await this.streamCall(input, subscriber, controller, watchdog);
+      subscriber.complete();
     } catch (error) {
       subscriber.error(error);
     } finally {
@@ -292,93 +119,43 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
     }
   }
 
-  private retryableFailure(
-    result: Extract<StreamAttemptResult, { type: 'failed' }>,
-    controller: AbortController,
-  ): RetryableStreamFailure | null {
-    if (
-      result.outputEmitted ||
-      controller.signal.aborted ||
-      !(result.error instanceof Error)
-    ) {
-      return null;
-    }
-    return retryableStreamFailure(result.error);
-  }
-
-  private logRetry(
+  private async streamCall(
     input: StreamInferenceInput,
-    attempt: number,
-    failure: RetryableStreamFailure,
-  ): void {
-    this.logger.warn(
-      {
-        model: input.model.name,
-        provider: input.model.provider,
-        attempt,
-        reason: failure.reason,
-      },
-      'Provider stream failed before the first chunk',
+    subscriber: Subscriber<StreamInferenceResponseChunk>,
+    controller: AbortController,
+    watchdog: StreamIdleWatchdog,
+  ): Promise<void> {
+    const request = await toProviderRequest(input, this.imageContentService);
+    const call = new InferenceCallTracker();
+    const chunks = call.track(
+      applyChunkTransform(
+        this.getProvider(input.model).stream({
+          ...request,
+          signal: controller.signal,
+        }),
+        this.createChunkTransform(),
+      ),
     );
-  }
-
-  private async streamAttempt(
-    params: StreamAttemptParams,
-  ): Promise<StreamAttemptResult> {
-    const { input, provider, request, subscriber, controller, watchdog } =
-      params;
-    const requestId = randomUUID();
-    await input.attemptLifecycle?.onAttemptStart({ requestId });
-    const transform = this.createChunkTransform();
-    const usage = new AttemptUsageAccumulator();
-    let outputEmitted = false;
-    let consumptionStarted = false;
     try {
-      for await (const providerChunk of provider.stream({
-        ...request,
-        signal: controller.signal,
-      })) {
-        consumptionStarted = true;
+      for await (const chunk of chunks) {
         watchdog.notifyChunk();
-        const chunk = toStreamChunk(transform(providerChunk));
-        usage.add(chunk.usage);
-        outputEmitted ||= emitsOutput(chunk);
-        subscriber.next(chunk);
+        subscriber.next(toStreamChunk(chunk));
       }
     } catch (error) {
+      // Stop first so slow accounting cannot be mistaken for a stall.
       watchdog.stop();
-      await this.notifyTerminal(
-        input,
-        {
-          requestId,
-          outcome: attemptOutcome(error, controller),
-          usage: usage.result(),
-          outputEmitted,
-        },
-        consumptionStarted,
+      await call.settle(
+        failedCallOutcome(error, controller.signal),
+        input.onCallTerminal,
       );
-      return failedAttemptResult(error, controller, outputEmitted);
+      throw stallReasonOr(error, controller.signal);
     }
     watchdog.stop();
-    await this.notifyTerminal(
-      input,
-      {
-        requestId,
-        outcome: 'completed',
-        usage: usage.result(),
-        outputEmitted,
-      },
-      true,
-    );
-    return { type: 'completed' };
+    await call.settle('completed', input.onCallTerminal);
   }
+}
 
-  private async notifyTerminal(
-    input: StreamInferenceInput,
-    context: StreamInferenceAttemptTerminalContext,
-    accountingRequired: boolean,
-  ): Promise<void> {
-    if (!accountingRequired || !input.attemptLifecycle) return;
-    await input.attemptLifecycle.onAttemptTerminal(context);
-  }
+function stallReasonOr(error: unknown, signal: AbortSignal): unknown {
+  const reason: unknown = signal.reason;
+  return reason instanceof InferenceStreamStalledError ? reason : error;
 }

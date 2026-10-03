@@ -1,18 +1,11 @@
 import { ModelProviderError, type ModelProvider } from '@ayunis/inference';
-import { Logger } from '@nestjs/common';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import type {
-  StreamInferenceAttemptLifecycle,
-  StreamInferenceInput,
-} from 'src/domain/models/application/ports/stream-inference.handler';
+import type { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import type { InferenceCallTerminalHandler } from 'src/domain/models/application/models/inference-call-terminal';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
-import {
-  RATE_LIMIT_MAX_WAIT_MS,
-  SETUP_RETRY_BACKOFF_MS,
-} from 'src/common/errors/provider-transport-error.classifier';
 
 /** Rejects the way a provider SDK does when its request signal aborts. */
 function whenAborted(signal: AbortSignal | undefined): Promise<never> {
@@ -71,7 +64,7 @@ class TestHandler extends RuntimeStreamInferenceHandler {
 }
 
 function makeInput(
-  attemptLifecycle?: StreamInferenceAttemptLifecycle,
+  onCallTerminal?: InferenceCallTerminalHandler,
 ): StreamInferenceInput {
   return {
     model: {
@@ -84,7 +77,7 @@ function makeInput(
     systemPrompt: '',
     tools: [],
     orgId: 'org-1',
-    attemptLifecycle,
+    onCallTerminal,
   } as unknown as StreamInferenceInput;
 }
 
@@ -162,12 +155,9 @@ describe('RuntimeStreamInferenceHandler', () => {
     const failed = new Promise<unknown>((resolve) => {
       new TestHandler(provider)
         .answer(
-          makeInput({
-            onAttemptStart: () => undefined,
-            onAttemptTerminal: () => {
-              terminalCalls += 1;
-              return Promise.reject(accountingError);
-            },
+          makeInput(() => {
+            terminalCalls += 1;
+            return Promise.reject(accountingError);
           }),
         )
         .subscribe({ error: resolve });
@@ -224,170 +214,61 @@ describe('RuntimeStreamInferenceHandler', () => {
     expect(calls).toBe(1);
   });
 
-  it('retries once when a transient connection failure happens before the first chunk', async () => {
-    let calls = 0;
-    const provider: ModelProvider = {
-      name: 'test:flaky-dns',
-      async *stream() {
-        calls += 1;
-        if (calls === 1) {
-          yield await Promise.reject(
-            Object.assign(new Error('getaddrinfo EAI_AGAIN'), {
-              code: 'EAI_AGAIN',
-            }),
-          );
-        }
-        yield { textDelta: 'recovered' };
-      },
-    };
-
-    const deltas: (string | null)[] = [];
-    const completed = new Promise<void>((resolve, reject) => {
-      new TestHandler(provider).answer(makeInput()).subscribe({
-        next: (chunk) => deltas.push(chunk.textContentDelta),
-        complete: resolve,
-        error: reject,
-      });
-    });
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
-
-    await completed;
-    expect(deltas).toEqual(['recovered']);
-    expect(calls).toBe(2);
-  });
-
-  it('retries once when a provider timeout happens before the first chunk', async () => {
-    let calls = 0;
-    const provider: ModelProvider = {
-      name: 'test:timeout-recovery',
-      async *stream() {
-        calls += 1;
-        if (calls === 1) {
-          yield await Promise.reject(
-            Object.assign(new Error('request timed out'), {
-              code: 'ETIMEDOUT',
-            }),
-          );
-        }
-        yield { textDelta: 'recovered' };
-      },
-    };
-
-    const deltas: (string | null)[] = [];
-    const completed = new Promise<void>((resolve, reject) => {
-      new TestHandler(provider).answer(makeInput()).subscribe({
-        next: (chunk) => deltas.push(chunk.textContentDelta),
-        complete: resolve,
-        error: reject,
-      });
-    });
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
-
-    await completed;
-    expect(deltas).toEqual(['recovered']);
-    expect(calls).toBe(2);
-  });
-
-  it('retries portable provider failures without logging their raw causes', async () => {
-    const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    let calls = 0;
-    const provider: ModelProvider = {
-      name: 'openai:compatible-model',
-      async *stream() {
-        calls += 1;
-        if (calls === 1) {
-          yield await Promise.reject(
-            new ModelProviderError({
-              kind: 'server',
-              stage: 'stream_establishment',
-              upstreamStatus: 503,
-              cause: new Error('provider echoed classified resident data'),
-            }),
-          );
-        }
-        yield { textDelta: 'recovered' };
-      },
-    };
-
-    const deltas: (string | null)[] = [];
-    const completed = new Promise<void>((resolve, reject) => {
-      new TestHandler(provider).answer(makeInput()).subscribe({
-        next: (chunk) => deltas.push(chunk.textContentDelta),
-        complete: resolve,
-        error: reject,
-      });
-    });
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
-
-    await completed;
-    expect(deltas).toEqual(['recovered']);
-    expect(calls).toBe(2);
-    expect(warn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: 'test-model',
-        provider: 'test',
-        reason: 'server',
+  it.each([
+    [
+      'connection setup',
+      Object.assign(new Error('getaddrinfo EAI_AGAIN'), { code: 'EAI_AGAIN' }),
+    ],
+    [
+      'timeout',
+      Object.assign(new Error('request timed out'), { code: 'ETIMEDOUT' }),
+    ],
+    [
+      'server',
+      new ModelProviderError({
+        kind: 'server',
+        stage: 'stream_establishment',
+        upstreamStatus: 503,
+        cause: new Error('service unavailable'),
       }),
-      'Provider stream failed before the first chunk',
-    );
-    expect(warn.mock.calls[0]?.[0]).not.toHaveProperty('err');
-  });
+    ],
+    [
+      'rate-limit',
+      Object.assign(new Error('rate limit exceeded'), {
+        status: 429,
+        headers: { 'retry-after': '1' },
+      }),
+    ],
+    [
+      'request rejection',
+      Object.assign(new Error('bad request'), { status: 400 }),
+    ],
+  ])(
+    'makes exactly one provider call for a %s failure before output',
+    async (_failure, rejection) => {
+      let calls = 0;
+      const provider: ModelProvider = {
+        name: 'test:single-call',
+        async *stream() {
+          calls += 1;
+          yield await Promise.reject(rejection);
+        },
+      };
+      const terminal = jest.fn<Promise<void>, []>();
 
-  it('recovers on the third attempt after repeated provider server failures', async () => {
-    let calls = 0;
-    const provider: ModelProvider = {
-      name: 'test:server-recovery',
-      async *stream() {
-        calls += 1;
-        if (calls < 3) {
-          yield await Promise.reject(
-            Object.assign(new Error('service unavailable'), { status: 503 }),
-          );
-        }
-        yield { textDelta: 'recovered' };
-      },
-    };
-
-    const deltas: (string | null)[] = [];
-    const completed = new Promise<void>((resolve, reject) => {
-      new TestHandler(provider).answer(makeInput()).subscribe({
-        next: (chunk) => deltas.push(chunk.textContentDelta),
-        complete: resolve,
-        error: reject,
+      const failed = new Promise<unknown>((resolve) => {
+        new TestHandler(provider).answer(makeInput(terminal)).subscribe({
+          next: () => undefined,
+          error: resolve,
+        });
       });
-    });
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS * 3);
+      await jest.advanceTimersByTimeAsync(60_000);
 
-    await completed;
-    expect(deltas).toEqual(['recovered']);
-    expect(calls).toBe(3);
-  });
-
-  it('does not retry a transient failure when the subscriber unsubscribes during the backoff', async () => {
-    let calls = 0;
-    const provider: ModelProvider = {
-      name: 'test:flaky-then-cancel',
-      async *stream() {
-        calls += 1;
-        yield await Promise.reject(
-          Object.assign(new Error('getaddrinfo EAI_AGAIN'), {
-            code: 'EAI_AGAIN',
-          }),
-        );
-      },
-    };
-
-    const subscription = new TestHandler(provider)
-      .answer(makeInput())
-      .subscribe({ next: () => undefined, error: () => undefined });
-    // Let the first attempt fail and the backoff start...
-    await jest.advanceTimersByTimeAsync(0);
-    // ...then disconnect while it is waiting.
-    subscription.unsubscribe();
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
-
-    expect(calls).toBe(1);
-  });
+      await expect(failed).resolves.toBe(rejection);
+      expect(calls).toBe(1);
+      expect(terminal).not.toHaveBeenCalled();
+    },
+  );
 
   it('does not retry a connection failure after chunks were already emitted', async () => {
     let calls = 0;
@@ -406,90 +287,6 @@ describe('RuntimeStreamInferenceHandler', () => {
 
     await arrived;
     await expect(failure).resolves.toBe(reset);
-    expect(calls).toBe(1);
-  });
-
-  it('waits out a short retry-after before retrying a rate limit', async () => {
-    let calls = 0;
-    const provider: ModelProvider = {
-      name: 'test:rate-limit-recovery',
-      async *stream() {
-        calls += 1;
-        if (calls === 1) {
-          yield await Promise.reject(
-            Object.assign(new Error('rate limit exceeded'), {
-              status: 429,
-              headers: { 'retry-after': '2' },
-            }),
-          );
-        }
-        yield { textDelta: 'recovered' };
-      },
-    };
-
-    const deltas: (string | null)[] = [];
-    const completed = new Promise<void>((resolve, reject) => {
-      new TestHandler(provider).answer(makeInput()).subscribe({
-        next: (chunk) => deltas.push(chunk.textContentDelta),
-        complete: resolve,
-        error: reject,
-      });
-    });
-    await jest.advanceTimersByTimeAsync(1_999);
-    expect(calls).toBe(1);
-    await jest.advanceTimersByTimeAsync(1);
-
-    await completed;
-    expect(deltas).toEqual(['recovered']);
-    expect(calls).toBe(2);
-  });
-
-  it('does not retry a rate limit whose retry-after exceeds the wait budget', async () => {
-    let calls = 0;
-    const rejection = Object.assign(new Error('rate limit exceeded'), {
-      status: 429,
-      headers: { 'retry-after': String(RATE_LIMIT_MAX_WAIT_MS / 1000 + 1) },
-    });
-    const provider: ModelProvider = {
-      name: 'test:rate-limit-too-long',
-      async *stream() {
-        calls += 1;
-        yield await Promise.reject(rejection);
-      },
-    };
-
-    const failed = new Promise<unknown>((resolve) => {
-      new TestHandler(provider).answer(makeInput()).subscribe({
-        next: () => undefined,
-        error: resolve,
-      });
-    });
-
-    await expect(failed).resolves.toBe(rejection);
-    expect(calls).toBe(1);
-  });
-
-  it('does not retry non-transport provider failures', async () => {
-    let calls = 0;
-    const rejection = Object.assign(new Error('bad request'), {
-      status: 400,
-    });
-    const provider: ModelProvider = {
-      name: 'test:rejected',
-      async *stream() {
-        calls += 1;
-        yield await Promise.reject(rejection);
-      },
-    };
-
-    const failed = new Promise<unknown>((resolve) => {
-      new TestHandler(provider).answer(makeInput()).subscribe({
-        next: () => undefined,
-        error: resolve,
-      });
-    });
-
-    await expect(failed).resolves.toBe(rejection);
     expect(calls).toBe(1);
   });
 
@@ -514,101 +311,7 @@ describe('RuntimeStreamInferenceHandler', () => {
 
     expect(deltas).toEqual(['hello', ' world']);
   });
-
-  it('gates each provider attempt after the prior attempt usage is persisted', async () => {
-    const order: string[] = [];
-    let calls = 0;
-    let releasePersistence!: () => void;
-    const persistence = new Promise<void>((resolve) => {
-      releasePersistence = resolve;
-    });
-    const provider: ModelProvider = {
-      name: 'test:accounted-retry',
-      async *stream() {
-        calls += 1;
-        order.push(`provider:${calls}`);
-        if (calls === 1) {
-          yield { usage: { inputTokens: 4, outputTokens: 1 } };
-          throw Object.assign(new Error('service unavailable'), {
-            status: 503,
-          });
-        }
-        yield { textDelta: 'recovered' };
-      },
-    };
-    const lifecycle: StreamInferenceAttemptLifecycle = {
-      onAttemptStart: async () => {
-        order.push(`gate:${calls + 1}`);
-      },
-      onAttemptTerminal: async ({ usage }) => {
-        order.push(`account:${calls}:${usage?.inputTokens}`);
-        if (calls === 1) await persistence;
-      },
-    };
-
-    const completed = new Promise<void>((resolve, reject) => {
-      new TestHandler(provider).answer(makeInput(lifecycle)).subscribe({
-        complete: resolve,
-        error: reject,
-      });
-    });
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
-    expect(calls).toBe(1);
-
-    releasePersistence();
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
-    await completed;
-
-    expect(order).toEqual([
-      'gate:1',
-      'provider:1',
-      'account:1:4',
-      'gate:2',
-      'provider:2',
-      'account:2:undefined',
-    ]);
-  });
-
-  it('assigns a distinct correlation ID to every direct stream attempt', async () => {
-    const requestIds: string[] = [];
-    let calls = 0;
-    const provider: ModelProvider = {
-      name: 'test:distinct-attempt-ids',
-      async *stream() {
-        calls += 1;
-        if (calls === 1) {
-          throw Object.assign(new Error('service unavailable'), {
-            status: 503,
-          });
-        }
-        yield { textDelta: 'recovered' };
-      },
-    };
-    const lifecycle: StreamInferenceAttemptLifecycle = {
-      onAttemptStart: ({ requestId }) => {
-        requestIds.push(requestId);
-      },
-      onAttemptTerminal: () => undefined,
-    };
-
-    const completed = new Promise<void>((resolve, reject) => {
-      new TestHandler(provider).answer(makeInput(lifecycle)).subscribe({
-        complete: resolve,
-        error: reject,
-      });
-    });
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
-    await completed;
-
-    expect(requestIds).toHaveLength(2);
-    expect(requestIds[0]).not.toBe(requestIds[1]);
-    expect(requestIds).toEqual([
-      expect.stringMatching(/^[0-9a-f-]{36}$/),
-      expect.stringMatching(/^[0-9a-f-]{36}$/),
-    ]);
-  });
-
-  it('folds cache usage into input tokens exactly once at attempt termination', async () => {
+  it('folds cache usage into input tokens exactly once at call termination', async () => {
     const terminal = jest.fn();
     const provider: ModelProvider = {
       name: 'test:cached-usage',
@@ -626,12 +329,7 @@ describe('RuntimeStreamInferenceHandler', () => {
 
     await new Promise<void>((resolve, reject) => {
       new TestHandler(provider)
-        .answer(
-          makeInput({
-            onAttemptStart: () => undefined,
-            onAttemptTerminal: terminal,
-          }),
-        )
+        .answer(makeInput(terminal))
         .subscribe({ complete: resolve, error: reject });
     });
 
@@ -669,12 +367,7 @@ describe('RuntimeStreamInferenceHandler', () => {
 
     await new Promise<void>((resolve, reject) => {
       new TestHandler(provider)
-        .answer(
-          makeInput({
-            onAttemptStart: () => undefined,
-            onAttemptTerminal: terminal,
-          }),
-        )
+        .answer(makeInput(terminal))
         .subscribe({ complete: resolve, error: reject });
     });
 
@@ -701,12 +394,7 @@ describe('RuntimeStreamInferenceHandler', () => {
 
     const failed = new Promise<unknown>((resolve) => {
       new TestHandler(provider)
-        .answer(
-          makeInput({
-            onAttemptStart: () => undefined,
-            onAttemptTerminal: terminal,
-          }),
-        )
+        .answer(makeInput(terminal))
         .subscribe({ error: resolve });
     });
 
@@ -719,7 +407,7 @@ describe('RuntimeStreamInferenceHandler', () => {
     );
   });
 
-  it('does not classify finish-only metadata as emitted output', async () => {
+  it('reports a completed call that returned no usage', async () => {
     const terminal = jest.fn();
     const provider: ModelProvider = {
       name: 'test:finish-only',
@@ -730,20 +418,13 @@ describe('RuntimeStreamInferenceHandler', () => {
 
     await new Promise<void>((resolve, reject) => {
       new TestHandler(provider)
-        .answer(
-          makeInput({
-            onAttemptStart: () => undefined,
-            onAttemptTerminal: terminal,
-          }),
-        )
+        .answer(makeInput(terminal))
         .subscribe({ complete: resolve, error: reject });
     });
 
     expect(terminal).toHaveBeenCalledWith({
-      requestId: expect.any(String),
       outcome: 'completed',
       usage: undefined,
-      outputEmitted: false,
     });
   });
 
@@ -760,12 +441,7 @@ describe('RuntimeStreamInferenceHandler', () => {
     const events: string[] = [];
     const failed = new Promise<unknown>((resolve) => {
       new TestHandler(provider)
-        .answer(
-          makeInput({
-            onAttemptStart: () => undefined,
-            onAttemptTerminal: () => Promise.reject(accountingError),
-          }),
-        )
+        .answer(makeInput(() => Promise.reject(accountingError)))
         .subscribe({
           next: () => events.push('output'),
           complete: () => events.push('complete'),
@@ -794,17 +470,12 @@ describe('RuntimeStreamInferenceHandler', () => {
     };
     const failed = new Promise<unknown>((resolve) => {
       new TestHandler(provider)
-        .answer(
-          makeInput({
-            onAttemptStart: () => undefined,
-            onAttemptTerminal: () => Promise.reject(persistenceError),
-          }),
-        )
+        .answer(makeInput(() => Promise.reject(persistenceError)))
         .subscribe({ error: resolve });
     });
 
     await expect(failed).resolves.toBe(persistenceError);
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+    await jest.advanceTimersByTimeAsync(60_000);
     expect(calls).toBe(1);
   });
 
@@ -828,13 +499,10 @@ describe('RuntimeStreamInferenceHandler', () => {
     };
     const subscription = new TestHandler(provider)
       .answer(
-        makeInput({
-          onAttemptStart: () => undefined,
-          onAttemptTerminal: async ({ outcome }) => {
-            expect(outcome).toBe('aborted');
-            terminalStarted();
-            await accounting;
-          },
+        makeInput(async ({ outcome }) => {
+          expect(outcome).toBe('aborted');
+          terminalStarted();
+          await accounting;
         }),
       )
       .subscribe();
@@ -849,11 +517,11 @@ describe('RuntimeStreamInferenceHandler', () => {
     expect(accountingFinished).toBe(true);
   });
 
-  it('keeps the legacy no-callback stream behavior', async () => {
+  it('streams without terminal accounting when no handler is supplied', async () => {
     const provider: ModelProvider = {
-      name: 'test:legacy-no-callback',
+      name: 'test:no-terminal-handler',
       async *stream() {
-        yield { textDelta: 'legacy answer' };
+        yield { textDelta: 'plain answer' };
       },
     };
 
@@ -864,6 +532,6 @@ describe('RuntimeStreamInferenceHandler', () => {
       });
     });
 
-    expect(result).toBe('legacy answer');
+    expect(result).toBe('plain answer');
   });
 });

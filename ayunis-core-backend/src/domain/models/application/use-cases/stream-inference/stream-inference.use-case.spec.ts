@@ -231,10 +231,7 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
       }),
     };
     const useCase = new StreamInferenceUseCase(registry as never);
-    const attemptLifecycle = {
-      onAttemptStart: jest.fn(),
-      onAttemptTerminal: jest.fn(),
-    };
+    const onCallTerminal = jest.fn();
 
     useCase.execute(
       new StreamInferenceInput({
@@ -243,7 +240,7 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
         systemPrompt: '',
         tools: [tool],
         orgId: '123e4567-e89b-12d3-a456-426614174000',
-        attemptLifecycle,
+        onCallTerminal,
       }),
     );
 
@@ -253,6 +250,6 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
     expect(history.content[0]).toMatchObject({
       params: { name: 'x', date: null },
     });
-    expect(received?.attemptLifecycle).toBe(attemptLifecycle);
+    expect(received?.onCallTerminal).toBe(onCallTerminal);
   });
 });

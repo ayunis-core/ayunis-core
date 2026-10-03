@@ -125,7 +125,7 @@ export class StreamInferenceUseCase {
       tools: input.tools,
       toolChoice: input.toolChoice,
       orgId: input.orgId,
-      attemptLifecycle: input.attemptLifecycle,
+      onCallTerminal: input.onCallTerminal,
     });
   }
 

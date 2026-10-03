@@ -8,10 +8,8 @@ import {
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
 import { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
-import {
-  StreamInferenceInput,
-  type StreamInferenceAttemptLifecycle,
-} from 'src/domain/models/application/ports/stream-inference.handler';
+import { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import type { InferenceCallTerminalHandler } from 'src/domain/models/application/models/inference-call-terminal';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
@@ -27,6 +25,7 @@ import {
   OpenAIModelNotFoundError,
   OpenAITokenLimitError,
   OpenAIUnexpectedError,
+  OpenAIUsageAccountingFailedError,
 } from 'src/domain/openai-compat/application/openai-compat.errors';
 import { ExecuteOpenAIChatCompletionCommand } from './execute-openai-chat-completion.command';
 import { OpenAIFileContentService } from 'src/domain/openai-compat/application/services/openai-file-content.service';
@@ -40,8 +39,9 @@ import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-di
  * and is the only caller of `InferenceUsageGuard` on this surface.
  * The controller stays purely DTO↔command + SSE framing + HTTP filter.
  *
- * Direct stream attempt gating and critical accounting are supplied through
- * the models module's provider-neutral attempt lifecycle seam.
+ * Each request makes exactly one provider call: the monetary gate runs once
+ * before it, and retries are left to the API caller. Critical usage
+ * accounting is supplied through the models module's call-terminal hook.
  */
 @Injectable()
 export class ExecuteOpenAIChatCompletionUseCase {
@@ -69,7 +69,6 @@ export class ExecuteOpenAIChatCompletionUseCase {
       threadId,
     );
 
-    const requestId = this.requestMapper.newRequestId();
     const tools = this.requestMapper.toToolSchemas(request);
 
     const inferenceCommand = new GetInferenceCommand({
@@ -79,26 +78,13 @@ export class ExecuteOpenAIChatCompletionUseCase {
       toolChoice: this.requestMapper.toModelToolChoice(request),
       instructions: systemPrompt || undefined,
       acceptTokenLimitCompletion: true,
+      onCallTerminal: this.accountCall(model),
     });
     await this.inferenceUsageGuard.ensureModelCallAllowed(
       command.principal,
       model,
     );
     const response = await this.executeNonStreamingInference(inferenceCommand);
-
-    if (
-      response.meta.inputTokens !== undefined ||
-      response.meta.outputTokens !== undefined
-    ) {
-      this.inferenceUsageGuard.collectUsage(
-        model,
-        {
-          inputTokens: response.meta.inputTokens ?? 0,
-          outputTokens: response.meta.outputTokens ?? 0,
-        },
-        requestId,
-      );
-    }
 
     return this.responseMapper.toResponse({
       id: this.completionId(),
@@ -146,7 +132,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
         tools: this.requestMapper.toToolSchemas(request),
         toolChoice: this.requestMapper.toModelToolChoice(request),
         orgId: command.principal.orgId,
-        attemptLifecycle: this.createAttemptLifecycle(command.principal, model),
+        onCallTerminal: this.accountCall(model),
       }),
     );
 
@@ -172,35 +158,36 @@ export class ExecuteOpenAIChatCompletionUseCase {
     );
   }
 
-  private createAttemptLifecycle(
-    principal: ExecuteOpenAIChatCompletionCommand['principal'],
-    model: LanguageModel,
-  ): StreamInferenceAttemptLifecycle {
-    let firstAttemptPreauthorized = true;
-    return {
-      onAttemptStart: async () => {
-        if (firstAttemptPreauthorized) {
-          firstAttemptPreauthorized = false;
-          return;
-        }
-        await this.inferenceUsageGuard.ensureModelCallAllowed(principal, model);
-      },
-      onAttemptTerminal: async (attempt) => {
-        if (attempt.usage) {
-          await this.inferenceUsageGuard.collectUsageCritical(
-            model,
-            attempt.usage,
-            attempt.requestId,
-          );
-          return;
-        }
+  private accountCall(model: LanguageModel): InferenceCallTerminalHandler {
+    return async ({ outcome, usage }) => {
+      const requestId = this.requestMapper.newRequestId();
+      if (!usage) {
         if (model.consumesCredits) {
-          throw new InferenceFailedError(
-            'Provider call completed without usage data',
-            { requestId: attempt.requestId, outcome: attempt.outcome },
-          );
+          throw new OpenAIUsageAccountingFailedError({
+            requestId,
+            outcome,
+            reason: 'usage_missing',
+          });
         }
-      },
+        return;
+      }
+      try {
+        await this.inferenceUsageGuard.collectUsageCritical(
+          model,
+          usage,
+          requestId,
+        );
+      } catch (error) {
+        this.logger.error(
+          { requestId, outcome, errorName: (error as Error).name },
+          'Critical usage write failed after a completed provider call',
+        );
+        throw new OpenAIUsageAccountingFailedError({
+          requestId,
+          outcome,
+          reason: 'usage_write_failed',
+        });
+      }
     };
   }
 
