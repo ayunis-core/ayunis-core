@@ -64,6 +64,8 @@ export function useLogin({ redirect }: { redirect?: string }) {
             if (code === 'IP_NOT_ALLOWED') {
               void navigate({ to: '/ip-blocked' });
               return;
+            } else if (code === 'ORG_NOT_ACTIVE') {
+              showError(t('login.error.orgNotActive'));
             } else if (code === 'USER_ACCOUNT_LOCKED') {
               showError(t('login.error.accountLocked'));
             } else if (code === 'LOCAL_PASSWORD_LOGIN_DISABLED') {

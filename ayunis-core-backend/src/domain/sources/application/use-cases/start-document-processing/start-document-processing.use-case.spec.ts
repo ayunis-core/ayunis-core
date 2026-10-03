@@ -6,7 +6,7 @@ import { StartDocumentProcessingCommand } from './start-document-processing.comm
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
@@ -26,7 +26,7 @@ describe('StartDocumentProcessingUseCase', () => {
   let useCase: StartDocumentProcessingUseCase;
   let mockCreateProcessingSourceUseCase: jest.Mocked<CreateProcessingSourceUseCase>;
   let mockMarkSourceFailedUseCase: jest.Mocked<MarkSourceFailedUseCase>;
-  let mockUploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
+  let mockUploadObjectUseCase: jest.Mocked<UploadOrgObjectUseCase>;
   let mockDeleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
   let mockEnqueueDocumentProcessingUseCase: jest.Mocked<EnqueueDocumentProcessingUseCase>;
   let mockGetPermittedEmbeddingModelUseCase: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
@@ -59,7 +59,7 @@ describe('StartDocumentProcessingUseCase', () => {
 
     mockUploadObjectUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<UploadObjectUseCase>;
+    } as unknown as jest.Mocked<UploadOrgObjectUseCase>;
 
     mockDeleteObjectUseCase = {
       execute: jest.fn(),
@@ -100,7 +100,7 @@ describe('StartDocumentProcessingUseCase', () => {
           provide: MarkSourceFailedUseCase,
           useValue: mockMarkSourceFailedUseCase,
         },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: mockUploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         {
           provide: EnqueueDocumentProcessingUseCase,
@@ -140,6 +140,7 @@ describe('StartDocumentProcessingUseCase', () => {
     // File uploaded to MinIO with correct path
     expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
     const uploadCall = mockUploadObjectUseCase.execute.mock.calls[0][0];
+    expect(uploadCall.orgId).toBe(orgId);
     expect(uploadCall.objectName).toContain(`${orgId}/processing/`);
     expect(uploadCall.objectName).toContain('Protokoll_M_rz_2025.pdf');
 

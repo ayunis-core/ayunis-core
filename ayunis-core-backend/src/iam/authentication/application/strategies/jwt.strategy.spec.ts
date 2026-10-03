@@ -1,3 +1,4 @@
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -25,6 +26,12 @@ describe('JwtStrategy', () => {
       providers: [
         JwtStrategy,
         {
+          provide: AssertCachedOrgActiveUseCase,
+          useValue: {
+            execute: jest.fn().mockResolvedValue({ sessionVersion: 0 }),
+          },
+        },
+        {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('access_token') },
         },
@@ -37,23 +44,23 @@ describe('JwtStrategy', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should return an ActiveUser for a valid access payload', () => {
-    const result = strategy.validate(validAccessPayload);
+  it('should return an ActiveUser for a valid access payload', async () => {
+    const result = await strategy.validate(validAccessPayload);
 
     expect(result).not.toBeNull();
     expect(result?.id).toBe(validAccessPayload.sub);
     expect(result?.email).toBe(validAccessPayload.email);
   });
 
-  it('should reject a typed token (e.g. refresh) presented as access', () => {
+  it('should reject a typed token (e.g. refresh) presented as access', async () => {
     expect(
-      strategy.validate({ ...validAccessPayload, type: 'refresh' }),
+      await strategy.validate({ ...validAccessPayload, type: 'refresh' }),
     ).toBeNull();
   });
 
-  it('should reject a bare {sub} payload with no email', () => {
+  it('should reject a bare {sub} payload with no email', async () => {
     expect(
-      strategy.validate({
+      await strategy.validate({
         sub: validAccessPayload.sub,
       } as unknown as typeof validAccessPayload),
     ).toBeNull();

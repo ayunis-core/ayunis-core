@@ -9,10 +9,11 @@ export interface OrgsPagination {
 
 export interface OrgsFilters {
   search?: string;
+  status?: 'active' | 'archived' | 'all';
 }
 
 export abstract class OrgsRepository {
-  abstract findById(id: UUID): Promise<Org>;
+  abstract findById(id: UUID, lockForLifecycle?: boolean): Promise<Org>;
   abstract findByUserId(userId: UUID): Promise<Org>;
   abstract findAllIds(): Promise<UUID[]>;
   abstract findAllForSuperAdmin(
@@ -21,5 +22,6 @@ export abstract class OrgsRepository {
   ): Promise<Paginated<Org>>;
   abstract create(org: Org): Promise<Org>;
   abstract updateName(id: UUID, name: string): Promise<Org>;
-  abstract delete(id: UUID): Promise<void>;
+  abstract updateArchived(id: UUID, archived: boolean): Promise<Org>;
+  abstract delete(id: UUID, confirmationName?: string): Promise<void>;
 }

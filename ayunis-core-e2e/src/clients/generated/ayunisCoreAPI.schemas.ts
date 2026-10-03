@@ -511,6 +511,8 @@ export interface SuperAdminOrgResponseDto {
   id: string;
   /** Organization display name */
   name: string;
+  /** Whether the organisation is archived */
+  archived: boolean;
   /** Date when the organization was created */
   createdAt: string;
 }
@@ -525,6 +527,16 @@ export interface SuperAdminOrgListResponseDto {
 export interface UpdateOrgRequestDto {
   /** Organization display name */
   name: string;
+}
+
+export interface SetOrgArchivedRequestDto {
+  /** Archive the organisation, or restore it when false */
+  archived: boolean;
+}
+
+export interface DeleteOrgRequestDto {
+  /** Exact organisation name confirming irreversible deletion */
+  confirmationName: string;
 }
 
 export type RolePermissionSetDtoRole = typeof RolePermissionSetDtoRole[keyof typeof RolePermissionSetDtoRole];
@@ -5581,6 +5593,7 @@ offset?: number;
 };
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
+status?: SuperAdminOrgsControllerGetAllOrgsStatus;
 /**
  * Search organizations by name.
  */
@@ -5594,6 +5607,15 @@ limit?: number;
  */
 offset?: number;
 };
+
+export type SuperAdminOrgsControllerGetAllOrgsStatus = typeof SuperAdminOrgsControllerGetAllOrgsStatus[keyof typeof SuperAdminOrgsControllerGetAllOrgsStatus];
+
+
+export const SuperAdminOrgsControllerGetAllOrgsStatus = {
+  active: 'active',
+  archived: 'archived',
+  all: 'all',
+} as const;
 
 export type TeamsControllerListTeamMembersParams = {
 /**

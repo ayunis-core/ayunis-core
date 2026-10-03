@@ -72,6 +72,8 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
     const count = await this.repository
       .createQueryBuilder('t')
       .where('t.id = :id', { id })
+      .andWhere('t.revokedAt IS NULL')
+      .andWhere('t.expiresAt > NOW()')
       .andWhere('t.usedAt IS NOT NULL')
       .andWhere('t.usedAt > NOW() - make_interval(secs => :graceSeconds)', {
         graceSeconds,
@@ -122,6 +124,22 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
       .andWhere('authenticationMethod = :authenticationMethod', {
         authenticationMethod: SessionAuthenticationMethod.SSO,
       })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
+  async revokeAllForOrg(orgId: UUID): Promise<void> {
+    const records = this.txHost.tx.getRepository(RefreshTokenRecord);
+    const userIds = records.manager
+      .createQueryBuilder(UserRecord, 'user')
+      .select('user.id')
+      .where('user.orgId = :orgId')
+      .getQuery();
+    await records
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where(`"userId" IN (${userIds})`, { orgId })
       .andWhere('revokedAt IS NULL')
       .execute();
   }

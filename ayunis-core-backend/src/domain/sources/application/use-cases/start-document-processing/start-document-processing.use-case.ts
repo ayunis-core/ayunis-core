@@ -11,8 +11,8 @@ import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-case
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { EnqueueDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.command';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
@@ -30,7 +30,7 @@ export class StartDocumentProcessingUseCase {
   constructor(
     private readonly createProcessingSourceUseCase: CreateProcessingSourceUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDocumentProcessingUseCase: EnqueueDocumentProcessingUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
@@ -72,13 +72,13 @@ export class StartDocumentProcessingUseCase {
         }),
       );
 
-      // Upload and enqueue both happen outside the transaction
+      // Upload holds no transaction; enqueue takes its own short lifecycle lock.
       const minioPath = buildMinioProcessingPath(
         orgId,
         savedSource.id,
         command.fileName,
       );
-      await this.uploadFileOrFail(savedSource, minioPath, command);
+      await this.uploadFileOrFail(savedSource, minioPath, command, orgId);
       await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
 
       return savedSource;
@@ -102,10 +102,11 @@ export class StartDocumentProcessingUseCase {
     source: FileSource,
     minioPath: string,
     command: StartDocumentProcessingCommand,
+    orgId: UUID,
   ): Promise<void> {
     try {
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(minioPath, command.fileData),
+      await this.uploadOrgObjectUseCase.execute(
+        new UploadOrgObjectCommand(orgId, minioPath, command.fileData),
       );
     } catch (error) {
       await this.tryMarkSourceFailed(

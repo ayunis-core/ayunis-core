@@ -16,6 +16,9 @@ export class SuperAdminOrgResponseDto {
   })
   name: string;
 
+  @ApiProperty({ description: 'Whether the organisation is archived' })
+  archived: boolean;
+
   @ApiProperty({
     description: 'Date when the organization was created',
     example: '2024-01-15T10:30:00Z',
