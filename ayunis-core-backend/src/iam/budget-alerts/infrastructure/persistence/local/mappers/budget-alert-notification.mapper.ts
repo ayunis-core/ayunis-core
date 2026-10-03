@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
+  ApiKeyBudgetAlertNotification,
   BudgetAlertNotification,
   OrgBudgetAlertNotification,
   TeamBudgetAlertNotification,
   UserBudgetAlertNotification,
-} from '../../../../domain/budget-alert-notification.entity';
+} from 'src/iam/budget-alerts/domain/budget-alert-notification.entity';
 import {
+  ApiKeyBudgetAlertNotificationRecord,
   BudgetAlertNotificationRecord,
   OrgBudgetAlertNotificationRecord,
   TeamBudgetAlertNotificationRecord,
   UserBudgetAlertNotificationRecord,
-} from '../schema/budget-alert-notification.record';
+} from 'src/iam/budget-alerts/infrastructure/persistence/local/schema/budget-alert-notification.record';
 
 @Injectable()
 export class BudgetAlertNotificationMapper {
@@ -64,6 +66,18 @@ export class BudgetAlertNotificationMapper {
       });
     }
 
+    if (record instanceof ApiKeyBudgetAlertNotificationRecord) {
+      return new ApiKeyBudgetAlertNotification({
+        id: record.id,
+        orgId: record.orgId,
+        apiKeyId: record.apiKeyId as UUID,
+        threshold: record.threshold,
+        periodStart: record.periodStart,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      });
+    }
+
     throw new Error(
       `Unknown budget alert notification record type: ${record.constructor.name}`,
     );
@@ -85,6 +99,12 @@ export class BudgetAlertNotificationMapper {
     if (notification instanceof TeamBudgetAlertNotification) {
       return Object.assign(new TeamBudgetAlertNotificationRecord(), {
         teamId: notification.teamId,
+      });
+    }
+
+    if (notification instanceof ApiKeyBudgetAlertNotification) {
+      return Object.assign(new ApiKeyBudgetAlertNotificationRecord(), {
+        apiKeyId: notification.apiKeyId,
       });
     }
 
