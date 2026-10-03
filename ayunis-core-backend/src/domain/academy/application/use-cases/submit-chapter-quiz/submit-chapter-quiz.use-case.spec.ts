@@ -16,7 +16,10 @@ import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-ques
 import {
   InvalidQuizSubmissionError,
   QuizNotAvailableError,
+  UnexpectedAcademyError,
 } from 'src/domain/academy/application/academy.errors';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AcademyProgressUpdatedEvent } from 'src/domain/academy/application/events/academy-progress-updated.event';
 
 function makePool(chapterId: UUID, count: number): AcademyQuizQuestion[] {
   return Array.from(
@@ -52,6 +55,7 @@ describe('SubmitChapterQuizUseCase', () => {
   let quizQuestionRepository: jest.Mocked<AcademyQuizQuestionRepository>;
   let progressRepository: jest.Mocked<AcademyChapterProgressRepository>;
   let completionRepository: jest.Mocked<AcademyCompletionRepository>;
+  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   const userId = randomUUID();
   const chapter = new AcademyChapter({
@@ -85,6 +89,10 @@ describe('SubmitChapterQuizUseCase', () => {
           provide: AcademyCompletionRepository,
           useValue: { findByUser: jest.fn(), upsert: jest.fn() },
         },
+        {
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
+        },
       ],
     }).compile();
 
@@ -93,6 +101,7 @@ describe('SubmitChapterQuizUseCase', () => {
     quizQuestionRepository = module.get(AcademyQuizQuestionRepository);
     progressRepository = module.get(AcademyChapterProgressRepository);
     completionRepository = module.get(AcademyCompletionRepository);
+    eventEmitter = module.get(EventEmitter2);
 
     chapterRepository.findOne.mockResolvedValue(chapter);
     chapterRepository.findQuizEnabledIds.mockResolvedValue([chapter.id]);
@@ -340,6 +349,134 @@ describe('SubmitChapterQuizUseCase', () => {
         expired.completedAt.getTime(),
       );
     });
+  });
+
+  it('emits started academy progress without a participation confirmation', async () => {
+    const pool = makePool(chapter.id, 10);
+    quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+
+    await submit(answersFor(pool, 3));
+
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      AcademyProgressUpdatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        userId,
+        started: true,
+        participationConfirmedAt: null,
+      }),
+    );
+  });
+
+  it('keeps an existing participation confirmation when a later attempt fails', async () => {
+    const confirmedAt = new Date('2026-03-01T10:00:00.000Z');
+    completionRepository.findByUser.mockResolvedValue(
+      new AcademyCompletion({ userId, completedAt: confirmedAt }),
+    );
+    const pool = makePool(chapter.id, 10);
+    quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+
+    await submit(answersFor(pool, 3));
+
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      AcademyProgressUpdatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        started: true,
+        participationConfirmedAt: confirmedAt,
+      }),
+    );
+  });
+
+  it('keeps an existing participation confirmation when this pass does not renew it', async () => {
+    const otherChapterId = randomUUID();
+    const confirmedAt = new Date('2025-01-15T08:00:00.000Z');
+    chapterRepository.findQuizEnabledIds.mockResolvedValue([
+      chapter.id,
+      otherChapterId,
+    ]);
+    completionRepository.findByUser.mockResolvedValue(
+      new AcademyCompletion({ userId, completedAt: confirmedAt }),
+    );
+    const pool = makePool(chapter.id, 10);
+    quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+    progressRepository.findAllByUser.mockResolvedValue([
+      new AcademyChapterProgress({
+        userId,
+        chapterId: chapter.id,
+        passedAt: new Date(),
+        lastScore: 100,
+        lastAttemptAt: new Date(),
+      }),
+    ]);
+
+    await submit(answersFor(pool, 10));
+
+    expect(completionRepository.upsert).not.toHaveBeenCalled();
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      AcademyProgressUpdatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        started: true,
+        participationConfirmedAt: confirmedAt,
+      }),
+    );
+  });
+
+  it('emits the new participation confirmation when the academy is completed', async () => {
+    const pool = makePool(chapter.id, 10);
+    quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+    progressRepository.findAllByUser.mockResolvedValue([
+      new AcademyChapterProgress({
+        userId,
+        chapterId: chapter.id,
+        passedAt: new Date(),
+        lastScore: 100,
+        lastAttemptAt: new Date(),
+      }),
+    ]);
+
+    await submit(answersFor(pool, 10));
+
+    const stamped = completionRepository.upsert.mock.calls[0][0];
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      AcademyProgressUpdatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        started: true,
+        participationConfirmedAt: stamped.completedAt,
+      }),
+    );
+  });
+
+  it('does not emit academy progress when the submission is rejected', async () => {
+    const pool = makePool(chapter.id, 10);
+    quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+
+    await expect(submit(answersFor(pool, 10).slice(0, 3))).rejects.toThrow(
+      InvalidQuizSubmissionError,
+    );
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+  });
+
+  it('does not emit academy progress when the attempt is not persisted', async () => {
+    progressRepository.upsert.mockRejectedValue(new Error('db down'));
+    const pool = makePool(chapter.id, 10);
+    quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+
+    await expect(submit(answersFor(pool, 3))).rejects.toThrow(
+      UnexpectedAcademyError,
+    );
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+  });
+
+  it('still returns the quiz result when progress emission fails', async () => {
+    eventEmitter.emitAsync.mockReturnValue(
+      Promise.reject(new Error('bus down')),
+    );
+    const pool = makePool(chapter.id, 10);
+    quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+
+    const result = await submit(answersFor(pool, 3));
+
+    expect(result.passed).toBe(false);
+    expect(result.academyCompleted).toBe(false);
   });
 
   it('rejects a submission with fewer answers than drawn', async () => {
