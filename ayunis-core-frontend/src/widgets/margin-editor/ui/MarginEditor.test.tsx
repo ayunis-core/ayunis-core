@@ -87,7 +87,7 @@ describe('MarginEditor preview feedback', () => {
     await waitFor(() =>
       expect(
         screen.queryByText('letterheads.createDialog.pdfPreviewLoading'),
-      ).toBe(null),
+      ).toBeNull(),
     );
 
     rerender(
@@ -111,7 +111,7 @@ describe('MarginEditor preview feedback', () => {
     await waitFor(() =>
       expect(
         screen.queryByText('letterheads.createDialog.pdfPreviewLoading'),
-      ).toBe(null),
+      ).toBeNull(),
     );
 
     rerender(
@@ -125,7 +125,7 @@ describe('MarginEditor preview feedback', () => {
 
     expect(
       screen.queryByText('letterheads.createDialog.pdfPreviewLoading'),
-    ).toBe(null);
+    ).toBeNull();
   });
 
   // The error branch used to unmount the canvas, so the retry ran with a null
@@ -157,7 +157,7 @@ describe('MarginEditor preview feedback', () => {
     await waitFor(() =>
       expect(
         screen.queryByText('letterheads.createDialog.pdfPreviewError'),
-      ).toBe(null),
+      ).toBeNull(),
     );
     // Sized by renderPreview — proves it actually drew, not just cleared.
     await waitFor(() =>
@@ -252,9 +252,9 @@ describe('MarginEditor preview feedback', () => {
     renderEditor();
 
     await act(() => vi.advanceTimersByTimeAsync(14_000));
-    expect(screen.queryByText('letterheads.createDialog.pdfPreviewError')).toBe(
-      null,
-    );
+    expect(
+      screen.queryByText('letterheads.createDialog.pdfPreviewError'),
+    ).toBeNull();
 
     await act(() => vi.advanceTimersByTimeAsync(2_000));
     expect(

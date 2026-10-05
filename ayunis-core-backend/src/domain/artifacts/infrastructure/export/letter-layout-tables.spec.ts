@@ -8,22 +8,20 @@ describe('markLayoutTables', () => {
     expect(markLayoutTables(html)).toContain(`class="${LAYOUT_TABLE_CLASS}"`);
   });
 
-  it('should leave a table with a header row untouched', () => {
-    const html =
-      '<table><thead><tr><th>Posten</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table>';
-
-    expect(markLayoutTables(html)).toBe(html);
-  });
-
-  it('should detect a header cell that is not wrapped in a thead', () => {
-    const html = '<table><tr><th>Posten</th></tr><tr><td>1</td></tr></table>';
-
-    expect(markLayoutTables(html)).toBe(html);
-  });
-
-  it('should return the input unchanged when there is no table', () => {
-    const html = '<p>Sehr geehrter Herr Müller,</p>';
-
+  it.each([
+    {
+      name: 'leave a table with a header row untouched',
+      html: '<table><thead><tr><th>Posten</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table>',
+    },
+    {
+      name: 'detect a header cell that is not wrapped in a thead',
+      html: '<table><tr><th>Posten</th></tr><tr><td>1</td></tr></table>',
+    },
+    {
+      name: 'return the input unchanged when there is no table',
+      html: '<p>Sehr geehrter Herr Müller,</p>',
+    },
+  ])('should $name', ({ html }) => {
     expect(markLayoutTables(html)).toBe(html);
   });
 

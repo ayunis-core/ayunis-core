@@ -100,7 +100,7 @@ describe('mobile sidebar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'dismiss' }));
 
     expect(
-      screen.queryByRole('link', { name: /Getting started/ }),
+      screen.getByRole('link', { name: /Getting started/ }),
     ).not.toBeNull();
   });
 

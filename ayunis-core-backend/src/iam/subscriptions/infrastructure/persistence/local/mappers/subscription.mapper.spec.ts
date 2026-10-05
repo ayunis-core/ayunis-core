@@ -4,12 +4,12 @@ import { SubscriptionBillingInfoMapper } from './subscription-billing-info.mappe
 import {
   SeatBasedSubscriptionRecord,
   UsageBasedSubscriptionRecord,
-} from '../schema/subscription.record';
+} from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
-import { SubscriptionBillingInfoRecord } from '../schema/subscription-billing-info.record';
+import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { InvalidSubscriptionDataError } from 'src/iam/subscriptions/application/subscription.errors';
 
 function createBillingInfoRecord(): SubscriptionBillingInfoRecord {
@@ -70,7 +70,7 @@ describe('SubscriptionMapper', () => {
       expect(domain).toBeInstanceOf(SeatBasedSubscription);
       const seatBased = domain as SeatBasedSubscription;
       expect(seatBased.noOfSeats).toBe(10);
-      expect(seatBased.pricePerSeat).toBe(9.99);
+      expect(seatBased.pricePerSeat).toBeCloseTo(9.99, 10);
       expect(seatBased.renewalCycle).toBe(RenewalCycle.MONTHLY);
     });
 

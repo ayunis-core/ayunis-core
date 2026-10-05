@@ -87,14 +87,48 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toMatch(/<w:strike\/>/);
   });
 
-  it('should render bullet lists', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<ul><li><p>Item 1</p></li><li><p>Item 2</p></li></ul>',
-    );
-    const xml = await extractDocumentXml(buffer);
+  it.each([
+    {
+      name: 'render bullet lists',
+      html: '<ul><li><p>Item 1</p></li><li><p>Item 2</p></li></ul>',
+      text: 'Item 1',
+      marker: 'Item 2',
+    },
+    {
+      name: 'render tables with header styling',
+      html: '<table><tr><th>Name</th></tr><tr><td>Alice</td></tr></table>',
+      text: 'Name',
+      marker: 'Alice',
+    },
+    {
+      name: 'render links as external hyperlinks',
+      html: '<p><a href="https://example.com">Click here</a></p>',
+      text: 'Click here',
+      marker: 'hyperlink',
+    },
+    {
+      name: 'render code blocks with monospace font',
+      html: '<pre><code>const x = 1;</code></pre>',
+      text: 'const x = 1;',
+      marker: 'Courier New',
+    },
+    {
+      name: 'preserve text-align on paragraphs',
+      html: '<p style="text-align: center">Centered</p>',
+      text: 'Centered',
+      marker: 'center',
+    },
+    {
+      name: 'preserve text-align on headings',
+      html: '<h1 style="text-align: right">Right Heading</h1>',
+      text: 'Right Heading',
+      marker: 'right',
+    },
+  ])('should $name', async ({ html, text, marker }) => {
+    const xml = await extractDocumentXml(await convertHtmlToDocx(html));
 
-    expect(xml).toContain('Item 1');
-    expect(xml).toContain('Item 2');
+    expect(xml).toContain(text);
+    expect(xml).toContain(marker);
   });
 
   it('should render ordered lists', async () => {
@@ -107,16 +141,6 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toContain('Second');
     // Ordered lists use <w:numPr> with a numbering reference
     expect(xml).toContain('w:numId');
-  });
-
-  it('should render tables with header styling', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<table><tr><th>Name</th></tr><tr><td>Alice</td></tr></table>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('Name');
-    expect(xml).toContain('Alice');
   });
 
   it('should render a header-less table without borders', async () => {
@@ -140,27 +164,6 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toContain('CCCCCC');
   });
 
-  it('should render links as external hyperlinks', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<p><a href="https://example.com">Click here</a></p>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('Click here');
-    // External hyperlinks use relationship IDs
-    expect(xml).toContain('hyperlink');
-  });
-
-  it('should render code blocks with monospace font', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<pre><code>const x = 1;</code></pre>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('const x = 1;');
-    expect(xml).toContain('Courier New');
-  });
-
   it('should render blockquotes with indent', async () => {
     const buffer = await convertHtmlToDocx(
       '<blockquote><p>Quoted text</p></blockquote>',
@@ -176,26 +179,6 @@ describe('convertHtmlToDocx', () => {
 
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
-  });
-
-  it('should preserve text-align on paragraphs', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<p style="text-align: center">Centered</p>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('Centered');
-    expect(xml).toContain('center');
-  });
-
-  it('should preserve text-align on headings', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<h1 style="text-align: right">Right Heading</h1>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('Right Heading');
-    expect(xml).toContain('right');
   });
 
   it('should render line-height: 1 as single line spacing', async () => {

@@ -104,7 +104,6 @@ describe('SourceCitationDialog', () => {
   });
 
   it.each([
-    // eslint-disable-next-line sonarjs/code-eval -- unsafe scheme is the behavior under test
     'javascript:alert(1)',
     'data:text/html,unsafe',
     '/relative/source',

@@ -4,7 +4,7 @@ const DURATION_UNIT_MS: Readonly<Record<string, number>> = {
   s: 1_000,
   ms: 1,
 };
-// eslint-disable-next-line sonarjs/slow-regex -- [\d.] is disjoint from the unit letters, so matching is linear
+// eslint-disable-next-line sonarjs/super-linear-regex -- only ever runs on one retry-after header value, so the worst case (a long unit-less digit run) is bounded by header size
 const DURATION_PART = /([\d.]+)(ms|h|m|s)/g;
 
 /**

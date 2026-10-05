@@ -228,7 +228,10 @@ describe('ChangeSubscriptionUseCase', () => {
 
       expect(result).toBeInstanceOf(SeatBasedSubscription);
       expect((result as SeatBasedSubscription).noOfSeats).toBe(10);
-      expect((result as SeatBasedSubscription).pricePerSeat).toBe(99.99);
+      expect((result as SeatBasedSubscription).pricePerSeat).toBeCloseTo(
+        99.99,
+        10,
+      );
     });
   });
 

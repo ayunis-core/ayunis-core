@@ -10,7 +10,7 @@ import { Card, CardContent } from '@ayunis/ui/components/card';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
-  SourceResponseDto,
+  SourceProcessingErrorCode,
   FileSourceResponseDtoFileType,
   SourceResponseDtoCreatedBy,
   SourceResponseDtoStatus,
@@ -65,7 +65,7 @@ interface ChatInputProps {
     createdBy?: SourceResponseDtoCreatedBy;
     status?: SourceResponseDtoStatus;
     processingError?: string;
-    processingErrorCode?: SourceResponseDto['processingErrorCode'];
+    processingErrorCode?: SourceProcessingErrorCode;
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
   mcpIntegrations?: IntegrationSummary[];

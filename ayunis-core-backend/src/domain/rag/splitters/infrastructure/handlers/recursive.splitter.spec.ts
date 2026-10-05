@@ -78,30 +78,32 @@ describe('RecursiveSplitterHandler', () => {
       expect(lastChunk.metadata.endLine).toBe(lines.length);
     });
 
-    it('should handle single line text', () => {
-      const input: SplitterInput = {
+    it.each([
+      {
+        name: 'single line text',
         text: 'This is a single line without any newlines',
-        metadata: { chunkSize: 1000, chunkOverlap: 100 },
-      };
-
-      const result = handler.processText(input);
-
-      expect(result.chunks).toHaveLength(1);
-      expect(result.chunks[0].metadata.startLine).toBe(1);
-      expect(result.chunks[0].metadata.endLine).toBe(1);
-    });
-
-    it('should handle text with consecutive newlines (empty lines)', () => {
-      const input: SplitterInput = {
+        endLine: 1,
+      },
+      {
+        name: 'text with consecutive newlines (empty lines)',
         text: 'Line 1\n\nLine 3\n\n\nLine 6',
+        endLine: 6,
+      },
+      // A trailing newline still belongs to the last line
+      {
+        name: 'text ending with newline',
+        text: 'Line 1\nLine 2\n',
+        endLine: 2,
+      },
+    ])('should handle $name', ({ text, endLine }) => {
+      const result = handler.processText({
+        text,
         metadata: { chunkSize: 1000, chunkOverlap: 100 },
-      };
-
-      const result = handler.processText(input);
+      });
 
       expect(result.chunks).toHaveLength(1);
       expect(result.chunks[0].metadata.startLine).toBe(1);
-      expect(result.chunks[0].metadata.endLine).toBe(6);
+      expect(result.chunks[0].metadata.endLine).toBe(endLine);
     });
 
     it('should handle empty text', () => {
@@ -170,21 +172,6 @@ describe('RecursiveSplitterHandler', () => {
       expect(result.chunks).toHaveLength(1);
       expect(result.chunks[0].metadata.startCharOffset).toBe(0);
       expect(result.chunks[0].metadata.endCharOffset).toBe(14); // Length of "AAAA\nBBBB\nCCCC"
-    });
-
-    it('should handle text ending with newline', () => {
-      const input: SplitterInput = {
-        text: 'Line 1\nLine 2\n',
-        metadata: { chunkSize: 1000, chunkOverlap: 100 },
-      };
-
-      const result = handler.processText(input);
-
-      expect(result.chunks).toHaveLength(1);
-      // The chunk includes the trailing newline but ends at the newline character
-      // which is still considered part of line 2
-      expect(result.chunks[0].metadata.startLine).toBe(1);
-      expect(result.chunks[0].metadata.endLine).toBe(2);
     });
 
     it('should handle overlapping chunks with correct line numbers', () => {

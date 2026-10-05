@@ -7,7 +7,6 @@ import {
 } from './image-upload.constants';
 
 export const IMAGE_UPLOAD_OPTIONS: MulterOptions = {
-  // eslint-disable-next-line sonarjs/content-length -- multer file size limit, not HTTP header
   storage: memoryStorage(),
   limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
   fileFilter: (req, file, cb) => {
