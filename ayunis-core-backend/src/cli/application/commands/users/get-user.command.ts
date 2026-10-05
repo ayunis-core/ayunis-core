@@ -1,6 +1,5 @@
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { Command, CommandRunner, Option } from 'nest-commander';
-import { User } from 'src/iam/users/domain/user.entity';
 
 type Options = { email: string };
 
@@ -16,11 +15,11 @@ export class GetUserCommand extends CommandRunner {
   }
 
   async run(_: string[], options: Options): Promise<void> {
-    let user: User | null = null;
-    user = await this.usersRepository.findOneByEmail(options.email);
+    const user = await this.usersRepository.findOneByEmail(options.email);
     if (!user) {
       throw new Error('User not found');
     }
+    // eslint-disable-next-line no-console -- CLI command output goes to stdout
     console.log(user);
   }
 }

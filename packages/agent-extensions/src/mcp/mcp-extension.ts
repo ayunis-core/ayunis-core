@@ -203,6 +203,7 @@ const rollbackClients = async (
     throw new AggregateError(
       [initializationError, closeError],
       'MCP initialization and rollback failed',
+      // eslint-disable-next-line preserve-caught-error -- the initialization failure is the primary error; the rollback error is kept in `errors`
       { cause: initializationError },
     );
   }

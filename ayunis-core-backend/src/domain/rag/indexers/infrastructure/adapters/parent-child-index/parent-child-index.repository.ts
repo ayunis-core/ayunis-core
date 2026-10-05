@@ -184,6 +184,7 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       );
       throw new Error(
         `Vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error },
       );
     }
   }

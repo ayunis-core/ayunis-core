@@ -155,6 +155,7 @@ const rollbackInitialization = async (
     throw new AggregateError(
       [initializationError, rollbackError],
       'Runtime extension initialization and rollback failed',
+      // eslint-disable-next-line preserve-caught-error -- the initialization failure is the primary error; the rollback error is kept in `errors`
       { cause: initializationError },
     );
   }

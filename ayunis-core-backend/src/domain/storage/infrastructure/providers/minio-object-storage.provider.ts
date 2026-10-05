@@ -172,6 +172,7 @@ export class MinioObjectStorageProvider
       if (error instanceof Error && error.message.includes('not found')) {
         throw new Error(
           `Object '${storageUrl.objectName}' not found in bucket '${bucketName}'`,
+          { cause: error },
         );
       }
       throw error;
