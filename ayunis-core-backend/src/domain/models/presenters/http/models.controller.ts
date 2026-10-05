@@ -203,6 +203,10 @@ export class ModelsController {
     description: 'Successfully created a permitted model',
   })
   @ApiResponse({ status: 400, description: 'Invalid model input' })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'Model already permitted for this organization',
+  })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(CreatePermittedModelDto)
   async createPermittedModel(

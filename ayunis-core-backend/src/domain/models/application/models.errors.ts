@@ -31,6 +31,7 @@ export enum ModelErrorCode {
   IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED = 'IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED',
   IMAGE_GENERATION_FAILED = 'IMAGE_GENERATION_FAILED',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
+  DUPLICATE_PERMITTED_MODEL = 'DUPLICATE_PERMITTED_MODEL',
   DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
   TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
   MODEL_NOT_RESTRICTABLE_FOR_TEAM = 'MODEL_NOT_RESTRICTABLE_FOR_TEAM',
@@ -288,17 +289,6 @@ export class ModelUpdateFailedError extends ModelError {
   }
 }
 
-export class ModelCreationFailedError extends ModelError {
-  constructor(reason: string, metadata?: ErrorMetadata) {
-    super(
-      `Model creation failed: ${reason}`,
-      ModelErrorCode.MODEL_CREATION_FAILED,
-      500,
-      metadata,
-    );
-  }
-}
-
 export class ModelNotFoundByIdError extends ModelError {
   constructor(id: UUID, metadata?: ErrorMetadata) {
     super(
@@ -327,17 +317,6 @@ export class ModelProviderInfoNotFoundError extends ModelError {
       `Model provider info for '${provider}' not found`,
       ModelErrorCode.MODEL_PROVIDER_INFO_NOT_FOUND,
       404,
-      metadata,
-    );
-  }
-}
-
-export class ModelDeletionFailedError extends ModelError {
-  constructor(reason: string, metadata?: ErrorMetadata) {
-    super(
-      `Model deletion failed: ${reason}`,
-      ModelErrorCode.MODEL_DELETION_FAILED,
-      500,
       metadata,
     );
   }
@@ -390,6 +369,16 @@ export class ImageGenerationModelProviderNotSupportedError extends ModelError {
       `Image-generation models must use provider 'azure', received '${provider}'`,
       ModelErrorCode.IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED,
       400,
+      metadata,
+    );
+  }
+}
+export class DuplicatePermittedModelError extends ModelError {
+  constructor(orgId: UUID, modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model '${modelId}' is already permitted for org '${orgId}'`,
+      ModelErrorCode.DUPLICATE_PERMITTED_MODEL,
+      409,
       metadata,
     );
   }
