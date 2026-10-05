@@ -1,17 +1,22 @@
 import * as z from 'zod';
 import { toEndOfLocalDay } from '@/pages/admin-settings/api-keys-settings/lib/to-end-of-local-day';
 
-export function createApiKeyFormSchema(t: (key: string) => string) {
+export const API_KEY_DESCRIPTION_MAX_LENGTH = 500;
+
+export function editApiKeyFormSchema(t: (key: string) => string) {
   return z.object({
     name: z
       .string()
       .trim()
-      .min(1, t('apiKeys.createDialog.nameRequired'))
-      .max(100, t('apiKeys.createDialog.nameTooLong')),
+      .min(1, t('apiKeys.editDialog.nameRequired'))
+      .max(100, t('apiKeys.editDialog.nameTooLong')),
     description: z
       .string()
       .trim()
-      .max(500, t('apiKeys.editDialog.descriptionTooLong')),
+      .max(
+        API_KEY_DESCRIPTION_MAX_LENGTH,
+        t('apiKeys.editDialog.descriptionTooLong'),
+      ),
     expiresAt: z
       .date()
       // The picker allows today and yields local midnight; the key only
@@ -23,6 +28,6 @@ export function createApiKeyFormSchema(t: (key: string) => string) {
   });
 }
 
-export type CreateApiKeyFormValues = z.infer<
-  ReturnType<typeof createApiKeyFormSchema>
+export type EditApiKeyFormValues = z.infer<
+  ReturnType<typeof editApiKeyFormSchema>
 >;

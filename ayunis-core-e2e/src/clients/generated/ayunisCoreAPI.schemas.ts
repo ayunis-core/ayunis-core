@@ -529,6 +529,30 @@ export interface UpdateOrgRequestDto {
   name: string;
 }
 
+export type OrgErrorCode = typeof OrgErrorCode[keyof typeof OrgErrorCode];
+
+
+export const OrgErrorCode = {
+  ORG_PROCESSING_ACTIVE: 'ORG_PROCESSING_ACTIVE',
+  ORG_DELETE_CONFIRMATION_MISMATCH: 'ORG_DELETE_CONFIRMATION_MISMATCH',
+  ORG_NOT_ACTIVE: 'ORG_NOT_ACTIVE',
+  ORG_SESSION_EXPIRED: 'ORG_SESSION_EXPIRED',
+  ORG_NOT_FOUND: 'ORG_NOT_FOUND',
+  ORG_ALREADY_EXISTS: 'ORG_ALREADY_EXISTS',
+  ORG_CREATION_FAILED: 'ORG_CREATION_FAILED',
+  ORG_UPDATE_FAILED: 'ORG_UPDATE_FAILED',
+  ORG_DELETION_FAILED: 'ORG_DELETION_FAILED',
+  ORG_RETRIEVAL_FAILED: 'ORG_RETRIEVAL_FAILED',
+  ORG_UNAUTHORIZED: 'ORG_UNAUTHORIZED',
+  ORG_UNEXPECTED_ERROR: 'ORG_UNEXPECTED_ERROR',
+} as const;
+
+export interface OrgErrorResponseDto {
+  code: OrgErrorCode;
+  /** Actionable error message, generic for server errors */
+  message: string;
+}
+
 export interface SetOrgArchivedRequestDto {
   /** Archive the organisation, or restore it when false */
   archived: boolean;
@@ -4709,8 +4733,32 @@ export interface CreateApiKeyDto {
      * @maxLength 100
      */
   name: string;
+  /**
+     * Optional plain-text description of what the key is used for
+     * @maxLength 500
+     */
+  description?: string;
   /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
   expiresAt?: string;
+}
+
+export interface UpdateApiKeyDto {
+  /**
+     * New name for the API key. Omit to keep the current name.
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Plain-text description of what the key is used for. Omit to keep it, send null or an empty string to remove it.
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * New expiry date (ISO 8601, must be in the future). Omit to keep it, send null to let the key never expire.
+     * @nullable
+     */
+  expiresAt?: string | null;
 }
 
 export interface ApiKeyResponseDto {
@@ -4718,6 +4766,11 @@ export interface ApiKeyResponseDto {
   id: string;
   /** Human-readable name for the API key */
   name: string;
+  /**
+     * Plain-text description of what the key is used for
+     * @nullable
+     */
+  description: string | null;
   /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
   prefixPreview: string;
   /**
@@ -4744,6 +4797,11 @@ export interface CreateApiKeyResponseDto {
   id: string;
   /** Human-readable name for the API key */
   name: string;
+  /**
+     * Plain-text description of what the key is used for
+     * @nullable
+     */
+  description: string | null;
   /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
   prefixPreview: string;
   /**
