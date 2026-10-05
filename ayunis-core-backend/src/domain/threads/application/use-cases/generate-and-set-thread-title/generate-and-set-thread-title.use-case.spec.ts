@@ -31,92 +31,65 @@ describe('GenerateAndSetThreadTitleUseCase - Markdown Stripping', () => {
   });
 
   describe('stripMarkdownFormatting', () => {
-    it('should strip bold formatting with **', () => {
-      const input = '**Turnhalle mieten – Sportverein**';
-      const expected = 'Turnhalle mieten – Sportverein';
+    it.each([
+      {
+        name: 'strip bold formatting with **',
+        input: '**Turnhalle mieten – Sportverein**',
+        expected: 'Turnhalle mieten – Sportverein',
+      },
+      {
+        name: 'strip bold formatting with __',
+        input: '__KI-Unterstützung für Verwaltung__',
+        expected: 'KI-Unterstützung für Verwaltung',
+      },
+      {
+        name: 'strip italic formatting with *',
+        input: '*Important Title*',
+        expected: 'Important Title',
+      },
+      {
+        name: 'strip quotes',
+        input: '**"Turnhalle mieten – Sportverein"**',
+        expected: 'Turnhalle mieten – Sportverein',
+      },
+      {
+        name: 'strip inline code',
+        input: '`Code Title` with text',
+        expected: 'Code Title with text',
+      },
+      {
+        name: 'strip strikethrough',
+        input: '~~Old Title~~ New Title',
+        expected: 'Old Title New Title',
+      },
+      {
+        name: 'strip headers',
+        input: '## Title Header',
+        expected: 'Title Header',
+      },
+      {
+        name: 'strip links and keep text',
+        input: '[Title Link](https://example.com)',
+        expected: 'Title Link',
+      },
+      {
+        name: 'handle multiple markdown formats',
+        input: '**"Important"** *Title* with `code`',
+        expected: 'Important Title with code',
+      },
+      {
+        name: 'clean up extra whitespace',
+        input: '**Title**   with    extra     spaces',
+        expected: 'Title with extra spaces',
+      },
+      {
+        name: 'return empty string for input with only markdown',
+        input: '**""**',
+        expected: '',
+      },
+    ])('should $name', ({ input, expected }) => {
       // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should strip bold formatting with __', () => {
-      const input = '__KI-Unterstützung für Verwaltung__';
-      const expected = 'KI-Unterstützung für Verwaltung';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should strip italic formatting with *', () => {
-      const input = '*Important Title*';
-      const expected = 'Important Title';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should strip quotes', () => {
-      const input = '**"Turnhalle mieten – Sportverein"**';
-      const expected = 'Turnhalle mieten – Sportverein';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should strip inline code', () => {
-      const input = '`Code Title` with text';
-      const expected = 'Code Title with text';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should strip strikethrough', () => {
-      const input = '~~Old Title~~ New Title';
-      const expected = 'Old Title New Title';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should strip headers', () => {
-      const input = '## Title Header';
-      const expected = 'Title Header';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should strip links and keep text', () => {
-      const input = '[Title Link](https://example.com)';
-      const expected = 'Title Link';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should handle multiple markdown formats', () => {
-      const input = '**"Important"** *Title* with `code`';
-      const expected = 'Important Title with code';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should clean up extra whitespace', () => {
-      const input = '**Title**   with    extra     spaces';
-      const expected = 'Title with extra spaces';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
-    });
-
-    it('should return empty string for input with only markdown', () => {
-      const input = '**""**';
-      const expected = '';
-      // @ts-expect-error - accessing private method for testing
-      const result = useCase.stripMarkdownFormatting(input);
-      expect(result).toBe(expected);
+      expect(useCase.stripMarkdownFormatting(input)).toBe(expected);
     });
   });
 });

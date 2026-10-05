@@ -24,7 +24,6 @@ export default function useSkillSources({
     useSkillSourcesControllerGetSkillSources(skill.id, {
       query: {
         staleTime: 0,
-        // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
         refetchInterval: (query) => {
           const data = query.state.data ?? [];
           const hasProcessing = data.some(

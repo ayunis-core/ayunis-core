@@ -5,6 +5,10 @@ import { isActive } from './is-active';
 export function classifySubscriptionStatus(
   subscription: Subscription,
 ): SubscriptionLifecycleStatus {
+  if (subscription.accessEndsAt && new Date() >= subscription.accessEndsAt) {
+    return SubscriptionLifecycleStatus.HISTORICAL;
+  }
+
   if (subscription.cancelledAt) {
     return isActive(subscription)
       ? SubscriptionLifecycleStatus.CANCELLED

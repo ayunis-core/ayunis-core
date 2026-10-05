@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -27,6 +34,7 @@ import type { Subscription } from 'src/iam/subscriptions/domain/subscription.ent
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import type { ReplaceSubscriptionParams } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 describe('ChangeSubscriptionUseCase', () => {
   let useCase: ChangeSubscriptionUseCase;
@@ -71,9 +79,13 @@ describe('ChangeSubscriptionUseCase', () => {
         ChangeSubscriptionUseCase,
         SubscriptionFactory,
         {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
           provide: SubscriptionRepository,
           useValue: {
-            findLatestByOrgId: jest.fn(),
+            findByOrgId: jest.fn(),
             replace: jest.fn((params: ReplaceSubscriptionParams) =>
               Promise.resolve(params.newSubscription),
             ),
@@ -113,7 +125,7 @@ describe('ChangeSubscriptionUseCase', () => {
   }
 
   function mockCurrentSubscription(subscription: Subscription): void {
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
   }
 
   function mockInvitesAndUsers(openInvites: number, userCount: number): void {
@@ -164,6 +176,79 @@ describe('ChangeSubscriptionUseCase', () => {
         (c) => c[0] === SubscriptionCancelledEvent.EVENT_NAME,
       )?.[1] as SubscriptionCancelledEvent;
       expect(cancelledEvent.payload.cancelledAt).toBeInstanceOf(Date);
+    });
+
+    it('does not announce cancellation while old access is still serving', async () => {
+      setupSuperAdminContext();
+      mockCurrentSubscription(existingSeatBased());
+
+      await useCase.execute(
+        new ChangeSubscriptionCommand({
+          orgId,
+          requestingUserId,
+          disposition: OldSubscriptionDisposition.CANCEL,
+          type: SubscriptionType.USAGE_BASED,
+          monthlyCredits: 1000,
+          startsAt: new Date('2099-08-01T00:00:00.000Z'),
+          ...baseBillingParams,
+        }),
+      );
+
+      const emittedEvents = eventEmitter.emitAsync.mock.calls.map((c) => c[0]);
+      expect(emittedEvents).not.toContain(
+        SubscriptionCancelledEvent.EVENT_NAME,
+      );
+      expect(emittedEvents).toContain(SubscriptionCreatedEvent.EVENT_NAME);
+    });
+
+    it('ends old access exactly when the replacement starts', async () => {
+      setupSuperAdminContext();
+      const current = existingSeatBased();
+      mockCurrentSubscription(current);
+      const startsAt = new Date('2026-08-01T00:00:00.000Z');
+
+      await useCase.execute(
+        new ChangeSubscriptionCommand({
+          orgId,
+          requestingUserId,
+          disposition: OldSubscriptionDisposition.CANCEL,
+          type: SubscriptionType.USAGE_BASED,
+          monthlyCredits: 1000,
+          startsAt,
+          ...baseBillingParams,
+        }),
+      );
+
+      expect(subscriptionRepository.replace).toHaveBeenCalledWith(
+        expect.objectContaining({ oldAccessEndsAt: startsAt }),
+      );
+      expect(current.accessEndsAt).toEqual(startsAt);
+    });
+
+    it('does not reopen access that ended before the replacement starts', async () => {
+      setupSuperAdminContext();
+      const current = existingSeatBased();
+      current.accessEndsAt = new Date('2026-07-01T00:00:00.000Z');
+      mockCurrentSubscription(current);
+
+      await useCase.execute(
+        new ChangeSubscriptionCommand({
+          orgId,
+          requestingUserId,
+          disposition: OldSubscriptionDisposition.CANCEL,
+          type: SubscriptionType.USAGE_BASED,
+          monthlyCredits: 1000,
+          startsAt: new Date('2026-08-01T00:00:00.000Z'),
+          ...baseBillingParams,
+        }),
+      );
+
+      expect(subscriptionRepository.replace).toHaveBeenCalledWith(
+        expect.objectContaining({ oldAccessEndsAt: current.accessEndsAt }),
+      );
+      expect(current.accessEndsAt).toEqual(
+        new Date('2026-07-01T00:00:00.000Z'),
+      );
     });
 
     it('does NOT emit cancelled on DELETE, only created', async () => {
@@ -228,7 +313,10 @@ describe('ChangeSubscriptionUseCase', () => {
 
       expect(result).toBeInstanceOf(SeatBasedSubscription);
       expect((result as SeatBasedSubscription).noOfSeats).toBe(10);
-      expect((result as SeatBasedSubscription).pricePerSeat).toBe(99.99);
+      expect((result as SeatBasedSubscription).pricePerSeat).toBeCloseTo(
+        99.99,
+        10,
+      );
     });
   });
 
@@ -259,12 +347,30 @@ describe('ChangeSubscriptionUseCase', () => {
   describe('replaceable subscription selection', () => {
     it('throws SubscriptionNotFoundError when no subscription exists', async () => {
       setupSuperAdminContext();
-      subscriptionRepository.findLatestByOrgId.mockResolvedValue(null);
+      subscriptionRepository.findByOrgId.mockResolvedValue([]);
 
       await expect(
         useCase.execute(seatToUsageCommand(OldSubscriptionDisposition.CANCEL)),
       ).rejects.toThrow(SubscriptionNotFoundError);
       expect(subscriptionRepository.replace).not.toHaveBeenCalled();
+    });
+
+    it('replaces the serving subscription when a newer record has ended', async () => {
+      setupSuperAdminContext();
+      const serving = existingSeatBased();
+      serving.createdAt = new Date('2025-01-01T00:00:00.000Z');
+      const ended = existingSeatBased();
+      ended.createdAt = new Date('2026-05-01T00:00:00.000Z');
+      ended.accessEndsAt = new Date('2026-06-01T00:00:00.000Z');
+      subscriptionRepository.findByOrgId.mockResolvedValue([serving, ended]);
+
+      await useCase.execute(
+        seatToUsageCommand(OldSubscriptionDisposition.CANCEL),
+      );
+
+      expect(
+        subscriptionRepository.replace.mock.calls[0][0].oldSubscriptionId,
+      ).toBe(serving.id);
     });
 
     it('replaces the latest subscription even when it is already cancelled', async () => {

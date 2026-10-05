@@ -17,6 +17,7 @@ describe('SubscriptionResponseMapper', () => {
       renewalCycle: RenewalCycle.YEARLY,
       renewalCycleAnchor: new Date('2025-01-01'),
       startsAt: new Date('2025-01-01'),
+      accessEndsAt: new Date('2026-08-01T00:00:00.000Z'),
       billingInfo: new SubscriptionBillingInfo({
         companyName: 'Gemeinde Musterstadt',
         street: 'Hauptstraße',
@@ -54,6 +55,7 @@ describe('SubscriptionResponseMapper', () => {
         availableSeats: null,
         status: SubscriptionLifecycleStatus.ACTIVE,
         isLatest: true,
+        accessEndsAt: new Date('2026-08-01T00:00:00.000Z'),
         nextRenewalDate,
       }),
     ]);

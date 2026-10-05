@@ -58,6 +58,8 @@
     "cancelError": "Ein unerwarteter Fehler ist aufgetreten",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "uncancelError": "Ein unerwarteter Fehler ist aufgetreten",
+    "uncancelErrorAccessOverlap": "Die Reaktivierung würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden.",
+    "multipleActiveSubscriptions": "Mehrere Abonnements sind derzeit für diese Organisation wirksam. Beheben Sie zuerst die Überschneidung in der Abo-Historie.",
     "edit": "Bearbeiten",
     "startsAtLabel": "Startdatum",
     "startsAtPlaceholder": "Startdatum auswählen",
@@ -69,6 +71,7 @@
     "updateStartDateSuccess": "Startdatum erfolgreich aktualisiert",
     "updateStartDateErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "updateStartDateErrorSubscriptionAlreadyCancelled": "Gekündigte Abonnements können nicht bearbeitet werden",
+    "updateStartDateErrorAccessOverlap": "Das neue Startdatum würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden.",
     "updateStartDateErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
     "scheduled": "Geplant",
     "scheduledDescription": "Dieses Abonnement startet am {{date}}.",
@@ -83,6 +86,7 @@
     "changeSuccess": "Abonnement erfolgreich geändert",
     "changeErrorSubscriptionNotFound": "Kein aktives Abonnement zum Ändern vorhanden",
     "changeErrorTooManyUsedSeats": "Zu viele Nutzer sind bereits in dieser Organisation. Wählen Sie mehr Plätze für das neue Abonnement.",
+    "changeErrorAccessOverlap": "Das neue Abonnement würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden. Passen Sie das Startdatum an oder beenden Sie zuerst das andere Abonnement.",
     "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
   },
   "subscriptionHistory": {
@@ -90,6 +94,7 @@
     "description": "Alle Abonnements dieser Organisation, einschließlich älterer und gekündigter Einträge.",
     "latest": "Aktuell",
     "notCancelled": "—",
+    "noAccessEnd": "Unbefristet",
     "multipleActive": "{{count}} Abonnements sind derzeit für diese Organisation wirksam. Diese Ansicht zeigt alle, statt eines stillschweigend auszuwählen.",
     "status": {
       "ACTIVE": "Aktiv",
@@ -107,12 +112,36 @@
       "createdAt": "Erstellt",
       "startsAt": "Start",
       "cancelledAt": "Gekündigt",
+      "accessEndsAt": "Zugriff endet",
       "details": "Details"
     },
     "details": {
       "seats": "{{count}} Plätze",
       "credits": "{{count}} monatliche Credits",
       "none": "—"
+    }
+  },
+  "subscriptionOverlap": {
+    "action": "Überschneidung beheben",
+    "title": "Abo-Überschneidung beheben",
+    "description": "Wählen Sie das maßgebliche Abonnement und dokumentieren Sie den Grund der Korrektur.",
+    "authoritative": "Maßgebliches Abonnement",
+    "authoritativePlaceholder": "Verbleibendes Abonnement auswählen",
+    "subscriptionLabel": "{{type}}, Start {{date}}",
+    "automaticAccessEnd": "Der Zugriff aller anderen Abonnements endet automatisch, sobald er sich erstmals mit dem maßgeblichen Abonnement überschneidet.",
+    "reason": "Korrekturgrund",
+    "reasonPlaceholder": "Vertragswechsel oder Supportfall angeben",
+    "cancel": "Abbrechen",
+    "confirm": "Korrektur anwenden",
+    "resolving": "Wird angewendet...",
+    "success": "Abo-Überschneidung behoben",
+    "invalidCorrection": "Die Korrektur behebt die aktuelle Überschneidung nicht. Aktualisieren Sie die Seite und prüfen Sie das ausgewählte Abonnement.",
+    "unauthorized": "Sie sind nicht berechtigt, den Abo-Zugriff zu korrigieren.",
+    "error": "Die Abo-Überschneidung konnte nicht behoben werden.",
+    "validation": {
+      "required": "Dieses Feld ist erforderlich",
+      "maxLength": "Verwenden Sie höchstens 500 Zeichen",
+      "invalid": "Prüfen Sie das ausgewählte Abonnement und den Grund"
     }
   },
   "licenseSeats": {

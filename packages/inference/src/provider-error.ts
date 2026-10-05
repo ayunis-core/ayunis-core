@@ -1,3 +1,5 @@
+import { parseRetryAfterMs } from './retry-after';
+
 /** Provider failure fact; retryability remains a host policy decision. */
 export type ProviderFailureKind =
   | 'connection'
@@ -134,6 +136,12 @@ const RATE_LIMIT_DIAGNOSTICS = new Set([
   'too_many_requests',
 ]);
 
+const SERVER_FAULT_DIAGNOSTICS = new Set([
+  'overloaded_error',
+  'server_error',
+  'service_unavailable_error',
+]);
+
 const REQUEST_ID_HEADERS = [
   'x-request-id',
   'request-id',
@@ -204,8 +212,11 @@ function classifyFailure(
   if (chain.some((node) => nodeHasName(node, ABORT_NAMES))) {
     return { kind: 'abort' };
   }
-  return hasRateLimitEvidence(chain)
-    ? { kind: 'rate_limit' }
+  if (hasDiagnosticEvidence(chain, RATE_LIMIT_DIAGNOSTICS)) {
+    return { kind: 'rate_limit' };
+  }
+  return hasDiagnosticEvidence(chain, SERVER_FAULT_DIAGNOSTICS)
+    ? { kind: 'server' }
     : { kind: 'unknown' };
 }
 
@@ -213,8 +224,9 @@ export function isProviderRateLimitDiagnostic(value: unknown): boolean {
   return typeof value === 'string' && RATE_LIMIT_DIAGNOSTICS.has(value);
 }
 
-function hasRateLimitEvidence(
+function hasDiagnosticEvidence(
   chain: readonly Record<string, unknown>[],
+  diagnostics: ReadonlySet<string>,
 ): boolean {
   return chain.some((record) => {
     const body = asRecord(record.error);
@@ -226,7 +238,7 @@ function hasRateLimitEvidence(
       body?.type,
       nestedBody?.code,
       nestedBody?.type,
-    ].some(isProviderRateLimitDiagnostic);
+    ].some((value) => typeof value === 'string' && diagnostics.has(value));
   });
 }
 
@@ -395,8 +407,7 @@ function extractRetryAfterMs(
     firstHeader(headers, 'retry-after-ms'),
   );
   if (milliseconds !== undefined) return milliseconds;
-  const seconds = nonNegativeNumber(firstHeader(headers, 'retry-after'));
-  return seconds === undefined ? undefined : seconds * 1_000;
+  return parseRetryAfterMs(firstHeader(headers, 'retry-after'));
 }
 
 function headerSources(

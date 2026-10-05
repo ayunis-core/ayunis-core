@@ -182,7 +182,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
       expect(types).toContain(ToolType.INSTALL_MARKETPLACE_SKILL);
 
-      expect(types.length).toBe(31);
+      expect(types).toHaveLength(31);
     });
   });
 });

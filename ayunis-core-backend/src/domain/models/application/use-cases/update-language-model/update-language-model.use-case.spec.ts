@@ -130,50 +130,35 @@ describe('UpdateLanguageModelUseCase', () => {
       );
     });
 
-    it('should NOT call clearDefaultsUseCase when model was already archived', async () => {
-      // Arrange
-      const existingModel = createMockLanguageModel(mockModelId, true);
-      const command = createUpdateCommand(mockModelId, true);
+    it.each([
+      {
+        name: 'model was already archived',
+        wasArchived: true,
+        isArchived: true,
+      },
+      {
+        name: 'unarchiving (true -> false)',
+        wasArchived: true,
+        isArchived: false,
+      },
+      {
+        name: 'isArchived remains false',
+        wasArchived: false,
+        isArchived: false,
+      },
+    ])(
+      'should NOT call clearDefaultsUseCase when $name',
+      async ({ wasArchived, isArchived }) => {
+        modelsRepository.findOne.mockResolvedValue(
+          createMockLanguageModel(mockModelId, wasArchived),
+        );
+        modelsRepository.save.mockResolvedValue();
 
-      modelsRepository.findOne.mockResolvedValue(existingModel);
-      modelsRepository.save.mockResolvedValue();
+        await useCase.execute(createUpdateCommand(mockModelId, isArchived));
 
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('should NOT call clearDefaultsUseCase when unarchiving (true -> false)', async () => {
-      // Arrange
-      const existingModel = createMockLanguageModel(mockModelId, true);
-      const command = createUpdateCommand(mockModelId, false);
-
-      modelsRepository.findOne.mockResolvedValue(existingModel);
-      modelsRepository.save.mockResolvedValue();
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('should NOT call clearDefaultsUseCase when isArchived remains false', async () => {
-      // Arrange
-      const existingModel = createMockLanguageModel(mockModelId, false);
-      const command = createUpdateCommand(mockModelId, false);
-
-      modelsRepository.findOne.mockResolvedValue(existingModel);
-      modelsRepository.save.mockResolvedValue();
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
-    });
+        expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
+      },
+    );
 
     it('should save the model before clearing defaults', async () => {
       // Arrange

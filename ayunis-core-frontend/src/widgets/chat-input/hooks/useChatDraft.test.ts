@@ -66,6 +66,6 @@ describe('useChatDraft', () => {
     const secondMount = renderHook(() => useChatDraft('thread-1'));
 
     expect(secondMount.result.current.message).toBe('');
-    expect(window.localStorage.length).toBe(0);
+    expect(window.localStorage).toHaveLength(0);
   });
 });

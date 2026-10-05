@@ -15,7 +15,6 @@ import UpdateSpreadsheetWidget from './UpdateSpreadsheetWidget';
  * Returns null when the tool call is not an artifact tool, so the caller can
  * continue its switch with other widget types.
  */
-// eslint-disable-next-line sonarjs/function-return-type -- returns JSX or null based on tool type
 export function renderArtifactToolWidget(params: {
   content: ToolUseMessageContent;
   result?: string;

@@ -176,6 +176,7 @@ import type {
   ReorderFavoritesDto,
   ResendEmailConfirmationDto,
   ResetPasswordDto,
+  ResolveSubscriptionOverlapDto,
   RetentionPolicyResponseDto,
   RevertArtifactDto,
   RolePermissionsResponseDto,
@@ -4756,6 +4757,76 @@ export const useSuperAdminSubscriptionsControllerUncancelSubscription = <TError 
         TContext
       > => {
       return useMutation(getSuperAdminSubscriptionsControllerUncancelSubscriptionMutationOptions(options), queryClient);
+    }
+
+/**
+ * Selects the authoritative serving subscription and atomically ends access for every conflicting subscription while preserving history. Super admins only.
+ * @summary Resolve an organization's overlapping subscription access
+ */
+export const superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap = (
+    orgId: string,
+    resolveSubscriptionOverlapDto: ResolveSubscriptionOverlapDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}/resolve-overlap`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resolveSubscriptionOverlapDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationKey = () => ['superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap'] as const;
+
+export const getSuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap>>, TError,SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap>>, TError,SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap>>, SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationVariables> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap(orgId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap>>>
+    export type SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationBody = ResolveSubscriptionOverlapDto
+    export type SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationError = void
+    export type SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationVariables = {orgId: string;data: ResolveSubscriptionOverlapDto}
+
+    /**
+ * @summary Resolve an organization's overlapping subscription access
+ */
+export const useSuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlap = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap>>, TError,SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap>>,
+        TError,
+        SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapMutationOptions(options), queryClient);
     }
 
 /**
