@@ -39,6 +39,31 @@ describe('normalizeProviderError', () => {
     },
   );
 
+  it.each([
+    ['Azure type', { type: 'service_unavailable_error' }],
+    ['Azure code', { error: { code: 'server_error', type: 'server_error' } }],
+    ['Bedrock type', { error: { type: 'overloaded_error' } }],
+  ] as const)(
+    'classifies a statusless provider server fault from its %s',
+    (_label, sdkError) => {
+      expect(normalizeProviderError(sdkError, ESTABLISHMENT)).toMatchObject({
+        kind: 'server',
+        upstreamStatus: undefined,
+      });
+    },
+  );
+
+  it.each([
+    ['rejection', { status: 400, type: 'server_error' }],
+    ['abort', { name: 'AbortError', type: 'overloaded_error' }],
+    ['rate_limit', { code: 'rate_limit_exceeded', type: 'server_error' }],
+  ] satisfies ReadonlyArray<readonly [ProviderFailureKind, object]>)(
+    'preserves an existing %s classification over server-fault diagnostics',
+    (kind, sdkError) => {
+      expect(normalizeProviderError(sdkError, ESTABLISHMENT).kind).toBe(kind);
+    },
+  );
+
   it('leaves an unknown statusless provider diagnostic unclassified', () => {
     const error = normalizeProviderError(
       { code: 'deployment_condition', type: 'upstream_error' },

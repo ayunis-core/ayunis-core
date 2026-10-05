@@ -1,4 +1,4 @@
-import { ModelProviderError } from '@ayunis/inference';
+import { ModelProviderError, normalizeProviderError } from '@ayunis/inference';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
 import { GetInferenceUseCase } from './get-inference.use-case';
@@ -131,6 +131,31 @@ describe('GetInferenceUseCase error mapping', () => {
       }),
     });
   });
+
+  it.each([
+    ['Azure', { error: { type: 'service_unavailable_error' } }],
+    ['Azure', { error: { code: 'server_error', type: 'server_error' } }],
+    ['Bedrock', { error: { type: 'overloaded_error' } }],
+  ])(
+    'classifies a statusless %s server fault as ProviderServerError',
+    async (_provider, sdkFields) => {
+      const portable = normalizeProviderError(
+        Object.assign(new Error('sensitive provider response'), sdkFields),
+        { stage: 'stream_establishment' },
+      );
+
+      const result = useCaseWithFailingHandler(portable).execute(makeCommand());
+
+      await expect(result).rejects.toBeInstanceOf(ProviderServerError);
+      await expect(result).rejects.toMatchObject({
+        context: expect.objectContaining({
+          provider: 'mistral',
+          modelId: 'mistral-large-latest',
+          upstreamType: sdkFields.error.type,
+        }),
+      });
+    },
+  );
 
   it('keeps upstream 4xx responses as InferenceFailedError — potentially our bug', async () => {
     const upstream = Object.assign(new Error('invalid request'), {
