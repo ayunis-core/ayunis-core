@@ -1,3 +1,5 @@
+import { parseRetryAfterMs } from './retry-after';
+
 /** Provider failure fact; retryability remains a host policy decision. */
 export type ProviderFailureKind =
   | 'connection'
@@ -395,8 +397,7 @@ function extractRetryAfterMs(
     firstHeader(headers, 'retry-after-ms'),
   );
   if (milliseconds !== undefined) return milliseconds;
-  const seconds = nonNegativeNumber(firstHeader(headers, 'retry-after'));
-  return seconds === undefined ? undefined : seconds * 1_000;
+  return parseRetryAfterMs(firstHeader(headers, 'retry-after'));
 }
 
 function headerSources(

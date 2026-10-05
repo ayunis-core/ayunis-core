@@ -111,6 +111,10 @@ describe('normalizeProviderError', () => {
       { response: { headers: new Headers({ 'retry-after-ms': '1250' }) } },
       1_250,
     ],
+    [{ headers: { 'retry-after': '2s' } }, 2_000],
+    [{ headers: { 'retry-after': '1m20s' } }, 80_000],
+    [{ headers: { 'retry-after': '1.5s' } }, 1_500],
+    [{ headers: { 'retry-after': '250ms' } }, 250],
   ] as const)('extracts retry timing from %#', (sdkError, retryAfterMs) => {
     expect(normalizeProviderError(sdkError, ESTABLISHMENT).retryAfterMs).toBe(
       retryAfterMs,
@@ -124,6 +128,22 @@ describe('normalizeProviderError', () => {
     );
 
     expect(error.retryAfterMs).toBe(750);
+  });
+
+  it.each([
+    'soon',
+    '2x',
+    'Wed, 21 Oct 2026 07:28:00 GMT',
+    '-1s',
+    '1.2.3s',
+    '.s',
+  ])('ignores unparseable retry-after %s', (value) => {
+    const error = normalizeProviderError(
+      { headers: { 'retry-after': value } },
+      ESTABLISHMENT,
+    );
+
+    expect(error.retryAfterMs).toBeUndefined();
   });
 
   it.each([
