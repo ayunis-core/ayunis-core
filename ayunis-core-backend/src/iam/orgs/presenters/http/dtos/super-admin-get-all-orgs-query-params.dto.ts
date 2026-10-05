@@ -1,8 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class SuperAdminGetAllOrgsQueryParamsDto {
+  @ApiPropertyOptional({
+    enum: ['active', 'archived', 'all'],
+    default: 'active',
+  })
+  @IsOptional()
+  @IsIn(['active', 'archived', 'all'])
+  status?: 'active' | 'archived' | 'all';
+
   @ApiPropertyOptional({
     description: 'Search organizations by name',
     example: 'Acme',

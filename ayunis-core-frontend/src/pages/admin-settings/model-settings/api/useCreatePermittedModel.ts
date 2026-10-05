@@ -23,6 +23,7 @@ const CREATE_ERROR_MAP: Record<string, string> = {
   MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED:
     'models.createPermittedModel.multipleImageGenerationModelsNotAllowed',
   MODEL_NOT_FOUND: 'models.createPermittedModel.modelNotFound',
+  DUPLICATE_PERMITTED_MODEL: 'models.createPermittedModel.alreadyEnabled',
 };
 
 export function useCreatePermittedModel() {

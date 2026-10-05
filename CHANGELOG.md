@@ -1,5 +1,79 @@
 # Changelog
 
+## [2.47.0](https://github.com/ayunis-core/ayunis-core/compare/v2.46.0...v2.47.0) (2026-10-02)
+
+
+### Features
+
+* **sources:** support uploading outlook .msg files (AYC-1003) ([#1825](https://github.com/ayunis-core/ayunis-core/issues/1825)) ([7ccdb09](https://github.com/ayunis-core/ayunis-core/commit/7ccdb09d1a4885122da1147bc6fa2b44a50a7126))
+
+
+### Bug Fixes
+
+* **inference:** classify statusless provider rate limits (AYC-1066) ([#1837](https://github.com/ayunis-core/ayunis-core/issues/1837)) ([92c8b08](https://github.com/ayunis-core/ayunis-core/commit/92c8b085de143985954fd377866a54fd6252e65c))
+* **sources:** sanitize spreadsheet unicode before persistence (AYC-1106) ([#1834](https://github.com/ayunis-core/ayunis-core/issues/1834)) ([bcb6e56](https://github.com/ayunis-core/ayunis-core/commit/bcb6e56e3c2cb1cd820810f32ce73070ca2c35b2))
+* **storage:** classify upload storage failures and retain safe diagnostics (AYC-1109) ([#1835](https://github.com/ayunis-core/ayunis-core/issues/1835)) ([f0e21a3](https://github.com/ayunis-core/ayunis-core/commit/f0e21a3abbe9dff0d611a016767eff6ca914390d))
+
+
+### Documentation
+
+* **frontend:** guide concise UI copy (AYC-000) ([#1836](https://github.com/ayunis-core/ayunis-core/issues/1836)) ([0d34f16](https://github.com/ayunis-core/ayunis-core/commit/0d34f16d11231900839274667347a0b67a97c480))
+
+
+### Miscellaneous
+
+* **deps:** patch piscina 4.x prototype-pollution advisory (AYC-000) ([#1832](https://github.com/ayunis-core/ayunis-core/issues/1832)) ([e249924](https://github.com/ayunis-core/ayunis-core/commit/e2499247eb55017f7ae5f92a3e6ade16028efa21))
+
+## [2.46.0](https://github.com/ayunis-core/ayunis-core/compare/v2.45.0...v2.46.0) (2026-10-01)
+
+
+### Features
+
+* **chat:** search message content alongside titles (AYC-298) ([#1823](https://github.com/ayunis-core/ayunis-core/issues/1823)) ([23c9e34](https://github.com/ayunis-core/ayunis-core/commit/23c9e3407838e5552b48d2b16ae7d05a00a4b90c))
+
+
+### Bug Fixes
+
+* **chat:** keep undo after paste and transcription (AYC-1024) ([#1816](https://github.com/ayunis-core/ayunis-core/issues/1816)) ([871119f](https://github.com/ayunis-core/ayunis-core/commit/871119f44ad499ab64c50ae43784e1758eba71dd))
+* **models:** classify statusless provider rate limits (AYC-1065) ([#1824](https://github.com/ayunis-core/ayunis-core/issues/1824)) ([f785a78](https://github.com/ayunis-core/ayunis-core/commit/f785a787047d5fa66b0d3dacf2334434a7f9adb2))
+* **observability:** suppress raw model idle signals (AYC-1064) ([#1819](https://github.com/ayunis-core/ayunis-core/issues/1819)) ([b6926a4](https://github.com/ayunis-core/ayunis-core/commit/b6926a4716d9f45562d052738aa8354e7dd87502))
+* **runs:** fall back to the upstream MCP tool name on replay (AYC-1102) ([#1829](https://github.com/ayunis-core/ayunis-core/issues/1829)) ([a4abe2a](https://github.com/ayunis-core/ayunis-core/commit/a4abe2a3b5bbb5fa85a6737189dbca1d6d54485b))
+* **tools:** namespace MCP capabilities by integration (AYC-1102) ([#1826](https://github.com/ayunis-core/ayunis-core/issues/1826)) ([af8e760](https://github.com/ayunis-core/ayunis-core/commit/af8e760d7a40085cec34575a7b962e1b6629b2b4))
+
+
+### Miscellaneous
+
+* **deps:** patch @xhmikosr/decompress path traversal advisory (AYC-000) ([#1827](https://github.com/ayunis-core/ayunis-core/issues/1827)) ([f19d215](https://github.com/ayunis-core/ayunis-core/commit/f19d2156a4b577f1fb51d4062404f3d3266626e8))
+
+
+### CI/CD
+
+* cache backend lint, parallelize frontend checks, and raise e2e workers (AYC-0000) ([#1757](https://github.com/ayunis-core/ayunis-core/issues/1757)) ([376d75d](https://github.com/ayunis-core/ayunis-core/commit/376d75d8b0e7a91ebb868b12f30db6a9c71982a1))
+
+## [2.45.0](https://github.com/ayunis-core/ayunis-core/compare/v2.44.1...v2.45.0) (2026-09-30)
+
+
+### Features
+
+* **chat:** add organization default for anonymous mode (AYC-723) ([#1813](https://github.com/ayunis-core/ayunis-core/issues/1813)) ([26c9a45](https://github.com/ayunis-core/ayunis-core/commit/26c9a45dd457fc93118e2f5ba15ec76152439dce))
+* **knowledge-bases:** accept csv, excel and ods uploads (AYC-419) ([#1810](https://github.com/ayunis-core/ayunis-core/issues/1810)) ([cea2e48](https://github.com/ayunis-core/ayunis-core/commit/cea2e48b7e642014b85e4a796698e75266437ad5))
+* **spreadsheet:** show column letters in grid headers and column manager (AYC-737) ([#1808](https://github.com/ayunis-core/ayunis-core/issues/1808)) ([4a90650](https://github.com/ayunis-core/ayunis-core/commit/4a90650c3fe2fe7690a9fe98b319c458c029c2c0))
+* **webhooks:** forward monthly subscription credit updates (AYC-1017) ([#1807](https://github.com/ayunis-core/ayunis-core/issues/1807)) ([bebc5f3](https://github.com/ayunis-core/ayunis-core/commit/bebc5f323759c73fa5ac1a848e825eb408bc8dfd))
+
+
+### Bug Fixes
+
+* **auth:** recover stale chat sessions (AYC-1043) ([#1806](https://github.com/ayunis-core/ayunis-core/issues/1806)) ([b36adb2](https://github.com/ayunis-core/ayunis-core/commit/b36adb2c02cf5f09ecc454b1ebb0ab734bd5b77d))
+* **chat:** remove deleted histories without refresh (AYC-1041) ([#1796](https://github.com/ayunis-core/ayunis-core/issues/1796)) ([ca6b1bb](https://github.com/ayunis-core/ayunis-core/commit/ca6b1bb7faaceb7e2b11494bdd9f45f1b26af634))
+* **chat:** render read documents inline (AYC-966) ([#1805](https://github.com/ayunis-core/ayunis-core/issues/1805)) ([14c40b4](https://github.com/ayunis-core/ayunis-core/commit/14c40b49286bcd6ffcd4590e5403992b89232552))
+* **persistence:** enroll repositories in cls transactions (AYC-496) ([#1811](https://github.com/ayunis-core/ayunis-core/issues/1811)) ([12467fd](https://github.com/ayunis-core/ayunis-core/commit/12467fde537cc88d8b454bdac784d0877d3c09ab))
+* **users:** show invite statuses as badges (AYC-286) ([#1803](https://github.com/ayunis-core/ayunis-core/issues/1803)) ([bef793e](https://github.com/ayunis-core/ayunis-core/commit/bef793e8f7d93d3576b73ccf68386fab8e713cd1))
+
+
+### Documentation
+
+* **frontend:** document behavior hook placement (AYC-937) ([#1660](https://github.com/ayunis-core/ayunis-core/issues/1660)) ([e6d3b37](https://github.com/ayunis-core/ayunis-core/commit/e6d3b37dfaaaf3a28acd63ca5f7d7ca556032a2a))
+
 ## [2.44.1](https://github.com/ayunis-core/ayunis-core/compare/v2.44.0...v2.44.1) (2026-09-29)
 
 

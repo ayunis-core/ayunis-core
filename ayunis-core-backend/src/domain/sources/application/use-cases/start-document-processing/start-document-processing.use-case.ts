@@ -4,14 +4,15 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.command';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { EnqueueDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.command';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
@@ -19,6 +20,7 @@ import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/u
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
+import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
 
 @Injectable()
@@ -28,7 +30,7 @@ export class StartDocumentProcessingUseCase {
   constructor(
     private readonly createProcessingSourceUseCase: CreateProcessingSourceUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDocumentProcessingUseCase: EnqueueDocumentProcessingUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
@@ -70,13 +72,13 @@ export class StartDocumentProcessingUseCase {
         }),
       );
 
-      // Upload and enqueue both happen outside the transaction
+      // Upload holds no transaction; enqueue takes its own short lifecycle lock.
       const minioPath = buildMinioProcessingPath(
         orgId,
         savedSource.id,
         command.fileName,
       );
-      await this.uploadFileOrFail(savedSource, minioPath, command);
+      await this.uploadFileOrFail(savedSource, minioPath, command, orgId);
       await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
 
       return savedSource;
@@ -100,15 +102,17 @@ export class StartDocumentProcessingUseCase {
     source: FileSource,
     minioPath: string,
     command: StartDocumentProcessingCommand,
+    orgId: UUID,
   ): Promise<void> {
     try {
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(minioPath, command.fileData),
+      await this.uploadOrgObjectUseCase.execute(
+        new UploadOrgObjectCommand(orgId, minioPath, command.fileData),
       );
     } catch (error) {
       await this.tryMarkSourceFailed(
         source,
         'Failed to upload file to storage',
+        classifySourceProcessingError(error),
       );
       throw error;
     }
@@ -168,12 +172,14 @@ export class StartDocumentProcessingUseCase {
   private async tryMarkSourceFailed(
     source: FileSource,
     errorMessage: string,
+    errorCode?: SourceProcessingErrorCode,
   ): Promise<void> {
     try {
       await this.markSourceFailedUseCase.execute(
         new MarkSourceFailedCommand({
           sourceId: source.id,
           errorMessage,
+          errorCode,
         }),
       );
     } catch (err) {

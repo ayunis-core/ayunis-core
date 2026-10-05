@@ -12,14 +12,17 @@ import {
   FileType,
   TextType,
 } from 'src/domain/sources/domain/source-type.enum';
-import { DataSourceRecord, TextSourceRecord } from '../schema/source.record';
-import { CSVDataSourceDetailsRecord } from '../schema/data-source-details.record';
+import {
+  DataSourceRecord,
+  TextSourceRecord,
+} from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import { CSVDataSourceDetailsRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/data-source-details.record';
 import {
   FileSourceDetailsRecord,
   UrlSourceDetailsRecord,
-} from '../schema/text-source-details.record';
+} from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
-import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
+import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source-content-chunk.record';
 
 describe('SourceMapper', () => {
   let mapper: SourceMapper;
@@ -136,6 +139,33 @@ describe('SourceMapper', () => {
 
         expect(record).toBeInstanceOf(DataSourceRecord);
         expect(record.createdBy).toBe(SourceCreator.SYSTEM);
+      });
+
+      it('replaces PostgreSQL-unsupported Unicode in CSV cells on the way to the record', () => {
+        const domain = new CSVDataSource({
+          id: randomUUID(),
+          name: 'municipal-services.csv',
+          data: {
+            headers: ['Service\u0000name', 'Gebühr €'],
+            rows: [
+              ['Waste collection', 'Valid 😀'],
+              ['Passport\ud800', '\udc0037'],
+            ],
+          },
+          createdBy: SourceCreator.LLM,
+        });
+
+        const { details } = mapper.toRecord(domain);
+
+        expect(details).toBeInstanceOf(CSVDataSourceDetailsRecord);
+        expect((details as CSVDataSourceDetailsRecord).data).toEqual({
+          headers: ['Servicename', 'Gebühr €'],
+          rows: [
+            ['Waste collection', 'Valid 😀'],
+            ['Passport�', '�37'],
+          ],
+        });
+        expect(domain.data.headers[0]).toBe('Service\u0000name');
       });
     });
   });

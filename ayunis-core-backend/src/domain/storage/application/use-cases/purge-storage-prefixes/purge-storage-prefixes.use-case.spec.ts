@@ -96,7 +96,7 @@ describe('PurgeStoragePrefixesUseCase', () => {
       new PurgeStoragePrefixesCommand(['org-1/', 'letterheads/org-1/']),
     );
 
-    expect(result).toEqual({ deletedCount: 1, failedCount: 0 });
+    expect(result).toEqual({ deletedCount: 1, failedCount: 1 });
     expect(logger.error).toHaveBeenCalledWith(
       { err: error, prefix: 'org-1/' },
       'Failed to list storage prefix',

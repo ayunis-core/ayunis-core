@@ -31,7 +31,8 @@
   },
   "statuses": {
     "active": "Aktiv",
-    "inactive": "Inaktiv"
+    "inactive": "Inaktiv",
+    "archived": "Archiviert"
   },
   "empty": {
     "title": "Noch keine Organisationen",
@@ -43,5 +44,11 @@
   },
   "search": {
     "placeholder": "Organisationen suchen..."
+  },
+  "filter": {
+    "label": "Organisationsstatus",
+    "active": "Aktiv",
+    "archived": "Archiviert",
+    "all": "Alle Organisationen"
   }
 }

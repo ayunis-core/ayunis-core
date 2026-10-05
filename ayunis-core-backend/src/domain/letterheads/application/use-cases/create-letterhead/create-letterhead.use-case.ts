@@ -2,8 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID, type UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { UnexpectedLetterheadError } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
@@ -18,7 +20,8 @@ export class CreateLetterheadUseCase {
   constructor(
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
+    private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly letterheadPdfService: LetterheadPdfService,
   ) {}
 
@@ -49,14 +52,42 @@ export class CreateLetterheadUseCase {
       letterheadId,
       'first-page.pdf',
     );
-    await this.uploadObjectUseCase.execute(
-      new UploadObjectCommand(firstPagePath, command.firstPagePdfBuffer),
-    );
-    const continuationPagePath = await this.uploadContinuationPage(
-      orgId,
-      letterheadId,
-      command.continuationPagePdfBuffer,
-    );
+    const uploadedPaths: string[] = [];
+    try {
+      await this.uploadOrgObjectUseCase.execute(
+        new UploadOrgObjectCommand(
+          orgId,
+          firstPagePath,
+          command.firstPagePdfBuffer,
+        ),
+      );
+      uploadedPaths.push(firstPagePath);
+      const continuationPagePath = await this.uploadContinuationPage(
+        orgId,
+        letterheadId,
+        command.continuationPagePdfBuffer,
+      );
+      if (continuationPagePath) uploadedPaths.push(continuationPagePath);
+      return await this.saveLetterhead(
+        command,
+        orgId,
+        letterheadId,
+        firstPagePath,
+        continuationPagePath,
+      );
+    } catch (error) {
+      await this.cleanupUploadedPdfs(orgId, letterheadId, uploadedPaths);
+      throw error;
+    }
+  }
+
+  private saveLetterhead(
+    command: CreateLetterheadCommand,
+    orgId: UUID,
+    letterheadId: UUID,
+    firstPagePath: string,
+    continuationPagePath: string | null,
+  ): Promise<Letterhead> {
     return this.letterheadsRepository.save(
       new Letterhead({
         id: letterheadId,
@@ -100,9 +131,36 @@ export class CreateLetterheadUseCase {
       letterheadId,
       'continuation.pdf',
     );
-    await this.uploadObjectUseCase.execute(
-      new UploadObjectCommand(path, buffer),
+    await this.uploadOrgObjectUseCase.execute(
+      new UploadOrgObjectCommand(orgId, path, buffer),
     );
     return path;
+  }
+
+  private async cleanupUploadedPdfs(
+    orgId: UUID,
+    letterheadId: UUID,
+    paths: string[],
+  ): Promise<void> {
+    await Promise.all(
+      paths.map((path) => this.deletePdf(orgId, letterheadId, path)),
+    );
+  }
+
+  private async deletePdf(
+    orgId: UUID,
+    letterheadId: UUID,
+    objectName: string,
+  ): Promise<void> {
+    try {
+      await this.deleteObjectUseCase.execute(
+        new DeleteObjectCommand(objectName),
+      );
+    } catch (error) {
+      this.logger.error(
+        { err: error as Error, orgId, letterheadId, objectName },
+        'Failed to clean up uncommitted letterhead PDF',
+      );
+    }
   }
 }

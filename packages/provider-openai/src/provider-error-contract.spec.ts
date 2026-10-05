@@ -106,6 +106,56 @@ describe('OpenAI provider error contract', () => {
     });
   });
 
+  it('classifies a statusless Azure rate-limit rejection from its diagnostics', async () => {
+    const cause = Object.assign(new Error('sensitive Azure response'), {
+      code: 'rate_limit_exceeded',
+      type: 'too_many_requests',
+      request_id: 'req_azure_statusless',
+      headers: { 'retry-after-ms': '1611' },
+    });
+    responsesCreateMock.mockRejectedValueOnce(cause);
+
+    const provider = azure({
+      apiKey: 'test',
+      endpoint: 'https://municipality.openai.azure.com',
+      model: 'gpt-5.6-sol',
+    });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rate_limit',
+      stage: 'stream_establishment',
+      upstreamStatus: undefined,
+      upstreamRequestId: 'req_azure_statusless',
+      retryAfterMs: 1_611,
+      cause,
+    });
+  });
+
+  it('classifies the Production-shaped Azure rate limit during stream consumption', async () => {
+    const cause = Object.assign(new Error('sensitive Azure response'), {
+      code: 'rate_limit_exceeded',
+      type: 'too_many_requests',
+      request_id: 'req_azure_consumption',
+      headers: { 'retry-after-ms': '1611' },
+    });
+    responsesCreateMock.mockResolvedValueOnce(scriptedStream([cause]));
+
+    const provider = azure({
+      apiKey: 'test',
+      endpoint: 'https://municipality.openai.azure.com',
+      model: 'gpt-5.6-sol',
+    });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rate_limit',
+      stage: 'stream_consumption',
+      upstreamStatus: undefined,
+      upstreamRequestId: 'req_azure_consumption',
+      retryAfterMs: 1_611,
+      cause,
+    });
+  });
+
   it('marks SDK setup timeouts as response-start timeouts', async () => {
     const cause = Object.assign(new Error('timed out'), {
       name: 'APIConnectionTimeoutError',

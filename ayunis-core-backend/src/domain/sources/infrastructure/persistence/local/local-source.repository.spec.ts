@@ -58,6 +58,37 @@ describe('LocalSourceRepository', () => {
     });
   });
 
+  it('stores the mapper-normalized CSV data in the processing update', async () => {
+    const qb = {
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+    const manager = {
+      getRepository: jest
+        .fn()
+        .mockReturnValue({ createQueryBuilder: () => qb }),
+    } as unknown as EntityManager;
+    const stored = { headers: ['Servicename'], rows: [['Passport�']] };
+    const mapper = {
+      toStoredCsvData: jest.fn().mockReturnValue(stored),
+    } as unknown as SourceMapper;
+    const repository = new LocalSourceRepository(
+      {} as Repository<SourceRecord>,
+      mapper,
+      {} as SourceContentChunkMapper,
+      { tx: manager } as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+    const raw = { headers: ['Service\u0000name'], rows: [['Passport\ud800']] };
+
+    await expect(
+      repository.updateCsvSourceData(randomUUID(), raw),
+    ).resolves.toBe(true);
+    expect(mapper.toStoredCsvData).toHaveBeenCalledWith(raw);
+    expect(qb.set).toHaveBeenCalledWith({ data: stored });
+  });
+
   it('uses the default repository outside an active transaction', async () => {
     const sourceRepository = {
       findOne: jest.fn().mockResolvedValue(null),

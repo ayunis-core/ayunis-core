@@ -104,18 +104,33 @@ const indexer = {
   markFailed: jest.fn().mockResolvedValue(undefined),
 };
 
+const admitOrgProcessing = {
+  execute: jest.fn().mockResolvedValue(true),
+};
+
 describe('UrlCrawlConsumer', () => {
   let consumer: UrlCrawlConsumer;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    admitOrgProcessing.execute.mockResolvedValue(true);
     consumer = new UrlCrawlConsumer(
       contextService as never,
       crawlUrlUseCase as never,
       splitTextUseCase as never,
       sourceRepository as never,
       indexer as never,
+      admitOrgProcessing as never,
     );
+  });
+
+  it('skips work when deletion wins before processing admission', async () => {
+    admitOrgProcessing.execute.mockResolvedValue(false);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.findById).not.toHaveBeenCalled();
+    expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('aggregates crawled pages and tags each chunk with its origin url', async () => {

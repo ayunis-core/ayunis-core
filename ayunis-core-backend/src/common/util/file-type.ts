@@ -34,6 +34,9 @@ export const MIME_TYPES = {
   // Email (RFC 822 message, .eml)
   EML: 'message/rfc822',
 
+  // Outlook message (.msg)
+  MSG: 'application/vnd.ms-outlook',
+
   // Audio — formats supported by the STT pipeline (Mistral voxtral).
   // Keep this list in sync with TranscribeUseCase's supportedMimeTypes.
   MP3: 'audio/mpeg',
@@ -59,6 +62,7 @@ export const FILE_EXTENSIONS = {
   TXT: '.txt',
   MD: '.md',
   EML: '.eml',
+  MSG: '.msg',
   MP3: '.mp3',
   M4A: '.m4a',
   WAV: '.wav',
@@ -74,6 +78,7 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'ODP',
   'TXT',
   'EML',
+  'MSG',
   'CSV',
   'XLSX',
   'XLS',
@@ -96,6 +101,7 @@ export type DetectedFileType =
   | 'csv'
   | 'txt'
   | 'eml'
+  | 'msg'
   | 'mp3'
   | 'm4a'
   | 'wav'
@@ -116,6 +122,7 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
   [MIME_TYPES.MD]: 'txt',
   [MIME_TYPES.EML]: 'eml',
+  [MIME_TYPES.MSG]: 'msg',
   [MIME_TYPES.MP3]: 'mp3',
   [MIME_TYPES.M4A]: 'm4a',
   [MIME_TYPES.M4A_ALT]: 'm4a',
@@ -137,6 +144,7 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.TXT]: 'txt',
   [FILE_EXTENSIONS.MD]: 'txt',
   [FILE_EXTENSIONS.EML]: 'eml',
+  [FILE_EXTENSIONS.MSG]: 'msg',
   [FILE_EXTENSIONS.MP3]: 'mp3',
   [FILE_EXTENSIONS.M4A]: 'm4a',
   [FILE_EXTENSIONS.WAV]: 'wav',
@@ -209,10 +217,10 @@ export function isCSVFile(fileType: DetectedFileType): boolean {
 }
 
 /**
- * Check if the file type is an email message (.eml, RFC 822)
+ * Check if the file type is an email message (.eml, RFC 822, or Outlook .msg)
  */
 export function isEmailFile(fileType: DetectedFileType): boolean {
-  return fileType === 'eml';
+  return fileType === 'eml' || fileType === 'msg';
 }
 
 /**
@@ -257,6 +265,7 @@ const CANONICAL_MIME_BY_FILE_TYPE: Record<
   csv: MIME_TYPES.CSV,
   txt: MIME_TYPES.TXT,
   eml: MIME_TYPES.EML,
+  msg: MIME_TYPES.MSG,
   mp3: MIME_TYPES.MP3,
   m4a: MIME_TYPES.M4A,
   wav: MIME_TYPES.WAV,

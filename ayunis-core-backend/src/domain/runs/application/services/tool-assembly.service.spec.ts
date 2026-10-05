@@ -171,15 +171,18 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     });
     const tools = await service.assembleTools(thread, new Map());
 
-    // Backend names are canonical: the built-in and the MCP tool coexist —
-    // wire-level collision handling is the providers' job.
+    // The integration namespace prevents both canonical and wire-level
+    // collisions with the built-in.
     const builtIn = tools.filter(
       (t: { name: string }) => t.name === 'code_execution',
     );
     expect(builtIn).toHaveLength(1);
     expect(builtIn[0].type).toBe(ToolType.CODE_EXECUTION);
     expect(
-      tools.some((t: { name: string }) => t.name === 'code.execution'),
+      tools.some(
+        (t: { name: string }) =>
+          t.name === `mcp__tool__code.execution__${integrationId.slice(0, 8)}`,
+      ),
     ).toBe(true);
   });
 
@@ -214,10 +217,11 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const tools = await service.assembleTools(thread, new Map());
 
     const matches = tools.filter(
-      (t: { name: string }) => t.name === 'notion.search',
+      (t: { name: string }) =>
+        t.name === `mcp__tool__notion.search__${integrationId.slice(0, 8)}`,
     );
     expect(matches).toHaveLength(1);
-    expect(matches[0].description).toBe('first');
+    expect(matches[0].description).toContain('first');
   });
 
   it('should include the map tool among the always-available tools', async () => {

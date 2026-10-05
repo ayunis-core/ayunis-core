@@ -91,6 +91,7 @@ import type {
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
   DeleteAllPendingInvitesResponseDto,
+  DeleteOrgRequestDto,
   DiscoverSsoDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
@@ -144,6 +145,7 @@ import type {
   OnboardingResponseDto,
   OrgAcademyAccessSettingsResponseDto,
   OrgChatSettingsResponseDto,
+  OrgErrorResponseDto,
   OrgMfaRequirementResponseDto,
   OrgSsoConnectionResourceDto,
   OrgSubscriptionsResponseDto,
@@ -189,6 +191,7 @@ import type {
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
   SetKnowledgeBaseActivationRequestDto,
+  SetOrgArchivedRequestDto,
   SetOrgDefaultModelDto,
   SetOrgLocalPasswordLoginEnabledRequestDto,
   SetOrgSsoEnabledRequestDto,
@@ -3389,7 +3392,7 @@ export const superAdminOrgsControllerUpdateOrg = (
 
 export const getSuperAdminOrgsControllerUpdateOrgMutationKey = () => ['superAdminOrgsControllerUpdateOrg'] as const;
 
-export const getSuperAdminOrgsControllerUpdateOrgMutationOptions = <TError = void,
+export const getSuperAdminOrgsControllerUpdateOrgMutationOptions = <TError = void | OrgErrorResponseDto,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,SuperAdminOrgsControllerUpdateOrgMutationVariables, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,SuperAdminOrgsControllerUpdateOrgMutationVariables, TContext> => {
 
@@ -3418,13 +3421,13 @@ const {mutation: mutationOptions} = options ?
 
     export type SuperAdminOrgsControllerUpdateOrgMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>>
     export type SuperAdminOrgsControllerUpdateOrgMutationBody = UpdateOrgRequestDto
-    export type SuperAdminOrgsControllerUpdateOrgMutationError = void
+    export type SuperAdminOrgsControllerUpdateOrgMutationError = void | OrgErrorResponseDto
     export type SuperAdminOrgsControllerUpdateOrgMutationVariables = {id: string;data: UpdateOrgRequestDto}
 
     /**
  * @summary Rename an organization
  */
-export const useSuperAdminOrgsControllerUpdateOrg = <TError = void,
+export const useSuperAdminOrgsControllerUpdateOrg = <TError = void | OrgErrorResponseDto,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,SuperAdminOrgsControllerUpdateOrgMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>,
@@ -3433,6 +3436,144 @@ export const useSuperAdminOrgsControllerUpdateOrg = <TError = void,
         TContext
       > => {
       return useMutation(getSuperAdminOrgsControllerUpdateOrgMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Permanently delete an organisation and its data
+ */
+export const superAdminOrgLifecycleControllerDeleteOrg = (
+    id: string,
+    deleteOrgRequestDto: DeleteOrgRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/orgs/${id}`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: deleteOrgRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOrgLifecycleControllerDeleteOrgMutationKey = () => ['superAdminOrgLifecycleControllerDeleteOrg'] as const;
+
+export const getSuperAdminOrgLifecycleControllerDeleteOrgMutationOptions = <TError = void | OrgErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerDeleteOrg>>, TError,SuperAdminOrgLifecycleControllerDeleteOrgMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerDeleteOrg>>, TError,SuperAdminOrgLifecycleControllerDeleteOrgMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminOrgLifecycleControllerDeleteOrgMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerDeleteOrg>>, SuperAdminOrgLifecycleControllerDeleteOrgMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminOrgLifecycleControllerDeleteOrg(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOrgLifecycleControllerDeleteOrgMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerDeleteOrg>>>
+    export type SuperAdminOrgLifecycleControllerDeleteOrgMutationBody = DeleteOrgRequestDto
+    export type SuperAdminOrgLifecycleControllerDeleteOrgMutationError = void | OrgErrorResponseDto
+    export type SuperAdminOrgLifecycleControllerDeleteOrgMutationVariables = {id: string;data: DeleteOrgRequestDto}
+
+    /**
+ * @summary Permanently delete an organisation and its data
+ */
+export const useSuperAdminOrgLifecycleControllerDeleteOrg = <TError = void | OrgErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerDeleteOrg>>, TError,SuperAdminOrgLifecycleControllerDeleteOrgMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOrgLifecycleControllerDeleteOrg>>,
+        TError,
+        SuperAdminOrgLifecycleControllerDeleteOrgMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminOrgLifecycleControllerDeleteOrgMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Archive or restore an organisation
+ */
+export const superAdminOrgLifecycleControllerSetOrgArchived = (
+    id: string,
+    setOrgArchivedRequestDto: SetOrgArchivedRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminOrgResponseDto>(
+      {url: `/super-admin/orgs/${id}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgArchivedRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOrgLifecycleControllerSetOrgArchivedMutationKey = () => ['superAdminOrgLifecycleControllerSetOrgArchived'] as const;
+
+export const getSuperAdminOrgLifecycleControllerSetOrgArchivedMutationOptions = <TError = OrgErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerSetOrgArchived>>, TError,SuperAdminOrgLifecycleControllerSetOrgArchivedMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerSetOrgArchived>>, TError,SuperAdminOrgLifecycleControllerSetOrgArchivedMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminOrgLifecycleControllerSetOrgArchivedMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerSetOrgArchived>>, SuperAdminOrgLifecycleControllerSetOrgArchivedMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminOrgLifecycleControllerSetOrgArchived(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOrgLifecycleControllerSetOrgArchivedMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerSetOrgArchived>>>
+    export type SuperAdminOrgLifecycleControllerSetOrgArchivedMutationBody = SetOrgArchivedRequestDto
+    export type SuperAdminOrgLifecycleControllerSetOrgArchivedMutationError = OrgErrorResponseDto
+    export type SuperAdminOrgLifecycleControllerSetOrgArchivedMutationVariables = {id: string;data: SetOrgArchivedRequestDto}
+
+    /**
+ * @summary Archive or restore an organisation
+ */
+export const useSuperAdminOrgLifecycleControllerSetOrgArchived = <TError = OrgErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgLifecycleControllerSetOrgArchived>>, TError,SuperAdminOrgLifecycleControllerSetOrgArchivedMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOrgLifecycleControllerSetOrgArchived>>,
+        TError,
+        SuperAdminOrgLifecycleControllerSetOrgArchivedMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminOrgLifecycleControllerSetOrgArchivedMutationOptions(options), queryClient);
     }
 
 /**

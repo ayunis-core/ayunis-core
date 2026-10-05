@@ -3,13 +3,14 @@ import { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
 import { McpIntegrationResource } from './mcp-integration-resource.entity';
 
 describe('McpIntegrationResource', () => {
-  it('keeps the human-readable resource name — providers translate on the wire', () => {
+  it('namespaces the model-visible resource name by integration', () => {
+    const integrationId = randomUUID();
     const resource = new McpResource({
       uri: 'file:///docs/readme.md',
       name: 'Project README',
       description: 'The project readme',
       mimeType: 'text/markdown',
-      integrationId: randomUUID(),
+      integrationId,
     });
 
     const tool = new McpIntegrationResource(
@@ -19,8 +20,11 @@ describe('McpIntegrationResource', () => {
       'https://cdn.example.com/municipal-documents.svg',
     );
 
-    expect(tool.name).toBe('Project README');
+    expect(tool.name).toBe(
+      `mcp__resource__Project README__${integrationId.slice(0, 8)}`,
+    );
     expect(tool.description).toContain('Project README');
+    expect(tool.description).toContain('Municipal Documents');
     expect(tool.integrationName).toBe('Municipal Documents');
     expect(tool.integrationLogoUrl).toBe(
       'https://cdn.example.com/municipal-documents.svg',

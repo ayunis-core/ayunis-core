@@ -14,8 +14,8 @@ import {
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
@@ -31,7 +31,7 @@ export class CreateUserMessageUseCase {
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
@@ -134,8 +134,8 @@ export class CreateUserMessageUseCase {
         },
         'Uploading image to storage',
       );
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(storagePath, pendingImage.buffer, {
+      await this.uploadOrgObjectUseCase.execute(
+        new UploadOrgObjectCommand(orgId, storagePath, pendingImage.buffer, {
           contentType: pendingImage.contentType,
         }),
       );

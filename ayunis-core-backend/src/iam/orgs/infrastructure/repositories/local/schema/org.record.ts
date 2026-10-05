@@ -7,6 +7,12 @@ export class OrgRecord extends BaseRecord {
   @Column()
   name: string;
 
+  @Column({ default: false })
+  archived: boolean;
+
+  @Column({ type: 'integer', default: 0 })
+  sessionVersion: number;
+
   @OneToMany(() => UserRecord, (user) => user.org, {
     cascade: true,
     nullable: false,

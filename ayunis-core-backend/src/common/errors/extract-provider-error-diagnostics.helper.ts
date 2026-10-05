@@ -1,4 +1,7 @@
-import { ModelProviderError } from '@ayunis/inference';
+import {
+  isProviderRateLimitDiagnostic,
+  ModelProviderError,
+} from '@ayunis/inference';
 import { extractUpstreamStatus } from './extract-upstream-status.helper';
 
 export interface ProviderErrorDiagnostics {
@@ -49,6 +52,16 @@ const REASON_PATTERNS: ReadonlyArray<readonly [ProviderErrorReason, RegExp]> = [
     /authentication|unauthorized|invalid api key/i,
   ],
 ];
+
+export function hasRateLimitDiagnostics(
+  diagnostics: ProviderErrorDiagnostics,
+): boolean {
+  return (
+    diagnostics.upstreamStatus === 429 ||
+    isProviderRateLimitDiagnostic(diagnostics.upstreamCode) ||
+    isProviderRateLimitDiagnostic(diagnostics.upstreamType)
+  );
+}
 
 export function extractProviderErrorDiagnostics(
   error: unknown,

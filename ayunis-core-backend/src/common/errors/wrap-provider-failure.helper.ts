@@ -1,6 +1,10 @@
 import { ModelProviderError } from '@ayunis/inference';
 import { ApplicationError } from './base.error';
-import { extractProviderErrorDiagnostics } from './extract-provider-error-diagnostics.helper';
+import {
+  extractProviderErrorDiagnostics,
+  hasRateLimitDiagnostics,
+  type ProviderErrorDiagnostics,
+} from './extract-provider-error-diagnostics.helper';
 import { classifyTransportError } from './provider-transport-error.classifier';
 import type {
   ProviderErrorContext,
@@ -21,8 +25,8 @@ export interface ProviderFailureSource {
 
 /**
  * Single integration point for outbound adapters: wraps transport failures,
- * upstream 5xx responses, and upstream 429 rate limits in the
- * ProviderUnavailableError family.
+ * upstream 5xx responses, and rate limits identified by HTTP 429 or known
+ * provider diagnostics in the ProviderUnavailableError family.
  *
  * Returns undefined for everything the caller should keep handling itself:
  * ApplicationError (already classified), upstream 4xx other than rate limits
@@ -58,7 +62,8 @@ function wrapPortableFailure(
   error: ModelProviderError,
   source: ProviderFailureSource,
 ): ProviderUnavailableError | undefined {
-  const context = portableProviderContext(error, source);
+  const diagnostics = extractProviderErrorDiagnostics(error);
+  const context = portableProviderContext(error, source, diagnostics);
   if (error.kind === 'connection') {
     return new ProviderConnectionError(context);
   }
@@ -68,8 +73,11 @@ function wrapPortableFailure(
   if (error.kind === 'server') {
     return new ProviderServerError(context);
   }
-  if (error.kind === 'rate_limit') {
-    return new ProviderRequestRejectedError(context);
+  if (error.kind === 'rate_limit' || hasRateLimitDiagnostics(diagnostics)) {
+    return new ProviderRequestRejectedError({
+      ...context,
+      upstreamStatus: context.upstreamStatus ?? 429,
+    });
   }
   return undefined;
 }
@@ -77,10 +85,12 @@ function wrapPortableFailure(
 function portableProviderContext(
   error: ModelProviderError,
   source: ProviderFailureSource,
+  diagnostics: ProviderErrorDiagnostics,
 ): ProviderErrorContext {
   return {
     ...source,
     failureStage: error.stage,
+    ...providerDiagnosticContext(diagnostics),
     ...(error.timeoutSource && { timeoutSource: error.timeoutSource }),
     ...(error.upstreamStatus !== undefined && {
       upstreamStatus: error.upstreamStatus,
@@ -93,6 +103,35 @@ function portableProviderContext(
     }),
     ...(error.transportCode && { underlyingCode: error.transportCode }),
     ...(error.host && { host: error.host }),
+  };
+}
+
+function providerDiagnosticContext(
+  diagnostics: ProviderErrorDiagnostics,
+): Pick<
+  ProviderErrorContext,
+  | 'upstreamCode'
+  | 'upstreamType'
+  | 'upstreamParam'
+  | 'upstreamReason'
+  | 'upstreamRequestId'
+> {
+  return {
+    ...(diagnostics.upstreamCode && {
+      upstreamCode: diagnostics.upstreamCode,
+    }),
+    ...(diagnostics.upstreamType && {
+      upstreamType: diagnostics.upstreamType,
+    }),
+    ...(diagnostics.upstreamParam && {
+      upstreamParam: diagnostics.upstreamParam,
+    }),
+    ...(diagnostics.upstreamReason && {
+      upstreamReason: diagnostics.upstreamReason,
+    }),
+    ...(diagnostics.upstreamRequestId && {
+      upstreamRequestId: diagnostics.upstreamRequestId,
+    }),
   };
 }
 

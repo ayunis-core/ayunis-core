@@ -3,19 +3,53 @@ import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { McpIntegrationTool } from './mcp-integration-tool.entity';
 
 describe('McpIntegrationTool', () => {
-  function createTool(name: string): McpIntegrationTool {
+  function createTool(
+    name: string,
+    integrationId = randomUUID(),
+    integrationName = 'Integration',
+  ): McpIntegrationTool {
     const mcpTool = new McpTool(
       name,
       'A tool',
       { type: 'object', properties: {} },
-      randomUUID(),
+      integrationId,
     );
-    return new McpIntegrationTool(mcpTool, false, 'Integration', null);
+    return new McpIntegrationTool(mcpTool, false, integrationName, null);
   }
 
-  it('keeps the original MCP tool name — providers translate on the wire', () => {
-    const tool = createTool('Project README.fetch');
-    expect(tool.name).toBe('Project README.fetch');
+  it('namespaces the model-visible name and preserves the upstream name', () => {
+    const integrationId = randomUUID();
+    const tool = createTool('Project README.fetch', integrationId);
+
+    expect(tool.name).toBe(
+      `mcp__tool__Project README.fetch__${integrationId.slice(0, 8)}`,
+    );
+    expect(tool.originalName).toBe('Project README.fetch');
+  });
+
+  it('identifies the integration in the model-visible description', () => {
+    const tool = createTool(
+      'create_document',
+      randomUUID(),
+      'Outline Bremerhaven',
+    );
+
+    expect(tool.description).toContain('Outline Bremerhaven');
+    expect(tool.description).toContain('create_document');
+  });
+
+  it('keeps canonical names within the 64-character provider limit for upstream names up to 43 characters', () => {
+    const tool = createTool('a'.repeat(43));
+
+    expect(tool.name).toHaveLength(64);
+  });
+
+  it('keeps the canonical name stable when the integration is renamed', () => {
+    const integrationId = randomUUID();
+
+    expect(createTool('create_document', integrationId, 'Outline').name).toBe(
+      createTool('create_document', integrationId, 'Municipal Wiki').name,
+    );
   });
 
   describe('validateParams', () => {

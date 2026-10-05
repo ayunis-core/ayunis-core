@@ -106,6 +106,7 @@ describe('LoginUseCase', () => {
     );
     expect(mockAuthRepository.generateAccessToken).toHaveBeenCalledWith(
       activeUser,
+      undefined,
     );
     expect(mockCreateSessionUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -154,6 +155,7 @@ describe('LoginUseCase', () => {
         orgId: currentUser.orgId,
         name: currentUser.name,
       }),
+      undefined,
     );
   });
 

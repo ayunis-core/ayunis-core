@@ -138,7 +138,13 @@
       "activate_skill": "Activate skill",
       "knowledge_query": "Search knowledge base",
       "knowledge_get_text": "Read knowledge base document",
-      "read_document": "Read document",
+      "read_document": {
+        "title": "Document",
+        "reading": "Reading document…",
+        "available": "Document available",
+        "unavailable": "Document could not be opened",
+        "openInEditor": "Open in editor"
+      },
       "send_email": {
         "subject": "Subject",
         "body": "Body",

@@ -34,7 +34,6 @@ interface RefreshTokenPayload {
 export class RefreshTokenUseCase {
   private readonly logger = new Logger(RefreshTokenUseCase.name);
 
-  // eslint-disable-next-line max-params -- NestJS dependency injection
   constructor(
     @Inject(AUTHENTICATION_REPOSITORY)
     private readonly authRepository: AuthenticationRepository,
@@ -64,19 +63,21 @@ export class RefreshTokenUseCase {
       new PrepareSessionRotationCommand(token),
     );
     const user = await this.findUser(current.userId);
-    await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
-      user.orgId,
-      current.authenticationMethod,
-    );
+    const sessionVersion =
+      await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
+        user.orgId,
+        current.authenticationMethod,
+      );
     const rotated = await this.rotateSessionUseCase.execute(
       new RotateSessionCommand(current),
     );
-    return this.issueTokens(user, rotated.refreshToken);
+    return this.issueTokens(user, rotated.refreshToken, sessionVersion);
   }
 
   /**
-   * Transitional path: a pre-deploy JWT refresh token is verified once and
-   * migrated to an opaque stored session (a new family).
+   * Transitional path: a pre-deploy JWT refresh token is verified once. If the
+   * organisation is active at its legacy session generation, it is migrated
+   * to an opaque stored session (a new family); otherwise it is rejected.
    *
    * FUTURE(AYC-452): remove ~7 days after deploy, once legacy JWT refresh
    * tokens have all expired.
@@ -88,14 +89,18 @@ export class RefreshTokenUseCase {
     }
     const userId = payload.sub as UUID;
     const user = await this.findUser(userId);
-    await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
-      user.orgId,
-      SessionAuthenticationMethod.PASSWORD,
-    );
+    const sessionVersion =
+      await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
+        user.orgId,
+        SessionAuthenticationMethod.PASSWORD,
+      );
+    if (sessionVersion !== 0) {
+      throw new InvalidTokenError('Organisation session has expired');
+    }
     const session = await this.createSessionUseCase.execute(
       new CreateSessionCommand(userId, SessionAuthenticationMethod.PASSWORD),
     );
-    return this.issueTokens(user, session.refreshToken);
+    return this.issueTokens(user, session.refreshToken, sessionVersion);
   }
 
   // A tampered or expired legacy JWT is invalid credentials (401), not an
@@ -127,8 +132,12 @@ export class RefreshTokenUseCase {
   private async issueTokens(
     user: ActiveUser,
     refreshToken: string,
+    sessionVersion: number,
   ): Promise<AuthTokens> {
-    const accessToken = await this.authRepository.generateAccessToken(user);
+    const accessToken = await this.authRepository.generateAccessToken(
+      user,
+      sessionVersion,
+    );
     return new AuthTokens(accessToken, refreshToken);
   }
 

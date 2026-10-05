@@ -1,4 +1,6 @@
 export class IdleTimeoutError extends Error {
+  readonly code = 'MODEL_CALL_IDLE_TIMEOUT';
+
   constructor(readonly idleTimeoutMs: number) {
     super(`Model provider stream was idle for ${idleTimeoutMs}ms`);
   }

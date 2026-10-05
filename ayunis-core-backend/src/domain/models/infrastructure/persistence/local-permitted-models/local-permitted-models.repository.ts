@@ -21,6 +21,7 @@ import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enu
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { LanguageModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import {
+  DuplicatePermittedModelError,
   DuplicateTeamPermittedModelError,
   MultipleTeamImageGenerationModelsNotAllowedError,
   NotALanguageModelError,
@@ -28,15 +29,7 @@ import {
 } from 'src/domain/models/application/models.errors';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { PermittedModelFinder } from './permitted-model-finder';
-
-const PG_UNIQUE_VIOLATION = '23505';
-
-function isUniqueViolation(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null) return false;
-  const record = error as Record<string, unknown>;
-  const driverError = record.driverError as Record<string, unknown> | undefined;
-  return (driverError?.code ?? record.code) === PG_UNIQUE_VIOLATION;
-}
+import { isUniqueViolation } from './is-unique-violation';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -228,7 +221,15 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     return this.finder.findManyImageGenerationByTeams(teamIds, orgId);
   }
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
-    return this.persist(permittedModel, this.permittedModelRepository);
+    try {
+      return await this.persist(permittedModel, this.permittedModelRepository);
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+      throw new DuplicatePermittedModelError(
+        permittedModel.orgId,
+        permittedModel.model.id,
+      );
+    }
   }
 
   async createTeamScoped(
@@ -249,13 +250,11 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       }
       return await this.persist(permittedModel, this.permittedModelRepository);
     } catch (error) {
-      if (isUniqueViolation(error)) {
-        throw new DuplicateTeamPermittedModelError(
-          permittedModel.scopeId,
-          permittedModel.model.id,
-        );
-      }
-      throw error;
+      if (!isUniqueViolation(error)) throw error;
+      throw new DuplicateTeamPermittedModelError(
+        permittedModel.scopeId,
+        permittedModel.model.id,
+      );
     }
   }
 

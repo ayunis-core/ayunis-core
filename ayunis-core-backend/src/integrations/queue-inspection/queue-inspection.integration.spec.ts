@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import type { INestApplication } from '@nestjs/common';
+import { Module, type INestApplication } from '@nestjs/common';
 import type { AddressInfo } from 'net';
 import { Queue } from 'bullmq';
 import { QueueInspectionModule } from './queue-inspection.module';
@@ -12,6 +12,22 @@ import { authenticationConfig } from 'src/config/authentication.config';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { IpAllowlistRecord } from 'src/iam/ip-allowlist/infrastructure/persistence/postgres/schema/ip-allowlist.record';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
+import { OrgAccessError } from 'src/iam/orgs/application/orgs.errors';
+
+const assertOrgActive = jest.fn().mockResolvedValue(undefined);
+
+@Module({
+  providers: [
+    {
+      provide: AssertCachedOrgActiveUseCase,
+      useValue: { execute: assertOrgActive },
+    },
+  ],
+  exports: [AssertCachedOrgActiveUseCase],
+})
+class QueueInspectionTestOrgsModule {}
 
 describe('queue inspection HTTP boundary', () => {
   const findIpAllowlistRecord = jest.fn().mockResolvedValue(null);
@@ -43,6 +59,7 @@ describe('queue inspection HTTP boundary', () => {
     builder.overrideProvider(getRepositoryToken(IpAllowlistRecord)).useValue({
       findOne: findIpAllowlistRecord,
     });
+    builder.overrideModule(OrgsModule).useModule(QueueInspectionTestOrgsModule);
 
     const moduleRef = await builder.compile();
     app = moduleRef.createNestApplication();
@@ -58,6 +75,10 @@ describe('queue inspection HTTP boundary', () => {
     await app.close();
   });
 
+  beforeEach(() => {
+    assertOrgActive.mockReset().mockResolvedValue(undefined);
+  });
+
   it('rejects unauthenticated requests', async () => {
     const response = await fetch(`${baseUrl}/api/internal/queues/`);
 
@@ -68,6 +89,14 @@ describe('queue inspection HTTP boundary', () => {
     const response = await requestAs(SystemRole.CUSTOMER);
 
     expect(response.status).toBe(403);
+  });
+
+  it('rejects a super admin session from an archived organisation', async () => {
+    assertOrgActive.mockRejectedValueOnce(new OrgAccessError());
+
+    const response = await requestAs(SystemRole.SUPER_ADMIN);
+
+    expect(response.status).toBe(401);
   });
 
   it('rejects an authorized operator outside the organization IP allowlist', async () => {

@@ -1,3 +1,4 @@
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
@@ -17,6 +18,7 @@ import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/ta
 
 @Module({
   imports: [
+    OrgsModule,
     BullModule.registerQueue({
       name: DOCUMENT_PROCESSING_QUEUE,
     }),

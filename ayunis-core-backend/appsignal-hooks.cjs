@@ -122,6 +122,18 @@ const SUPPRESSIONS = [
     exceptionType: 'MARKETPLACE_UNAVAILABLE',
   },
   {
+    id: 'runtime-model-idle-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-1064',
+    reason:
+      'The agent runtime raises this internal signal to abort a model stream ' +
+      'that emitted no further data before its idle deadline. The runtime ' +
+      'retries it before visible output and reports terminal stalls as INFERENCE_TIMEOUT ' +
+      'or PROVIDER_UNAVAILABLE_TIMEOUT_*; the raw signal is a duplicate ' +
+      '(incident #659).',
+    exceptionType: 'MODEL_CALL_IDLE_TIMEOUT',
+  },
+  {
     id: 'abort-signal-cancellation',
     lever: 'ignoreErrors',
     ticket: 'AYC-651',
