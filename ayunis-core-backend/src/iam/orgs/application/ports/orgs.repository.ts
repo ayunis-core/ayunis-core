@@ -23,5 +23,6 @@ export abstract class OrgsRepository {
   abstract create(org: Org): Promise<Org>;
   abstract updateName(id: UUID, name: string): Promise<Org>;
   abstract updateArchived(id: UUID, archived: boolean): Promise<Org>;
+  abstract lockForLifecycleMutation(id: UUID): Promise<void>;
   abstract delete(id: UUID, confirmationName?: string): Promise<void>;
 }

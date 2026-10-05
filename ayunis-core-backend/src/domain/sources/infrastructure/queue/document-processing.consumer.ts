@@ -16,6 +16,8 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
+import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import { tableToText } from 'src/domain/sources/application/util/table-to-text';
 import {
@@ -44,6 +46,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly sourceRepository: SourceRepository,
     private readonly helper: SourceProcessingHelper,
     private readonly spreadsheetParser: SpreadsheetParserPort,
+    private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
   ) {
     super();
   }
@@ -63,6 +66,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
       this.validateAndSetContext(orgId, userId);
+      if (!(await this.isAdmitted(job))) return;
 
       try {
         const source = await this.loadSourceOrSkip(sourceId, minioPath);
@@ -103,6 +107,21 @@ export class DocumentProcessingConsumer extends WorkerHost {
         if (rethrow) throw rethrow;
       }
     });
+  }
+
+  private async isAdmitted(
+    job: Job<DocumentProcessingJobData>,
+  ): Promise<boolean> {
+    const admitted = await this.admitOrgProcessing.execute(
+      new AdmitOrgProcessingQuery(job.data.orgId),
+    );
+    if (!admitted) {
+      this.logger.warn(
+        { jobId: job.id, orgId: job.data.orgId },
+        'Organisation deleted',
+      );
+    }
+    return admitted;
   }
 
   private validateAndSetContext(

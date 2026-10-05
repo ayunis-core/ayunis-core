@@ -104,13 +104,32 @@ it('preserves archive data, invalidates generations, rolls back failure, and ser
     });
     await migration.down(runner);
     await migration.up(runner);
+    const lateJobOrgId = randomUUID();
     await runner.query('INSERT INTO orgs(id,name) VALUES ($1,$2)', [
-      randomUUID(),
-      'Archive regression',
+      lateJobOrgId,
+      'Late job regression',
     ]);
     expect(
       await runner.query('SELECT archived, "sessionVersion" FROM orgs'),
     ).toEqual([{ archived: false, sessionVersion: 0 }]);
+
+    await runner.startTransaction();
+    await repository(runner).lockForLifecycleMutation(lateJobOrgId);
+    await admission.startTransaction();
+    let admitted = false;
+    const lateAdmission = repository(admission)
+      .findById(lateJobOrgId, true)
+      .then(() => {
+        admitted = true;
+      });
+    await runner.query('SELECT pg_sleep(0.05)');
+    expect(admitted).toBe(false);
+    await repository(runner).delete(lateJobOrgId);
+    await runner.commitTransaction();
+    await expect(lateAdmission).rejects.toMatchObject({
+      code: 'ORG_NOT_FOUND',
+    });
+    await admission.rollbackTransaction();
   } finally {
     if (admission.isTransactionActive) await admission.rollbackTransaction();
     await runner.query('SET search_path TO public');

@@ -253,6 +253,21 @@ export class LocalOrgsRepository extends OrgsRepository {
     return OrgMapper.toDomain(record);
   }
 
+  async lockForLifecycleMutation(id: UUID): Promise<void> {
+    try {
+      const record = await this.orgRepository.findOne({
+        select: { id: true },
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!record) throw new OrgNotFoundError(id);
+    } catch (error) {
+      if (error instanceof OrgNotFoundError) throw error;
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      throw new OrgRetrievalFailedError(err.message);
+    }
+  }
+
   async delete(id: UUID, confirmationName?: string): Promise<void> {
     const result = await this.orgRepository.delete({
       id,

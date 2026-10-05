@@ -10,6 +10,8 @@ import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 
 const JOB_PAGE_SIZE = 100;
+const LOCKED_JOB_RETRIES = 20;
+const LOCKED_JOB_RETRY_DELAY_MS = 50;
 type OrgJob = Job<{ orgId?: string }>;
 
 @Injectable()
@@ -97,8 +99,32 @@ export class OrgProcessingDeletionListener {
   private async removeJobs(jobs: OrgJob[]): Promise<void> {
     for (let start = 0; start < jobs.length; start += JOB_PAGE_SIZE) {
       await Promise.all(
-        jobs.slice(start, start + JOB_PAGE_SIZE).map((job) => job.remove()),
+        jobs
+          .slice(start, start + JOB_PAGE_SIZE)
+          .map((job) => this.removeJob(job)),
       );
+    }
+  }
+
+  private async removeJob(job: OrgJob): Promise<void> {
+    let retriedAfterCompletion = false;
+    for (let attempt = 0; attempt <= LOCKED_JOB_RETRIES; attempt += 1) {
+      try {
+        await job.remove();
+        return;
+      } catch (error) {
+        if (attempt === LOCKED_JOB_RETRIES) {
+          throw error;
+        }
+        if (!(await job.isActive())) {
+          if (retriedAfterCompletion) throw error;
+          retriedAfterCompletion = true;
+          continue;
+        }
+        await new Promise((resolve) =>
+          setTimeout(resolve, LOCKED_JOB_RETRY_DELAY_MS),
+        );
+      }
     }
   }
 

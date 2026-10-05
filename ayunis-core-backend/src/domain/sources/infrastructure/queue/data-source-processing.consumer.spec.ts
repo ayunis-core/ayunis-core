@@ -25,6 +25,7 @@ describe('DataSourceProcessingConsumer', () => {
   let markSourceFailed: jest.Mocked<MarkSourceFailedUseCase>;
   let downloadObject: jest.Mocked<DownloadObjectUseCase>;
   let deleteObject: jest.Mocked<DeleteObjectUseCase>;
+  let admitOrgProcessing: { execute: jest.Mock };
   let consumer: DataSourceProcessingConsumer;
 
   function processingSource(name: string): CSVDataSource {
@@ -72,6 +73,9 @@ describe('DataSourceProcessingConsumer', () => {
     deleteObject = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<DeleteObjectUseCase>;
+    admitOrgProcessing = {
+      execute: jest.fn().mockResolvedValue(true),
+    };
     const contextService = {
       run: jest.fn((fn: () => Promise<void>) => fn()),
       set: jest.fn(),
@@ -84,7 +88,17 @@ describe('DataSourceProcessingConsumer', () => {
       sourceRepository,
       parser,
       markSourceFailed,
+      admitOrgProcessing as never,
     );
+  });
+
+  it('skips work when deletion wins before processing admission', async () => {
+    admitOrgProcessing.execute.mockResolvedValue(false);
+
+    await consumer.process(jobFor({}));
+
+    expect(sourceRepository.findById).not.toHaveBeenCalled();
+    expect(downloadObject.execute).not.toHaveBeenCalled();
   });
 
   it('fills each source with its sheet data and flips it to READY', async () => {
