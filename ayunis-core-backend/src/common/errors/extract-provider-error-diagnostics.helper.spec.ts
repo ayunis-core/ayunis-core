@@ -1,8 +1,32 @@
 import { ModelProviderError } from '@ayunis/inference';
 import {
   extractProviderErrorDiagnostics,
+  hasRateLimitDiagnostics,
   ProviderErrorReason,
 } from './extract-provider-error-diagnostics.helper';
+
+describe('hasRateLimitDiagnostics', () => {
+  it.each(['no_capacity', 'rate_limit_exceeded', 'too_many_requests'])(
+    'recognizes %s as an upstream code or type',
+    (diagnostic) => {
+      expect(hasRateLimitDiagnostics({ upstreamCode: diagnostic })).toBe(true);
+      expect(hasRateLimitDiagnostics({ upstreamType: diagnostic })).toBe(true);
+    },
+  );
+
+  it('recognizes HTTP 429 without provider diagnostics', () => {
+    expect(hasRateLimitDiagnostics({ upstreamStatus: 429 })).toBe(true);
+  });
+
+  it('does not classify unrelated provider diagnostics', () => {
+    expect(
+      hasRateLimitDiagnostics({
+        upstreamStatus: 400,
+        upstreamCode: 'invalid_request_error',
+      }),
+    ).toBe(false);
+  });
+});
 
 describe('extractProviderErrorDiagnostics', () => {
   it('extracts a provider request ID from Web API response headers', () => {

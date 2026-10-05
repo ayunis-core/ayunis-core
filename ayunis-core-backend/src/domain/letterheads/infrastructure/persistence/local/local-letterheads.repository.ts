@@ -50,6 +50,27 @@ export class LocalLetterheadsRepository extends LetterheadsRepository {
     return this.mapper.toDomain(saved);
   }
 
+  async updateIfUnchanged(
+    letterhead: Letterhead,
+    expectedUpdatedAt: Date,
+  ): Promise<Letterhead | null> {
+    this.logger.log({ letterheadId: letterhead.id }, 'Updating letterhead');
+    const record = this.mapper.toRecord(letterhead);
+    const result = await this.repo.update(
+      { id: record.id, orgId: record.orgId, updatedAt: expectedUpdatedAt },
+      {
+        name: record.name,
+        description: record.description,
+        firstPageStoragePath: record.firstPageStoragePath,
+        continuationPageStoragePath: record.continuationPageStoragePath,
+        firstPageMargins: record.firstPageMargins,
+        continuationPageMargins: record.continuationPageMargins,
+        updatedAt: record.updatedAt,
+      },
+    );
+    return result.affected ? letterhead : null;
+  }
+
   async delete(orgId: UUID, id: UUID): Promise<void> {
     const result = await this.repo.delete({ orgId, id });
     if (!result.affected) {

@@ -3,6 +3,7 @@ import {
   getCanonicalMimeType,
   isAudioFile,
   isDocumentFile,
+  isDocumentSourceFile,
   isEmailFile,
   isOfficeDocumentFile,
   MIME_TYPES,
@@ -220,6 +221,24 @@ describe('detectFileType', () => {
       expect(detectFileType('application/octet-stream', 'MESSAGE.EML')).toBe(
         'eml',
       );
+    });
+  });
+
+  describe('MSG detection', () => {
+    it('returns "msg" when MIME type is application/vnd.ms-outlook', () => {
+      expect(detectFileType(MIME_TYPES.MSG, 'message.msg')).toBe('msg');
+    });
+
+    it('returns "msg" from the .msg extension when MIME type is generic', () => {
+      expect(detectFileType('application/octet-stream', 'MESSAGE.MSG')).toBe(
+        'msg',
+      );
+    });
+
+    it('treats .msg as an email document source', () => {
+      expect(isEmailFile('msg')).toBe(true);
+      expect(isDocumentSourceFile('msg')).toBe(true);
+      expect(getCanonicalMimeType('msg')).toBe(MIME_TYPES.MSG);
     });
   });
 

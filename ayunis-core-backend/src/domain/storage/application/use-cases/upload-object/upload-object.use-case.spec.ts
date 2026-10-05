@@ -10,6 +10,7 @@ import {
   BucketNotFoundError,
   InvalidObjectNameError,
   StoragePermissionDeniedError,
+  StorageUnavailableError,
   UploadFailedError,
 } from 'src/domain/storage/application/storage.errors';
 
@@ -173,18 +174,61 @@ describe('UploadObjectUseCase', () => {
       expect(result.bucket).toBe(customBucket);
     });
 
-    it('should throw UploadFailedError on storage error', async () => {
-      // Arrange
-      const objectName = 'test-file.txt';
-      const data = Buffer.from('test data');
-      const command = new UploadObjectCommand(objectName, data);
+    it('wraps a rejected S3 request as UploadFailedError without exposing storage details', async () => {
+      const command = new UploadObjectCommand(
+        'generated-images/org-id/image.png',
+        Buffer.from('image data'),
+      );
+      // The minio SDK's S3Error: `code` plus x-amz-* headers, no status field.
+      const storageError = Object.assign(
+        new Error('request failed for sensitive-bucket/private/object.png'),
+        { code: 'AccessDenied', amzRequestid: 'sensitive-request-id' },
+      );
+      storageError.name = 'S3Error';
+      jest.spyOn(mockObjectStorage, 'upload').mockRejectedValue(storageError);
 
-      jest
-        .spyOn(mockObjectStorage, 'upload')
-        .mockRejectedValue(new Error('Storage error'));
+      const error: unknown = await useCase
+        .execute(command)
+        .catch((caught: unknown) => caught);
 
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(UploadFailedError);
+      expect(error).toBeInstanceOf(UploadFailedError);
+      expect(error).toMatchObject({
+        message: 'Failed to upload object (S3Error, code AccessDenied)',
+        metadata: { upstreamName: 'S3Error', upstreamCode: 'AccessDenied' },
+      });
+      expect((error as UploadFailedError).message).not.toContain(
+        'sensitive-bucket',
+      );
+      expect((error as UploadFailedError).metadata).not.toHaveProperty(
+        'amzRequestid',
+      );
+      expect((error as UploadFailedError).toClientResponse()).toEqual({
+        code: 'UPLOAD_FAILED',
+        message: 'Internal server error',
+      });
+    });
+
+    it('wraps an unreachable object store as StorageUnavailableError', async () => {
+      const command = new UploadObjectCommand(
+        'test-file.txt',
+        Buffer.from('test data'),
+      );
+      jest.spyOn(mockObjectStorage, 'upload').mockRejectedValue(
+        Object.assign(new Error('connect ECONNREFUSED'), {
+          code: 'ECONNREFUSED',
+        }),
+      );
+
+      const error: unknown = await useCase
+        .execute(command)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorageUnavailableError);
+      expect((error as StorageUnavailableError).statusCode).toBe(503);
+      expect((error as StorageUnavailableError).toClientResponse()).toEqual({
+        code: 'STORAGE_UNAVAILABLE',
+        message: 'Internal server error',
+      });
     });
 
     it('should pass through StoragePermissionDeniedError', async () => {

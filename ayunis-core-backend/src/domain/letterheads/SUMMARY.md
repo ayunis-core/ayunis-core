@@ -56,14 +56,14 @@ letterheads/
 
 ## Ports
 
-- **LetterheadsRepository** — CRUD for letterhead entities (find by org, find by ID, save, delete)
+- **LetterheadsRepository** — CRUD for letterhead entities, including optimistic updates that persist only when the stored version is unchanged
 
 ## Key Behaviors
 
 - Page margins are validated (non-negative, finite) when a `Letterhead` entity is constructed
 - Uploaded PDFs are validated with `pdf-lib` and must be exactly one page each
-- Create stores the first-page PDF and optional continuation PDF under org-scoped storage paths like `letterheads/<orgId>/<letterheadId>/...`
-- Update can replace either PDF, update metadata/margins, or remove the continuation page; removal is persisted before best-effort object cleanup so storage failures cannot roll back the database state
+- Create stores the first-page PDF and optional continuation PDF under org-scoped storage paths like `letterheads/<orgId>/<letterheadId>/...`; if a later upload or persistence fails, it removes every PDF uploaded by that attempt
+- Update stores replacement PDFs under immutable revision paths and conditionally persists against the version it read, so concurrent edits cannot restore a superseded object path. It then removes superseded objects. If persistence or a later replacement upload fails, it removes any uncommitted revision while preserving the PDFs still referenced by the database. Cleanup remains best effort so storage failures cannot roll back committed database state.
 - Find-all and find-one are organization-scoped via request context
 - Delete throws `LetterheadNotFoundError` if no matching record exists
 - Each letterhead is scoped to an organization via `orgId`

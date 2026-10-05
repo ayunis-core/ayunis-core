@@ -11,6 +11,11 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
 
+const { redirectToLogin } = vi.hoisted(() => ({
+  redirectToLogin: vi.fn(),
+}));
+vi.mock('@/shared/lib/redirect-to-login', () => ({ redirectToLogin }));
+
 const threadId = '00000000-0000-0000-0000-000000000001';
 const otherThreadId = '00000000-0000-0000-0000-000000000002';
 
@@ -36,6 +41,7 @@ function createControlledSseResponse() {
 
 describe('useMessageSend', () => {
   beforeEach(() => {
+    redirectToLogin.mockClear();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
@@ -44,6 +50,35 @@ describe('useMessageSend', () => {
     abortActiveThreadRun(otherThreadId);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  it('redirects to login when the session can no longer be renewed', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Unauthorized' }), {
+          status: 401,
+        }),
+      ),
+    );
+    const onError = vi.fn();
+    const onComplete = vi.fn();
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(
+      () => useMessageSend({ threadId, onError, onComplete }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.sendTextMessage({ text: 'Bitte antworte.' });
+    });
+
+    expect(redirectToLogin).toHaveBeenCalledOnce();
+    expect(onError).not.toHaveBeenCalled();
+    expect(onComplete).toHaveBeenCalledWith(true);
   });
 
   it('registers the streamed request for thread-level cancellation', async () => {

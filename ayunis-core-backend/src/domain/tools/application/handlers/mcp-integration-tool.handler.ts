@@ -27,7 +27,7 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
       const result = await this.executeMcpToolUseCase.execute(
         new ExecuteMcpToolCommand(
           tool.integrationId,
-          tool.name,
+          tool.originalName,
           validatedInput,
         ),
       );

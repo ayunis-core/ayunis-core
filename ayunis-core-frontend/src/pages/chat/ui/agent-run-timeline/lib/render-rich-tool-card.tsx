@@ -89,6 +89,7 @@ export function renderRichToolCard({
     default: {
       const artifact = renderArtifactToolWidget({
         content: toolUse,
+        result,
         index,
         isStreaming,
         threadId: threadId ?? '',

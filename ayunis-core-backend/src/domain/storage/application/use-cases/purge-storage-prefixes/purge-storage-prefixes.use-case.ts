@@ -42,17 +42,22 @@ export class PurgeStoragePrefixesUseCase {
       'Purging storage prefixes',
     );
 
-    const objectNames = await this.collectObjects(command.prefixes);
+    const { objectNames, failedCount } = await this.collectObjects(
+      command.prefixes,
+    );
     if (objectNames.length === 0) {
-      return { deletedCount: 0, failedCount: 0 };
+      return { deletedCount: 0, failedCount };
     }
 
     const result = await this.deleteObjects(objectNames);
     this.logger.log({ ...result }, 'Finished purging storage prefixes');
-    return result;
+    return { ...result, failedCount: result.failedCount + failedCount };
   }
 
-  private async collectObjects(prefixes: string[]): Promise<string[]> {
+  private async collectObjects(
+    prefixes: string[],
+  ): Promise<{ objectNames: string[]; failedCount: number }> {
+    let failedCount = 0;
     const objectNames = new Set<string>();
     for (const prefix of prefixes) {
       // A prefix that fails to list leaks its blobs, but must not abort the
@@ -65,13 +70,14 @@ export class PurgeStoragePrefixesUseCase {
           objectNames.add(name);
         }
       } catch (error) {
+        failedCount++;
         this.logger.error(
           { err: error as Error, prefix },
           'Failed to list storage prefix',
         );
       }
     }
-    return Array.from(objectNames);
+    return { objectNames: Array.from(objectNames), failedCount };
   }
 
   private async deleteObjects(

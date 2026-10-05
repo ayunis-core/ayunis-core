@@ -259,7 +259,7 @@ export class LocalSourceRepository extends SourceRepository {
     const result = await this.dataSourceDetailsRepository
       .createQueryBuilder()
       .update(CSVDataSourceDetailsRecord)
-      .set({ data })
+      .set({ data: this.mapper.toStoredCsvData(data) })
       .where('"sourceId" = :id', { id: sourceId })
       .execute();
     return (result.affected ?? 0) > 0;

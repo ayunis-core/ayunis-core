@@ -372,7 +372,7 @@ export class KnowledgeBasesController {
       errorMessage: (reason, detectedType) =>
         reason === 'missing-mime'
           ? `Unable to determine MIME type for detected file type: ${detectedType}`
-          : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
+          : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, MSG, and audio files (MP3, M4A, WAV, WebM).`,
     });
   }
 

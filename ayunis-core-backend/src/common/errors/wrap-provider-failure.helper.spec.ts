@@ -87,6 +87,30 @@ describe('wrapProviderFailure', () => {
     });
   });
 
+  it('recognizes a portable rate limit retained only in safe diagnostics', () => {
+    const error = new ModelProviderError({
+      kind: 'unknown',
+      stage: 'stream_consumption',
+      retryAfterMs: 10_517,
+      cause: Object.assign(new Error('sensitive Azure response'), {
+        code: 'rate_limit_exceeded',
+        type: 'too_many_requests',
+        requestID: 'req_azure_diagnostic_rate_limit',
+      }),
+    });
+    const wrapped = wrapProviderFailure(error, source);
+
+    expect(wrapped).toBeInstanceOf(ProviderRequestRejectedError);
+    expect(wrapped?.context).toMatchObject({
+      upstreamStatus: 429,
+      upstreamCode: 'rate_limit_exceeded',
+      upstreamType: 'too_many_requests',
+      upstreamRequestId: 'req_azure_diagnostic_rate_limit',
+      retryAfterMs: 10_517,
+    });
+    expect(JSON.stringify(wrapped)).not.toContain('sensitive Azure response');
+  });
+
   it('leaves other upstream 4xx alone — our-bug responses must stay distinct', () => {
     const error = Object.assign(new Error('bad request'), { status: 400 });
     expect(wrapProviderFailure(error, source)).toBeUndefined();

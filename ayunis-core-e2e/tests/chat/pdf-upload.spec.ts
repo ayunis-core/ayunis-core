@@ -72,7 +72,7 @@ test("recovers OCR-rejected PDFs and can replace a failed upload in the same ski
   await failed.focus();
   await expect(
     page.getByRole("tooltip", {
-      name: /Diese PDF konnte nicht gelesen werden/,
+      name: /Diese Datei konnte nicht gelesen werden/,
     }),
   ).toContainText("laden Sie sie erneut hoch");
   await page.screenshot({

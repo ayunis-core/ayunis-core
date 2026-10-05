@@ -77,7 +77,9 @@ The runtime never retries after text, thinking, or tool-call snapshots have
 been emitted, after cancellation, or after a critical terminal hook failure.
 Usage and finish metadata are not visible output. Hook-emitted custom events do
 not make provider replay unsafe; hooks that emit call-local events must make
-them idempotent.
+them idempotent. The internal idle-watchdog abort carries the stable
+`MODEL_CALL_IDLE_TIMEOUT` code so telemetry can suppress that raw control
+signal while retaining the terminal classified timeout.
 
 ## Lifecycle hooks
 

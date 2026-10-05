@@ -1,3 +1,4 @@
+import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { LocalPasswordLoginDisabledError } from 'src/iam/authentication/application/authentication.errors';
@@ -13,12 +14,14 @@ export class LocalPasswordLoginPolicyService {
   constructor(
     private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
     private readonly findUserById: FindUserByIdUseCase,
+    private readonly assertOrgActive: AssertOrgActiveUseCase,
   ) {}
 
   async assertAllowedForOrg(
     orgId: UUID,
     authenticationMethod: SessionAuthenticationMethod,
   ): Promise<void> {
+    await this.assertOrgActive.execute({ orgId });
     if (authenticationMethod === SessionAuthenticationMethod.SSO) return;
     const policy = await this.getOrgAuthenticationPolicy.execute(
       new GetOrgAuthenticationPolicyQuery(orgId),
@@ -40,13 +43,19 @@ export class LocalPasswordLoginPolicyService {
   async assertSessionIssuanceAllowed(
     orgId: UUID,
     authenticationMethod: SessionAuthenticationMethod,
-  ): Promise<void> {
-    if (authenticationMethod === SessionAuthenticationMethod.SSO) return;
+  ): Promise<number> {
+    const org = await this.assertOrgActive.execute({
+      orgId,
+      lockForLifecycle: true,
+    });
+    if (authenticationMethod === SessionAuthenticationMethod.SSO)
+      return org.sessionVersion;
     const policy = await this.getOrgAuthenticationPolicy.execute(
       new GetOrgAuthenticationPolicyQuery(orgId, true),
     );
     if (!policy.localPasswordLoginEnabled) {
       throw new LocalPasswordLoginDisabledError();
     }
+    return org.sessionVersion;
   }
 }

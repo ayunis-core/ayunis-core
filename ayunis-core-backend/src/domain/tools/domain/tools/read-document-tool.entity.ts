@@ -35,7 +35,7 @@ export class ReadDocumentTool extends Tool {
     super({
       name: ToolType.READ_DOCUMENT,
       description:
-        'Read the current content of an existing document. Use this before editing a document that the user may have modified.',
+        'Read the current content of an existing document. Use this before editing a document that the user may have modified. This is the in-chat Ayunis document editor, not a document in an external system such as a wiki or document management tool; for those, use the tools of the connected integration.',
       descriptionLong:
         'Use read_document to retrieve the current content and version of a document. ' +
         'Always read a document before editing it when the document list indicates the user has made changes. ' +

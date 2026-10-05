@@ -28,7 +28,7 @@ test.describe('chat thread CRUD', () => {
     await expect(item).toHaveCount(0);
   });
 
-  test.fixme(
+  test(
     'deletes the currently viewed thread and removes it from the sidebar',
     async ({ page }) => {
       const threadId = await startThread(page, 'Delete me while viewing');

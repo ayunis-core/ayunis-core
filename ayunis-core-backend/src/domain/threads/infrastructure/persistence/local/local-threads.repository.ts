@@ -24,6 +24,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { findThreadCitationContext } from './queries/find-thread-citation-context';
+import { applyThreadSearch } from './queries/apply-thread-search';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -186,9 +187,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     filters?: ThreadsFindAllFilters,
   ): void {
     if (filters?.search) {
-      queryBuilder.andWhere('thread.title ILIKE :search', {
-        search: `%${filters.search}%`,
-      });
+      applyThreadSearch(queryBuilder, filters.search);
     }
 
     if (filters?.workspaceId) {

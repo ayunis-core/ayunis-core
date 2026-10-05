@@ -26,6 +26,39 @@ describe('normalizeProviderError', () => {
   );
 
   it.each([
+    ['code', { code: 'rate_limit_exceeded' }],
+    ['type', { type: 'too_many_requests' }],
+    ['nested code', { error: { code: 'no_capacity' } }],
+  ] as const)(
+    'classifies a statusless provider rate limit from its %s',
+    (_label, sdkError) => {
+      expect(normalizeProviderError(sdkError, ESTABLISHMENT)).toMatchObject({
+        kind: 'rate_limit',
+        upstreamStatus: undefined,
+      });
+    },
+  );
+
+  it('leaves an unknown statusless provider diagnostic unclassified', () => {
+    const error = normalizeProviderError(
+      { code: 'deployment_condition', type: 'upstream_error' },
+      ESTABLISHMENT,
+    );
+
+    expect(error.kind).toBe('unknown');
+  });
+
+  it.each([
+    ['rejection', { status: 400, code: 'rate_limit_exceeded' }],
+    ['abort', { name: 'AbortError', type: 'too_many_requests' }],
+  ] satisfies ReadonlyArray<readonly [ProviderFailureKind, object]>)(
+    'preserves an existing %s classification over rate-limit diagnostics',
+    (kind, sdkError) => {
+      expect(normalizeProviderError(sdkError, ESTABLISHMENT).kind).toBe(kind);
+    },
+  );
+
+  it.each([
     [400, 'rejection'],
     [401, 'rejection'],
     [408, 'timeout'],

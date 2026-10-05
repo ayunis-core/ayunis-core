@@ -12,3 +12,5 @@ Use cases: `CreateSessionUseCase` (new family on login), `PrepareSessionRotation
 Infrastructure: `LocalRefreshTokensRepository` implements the port with TypeORM; rotation-sensitive writes are conditional UPDATEs on DB time (`NOW()`), keeping the winner decision single-writer under concurrency and immune to app-clock skew. `SessionsCleanupTask` deletes rows strictly by expiry nightly at 5 AM — used and revoked rows survive until expiry so grace-window checks and "revoked family" replay responses keep working.
 
 It integrates with **authentication** (login mints a session, refresh rotates it, logout revokes the family) and **users** (password reset/change revoke sessions) via the exported use cases, and with **users** for the `userId` FK relationship.
+
+`RevokeOrgSessionsUseCase` revokes every authentication method for all users in an organisation with one set-based update on the ambient transaction. It participates in the archive transaction together with status and session-generation updates. A revoked or expired token never qualifies for concurrent-refresh grace, including a token prepared before archive and resumed after restore.

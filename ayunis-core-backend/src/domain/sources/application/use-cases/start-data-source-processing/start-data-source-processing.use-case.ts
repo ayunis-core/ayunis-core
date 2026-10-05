@@ -7,6 +7,8 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import type { DataSourceProcessingTarget } from 'src/domain/sources/application/ports/data-source-processing.port';
@@ -14,8 +16,8 @@ import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-case
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import { EnqueueDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
 import { EnqueueDataSourceProcessingCommand } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.command';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import {
@@ -45,7 +47,7 @@ export class StartDataSourceProcessingUseCase {
     private readonly sourceRepository: SourceRepository,
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDataSourceProcessingUseCase: EnqueueDataSourceProcessingUseCase,
     private readonly contextService: ContextService,
@@ -81,13 +83,13 @@ export class StartDataSourceProcessingUseCase {
     // The job and its file are shared by every sheet source, so they are
     // keyed by a fresh upload id rather than any (deletable) source id.
     const uploadId = randomUUID();
-    // Upload and enqueue both happen outside the transaction
+    // Upload holds no transaction; enqueue takes its own short lifecycle lock.
     const minioPath = buildMinioProcessingPath(
       orgId,
       uploadId,
       command.fileName,
     );
-    await this.uploadFileOrFail(sources, minioPath, command);
+    await this.uploadFileOrFail(sources, minioPath, command, orgId);
     await this.enqueueOrFail(
       { sources, plans, uploadId, minioPath, orgId, userId },
       command,
@@ -141,15 +143,17 @@ export class StartDataSourceProcessingUseCase {
     sources: CSVDataSource[],
     minioPath: string,
     command: StartDataSourceProcessingCommand,
+    orgId: UUID,
   ): Promise<void> {
     try {
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(minioPath, command.fileData),
+      await this.uploadOrgObjectUseCase.execute(
+        new UploadOrgObjectCommand(orgId, minioPath, command.fileData),
       );
     } catch (error) {
       await this.tryMarkSourcesFailed(
         sources,
         'Failed to upload file to storage',
+        classifySourceProcessingError(error),
       );
       throw error;
     }
@@ -221,6 +225,7 @@ export class StartDataSourceProcessingUseCase {
   private async tryMarkSourcesFailed(
     sources: CSVDataSource[],
     errorMessage: string,
+    errorCode?: SourceProcessingErrorCode,
   ): Promise<void> {
     for (const source of sources) {
       try {
@@ -228,6 +233,7 @@ export class StartDataSourceProcessingUseCase {
           new MarkSourceFailedCommand({
             sourceId: source.id,
             errorMessage,
+            errorCode,
           }),
         );
       } catch (err) {

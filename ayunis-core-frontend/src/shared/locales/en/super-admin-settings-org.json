@@ -486,7 +486,8 @@
         "invalid": "Invalid name"
       },
       "invalid": "Invalid input"
-    }
+    },
+    "title": "Organisation details"
   },
   "trial": {
     "title": "Trial Information",
@@ -614,5 +615,34 @@
         "invalid": "Review the entered model details"
       }
     }
+  },
+  "lifecycle": {
+    "archiveButton": "Archive",
+    "restoreButton": "Restore",
+    "deleteButton": "Delete",
+    "archive": "Archive organisation",
+    "restore": "Restore organisation",
+    "delete": "Delete organisation",
+    "active": "Active",
+    "archived": "Archived",
+    "archiveTitle": "Archive organisation?",
+    "restoreTitle": "Restore organisation?",
+    "archiveDescription": "All data stays. Members will be signed out and cannot sign in until the organisation is restored.",
+    "restoreDescription": "Members can sign in again. Previous sessions remain invalid.",
+    "deleteTitle": "Permanently delete organisation?",
+    "deleteDescription": "This permanently deletes <name/>, its users and all its data and stored files. This action cannot be undone.",
+    "typeName": "Type <name/> to confirm",
+    "cancel": "Cancel",
+    "archivedSuccess": "Organisation archived",
+    "restoredSuccess": "Organisation restored",
+    "deletedSuccess": "Organisation deleted",
+    "errorNotFound": "Organisation no longer exists",
+    "confirmationMismatch": "The name must match exactly",
+    "cleanupIncomplete": "The organisation was deleted, but some files or processing data could not be removed. Contact support.",
+    "errorUnauthorized": "Super admin privileges are required",
+    "error": "Could not update organisation",
+    "processingActive": "Document processing is still running. The organisation was not deleted. Retry once processing finishes.",
+    "managementTitle": "Organisation management",
+    "deleteActionDescription": "Permanently remove this organisation, its members, data and stored files. This cannot be undone."
   }
 }

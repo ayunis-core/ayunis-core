@@ -61,6 +61,22 @@ describe(useLogin.name, () => {
     expect(mocks.showError).toHaveBeenCalledWith('login.error.accountLocked');
   });
 
+  it('tells members that their organisation is not active', () => {
+    mocks.extractErrorData.mockReturnValue({
+      code: 'ORG_NOT_ACTIVE',
+      status: 401,
+    });
+    const { result } = renderHook(() => useLogin({}));
+    act(() =>
+      result.current.onSubmit({
+        email: 'staff@stadt.example',
+        password: ['valid', 'password'].join('-'),
+      }),
+    );
+    act(() => mocks.callbacks?.onError(new Error('request failed')));
+    expect(mocks.showError).toHaveBeenCalledWith('login.error.orgNotActive');
+  });
+
   it('keeps other authentication failures generic', () => {
     mocks.extractErrorData.mockReturnValue({
       code: 'UNKNOWN_ERROR',

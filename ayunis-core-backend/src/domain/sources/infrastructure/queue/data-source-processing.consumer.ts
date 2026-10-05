@@ -21,6 +21,8 @@ import type {
   DataSourceProcessingJobData,
   DataSourceProcessingTarget,
 } from 'src/domain/sources/application/ports/data-source-processing.port';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
+import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import {
@@ -39,6 +41,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     private readonly sourceRepository: SourceRepository,
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
+    private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
   ) {
     super();
   }
@@ -60,6 +63,14 @@ export class DataSourceProcessingConsumer extends WorkerHost {
   ): Promise<void> {
     const { orgId, userId, minioPath, fileName, kind, targets } = job.data;
     this.validateAndSetContext(orgId, userId);
+    if (
+      !(await this.admitOrgProcessing.execute(
+        new AdmitOrgProcessingQuery(orgId),
+      ))
+    ) {
+      this.logger.warn({ jobId: job.id, orgId }, 'Organisation deleted');
+      return;
+    }
 
     try {
       const pending = await this.loadPendingTargets(targets);

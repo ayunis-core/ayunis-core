@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { Tool } from '../tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 const createDocumentToolParameters = {
   type: 'object' as const,
@@ -34,7 +34,7 @@ export class CreateDocumentTool extends Tool {
     super({
       name: ToolType.CREATE_DOCUMENT,
       description:
-        'Create a new document that the user can view and edit in a WYSIWYG editor. Only use this when the user explicitly asks for a document they can edit, export, or download — for example a letter, report, or formal text. Do not use this for regular conversational answers.',
+        'Create a new document that the user can view and edit in a WYSIWYG editor. Only use this when the user explicitly asks for a document they can edit, export, or download — for example a letter, report, or formal text. Do not use this for regular conversational answers. This is the in-chat Ayunis document editor, not a document in an external system such as a wiki or document management tool; for those, use the tools of the connected integration.',
       parameters: createDocumentToolParameters,
       type: ToolType.CREATE_DOCUMENT,
     });

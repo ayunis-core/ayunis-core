@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 
 import CreateDocumentWidget from './CreateDocumentWidget';
 import UpdateDocumentWidget from './UpdateDocumentWidget';
 import EditDocumentWidget from './EditDocumentWidget';
+import ReadDocumentWidget from './ReadDocumentWidget';
 import CreateDiagramWidget from './CreateDiagramWidget';
 import UpdateDiagramWidget from './UpdateDiagramWidget';
 import CreateSpreadsheetWidget from './CreateSpreadsheetWidget';
@@ -17,6 +18,7 @@ import UpdateSpreadsheetWidget from './UpdateSpreadsheetWidget';
 // eslint-disable-next-line sonarjs/function-return-type -- returns JSX or null based on tool type
 export function renderArtifactToolWidget(params: {
   content: ToolUseMessageContent;
+  result?: string;
   index: number;
   isStreaming?: boolean;
   threadId: string;
@@ -24,6 +26,7 @@ export function renderArtifactToolWidget(params: {
 }): ReactNode {
   const {
     content,
+    result,
     index,
     isStreaming = false,
     threadId,
@@ -56,6 +59,16 @@ export function renderArtifactToolWidget(params: {
         <EditDocumentWidget
           key={`edit-document-${keySuffix}`}
           content={content}
+          isStreaming={isStreaming}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case 'read_document':
+      return (
+        <ReadDocumentWidget
+          key={`read-document-${keySuffix}`}
+          content={content}
+          result={result}
           isStreaming={isStreaming}
           onOpenArtifact={onOpenArtifact}
         />

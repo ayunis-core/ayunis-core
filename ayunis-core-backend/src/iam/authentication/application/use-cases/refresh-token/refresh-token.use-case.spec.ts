@@ -96,7 +96,7 @@ describe('RefreshTokenUseCase', () => {
       authenticationMethod: SessionAuthenticationMethod.PASSWORD,
     });
     mockLocalPasswordLoginPolicy.assertSessionIssuanceAllowed.mockResolvedValue(
-      undefined,
+      0,
     );
   });
 
@@ -183,6 +183,17 @@ describe('RefreshTokenUseCase', () => {
     expect(mockCreateSessionUseCase.execute).toHaveBeenCalled();
     expect(mockPrepareSessionRotationUseCase.execute).not.toHaveBeenCalled();
     expect(mockRotateSessionUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects legacy refresh tokens after archive and restore', async () => {
+    mockJwtService.verify.mockReturnValue({ sub: userId, type: 'refresh' });
+    mockLocalPasswordLoginPolicy.assertSessionIssuanceAllowed.mockResolvedValue(
+      1,
+    );
+    await expect(
+      useCase.execute(new RefreshTokenCommand(legacyJwt)),
+    ).rejects.toThrow(InvalidTokenError);
+    expect(mockCreateSessionUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should migrate a bare {sub} legacy refresh token', async () => {

@@ -1,7 +1,13 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { Request, Response } from 'express';
 import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
 import { RefreshTokenCommand } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.command';
@@ -11,7 +17,6 @@ import {
   getAccessTokenCookieName,
   setCookies,
 } from 'src/common/util/cookie.util';
-import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -41,8 +46,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       if (result) {
         return true;
       }
-    } catch {
-      // Access token validation failed, try refresh token
+    } catch (error) {
+      if (!this.isAuthenticationRejection(error)) throw error;
     }
 
     // Access token validation failed, try refresh token
@@ -57,7 +62,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const refreshToken = request.cookies[refreshTokenName] as string;
 
     if (!refreshToken) {
-      return false;
+      throw new UnauthorizedException();
     }
 
     return this.tryRefreshAndRetry(context, request, response, refreshToken);
@@ -82,18 +87,22 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
       return (await super.canActivate(context)) === true;
     } catch (error) {
-      if (error instanceof RefreshTokenReuseError) {
-        // Theft response: the family is already revoked; drop the cookies so the
-        // client stops presenting the compromised token.
-        clearCookies(response, this.configService);
-      }
+      if (!this.isAuthenticationRejection(error)) throw error;
+      clearCookies(response, this.configService);
       this.logger.debug(
         {
           error: error instanceof Error ? error.message : String(error),
         },
         'JwtAuthGuard canActivate: token refresh failed',
       );
-      return false;
+      throw new UnauthorizedException();
     }
+  }
+
+  private isAuthenticationRejection(error: unknown): boolean {
+    return (
+      error instanceof UnauthorizedException ||
+      (error instanceof ApplicationError && error.statusCode === 401)
+    );
   }
 }
