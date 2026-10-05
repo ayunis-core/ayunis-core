@@ -55,6 +55,7 @@ export class GetInferenceUseCase {
           tools: command.tools,
           toolChoice: command.toolChoice,
           orgId,
+          onCallTerminal: command.onCallTerminal,
         }),
       );
       this.assertTokenLimitResponseAllowed(

@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { openai } from '@ayunis/provider-openai';
 import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { ThinkingTagInferenceHandler } from '../runtime/thinking-tag-inference.handler';
-import type { Model } from '../../domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
+import { ThinkingTagInferenceHandler } from 'src/domain/models/infrastructure/runtime/thinking-tag-inference.handler';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { PROVIDER_SDK_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class OtcInferenceHandler extends ThinkingTagInferenceHandler {
@@ -21,7 +21,7 @@ export class OtcInferenceHandler extends ThinkingTagInferenceHandler {
       apiKey: this.configService.get<string>('models.otc.apiKey') ?? '',
       baseUrl: this.configService.get<string>('models.otc.baseURL'),
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: PROVIDER_SDK_MAX_RETRIES,
     });
   }
 }
