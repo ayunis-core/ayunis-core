@@ -3,6 +3,18 @@ import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/de
 import 'src/config/env';
 import { randomUUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (
+      _target: object,
+      _propertyName: string | symbol,
+      descriptor: PropertyDescriptor,
+    ) =>
+      descriptor,
+}));
+
 import storageConfig from 'src/config/storage.config';
 import { MinioObjectStorageProvider } from 'src/domain/storage/infrastructure/providers/minio-object-storage.provider';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
@@ -46,6 +58,7 @@ it('deletes all org storage layouts immediately, preserves other orgs and keeps 
     listener.handleOrgDeletionRequested(event as OrgDeletionRequestedEvent),
   );
   const rows = {
+    lockForLifecycleMutation: jest.fn().mockResolvedValue(undefined),
     delete: jest
       .fn()
       .mockRejectedValueOnce(new Error('preserve rows'))

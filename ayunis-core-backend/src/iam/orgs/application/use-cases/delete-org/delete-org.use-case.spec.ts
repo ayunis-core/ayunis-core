@@ -1,6 +1,18 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (
+      _target: object,
+      _propertyName: string | symbol,
+      descriptor: PropertyDescriptor,
+    ) =>
+      descriptor,
+}));
+
 import { DeleteOrgUseCase } from './delete-org.use-case';
 import { DeleteOrgCommand } from './delete-org.command';
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
@@ -13,13 +25,17 @@ import type { UUID } from 'crypto';
 
 describe('DeleteOrgUseCase', () => {
   let useCase: DeleteOrgUseCase;
-  let mockOrgsRepository: { delete: jest.Mock };
+  let mockOrgsRepository: {
+    lockForLifecycleMutation: jest.Mock;
+    delete: jest.Mock;
+  };
   let eventEmitter: { emitAsync: jest.Mock };
 
   const orgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
     mockOrgsRepository = {
+      lockForLifecycleMutation: jest.fn().mockResolvedValue(undefined),
       delete: jest.fn().mockResolvedValue(undefined),
     };
     eventEmitter = {
@@ -58,6 +74,26 @@ describe('DeleteOrgUseCase', () => {
       OrgDeletionRequestedEvent.EVENT_NAME,
       expect.objectContaining({ orgId }),
     );
+  });
+
+  it('holds the lifecycle mutation lock across active-job preflight and row deletion', async () => {
+    const callOrder: string[] = [];
+    mockOrgsRepository.lockForLifecycleMutation.mockImplementation(() => {
+      callOrder.push('lock');
+      return Promise.resolve();
+    });
+    eventEmitter.emitAsync.mockImplementation(() => {
+      callOrder.push('preflight');
+      return Promise.resolve([]);
+    });
+    mockOrgsRepository.delete.mockImplementation(() => {
+      callOrder.push('delete');
+      return Promise.resolve();
+    });
+
+    await useCase.execute(new DeleteOrgCommand(orgId));
+
+    expect(callOrder).toEqual(['lock', 'preflight', 'delete']);
   });
 
   it('should run deferred cleanup only after the org row is deleted', async () => {

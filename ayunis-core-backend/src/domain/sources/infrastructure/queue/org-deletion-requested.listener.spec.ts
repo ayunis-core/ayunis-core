@@ -1,6 +1,18 @@
 import { OrgProcessingDeletionListener } from './org-deletion-requested.listener';
 import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
 import type { Queue } from 'bullmq';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (
+      _target: object,
+      _propertyName: string | symbol,
+      descriptor: PropertyDescriptor,
+    ) =>
+      descriptor,
+}));
+
 const orgId = '11111111-1111-1111-1111-111111111111';
 
 function createJob(id: string, jobOrgId = orgId, active = false) {
@@ -129,6 +141,50 @@ it('waits for each removal batch before starting the next one', async () => {
   expect(jobs[100].remove).toHaveBeenCalled();
 });
 
+it('retries removal when a job became active after the deletion preflight', async () => {
+  const late = createJob('late');
+  late.isActive.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  late.remove
+    .mockRejectedValueOnce(new Error('Job is locked'))
+    .mockResolvedValueOnce(undefined);
+  const queue = scannedQueue(
+    [[jobKey(late)]],
+    new Map([[late.id, late]]),
+  ).queue;
+  const event = new OrgDeletionRequestedEvent(orgId);
+  await new OrgProcessingDeletionListener(
+    queue,
+    emptyQueue(),
+    emptyQueue(),
+  ).handle(event);
+
+  await expect(event.takeCleanupTasks()[0].run()).resolves.toBeUndefined();
+
+  expect(late.remove).toHaveBeenCalledTimes(2);
+});
+
+it('retries removal when the job completes before its active-state check', async () => {
+  const late = createJob('late');
+  late.isActive.mockResolvedValue(false);
+  late.remove
+    .mockRejectedValueOnce(new Error('Job is locked'))
+    .mockResolvedValueOnce(undefined);
+  const queue = scannedQueue(
+    [[jobKey(late)]],
+    new Map([[late.id, late]]),
+  ).queue;
+  const event = new OrgDeletionRequestedEvent(orgId);
+  await new OrgProcessingDeletionListener(
+    queue,
+    emptyQueue(),
+    emptyQueue(),
+  ).handle(event);
+
+  await expect(event.takeCleanupTasks()[0].run()).resolves.toBeUndefined();
+
+  expect(late.remove).toHaveBeenCalledTimes(2);
+});
+
 import { Test } from '@nestjs/testing';
 import { EventEmitterModule, EventEmitter2 } from '@nestjs/event-emitter';
 import { getQueueToken } from '@nestjs/bullmq';
@@ -157,7 +213,10 @@ it('rejects active processing through Nest event dispatch before deleting any ro
   }).compile();
   await module.init();
   try {
-    const rows = { delete: jest.fn() };
+    const rows = {
+      lockForLifecycleMutation: jest.fn().mockResolvedValue(undefined),
+      delete: jest.fn(),
+    };
     const deletion = new DeleteOrgUseCase(
       rows as never,
       module.get(EventEmitter2),

@@ -4,6 +4,7 @@ import { SuperAdminDeleteOrgUseCase } from 'src/iam/orgs/application/use-cases/s
 import { SuperAdminOrgLifecycleController } from 'src/iam/orgs/presenters/http/super-admin-org-lifecycle.controller';
 import { SessionsModule } from 'src/iam/sessions/sessions.module';
 import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
 import { SetOrgArchivedUseCase } from 'src/iam/orgs/application/use-cases/set-org-archived/set-org-archived.use-case';
 import { Module } from '@nestjs/common';
 import { OrgsRepository } from './application/ports/orgs.repository';
@@ -41,6 +42,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
     OrgAuthenticationStateCacheService,
     // Use cases
     AssertOrgActiveUseCase,
+    AdmitOrgProcessingUseCase,
     AssertCachedOrgActiveUseCase,
     SetOrgArchivedUseCase,
     SuperAdminDeleteOrgUseCase,
@@ -55,6 +57,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
   ],
   exports: [
     AssertOrgActiveUseCase,
+    AdmitOrgProcessingUseCase,
     AssertCachedOrgActiveUseCase,
     SetOrgArchivedUseCase,
     SuperAdminDeleteOrgUseCase,
