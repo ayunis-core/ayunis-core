@@ -54,6 +54,12 @@ export default function useSuperAdminSubscriptionStartDateUpdate({
                   ),
                 );
                 break;
+              case 'SUBSCRIPTION_ACCESS_OVERLAP':
+                showError(t('subscription.updateStartDateErrorAccessOverlap'));
+                break;
+              case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+                showError(t('subscription.multipleActiveSubscriptions'));
+                break;
               default:
                 showError(t('subscription.updateStartDateErrorUnexpected'));
             }
