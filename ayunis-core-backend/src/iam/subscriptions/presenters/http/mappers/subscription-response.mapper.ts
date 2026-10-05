@@ -6,6 +6,7 @@ import {
 } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import type { ListOrgSubscriptionsResult } from 'src/iam/subscriptions/application/use-cases/list-org-subscriptions/list-org-subscriptions.use-case';
 import { SubscriptionResponseDto } from 'src/iam/subscriptions/presenters/http/dto/subscription-response.dto';
+import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
 import {
   OrgSubscriptionHistoryItemDto,
   OrgSubscriptionsResponseDto,
@@ -26,6 +27,7 @@ export class SubscriptionResponseMapper {
       updatedAt: subscription.updatedAt,
       cancelledAt: subscription.cancelledAt,
       startsAt: subscription.startsAt,
+      accessEndsAt: getEffectiveAccessEnd(subscription),
       orgId: subscription.orgId,
       type: subscription.type,
       nextRenewalDate,

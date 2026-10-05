@@ -82,6 +82,16 @@ export class SubscriptionResponseDto {
   startsAt: Date;
 
   @ApiProperty({
+    description:
+      'Exclusive date when this subscription stops controlling product access',
+    example: '2026-08-01T00:00:00Z',
+    type: String,
+    format: 'date-time',
+    nullable: true,
+  })
+  accessEndsAt: Date | null;
+
+  @ApiProperty({
     description: 'Organization ID associated with the subscription',
     example: '123e4567-e89b-12d3-a456-426614174000',
     format: 'uuid',

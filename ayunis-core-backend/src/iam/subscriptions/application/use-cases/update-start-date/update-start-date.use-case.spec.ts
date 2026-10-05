@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
@@ -7,6 +14,7 @@ import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/
 import {
   SubscriptionAlreadyCancelledError,
   SubscriptionNotFoundError,
+  SubscriptionAccessOverlapError,
 } from 'src/iam/subscriptions/application/subscription.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -15,6 +23,7 @@ import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-s
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 const mockOrgId = randomUUID();
 const mockUserId = randomUUID();
@@ -75,13 +84,17 @@ describe('UpdateStartDateUseCase', () => {
         {
           provide: SubscriptionRepository,
           useValue: {
-            findLatestByOrgId: jest.fn(),
+            findByOrgId: jest.fn(),
             updateStartDate: jest.fn(),
           },
         },
         {
           provide: ContextService,
           useValue: { get: jest.fn() },
+        },
+        {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: { execute: jest.fn() },
         },
       ],
     }).compile();
@@ -92,6 +105,7 @@ describe('UpdateStartDateUseCase', () => {
   });
 
   beforeEach(() => {
+    subscriptionRepository.findByOrgId.mockResolvedValue([]);
     contextService.get.mockImplementation((key) => {
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
@@ -111,7 +125,7 @@ describe('UpdateStartDateUseCase', () => {
       startsAt: newStartsAt,
     });
 
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     subscriptionRepository.updateStartDate.mockResolvedValue(
       updatedSubscription,
     );
@@ -139,7 +153,7 @@ describe('UpdateStartDateUseCase', () => {
       renewalCycleAnchor: newStartsAt,
     });
 
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     subscriptionRepository.updateStartDate.mockResolvedValue(
       updatedSubscription,
     );
@@ -163,9 +177,59 @@ describe('UpdateStartDateUseCase', () => {
     );
   });
 
-  it('should throw SubscriptionNotFoundError when no subscription exists', async () => {
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(null);
+  it('rejects moving a start date into another subscription access period', async () => {
+    const subscription = createUsageBasedSubscription();
+    const predecessor = createSeatBasedSubscription({
+      startsAt: new Date('2025-01-01T00:00:00.000Z'),
+    });
+    predecessor.accessEndsAt = new Date('2026-07-01T00:00:00.000Z');
+    subscriptionRepository.findByOrgId.mockResolvedValue([
+      predecessor,
+      subscription,
+    ]);
 
+    await expect(
+      useCase.execute(
+        new UpdateStartDateCommand({
+          orgId: mockOrgId,
+          requestingUserId: mockUserId,
+          startsAt: new Date('2026-06-15T00:00:00.000Z'),
+        }),
+      ),
+    ).rejects.toThrow(SubscriptionAccessOverlapError);
+
+    expect(subscriptionRepository.updateStartDate).not.toHaveBeenCalled();
+  });
+
+  it('updates the serving subscription when a newer record has ended', async () => {
+    const serving = createUsageBasedSubscription({
+      startsAt: new Date('2025-01-01T00:00:00.000Z'),
+    });
+    serving.createdAt = new Date('2025-01-01T00:00:00.000Z');
+    const ended = createUsageBasedSubscription({
+      startsAt: new Date('2026-05-01T00:00:00.000Z'),
+    });
+    ended.createdAt = new Date('2026-05-01T00:00:00.000Z');
+    ended.accessEndsAt = new Date('2026-06-01T00:00:00.000Z');
+    const newStartsAt = new Date('2026-07-01T00:00:00.000Z');
+    subscriptionRepository.findByOrgId.mockResolvedValue([serving, ended]);
+    subscriptionRepository.updateStartDate.mockResolvedValue(serving);
+
+    await useCase.execute(
+      new UpdateStartDateCommand({
+        orgId: mockOrgId,
+        requestingUserId: mockUserId,
+        startsAt: newStartsAt,
+      }),
+    );
+
+    expect(subscriptionRepository.updateStartDate).toHaveBeenCalledWith({
+      subscriptionId: serving.id,
+      startsAt: newStartsAt,
+    });
+  });
+
+  it('should throw SubscriptionNotFoundError when no subscription exists', async () => {
     await expect(
       useCase.execute(
         new UpdateStartDateCommand({
@@ -181,9 +245,9 @@ describe('UpdateStartDateUseCase', () => {
     const cancelledSubscription = createSeatBasedSubscription({
       cancelledAt: new Date('2026-07-15T00:00:00.000Z'),
     });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(
+    subscriptionRepository.findByOrgId.mockResolvedValue([
       cancelledSubscription,
-    );
+    ]);
 
     await expect(
       useCase.execute(
@@ -198,7 +262,7 @@ describe('UpdateStartDateUseCase', () => {
 
   it('should wrap unexpected repository errors', async () => {
     const subscription = createUsageBasedSubscription();
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     subscriptionRepository.updateStartDate.mockRejectedValue(
       new Error('database unavailable'),
     );

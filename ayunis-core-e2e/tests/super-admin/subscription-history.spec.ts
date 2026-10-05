@@ -78,7 +78,7 @@ test('super admin sees every subscription after changing with cancel', async ({
   await expect(page.getByTestId('subscription-history-latest')).toBeVisible();
 });
 
-test('super admin sees every currently serving subscription and is warned', async ({
+test('changing a subscription ends the old access period without deleting history', async ({
   page,
   publicApi,
 }) => {
@@ -95,8 +95,6 @@ test('super admin sees every currently serving subscription and is warned', asyn
     type: 'SEAT_BASED',
     noOfSeats: 5,
   });
-  // A cancelled seat-based subscription keeps serving until the end of its
-  // paid period, so the organization legitimately has two active records.
   await changeSuperAdminSubscription(publicApi, org.id, {
     ...e2eSubscriptionBilling,
     type: 'USAGE_BASED',
@@ -105,16 +103,19 @@ test('super admin sees every currently serving subscription and is warned', asyn
   });
 
   const history = await getSuperAdminSubscriptionHistory(publicApi, org.id);
-  expect(history.activeCount).toBe(2);
+  expect(history.activeCount).toBe(1);
   expect(history.subscriptions).toHaveLength(2);
   expect(history.subscriptions[0]?.status).toBe('ACTIVE');
   expect(history.subscriptions[0]?.isLatest).toBe(true);
-  expect(history.subscriptions[1]?.status).toBe('CANCELLED');
+  expect(history.subscriptions[1]?.status).toBe('HISTORICAL');
+  expect(history.subscriptions[1]?.accessEndsAt).toBe(
+    history.subscriptions[0]?.startsAt,
+  );
 
   await page.goto(`/super-admin-settings/orgs/${org.id}?tab=subscriptions`);
   await expect(
     page.getByTestId('subscription-multiple-active-alert'),
-  ).toBeVisible();
+  ).toHaveCount(0);
   for (const subscription of history.subscriptions) {
     await expect(
       page.getByTestId(`subscription-history-row-${subscription.id}`),
@@ -122,5 +123,5 @@ test('super admin sees every currently serving subscription and is warned', asyn
   }
   await expect(
     page.getByTestId(`subscription-history-status-${history.subscriptions[1]?.id}`),
-  ).toHaveText(/gekündigt/i);
+  ).toHaveText(/historisch/i);
 });

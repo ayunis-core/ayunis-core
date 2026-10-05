@@ -140,6 +140,7 @@ describe('SubscriptionMapper', () => {
 
   describe('round-trip', () => {
     it('should preserve all seat-based fields through domain → record → domain', () => {
+      const accessEndsAt = new Date('2026-08-01T00:00:00.000Z');
       const original = new SeatBasedSubscription({
         orgId: randomUUID(),
         noOfSeats: 25,
@@ -147,6 +148,7 @@ describe('SubscriptionMapper', () => {
         renewalCycle: RenewalCycle.YEARLY,
         renewalCycleAnchor: new Date('2025-06-15'),
         startsAt: new Date('2025-06-15'),
+        accessEndsAt,
         billingInfo: new SubscriptionBillingInfo({
           companyName: 'Stadt Beispielburg',
           street: 'Rathausplatz',
@@ -167,6 +169,7 @@ describe('SubscriptionMapper', () => {
       expect(restored.renewalCycle).toBe(original.renewalCycle);
       expect(restored.renewalCycleAnchor).toEqual(original.renewalCycleAnchor);
       expect(restored.startsAt).toEqual(original.startsAt);
+      expect(restored.accessEndsAt).toEqual(accessEndsAt);
     });
 
     it('should preserve all usage-based fields through domain → record → domain', () => {

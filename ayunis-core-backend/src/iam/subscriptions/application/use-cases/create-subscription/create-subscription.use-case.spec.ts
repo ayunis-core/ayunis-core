@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -23,6 +30,9 @@ import {
 } from 'src/iam/subscriptions/application/subscription.errors';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
@@ -50,6 +60,10 @@ describe('CreateSubscriptionUseCase', () => {
       providers: [
         CreateSubscriptionUseCase,
         SubscriptionFactory,
+        {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: { execute: jest.fn() },
+        },
         {
           provide: SubscriptionRepository,
           useValue: {
@@ -337,7 +351,12 @@ describe('CreateSubscriptionUseCase', () => {
     it('should reject creation when a non-cancelled subscription exists', async () => {
       setupSuperAdminContext();
       subscriptionRepository.findByOrgId.mockResolvedValue([
-        { cancelledAt: null } as unknown as Subscription,
+        new UsageBasedSubscription({
+          orgId,
+          monthlyCredits: 500,
+          startsAt: new Date('2025-01-01T00:00:00.000Z'),
+          billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+        }),
       ]);
 
       const command = new CreateSubscriptionCommand({
@@ -357,10 +376,12 @@ describe('CreateSubscriptionUseCase', () => {
     it('should reject creation when a non-cancelled future-dated subscription already exists', async () => {
       setupSuperAdminContext();
       subscriptionRepository.findByOrgId.mockResolvedValue([
-        {
-          cancelledAt: null,
+        new UsageBasedSubscription({
+          orgId,
+          monthlyCredits: 500,
           startsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-        } as unknown as Subscription,
+          billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+        }),
       ]);
 
       const command = new CreateSubscriptionCommand({
@@ -376,10 +397,45 @@ describe('CreateSubscriptionUseCase', () => {
       );
     });
 
+    it('rejects creation while a cancelled seat subscription still grants access', async () => {
+      setupSuperAdminContext();
+      const existing = new SeatBasedSubscription({
+        orgId,
+        startsAt: new Date('2026-01-01T00:00:00.000Z'),
+        cancelledAt: new Date('2026-06-15T00:00:00.000Z'),
+        accessEndsAt: new Date('2027-01-01T00:00:00.000Z'),
+        renewalCycleAnchor: new Date('2026-01-01T00:00:00.000Z'),
+        renewalCycle: RenewalCycle.YEARLY,
+        noOfSeats: 50,
+        pricePerSeat: 120,
+        billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+      });
+      subscriptionRepository.findByOrgId.mockResolvedValue([existing]);
+
+      await expect(
+        useCase.execute(
+          new CreateSubscriptionCommand({
+            orgId,
+            requestingUserId,
+            type: SubscriptionType.USAGE_BASED,
+            monthlyCredits: 500,
+            ...baseBillingParams,
+          }),
+        ),
+      ).rejects.toThrow(SubscriptionAlreadyExistsError);
+      expect(subscriptionRepository.create).not.toHaveBeenCalled();
+    });
+
     it('should allow creation when only cancelled subscriptions exist', async () => {
       setupSuperAdminContext();
       subscriptionRepository.findByOrgId.mockResolvedValue([
-        { cancelledAt: new Date() } as unknown as Subscription,
+        new UsageBasedSubscription({
+          orgId,
+          monthlyCredits: 500,
+          startsAt: new Date('2025-01-01T00:00:00.000Z'),
+          cancelledAt: new Date(),
+          billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+        }),
       ]);
 
       const command = new CreateSubscriptionCommand({
