@@ -173,7 +173,7 @@ export class SpreadsheetEvaluator {
   }
 
   private cellValue(sheetRow: number, col: number): Evaluated {
-    let value: EvaluatedCell = null;
+    let value: EvaluatedCell;
     if (sheetRow === 1) {
       value = this.data.columns[col] ?? null;
     } else {

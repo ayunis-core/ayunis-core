@@ -90,6 +90,7 @@ export class BackendToolAdapter {
           error instanceof Error ? error.message : 'Invalid parameters';
         throw new Error(
           `The tool didn't provide any result due to the following error in tool usage: ${message}`,
+          { cause: error },
         );
       }
     };

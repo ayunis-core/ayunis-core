@@ -85,7 +85,7 @@ export class PostgresSharesRepository extends SharesRepository {
     scopeType: ShareScopeType,
     scopeId: UUID,
   ): Promise<Share[]> {
-    let records: ShareRecord[] = [];
+    let records: ShareRecord[];
 
     if (scopeType === ShareScopeType.ORG) {
       records = await this.shareRepository
@@ -116,7 +116,7 @@ export class PostgresSharesRepository extends SharesRepository {
     scopeType: ShareScopeType,
     scopeId: UUID,
   ): Promise<Share | null> {
-    let record: ShareRecord | null = null;
+    let record: ShareRecord | null;
 
     const entityColumn = this.getEntityColumn(entityType);
 
@@ -151,9 +151,7 @@ export class PostgresSharesRepository extends SharesRepository {
       return [];
     }
 
-    let records: ShareRecord[] = [];
-
-    records = await this.shareRepository
+    const records = await this.shareRepository
       .createQueryBuilder('share')
       .leftJoinAndSelect('share.scope', 'scope')
       .where('share.entity_type = :entityType', { entityType })

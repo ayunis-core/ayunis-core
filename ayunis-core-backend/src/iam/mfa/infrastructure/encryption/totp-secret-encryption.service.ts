@@ -65,7 +65,7 @@ export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
         },
         'Failed to encrypt TOTP secret',
       );
-      throw new Error('Failed to encrypt TOTP secret');
+      throw new Error('Failed to encrypt TOTP secret', { cause: error });
     }
   }
 
@@ -101,7 +101,7 @@ export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
         },
         'Failed to decrypt TOTP secret',
       );
-      throw new Error('Failed to decrypt TOTP secret');
+      throw new Error('Failed to decrypt TOTP secret', { cause: error });
     }
   }
 }

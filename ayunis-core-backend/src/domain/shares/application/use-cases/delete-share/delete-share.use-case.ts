@@ -72,7 +72,7 @@ export class DeleteShareUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error({ err: error as Error }, 'Failed to delete share');
-      throw new Error('Unexpected error occurred');
+      throw new Error('Unexpected error occurred', { cause: error });
     }
   }
 

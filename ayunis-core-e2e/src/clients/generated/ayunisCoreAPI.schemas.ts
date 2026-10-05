@@ -529,6 +529,30 @@ export interface UpdateOrgRequestDto {
   name: string;
 }
 
+export type OrgErrorCode = typeof OrgErrorCode[keyof typeof OrgErrorCode];
+
+
+export const OrgErrorCode = {
+  ORG_PROCESSING_ACTIVE: 'ORG_PROCESSING_ACTIVE',
+  ORG_DELETE_CONFIRMATION_MISMATCH: 'ORG_DELETE_CONFIRMATION_MISMATCH',
+  ORG_NOT_ACTIVE: 'ORG_NOT_ACTIVE',
+  ORG_SESSION_EXPIRED: 'ORG_SESSION_EXPIRED',
+  ORG_NOT_FOUND: 'ORG_NOT_FOUND',
+  ORG_ALREADY_EXISTS: 'ORG_ALREADY_EXISTS',
+  ORG_CREATION_FAILED: 'ORG_CREATION_FAILED',
+  ORG_UPDATE_FAILED: 'ORG_UPDATE_FAILED',
+  ORG_DELETION_FAILED: 'ORG_DELETION_FAILED',
+  ORG_RETRIEVAL_FAILED: 'ORG_RETRIEVAL_FAILED',
+  ORG_UNAUTHORIZED: 'ORG_UNAUTHORIZED',
+  ORG_UNEXPECTED_ERROR: 'ORG_UNEXPECTED_ERROR',
+} as const;
+
+export interface OrgErrorResponseDto {
+  code: OrgErrorCode;
+  /** Actionable error message, generic for server errors */
+  message: string;
+}
+
 export interface SetOrgArchivedRequestDto {
   /** Archive the organisation, or restore it when false */
   archived: boolean;
