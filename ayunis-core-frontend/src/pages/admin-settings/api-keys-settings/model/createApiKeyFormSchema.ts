@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { toEndOfLocalDay } from '@/pages/admin-settings/api-keys-settings/lib/to-end-of-local-day';
 
 export function createApiKeyFormSchema(t: (key: string) => string) {
   return z.object({
@@ -13,7 +14,9 @@ export function createApiKeyFormSchema(t: (key: string) => string) {
       .max(500, t('apiKeys.editDialog.descriptionTooLong')),
     expiresAt: z
       .date()
-      .refine((d) => d > new Date(), {
+      // The picker allows today and yields local midnight; the key only
+      // expires at the end of the chosen day, so compare that moment.
+      .refine((d) => toEndOfLocalDay(d) > new Date(), {
         message: t('apiKeys.createDialog.expiresInPast'),
       })
       .optional(),
