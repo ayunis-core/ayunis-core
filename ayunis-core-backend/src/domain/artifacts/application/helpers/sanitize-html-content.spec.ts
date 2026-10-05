@@ -71,27 +71,49 @@ describe('sanitizeHtmlContent', () => {
   });
 
   describe('safe Tiptap HTML preservation', () => {
-    it('should preserve headings', () => {
-      const html =
-        '<h1>Title</h1><h2>Subtitle</h2><h3>Section</h3><h4>Sub</h4>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve paragraphs with inline formatting', () => {
-      const html =
-        '<p>This is <strong>bold</strong>, <em>italic</em>, <u>underlined</u>, and <s>strikethrough</s> text.</p>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve unordered and ordered lists', () => {
-      const html =
-        '<ul><li>Item 1</li><li>Item 2</li></ul><ol><li>First</li><li>Second</li></ol>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve links with href and target', () => {
-      const html =
-        '<p><a href="https://example.com" target="_blank">Link text</a></p>';
+    it.each([
+      {
+        name: 'headings',
+        html: '<h1>Title</h1><h2>Subtitle</h2><h3>Section</h3><h4>Sub</h4>',
+      },
+      {
+        name: 'paragraphs with inline formatting',
+        html: '<p>This is <strong>bold</strong>, <em>italic</em>, <u>underlined</u>, and <s>strikethrough</s> text.</p>',
+      },
+      {
+        name: 'unordered and ordered lists',
+        html: '<ul><li>Item 1</li><li>Item 2</li></ul><ol><li>First</li><li>Second</li></ol>',
+      },
+      {
+        name: 'links with href and target',
+        html: '<p><a href="https://example.com" target="_blank">Link text</a></p>',
+      },
+      {
+        name: 'tables with headers and rows',
+        html: '<table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody><tr><td>Row 1</td><td>Data 1</td></tr></tbody></table>',
+      },
+      {
+        name: 'code blocks',
+        html: '<pre><code class="language-typescript">const x = 42;</code></pre>',
+      },
+      {
+        name: 'inline code',
+        html: '<p>Use the <code>console.log()</code> function.</p>',
+      },
+      {
+        name: 'blockquotes',
+        html: '<blockquote><p>A wise quote</p></blockquote>',
+      },
+      { name: 'horizontal rules', html: '<p>Above</p><hr /><p>Below</p>' },
+      {
+        name: 'table cells with colspan and rowspan',
+        html: '<table><tr><td colspan="2">Merged</td></tr><tr><td>A</td><td>B</td></tr></table>',
+      },
+      {
+        name: 'text-align styles',
+        html: '<p style="text-align:center">Centered text</p>',
+      },
+    ])('should preserve $name', ({ html }) => {
       expect(sanitizeHtmlContent(html)).toBe(html);
     });
 
@@ -100,44 +122,6 @@ describe('sanitizeHtmlContent', () => {
       const result = sanitizeHtmlContent(html);
       expect(result).toContain('src="https://example.com/photo.jpg"');
       expect(result).toContain('alt="A photo"');
-    });
-
-    it('should preserve tables with headers and rows', () => {
-      const html =
-        '<table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody><tr><td>Row 1</td><td>Data 1</td></tr></tbody></table>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve code blocks', () => {
-      const html =
-        '<pre><code class="language-typescript">const x = 42;</code></pre>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve inline code', () => {
-      const html = '<p>Use the <code>console.log()</code> function.</p>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve blockquotes', () => {
-      const html = '<blockquote><p>A wise quote</p></blockquote>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve horizontal rules', () => {
-      const html = '<p>Above</p><hr /><p>Below</p>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve table cells with colspan and rowspan', () => {
-      const html =
-        '<table><tr><td colspan="2">Merged</td></tr><tr><td>A</td><td>B</td></tr></table>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
-    });
-
-    it('should preserve text-align styles', () => {
-      const html = '<p style="text-align:center">Centered text</p>';
-      expect(sanitizeHtmlContent(html)).toBe(html);
     });
 
     it('should preserve paragraph spacing styles for export', () => {

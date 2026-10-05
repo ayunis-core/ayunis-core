@@ -8,7 +8,6 @@ export function useKnowledgeBaseDocuments(id: string, enabled = true) {
     query: {
       enabled,
       staleTime: 0,
-      // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
       refetchInterval: (query) => {
         const documents = query.state.data?.data ?? [];
         const hasProcessing = documents.some(

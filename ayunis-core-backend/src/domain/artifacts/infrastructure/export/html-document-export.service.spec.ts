@@ -119,50 +119,32 @@ describe('HtmlDocumentExportService', () => {
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should handle headings followed by paragraphs', async () => {
-      const html =
-        '<h1>Title</h1><p>Normal paragraph text.</p><p>Another paragraph.</p>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle inline formatting', async () => {
-      const html =
-        '<p><strong>Bold</strong> <em>italic</em> <u>underline</u> <s>strike</s></p>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle blockquotes', async () => {
-      const html = '<blockquote><p>Quoted text</p></blockquote>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle code blocks', async () => {
-      const html = '<pre><code>const x = 1;\nconsole.log(x);</code></pre>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle links', async () => {
-      const html = '<p>Visit <a href="https://example.com">Example</a></p>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should sanitize dangerous HTML', async () => {
-      const html = '<p>Safe</p><script>alert("xss")</script><p>Also safe</p>';
+    it.each([
+      {
+        name: 'handle headings followed by paragraphs',
+        html: '<h1>Title</h1><p>Normal paragraph text.</p><p>Another paragraph.</p>',
+      },
+      {
+        name: 'handle inline formatting',
+        html: '<p><strong>Bold</strong> <em>italic</em> <u>underline</u> <s>strike</s></p>',
+      },
+      {
+        name: 'handle blockquotes',
+        html: '<blockquote><p>Quoted text</p></blockquote>',
+      },
+      {
+        name: 'handle code blocks',
+        html: '<pre><code>const x = 1;\nconsole.log(x);</code></pre>',
+      },
+      {
+        name: 'handle links',
+        html: '<p>Visit <a href="https://example.com">Example</a></p>',
+      },
+      {
+        name: 'sanitize dangerous HTML',
+        html: '<p>Safe</p><script>alert("xss")</script><p>Also safe</p>',
+      },
+    ])('should $name', async ({ html }) => {
       const result = await service.exportToDocx(html);
 
       expect(result).toBeInstanceOf(Buffer);

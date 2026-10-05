@@ -65,33 +65,25 @@ describe('CreditBudgetGuardService', () => {
     });
   });
 
-  it('should throw CreditBudgetExceededError when credits are exactly exhausted', async () => {
-    mockGetMonthlyCreditLimit.execute.mockResolvedValue({
+  it.each([
+    {
+      name: 'throw CreditBudgetExceededError when credits are exactly exhausted',
       monthlyCredits: 1000,
-    });
-    mockGetMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed: 1000 });
-
-    await expect(service.ensureBudgetAvailable(orgId)).rejects.toThrow(
-      CreditBudgetExceededError,
-    );
-  });
-
-  it('should throw CreditBudgetExceededError when credits are exceeded', async () => {
-    mockGetMonthlyCreditLimit.execute.mockResolvedValue({
+      creditsUsed: 1000,
+    },
+    {
+      name: 'throw CreditBudgetExceededError when credits are exceeded',
       monthlyCredits: 1000,
-    });
-    mockGetMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed: 1500 });
-
-    await expect(service.ensureBudgetAvailable(orgId)).rejects.toThrow(
-      CreditBudgetExceededError,
-    );
-  });
-
-  it('should pass through when budget is zero and no usage', async () => {
-    mockGetMonthlyCreditLimit.execute.mockResolvedValue({
+      creditsUsed: 1500,
+    },
+    {
+      name: 'throw CreditBudgetExceededError when the budget is zero, even without usage',
       monthlyCredits: 0,
-    });
-    mockGetMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed: 0 });
+      creditsUsed: 0,
+    },
+  ])('should $name', async ({ monthlyCredits, creditsUsed }) => {
+    mockGetMonthlyCreditLimit.execute.mockResolvedValue({ monthlyCredits });
+    mockGetMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed });
 
     await expect(service.ensureBudgetAvailable(orgId)).rejects.toThrow(
       CreditBudgetExceededError,

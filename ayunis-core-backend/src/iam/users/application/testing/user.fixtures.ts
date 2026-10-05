@@ -12,7 +12,6 @@ export function aUser(overrides: Partial<UserParams> = {}): User {
     id: TEST_USER_ID,
     email: 'test@example.com',
     emailVerified: false,
-    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- This is a non-secret test hash.
     passwordHash: 'hashedPassword',
     role: UserRole.USER,
     orgId: TEST_ORG_ID,

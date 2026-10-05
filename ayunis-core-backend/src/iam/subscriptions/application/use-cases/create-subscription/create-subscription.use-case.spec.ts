@@ -252,7 +252,10 @@ describe('CreateSubscriptionUseCase', () => {
 
       expect(result).toBeInstanceOf(SeatBasedSubscription);
       expect((result as SeatBasedSubscription).noOfSeats).toBe(5);
-      expect((result as SeatBasedSubscription).pricePerSeat).toBe(99.99);
+      expect((result as SeatBasedSubscription).pricePerSeat).toBeCloseTo(
+        99.99,
+        10,
+      );
       expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
         SubscriptionCreatedEvent.EVENT_NAME,
         expect.objectContaining({

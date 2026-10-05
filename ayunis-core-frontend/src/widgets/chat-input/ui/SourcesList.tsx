@@ -3,7 +3,7 @@ import { getSourceProcessingErrorKey } from '@/widgets/chat-input/lib/source-pro
 
 // Types
 import type {
-  SourceResponseDto,
+  SourceProcessingErrorCode,
   FileSourceResponseDtoFileType,
   SourceResponseDtoType,
   SourceResponseDtoCreatedBy,
@@ -47,7 +47,7 @@ interface Source {
   createdBy?: SourceResponseDtoCreatedBy;
   status?: SourceResponseDtoStatus;
   processingError?: string;
-  processingErrorCode?: SourceResponseDto['processingErrorCode'];
+  processingErrorCode?: SourceProcessingErrorCode;
 }
 
 interface SourcesListProps {
