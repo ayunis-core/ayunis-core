@@ -18,6 +18,10 @@ export enum UserProperty {
  */
 export type CurrentUserParam = UserProperty;
 
+type AuthenticatedRequest = Request & {
+  user?: Partial<Record<UserProperty, unknown>>;
+};
+
 /**
  * Custom decorator to extract the current user from the request.
  * Uses an enum to avoid magic strings.
@@ -39,7 +43,7 @@ export const CurrentUser = createParamDecorator(
     property: CurrentUserParam = UserProperty.FULL_USER,
     ctx: ExecutionContext,
   ) => {
-    const request = ctx.switchToHttp().getRequest<Request>();
+    const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) {
@@ -50,6 +54,6 @@ export const CurrentUser = createParamDecorator(
       return user;
     }
 
-    return user[property as keyof typeof user];
+    return user[property];
   },
 );
