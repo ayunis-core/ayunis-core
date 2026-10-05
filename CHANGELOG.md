@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.49.0](https://github.com/ayunis-core/ayunis-core/compare/v2.48.0...v2.49.0) (2026-10-05)
+
+
+### Features
+
+* **subscriptions:** add overlap recovery workflow (AYC-1158) ([#1839](https://github.com/ayunis-core/ayunis-core/issues/1839)) ([9473785](https://github.com/ayunis-core/ayunis-core/commit/9473785cc41b174cc23d319a2dacba3b5c0d8727))
+
+
+### Miscellaneous
+
+* **backend:** migrate to NestJS 12 (AYC-1008) ([#1844](https://github.com/ayunis-core/ayunis-core/issues/1844)) ([73ee472](https://github.com/ayunis-core/ayunis-core/commit/73ee472f44ca4da8e7cb87c8baec6756ee17e2d2))
+
 ## [2.48.0](https://github.com/ayunis-core/ayunis-core/compare/v2.47.0...v2.48.0) (2026-10-05)
 
 
