@@ -9,10 +9,12 @@ import { LetterheadPdfService } from 'src/domain/letterheads/application/service
 import { ContextService } from 'src/common/context/services/context.service';
 import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   LetterheadNotFoundError,
   LetterheadPdfNotSinglePageError,
+  LetterheadUpdateConflictError,
   UnexpectedLetterheadError,
 } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
@@ -58,6 +60,7 @@ describe('UpdateLetterheadUseCase', () => {
       findAllByOrgId: jest.fn(),
       findById: jest.fn().mockResolvedValue(existingLetterhead),
       save: jest.fn(),
+      updateIfUnchanged: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -96,7 +99,7 @@ describe('UpdateLetterheadUseCase', () => {
     uploadObjectUseCase = module.get(UploadOrgObjectUseCase);
     deleteObjectUseCase = module.get(DeleteObjectUseCase);
 
-    letterheadsRepository.save.mockImplementation(async (l) => l);
+    letterheadsRepository.updateIfUnchanged.mockImplementation(async (l) => l);
   });
 
   afterEach(() => {
@@ -139,6 +142,20 @@ describe('UpdateLetterheadUseCase', () => {
     );
   });
 
+  it('should advance the version timestamp when the update starts in the same millisecond', async () => {
+    const timestamp = new Date(Date.now() + 60_000);
+    letterheadsRepository.findById.mockResolvedValue(
+      new Letterhead({ ...existingLetterhead, updatedAt: timestamp }),
+    );
+
+    await useCase.execute(
+      new UpdateLetterheadCommand({ letterheadId: mockLetterheadId }),
+    );
+
+    const updated = letterheadsRepository.updateIfUnchanged.mock.calls[0][0];
+    expect(updated.updatedAt.getTime()).toBe(timestamp.getTime() + 1);
+  });
+
   it('should replace the first-page PDF when a new buffer is provided', async () => {
     const newPdf = await createSinglePagePdf();
 
@@ -150,9 +167,20 @@ describe('UpdateLetterheadUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.firstPageStoragePath).toContain('first-page.pdf');
+    expect(result.firstPageStoragePath).not.toBe(
+      existingLetterhead.firstPageStoragePath,
+    );
     expect(uploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
     expect(uploadObjectUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ orgId: mockOrgId }),
+      expect.objectContaining({
+        orgId: mockOrgId,
+        objectName: result.firstPageStoragePath,
+      }),
+    );
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        objectName: existingLetterhead.firstPageStoragePath,
+      }),
     );
   });
 
@@ -168,6 +196,103 @@ describe('UpdateLetterheadUseCase', () => {
 
     expect(result.continuationPageStoragePath).toContain('continuation.pdf');
     expect(uploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should retire the previous continuation PDF after persisting its replacement', async () => {
+    const continuationPath = `letterheads/${mockOrgId}/${mockLetterheadId}/continuation.pdf`;
+    letterheadsRepository.findById.mockResolvedValue(
+      new Letterhead({
+        ...existingLetterhead,
+        continuationPageStoragePath: continuationPath,
+      }),
+    );
+
+    const result = await useCase.execute(
+      new UpdateLetterheadCommand({
+        letterheadId: mockLetterheadId,
+        continuationPagePdfBuffer: await createSinglePagePdf(),
+      }),
+    );
+
+    expect(result.continuationPageStoragePath).not.toBe(continuationPath);
+    expect(
+      letterheadsRepository.updateIfUnchanged.mock.invocationCallOrder[0],
+    ).toBeLessThan(deleteObjectUseCase.execute.mock.invocationCallOrder[0]);
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ objectName: continuationPath }),
+    );
+  });
+
+  it('should remove an uploaded replacement when persistence fails', async () => {
+    letterheadsRepository.updateIfUnchanged.mockRejectedValue(
+      new Error('database error'),
+    );
+
+    await expect(
+      useCase.execute(
+        new UpdateLetterheadCommand({
+          letterheadId: mockLetterheadId,
+          firstPagePdfBuffer: await createSinglePagePdf(),
+        }),
+      ),
+    ).rejects.toThrow(UnexpectedLetterheadError);
+
+    const upload = uploadObjectUseCase.execute.mock.calls[0][0];
+    expect(upload.objectName).not.toBe(existingLetterhead.firstPageStoragePath);
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ objectName: upload.objectName }),
+    );
+    expect(deleteObjectUseCase.execute).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        objectName: existingLetterhead.firstPageStoragePath,
+      }),
+    );
+  });
+
+  it('should preserve the committed PDF when a concurrent update wins', async () => {
+    letterheadsRepository.updateIfUnchanged.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute(
+        new UpdateLetterheadCommand({
+          letterheadId: mockLetterheadId,
+          firstPagePdfBuffer: await createSinglePagePdf(),
+        }),
+      ),
+    ).rejects.toThrow(LetterheadUpdateConflictError);
+
+    const upload = uploadObjectUseCase.execute.mock.calls[0][0];
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ objectName: upload.objectName }),
+    );
+    expect(deleteObjectUseCase.execute).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        objectName: existingLetterhead.firstPageStoragePath,
+      }),
+    );
+  });
+
+  it('should remove an earlier replacement when a later upload fails', async () => {
+    uploadObjectUseCase.execute
+      .mockResolvedValueOnce(
+        new StorageObject('first', 'default', 1024, 'first'),
+      )
+      .mockRejectedValueOnce(new Error('organisation archived'));
+
+    await expect(
+      useCase.execute(
+        new UpdateLetterheadCommand({
+          letterheadId: mockLetterheadId,
+          firstPagePdfBuffer: await createSinglePagePdf(),
+          continuationPagePdfBuffer: await createSinglePagePdf(),
+        }),
+      ),
+    ).rejects.toThrow(UnexpectedLetterheadError);
+
+    const firstUpload = uploadObjectUseCase.execute.mock.calls[0][0];
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ objectName: firstUpload.objectName }),
+    );
   });
 
   it('should clear continuation PDF and delete storage file when removeContinuationPage is true', async () => {
@@ -207,9 +332,9 @@ describe('UpdateLetterheadUseCase', () => {
       }),
     );
 
-    expect(letterheadsRepository.save.mock.invocationCallOrder[0]).toBeLessThan(
-      deleteObjectUseCase.execute.mock.invocationCallOrder[0],
-    );
+    expect(
+      letterheadsRepository.updateIfUnchanged.mock.invocationCallOrder[0],
+    ).toBeLessThan(deleteObjectUseCase.execute.mock.invocationCallOrder[0]);
   });
 
   it('should keep a committed removal successful when storage cleanup fails', async () => {
@@ -232,7 +357,7 @@ describe('UpdateLetterheadUseCase', () => {
     );
 
     expect(result.continuationPageStoragePath).toBeNull();
-    expect(letterheadsRepository.save).toHaveBeenCalled();
+    expect(letterheadsRepository.updateIfUnchanged).toHaveBeenCalled();
   });
 
   it('should not delete the continuation file when persistence fails', async () => {
@@ -243,7 +368,9 @@ describe('UpdateLetterheadUseCase', () => {
         continuationPageStoragePath: continuationPath,
       }),
     );
-    letterheadsRepository.save.mockRejectedValue(new Error('database error'));
+    letterheadsRepository.updateIfUnchanged.mockRejectedValue(
+      new Error('database error'),
+    );
 
     await expect(
       useCase.execute(

@@ -8,6 +8,7 @@ export enum LetterheadErrorCode {
   LETTERHEAD_INVALID_PDF = 'LETTERHEAD_INVALID_PDF',
   LETTERHEAD_PDF_NOT_SINGLE_PAGE = 'LETTERHEAD_PDF_NOT_SINGLE_PAGE',
   LETTERHEAD_ORG_MISMATCH = 'LETTERHEAD_ORG_MISMATCH',
+  LETTERHEAD_UPDATE_CONFLICT = 'LETTERHEAD_UPDATE_CONFLICT',
   UNEXPECTED_LETTERHEAD_ERROR = 'UNEXPECTED_LETTERHEAD_ERROR',
 }
 
@@ -67,6 +68,17 @@ export class LetterheadOrgMismatchError extends LetterheadError {
       `Letterhead '${letterheadId}' does not belong to the current organization`,
       LetterheadErrorCode.LETTERHEAD_ORG_MISMATCH,
       403,
+      { letterheadId, ...metadata },
+    );
+  }
+}
+
+export class LetterheadUpdateConflictError extends LetterheadError {
+  constructor(letterheadId: string, metadata?: ErrorMetadata) {
+    super(
+      'The letterhead was changed by another request. Reload and try again.',
+      LetterheadErrorCode.LETTERHEAD_UPDATE_CONFLICT,
+      409,
       { letterheadId, ...metadata },
     );
   }

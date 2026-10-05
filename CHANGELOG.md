@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.47.0](https://github.com/ayunis-core/ayunis-core/compare/v2.46.0...v2.47.0) (2026-10-02)
+
+
+### Features
+
+* **sources:** support uploading outlook .msg files (AYC-1003) ([#1825](https://github.com/ayunis-core/ayunis-core/issues/1825)) ([7ccdb09](https://github.com/ayunis-core/ayunis-core/commit/7ccdb09d1a4885122da1147bc6fa2b44a50a7126))
+
+
+### Bug Fixes
+
+* **inference:** classify statusless provider rate limits (AYC-1066) ([#1837](https://github.com/ayunis-core/ayunis-core/issues/1837)) ([92c8b08](https://github.com/ayunis-core/ayunis-core/commit/92c8b085de143985954fd377866a54fd6252e65c))
+* **sources:** sanitize spreadsheet unicode before persistence (AYC-1106) ([#1834](https://github.com/ayunis-core/ayunis-core/issues/1834)) ([bcb6e56](https://github.com/ayunis-core/ayunis-core/commit/bcb6e56e3c2cb1cd820810f32ce73070ca2c35b2))
+* **storage:** classify upload storage failures and retain safe diagnostics (AYC-1109) ([#1835](https://github.com/ayunis-core/ayunis-core/issues/1835)) ([f0e21a3](https://github.com/ayunis-core/ayunis-core/commit/f0e21a3abbe9dff0d611a016767eff6ca914390d))
+
+
+### Documentation
+
+* **frontend:** guide concise UI copy (AYC-000) ([#1836](https://github.com/ayunis-core/ayunis-core/issues/1836)) ([0d34f16](https://github.com/ayunis-core/ayunis-core/commit/0d34f16d11231900839274667347a0b67a97c480))
+
+
+### Miscellaneous
+
+* **deps:** patch piscina 4.x prototype-pollution advisory (AYC-000) ([#1832](https://github.com/ayunis-core/ayunis-core/issues/1832)) ([e249924](https://github.com/ayunis-core/ayunis-core/commit/e2499247eb55017f7ae5f92a3e6ade16028efa21))
+
 ## [2.46.0](https://github.com/ayunis-core/ayunis-core/compare/v2.45.0...v2.46.0) (2026-10-01)
 
 

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
@@ -10,6 +10,7 @@ import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import {
   LetterheadNotFoundError,
+  LetterheadUpdateConflictError,
   UnexpectedLetterheadError,
 } from 'src/domain/letterheads/application/letterheads.errors';
 import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
@@ -56,26 +57,38 @@ export class UpdateLetterheadUseCase {
       command.letterheadId,
     );
     if (!existing) throw new LetterheadNotFoundError(command.letterheadId);
-    const firstPageStoragePath = await this.replaceFirstPage(
-      orgId,
-      existing,
-      command.firstPagePdfBuffer,
-    );
-    const continuationPageStoragePath = await this.resolveContinuationPage(
-      orgId,
-      existing,
-      command,
-    );
-    const updated = await this.letterheadsRepository.save(
-      this.buildUpdatedLetterhead(
+    let firstPageStoragePath = existing.firstPageStoragePath;
+    let continuationPageStoragePath = existing.continuationPageStoragePath;
+    try {
+      firstPageStoragePath = await this.replaceFirstPage(
+        orgId,
+        existing,
+        command.firstPagePdfBuffer,
+      );
+      continuationPageStoragePath = await this.resolveContinuationPage(
+        orgId,
         existing,
         command,
+      );
+      const updated = await this.letterheadsRepository.updateIfUnchanged(
+        this.buildUpdatedLetterhead(
+          existing,
+          command,
+          firstPageStoragePath,
+          continuationPageStoragePath,
+        ),
+        existing.updatedAt,
+      );
+      if (!updated) throw new LetterheadUpdateConflictError(existing.id);
+      await this.cleanupSupersededPdfs(orgId, existing, updated);
+      return updated;
+    } catch (error) {
+      await this.cleanupUncommittedPdfs(orgId, existing, [
         firstPageStoragePath,
         continuationPageStoragePath,
-      ),
-    );
-    await this.cleanupRemovedContinuationPage(orgId, existing, command);
-    return updated;
+      ]);
+      throw error;
+    }
   }
 
   private resolveOrgId(): UUID {
@@ -116,27 +129,62 @@ export class UpdateLetterheadUseCase {
     return null;
   }
 
-  private async cleanupRemovedContinuationPage(
+  private async cleanupSupersededPdfs(
     orgId: UUID,
     existing: Letterhead,
-    command: UpdateLetterheadCommand,
+    updated: Letterhead,
   ): Promise<void> {
-    const objectName = existing.continuationPageStoragePath;
-    if (
-      !command.removeContinuationPage ||
-      command.continuationPagePdfBuffer ||
-      !objectName
-    ) {
-      return;
-    }
+    const retained = new Set([
+      updated.firstPageStoragePath,
+      updated.continuationPageStoragePath,
+    ]);
+    const superseded = [
+      existing.firstPageStoragePath,
+      existing.continuationPageStoragePath,
+    ].filter((path): path is string => Boolean(path) && !retained.has(path));
+    await this.cleanupPdfs(orgId, existing.id, superseded);
+  }
+
+  private async cleanupUncommittedPdfs(
+    orgId: UUID,
+    existing: Letterhead,
+    paths: Array<string | null>,
+  ): Promise<void> {
+    const committed = new Set([
+      existing.firstPageStoragePath,
+      existing.continuationPageStoragePath,
+    ]);
+    const uncommitted = paths.filter(
+      (path): path is string => Boolean(path) && !committed.has(path),
+    );
+    await this.cleanupPdfs(orgId, existing.id, uncommitted);
+  }
+
+  private async cleanupPdfs(
+    orgId: UUID,
+    letterheadId: UUID,
+    paths: string[],
+  ): Promise<void> {
+    await Promise.all(
+      [...new Set(paths)].map((path) =>
+        this.deletePdf(orgId, letterheadId, path),
+      ),
+    );
+  }
+
+  private async deletePdf(
+    orgId: UUID,
+    letterheadId: UUID,
+    objectName: string,
+  ): Promise<void> {
     try {
       await this.deleteObjectUseCase.execute(
         new DeleteObjectCommand(objectName),
       );
     } catch (error) {
       this.logger.error(
-        { err: error as Error, orgId, letterheadId: existing.id, objectName },
-        'Failed to clean up removed continuation page',
+        { err: error as Error, orgId, letterheadId, objectName },
+        'Failed to clean up superseded letterhead PDF',
       );
     }
   }
@@ -150,7 +198,7 @@ export class UpdateLetterheadUseCase {
     const path = this.letterheadPdfService.buildStoragePath(
       orgId,
       letterheadId,
-      fileName,
+      `${randomUUID()}/${fileName}`,
     );
     await this.uploadOrgObjectUseCase.execute(
       new UploadOrgObjectCommand(orgId, path, buffer),
@@ -178,7 +226,9 @@ export class UpdateLetterheadUseCase {
       continuationPageMargins:
         command.continuationPageMargins ?? existing.continuationPageMargins,
       createdAt: existing.createdAt,
-      updatedAt: new Date(),
+      updatedAt: new Date(
+        Math.max(Date.now(), existing.updatedAt.getTime() + 1),
+      ),
     });
   }
 }

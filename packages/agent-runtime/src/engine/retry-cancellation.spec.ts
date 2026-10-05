@@ -61,6 +61,78 @@ describe('provider retry policy', () => {
     expect(calls).toBe(2);
   });
 
+  it('retries a consumption-stage rate limit before visible output', async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    const model: ModelProvider = {
+      name: 'mid-stream-rate-limit',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          throw new ModelProviderError({
+            kind: 'rate_limit',
+            stage: 'stream_consumption',
+            retryAfterMs: 1_611,
+            cause: new Error('limited'),
+          });
+        }
+        yield { textDelta: 'Recovered' };
+      },
+    };
+
+    const pending = collectEvents(
+      baseInput(model, {
+        retry: {
+          maxRetries: 1,
+          backoff: { initialDelayMs: 50, jitterRatio: 0 },
+          retryAfter: { precedence: 'retry_after', maxWaitMs: 3_000 },
+        },
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(1_610);
+    expect(calls).toBe(1);
+    await vi.advanceTimersByTimeAsync(1);
+
+    await expect(pending).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'run_end', status: 'completed' }),
+      ]),
+    );
+    expect(calls).toBe(2);
+  });
+
+  it('does not retry a consumption-stage rate limit after visible output', async () => {
+    let calls = 0;
+    const model: ModelProvider = {
+      name: 'visible-rate-limit',
+      async *stream() {
+        calls += 1;
+        yield { textDelta: 'Partial' };
+        throw new ModelProviderError({
+          kind: 'rate_limit',
+          stage: 'stream_consumption',
+          retryAfterMs: 1_611,
+          cause: new Error('limited'),
+        });
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        retry: {
+          maxRetries: 3,
+          backoff: { initialDelayMs: 0, jitterRatio: 0 },
+        },
+      }),
+    );
+
+    expect(calls).toBe(1);
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: 'text_delta', delta: 'Partial' }),
+    );
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
   it('does not retry a Retry-After above the accepted wait cap', async () => {
     let calls = 0;
     const model: ModelProvider = {
