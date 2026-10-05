@@ -86,6 +86,17 @@ describe('extractProviderErrorDiagnostics', () => {
     ).toBeUndefined();
   });
 
+  it('extracts duration-formatted retry-after values such as StackIT sends', () => {
+    const stackit = Object.assign(new Error('Request rate limited'), {
+      status: 429,
+      headers: new Headers({ 'retry-after': '2s' }),
+    });
+
+    expect(extractProviderErrorDiagnostics(stackit).upstreamRetryAfterMs).toBe(
+      2_000,
+    );
+  });
+
   it('extracts a provider request ID from plain-object headers', () => {
     const error = Object.assign(new Error('content filter rejection'), {
       status: 400,
