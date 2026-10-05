@@ -35,6 +35,8 @@ export abstract class RefreshTokensRepository {
 
   abstract revokeSsoForUser(userId: UUID): Promise<void>;
 
+  abstract revokeAllForOrg(orgId: UUID): Promise<void>;
+
   abstract revokePasswordSessionsForOrg(orgId: UUID): Promise<void>;
 
   /**

@@ -7,6 +7,54 @@ const workbookPath = fileURLToPath(
   new URL("../../fixtures/two-sheet-workbook.xlsx", import.meta.url),
 );
 
+test("persists CSV cells containing PostgreSQL-unsupported Unicode", async ({
+  page,
+  api,
+}) => {
+  const skill = await generatedApi.skillsControllerCreate(
+    {
+      ownerType: "personal",
+      name: `Unicode spreadsheet upload ${Date.now()}`,
+      shortDescription: "Use municipal service data from the attached CSV.",
+      instructions: "Answer with information from the attached CSV.",
+    },
+    { api },
+  );
+
+  const upload = await api.post(`/api/skills/${skill.id}/sources/file`, {
+    multipart: {
+      file: {
+        name: "municipal-services.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from(
+          "Service\u0000name,City\nWaste collection,München",
+          "utf8",
+        ),
+      },
+    },
+  });
+  expect(upload.ok()).toBe(true);
+
+  await expect
+    .poll(
+      async () => {
+        const sources =
+          await generatedApi.skillSourcesControllerGetSkillSources(skill.id, {
+            api,
+          });
+        return sources.map((source) => ({
+          name: source.name,
+          status: source.status,
+        }));
+      },
+      { timeout: 30_000 },
+    )
+    .toEqual([{ name: "municipal-services.csv", status: "ready" }]);
+
+  await page.goto(`/skills/${skill.id}`);
+  await expect(page.getByTestId(/^source-item-/)).toHaveCount(1);
+});
+
 test("keeps every worksheet attached after uploading a workbook", async ({
   page,
   api,

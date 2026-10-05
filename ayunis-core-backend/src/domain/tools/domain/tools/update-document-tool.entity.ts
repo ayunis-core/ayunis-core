@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { Tool } from '../tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 const updateDocumentToolParameters = {
   type: 'object' as const,
@@ -39,7 +39,7 @@ export class UpdateDocumentTool extends Tool {
     super({
       name: ToolType.UPDATE_DOCUMENT,
       description:
-        'Update an existing document with new content. Use this when the user asks you to modify, revise, or improve an existing document.',
+        'Update an existing document with new content. Use this when the user asks you to modify, revise, or improve an existing document. This is the in-chat Ayunis document editor, not a document in an external system such as a wiki or document management tool; for those, use the tools of the connected integration.',
       descriptionLong:
         'Use update_document when a document already exists in the conversation (was previously created with create_document). ' +
         'Use create_document instead when the user wants a brand new document. ' +

@@ -15,6 +15,8 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
+import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
@@ -30,6 +32,7 @@ export class UrlCrawlConsumer extends WorkerHost {
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly helper: SourceProcessingHelper,
+    private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
   ) {
     super();
   }
@@ -49,6 +52,14 @@ export class UrlCrawlConsumer extends WorkerHost {
   private async processCrawl(job: Job<UrlCrawlJobData>): Promise<void> {
     const { sourceId, orgId, userId, rootUrl, maxDepth } = job.data;
     this.validateAndSetContext(orgId, userId);
+    if (
+      !(await this.admitOrgProcessing.execute(
+        new AdmitOrgProcessingQuery(orgId),
+      ))
+    ) {
+      this.logger.warn({ jobId: job.id, orgId }, 'Organisation deleted');
+      return;
+    }
 
     try {
       if (!(await this.loadSourceOrSkip(sourceId))) return;

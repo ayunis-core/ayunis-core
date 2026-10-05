@@ -8,6 +8,19 @@ import { TEST_ORG_ID } from 'src/iam/sso/application/testing/org-sso-connection.
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 
 describe(LocalRefreshTokensRepository.name, () => {
+  it('excludes revoked and expired tokens from the concurrent refresh grace period', async () => {
+    const query = chain({ getCount: jest.fn().mockResolvedValue(0) });
+    const records = {
+      createQueryBuilder: jest.fn().mockReturnValue(query),
+    } as unknown as Repository<RefreshTokenRecord>;
+    const repository = new LocalRefreshTokensRepository(
+      records,
+      {} as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+    expect(await repository.wasUsedWithinGrace(TEST_ORG_ID, 60)).toBe(false);
+    expect(query.andWhere).toHaveBeenCalledWith('t.revokedAt IS NULL');
+    expect(query.andWhere).toHaveBeenCalledWith('t.expiresAt > NOW()');
+  });
   it('inserts through the ambient transaction', async () => {
     const records = { save: jest.fn().mockResolvedValue(undefined) };
     const txHost = {

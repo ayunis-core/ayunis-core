@@ -1,3 +1,11 @@
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
+import { OrgAuthenticationStateCacheService } from 'src/iam/orgs/application/services/org-authentication-state-cache.service';
+import { SuperAdminDeleteOrgUseCase } from 'src/iam/orgs/application/use-cases/super-admin-delete-org/super-admin-delete-org.use-case';
+import { SuperAdminOrgLifecycleController } from 'src/iam/orgs/presenters/http/super-admin-org-lifecycle.controller';
+import { SessionsModule } from 'src/iam/sessions/sessions.module';
+import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
+import { SetOrgArchivedUseCase } from 'src/iam/orgs/application/use-cases/set-org-archived/set-org-archived.use-case';
 import { Module } from '@nestjs/common';
 import { OrgsRepository } from './application/ports/orgs.repository';
 import { LocalOrgsRepository } from './infrastructure/repositories/local/local-orgs.repository';
@@ -17,8 +25,12 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OrgRecord]), PermissionsModule],
-  controllers: [SuperAdminOrgsController],
+  imports: [
+    TypeOrmModule.forFeature([OrgRecord]),
+    PermissionsModule,
+    SessionsModule,
+  ],
+  controllers: [SuperAdminOrgsController, SuperAdminOrgLifecycleController],
   providers: [
     {
       provide: OrgsRepository,
@@ -27,7 +39,13 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
       },
       inject: [TransactionHost],
     },
+    OrgAuthenticationStateCacheService,
     // Use cases
+    AssertOrgActiveUseCase,
+    AdmitOrgProcessingUseCase,
+    AssertCachedOrgActiveUseCase,
+    SetOrgArchivedUseCase,
+    SuperAdminDeleteOrgUseCase,
     FindOrgByIdUseCase,
     CreateOrgUseCase,
     UpdateOrgUseCase,
@@ -38,6 +56,11 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
     SuperAdminOrgResponseDtoMapper,
   ],
   exports: [
+    AssertOrgActiveUseCase,
+    AdmitOrgProcessingUseCase,
+    AssertCachedOrgActiveUseCase,
+    SetOrgArchivedUseCase,
+    SuperAdminDeleteOrgUseCase,
     FindOrgByIdUseCase,
     CreateOrgUseCase,
     UpdateOrgUseCase,

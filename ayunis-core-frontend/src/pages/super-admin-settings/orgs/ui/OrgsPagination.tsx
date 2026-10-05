@@ -1,15 +1,18 @@
+import type { SuperAdminOrgsControllerGetAllOrgsStatus } from '@/shared/api';
 import { SearchPagination } from '@/widgets/pagination';
 
 interface OrgsPaginationProps {
   currentPage: number;
   totalPages: number;
   search?: string;
+  status: SuperAdminOrgsControllerGetAllOrgsStatus;
 }
 
 export default function OrgsPagination({
   currentPage,
   totalPages,
   search,
+  status,
 }: Readonly<OrgsPaginationProps>) {
   return (
     <SearchPagination
@@ -17,6 +20,7 @@ export default function OrgsPagination({
       totalPages={totalPages}
       to="/super-admin-settings/orgs"
       search={search}
+      extraSearchParams={{ orgStatus: status }}
     />
   );
 }

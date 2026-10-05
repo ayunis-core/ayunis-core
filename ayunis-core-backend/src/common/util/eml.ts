@@ -20,13 +20,18 @@ function htmlToText(html: string): string {
     .trim();
 }
 
-function extractBody(text: string | undefined, html: string | false): string {
+export function extractBody(
+  text: string | undefined,
+  html: string | false,
+): string {
   const plain = text?.trim() ?? '';
   if (plain.length > 0) return plain;
   return html ? htmlToText(html) : '';
 }
 
-function buildHeaderLines(fields: { label: string; value: string }[]): string {
+export function buildHeaderLines(
+  fields: { label: string; value: string }[],
+): string {
   return fields
     .filter((field) => field.value.length > 0)
     .map((field) => `${field.label}: ${field.value}`)

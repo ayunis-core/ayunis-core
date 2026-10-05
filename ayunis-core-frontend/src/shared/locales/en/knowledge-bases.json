@@ -148,7 +148,7 @@
     },
     "documents": {
       "title": "Documents",
-      "description": "Manage the documents in this knowledge base. Supported formats: PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML and audio.",
+      "description": "Manage the documents in this knowledge base. Supported formats: PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, MSG and audio.",
       "upload": "Upload",
       "empty": "No documents uploaded yet. Upload a PDF, DOCX or ODT file to get started.",
       "uploadSuccess": "Document uploaded successfully!",

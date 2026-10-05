@@ -1457,6 +1457,16 @@
         "operationId": "SuperAdminOrgsController_getAllOrgs",
         "parameters": [
           {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "active",
+              "type": "string",
+              "enum": ["active", "archived", "all"]
+            }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
@@ -1584,10 +1594,149 @@
             "description": "The requester is not a super admin."
           },
           "404": {
-            "description": "The organization does not exist."
+            "description": "The organization does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Rename an organization",
+        "tags": ["Super Admin Orgs"]
+      },
+      "delete": {
+        "operationId": "SuperAdminOrgLifecycleController_deleteOrg",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteOrgRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Organisation, users and stored files deleted"
+          },
+          "400": {
+            "description": "Invalid request or organisation name does not match"
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Organisation has active processing jobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Deletion or external cleanup failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Permanently delete an organisation and its data",
+        "tags": ["Super Admin Orgs"]
+      }
+    },
+    "/super-admin/orgs/{id}/archive": {
+      "patch": {
+        "operationId": "SuperAdminOrgLifecycleController_setOrgArchived",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgArchivedRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Archive or restore an organisation",
         "tags": ["Super Admin Orgs"]
       }
     },
@@ -12817,6 +12966,10 @@
             "description": "Organization display name",
             "example": "Acme Corporation"
           },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether the organisation is archived"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -12824,7 +12977,7 @@
             "example": "2024-01-15T10:30:00Z"
           }
         },
-        "required": ["id", "name", "createdAt"]
+        "required": ["id", "name", "archived", "createdAt"]
       },
       "SuperAdminOrgListResponseDto": {
         "type": "object",
@@ -12857,6 +13010,60 @@
           }
         },
         "required": ["name"]
+      },
+      "OrgErrorCode": {
+        "type": "string",
+        "enum": [
+          "ORG_PROCESSING_ACTIVE",
+          "ORG_DELETE_CONFIRMATION_MISMATCH",
+          "ORG_NOT_ACTIVE",
+          "ORG_SESSION_EXPIRED",
+          "ORG_NOT_FOUND",
+          "ORG_ALREADY_EXISTS",
+          "ORG_CREATION_FAILED",
+          "ORG_UPDATE_FAILED",
+          "ORG_DELETION_FAILED",
+          "ORG_RETRIEVAL_FAILED",
+          "ORG_UNAUTHORIZED",
+          "ORG_UNEXPECTED_ERROR"
+        ]
+      },
+      "OrgErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrgErrorCode"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "Actionable error message, generic for server errors"
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "SetOrgArchivedRequestDto": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean",
+            "description": "Archive the organisation, or restore it when false"
+          }
+        },
+        "required": ["archived"]
+      },
+      "DeleteOrgRequestDto": {
+        "type": "object",
+        "properties": {
+          "confirmationName": {
+            "type": "string",
+            "description": "Exact organisation name confirming irreversible deletion"
+          }
+        },
+        "required": ["confirmationName"]
       },
       "RolePermissionSetDto": {
         "type": "object",

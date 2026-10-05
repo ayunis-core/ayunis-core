@@ -65,6 +65,7 @@ const ACCEPTED_EXTENSIONS = [
   '.txt',
   '.md',
   '.eml',
+  '.msg',
   '.csv',
   '.xlsx',
   '.xls',

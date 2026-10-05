@@ -52,6 +52,7 @@ export default function handleSourceUploadError(
         showError(t('sources.noEmbeddingModelError'));
         break;
       case 'SERVICE_BUSY':
+      case 'STORAGE_UNAVAILABLE':
         showError(t('sources.fileSourceServiceBusyError'));
         break;
       case 'SERVICE_TIMEOUT':

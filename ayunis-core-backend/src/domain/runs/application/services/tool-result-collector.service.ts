@@ -36,6 +36,7 @@ import {
   truncateToolResult,
 } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 
 const DISPLAY_ACK = 'Tool has been displayed successfully';
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
@@ -141,7 +142,14 @@ export class ToolResultCollectorService {
     input: RunToolResultInput,
     context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
-    const tool = tools.find((t) => t.name === content.name);
+    // History from before the integration namespace carries MCP calls under
+    // the plain upstream name, and models imitate what they see there.
+    const tool =
+      tools.find((t) => t.name === content.name) ??
+      tools.find(
+        (t) =>
+          t instanceof McpIntegrationTool && t.originalName === content.name,
+      );
     if (!tool) {
       return {
         content: new ToolResultMessageContent(

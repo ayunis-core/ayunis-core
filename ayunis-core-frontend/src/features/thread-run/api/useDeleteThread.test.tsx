@@ -17,15 +17,24 @@ import {
 import { useDeleteThread } from './useDeleteThread';
 import { readChatDraft, writeChatDraft } from '@/shared/lib/chat-draft-storage';
 
-const { invalidateRouter, mutate } = vi.hoisted(() => ({
+interface MutationCallbacks {
+  onSuccess?: (data: unknown, variables: { id: string }) => void;
+  onError?: (error: Error) => void;
+}
+
+const { invalidateRouter, mutate, mutationCallbacks } = vi.hoisted(() => ({
   invalidateRouter: vi.fn(),
   mutate: vi.fn(),
+  mutationCallbacks: { current: undefined as MutationCallbacks | undefined },
 }));
 
 vi.mock('@/shared/api', () => ({
   getFavoritesControllerFindAllQueryKey: () => ['favorites'],
   getThreadsControllerFindAllQueryKey: () => ['threads'],
-  useThreadsControllerDelete: () => ({ mutate }),
+  useThreadsControllerDelete: (options: { mutation: MutationCallbacks }) => {
+    mutationCallbacks.current = options.mutation;
+    return { mutate };
+  },
 }));
 
 vi.mock('@tanstack/react-router', () => ({
@@ -59,6 +68,7 @@ describe('useDeleteThread', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mutationCallbacks.current = undefined;
     window.localStorage.clear();
   });
   afterEach(() => {
@@ -76,13 +86,34 @@ describe('useDeleteThread', () => {
     const { result } = renderHook(() => useDeleteThread({}), { wrapper });
 
     act(() => result.current.deleteChat(threadId));
-    const mutationCall = mutate.mock.calls[0] as unknown as [
-      unknown,
-      { onSuccess: () => void },
-    ];
-    act(() => mutationCall[1].onSuccess());
+    act(() =>
+      mutationCallbacks.current?.onSuccess?.(undefined, { id: threadId }),
+    );
 
     expect(readChatDraft(threadId)).toBe('');
+  });
+
+  it('invalidates deleted thread lists after the caller unmounts', () => {
+    const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result, unmount } = renderHook(() => useDeleteThread({}), {
+      wrapper,
+    });
+
+    act(() => result.current.deleteChat(threadId));
+    unmount();
+
+    expect(mutationCallbacks.current?.onSuccess).toBeTypeOf('function');
+    act(() =>
+      mutationCallbacks.current?.onSuccess?.(undefined, { id: threadId }),
+    );
+
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['threads'] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['favorites'] });
+    expect(invalidateRouter).toHaveBeenCalledOnce();
   });
 
   it('resets local run state and aborts only the deleted thread before deleting', () => {
@@ -107,9 +138,6 @@ describe('useDeleteThread', () => {
     expect(onBeforeDelete.mock.invocationCallOrder[0]).toBeLessThan(
       mutate.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,
     );
-    expect(mutate).toHaveBeenCalledWith(
-      { id: threadId },
-      expect.objectContaining({ onSuccess: expect.any(Function) }),
-    );
+    expect(mutate).toHaveBeenCalledWith({ id: threadId });
   });
 });

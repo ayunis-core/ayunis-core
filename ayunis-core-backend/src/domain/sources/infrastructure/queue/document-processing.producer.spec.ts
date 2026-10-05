@@ -1,3 +1,8 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (_target: object, _key: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
 import type { UUID } from 'crypto';
 import type { Queue } from 'bullmq';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
@@ -26,6 +31,7 @@ describe('DocumentProcessingProducer', () => {
       getJob: jest.fn(),
     };
     producer = new DocumentProcessingProducer(
+      { execute: jest.fn().mockResolvedValue({}) } as never,
       queue as unknown as Queue<DocumentProcessingJobData>,
     );
   });

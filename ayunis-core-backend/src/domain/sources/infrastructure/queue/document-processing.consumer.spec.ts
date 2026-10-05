@@ -105,6 +105,10 @@ const helper = {
   cleanupIndex: jest.fn().mockResolvedValue(undefined),
 };
 
+const admitOrgProcessing = {
+  execute: jest.fn().mockResolvedValue(true),
+};
+
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
@@ -115,6 +119,7 @@ describe('DocumentProcessingConsumer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
+    admitOrgProcessing.execute.mockResolvedValue(true);
 
     consumer = new DocumentProcessingConsumer(
       contextService as never,
@@ -125,7 +130,17 @@ describe('DocumentProcessingConsumer', () => {
       sourceRepository as never,
       helper as never,
       spreadsheetParser as never,
+      admitOrgProcessing as never,
     );
+  });
+
+  it('skips work when deletion wins before processing admission', async () => {
+    admitOrgProcessing.execute.mockResolvedValue(false);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.findById).not.toHaveBeenCalled();
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('skips processing when the queued source can no longer be claimed', async () => {

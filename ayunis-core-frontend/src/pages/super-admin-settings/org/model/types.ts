@@ -34,3 +34,7 @@ export interface SsoConnectionFormFields {
   zitadelIdpId: string;
   domainVerified: boolean;
 }
+
+export interface DeleteOrgFormData {
+  confirmationName: string;
+}

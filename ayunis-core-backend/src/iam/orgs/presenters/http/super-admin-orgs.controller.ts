@@ -16,6 +16,7 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -24,6 +25,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { SuperAdminGetAllOrgsUseCase } from 'src/iam/orgs/application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.use-case';
+import { OrgErrorResponseDto } from './dtos/org-error-response.dto';
 import { SuperAdminOrgResponseDtoMapper } from './mappers/super-admin-org-response-dto.mapper';
 import {
   SuperAdminOrgListResponseDto,
@@ -129,6 +131,7 @@ export class SuperAdminOrgsController {
     const orgs = await this.superAdminGetAllOrgsUseCase.execute(
       new SuperAdminGetAllOrgsQuery({
         search: queryParams.search,
+        status: queryParams.status,
         pagination: {
           limit: queryParams.limit,
           offset: queryParams.offset,
@@ -193,7 +196,9 @@ export class SuperAdminOrgsController {
   })
   @ApiNotFoundResponse({
     description: 'The organization does not exist.',
+    type: OrgErrorResponseDto,
   })
+  @ApiInternalServerErrorResponse({ type: OrgErrorResponseDto })
   async updateOrg(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateOrgDto: UpdateOrgRequestDto,
