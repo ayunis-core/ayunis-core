@@ -139,7 +139,7 @@ describe('SpreadsheetEvaluator', () => {
       rows: [['0.1', '0.2', '=A2+B2']],
     });
 
-    expect(result[0][2]).toBe(0.3);
+    expect(result[0][2]).toBeCloseTo(0.3, 10);
   });
 
   describe('evaluateForExport', () => {

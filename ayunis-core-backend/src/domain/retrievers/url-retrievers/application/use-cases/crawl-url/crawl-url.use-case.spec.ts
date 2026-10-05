@@ -179,7 +179,7 @@ describe('CrawlUrlUseCase', () => {
       new CrawlUrlCommand('https://acme.test/', ORG_ID, 1),
     );
 
-    expect(result.pages.length).toBe(UrlCrawlConstants.MAX_PAGES);
+    expect(result.pages).toHaveLength(UrlCrawlConstants.MAX_PAGES);
   });
 
   it('never exceeds MAX_PAGES when a depth-2 frontier over-budgets', async () => {
@@ -215,7 +215,7 @@ describe('CrawlUrlUseCase', () => {
     expect(result.pages.length).toBeLessThanOrEqual(
       UrlCrawlConstants.MAX_PAGES,
     );
-    expect(result.pages.length).toBe(UrlCrawlConstants.MAX_PAGES);
+    expect(result.pages).toHaveLength(UrlCrawlConstants.MAX_PAGES);
   });
 
   it('treats www and apex variants of a link as the same page', async () => {
@@ -235,7 +235,7 @@ describe('CrawlUrlUseCase', () => {
     );
 
     // Root + a single "about" page — not two.
-    expect(result.pages.length).toBe(2);
+    expect(result.pages).toHaveLength(2);
     expect(retriever.execute).toHaveBeenCalledTimes(2);
   });
 

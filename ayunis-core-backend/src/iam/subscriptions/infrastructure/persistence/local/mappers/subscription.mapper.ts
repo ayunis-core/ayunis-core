@@ -6,7 +6,7 @@ import {
   SubscriptionRecord,
   SeatBasedSubscriptionRecord,
   UsageBasedSubscriptionRecord,
-} from '../schema/subscription.record';
+} from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionBillingInfoMapper } from './subscription-billing-info.mapper';
 import { InvalidSubscriptionDataError } from 'src/iam/subscriptions/application/subscription.errors';
 
@@ -38,6 +38,7 @@ export class SubscriptionMapper {
       record.updatedAt = domain.updatedAt;
       record.cancelledAt = domain.cancelledAt;
       record.startsAt = domain.startsAt;
+      record.accessEndsAt = domain.accessEndsAt;
       record.orgId = domain.orgId;
       record.noOfSeats = domain.noOfSeats;
       record.pricePerSeat = domain.pricePerSeat;
@@ -57,6 +58,7 @@ export class SubscriptionMapper {
       record.updatedAt = domain.updatedAt;
       record.cancelledAt = domain.cancelledAt;
       record.startsAt = domain.startsAt;
+      record.accessEndsAt = domain.accessEndsAt;
       record.orgId = domain.orgId;
       record.monthlyCredits = domain.monthlyCredits;
       record.billingInfo = this.subscriptionBillingInfoMapper.toRecord(
@@ -95,6 +97,7 @@ export class SubscriptionMapper {
       updatedAt: record.updatedAt,
       cancelledAt: record.cancelledAt,
       startsAt: record.startsAt,
+      accessEndsAt: record.accessEndsAt,
       orgId: record.orgId,
       noOfSeats: record.noOfSeats!,
       pricePerSeat: record.pricePerSeat!,
@@ -121,6 +124,7 @@ export class SubscriptionMapper {
       updatedAt: record.updatedAt,
       cancelledAt: record.cancelledAt,
       startsAt: record.startsAt,
+      accessEndsAt: record.accessEndsAt,
       orgId: record.orgId,
       monthlyCredits: record.monthlyCredits,
       billingInfo: this.subscriptionBillingInfoMapper.toDomain(

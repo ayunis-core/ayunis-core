@@ -13,6 +13,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
 import { computeAvailableSeats } from 'src/iam/subscriptions/application/util/compute-available-seats';
 import { getNextRenewalDate } from 'src/iam/subscriptions/application/util/get-next-renewal-date';
+import { selectCurrentSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
 
 @Injectable()
 export class GetLatestSubscriptionUseCase {
@@ -45,8 +46,8 @@ export class GetLatestSubscriptionUseCase {
         query.orgId,
       );
 
-      const subscription = await this.subscriptionRepository.findLatestByOrgId(
-        query.orgId,
+      const subscription = selectCurrentSubscription(
+        await this.subscriptionRepository.findByOrgId(query.orgId),
       );
 
       if (!subscription) {

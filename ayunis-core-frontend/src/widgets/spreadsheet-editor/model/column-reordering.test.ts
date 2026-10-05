@@ -12,13 +12,13 @@ describe('resolveColumnReorder', () => {
   });
 
   it('returns null when dropped on itself or outside the list', () => {
-    expect(resolveColumnReorder(getColumnDragId(1), getColumnDragId(1))).toBe(
-      null,
-    );
-    expect(resolveColumnReorder(getColumnDragId(1), undefined)).toBe(null);
+    expect(
+      resolveColumnReorder(getColumnDragId(1), getColumnDragId(1)),
+    ).toBeNull();
+    expect(resolveColumnReorder(getColumnDragId(1), undefined)).toBeNull();
   });
 
   it('returns null for malformed ids', () => {
-    expect(resolveColumnReorder('column-x', getColumnDragId(1))).toBe(null);
+    expect(resolveColumnReorder('column-x', getColumnDragId(1))).toBeNull();
   });
 });

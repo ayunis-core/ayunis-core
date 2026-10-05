@@ -2,13 +2,17 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { PredefinedMcpIntegrationRegistry } from './predefined-mcp-integration-registry.service';
-import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../domain/value-objects/mcp-auth-method.enum';
-import { CredentialFieldType } from '../../domain/predefined-mcp-integration-config';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 describe('PredefinedMcpIntegrationRegistryService', () => {
   let service: PredefinedMcpIntegrationRegistry;
   let configService: ConfigService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('with Locaboo 4 URL configured', () => {
     beforeAll(async () => {
@@ -186,10 +190,6 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
       });
     });
   });
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('without Locaboo 4 URL configured', () => {
     beforeAll(async () => {
       const module: TestingModule = await Test.createTestingModule({
