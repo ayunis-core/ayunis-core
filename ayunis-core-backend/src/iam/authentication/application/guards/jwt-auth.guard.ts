@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { Request, Response } from 'express';
 import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
 import { RefreshTokenCommand } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.command';
@@ -45,8 +46,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       if (result) {
         return true;
       }
-    } catch {
-      // Access token validation failed, try refresh token
+    } catch (error) {
+      if (!this.isAuthenticationRejection(error)) throw error;
     }
 
     // Access token validation failed, try refresh token
@@ -86,6 +87,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
       return (await super.canActivate(context)) === true;
     } catch (error) {
+      if (!this.isAuthenticationRejection(error)) throw error;
       clearCookies(response, this.configService);
       this.logger.debug(
         {
@@ -95,5 +97,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       );
       throw new UnauthorizedException();
     }
+  }
+
+  private isAuthenticationRejection(error: unknown): boolean {
+    return (
+      error instanceof UnauthorizedException ||
+      (error instanceof ApplicationError && error.statusCode === 401)
+    );
   }
 }

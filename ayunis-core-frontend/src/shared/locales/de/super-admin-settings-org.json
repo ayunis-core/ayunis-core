@@ -486,7 +486,8 @@
         "invalid": "Ungültiger Name"
       },
       "invalid": "Ungültige Eingabe"
-    }
+    },
+    "title": "Organisationsdetails"
   },
   "trial": {
     "title": "Trial-Informationen",
@@ -614,5 +615,34 @@
         "invalid": "Überprüfen Sie die eingegebenen Modelldaten"
       }
     }
+  },
+  "lifecycle": {
+    "archiveButton": "Archivieren",
+    "restoreButton": "Wiederherstellen",
+    "deleteButton": "Löschen",
+    "archive": "Organisation archivieren",
+    "restore": "Organisation wiederherstellen",
+    "delete": "Organisation löschen",
+    "active": "Aktiv",
+    "archived": "Archiviert",
+    "archiveTitle": "Organisation archivieren?",
+    "restoreTitle": "Organisation wiederherstellen?",
+    "archiveDescription": "Alle Daten bleiben erhalten. Mitglieder werden abgemeldet und können sich erst nach der Wiederherstellung wieder anmelden.",
+    "restoreDescription": "Mitglieder können sich wieder anmelden. Vorherige Sitzungen bleiben ungültig.",
+    "deleteTitle": "Organisation endgültig löschen?",
+    "deleteDescription": "<name/>, alle Mitglieder, Daten und gespeicherten Dateien werden endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "typeName": "Zum Bestätigen <name/> eingeben",
+    "cancel": "Abbrechen",
+    "archivedSuccess": "Organisation archiviert",
+    "restoredSuccess": "Organisation wiederhergestellt",
+    "deletedSuccess": "Organisation gelöscht",
+    "errorNotFound": "Organisation existiert nicht mehr",
+    "confirmationMismatch": "Der Name muss exakt übereinstimmen",
+    "cleanupIncomplete": "Die Organisation wurde gelöscht, aber einige Dateien oder Verarbeitungsdaten konnten nicht entfernt werden. Bitte den Support kontaktieren.",
+    "errorUnauthorized": "Super-Admin-Rechte sind erforderlich",
+    "error": "Organisation konnte nicht aktualisiert werden",
+    "processingActive": "Die Dokumentverarbeitung läuft noch. Die Organisation wurde nicht gelöscht. Versuchen Sie es nach Abschluss erneut.",
+    "managementTitle": "Organisation verwalten",
+    "deleteActionDescription": "Diese Organisation, ihre Mitglieder, Daten und gespeicherten Dateien endgültig entfernen. Dies kann nicht rückgängig gemacht werden."
   }
 }

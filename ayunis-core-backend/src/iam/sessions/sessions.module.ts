@@ -1,3 +1,4 @@
+import { RevokeOrgSessionsUseCase } from 'src/iam/sessions/application/use-cases/revoke-org-sessions/revoke-org-sessions.use-case';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshTokenRecord } from './infrastructure/repositories/local/schema/refresh-token.record';
@@ -37,6 +38,7 @@ import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-
     RevokeOtherSessionsForUserUseCase,
     RevokeSessionsByZitadelSessionUseCase,
     RevokeSsoSessionsForUserUseCase,
+    RevokeOrgSessionsUseCase,
     RevokePasswordSessionsForOrgUseCase,
     SessionsCleanupTask,
   ],
@@ -49,6 +51,7 @@ import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-
     RevokeOtherSessionsForUserUseCase,
     RevokeSessionsByZitadelSessionUseCase,
     RevokeSsoSessionsForUserUseCase,
+    RevokeOrgSessionsUseCase,
     RevokePasswordSessionsForOrgUseCase,
   ],
 })

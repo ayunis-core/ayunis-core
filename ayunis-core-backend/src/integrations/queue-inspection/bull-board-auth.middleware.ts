@@ -9,6 +9,8 @@ import { IpNotAllowedError } from 'src/iam/ip-allowlist/application/ip-allowlist
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { getAccessTokenCookieName } from 'src/common/util/cookie.util';
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
+import { OrgAccessError } from 'src/iam/orgs/application/orgs.errors';
 
 interface QueueOperatorClaims {
   sub?: string;
@@ -19,6 +21,7 @@ interface QueueOperatorClaims {
   systemRole?: SystemRole;
   name?: string;
   type?: string;
+  orgSessionVersion?: number;
 }
 
 @Injectable()
@@ -29,6 +32,7 @@ export class BullBoardAuthMiddleware implements NestMiddleware {
     private readonly jwtService: JwtService,
     private readonly ipAllowlistGuard: IpAllowlistGuard,
     private readonly configService: ConfigService,
+    private readonly assertOrgActive: AssertCachedOrgActiveUseCase,
   ) {}
 
   async use(
@@ -88,13 +92,28 @@ export class BullBoardAuthMiddleware implements NestMiddleware {
       return null;
     }
 
+    let claims: QueueOperatorClaims;
     try {
-      const claims =
-        await this.jwtService.verifyAsync<QueueOperatorClaims>(token);
-      return this.toActiveUser(claims);
+      claims = await this.jwtService.verifyAsync<QueueOperatorClaims>(token);
     } catch {
       return null;
     }
+    const operator = this.toActiveUser(claims);
+    if (!operator) {
+      return null;
+    }
+    try {
+      await this.assertOrgActive.execute({
+        orgId: operator.orgId,
+        sessionVersion: claims.orgSessionVersion ?? 0,
+      });
+    } catch (error) {
+      if (error instanceof OrgAccessError) {
+        return null;
+      }
+      throw error;
+    }
+    return operator;
   }
 
   private toActiveUser(claims: QueueOperatorClaims): ActiveUser | null {

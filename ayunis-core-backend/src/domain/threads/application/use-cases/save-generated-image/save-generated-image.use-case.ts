@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import {
@@ -24,7 +24,7 @@ export class SaveGeneratedImageUseCase {
 
   constructor(
     private readonly generatedImagesRepository: GeneratedImagesRepository,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
 
@@ -43,11 +43,7 @@ export class SaveGeneratedImageUseCase {
       const ext = contentTypeToExtension(command.contentType);
       const storageKey = `generated-images/${command.orgId}/${command.threadId}/${imageId}${ext}`;
 
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(storageKey, command.imageData, {
-          'content-type': command.contentType,
-        }),
-      );
+      await this.uploadImage(command, storageKey);
 
       const image = new GeneratedImage(
         imageId,
@@ -82,6 +78,17 @@ export class SaveGeneratedImageUseCase {
         error instanceof Error ? error : new Error('Unknown error'),
       );
     }
+  }
+
+  private async uploadImage(
+    command: SaveGeneratedImageCommand,
+    storageKey: string,
+  ): Promise<void> {
+    await this.uploadOrgObjectUseCase.execute(
+      new UploadOrgObjectCommand(command.orgId, storageKey, command.imageData, {
+        'content-type': command.contentType,
+      }),
+    );
   }
 
   private async cleanupUploadedObject(storageKey: string): Promise<void> {

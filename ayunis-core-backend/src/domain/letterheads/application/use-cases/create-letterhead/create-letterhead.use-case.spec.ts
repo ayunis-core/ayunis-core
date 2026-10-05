@@ -7,7 +7,9 @@ import { CreateLetterheadCommand } from './create-letterhead.command';
 import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   LetterheadInvalidPdfError,
@@ -33,7 +35,8 @@ async function createMultiPagePdf(pages: number): Promise<Buffer> {
 describe('CreateLetterheadUseCase', () => {
   let useCase: CreateLetterheadUseCase;
   let letterheadsRepository: jest.Mocked<LetterheadsRepository>;
-  let uploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
+  let uploadObjectUseCase: jest.Mocked<UploadOrgObjectUseCase>;
+  let deleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -60,19 +63,25 @@ describe('CreateLetterheadUseCase', () => {
       }),
     };
 
+    const mockDeleteObjectUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateLetterheadUseCase,
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
       ],
     }).compile();
 
     useCase = module.get(CreateLetterheadUseCase);
     letterheadsRepository = module.get(LetterheadsRepository);
-    uploadObjectUseCase = module.get(UploadObjectUseCase);
+    uploadObjectUseCase = module.get(UploadOrgObjectUseCase);
+    deleteObjectUseCase = module.get(DeleteObjectUseCase);
 
     letterheadsRepository.save.mockImplementation(async (l) => l);
   });
@@ -101,6 +110,9 @@ describe('CreateLetterheadUseCase', () => {
     expect(result.firstPageStoragePath).toContain('first-page.pdf');
     expect(result.continuationPageStoragePath).toBeNull();
     expect(uploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(uploadObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: mockOrgId }),
+    );
   });
 
   it('should create a letterhead with both first-page and continuation PDFs', async () => {
@@ -119,6 +131,70 @@ describe('CreateLetterheadUseCase', () => {
 
     expect(result.continuationPageStoragePath).toContain('continuation.pdf');
     expect(uploadObjectUseCase.execute).toHaveBeenCalledTimes(2);
+  });
+
+  it('removes the first page when the continuation upload fails', async () => {
+    const firstPagePdf = await createSinglePagePdf();
+    const continuationPdf = await createSinglePagePdf();
+    uploadObjectUseCase.execute
+      .mockResolvedValueOnce(new StorageObject('first', 'default', 1, 'first'))
+      .mockRejectedValueOnce(new Error('continuation upload failed'));
+
+    await expect(
+      useCase.execute(
+        new CreateLetterheadCommand({
+          name: 'Failed continuation',
+          firstPagePdfBuffer: firstPagePdf,
+          continuationPagePdfBuffer: continuationPdf,
+          firstPageMargins: { top: 20, bottom: 20, left: 20, right: 20 },
+          continuationPageMargins: {
+            top: 20,
+            bottom: 20,
+            left: 20,
+            right: 20,
+          },
+        }),
+      ),
+    ).rejects.toThrow('Error creating letterhead');
+
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        objectName: expect.stringMatching(/first-page\.pdf$/),
+      }),
+    );
+  });
+
+  it('removes both uploaded pages when persistence fails', async () => {
+    const firstPagePdf = await createSinglePagePdf();
+    const continuationPdf = await createSinglePagePdf();
+    letterheadsRepository.save.mockRejectedValueOnce(new Error('save failed'));
+
+    await expect(
+      useCase.execute(
+        new CreateLetterheadCommand({
+          name: 'Failed save',
+          firstPagePdfBuffer: firstPagePdf,
+          continuationPagePdfBuffer: continuationPdf,
+          firstPageMargins: { top: 20, bottom: 20, left: 20, right: 20 },
+          continuationPageMargins: {
+            top: 20,
+            bottom: 20,
+            left: 20,
+            right: 20,
+          },
+        }),
+      ),
+    ).rejects.toThrow('Error creating letterhead');
+
+    const deletedPaths = deleteObjectUseCase.execute.mock.calls.map(
+      ([command]) => command.objectName,
+    );
+    expect(deletedPaths).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/first-page\.pdf$/),
+        expect.stringMatching(/continuation\.pdf$/),
+      ]),
+    );
   });
 
   it('should reject a multi-page first-page PDF', async () => {
@@ -181,7 +257,8 @@ describe('CreateLetterheadUseCase', () => {
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: UploadObjectUseCase, useValue: uploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: uploadObjectUseCase },
+        { provide: DeleteObjectUseCase, useValue: deleteObjectUseCase },
       ],
     }).compile();
 
