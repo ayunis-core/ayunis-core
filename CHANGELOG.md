@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.48.0](https://github.com/ayunis-core/ayunis-core/compare/v2.47.0...v2.48.0) (2026-10-05)
+
+
+### Features
+
+* **orgs:** archive and delete organisations (AYC-35) ([#1828](https://github.com/ayunis-core/ayunis-core/issues/1828)) ([8122b91](https://github.com/ayunis-core/ayunis-core/commit/8122b914249c6827a04fa2dd86f31efc5f5d524c))
+
+
+### Bug Fixes
+
+* **AYC-35:** coordinate deletion with processing admission ([#1841](https://github.com/ayunis-core/ayunis-core/issues/1841)) ([fdb0344](https://github.com/ayunis-core/ayunis-core/commit/fdb03447deeca34c84ac4cd89257485f28099f51))
+* **inference:** classify statusless provider server faults (AYC-1165) ([#1845](https://github.com/ayunis-core/ayunis-core/issues/1845)) ([120a1db](https://github.com/ayunis-core/ayunis-core/commit/120a1dbf9be1a89fa25bb43cd713af59e03e7055))
+* **inference:** honor duration-formatted retry-after from stackit (AYC-1112) ([#1843](https://github.com/ayunis-core/ayunis-core/issues/1843)) ([11d0ca4](https://github.com/ayunis-core/ayunis-core/commit/11d0ca43b01b858f09c1b7f6b298f709aea530ee))
+* **models:** return conflict for duplicate org model grants (AYC-1110) ([#1840](https://github.com/ayunis-core/ayunis-core/issues/1840)) ([4fa2cca](https://github.com/ayunis-core/ayunis-core/commit/4fa2cca33e0ce477565768466fcc288e979090d2))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump actions/checkout from 6.0.3 to 7.0.1 ([#1220](https://github.com/ayunis-core/ayunis-core/issues/1220)) ([7968954](https://github.com/ayunis-core/ayunis-core/commit/7968954ce0c28b19c4d308aa0fedf09183e16cc3))
+* **deps-actions:** bump docker/metadata-action from 5.10.0 to 6.2.0 ([#1218](https://github.com/ayunis-core/ayunis-core/issues/1218)) ([6f700cd](https://github.com/ayunis-core/ayunis-core/commit/6f700cd5ac97b26e4ac12afa940b97be25cf4b12))
+* **deps:** bump eslint-plugin-sonarjs from 3.0.7 to 4.2.1 ([#1716](https://github.com/ayunis-core/ayunis-core/issues/1716)) ([5c38631](https://github.com/ayunis-core/ayunis-core/commit/5c3863139df446c9b3c649bbd75a6aa42d921daf))
+
 ## [2.47.0](https://github.com/ayunis-core/ayunis-core/compare/v2.46.0...v2.47.0) (2026-10-02)
 
 
