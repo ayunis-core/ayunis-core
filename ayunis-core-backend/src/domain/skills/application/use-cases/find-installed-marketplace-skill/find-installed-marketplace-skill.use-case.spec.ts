@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
@@ -22,8 +23,10 @@ describe('FindInstalledMarketplaceSkillUseCase', () => {
 
   beforeEach(() => {
     findPersonalByMarketplaceIdentifier.mockReset();
-    contextValues.userId = USER_ID;
-    contextValues.orgId = ORG_ID;
+    Object.assign(
+      contextValues,
+      aUserContext({ userId: USER_ID, orgId: ORG_ID }),
+    );
   });
 
   it("returns the current user's skill installed from the marketplace entry", async () => {

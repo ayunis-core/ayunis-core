@@ -113,6 +113,7 @@ describe('CancelSubscriptionUseCase', () => {
     acquireAllocationLock = module.get(AcquireSeatAllocationLockUseCase);
 
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return mockUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'orgId') return mockOrgId;
@@ -288,6 +289,7 @@ describe('CancelSubscriptionUseCase', () => {
 
   it('rejects an admin of a different organization', async () => {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return mockUserId;
       if (key === 'systemRole') return SystemRole.CUSTOMER;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'orgId') return randomUUID();

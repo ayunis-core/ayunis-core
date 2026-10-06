@@ -1,4 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -27,7 +28,7 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
       findByWorkspaceId: jest.fn(),
     } as unknown as jest.Mocked<ArtifactsRepository>;
     const context = {
-      get: jest.fn((key: string) => ({ userId, orgId })[key]),
+      get: jest.fn(getFromUserContext({ userId, orgId })),
     } as unknown as jest.Mocked<ContextService>;
     const workspaceReadAccessMock = {
       execute: jest.fn().mockResolvedValue({}),

@@ -10,6 +10,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { UUID } from 'crypto';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
@@ -92,7 +93,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       if (key === 'userId') return 'test-user-id';
       if (key === 'orgId') return mockOrgId;
       if (key === 'role') return UserRole.ADMIN;
-      if (key === 'systemRole') return null;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
       return null;
     });
 
@@ -285,8 +286,10 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       ModelType.LANGUAGE,
     );
     mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return 'test-user-id';
+      if (key === 'orgId') return mockOrgId;
       if (key === 'role') return UserRole.USER;
-      if (key === 'systemRole') return null;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
       return null;
     });
 

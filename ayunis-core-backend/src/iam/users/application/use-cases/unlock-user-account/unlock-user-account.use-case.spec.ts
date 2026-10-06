@@ -15,6 +15,8 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 
 describe(UnlockUserAccountUseCase.name, () => {
   const lockedAt = new Date('2026-08-24T10:00:00.000Z');
+  const requestingUserId = 'a3c1f0d2-5b7e-4c89-9d1a-2e3f4b5c6d7e';
+  const otherOrgId = '820bd986-1c7d-4eb5-b541-86de9c2c695f';
   const usersRepository = {
     findOneById: jest.fn(),
     clearLoginLock: jest.fn(),
@@ -69,7 +71,7 @@ describe(UnlockUserAccountUseCase.name, () => {
     usersRepository.findOneById.mockResolvedValue(target);
     mockContext({
       role: UserRole.ADMIN,
-      orgId: '820bd986-1c7d-4eb5-b541-86de9c2c695f',
+      orgId: otherOrgId,
     });
 
     await expect(
@@ -103,6 +105,13 @@ describe(UnlockUserAccountUseCase.name, () => {
     systemRole?: SystemRole;
     userId?: string;
   }): void {
-    context.get.mockImplementation((key: keyof typeof values) => values[key]);
+    const store = {
+      userId: requestingUserId,
+      orgId: otherOrgId,
+      role: UserRole.USER,
+      systemRole: SystemRole.CUSTOMER,
+      ...values,
+    };
+    context.get.mockImplementation((key: keyof typeof store) => store[key]);
   }
 });

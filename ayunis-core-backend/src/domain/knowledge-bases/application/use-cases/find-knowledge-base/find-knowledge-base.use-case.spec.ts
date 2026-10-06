@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { randomUUID, type UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
@@ -37,11 +38,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
     requireRead: jest.fn(),
   } as unknown as jest.Mocked<KnowledgeBaseReadAccessService>;
   const context = {
-    get: jest.fn((key: string) => {
-      if (key === 'userId') return USER_ID;
-      if (key === 'orgId') return ORG_ID;
-      return undefined;
-    }),
+    get: jest.fn(getFromUserContext({ userId: USER_ID, orgId: ORG_ID })),
   };
   const module = await Test.createTestingModule({
     providers: [

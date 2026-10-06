@@ -1,4 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
 
 import { RemoveKnowledgeBaseFromThreadUseCase } from './remove-knowledge-base-from-thread.use-case';
@@ -30,11 +31,9 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     };
 
     mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({

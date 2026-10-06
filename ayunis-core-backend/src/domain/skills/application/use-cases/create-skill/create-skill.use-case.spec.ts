@@ -1,4 +1,5 @@
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -39,11 +40,9 @@ describe('CreateSkillUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const module: TestingModule = await Test.createTestingModule({

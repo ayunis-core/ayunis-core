@@ -1,4 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ApplyEditsToArtifactUseCase } from './apply-edits-to-artifact.use-case';
@@ -42,11 +43,9 @@ describe('ApplyEditsToArtifactUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockUpdateUseCase = {

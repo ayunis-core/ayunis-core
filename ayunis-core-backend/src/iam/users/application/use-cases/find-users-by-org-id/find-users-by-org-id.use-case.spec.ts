@@ -41,6 +41,8 @@ describe('FindUsersByOrgIdUseCase', () => {
 
     // Configure ContextService mock to return ADMIN role
     mockContextService.get.mockImplementation((key: string): unknown => {
+      if (key === 'userId') return 'requesting-user-id';
+      if (key === 'orgId') return 'org-id';
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
       return null;

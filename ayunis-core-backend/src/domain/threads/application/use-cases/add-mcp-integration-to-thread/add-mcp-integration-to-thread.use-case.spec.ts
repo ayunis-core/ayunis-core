@@ -1,4 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
 
 import { AddMcpIntegrationToThreadUseCase } from './add-mcp-integration-to-thread.use-case';
@@ -34,11 +35,9 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockGetMcpIntegrationsByIdsUseCase = {

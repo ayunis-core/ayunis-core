@@ -7,7 +7,7 @@ import {
   PermittedModelNotFoundError,
 } from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
@@ -76,9 +76,9 @@ export class SetOrgDefaultLanguageModelUseCase {
 
   private assertAuthorized(orgId: string): void {
     const isFromOrg = this.contextService.get('orgId') === orgId;
-    const isSuperAdmin =
-      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
-    if (!isFromOrg && !isSuperAdmin) throw new UnauthorizedAccessError();
+    if (!isFromOrg && !isSuperAdmin(this.contextService)) {
+      throw new UnauthorizedAccessError();
+    }
   }
 
   private async findPermittedModel(

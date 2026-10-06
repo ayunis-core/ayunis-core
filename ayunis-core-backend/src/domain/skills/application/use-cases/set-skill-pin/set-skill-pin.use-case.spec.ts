@@ -9,6 +9,8 @@ import type { SkillAuthorizationService } from 'src/domain/skills/application/se
 import { SkillNotActiveError } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { SetSkillPinUseCase } from './set-skill-pin.use-case';
 
@@ -24,7 +26,13 @@ function setup() {
   const authorization = { requireRead: jest.fn(), requireWrite: jest.fn() };
   const context = {
     get: jest.fn(
-      (key: string) => ({ userId, orgId: randomUUID(), role: 'admin' })[key],
+      (key: string) =>
+        ({
+          userId,
+          orgId: randomUUID(),
+          role: UserRole.ADMIN,
+          systemRole: SystemRole.CUSTOMER,
+        })[key],
     ),
   };
   const permission = { execute: jest.fn().mockResolvedValue(true) };
