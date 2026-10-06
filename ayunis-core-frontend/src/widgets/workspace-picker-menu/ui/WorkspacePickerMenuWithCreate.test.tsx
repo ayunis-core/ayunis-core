@@ -13,6 +13,9 @@ import { WorkspacePickerMenuWithCreate } from './WorkspacePickerMenuWithCreate';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
+vi.mock('@/features/favorites', () => ({
+  useFavorites: () => ({ favorites: [] }),
+}));
 afterEach(cleanup);
 
 describe('WorkspacePickerMenuWithCreate in a chat submenu', () => {

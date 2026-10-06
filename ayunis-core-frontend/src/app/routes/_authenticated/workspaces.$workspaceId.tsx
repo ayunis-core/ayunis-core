@@ -1,18 +1,6 @@
-import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { WorkspacePage } from '@/pages/workspace';
-import {
-  workspacesControllerFindOne,
-  getWorkspacesControllerFindOneQueryKey,
-  threadsControllerFindAll,
-  getThreadsControllerFindAllQueryKey,
-  modelsControllerIsEmbeddingModelEnabled,
-  getModelsControllerIsEmbeddingModelEnabledQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { effectiveDefaultModelQueryOptions } from './-effective-default-model-query';
-
-const WORKSPACE_CHATS_LIMIT = 20;
+import { PrototypeWorkspacePage } from '@/pages/skill-sharing-prototype';
 
 const searchSchema = z.object({
   search: z.string().optional(),
@@ -21,93 +9,24 @@ const searchSchema = z.object({
     .enum(['chats', 'artifacts', 'skills', 'knowledge', 'instructions'])
     .optional()
     .catch('chats'),
-});
-
-const queryIsEmbeddingModelEnabledOptions = () => ({
-  queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
-  queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
+  dialog: z.enum(['add', 'members', 'transfer']).optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
   {
     validateSearch: searchSchema,
-    loaderDeps: ({ search: { search, page } }) => ({ search, page }),
     component: RouteComponent,
-    loader: async ({
-      params: { workspaceId },
-      deps: { search, page = 1 },
-      context: { queryClient },
-    }) => {
-      await queryClient.query(anonymousModeDefaultQueryOptions());
-      const chatsParams = {
-        workspaceId,
-        search: search || undefined,
-        limit: WORKSPACE_CHATS_LIMIT,
-        offset: (page - 1) * WORKSPACE_CHATS_LIMIT,
-      };
-
-      const workspace = await queryClient
-        .query({
-          queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
-          queryFn: () => workspacesControllerFindOne(workspaceId),
-        })
-        .catch(() => {
-          throw redirect({ to: '/workspaces' });
-        });
-
-      const chats = await queryClient.query({
-        queryKey: getThreadsControllerFindAllQueryKey(chatsParams),
-        queryFn: () => threadsControllerFindAll(chatsParams),
-      });
-
-      const [defaultModelResponse, embeddingModelResponse] = await Promise.all([
-        queryClient
-          .query(effectiveDefaultModelQueryOptions())
-          .catch(() => null),
-        queryClient
-          .query(queryIsEmbeddingModelEnabledOptions())
-          .catch(() => null),
-      ]);
-
-      return {
-        workspace,
-        chats: chats.data,
-        chatCount: chats.pagination.total ?? chats.data.length,
-        chatPagination: chats.pagination,
-        chatSearch: search,
-        chatPage: page,
-        selectedModelId: defaultModelResponse?.permittedLanguageModel?.id,
-        isEmbeddingModelEnabled:
-          embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
-      };
-    },
   },
 );
 
 function RouteComponent() {
-  const { tab = 'chats' } = Route.useSearch();
-  const {
-    workspace,
-    chats,
-    chatCount,
-    chatPagination,
-    chatSearch,
-    chatPage,
-    selectedModelId,
-    isEmbeddingModelEnabled,
-  } = Route.useLoaderData();
+  const { workspaceId } = Route.useParams();
+  const { tab = 'chats', dialog } = Route.useSearch();
   return (
-    <WorkspacePage
-      key={workspace.id}
-      workspace={workspace}
-      activeTab={tab}
-      chats={chats}
-      chatCount={chatCount}
-      chatPagination={chatPagination}
-      chatSearch={chatSearch}
-      chatPage={chatPage}
-      selectedModelId={selectedModelId}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+    <PrototypeWorkspacePage
+      workspaceId={workspaceId}
+      tab={tab}
+      dialog={dialog}
     />
   );
 }

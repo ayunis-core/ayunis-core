@@ -15,6 +15,9 @@ vi.mock('@/features/workspaces', () => ({
 vi.mock('@/widgets/create-workspace-dialog', () => ({
   CreateWorkspaceDialog: () => null,
 }));
+vi.mock('@/features/favorites', () => ({
+  useFavorites: () => ({ favorites: [] }),
+}));
 
 afterEach(cleanup);
 

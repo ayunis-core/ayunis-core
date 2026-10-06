@@ -1,23 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { SkillsPage } from '@/pages/skills';
-import {
-  skillsControllerFindAll,
-  getSkillsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import { z } from 'zod';
+import { PrototypeSkillsPage } from '@/pages/skill-sharing-prototype';
+
+const searchSchema = z.object({
+  tab: z.enum(['own', 'shared', 'requests']).optional().catch(undefined),
+});
 
 export const Route = createFileRoute('/_authenticated/skills/')({
+  validateSearch: searchSchema,
   component: RouteComponent,
-  loader: async ({ context: { queryClient } }) => {
-    const skills = await queryClient.query({
-      queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
-      queryFn: () => skillsControllerFindAll(personalSkillListParams),
-    });
-    return { skills: skills.data };
-  },
 });
 
 function RouteComponent() {
-  const { skills } = Route.useLoaderData();
-  return <SkillsPage skills={skills} />;
+  const { tab = 'own' } = Route.useSearch();
+  return <PrototypeSkillsPage key={tab} initialTab={tab} />;
 }

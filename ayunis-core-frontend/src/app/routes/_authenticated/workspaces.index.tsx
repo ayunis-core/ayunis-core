@@ -1,11 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { WorkspacesPage } from '@/pages/workspaces';
-import { WORKSPACES_PER_PAGE } from '@/features/workspaces';
-import {
-  workspacesControllerFindAll,
-  getWorkspacesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { PrototypeWorkspacesPage } from '@/pages/skill-sharing-prototype';
 
 const searchSchema = z.object({
   page: z.number().min(1).optional().catch(1),
@@ -13,32 +8,5 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_authenticated/workspaces/')({
   validateSearch: searchSchema,
-  loaderDeps: ({ search }) => search,
-  component: RouteComponent,
-  loader: async ({ deps: { page = 1 }, context: { queryClient } }) => {
-    const params = {
-      limit: WORKSPACES_PER_PAGE,
-      offset: (page - 1) * WORKSPACES_PER_PAGE,
-    };
-    const response = await queryClient.query({
-      queryKey: getWorkspacesControllerFindAllQueryKey(params),
-      queryFn: () => workspacesControllerFindAll(params),
-    });
-    return {
-      workspaces: response.data,
-      pagination: response.pagination,
-      page,
-    };
-  },
+  component: PrototypeWorkspacesPage,
 });
-
-function RouteComponent() {
-  const { workspaces, pagination, page } = Route.useLoaderData();
-  return (
-    <WorkspacesPage
-      workspaces={workspaces}
-      pagination={pagination}
-      currentPage={page}
-    />
-  );
-}

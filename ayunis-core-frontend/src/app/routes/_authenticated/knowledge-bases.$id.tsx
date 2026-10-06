@@ -1,83 +1,17 @@
-import { queryOptions } from '@tanstack/react-query';
-import {
-  knowledgeBasesControllerFindOne,
-  getKnowledgeBasesControllerFindOneQueryKey,
-  sharesControllerGetShares,
-  getSharesControllerGetSharesQueryKey,
-  teamsControllerListMyTeams,
-  getTeamsControllerListMyTeamsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { CreateKnowledgeBaseShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { KnowledgeBasePage } from '@/pages/knowledge-base';
+import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
+import { PrototypeKnowledgeDetailPage } from '@/pages/skill-sharing-prototype';
 
 const searchSchema = z.object({
   tab: z.enum(['config', 'share']).optional(),
 });
 
-const knowledgeBaseQueryOptions = (id: string) =>
-  queryOptions({
-    queryKey: getKnowledgeBasesControllerFindOneQueryKey(id),
-    queryFn: () => knowledgeBasesControllerFindOne(id),
-  });
-
-const sharesQueryOptions = (knowledgeBaseId: string) =>
-  queryOptions({
-    queryKey: getSharesControllerGetSharesQueryKey({
-      entityId: knowledgeBaseId,
-      entityType: CreateKnowledgeBaseShareDtoEntityType.knowledge_base,
-    }),
-    queryFn: () =>
-      sharesControllerGetShares({
-        entityId: knowledgeBaseId,
-        entityType: CreateKnowledgeBaseShareDtoEntityType.knowledge_base,
-      }),
-  });
-
-const userTeamsQueryOptions = () =>
-  queryOptions({
-    queryKey: getTeamsControllerListMyTeamsQueryKey(),
-    queryFn: () => teamsControllerListMyTeams(),
-  });
-
 export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
-  component: RouteComponent,
   validateSearch: searchSchema,
-  loader: async ({ context: { queryClient }, params: { id } }) => {
-    const knowledgeBase = await queryClient.query(
-      knowledgeBaseQueryOptions(id),
-    );
-    if (knowledgeBase.ownerType !== 'personal') {
-      if (!knowledgeBase.workspaceId)
-        throw redirect({ to: '/knowledge-bases' });
-      throw redirect({
-        to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
-        params: {
-          workspaceId: knowledgeBase.workspaceId,
-          knowledgeBaseId: knowledgeBase.id,
-        },
-      });
-    }
-    const shares = knowledgeBase.isShared
-      ? []
-      : await queryClient.query(sharesQueryOptions(id));
-    const userTeams = knowledgeBase.isShared
-      ? []
-      : await queryClient.query(userTeamsQueryOptions());
-    return { knowledgeBase, shares, userTeams };
-  },
+  component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { knowledgeBase, shares, userTeams } = Route.useLoaderData();
-  const { tab } = Route.useSearch();
-  return (
-    <KnowledgeBasePage
-      knowledgeBase={knowledgeBase}
-      shares={shares}
-      userTeams={userTeams}
-      initialTab={tab}
-    />
-  );
+  const { id } = Route.useParams();
+  return <PrototypeKnowledgeDetailPage key={id} itemId={id} />;
 }

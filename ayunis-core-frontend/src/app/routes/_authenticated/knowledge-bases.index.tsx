@@ -1,26 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { KnowledgeBasesPage } from '@/pages/knowledge-bases';
-import {
-  knowledgeBasesControllerFindAll,
-  getKnowledgeBasesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
+import { z } from 'zod';
+import { PrototypeKnowledgePage } from '@/pages/skill-sharing-prototype';
+
+const searchSchema = z.object({
+  tab: z.enum(['own', 'shared', 'requests']).optional().catch(undefined),
+});
 
 export const Route = createFileRoute('/_authenticated/knowledge-bases/')({
+  validateSearch: searchSchema,
   component: RouteComponent,
-  loader: async ({ context: { queryClient } }) => {
-    const knowledgeBases = await queryClient.query({
-      queryKey: getKnowledgeBasesControllerFindAllQueryKey(
-        personalKnowledgeBaseListParams,
-      ),
-      queryFn: () =>
-        knowledgeBasesControllerFindAll(personalKnowledgeBaseListParams),
-    });
-    return { knowledgeBases };
-  },
 });
 
 function RouteComponent() {
-  const { knowledgeBases } = Route.useLoaderData();
-  return <KnowledgeBasesPage knowledgeBases={knowledgeBases.data} />;
+  const { tab = 'own' } = Route.useSearch();
+  return <PrototypeKnowledgePage key={tab} initialTab={tab} />;
 }

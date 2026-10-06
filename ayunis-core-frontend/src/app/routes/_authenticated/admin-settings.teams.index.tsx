@@ -1,22 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TeamsSettingsPage } from '@/pages/admin-settings/teams-settings';
-import {
-  teamsControllerListTeams,
-  getTeamsControllerListTeamsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout/ui/AdminSettingsLayout';
+import { PrototypeTeamsSettings } from '@/pages/skill-sharing-prototype';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/teams/')({
   component: RouteComponent,
-  loader: async ({ context: { queryClient } }) => {
-    const teams = await queryClient.query({
-      queryKey: getTeamsControllerListTeamsQueryKey(),
-      queryFn: () => teamsControllerListTeams(),
-    });
-    return { teams };
-  },
 });
 
 function RouteComponent() {
-  const { teams } = Route.useLoaderData();
-  return <TeamsSettingsPage teams={teams} />;
+  return (
+    <SettingsLayout title="Teams">
+      <PrototypeTeamsSettings />
+    </SettingsLayout>
+  );
 }

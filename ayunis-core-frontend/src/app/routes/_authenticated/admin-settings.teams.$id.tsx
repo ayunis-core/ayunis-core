@@ -1,36 +1,36 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TeamDetailPage } from '@/pages/admin-settings/team-detail';
+import { z } from 'zod';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout/ui/AdminSettingsLayout';
+import { TEAMS } from '@/widgets/sharing-prototype/model/fixtures';
 import {
-  teamsControllerGetTeam,
-  getTeamsControllerGetTeamQueryKey,
-  teamsControllerListTeamMembers,
-  getTeamsControllerListTeamMembersQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+  AddTeamMembersButton,
+  PrototypeTeamDetail,
+} from '@/pages/skill-sharing-prototype';
+
+const searchSchema = z.object({
+  page: z.number().min(1).optional().catch(1),
+});
 
 export const Route = createFileRoute(
   '/_authenticated/admin-settings/teams/$id',
 )({
+  validateSearch: searchSchema,
   component: RouteComponent,
-  loader: async ({ context: { queryClient }, params: { id } }) => {
-    const [team, membersResponse] = await Promise.all([
-      queryClient.query({
-        queryKey: getTeamsControllerGetTeamQueryKey(id),
-        queryFn: () => teamsControllerGetTeam(id),
-      }),
-      queryClient.query({
-        queryKey: getTeamsControllerListTeamMembersQueryKey(id, {
-          limit: 50,
-          offset: 0,
-        }),
-        queryFn: () =>
-          teamsControllerListTeamMembers(id, { limit: 50, offset: 0 }),
-      }),
-    ]);
-    return { team, membersResponse };
-  },
 });
 
 function RouteComponent() {
-  const { team, membersResponse } = Route.useLoaderData();
-  return <TeamDetailPage team={team} membersResponse={membersResponse} />;
+  const { id } = Route.useParams();
+  const { page = 1 } = Route.useSearch();
+  const team = TEAMS.find((candidate) => candidate.id === id);
+  return (
+    <SettingsLayout
+      action={<AddTeamMembersButton teamId={id} />}
+      breadcrumbs={[
+        { label: 'Teams', href: '/admin-settings/teams' },
+        { label: team?.name ?? 'Team' },
+      ]}
+    >
+      <PrototypeTeamDetail teamId={id} page={page} />
+    </SettingsLayout>
+  );
 }
