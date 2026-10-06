@@ -1,3 +1,4 @@
+import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useState } from 'react';
 import { CreditLimitDialog } from '@/widgets/credit-limit-editor/ui/CreditLimitDialog';
 import { useTranslation } from 'react-i18next';
@@ -53,7 +54,7 @@ export function TeamCreditLimitCard({
         <CreditLimitDialog
           id={teamId}
           name={teamName}
-          target="teams"
+          target={CreditLimitScope.TEAM}
           initialLimit={limit?.monthlyCredits ?? null}
           onClose={() => setIsOpen(false)}
         />

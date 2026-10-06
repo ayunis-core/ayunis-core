@@ -3,6 +3,7 @@ import {
   useUserControllerGetUsersInOrganization,
 } from '@/shared/api';
 import {
+  useDefaultUserLimit,
   useTeamLimitOverview,
   useUserLimitOverview,
 } from '@/features/credit-limits/api/useCreditLimitQueries';
@@ -26,6 +27,7 @@ export function useCreditLimitDirectory(
   });
   const userLimits = useUserLimitOverview(enabled && usersActive);
   const teamLimits = useTeamLimitOverview(enabled && !usersActive);
+  const defaultLimit = useDefaultUserLimit(enabled && usersActive);
   const filteredTeams = (teams.data ?? []).filter((team) =>
     team.name
       .toLocaleLowerCase()
@@ -44,16 +46,20 @@ export function useCreditLimitDirectory(
           ...team,
           limit: teamLimits.limits.get(team.id) ?? null,
         }));
+  const defaultPending = usersActive && defaultLimit.isPending;
+  const defaultError = usersActive && defaultLimit.isError;
   return {
     rows,
+    defaultLimit: defaultLimit.defaultLimit,
     total: usersActive
       ? (users.data?.pagination.total ?? 0)
       : filteredTeams.length,
-    isPending: directory.isPending || limits.isPending,
-    isError: directory.isError || limits.isError,
+    isPending: directory.isPending || limits.isPending || defaultPending,
+    isError: directory.isError || limits.isError || defaultError,
     retry: () => {
       void directory.refetch();
       void limits.refetch();
+      if (usersActive) void defaultLimit.refetch();
     },
   };
 }

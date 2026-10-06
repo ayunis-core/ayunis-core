@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+  useCreditLimitsControllerGetDefaultUserLimit,
   useCreditLimitsControllerGetTeamLimits,
   useCreditLimitsControllerGetUserLimits,
   useUsageControllerGetCreditUsage,
@@ -53,4 +54,11 @@ export function useTeamLimitOverview(enabled: boolean) {
     isPending: query.isPending || (enabled && !query.isFetchedAfterMount),
     limits,
   };
+}
+
+export function useDefaultUserLimit(enabled: boolean) {
+  const query = useCreditLimitsControllerGetDefaultUserLimit({
+    query: { enabled },
+  });
+  return { ...query, defaultLimit: query.data?.monthlyCredits ?? null };
 }
