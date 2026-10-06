@@ -20,6 +20,7 @@ import type { CreditLimitRow } from '@/pages/admin-settings/credit-limits-settin
 interface Props {
   rows: CreditLimitRow[];
   filters: CreditLimitSearch;
+  defaultLimit?: number | null;
   isPending: boolean;
   isError: boolean;
   onRetry?: () => void;
@@ -28,6 +29,7 @@ interface Props {
 export function CreditLimitsTable({
   rows,
   filters,
+  defaultLimit = null,
   isPending,
   isError,
   onRetry,
@@ -55,6 +57,7 @@ export function CreditLimitsTable({
               key={row.id}
               row={row}
               target={filters.tab}
+              defaultLimit={filters.tab === 'users' ? defaultLimit : null}
               onConfigure={() => setSelected({ row, target: filters.tab })}
             />
           ))}
@@ -81,18 +84,27 @@ export function CreditLimitsTable({
 function CreditLimitTableRow({
   row,
   target,
+  defaultLimit,
   onConfigure,
 }: Readonly<{
   row: CreditLimitRow;
   target: CreditLimitTarget;
+  defaultLimit: number | null;
   onConfigure: () => void;
 }>) {
   const { t, i18n } = useTranslation('admin-settings-credit-limits');
   const limit = row.limit;
-  const limitLabel =
-    limit === null
-      ? t('form.noLimit')
-      : `${limit.creditsUsed.toLocaleString(i18n.language)} / ${limit.monthlyCredits.toLocaleString(i18n.language)}`;
+  const effectiveCredits = limit?.monthlyCredits ?? defaultLimit;
+  let limitLabel: string;
+  if (limit !== null) {
+    limitLabel = `${limit.creditsUsed.toLocaleString(i18n.language)} / ${limit.monthlyCredits.toLocaleString(i18n.language)}`;
+  } else if (defaultLimit !== null) {
+    limitLabel = t('table.defaultLimit', {
+      credits: defaultLimit.toLocaleString(i18n.language),
+    });
+  } else {
+    limitLabel = t('form.noLimit');
+  }
   return (
     <TableRow data-testid={`credit-limits-row-${row.id}`}>
       <TableCell>
@@ -103,7 +115,7 @@ function CreditLimitTableRow({
       </TableCell>
       <TableCell>
         {limitLabel}
-        {limit?.monthlyCredits === 0 && (
+        {effectiveCredits === 0 && (
           <span className="ml-2 text-muted-foreground">
             {t('table.blocked')}
           </span>

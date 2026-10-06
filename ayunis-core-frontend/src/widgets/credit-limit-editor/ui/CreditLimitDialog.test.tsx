@@ -33,6 +33,9 @@ vi.mock('@/shared/api', () => ({
   creditLimitsControllerRemoveTeamLimit: api.removeTeam,
   getCreditLimitsControllerGetUserLimitsQueryKey: () => ['user-limits'],
   getCreditLimitsControllerGetTeamLimitsQueryKey: () => ['team-limits'],
+  getCreditLimitsControllerGetDefaultUserLimitQueryKey: () => [
+    'default-user-limit',
+  ],
 }));
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: vi.fn() }),

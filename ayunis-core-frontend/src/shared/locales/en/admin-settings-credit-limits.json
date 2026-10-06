@@ -1,6 +1,11 @@
 {
-  "page": { "title": "Credit limits" },
-  "tabs": { "teams": "Teams", "users": "Users" },
+  "page": {
+    "title": "Credit limits"
+  },
+  "tabs": {
+    "teams": "Teams",
+    "users": "Users"
+  },
   "budget": {
     "title": "Organization credit budget",
     "monthly": "Monthly budget",
@@ -23,7 +28,14 @@
     "configure": "Configure",
     "search": "Search teams or users",
     "empty": "No matching teams or users.",
-    "blocked": "Paid-model usage blocked"
+    "blocked": "Paid-model usage blocked",
+    "defaultLimit": "Default ({{credits}})"
+  },
+  "defaultLimit": {
+    "title": "Default limit per user",
+    "description": "Applies to every user without an individual limit. Team limits still apply on top.",
+    "value": "{{credits}} credits per month",
+    "notSet": "Not set — users without an individual limit have no personal limit"
   },
   "form": {
     "noLimit": "No additional limit",

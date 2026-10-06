@@ -13,12 +13,19 @@ const api = vi.hoisted(() => ({
   setUser: vi.fn(),
   removeTeam: vi.fn(),
   removeUser: vi.fn(),
+  setDefault: vi.fn(),
+  removeDefault: vi.fn(),
 }));
 vi.mock('@/shared/api', () => ({
   creditLimitsControllerSetTeamLimit: api.setTeam,
   creditLimitsControllerSetUserLimit: api.setUser,
   creditLimitsControllerRemoveTeamLimit: api.removeTeam,
   creditLimitsControllerRemoveUserLimit: api.removeUser,
+  creditLimitsControllerSetDefaultUserLimit: api.setDefault,
+  creditLimitsControllerRemoveDefaultUserLimit: api.removeDefault,
+  getCreditLimitsControllerGetDefaultUserLimitQueryKey: () => [
+    'default-user-limit',
+  ],
   getCreditLimitsControllerGetTeamLimitsQueryKey: () => ['team-limits'],
   getCreditLimitsControllerGetUserLimitsQueryKey: () => ['user-limits'],
 }));
@@ -170,5 +177,25 @@ describe('useSaveCreditLimit', () => {
     expect(
       result.current.form.getFieldState('monthlyCredits').error?.message,
     ).toBe('validation.monthlyCredits.invalid');
+  });
+
+  it('sets and removes the org default without touching any user limit', async () => {
+    const { result } = renderHook(
+      () => ({
+        mutation: useSaveCreditLimit('default-user', '', true),
+        form: useForm<CreditLimitFields>(),
+      }),
+      { wrapper },
+    );
+    await act(async () => {
+      await result.current.mutation.onSave(100, result.current.form);
+    });
+    expect(api.setDefault).toHaveBeenCalledWith({ monthlyCredits: 100 });
+    await act(async () => {
+      await result.current.mutation.onSave(null, result.current.form);
+    });
+    expect(api.removeDefault).toHaveBeenCalledTimes(1);
+    expect(api.setUser).not.toHaveBeenCalled();
+    expect(api.removeUser).not.toHaveBeenCalled();
   });
 });

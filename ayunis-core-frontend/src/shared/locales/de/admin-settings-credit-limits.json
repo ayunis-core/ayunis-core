@@ -1,6 +1,11 @@
 {
-  "page": { "title": "Credit-Limits" },
-  "tabs": { "teams": "Teams", "users": "Nutzer" },
+  "page": {
+    "title": "Credit-Limits"
+  },
+  "tabs": {
+    "teams": "Teams",
+    "users": "Nutzer"
+  },
   "budget": {
     "title": "Credit-Budget der Organisation",
     "monthly": "Monatliches Budget",
@@ -23,7 +28,14 @@
     "configure": "Konfigurieren",
     "search": "Teams oder Nutzer suchen",
     "empty": "Keine passenden Teams oder Nutzer.",
-    "blocked": "Kostenpflichtige Modelle gesperrt"
+    "blocked": "Kostenpflichtige Modelle gesperrt",
+    "defaultLimit": "Standard ({{credits}})"
+  },
+  "defaultLimit": {
+    "title": "Standardlimit pro Nutzer",
+    "description": "Gilt für alle Nutzer ohne individuelles Limit. Team-Limits gelten zusätzlich.",
+    "value": "{{credits}} Credits pro Monat",
+    "notSet": "Nicht festgelegt – Nutzer ohne individuelles Limit haben kein persönliches Limit"
   },
   "form": {
     "noLimit": "Kein zusätzliches Limit",

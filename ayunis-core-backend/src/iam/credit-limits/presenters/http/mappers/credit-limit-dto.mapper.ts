@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { ApiKeyCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/api-key-credit-limit.view';
 import type { TeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/team-credit-limit.view';
 import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
+import type { DefaultUserCreditLimit } from 'src/iam/credit-limits/domain/default-user-credit-limit.entity';
 import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
@@ -12,6 +13,7 @@ import {
 } from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-item.dto';
 import {
   ApiKeyCreditLimitResponseDto,
+  DefaultUserCreditLimitResponseDto,
   TeamCreditLimitResponseDto,
   UserCreditLimitResponseDto,
 } from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-response.dto';
@@ -40,6 +42,12 @@ export class CreditLimitDtoMapper {
       teamId: limit.teamId,
       monthlyCredits: limit.monthlyCredits,
     };
+  }
+
+  toDefaultUserDto(
+    limit: DefaultUserCreditLimit | null,
+  ): DefaultUserCreditLimitResponseDto {
+    return { monthlyCredits: limit?.monthlyCredits ?? null };
   }
 
   toUserItems(items: UserCreditLimitOverviewItem[]): UserCreditLimitItemDto[] {

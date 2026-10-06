@@ -4700,6 +4700,22 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+export interface DefaultUserCreditLimitResponseDto {
+  /**
+     * Personal limit for every user without an individual limit; null when no default is set.
+     * @nullable
+     */
+  monthlyCredits: number | null;
+}
+
+export interface SetCreditLimitDto {
+  /**
+     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
+     * @minimum 0
+     */
+  monthlyCredits: number;
+}
+
 export interface UserCreditLimitItemDto {
   userId: string;
   name: string;
@@ -4726,14 +4742,6 @@ export interface ApiKeyCreditLimitItemDto {
   monthlyCredits: number;
   /** Credits consumed in the current calendar month */
   creditsUsed: number;
-}
-
-export interface SetCreditLimitDto {
-  /**
-     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
-     * @minimum 0
-     */
-  monthlyCredits: number;
 }
 
 export interface UserCreditLimitResponseDto {

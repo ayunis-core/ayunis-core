@@ -56,6 +56,26 @@ export async function getUserCreditLimit(
   );
 }
 
+export async function getDefaultUserCreditLimit(api: APIRequestContext) {
+  const { monthlyCredits } =
+    await generatedApi.creditLimitsControllerGetDefaultUserLimit({ api });
+  return monthlyCredits;
+}
+
+export function setDefaultUserCreditLimit(
+  api: APIRequestContext,
+  monthlyCredits: number,
+) {
+  return generatedApi.creditLimitsControllerSetDefaultUserLimit(
+    { monthlyCredits },
+    { api },
+  );
+}
+
+export function removeDefaultUserCreditLimit(api: APIRequestContext) {
+  return generatedApi.creditLimitsControllerRemoveDefaultUserLimit({ api });
+}
+
 export function getAuthenticatedCreditPrincipal(api: APIRequestContext) {
   return generatedApi.authenticationControllerMe({ api });
 }

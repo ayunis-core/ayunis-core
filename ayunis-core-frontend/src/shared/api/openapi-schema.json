@@ -9465,6 +9465,65 @@
         "tags": ["Super Admin Trials"]
       }
     },
+    "/credit-limits/default-user": {
+      "get": {
+        "operationId": "CreditLimitsController_getDefaultUserLimit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultUserCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the org-wide default personal credit limit",
+        "tags": ["credit-limits"]
+      },
+      "put": {
+        "operationId": "CreditLimitsController_setDefaultUserLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultUserCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the default personal credit limit for users without an individual limit",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeDefaultUserLimit",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove the default personal credit limit",
+        "tags": ["credit-limits"]
+      }
+    },
     "/credit-limits/users": {
       "get": {
         "operationId": "CreditLimitsController_getUserLimits",
@@ -19560,6 +19619,30 @@
           }
         }
       },
+      "DefaultUserCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Personal limit for every user without an individual limit; null when no default is set.",
+            "example": 100,
+            "nullable": true
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
+      "SetCreditLimitDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
+            "example": 5000,
+            "minimum": 0
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
       "UserCreditLimitItemDto": {
         "type": "object",
         "properties": {
@@ -19635,18 +19718,6 @@
           }
         },
         "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
-      },
-      "SetCreditLimitDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
-            "example": 5000,
-            "minimum": 0
-          }
-        },
-        "required": ["monthlyCredits"]
       },
       "UserCreditLimitResponseDto": {
         "type": "object",
