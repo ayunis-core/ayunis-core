@@ -15,6 +15,7 @@ import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/ser
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
+  McpToolTimeoutError,
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
@@ -203,6 +204,26 @@ describe('ExecuteMcpToolUseCase', () => {
 
     expect(result.isError).toBe(true);
     expect(setError).toHaveBeenCalledWith(timeoutError);
+  });
+
+  it('reports a tool timeout to AppSignal under its own incident type while soft-returning it to the LLM', async () => {
+    const integration = buildPredefined();
+    repository.findById.mockResolvedValue(integration);
+    contextService.get.mockReturnValue(mockOrgId);
+    const toolTimeout = new McpToolTimeoutError(
+      'https://example.com/mcp',
+      30_000,
+    );
+    mcpClientService.callTool.mockRejectedValue(toolTimeout);
+
+    const result = await useCase.execute(buildCommand());
+
+    expect(result).toEqual({
+      isError: true,
+      content: null,
+      errorMessage: toolTimeout.message,
+    });
+    expect(setError).toHaveBeenCalledWith(toolTimeout);
   });
 
   it('does not report tool-level failures that are not connection outages', async () => {
