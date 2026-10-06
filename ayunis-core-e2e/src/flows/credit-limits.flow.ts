@@ -17,6 +17,14 @@ export async function openCreditLimitDialog(
   await expect(page.getByTestId('credit-limit-dialog')).toBeVisible();
 }
 
+export async function openDefaultUserCreditLimitDialog(
+  page: Page,
+): Promise<void> {
+  await page.goto('/admin-settings/credit-limits?tab=users');
+  await page.getByTestId('credit-limits-default-user-configure').click();
+  await expect(page.getByTestId('credit-limit-dialog')).toBeVisible();
+}
+
 export async function saveCreditLimit(
   page: Page,
   credits: number,

@@ -19,6 +19,7 @@ import {
 } from '@/features/credit-limits/model/credit-limit-settings';
 import { useCreditLimitDirectory } from '@/pages/admin-settings/credit-limits-settings/api/useCreditLimitDirectory';
 import { CreditLimitsTable } from './CreditLimitsTable';
+import { DefaultUserLimitCard } from './DefaultUserLimitCard';
 
 export default function CreditLimitsSettingsPage({
   filters,
@@ -75,6 +76,11 @@ function CreditLimitDirectory({
           </TabsTrigger>
         </TabsList>
       </Tabs>
+      {filters.tab === 'users' &&
+        !directory.isPending &&
+        !directory.isError && (
+          <DefaultUserLimitCard defaultLimit={directory.defaultLimit} />
+        )}
       <Card>
         <CardHeader>
           <CardTitle>{t(`table.${filters.tab}Title`)}</CardTitle>
@@ -93,6 +99,7 @@ function CreditLimitDirectory({
           <CreditLimitsTable
             rows={directory.rows}
             filters={filters}
+            defaultLimit={directory.defaultLimit}
             isPending={directory.isPending}
             isError={directory.isError}
             onRetry={directory.retry}

@@ -18,6 +18,7 @@ vi.mock(
     useCreditLimitDirectory: () => ({
       rows: [],
       total: 75,
+      defaultLimit: 100,
       isPending: false,
       isError: false,
     }),
@@ -30,7 +31,11 @@ vi.mock('@/widgets/credit-limit-context/ui/CreditLimitBudget', () => ({
   CreditLimitBudget: () => null,
 }));
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) =>
+      options ? `${key}:${JSON.stringify(options)}` : key,
+    i18n: { language: 'en' },
+  }),
 }));
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const router = await importOriginal<typeof RouterModule>();
@@ -78,4 +83,21 @@ describe('CreditLimitsSettingsPage', () => {
       ).toEqual({ tab, page: 2, search: '123' });
     },
   );
+
+  it('shows the default limit per user above the users table only', () => {
+    const { unmount } = render(
+      <CreditLimitsSettingsPage filters={{ tab: 'users', page: 1 }} />,
+    );
+    const card = screen.getByTestId('credit-limits-default-user');
+    expect(card.textContent).toContain('defaultLimit.title');
+    expect(card.textContent).toContain('defaultLimit.value:{"credits":"100"}');
+    expect(
+      card.compareDocumentPosition(screen.getByRole('table')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    unmount();
+
+    render(<CreditLimitsSettingsPage filters={{ tab: 'teams', page: 1 }} />);
+    expect(screen.queryByTestId('credit-limits-default-user')).toBeNull();
+  });
 });
