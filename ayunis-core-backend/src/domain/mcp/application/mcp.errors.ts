@@ -10,6 +10,7 @@ export enum McpErrorCode {
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
   MCP_CONNECTION_TIMEOUT = 'MCP_CONNECTION_TIMEOUT',
   MCP_CONNECTION_FAILED = 'MCP_CONNECTION_FAILED',
+  MCP_TOOL_TIMEOUT = 'MCP_TOOL_TIMEOUT',
   MCP_AUTHENTICATION_FAILED = 'MCP_AUTHENTICATION_FAILED',
   MCP_VALIDATION_FAILED = 'MCP_VALIDATION_FAILED',
   MCP_TOOL_EXECUTION_FAILED = 'MCP_TOOL_EXECUTION_FAILED',
@@ -167,6 +168,33 @@ export class McpConnectionTimeoutError extends McpError {
         `within ${Math.round(timeoutMs / 1000)}s. Please verify the server ` +
         `is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_TIMEOUT,
+      504,
+      metadata,
+    );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
+  }
+}
+
+/**
+ * A tool call on an already-connected MCP server that outlived its budget —
+ * typically a slow upstream behind the server, not an outage (AYC-1120).
+ * Kept apart from McpConnectionTimeoutError so it is still reported, but
+ * under its own incident instead of masking real outages. The message is
+ * handed to the LLM as the tool result.
+ */
+export class McpToolTimeoutError extends McpError {
+  constructor(
+    serverUrl: string,
+    timeoutMs: number,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `The tool call to the MCP server at ${redactServerUrl(serverUrl)} ` +
+        `did not finish within ${Math.round(timeoutMs / 1000)}s.`,
+      McpErrorCode.MCP_TOOL_TIMEOUT,
       504,
       metadata,
     );

@@ -1,13 +1,14 @@
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
+  McpToolTimeoutError,
 } from './mcp.errors';
 
 // These messages are user-visible (validation responses, tool soft-failure
 // results, warning logs), so the server URL must not leak anything beyond
 // origin + path: credentials, query strings, and fragments can all carry
 // tokens for integrations whose serverUrl is otherwise never exposed.
-describe('MCP connectivity error messages', () => {
+describe('MCP server URL error messages', () => {
   const secretUrl =
     'https://user:hunter2@mcp.example.com/api?api_key=s3cret&sig=abc#token=xyz';
 
@@ -17,6 +18,7 @@ describe('MCP connectivity error messages', () => {
       'McpConnectionTimeoutError',
       () => new McpConnectionTimeoutError(secretUrl, 30_000),
     ],
+    ['McpToolTimeoutError', () => new McpToolTimeoutError(secretUrl, 30_000)],
   ])('%s strips credentials, query, and fragment', (_name, build) => {
     const message = build().message;
 

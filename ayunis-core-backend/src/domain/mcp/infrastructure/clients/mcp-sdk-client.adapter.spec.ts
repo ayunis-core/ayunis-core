@@ -8,6 +8,7 @@ import type { McpConnectionConfig } from 'src/domain/mcp/application/ports/mcp-c
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
+  McpToolTimeoutError,
 } from 'src/domain/mcp/application/mcp.errors';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
@@ -429,14 +430,78 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('maps timeouts on callTool as well', async () => {
+    // A connected server whose tool outlives the budget is slow upstream,
+    // not an outage (AYC-1120): it gets its own incident type.
+    it('maps a tool call that outlives the budget to McpToolTimeoutError', async () => {
       clientMock.callTool.mockRejectedValue(
+        new DOMException('This operation was aborted', 'AbortError'),
+      );
+
+      const mapped = await adapter
+        .callTool(config, { toolName: 'search', parameters: {} })
+        .catch((error: unknown) => error);
+
+      expect(mapped).toBeInstanceOf(McpToolTimeoutError);
+      expect(mapped).not.toBeInstanceOf(McpConnectionTimeoutError);
+      expect((mapped as McpToolTimeoutError).metadata).toEqual({
+        integrationId: config.connectionScope.integrationId,
+        orgId: config.connectionScope.orgId,
+        operation: 'callTool',
+        serverHost: 'mcp.example.com',
+        timeoutMs: 30000,
+        underlyingCode: 20,
+        underlyingName: 'AbortError',
+      });
+    });
+
+    it('maps a transport timeout during a tool call to McpToolTimeoutError', async () => {
+      clientMock.callTool.mockRejectedValue(
+        buildFetchFailedError(
+          'UND_ERR_HEADERS_TIMEOUT',
+          'Headers Timeout Error',
+        ),
+      );
+
+      await expect(
+        adapter.callTool(config, { toolName: 'search', parameters: {} }),
+      ).rejects.toThrow(McpToolTimeoutError);
+    });
+
+    it.each(['UND_ERR_CONNECT_TIMEOUT', 'ERR_SOCKET_CONNECTION_TIMEOUT'])(
+      'keeps a %s during a tool call as McpConnectionTimeoutError',
+      async (code) => {
+        clientMock.callTool.mockRejectedValue(
+          buildFetchFailedError(code, 'Connection attempt timed out'),
+        );
+
+        const mapped = await adapter
+          .callTool(config, { toolName: 'search', parameters: {} })
+          .catch((error: unknown) => error);
+
+        expect(mapped).toBeInstanceOf(McpConnectionTimeoutError);
+        expect(mapped).not.toBeInstanceOf(McpToolTimeoutError);
+      },
+    );
+
+    it('keeps a connect timeout before a tool call as McpConnectionTimeoutError', async () => {
+      clientMock.connect.mockRejectedValue(
         new DOMException('This operation was aborted', 'AbortError'),
       );
 
       await expect(
         adapter.callTool(config, { toolName: 'search', parameters: {} }),
       ).rejects.toThrow(McpConnectionTimeoutError);
+      expect(clientMock.callTool).not.toHaveBeenCalled();
+    });
+
+    it('keeps a connection failure during a tool call as McpConnectionFailedError', async () => {
+      clientMock.callTool.mockRejectedValue(
+        buildFetchFailedError('ECONNREFUSED', 'connect ECONNREFUSED'),
+      );
+
+      await expect(
+        adapter.callTool(config, { toolName: 'search', parameters: {} }),
+      ).rejects.toThrow(McpConnectionFailedError);
     });
 
     it('passes non-timeout errors through unchanged', async () => {

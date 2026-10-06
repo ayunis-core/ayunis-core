@@ -24,6 +24,7 @@ import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fe
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
+  McpToolTimeoutError,
 } from 'src/domain/mcp/application/mcp.errors';
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
@@ -190,13 +191,14 @@ export class McpSdkClientAdapter extends McpClientPort {
     return this.withClient(
       config,
       async (client) => {
-        const result = await client.callTool(
-          {
-            name: call.toolName,
-            arguments: call.parameters,
-          },
-          this.requestOptions,
-        );
+        const result = await client
+          .callTool(
+            { name: call.toolName, arguments: call.parameters },
+            this.requestOptions,
+          )
+          .catch((error: unknown) => {
+            throw this.toToolTimeoutError(error, config) ?? error;
+          });
 
         return {
           content: result.content,
@@ -205,6 +207,43 @@ export class McpSdkClientAdapter extends McpClientPort {
       },
       this.requestOptions,
       'callTool',
+    );
+  }
+
+  /**
+   * Request and response timeouts normally mean the tool outlived its budget.
+   * A fresh HTTP request can still need a new socket, so explicit connection
+   * timeouts fall through to the outage classifier (AYC-1120).
+   */
+  private toToolTimeoutError(
+    error: unknown,
+    config: McpConnectionConfig,
+  ): McpToolTimeoutError | undefined {
+    const transport = classifyTransportError(error);
+    if (
+      transport?.code === 'ERR_SOCKET_CONNECTION_TIMEOUT' ||
+      transport?.code === 'UND_ERR_CONNECT_TIMEOUT'
+    ) {
+      return undefined;
+    }
+    if (
+      !isTimeoutOrAbortError(error) &&
+      transport?.failureClass !== ProviderFailureClass.TIMEOUT
+    ) {
+      return undefined;
+    }
+    const { timeout } = this.requestOptions;
+    return new McpToolTimeoutError(
+      config.serverUrl,
+      timeout,
+      error,
+      this.buildOperationErrorMetadata(
+        error,
+        config,
+        timeout,
+        'callTool',
+        transport?.code,
+      ),
     );
   }
 
@@ -267,11 +306,8 @@ export class McpSdkClientAdapter extends McpClientPort {
   }
 
   /**
-   * SDK timeouts and transport aborts must never escape raw (AYC-651): they
-   * surface as McpConnectionTimeoutError so validation endpoints can show a
-   * clean user message and capability discovery can skip the integration.
-   * Everything else (auth, protocol, HTTP errors) passes through unchanged
-   * for the callers' own mapping.
+   * Classified MCP errors keep SDK timeouts and transport aborts from escaping
+   * raw (AYC-651). Tool deadlines map in the callback; connectivity maps here.
    */
   private async withClient<T>(
     config: McpConnectionConfig,
@@ -302,6 +338,7 @@ export class McpSdkClientAdapter extends McpClientPort {
     timeoutMs: number,
     operation: string,
   ): unknown {
+    if (error instanceof McpToolTimeoutError) return error;
     // Transport errnos (timeouts beyond the SDK's own codes, DNS, reset,
     // broken pipe) must not escape raw either: their raw span duplicates
     // are suppressed AppSignal-side (AYC-616), so the classified error is
