@@ -365,6 +365,7 @@ git update-index --chmod=+x .husky/commit-msg
 - **[Contributing Guide](CONTRIBUTING.md)**
 - **[Deployment Guide](DEPLOYMENT.md)**
 - **[Authentication architecture](docs/architecture/authentication.md)**
+- **[Customer SSO setup guide](docs/guides/customer-sso-setup.md)**
 - **[Municipal SSO V1 operator runbook](docs/runbooks/municipal-sso-v1.md)**
 - **[License](LICENSE.md)**
 
