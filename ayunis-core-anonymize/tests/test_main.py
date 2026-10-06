@@ -11,21 +11,27 @@ from app import main
 
 
 class AnalyzeSchedulingTests(unittest.TestCase):
-    def test_default_concurrency_uses_the_four_cpu_allocation(self):
-        self.assertEqual(main.MAX_CONCURRENT_ANALYSES, 4)
+    def test_default_concurrency_splits_the_four_cpu_budget_between_two_analyses(self):
+        self.assertEqual(main.MAX_CONCURRENT_ANALYSES, 2)
 
-    def test_four_requests_start_without_queueing(self):
+    def test_third_request_queues_until_one_of_two_analyses_finishes(self):
         started_count = 0
         started_lock = threading.Lock()
-        four_started = threading.Event()
+        first_started = threading.Event()
+        second_started = threading.Event()
+        third_started = threading.Event()
         release = threading.Event()
 
         def fake_analyze(text, entities, enqueued_at):
             nonlocal started_count
             with started_lock:
                 started_count += 1
-                if started_count == 4:
-                    four_started.set()
+                if started_count == 1:
+                    first_started.set()
+                if started_count == 2:
+                    second_started.set()
+                if started_count == 3:
+                    third_started.set()
             release.wait(timeout=5)
             return main.AnalysisRun(
                 results=[],
@@ -47,14 +53,16 @@ class AnalyzeSchedulingTests(unittest.TestCase):
                     asyncio.create_task(
                         client.post("/analyze", json={"text": f"Nachricht {i}"})
                     )
-                    for i in range(4)
+                    for i in range(3)
                 ]
                 try:
-                    all_started = await asyncio.to_thread(four_started.wait, 1.0)
-                    self.assertTrue(all_started)
+                    self.assertTrue(await asyncio.to_thread(first_started.wait, 1.0))
+                    self.assertTrue(await asyncio.to_thread(second_started.wait, 1.0))
+                    self.assertFalse(await asyncio.to_thread(third_started.wait, 0.1))
                 finally:
                     release.set()
                     await asyncio.gather(*requests)
+                self.assertTrue(third_started.is_set())
 
         with (
             patch.object(main, "_analyze", side_effect=fake_analyze),
