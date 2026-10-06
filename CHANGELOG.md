@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.50.0](https://github.com/ayunis-core/ayunis-core/compare/v2.49.0...v2.50.0) (2026-10-06)
+
+
+### Features
+
+* **spreadsheet:** add undo/redo for unsaved spreadsheet changes (AYC-826) ([#1855](https://github.com/ayunis-core/ayunis-core/issues/1855)) ([631acb8](https://github.com/ayunis-core/ayunis-core/commit/631acb8adffc947188245080509f109b443b1c21))
+
+
+### Bug Fixes
+
+* **anonymize:** bound GLiNER inference latency (AYC-1182) ([#1853](https://github.com/ayunis-core/ayunis-core/issues/1853)) ([41d7318](https://github.com/ayunis-core/ayunis-core/commit/41d73189aa5547f5d37f94802441ffd4c7ef7b2d))
+* **artifacts:** keep paragraph spacing through the document editor (AYC-1135) ([#1851](https://github.com/ayunis-core/ayunis-core/issues/1851)) ([acb597c](https://github.com/ayunis-core/ayunis-core/commit/acb597c2eedc52f998ea8863aa042524654c4778))
+* **chat:** skip transcription for empty voice recordings (AYC-1170) ([#1856](https://github.com/ayunis-core/ayunis-core/issues/1856)) ([237f3d2](https://github.com/ayunis-core/ayunis-core/commit/237f3d2521ba39c4ddcb59ee82a4fc1831ac8615))
+* **mcp:** report tool-call timeouts as their own incident (AYC-1120) ([#1850](https://github.com/ayunis-core/ayunis-core/issues/1850)) ([4d7dbd1](https://github.com/ayunis-core/ayunis-core/commit/4d7dbd1a5c0446f6b0dc54fe142184759da4d2f8))
+* **skills:** say when a skill name is already taken (AYC-968) ([#1767](https://github.com/ayunis-core/ayunis-core/issues/1767)) ([0198850](https://github.com/ayunis-core/ayunis-core/commit/0198850aae10c3c5e9d76a678f6e92c5ce483a3c))
+
+
+### Documentation
+
+* **auth:** add customer SSO setup guide (AYC-1174) ([#1857](https://github.com/ayunis-core/ayunis-core/issues/1857)) ([82c4d04](https://github.com/ayunis-core/ayunis-core/commit/82c4d0458147d4e51155e5894fe534413d1ce950))
+
 ## [2.49.0](https://github.com/ayunis-core/ayunis-core/compare/v2.48.0...v2.49.0) (2026-10-05)
 
 
