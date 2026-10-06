@@ -9,6 +9,10 @@ function readRef<T>(ref: { current: T }): T {
 
 const MAX_RECORDING_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MIN_RECORDING_DURATION_MS = 1000; // 1 second
+// A recording whose track delivered no audio frames is just the container
+// header (110 bytes in Chromium WebM), regardless of how long it ran. One
+// second of real audio is ~11 KB.
+const MIN_AUDIO_BLOB_BYTES = 2048;
 
 function getSupportedMimeType(): string | null {
   if (MediaRecorder.isTypeSupported('audio/webm')) {
@@ -68,8 +72,7 @@ export function useVoiceRecording(
     async (chunks: Blob[], mimeType: string) => {
       const blob = new Blob(chunks, { type: mimeType });
 
-      // Guard against empty recordings (Safari can fire onstop before ondataavailable)
-      if (blob.size === 0) {
+      if (blob.size < MIN_AUDIO_BLOB_BYTES) {
         setState('idle');
         return;
       }
