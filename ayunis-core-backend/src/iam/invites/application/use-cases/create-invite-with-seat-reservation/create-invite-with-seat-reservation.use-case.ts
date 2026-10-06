@@ -4,6 +4,7 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 import { CreateInviteCommand } from 'src/iam/invites/application/use-cases/create-invite/create-invite.command';
 import { CreateInviteUseCase } from 'src/iam/invites/application/use-cases/create-invite/create-invite.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getUserPrincipal } from 'src/common/context/required-context';
 import {
   UnauthorizedInviteAccessError,
   UnexpectedInviteError,
@@ -40,9 +41,11 @@ export class CreateInviteWithSeatReservationUseCase {
   }
 
   private assertTenantAdmin(command: CreateInviteCommand): void {
-    const role = this.contextService.get('role');
-    const orgId = this.contextService.get('orgId');
-    if (role !== UserRole.ADMIN || orgId !== command.orgId) {
+    const principal = getUserPrincipal(this.contextService);
+    if (
+      principal?.role !== UserRole.ADMIN ||
+      principal.orgId !== command.orgId
+    ) {
       throw new UnauthorizedInviteAccessError({
         requestingUserId: command.userId,
         requestedOrgId: command.orgId,

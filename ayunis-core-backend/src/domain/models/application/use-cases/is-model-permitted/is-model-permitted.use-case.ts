@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { IsModelPermittedQuery } from './is-model-permitted.query';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class IsModelPermittedUseCase {
@@ -17,10 +17,8 @@ export class IsModelPermittedUseCase {
       id: query.modelId,
     });
     const orgId = this.contextService.get('orgId');
-    const systemRole = this.contextService.get('systemRole');
-    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
     const isFromOrg = orgId === permittedModel?.orgId;
-    if (!isFromOrg && !isSuperAdmin) {
+    if (!isFromOrg && !isSuperAdmin(this.contextService)) {
       throw new UnauthorizedAccessError();
     }
     return !!permittedModel;

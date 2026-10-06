@@ -5,8 +5,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedLanguageModelsUseCase {
@@ -28,10 +28,8 @@ export class GetPermittedLanguageModelsUseCase {
     );
     try {
       const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
       const isFromOrg = orgId === query.orgId;
-      if (!isFromOrg && !isSuperAdmin) {
+      if (!isFromOrg && !isSuperAdmin(this.contextService)) {
         throw new UnauthorizedAccessError();
       }
       return this.permittedModelsRepository.findManyLanguage(query.orgId);

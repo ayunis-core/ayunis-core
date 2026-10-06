@@ -8,8 +8,8 @@ import {
   UnexpectedTrialError,
 } from 'src/iam/trials/application/trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
@@ -46,9 +46,8 @@ export class UpdateTrialUseCase {
   }
 
   private ensureSuperAdmin(orgId: UpdateTrialCommand['orgId']): void {
-    const systemRole = this.contextService.get<SystemRole>('systemRole');
-    if (systemRole !== SystemRole.SUPER_ADMIN) {
-      throw new UnauthorizedAccessError({ orgId, systemRole });
+    if (!isSuperAdmin(this.contextService)) {
+      throw new UnauthorizedAccessError({ orgId });
     }
   }
 

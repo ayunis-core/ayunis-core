@@ -4,6 +4,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getUserPrincipal } from 'src/common/context/required-context';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
@@ -29,7 +30,7 @@ export class SuperAdminGetAllOrgsUseCase {
       'superAdminGetAllOrgs',
     );
 
-    const systemRole = this.contextService.get('systemRole');
+    const systemRole = getUserPrincipal(this.contextService)?.systemRole;
     if (systemRole !== SystemRole.SUPER_ADMIN) {
       this.logger.warn(
         {

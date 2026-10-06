@@ -14,6 +14,7 @@ import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   InvalidSubscriptionDataError,
   UnauthorizedSubscriptionAccessError,
@@ -77,10 +78,20 @@ describe('ResolveSubscriptionOverlapUseCase', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-10-02T12:00:00.000Z'));
     jest.clearAllMocks();
-    context.get.mockImplementation((key) =>
-      key === 'systemRole' ? SystemRole.SUPER_ADMIN : undefined,
-    );
+    mockPrincipal(SystemRole.SUPER_ADMIN);
   });
+
+  function mockPrincipal(systemRole: SystemRole): void {
+    const store: Record<string, unknown> = {
+      userId: ACTOR_ID,
+      orgId: ORG_ID,
+      role: UserRole.USER,
+      systemRole,
+    };
+    context.get.mockImplementation((key) =>
+      typeof key === 'string' ? store[key] : undefined,
+    );
+  }
 
   afterEach(() => jest.useRealTimers());
 
@@ -190,7 +201,7 @@ describe('ResolveSubscriptionOverlapUseCase', () => {
   });
 
   it('rejects a non-super-admin before acquiring the lock', async () => {
-    context.get.mockReturnValue(SystemRole.CUSTOMER);
+    mockPrincipal(SystemRole.CUSTOMER);
 
     await expect(
       useCase.execute(

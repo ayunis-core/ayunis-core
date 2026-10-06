@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   EffectiveImageGenerationModelConflictError,
@@ -12,7 +13,6 @@ import { PermittedModelsRepository } from 'src/domain/models/application/ports/p
 import { EffectiveModelScopeResolverService } from 'src/domain/models/application/services/effective-model-scope-resolver.service';
 import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { GetPermittedImageGenerationModelQuery } from './get-permitted-image-generation-model.query';
 
 @Injectable()
@@ -48,8 +48,7 @@ export class GetPermittedImageGenerationModelUseCase {
 
   private validateOrgAccess(queryOrgId: UUID): void {
     const orgId = this.contextService.get('orgId');
-    const systemRole = this.contextService.get('systemRole');
-    if (orgId !== queryOrgId && systemRole !== SystemRole.SUPER_ADMIN) {
+    if (orgId !== queryOrgId && !isSuperAdmin(this.contextService)) {
       throw new UnauthorizedAccessError();
     }
   }

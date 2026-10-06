@@ -26,6 +26,7 @@ import { ModelPolicyService } from 'src/domain/models/application/services/model
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 describe('CreatePermittedModelUseCase', () => {
   const logger = createLoggerMock();
@@ -35,6 +36,7 @@ describe('CreatePermittedModelUseCase', () => {
   let mockContextService: any;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const existingPermittedModelId =
     '123e4567-e89b-12d3-a456-426614174002' as UUID;
@@ -84,9 +86,10 @@ describe('CreatePermittedModelUseCase', () => {
 
     // Configure ContextService mock
     mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return mockUserId;
       if (key === 'orgId') return mockOrgId;
       if (key === 'role') return UserRole.ADMIN;
-      if (key === 'systemRole') return null;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
       return null;
     });
 

@@ -17,7 +17,10 @@ import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.en
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import {
+  getRequiredUserContext,
+  getRequiredUserPrincipal,
+} from 'src/common/context/required-context';
 
 interface SetSkillPinCommand {
   skillId: UUID;
@@ -82,9 +85,7 @@ export class SetSkillPinUseCase {
   }
 
   private async requireManagementPermission(): Promise<void> {
-    const orgId = this.context.get('orgId');
-    const role = this.context.get('role');
-    if (!orgId || !role) throw new UnauthorizedAccessError();
+    const { orgId, role } = getRequiredUserPrincipal(this.context);
     const allowed = await this.hasPermission.execute(
       new HasPermissionQuery(orgId, role, Permission.MANAGE_SKILLS),
     );

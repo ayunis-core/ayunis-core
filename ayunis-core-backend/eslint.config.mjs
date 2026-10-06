@@ -6,6 +6,25 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// Nest treats a logger call's last argument as the context, so
+// `logger.log('msg', { id })` silently drops the metadata instead of
+// emitting structured fields.
+const loggerMetadataFirst = {
+  selector:
+    "CallExpression:matches([callee.object.name=/[Ll]ogger$/], [callee.object.property.name=/[Ll]ogger$/])[callee.property.name=/^(log|warn|error|debug|verbose|fatal)$/][arguments.0.type='Literal'][arguments.1.type='ObjectExpression']",
+  message:
+    'Pass log metadata as the first argument: logger.log({ id }, "message").',
+};
+
+// Roles only exist on user-backed requests; reading them straight from the
+// request context skips the check that the caller is a user at all.
+const roleReadsThroughUserPrincipal = {
+  selector:
+    "CallExpression[callee.property.name='get'][arguments.0.value=/^(role|systemRole)$/]",
+  message:
+    'Read roles via getUserPrincipal / getRequiredUserPrincipal / isSuperAdmin from src/common/context/required-context.',
+};
+
 export default tseslint.config(
   {
     ignores: [
@@ -156,18 +175,17 @@ export default tseslint.config(
           ],
         },
       ],
-      // Nest treats a logger call's last argument as the context, so
-      // `logger.log('msg', { id })` silently drops the metadata instead of
-      // emitting structured fields.
       'no-restricted-syntax': [
         'error',
-        {
-          selector:
-            "CallExpression:matches([callee.object.name=/[Ll]ogger$/], [callee.object.property.name=/[Ll]ogger$/])[callee.property.name=/^(log|warn|error|debug|verbose|fatal)$/][arguments.0.type='Literal'][arguments.1.type='ObjectExpression']",
-          message:
-            'Pass log metadata as the first argument: logger.log({ id }, "message").',
-        },
+        loggerMetadataFirst,
+        roleReadsThroughUserPrincipal,
       ],
+    },
+  },
+  {
+    files: ['src/common/context/required-context.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', loggerMetadataFirst],
     },
   },
   // Relaxed rules for test files

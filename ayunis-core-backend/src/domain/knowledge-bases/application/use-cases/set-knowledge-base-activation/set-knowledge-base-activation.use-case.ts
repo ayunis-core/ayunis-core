@@ -16,7 +16,10 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { SetKnowledgeBaseActivationCommand } from './set-knowledge-base-activation.command';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import {
+  getRequiredUserContext,
+  getRequiredUserPrincipal,
+} from 'src/common/context/required-context';
 
 @Injectable()
 export class SetKnowledgeBaseActivationUseCase {
@@ -77,9 +80,7 @@ export class SetKnowledgeBaseActivationUseCase {
   }
 
   private async requireWorkspaceManagementPermission(): Promise<void> {
-    const orgId = this.context.get('orgId');
-    const role = this.context.get('role');
-    if (!orgId || !role) throw new UnauthorizedAccessError();
+    const { orgId, role } = getRequiredUserPrincipal(this.context);
     const allowed = await this.hasPermission.execute(
       new HasPermissionQuery(orgId, role, Permission.MANAGE_KNOWLEDGE_BASES),
     );

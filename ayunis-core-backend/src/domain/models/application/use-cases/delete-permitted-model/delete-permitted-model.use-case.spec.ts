@@ -47,6 +47,7 @@ describe('DeletePermittedModelUseCase', () => {
   const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockPermittedModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockCatalogModelId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174004' as UUID;
 
   const mockLanguageModel = new LanguageModel({
     id: mockCatalogModelId,
@@ -108,9 +109,10 @@ describe('DeletePermittedModelUseCase', () => {
           provide: ContextService,
           useValue: {
             get: jest.fn((key: string) => {
+              if (key === 'userId') return mockUserId;
               if (key === 'orgId') return mockOrgId;
               if (key === 'role') return UserRole.ADMIN;
-              if (key === 'systemRole') return null;
+              if (key === 'systemRole') return SystemRole.CUSTOMER;
               return null;
             }),
           },
@@ -153,7 +155,9 @@ describe('DeletePermittedModelUseCase', () => {
       scope: PermittedModelScope.ORG,
     });
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return mockUserId;
       if (key === 'orgId') return adminOrgId;
+      if (key === 'role') return UserRole.USER;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       return null;
     });

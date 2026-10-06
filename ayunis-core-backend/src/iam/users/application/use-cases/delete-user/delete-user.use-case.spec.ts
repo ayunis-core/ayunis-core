@@ -20,6 +20,7 @@ import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-case
 import { ContextService } from 'src/common/context/services/context.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserUnauthorizedError } from 'src/iam/users/application/users.errors';
 
 describe('DeleteUserUseCase', () => {
@@ -47,7 +48,7 @@ describe('DeleteUserUseCase', () => {
           userId: '123e4567-e89b-12d3-a456-426614174000',
           orgId: '123e4567-e89b-12d3-a456-426614174000',
           role: UserRole.ADMIN,
-          systemRole: null,
+          systemRole: SystemRole.CUSTOMER,
         };
         return context[key];
       }) as ContextService['get'],
