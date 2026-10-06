@@ -171,7 +171,12 @@ function convertBlockquote(node: HTMLElement): BlockChild[] {
       const text = (child as unknown as TextNode).text.trim();
       if (text) {
         result.push(
-          new Paragraph({ ...blockquoteStyle, children: [new TextRun(text)] }),
+          new Paragraph({
+            ...blockquoteStyle,
+            alignment: parseAlignment(node),
+            spacing: parseSpacing(node),
+            children: [new TextRun(text)],
+          }),
         );
       }
     } else if (child.nodeType === NodeType.ELEMENT_NODE) {
@@ -180,8 +185,8 @@ function convertBlockquote(node: HTMLElement): BlockChild[] {
         result.push(
           new Paragraph({
             ...blockquoteStyle,
-            alignment: parseAlignment(child),
-            spacing: parseSpacing(child),
+            alignment: parseAlignment(child) ?? parseAlignment(node),
+            spacing: mergeSpacing(node, child),
             children: collectInlineRuns(child, {}),
           }),
         );
@@ -220,6 +225,15 @@ function listProps(ordered: boolean, level: number): IParagraphOptions {
     : { bullet: { level } };
 }
 
+function mergeSpacing(parent: HTMLElement, child: HTMLElement) {
+  const parentSpacing = parseSpacing(parent);
+  const childSpacing = parseSpacing(child);
+
+  if (!parentSpacing) return childSpacing;
+  if (!childSpacing) return parentSpacing;
+  return { ...parentSpacing, ...childSpacing };
+}
+
 function convertList(
   node: HTMLElement,
   ordered: boolean,
@@ -250,7 +264,7 @@ function convertListItem(
         new Paragraph({
           children: collectInlineRuns(child, {}),
           alignment: parseAlignment(child) ?? parseAlignment(li),
-          spacing: parseSpacing(child) ?? parseSpacing(li),
+          spacing: mergeSpacing(li, child),
           ...listProps(ordered, level),
         }),
       );
@@ -356,7 +370,7 @@ function convertTableCell(
       new Paragraph({
         children: runs,
         alignment: parseAlignment(styleNode) ?? parseAlignment(cell),
-        spacing: parseSpacing(styleNode) ?? parseSpacing(cell),
+        spacing: mergeSpacing(cell, styleNode),
       }),
     ],
     ...cellFrame(isLayout),

@@ -124,19 +124,20 @@ describe('sanitizeHtmlContent', () => {
       expect(result).toContain('alt="A photo"');
     });
 
-    it('should preserve paragraph spacing styles for export', () => {
-      const html =
-        '<p style="line-height:1;margin-top:0pt;margin-bottom:0pt">Text</p>';
-      const result = sanitizeHtmlContent(html);
-      expect(result).toContain('line-height:1');
-      expect(result).toContain('margin-top:0pt');
-      expect(result).toContain('margin-bottom:0pt');
-    });
-
-    it('should preserve paragraph spacing styles on list items', () => {
-      const html =
-        '<ul><li style="line-height:1;margin-top:0pt;margin-bottom:0pt">Item</li></ul>';
-
+    it.each([
+      [
+        'paragraph spacing styles for export',
+        '<p style="line-height:1;margin-top:0pt;margin-bottom:0pt">Text</p>',
+      ],
+      [
+        'paragraph spacing styles on list items',
+        '<ul><li style="line-height:1;margin-top:0pt;margin-bottom:0pt">Item</li></ul>',
+      ],
+      [
+        'auto vertical margins produced by the editor',
+        '<p style="margin-top:auto;margin-bottom:auto">Text</p>',
+      ],
+    ])('should preserve %s', (_name, html) => {
       expect(sanitizeHtmlContent(html)).toBe(html);
     });
 
@@ -145,6 +146,26 @@ describe('sanitizeHtmlContent', () => {
       const result = sanitizeHtmlContent(html);
       expect(result).not.toContain('line-height');
       expect(result).not.toContain('margin-bottom');
+    });
+
+    it('should preserve margin shorthand and percentage line-height', () => {
+      const html =
+        '<p style="margin:0;line-height:100%">A</p><p style="margin:6pt 0 12pt">B</p><p style="margin:0 auto">C</p>';
+
+      expect(sanitizeHtmlContent(html)).toBe(html);
+    });
+
+    it('should strip margin shorthand with unsafe or unsupported values', () => {
+      for (const value of [
+        'expression(alert(1))',
+        '0 url(x)',
+        '1em',
+        '0 0 0 0 0',
+      ]) {
+        expect(sanitizeHtmlContent(`<p style="margin:${value}">T</p>`)).toBe(
+          '<p>T</p>',
+        );
+      }
     });
 
     it('should handle empty HTML', () => {
