@@ -76,6 +76,18 @@ function validateRow(
   return undefined;
 }
 
+/**
+ * Excel's default "CSV" export on German Windows is Windows-1252, not UTF-8,
+ * so umlauts would otherwise decode to U+FFFD and team names would not match.
+ */
+export function decodeCsvFile(buffer: ArrayBuffer): string {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch {
+    return new TextDecoder('windows-1252').decode(buffer);
+  }
+}
+
 export function parseInviteCsv(csvContent: string): CsvParseResult {
   const lines = csvContent
     .split(/\r?\n/)
