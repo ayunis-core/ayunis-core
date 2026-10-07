@@ -1,8 +1,20 @@
+let mockTransactionActive = false;
+
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () =>
-    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
-      descriptor,
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) => {
+      const original = descriptor.value as (...args: unknown[]) => unknown;
+      descriptor.value = async function (...args: unknown[]) {
+        mockTransactionActive = true;
+        try {
+          return await original.apply(this, args);
+        } finally {
+          mockTransactionActive = false;
+        }
+      };
+      return descriptor;
+    },
 }));
 
 import type { TestingModule } from '@nestjs/testing';
@@ -26,6 +38,8 @@ import type { UUID } from 'crypto';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
 import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-cases/prepare-session-rotation/prepare-session-rotation.use-case';
+import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
+import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
@@ -35,6 +49,7 @@ describe('RefreshTokenUseCase', () => {
   let mockPrepareSessionRotationUseCase: { execute: jest.Mock };
   let mockRotateSessionUseCase: { execute: jest.Mock };
   let mockCreateSessionUseCase: { execute: jest.Mock };
+  let mockRevokeSessionFamilyUseCase: { execute: jest.Mock };
   let mockLocalPasswordLoginPolicy: {
     assertSessionIssuanceAllowed: jest.Mock;
   };
@@ -56,12 +71,14 @@ describe('RefreshTokenUseCase', () => {
     });
 
   beforeEach(async () => {
+    mockTransactionActive = false;
     mockAuthRepository = { generateAccessToken: jest.fn() };
     mockJwtService = { verify: jest.fn() };
     mockFindUserByIdUseCase = { execute: jest.fn() };
     mockPrepareSessionRotationUseCase = { execute: jest.fn() };
     mockRotateSessionUseCase = { execute: jest.fn() };
     mockCreateSessionUseCase = { execute: jest.fn() };
+    mockRevokeSessionFamilyUseCase = { execute: jest.fn() };
     mockLocalPasswordLoginPolicy = {
       assertSessionIssuanceAllowed: jest.fn(),
     };
@@ -78,6 +95,10 @@ describe('RefreshTokenUseCase', () => {
         },
         { provide: RotateSessionUseCase, useValue: mockRotateSessionUseCase },
         { provide: CreateSessionUseCase, useValue: mockCreateSessionUseCase },
+        {
+          provide: RevokeSessionFamilyUseCase,
+          useValue: mockRevokeSessionFamilyUseCase,
+        },
         {
           provide: LocalPasswordLoginPolicyService,
           useValue: mockLocalPasswordLoginPolicy,
@@ -160,14 +181,38 @@ describe('RefreshTokenUseCase', () => {
     ).toHaveBeenCalledWith(expect.anything(), SessionAuthenticationMethod.SSO);
   });
 
-  it('should propagate a reuse error un-flattened (theft response)', async () => {
+  it('revokes post-grace replay after the transaction and preserves the theft response', async () => {
     mockRotateSessionUseCase.execute.mockRejectedValue(
       new RefreshTokenReuseError(),
     );
+    mockRevokeSessionFamilyUseCase.execute.mockImplementation(() => {
+      expect(mockTransactionActive).toBe(false);
+      return Promise.resolve(null);
+    });
 
     await expect(
       useCase.execute(new RefreshTokenCommand(opaqueToken)),
     ).rejects.toThrow(RefreshTokenReuseError);
+    expect(mockRevokeSessionFamilyUseCase.execute).toHaveBeenCalledWith(
+      new RevokeSessionFamilyCommand(opaqueToken),
+    );
+  });
+
+  it('revokes an already-revoked token family after the transaction closes', async () => {
+    mockPrepareSessionRotationUseCase.execute.mockRejectedValue(
+      new RefreshTokenReuseError(),
+    );
+    mockRevokeSessionFamilyUseCase.execute.mockImplementation(() => {
+      expect(mockTransactionActive).toBe(false);
+      return Promise.resolve(null);
+    });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(RefreshTokenReuseError);
+    expect(mockRevokeSessionFamilyUseCase.execute).toHaveBeenCalledWith(
+      new RevokeSessionFamilyCommand(opaqueToken),
+    );
   });
 
   it('should migrate a valid legacy JWT refresh token to an opaque session', async () => {
