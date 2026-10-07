@@ -9,6 +9,11 @@ import { applyReplacements } from 'src/common/anonymization/domain/apply-replace
 import { applyMaskReplacements } from 'src/common/anonymization/domain/apply-mask-replacements';
 import { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
 import { PiiMask } from 'src/common/anonymization/domain/pii-mask';
+import {
+  AnonymizationPostDetectionError,
+  getAnonymizationCauseType,
+  type AnonymizationPostDetectionStage,
+} from 'src/common/anonymization/application/anonymization.errors';
 
 @Injectable()
 export class AnonymizeTextUseCase {
@@ -30,9 +35,7 @@ export class AnonymizeTextUseCase {
       command.text,
       command.entities,
     );
-    const remaining = command.whitelist?.length
-      ? filterWhitelistedDetections(detections, command.whitelist)
-      : detections;
+    const remaining = this.filterDetections(command, detections);
 
     const { anonymizedText, newMasks } = this.buildAnonymizedText(
       command,
@@ -47,21 +50,67 @@ export class AnonymizeTextUseCase {
     };
   }
 
+  private filterDetections(
+    command: AnonymizeTextCommand,
+    detections: PiiDetection[],
+  ): PiiDetection[] {
+    try {
+      return command.whitelist?.length
+        ? filterWhitelistedDetections(detections, command.whitelist)
+        : detections;
+    } catch (cause) {
+      throw this.postDetectionError(
+        'whitelist_filter',
+        command.text.length,
+        detections.length,
+        cause,
+      );
+    }
+  }
+
   private buildAnonymizedText(
     command: AnonymizeTextCommand,
     detections: PiiDetection[],
   ): { anonymizedText: string; newMasks: PiiMask[] } {
-    if (command.existingMasks !== undefined) {
-      return applyMaskReplacements(
-        command.text,
-        detections,
-        command.existingMasks,
+    try {
+      if (command.existingMasks !== undefined) {
+        return applyMaskReplacements(
+          command.text,
+          detections,
+          command.existingMasks,
+        );
+      }
+      return {
+        anonymizedText: applyReplacements(command.text, detections),
+        newMasks: [],
+      };
+    } catch (cause) {
+      throw this.postDetectionError(
+        'mask_application',
+        command.text.length,
+        detections.length,
+        cause,
       );
     }
-    return {
-      anonymizedText: applyReplacements(command.text, detections),
-      newMasks: [],
-    };
+  }
+
+  private postDetectionError(
+    stage: AnonymizationPostDetectionStage,
+    textLength: number,
+    detectionCount: number,
+    cause: unknown,
+  ): AnonymizationPostDetectionError {
+    const error = new AnonymizationPostDetectionError(
+      stage,
+      textLength,
+      detectionCount,
+      getAnonymizationCauseType(cause),
+    );
+    this.logger.error(
+      { errorCode: error.code, ...error.metadata },
+      'Anonymization failed after detection',
+    );
+    return error;
   }
 
   private toReplacement(detection: PiiDetection) {

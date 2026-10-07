@@ -1,5 +1,7 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { AnonymizationPostDetectionError } from 'src/common/anonymization/application/anonymization.errors';
+import { ThreadPiiMaskAnonymizationError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 
 /**
  * Error codes specific to the Runs domain
@@ -178,6 +180,12 @@ export class RunAnonymizationUnavailableError extends RunError {
     );
     if (cause !== undefined) {
       this.cause = cause;
+    }
+    if (
+      cause instanceof ThreadPiiMaskAnonymizationError ||
+      cause instanceof AnonymizationPostDetectionError
+    ) {
+      this.name = cause.name;
     }
   }
 }

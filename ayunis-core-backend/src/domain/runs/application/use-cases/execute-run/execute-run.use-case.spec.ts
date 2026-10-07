@@ -43,7 +43,11 @@ import type { CountTokensUseCase } from 'src/common/token-counter/application/us
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
+import { ThreadPiiMaskAnonymizationError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import {
+  AnonymizationFailedError,
+  AnonymizationInputTooLongError,
+} from 'src/common/anonymization/application/anonymization.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
@@ -62,6 +66,7 @@ import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime
 import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import {
+  RunAnonymizationUnavailableError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
 } from 'src/domain/runs/application/runs.errors';
@@ -1796,6 +1801,54 @@ describe('ExecuteRunUseCase', () => {
     const generator = await useCase.execute(userCommand());
 
     await expect(drain(generator)).rejects.toBe(timeout);
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('keeps generic engine failures in the privacy-safe run group', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const engineFailure = new AnonymizationFailedError('invalid request');
+    anonymize.mockRejectedValue(engineFailure);
+
+    const generator = await useCase.execute(userCommand());
+    const error: unknown = await drain(generator).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(RunAnonymizationUnavailableError);
+    expect(error).toMatchObject({
+      name: 'RunAnonymizationUnavailableError',
+      code: 'RUN_ANONYMIZATION_UNAVAILABLE',
+      cause: engineFailure,
+    });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('preserves thread-mask grouping while keeping the privacy-safe run contract', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const maskFailure = new ThreadPiiMaskAnonymizationError(
+      'new_masks_persistence',
+      { textLength: 2, newMaskCount: 1, databaseCode: '23505' },
+      new Error('sensitive database detail'),
+    );
+    anonymize.mockRejectedValue(maskFailure);
+
+    const generator = await useCase.execute(userCommand());
+    const error: unknown = await drain(generator).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(RunAnonymizationUnavailableError);
+    expect(error).toMatchObject({
+      name: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+      code: 'RUN_ANONYMIZATION_UNAVAILABLE',
+      cause: maskFailure,
+    });
     expect(createUser).not.toHaveBeenCalled();
     expect(provider.requests).toHaveLength(0);
   });
