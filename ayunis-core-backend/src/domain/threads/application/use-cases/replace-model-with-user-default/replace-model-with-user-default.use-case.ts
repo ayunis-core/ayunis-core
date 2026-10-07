@@ -20,7 +20,6 @@ export class ReplaceModelWithUserDefaultUseCase {
       {
         orgId: command.orgId,
         oldPermittedModelId: command.oldPermittedModelId,
-        catalogModelId: command.catalogModelId,
       },
       'execute',
     );
@@ -49,9 +48,7 @@ export class ReplaceModelWithUserDefaultUseCase {
       new GetDefaultModelQuery({
         orgId: command.orgId,
         userId: thread.userId,
-        blacklistedModelIds: command.catalogModelId
-          ? [command.catalogModelId]
-          : [],
+        excludedPermittedModelIds: [command.oldPermittedModelId],
       }),
     );
     this.logger.debug(

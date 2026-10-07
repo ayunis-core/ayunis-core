@@ -33,10 +33,11 @@ export class GetEffectiveLanguageModelsUseCase {
 
     const scope = await this.scopeResolver.resolve(query.orgId, query.userId);
     if (scope.overrideTeamIds.length === 0) {
+      const models = await this.permittedModelsRepository.findManyLanguage(
+        query.orgId,
+      );
       return {
-        models: await this.permittedModelsRepository.findManyLanguage(
-          query.orgId,
-        ),
+        models: this.withoutExcluded(models, query.excludedPermittedModelIds),
         overrideTeamIds: [],
       };
     }
@@ -47,7 +48,9 @@ export class GetEffectiveLanguageModelsUseCase {
         query.orgId,
       );
     return {
-      models: this.mergeTeamGrants(teamGrants),
+      models: this.mergeTeamGrants(
+        this.withoutExcluded(teamGrants, query.excludedPermittedModelIds),
+      ),
       overrideTeamIds: scope.overrideTeamIds,
     };
   }
@@ -58,6 +61,13 @@ export class GetEffectiveLanguageModelsUseCase {
     if (orgId !== queryOrgId && systemRole !== SystemRole.SUPER_ADMIN) {
       throw new UnauthorizedAccessError();
     }
+  }
+
+  private withoutExcluded(
+    models: PermittedLanguageModel[],
+    excludedIds: UUID[],
+  ): PermittedLanguageModel[] {
+    return models.filter((model) => !excludedIds.includes(model.id));
   }
 
   private mergeTeamGrants(
