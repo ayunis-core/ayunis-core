@@ -7,13 +7,15 @@ import {
   WebhookDeliveryFailedError,
   WebhookTimeoutError,
 } from 'src/integrations/webhooks/application/errors/webhook.errors';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
 @Injectable()
 export class HttpWebhookHandler extends WebhookHandler {
   private readonly logger = new Logger(HttpWebhookHandler.name);
 
-  private readonly maxRetries = 3;
-  private readonly timeoutMs = 10000; // 10 seconds
+  private readonly defaultMaxAttempts = 3;
+  private readonly defaultTimeoutMs = 10000;
+  private readonly reconciliationTimeoutMs = 60000;
   private readonly baseBackoffMs = 1000; // 1 second
 
   constructor(private readonly configService: ConfigService) {
@@ -38,16 +40,17 @@ export class HttpWebhookHandler extends WebhookHandler {
       'Attempting webhook delivery',
     );
 
-    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+    const maxAttempts = this.maxAttemptsFor(event);
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        await this.deliverWebhook(event, webhookUrl);
+        await this.deliverWebhook(event, webhookUrl, this.timeoutFor(event));
         this.logger.debug(
           { eventType: event.eventType, eventId: event.id, attempt },
           'Webhook delivered successfully',
         );
         return; // Success
       } catch (error) {
-        await this.handleDeliveryFailure(event, error, attempt);
+        await this.handleDeliveryFailure(event, error, attempt, maxAttempts);
       }
     }
   }
@@ -56,15 +59,16 @@ export class HttpWebhookHandler extends WebhookHandler {
     event: WebhookEvent,
     error: unknown,
     attempt: number,
+    maxAttempts: number,
   ): Promise<void> {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    if (attempt === this.maxRetries) {
+    if (attempt === maxAttempts) {
       this.logger.error(
         {
           eventType: event.eventType,
           eventId: event.id,
-          attempts: this.maxRetries,
+          attempts: maxAttempts,
           error: errorMessage,
         },
         'Webhook delivery failed after all retries',
@@ -86,9 +90,26 @@ export class HttpWebhookHandler extends WebhookHandler {
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
+  private maxAttemptsFor(event: WebhookEvent): number {
+    if (
+      event.eventType === WebhookEventType.USAGE_COLLECTED ||
+      event.eventType === WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT
+    ) {
+      return 1;
+    }
+    return this.defaultMaxAttempts;
+  }
+
+  private timeoutFor(event: WebhookEvent): number {
+    return event.eventType === WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT
+      ? this.reconciliationTimeoutMs
+      : this.defaultTimeoutMs;
+  }
+
   private async deliverWebhook(
     event: WebhookEvent,
     webhookUrl: string,
+    timeoutMs: number,
   ): Promise<void> {
     const payload = {
       eventId: event.id,
@@ -106,7 +127,7 @@ export class HttpWebhookHandler extends WebhookHandler {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, this.timeoutMs);
+    }, timeoutMs);
 
     try {
       const response = await fetch(webhookUrl, {
@@ -130,7 +151,7 @@ export class HttpWebhookHandler extends WebhookHandler {
       );
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new WebhookTimeoutError(event.eventType, this.timeoutMs);
+        throw new WebhookTimeoutError(event.eventType, timeoutMs);
       }
       throw error;
     } finally {

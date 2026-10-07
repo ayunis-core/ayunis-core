@@ -14,6 +14,7 @@ import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
 import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { MonthlyCreditsSnapshotEvent } from 'src/domain/usage/application/events/monthly-credits-snapshot.event';
 import { AddonActivatedEvent } from 'src/iam/addons/application/events/addon-activated.event';
 import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
@@ -34,6 +35,7 @@ import { SubscriptionUncancelledWebhookEvent } from 'src/integrations/webhooks/d
 import { SubscriptionSeatsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-seats-updated.webhook-event';
 import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
 import { UsageCollectedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/usage-collected.webhook-event';
+import { MonthlyCreditsSnapshotWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/monthly-credits-snapshot.webhook-event';
 import { ChatSentWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/chat-sent.webhook-event';
 import { AddonActivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-activated.webhook-event';
 import { AddonDeactivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-deactivated.webhook-event';
@@ -195,6 +197,15 @@ export class WebhookDispatchListener {
         : null;
     await this.dispatch(
       new UsageCollectedWebhookEvent(event.usage, event.modelName, user),
+    );
+  }
+
+  @OnEvent(MonthlyCreditsSnapshotEvent.EVENT_NAME, { suppressErrors: false })
+  async handleMonthlyCreditsSnapshot(
+    event: MonthlyCreditsSnapshotEvent,
+  ): Promise<void> {
+    await this.sendWebhookUseCase.executeOrThrow(
+      new SendWebhookCommand(new MonthlyCreditsSnapshotWebhookEvent(event)),
     );
   }
 

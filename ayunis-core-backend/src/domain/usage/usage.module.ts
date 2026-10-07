@@ -26,6 +26,9 @@ import { UsageUseCasesFacade } from './presenters/http/usage-use-cases.facade';
 import { PlatformConfigModule } from 'src/iam/platform-config/platform-config.module';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TeamsModule } from 'src/iam/teams/teams.module';
+import { MonthlyCreditsReconciliationTask } from 'src/domain/usage/application/tasks/monthly-credits-reconciliation.task';
+import { CreditReconciliationLock } from 'src/domain/usage/application/ports/credit-reconciliation-lock.port';
+import { PostgresCreditReconciliationLock } from 'src/domain/usage/infrastructure/locking/postgres-credit-reconciliation-lock';
 
 @Module({
   imports: [
@@ -42,6 +45,11 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
   providers: [
     // Services
     CollectUsageAsyncService,
+    MonthlyCreditsReconciliationTask,
+    {
+      provide: CreditReconciliationLock,
+      useClass: PostgresCreditReconciliationLock,
+    },
     // Use Cases
     CollectUsageUseCase,
     GetProviderUsageUseCase,
