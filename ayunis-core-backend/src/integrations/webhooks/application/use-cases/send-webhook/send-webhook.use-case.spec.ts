@@ -27,4 +27,10 @@ describe('SendWebhookUseCase delivery failures', () => {
       useCase.execute(new SendWebhookCommand(event, true)),
     ).rejects.toBe(error);
   });
+
+  it('can propagate delivery failure to a monitored scheduled caller', async () => {
+    await expect(
+      useCase.executeOrThrow(new SendWebhookCommand(event)),
+    ).rejects.toBe(error);
+  });
 });

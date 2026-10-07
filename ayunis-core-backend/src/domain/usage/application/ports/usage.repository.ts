@@ -51,6 +51,11 @@ export interface UserUsageResult {
   totalCredits: number;
 }
 
+export interface OrganizationCreditTotal {
+  organizationId: UUID;
+  creditsConsumed: number;
+}
+
 export abstract class UsageRepository {
   abstract save(usage: Usage): Promise<void>;
   abstract saveBatch(usages: Usage[]): Promise<void>;
@@ -91,6 +96,11 @@ export abstract class UsageRepository {
     organizationId: UUID,
     monthStart: Date,
   ): Promise<number>;
+
+  abstract getCreditTotalsByOrganization(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<OrganizationCreditTotal[]>;
 
   abstract getTotalMonthlyCreditUsageForUser(
     organizationId: UUID,
