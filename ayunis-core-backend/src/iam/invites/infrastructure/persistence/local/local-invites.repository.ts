@@ -102,7 +102,8 @@ export class LocalInvitesRepository implements InvitesRepository {
     const queryBuilder = this.invites
       .createQueryBuilder('invite')
       .where('invite.orgId = :orgId', { orgId })
-      .orderBy('invite.createdAt', 'DESC');
+      .orderBy('invite.createdAt', 'DESC')
+      .addOrderBy('invite.id', 'DESC');
 
     if (filters?.onlyPending) {
       queryBuilder.andWhere('invite.acceptedAt IS NULL');
