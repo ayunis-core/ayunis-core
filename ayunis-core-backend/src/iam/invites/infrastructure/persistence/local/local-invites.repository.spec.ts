@@ -219,4 +219,30 @@ describe('LocalInvitesRepository', () => {
       expect(inviteRepo.createQueryBuilder).not.toHaveBeenCalled();
     });
   });
+
+  describe('findByOrgIdPaginated', () => {
+    it('uses invite id as a descending tie-breaker for stable pagination', async () => {
+      const queryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      inviteRepo.createQueryBuilder.mockReturnValue(queryBuilder as never);
+
+      await repository.findByOrgIdPaginated(randomUUID(), {
+        limit: 50,
+        offset: 50,
+      });
+
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'invite.createdAt',
+        'DESC',
+      );
+      expect(queryBuilder.addOrderBy).toHaveBeenCalledWith('invite.id', 'DESC');
+    });
+  });
 });
