@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.50.1](https://github.com/ayunis-core/ayunis-core/compare/v2.50.0...v2.50.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **anonymization:** classify thread mask failures (AYC-1184) ([#1858](https://github.com/ayunis-core/ayunis-core/issues/1858)) ([b7d04f2](https://github.com/ayunis-core/ayunis-core/commit/b7d04f2be78a8217b85e96d7ef4e837d84777bdd))
+* **auth:** keep refresh-token reads on the refresh transaction (AYC-1191) ([#1861](https://github.com/ayunis-core/ayunis-core/issues/1861)) ([6f4cd50](https://github.com/ayunis-core/ayunis-core/commit/6f4cd505940ab8a7edebae99c103d70819d3d0f6))
+* **invites:** decode windows-1252 csv uploads in bulk invite (AYC-1190) ([#1867](https://github.com/ayunis-core/ayunis-core/issues/1867)) ([d6167eb](https://github.com/ayunis-core/ayunis-core/commit/d6167eb8dbde3713e1272887a832909454b894bc))
+* **invites:** stabilize invite pagination (AYC-1006) ([#1866](https://github.com/ayunis-core/ayunis-core/issues/1866)) ([591e92e](https://github.com/ayunis-core/ayunis-core/commit/591e92ec781306a14b8cbf21c9044d05b7baaedf))
+* **models:** fall back to default model in threads when a team model is removed (AYC-1177) ([#1865](https://github.com/ayunis-core/ayunis-core/issues/1865)) ([f59c3a0](https://github.com/ayunis-core/ayunis-core/commit/f59c3a0dffb42c6f56f1fc6c5e2c9c9224b038e9))
+
 ## [2.50.0](https://github.com/ayunis-core/ayunis-core/compare/v2.49.0...v2.50.0) (2026-10-06)
 
 
