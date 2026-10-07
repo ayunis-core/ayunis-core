@@ -16,7 +16,8 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { OpenAIModelNotFoundError } from 'src/domain/openai-compat/application/openai-compat.errors';
-import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
+import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import {
@@ -31,7 +32,8 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
   let getPermittedLanguageModelsUseCase: jest.Mocked<GetPermittedLanguageModelsUseCase>;
   let getInferenceUseCase: jest.Mocked<GetInferenceUseCase>;
   let streamInferenceUseCase: jest.Mocked<StreamInferenceUseCase>;
-  let inferenceUsageGuard: jest.Mocked<InferenceUsageGuard>;
+  let inferenceAdmissionGuard: jest.Mocked<InferenceAdmissionGuard>;
+  let collectUsageAsyncService: jest.Mocked<CollectUsageAsyncService>;
   let fileContentService: jest.Mocked<OpenAIFileContentService>;
 
   const orgId = randomUUID();
@@ -85,12 +87,14 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<StreamInferenceUseCase>;
 
-    inferenceUsageGuard = {
+    inferenceAdmissionGuard = {
       preflight: jest.fn().mockResolvedValue(undefined),
       ensureModelCallAllowed: jest.fn().mockResolvedValue(undefined),
-      collectUsage: jest.fn(),
-      collectUsageCritical: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<InferenceUsageGuard>;
+    } as unknown as jest.Mocked<InferenceAdmissionGuard>;
+    collectUsageAsyncService = {
+      collect: jest.fn(),
+      collectCritical: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CollectUsageAsyncService>;
 
     fileContentService = {
       expand: jest.fn().mockImplementation(async (request) => request),
@@ -100,7 +104,8 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       getPermittedLanguageModelsUseCase,
       getInferenceUseCase,
       streamInferenceUseCase,
-      inferenceUsageGuard,
+      inferenceAdmissionGuard,
+      collectUsageAsyncService,
       fileContentService,
       new OpenAIRequestMapper(),
       new OpenAIResponseMapper(),
@@ -128,14 +133,14 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         completion_tokens: 5,
         total_tokens: 15,
       });
-      expect(inferenceUsageGuard.preflight).toHaveBeenCalledTimes(1);
-      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledWith(
-        principal,
+      expect(inferenceAdmissionGuard.preflight).toHaveBeenCalledTimes(1);
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledWith(principal, model);
+      expect(collectUsageAsyncService.collect).toHaveBeenCalledWith(
         model,
-      );
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
-        model,
-        { inputTokens: 10, outputTokens: 5 },
+        10,
+        5,
         expect.any(String),
       );
     });
@@ -152,9 +157,10 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
 
         await useCase.executeNonStreaming(baseCommand());
 
-        expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
+        expect(collectUsageAsyncService.collect).toHaveBeenCalledWith(
           model,
-          expectedUsage,
+          expectedUsage.inputTokens,
+          expectedUsage.outputTokens,
           expect.any(String),
         );
       },
@@ -162,10 +168,10 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
 
     it('gates immediately before the direct inference call', async () => {
       const order: string[] = [];
-      inferenceUsageGuard.preflight.mockImplementation(async () => {
+      inferenceAdmissionGuard.preflight.mockImplementation(async () => {
         order.push('preflight');
       });
-      inferenceUsageGuard.ensureModelCallAllowed.mockImplementation(
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockImplementation(
         async () => {
           order.push('gate');
         },
@@ -187,13 +193,15 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         3600_000,
         60,
       );
-      inferenceUsageGuard.ensureModelCallAllowed.mockRejectedValue(rejected);
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockRejectedValue(
+        rejected,
+      );
 
       await expect(useCase.executeNonStreaming(baseCommand())).rejects.toBe(
         rejected,
       );
       expect(getInferenceUseCase.execute).not.toHaveBeenCalled();
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
     });
 
     it('passes extracted inline file text to inference', async () => {
@@ -271,7 +279,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         code: 'OPENAI_COMPAT_TOKEN_LIMIT',
         statusCode: 422,
       });
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
     });
 
     it('classifies a provider context-length rejection as an invalid OpenAI request', async () => {
@@ -309,12 +317,12 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       await expect(useCase.executeNonStreaming(baseCommand())).rejects.toThrow(
         OpenAIModelNotFoundError,
       );
-      expect(inferenceUsageGuard.preflight).not.toHaveBeenCalled();
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      expect(inferenceAdmissionGuard.preflight).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
     });
 
-    it('propagates preflight failure and does not call collectUsage', async () => {
-      inferenceUsageGuard.preflight.mockRejectedValue(
+    it('propagates preflight failure and does not record usage', async () => {
+      inferenceAdmissionGuard.preflight.mockRejectedValue(
         new QuotaExceededError(
           QuotaType.FAIR_USE_MESSAGES_MEDIUM,
           100,
@@ -327,7 +335,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         QuotaExceededError,
       );
       expect(getInferenceUseCase.execute).not.toHaveBeenCalled();
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
     });
   });
 
@@ -416,26 +424,25 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
 
       await useCase.executeStreaming(baseCommand({ stream: true }));
-      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledTimes(
-        1,
-      );
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledTimes(1);
       const lifecycle =
         streamInferenceUseCase.execute.mock.calls[0][0].attemptLifecycle;
 
       await lifecycle?.onAttemptStart({ requestId: randomUUID() });
-      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledTimes(
-        1,
-      );
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledTimes(1);
 
       await lifecycle?.onAttemptStart({ requestId: randomUUID() });
-      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledTimes(
-        2,
-      );
-      expect(inferenceUsageGuard.ensureModelCallAllowed).toHaveBeenCalledWith(
-        principal,
-        model,
-      );
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledWith(principal, model);
+      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
       subject.complete();
     });
 
@@ -446,7 +453,9 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         3600_000,
         60,
       );
-      inferenceUsageGuard.ensureModelCallAllowed.mockRejectedValue(rejected);
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockRejectedValue(
+        rejected,
+      );
 
       await expect(
         useCase.executeStreaming(baseCommand({ stream: true })),
@@ -471,9 +480,10 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
           outputEmitted: outcome === 'completed',
         });
 
-        expect(inferenceUsageGuard.collectUsageCritical).toHaveBeenCalledWith(
+        expect(collectUsageAsyncService.collectCritical).toHaveBeenCalledWith(
           model,
-          { inputTokens: 15, outputTokens: 8 },
+          15,
+          8,
           requestId,
         );
         subject.complete();
@@ -485,7 +495,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
       let release!: () => void;
       const persistence = new Promise<void>((resolve) => (release = resolve));
-      inferenceUsageGuard.collectUsageCritical.mockReturnValue(persistence);
+      collectUsageAsyncService.collectCritical.mockReturnValue(persistence);
 
       await useCase.executeStreaming(baseCommand({ stream: true }));
       const lifecycle =
@@ -525,7 +535,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
             outputEmitted,
           }),
         ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
-        expect(inferenceUsageGuard.collectUsageCritical).not.toHaveBeenCalled();
+        expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
         subject.complete();
       },
     );
@@ -561,7 +571,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
           outputEmitted: true,
         }),
       ).resolves.toBeUndefined();
-      expect(inferenceUsageGuard.collectUsageCritical).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
       subject.complete();
     });
 

@@ -45,7 +45,7 @@ import {
   RunToolRepeatedlyFailingError,
   UnexpectedRunError,
 } from 'src/domain/runs/application/runs.errors';
-import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
 import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
@@ -91,7 +91,7 @@ export class ExecuteRunUseCase {
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly effectiveRunModelResolver: EffectiveRunModelResolverService,
-    private readonly inferenceUsageGuard: InferenceUsageGuard,
+    private readonly inferenceAdmissionGuard: InferenceAdmissionGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly backendToolAdapter: BackendToolAdapter,
     private readonly skillActivationService: SkillActivationService,
@@ -151,7 +151,7 @@ export class ExecuteRunUseCase {
       orgId,
     });
     const model = permittedModel.model;
-    await this.inferenceUsageGuard.preflight({ userId, orgId }, model);
+    await this.inferenceAdmissionGuard.preflight({ userId, orgId }, model);
     const anonymous = found.thread.isAnonymous || permittedModel.anonymousOnly;
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
     const workspaceContext = await this.buildWorkspaceContext(found.thread);

@@ -3,8 +3,7 @@ import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/che
 import type { ApiKeyCreditLimitGuardService } from './api-key-credit-limit-guard.service';
 import type { CreditBudgetGuardService } from './credit-budget-guard.service';
 import type { CreditLimitGuardService } from './credit-limit-guard.service';
-import type { CollectUsageAsyncService } from './collect-usage-async.service';
-import { InferenceUsageGuard } from './inference-usage-guard.service';
+import { InferenceAdmissionGuard } from './inference-admission-guard.service';
 import {
   ApiKeyCreditLimitExceededError,
   UserCreditLimitExceededError,
@@ -16,13 +15,12 @@ import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
 
-describe('InferenceUsageGuard', () => {
-  let guard: InferenceUsageGuard;
+describe('InferenceAdmissionGuard', () => {
+  let guard: InferenceAdmissionGuard;
   let checkQuotaUseCase: jest.Mocked<CheckQuotaUseCase>;
   let creditBudgetGuardService: jest.Mocked<CreditBudgetGuardService>;
   let creditLimitGuardService: jest.Mocked<CreditLimitGuardService>;
   let apiKeyCreditLimitGuardService: jest.Mocked<ApiKeyCreditLimitGuardService>;
-  let collectUsageAsyncService: jest.Mocked<CollectUsageAsyncService>;
 
   const userId = randomUUID();
   const apiKeyId = randomUUID();
@@ -68,17 +66,11 @@ describe('InferenceUsageGuard', () => {
     apiKeyCreditLimitGuardService = {
       ensureWithinLimit: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ApiKeyCreditLimitGuardService>;
-    collectUsageAsyncService = {
-      collect: jest.fn(),
-      collectCritical: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<CollectUsageAsyncService>;
-
-    guard = new InferenceUsageGuard(
+    guard = new InferenceAdmissionGuard(
       checkQuotaUseCase,
       creditBudgetGuardService,
       creditLimitGuardService,
       apiKeyCreditLimitGuardService,
-      collectUsageAsyncService,
     );
   });
 
@@ -238,55 +230,6 @@ describe('InferenceUsageGuard', () => {
       expect(
         apiKeyCreditLimitGuardService.ensureWithinLimit,
       ).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('collectUsage', () => {
-    it('keeps non-critical callers fire-and-forget', () => {
-      const model = makeModel(ModelTier.LOW);
-      const requestId = randomUUID();
-
-      const result = guard.collectUsage(
-        model,
-        { inputTokens: 42, outputTokens: 8 },
-        requestId,
-        'legacy',
-      );
-
-      expect(result).toBeUndefined();
-      expect(collectUsageAsyncService.collect).toHaveBeenCalledWith(
-        model,
-        42,
-        8,
-        requestId,
-        'legacy',
-      );
-    });
-
-    it('awaits critical agent-runtime usage collection', async () => {
-      const model = makeModel(ModelTier.LOW);
-      const requestId = randomUUID();
-      const persistenceError = new Error('Usage database unavailable');
-      collectUsageAsyncService.collectCritical.mockRejectedValue(
-        persistenceError,
-      );
-
-      await expect(
-        guard.collectUsageCritical(
-          model,
-          { inputTokens: 42, outputTokens: 8 },
-          requestId,
-          'agent_runtime',
-        ),
-      ).rejects.toBe(persistenceError);
-      expect(collectUsageAsyncService.collectCritical).toHaveBeenCalledWith(
-        model,
-        42,
-        8,
-        requestId,
-        'agent_runtime',
-      );
-      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
     });
   });
 });

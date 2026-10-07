@@ -9144,327 +9144,6 @@
         "tags": ["App Alert"]
       }
     },
-    "/runs/send-message": {
-      "post": {
-        "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
-        "operationId": "RunsController_sendMessage",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": ["threadId"],
-                "properties": {
-                  "threadId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "text": {
-                    "type": "string",
-                    "description": "Message text (optional if images provided)"
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "binary"
-                    },
-                    "description": "Image files to attach (max 10, max 10MB each, 50MB total)"
-                  },
-                  "imageAltTexts": {
-                    "type": "string",
-                    "description": "JSON array of alt texts matching image order"
-                  },
-                  "toolResult": {
-                    "type": "string",
-                    "description": "JSON object for tool result input"
-                  },
-                  "skillId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Skill ID to activate for this message"
-                  },
-                  "streaming": {
-                    "type": "boolean",
-                    "default": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Server-sent events stream with discriminated response types",
-            "content": {
-              "text/event-stream": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/RunSessionResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunMessageResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunErrorResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunThreadResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunMasksResponseDto"
-                    }
-                  ],
-                  "discriminator": {
-                    "propertyName": "type",
-                    "mapping": {
-                      "session": "#/components/schemas/RunSessionResponseDto",
-                      "message": "#/components/schemas/RunMessageResponseDto",
-                      "error": "#/components/schemas/RunErrorResponseDto",
-                      "thread": "#/components/schemas/RunThreadResponseDto",
-                      "masks": "#/components/schemas/RunMasksResponseDto"
-                    }
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "description": "Content type for server-sent events",
-                "schema": {
-                  "type": "string",
-                  "example": "text/event-stream"
-                }
-              },
-              "Cache-Control": {
-                "description": "Cache control header",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache"
-                }
-              },
-              "Connection": {
-                "description": "Connection type",
-                "schema": {
-                  "type": "string",
-                  "example": "keep-alive"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          },
-          "403": {
-            "description": "Subscription required"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Send a message with optional images and receive streaming response",
-        "tags": ["runs"]
-      }
-    },
-    "/threads/{threadId}/ai-context": {
-      "get": {
-        "operationId": "ThreadAiContextController_getAiContext",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ThreadAiContextResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Thread not found"
-          }
-        },
-        "summary": "Get the AI resources available in a thread",
-        "tags": ["threads"]
-      }
-    },
-    "/threads/{threadId}/source-chunks/{chunkId}": {
-      "get": {
-        "operationId": "ThreadSourceCitationsController_getSourceCitation",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "chunkId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the cited chunk and source metadata",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SourceCitationResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Citation not found"
-          }
-        },
-        "summary": "Get a source citation in a thread",
-        "tags": ["threads"]
-      }
-    },
-    "/super-admin/trials": {
-      "post": {
-        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_createTrial",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Trial information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Create a new trial",
-        "tags": ["Super Admin Trials"]
-      }
-    },
-    "/super-admin/trials/{orgId}": {
-      "get": {
-        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to retrieve.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Trial not found for the organization."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Get a trial by organization ID",
-        "tags": ["Super Admin Trials"]
-      },
-      "put": {
-        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_updateTrial",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to update.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Trial update information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Update a trial",
-        "tags": ["Super Admin Trials"]
-      }
-    },
     "/credit-limits/users": {
       "get": {
         "operationId": "CreditLimitsController_getUserLimits",
@@ -9806,6 +9485,327 @@
         },
         "summary": "Revoke an API key",
         "tags": ["api-keys"]
+      }
+    },
+    "/runs/send-message": {
+      "post": {
+        "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
+        "operationId": "RunsController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["threadId"],
+                "properties": {
+                  "threadId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Message text (optional if images provided)"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Image files to attach (max 10, max 10MB each, 50MB total)"
+                  },
+                  "imageAltTexts": {
+                    "type": "string",
+                    "description": "JSON array of alt texts matching image order"
+                  },
+                  "toolResult": {
+                    "type": "string",
+                    "description": "JSON object for tool result input"
+                  },
+                  "skillId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Skill ID to activate for this message"
+                  },
+                  "streaming": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events stream with discriminated response types",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/RunSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMessageResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunErrorResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunThreadResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMasksResponseDto"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "session": "#/components/schemas/RunSessionResponseDto",
+                      "message": "#/components/schemas/RunMessageResponseDto",
+                      "error": "#/components/schemas/RunErrorResponseDto",
+                      "thread": "#/components/schemas/RunThreadResponseDto",
+                      "masks": "#/components/schemas/RunMasksResponseDto"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "Content type for server-sent events",
+                "schema": {
+                  "type": "string",
+                  "example": "text/event-stream"
+                }
+              },
+              "Cache-Control": {
+                "description": "Cache control header",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Connection": {
+                "description": "Connection type",
+                "schema": {
+                  "type": "string",
+                  "example": "keep-alive"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "403": {
+            "description": "Subscription required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Send a message with optional images and receive streaming response",
+        "tags": ["runs"]
+      }
+    },
+    "/threads/{threadId}/ai-context": {
+      "get": {
+        "operationId": "ThreadAiContextController_getAiContext",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadAiContextResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found"
+          }
+        },
+        "summary": "Get the AI resources available in a thread",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{threadId}/source-chunks/{chunkId}": {
+      "get": {
+        "operationId": "ThreadSourceCitationsController_getSourceCitation",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "chunkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the cited chunk and source metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCitationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Citation not found"
+          }
+        },
+        "summary": "Get a source citation in a thread",
+        "tags": ["threads"]
+      }
+    },
+    "/super-admin/trials": {
+      "post": {
+        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_createTrial",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Trial information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Create a new trial",
+        "tags": ["Super Admin Trials"]
+      }
+    },
+    "/super-admin/trials/{orgId}": {
+      "get": {
+        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to retrieve.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Trial not found for the organization."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Get a trial by organization ID",
+        "tags": ["Super Admin Trials"]
+      },
+      "put": {
+        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_updateTrial",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Trial update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Update a trial",
+        "tags": ["Super Admin Trials"]
       }
     },
     "/chat-settings/system-prompt": {
@@ -18882,6 +18882,286 @@
         },
         "required": ["enabled", "message"]
       },
+      "UserCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "jane.doe@example.com"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
+      },
+      "TeamCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 20000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed by all current team members in the current month",
+            "example": 8300
+          }
+        },
+        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
+      },
+      "ApiKeyCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          },
+          "name": {
+            "type": "string",
+            "example": "Finance export"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
+      },
+      "SetCreditLimitDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
+            "example": 5000,
+            "minimum": 0
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
+      "UserCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          }
+        },
+        "required": ["id", "monthlyCredits", "userId"]
+      },
+      "TeamCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "teamId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          }
+        },
+        "required": ["id", "monthlyCredits", "teamId"]
+      },
+      "ApiKeyCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          }
+        },
+        "required": ["id", "monthlyCredits", "apiKeyId"]
+      },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot",
+            "maxLength": 100
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": ["name"]
+      },
+      "ApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt"
+        ]
+      },
+      "CreateApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
+            "example": "ayk_live_abc123def456ghi789..."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt",
+          "secret"
+        ]
+      },
       "MessageContentResponseDto": {
         "type": "object",
         "properties": {
@@ -19364,286 +19644,6 @@
             "minimum": 0
           }
         }
-      },
-      "UserCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          },
-          "name": {
-            "type": "string",
-            "example": "Jane Doe"
-          },
-          "email": {
-            "type": "string",
-            "example": "jane.doe@example.com"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 5000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed in the current calendar month",
-            "example": 1240
-          }
-        },
-        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
-      },
-      "TeamCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "teamId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440002"
-          },
-          "name": {
-            "type": "string",
-            "example": "Engineering"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 20000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed by all current team members in the current month",
-            "example": 8300
-          }
-        },
-        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
-      },
-      "ApiKeyCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "apiKeyId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440003"
-          },
-          "name": {
-            "type": "string",
-            "example": "Finance export"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 5000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed in the current calendar month",
-            "example": 1240
-          }
-        },
-        "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
-      },
-      "SetCreditLimitDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
-            "example": 5000,
-            "minimum": 0
-          }
-        },
-        "required": ["monthlyCredits"]
-      },
-      "UserCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "userId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          }
-        },
-        "required": ["id", "monthlyCredits", "userId"]
-      },
-      "TeamCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "teamId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440002"
-          }
-        },
-        "required": ["id", "monthlyCredits", "teamId"]
-      },
-      "ApiKeyCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "apiKeyId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440003"
-          }
-        },
-        "required": ["id", "monthlyCredits", "apiKeyId"]
-      },
-      "CreateApiKeyDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot",
-            "maxLength": 100
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": ["name"]
-      },
-      "ApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt"
-        ]
-      },
-      "CreateApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          },
-          "secret": {
-            "type": "string",
-            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
-            "example": "ayk_live_abc123def456ghi789..."
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt",
-          "secret"
-        ]
       },
       "UserSystemPromptResponseDto": {
         "type": "object",
