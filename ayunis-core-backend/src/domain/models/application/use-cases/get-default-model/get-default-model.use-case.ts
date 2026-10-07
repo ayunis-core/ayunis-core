@@ -28,18 +28,19 @@ export class GetDefaultModelUseCase {
       {
         orgId: query.orgId,
         userId: query.userId,
-        blacklistedModelIds: query.blacklistedModelIds,
+        excludedPermittedModelIds: query.excludedPermittedModelIds,
       },
       'execute',
     );
     const { models, overrideTeamIds } =
       await this.getEffectiveLanguageModelsUseCase.execute(
-        new GetEffectiveLanguageModelsQuery(query.orgId, query.userId),
+        new GetEffectiveLanguageModelsQuery(
+          query.orgId,
+          query.userId,
+          query.excludedPermittedModelIds,
+        ),
       );
-    const effectiveModels = this.indexEffectiveModels(
-      models,
-      query.blacklistedModelIds,
-    );
+    const effectiveModels = this.indexEffectiveModels(models);
     if (effectiveModels.size === 0) {
       throw new DefaultModelNotFoundError(query.orgId);
     }
@@ -54,6 +55,7 @@ export class GetDefaultModelUseCase {
       overrideTeamIds,
       query.orgId,
       effectiveModels,
+      query.excludedPermittedModelIds ?? [],
     );
     if (teamDefault) return teamDefault;
 
@@ -70,13 +72,8 @@ export class GetDefaultModelUseCase {
 
   private indexEffectiveModels(
     models: PermittedLanguageModel[],
-    blacklistedModelIds?: UUID[],
   ): Map<UUID, PermittedLanguageModel> {
-    return new Map(
-      models
-        .filter((model) => !blacklistedModelIds?.includes(model.model.id))
-        .map((model) => [model.model.id, model]),
-    );
+    return new Map(models.map((model) => [model.model.id, model]));
   }
 
   private async resolveUserDefault(
@@ -93,6 +90,7 @@ export class GetDefaultModelUseCase {
     teamIds: UUID[],
     orgId: UUID,
     effectiveModels: Map<UUID, PermittedLanguageModel>,
+    excludedIds: UUID[],
   ): Promise<PermittedLanguageModel | null> {
     if (teamIds.length === 0) return null;
     const defaults =
@@ -101,6 +99,7 @@ export class GetDefaultModelUseCase {
         orgId,
       );
     const effectiveDefaults = defaults
+      .filter((model) => !excludedIds.includes(model.id))
       .map((model) => this.toEffectiveModel(model, effectiveModels))
       .filter((model): model is PermittedLanguageModel => model !== null)
       .sort((a, b) => a.model.name.localeCompare(b.model.name));
