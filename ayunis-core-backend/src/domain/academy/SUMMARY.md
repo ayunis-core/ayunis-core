@@ -9,7 +9,7 @@ progress toward whole-academy completion.
 ## Model
 
 - `AcademyChapter` — `{ id, title, description, position, quizEnabled,
-  passThreshold, courseModules[], quizQuestions[] }`. `quizEnabled` shows the
+passThreshold, courseModules[], quizQuestions[] }`. `quizEnabled` shows the
   quiz at chapter end; `passThreshold` is the percent of correct answers needed
   to pass (default 80).
 - `AcademyCourseModule` — `{ id, chapterId, title, description?, loomUrl, position }`,
@@ -34,7 +34,11 @@ the client:
   stamps the single per-user `AcademyCompletion.completedAt` snapshot. That
   snapshot is the anchor for the access gate (`src/iam/academy-access`): it is
   only ever written on full completion, never cleared by content changes, so
-  adding a chapter never revokes a completion.
+  adding a chapter never revokes a completion. After the attempt is persisted
+  it emits `AcademyProgressUpdatedEvent` (`started`, plus
+  `participationConfirmedAt` from the completion snapshot or null). Whether
+  the org has the academy add-on stays on `addon.activated` /
+  `addon.deactivated`. Downstream KPI rates are not calculated here.
 - `GetAcademyProgressUseCase` returns per-chapter pass state + the completion
   date and its expiry. Unlimited retries; each retry re-draws.
 
@@ -115,7 +119,7 @@ Authenticated users in an org with the academy add-on active
   (`GET progress`: per-chapter pass state + `academyCompletedAt`).
 - `AcademyCertificateController` (`academy/certificate`) — download the
   completion certificate PDF (`GET`, streamed with `Content-Disposition:
-  attachment`; 404 until the academy is completed).
+attachment`; 404 until the academy is completed).
 
 ## Management
 

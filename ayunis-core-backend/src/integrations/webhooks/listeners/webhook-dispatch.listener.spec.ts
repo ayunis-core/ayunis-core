@@ -37,6 +37,7 @@ import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructu
 import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
+import { AcademyProgressUpdatedEvent } from 'src/domain/academy/application/events/academy-progress-updated.event';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
@@ -214,6 +215,67 @@ describe('WebhookDispatchListener', () => {
         email: 'test@example.com',
         orgId: ORG_ID,
       });
+    });
+  });
+
+  describe('handleAcademyProgressUpdated', () => {
+    const confirmedAt = new Date('2026-04-02T09:30:00.000Z');
+
+    it('should dispatch academy progress enriched with the user identity', async () => {
+      await listener.handleAcademyProgressUpdated(
+        new AcademyProgressUpdatedEvent(USER_ID, confirmedAt),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.ACADEMY_PROGRESS_UPDATED,
+      );
+      expect(command.event.data).toEqual({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        userEmail: 'test@example.com',
+        userName: 'Test User',
+        started: true,
+        participationConfirmedAt: '2026-04-02T09:30:00.000Z',
+      });
+    });
+
+    it('should dispatch a start that has no participation confirmation', async () => {
+      await listener.handleAcademyProgressUpdated(
+        new AcademyProgressUpdatedEvent(USER_ID, null),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          started: true,
+          participationConfirmedAt: null,
+        }),
+      );
+    });
+
+    it('should skip academy progress when no webhook receiver is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleAcademyProgressUpdated(
+        new AcademyProgressUpdatedEvent(USER_ID, confirmedAt),
+      );
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should skip academy progress when the user lookup fails', async () => {
+      findUserByIdUseCase.execute.mockRejectedValue(
+        new Error('User not found'),
+      );
+
+      await listener.handleAcademyProgressUpdated(
+        new AcademyProgressUpdatedEvent(USER_ID, confirmedAt),
+      );
+
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
     });
   });
 

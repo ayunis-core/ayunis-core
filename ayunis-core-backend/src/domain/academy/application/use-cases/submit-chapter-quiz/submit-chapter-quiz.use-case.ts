@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { AcademyProgressUpdatedEvent } from 'src/domain/academy/application/events/academy-progress-updated.event';
 import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
 import { AcademyChapterProgressRepository } from 'src/domain/academy/application/ports/academy-chapter-progress.repository';
 import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
@@ -43,6 +45,7 @@ export class SubmitChapterQuizUseCase {
     private readonly quizQuestionRepository: AcademyQuizQuestionRepository,
     private readonly progressRepository: AcademyChapterProgressRepository,
     private readonly completionRepository: AcademyCompletionRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: SubmitChapterQuizCommand): Promise<QuizAttemptResult> {
@@ -63,10 +66,13 @@ export class SubmitChapterQuizUseCase {
       }
       const grade = this.grade(pool, command.answers, chapter.passThreshold);
       await this.persistProgress(command, grade);
-      const academyCompleted = grade.passed
+      const stampedAt = grade.passed
         ? await this.recomputeCompletion(command.userId)
-        : false;
-      return { ...grade, academyCompleted };
+        : null;
+      const participationConfirmedAt =
+        await this.resolveParticipationConfirmedAt(command.userId, stampedAt);
+      this.emitAcademyProgress(command.userId, participationConfirmedAt);
+      return { ...grade, academyCompleted: stampedAt !== null };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(
@@ -173,11 +179,40 @@ export class SubmitChapterQuizUseCase {
     );
   }
 
+  private async resolveParticipationConfirmedAt(
+    userId: UUID,
+    stampedAt: Date | null,
+  ): Promise<Date | null> {
+    if (stampedAt) return stampedAt;
+    const existing = await this.completionRepository.findByUser(userId);
+    return existing?.completedAt ?? null;
+  }
+
+  private emitAcademyProgress(
+    userId: UUID,
+    participationConfirmedAt: Date | null,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        AcademyProgressUpdatedEvent.EVENT_NAME,
+        new AcademyProgressUpdatedEvent(userId, participationConfirmedAt),
+      )
+      .catch((error: unknown) => {
+        this.logger.error(
+          {
+            userId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Failed to emit AcademyProgressUpdatedEvent',
+        );
+      });
+  }
+
   // Stamp/refresh the single whole-academy completion snapshot when every
   // currently quiz-enabled chapter has a passing progress row. Passes that have
   // themselves aged out of the validity window do not count, so renewing a
   // lapsed certificate means re-passing the whole academy rather than one quiz.
-  private async recomputeCompletion(userId: UUID): Promise<boolean> {
+  private async recomputeCompletion(userId: UUID): Promise<Date | null> {
     const now = new Date();
     const quizEnabledIds = await this.chapterRepository.findQuizEnabledIds();
     const progress = await this.progressRepository.findAllByUser(userId);
@@ -191,7 +226,7 @@ export class SubmitChapterQuizUseCase {
     const completed =
       quizEnabledIds.length > 0 &&
       quizEnabledIds.every((id) => passedIds.has(id));
-    if (!completed) return false;
+    if (!completed) return null;
     const existing = await this.completionRepository.findByUser(userId);
     await this.completionRepository.upsert(
       new AcademyCompletion({
@@ -201,6 +236,6 @@ export class SubmitChapterQuizUseCase {
         createdAt: existing?.createdAt,
       }),
     );
-    return true;
+    return now;
   }
 }
