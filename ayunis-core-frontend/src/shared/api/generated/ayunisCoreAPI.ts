@@ -90,6 +90,7 @@ import type {
   CreateWorkspaceDto,
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
+  DefaultUserCreditLimitResponseDto,
   DeleteAllPendingInvitesResponseDto,
   DeleteOrgRequestDto,
   DiscoverSsoDto,
@@ -19503,6 +19504,233 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
         TContext
       > => {
       return useMutation(getSuperAdminTrialsControllerUpdateTrialMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get the org-wide default personal credit limit
+ */
+export const creditLimitsControllerGetDefaultUserLimit = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DefaultUserCreditLimitResponseDto>(
+      {url: `/credit-limits/default-user`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerGetDefaultUserLimitQueryKey = () => {
+    return [
+    `/credit-limits/default-user`
+    ] as const;
+    }
+
+
+export const getCreditLimitsControllerGetDefaultUserLimitQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetDefaultUserLimitQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>> = ({ signal }) => creditLimitsControllerGetDefaultUserLimit(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetDefaultUserLimitQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>>
+export type CreditLimitsControllerGetDefaultUserLimitQueryError = unknown
+
+
+export function useCreditLimitsControllerGetDefaultUserLimit<TData = Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetDefaultUserLimit<TData = Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetDefaultUserLimit<TData = Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the org-wide default personal credit limit
+ */
+
+export function useCreditLimitsControllerGetDefaultUserLimit<TData = Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetDefaultUserLimit>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetDefaultUserLimitQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set the default personal credit limit for users without an individual limit
+ */
+export const creditLimitsControllerSetDefaultUserLimit = (
+    setCreditLimitDto: SetCreditLimitDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DefaultUserCreditLimitResponseDto>(
+      {url: `/credit-limits/default-user`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerSetDefaultUserLimitMutationKey = () => ['creditLimitsControllerSetDefaultUserLimit'] as const;
+
+export const getCreditLimitsControllerSetDefaultUserLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetDefaultUserLimit>>, TError,CreditLimitsControllerSetDefaultUserLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetDefaultUserLimit>>, TError,CreditLimitsControllerSetDefaultUserLimitMutationVariables, TContext> => {
+
+const mutationKey = getCreditLimitsControllerSetDefaultUserLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetDefaultUserLimit>>, CreditLimitsControllerSetDefaultUserLimitMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  creditLimitsControllerSetDefaultUserLimit(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerSetDefaultUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetDefaultUserLimit>>>
+    export type CreditLimitsControllerSetDefaultUserLimitMutationBody = SetCreditLimitDto
+    export type CreditLimitsControllerSetDefaultUserLimitMutationError = unknown
+    export type CreditLimitsControllerSetDefaultUserLimitMutationVariables = {data: SetCreditLimitDto}
+
+    /**
+ * @summary Set the default personal credit limit for users without an individual limit
+ */
+export const useCreditLimitsControllerSetDefaultUserLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetDefaultUserLimit>>, TError,CreditLimitsControllerSetDefaultUserLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerSetDefaultUserLimit>>,
+        TError,
+        CreditLimitsControllerSetDefaultUserLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerSetDefaultUserLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Remove the default personal credit limit
+ */
+export const creditLimitsControllerRemoveDefaultUserLimit = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/credit-limits/default-user`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerRemoveDefaultUserLimitMutationKey = () => ['creditLimitsControllerRemoveDefaultUserLimit'] as const;
+
+export const getCreditLimitsControllerRemoveDefaultUserLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveDefaultUserLimit>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveDefaultUserLimit>>, TError,void, TContext> => {
+
+const mutationKey = getCreditLimitsControllerRemoveDefaultUserLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveDefaultUserLimit>>, void> = () => {
+
+
+          return  creditLimitsControllerRemoveDefaultUserLimit()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerRemoveDefaultUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveDefaultUserLimit>>>
+
+    export type CreditLimitsControllerRemoveDefaultUserLimitMutationError = unknown
+
+
+    /**
+ * @summary Remove the default personal credit limit
+ */
+export const useCreditLimitsControllerRemoveDefaultUserLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveDefaultUserLimit>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerRemoveDefaultUserLimit>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerRemoveDefaultUserLimitMutationOptions(options), queryClient);
     }
 
 /**

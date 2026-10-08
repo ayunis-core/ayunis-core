@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { DefaultUserCreditLimit } from 'src/iam/credit-limits/domain/default-user-credit-limit.entity';
 import { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
@@ -45,6 +46,13 @@ export function anApiKeyCreditLimit(
   return new ApiKeyCreditLimit({ orgId, apiKeyId, monthlyCredits });
 }
 
+export function aDefaultUserCreditLimit(
+  overrides: { orgId?: UUID; monthlyCredits?: number } = {},
+): DefaultUserCreditLimit {
+  const { orgId = TEST_ORG_ID, monthlyCredits = 100 } = overrides;
+  return new DefaultUserCreditLimit({ orgId, monthlyCredits });
+}
+
 // Port mock factory — defaults model the "empty" state: finders resolve to
 // null/[], save echoes its argument, deletes resolve. Tests override per case.
 export function createMockCreditLimitRepository(): jest.Mocked<CreditLimitRepository> {
@@ -57,6 +65,8 @@ export function createMockCreditLimitRepository(): jest.Mocked<CreditLimitReposi
     findByTeamId: jest.fn().mockResolvedValue(null),
     findByTeamIds: jest.fn().mockResolvedValue([]),
     findByApiKeyId: jest.fn().mockResolvedValue(null),
+    findDefaultUserLimit: jest.fn().mockResolvedValue(null),
+    deleteDefaultUserLimit: jest.fn().mockResolvedValue(undefined),
     deleteByUserId: jest.fn().mockResolvedValue(undefined),
     deleteByTeamId: jest.fn().mockResolvedValue(undefined),
     deleteByApiKeyId: jest.fn().mockResolvedValue(undefined),

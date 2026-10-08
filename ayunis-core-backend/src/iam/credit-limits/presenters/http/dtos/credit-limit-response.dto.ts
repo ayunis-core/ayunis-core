@@ -23,3 +23,15 @@ export class TeamCreditLimitResponseDto extends BaseCreditLimitResponseDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440002' })
   teamId: UUID;
 }
+
+export class DefaultUserCreditLimitResponseDto {
+  @ApiProperty({
+    description:
+      'Personal limit for every user without an individual limit; ' +
+      'null when no default is set.',
+    example: 100,
+    type: Number,
+    nullable: true,
+  })
+  monthlyCredits: number | null;
+}

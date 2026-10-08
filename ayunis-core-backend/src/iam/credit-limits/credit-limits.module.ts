@@ -6,6 +6,9 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
 import { UsersModule } from 'src/iam/users/users.module';
 import { SubscriptionCancelledListener } from './application/listeners/subscription-cancelled.listener';
 import { CreditLimitRepository } from './application/ports/credit-limit.repository';
+import { GetDefaultUserCreditLimitUseCase } from './application/use-cases/get-default-user-credit-limit/get-default-user-credit-limit.use-case';
+import { RemoveDefaultUserCreditLimitUseCase } from './application/use-cases/remove-default-user-credit-limit/remove-default-user-credit-limit.use-case';
+import { SetDefaultUserCreditLimitUseCase } from './application/use-cases/set-default-user-credit-limit/set-default-user-credit-limit.use-case';
 import { GetApiKeyCreditLimitsOverviewUseCase } from './application/use-cases/get-api-key-credit-limits-overview/get-api-key-credit-limits-overview.use-case';
 import { GetTeamCreditLimitsOverviewUseCase } from './application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.use-case';
 import { GetUserCreditLimitsOverviewUseCase } from './application/use-cases/get-user-credit-limits-overview/get-user-credit-limits-overview.use-case';
@@ -23,11 +26,18 @@ import { LocalCreditLimitRepository } from './infrastructure/persistence/local/l
 import {
   ApiKeyCreditLimitRecord,
   CreditLimitRecord,
+  DefaultUserCreditLimitRecord,
   TeamCreditLimitRecord,
   UserCreditLimitRecord,
 } from './infrastructure/persistence/local/schema/credit-limit.record';
 import { CreditLimitsController } from './presenters/http/credit-limits.controller';
 import { CreditLimitDtoMapper } from './presenters/http/mappers/credit-limit-dto.mapper';
+
+const defaultUserCreditLimitUseCases = [
+  SetDefaultUserCreditLimitUseCase,
+  RemoveDefaultUserCreditLimitUseCase,
+  GetDefaultUserCreditLimitUseCase,
+];
 
 const apiKeyCreditLimitUseCases = [
   SetApiKeyCreditLimitUseCase,
@@ -43,6 +53,7 @@ const apiKeyCreditLimitUseCases = [
       UserCreditLimitRecord,
       TeamCreditLimitRecord,
       ApiKeyCreditLimitRecord,
+      DefaultUserCreditLimitRecord,
     ]),
     ApiKeysModule,
     TeamsModule,
@@ -67,6 +78,7 @@ const apiKeyCreditLimitUseCases = [
     RemoveOrgCreditLimitsUseCase,
     SubscriptionCancelledListener,
     ...apiKeyCreditLimitUseCases,
+    ...defaultUserCreditLimitUseCases,
   ],
   exports: [
     SetUserCreditLimitUseCase,
