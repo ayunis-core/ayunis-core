@@ -200,6 +200,3 @@ export class RunContextBudgetExceededError extends RunError {
     );
   }
 }
-
-// CreditBudgetExceededError moved to iam/subscriptions — re-export for backward compatibility
-export { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';

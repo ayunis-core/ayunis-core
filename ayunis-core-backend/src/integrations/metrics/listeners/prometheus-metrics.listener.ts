@@ -8,7 +8,7 @@ import { AssistantMessageCreatedEvent } from 'src/domain/messages/application/ev
 import { RunExecutedEvent } from 'src/domain/runs/application/events/run-executed.event';
 import { RunTerminalEvent } from 'src/domain/runs/application/events/run-terminal.event';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
-import { TokensConsumedEvent } from 'src/domain/runs/application/events/tokens-consumed.event';
+import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
 import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run-usage-collection.event';
