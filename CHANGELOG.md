@@ -1,5 +1,45 @@
 # Changelog
 
+## [2.51.0](https://github.com/ayunis-core/ayunis-core/compare/v2.50.1...v2.51.0) (2026-10-09)
+
+
+### Features
+
+* **academy:** replace quizzes with chapter confirmations (AYC-833) ([#1542](https://github.com/ayunis-core/ayunis-core/issues/1542)) ([9620267](https://github.com/ayunis-core/ayunis-core/commit/9620267a9a194580935f0fde3e1fe33c7edc3411))
+* **skills:** add an endpoint that improves a skill's texts (AYC-968) ([#1765](https://github.com/ayunis-core/ayunis-core/issues/1765)) ([f002269](https://github.com/ayunis-core/ayunis-core/commit/f0022695b903056640ff89c0d0b92d1def5da11f))
+* **skills:** let Ayunis Core improve a skill's trigger and instructions (AYC-968) ([#1766](https://github.com/ayunis-core/ayunis-core/issues/1766)) ([3520080](https://github.com/ayunis-core/ayunis-core/commit/352008022e531c41d07460d7f240f6cd0ad17f55))
+
+
+### Bug Fixes
+
+* **api:** retry reads through the deploy restart gap (AYC-1186) ([#1871](https://github.com/ayunis-core/ayunis-core/issues/1871)) ([8a513fd](https://github.com/ayunis-core/ayunis-core/commit/8a513fdf70647934a058c701cedfdfdee58b7445))
+* **artifacts:** stop waiting for PDF network idle (AYC-1185) ([#1874](https://github.com/ayunis-core/ayunis-core/issues/1874)) ([0fcdeb1](https://github.com/ayunis-core/ayunis-core/commit/0fcdeb13dc41600adf051946861671a7e538ca6b))
+* **auth:** return service unavailable during database outages (AYC-1218) ([#1878](https://github.com/ayunis-core/ayunis-core/issues/1878)) ([3f61763](https://github.com/ayunis-core/ayunis-core/commit/3f61763b882b00e4b499025cd715b366e002751a))
+* **deploy:** match the app's theme on the update page (AYC-1186) ([#1876](https://github.com/ayunis-core/ayunis-core/issues/1876)) ([eccfba9](https://github.com/ayunis-core/ayunis-core/commit/eccfba9d702baec51fae340cee1cee7deb665e9a))
+* **observability:** drop raw connect timeouts duplicated by classified provider failures (AYC-1212) ([#1880](https://github.com/ayunis-core/ayunis-core/issues/1880)) ([b32cb3e](https://github.com/ayunis-core/ayunis-core/commit/b32cb3ef338c51cd1b493f5890088c87476840ee))
+
+
+### Code Refactoring
+
+* **quotas:** own paid-call admission and record usage directly (AYC-968) ([#1864](https://github.com/ayunis-core/ayunis-core/issues/1864)) ([fd9f9c2](https://github.com/ayunis-core/ayunis-core/commit/fd9f9c2b3c0cce8c4bfb782029842bf069c99fec))
+
+
+### Documentation
+
+* **deploy:** document nginx upstream and permission setup for the update page (AYC-1186) ([#1875](https://github.com/ayunis-core/ayunis-core/issues/1875)) ([787c39c](https://github.com/ayunis-core/ayunis-core/commit/787c39c6234db3f2c4b9e584d3b28b0ba59d14fc))
+
+
+### Miscellaneous
+
+* **runs:** derive the execution path from usage and drop the re-export stubs (AYC-000) ([#1877](https://github.com/ayunis-core/ayunis-core/issues/1877)) ([d7513ae](https://github.com/ayunis-core/ayunis-core/commit/d7513ae97a2137c6962c31014397a56a580bedb7))
+
+
+### CI/CD
+
+* **deploy:** keep unchanged services running during deploys (AYC-1194) ([#1863](https://github.com/ayunis-core/ayunis-core/issues/1863)) ([932e2e6](https://github.com/ayunis-core/ayunis-core/commit/932e2e6eff8a693ce8ee051c6dfbfdf8043e8ce3))
+* **deploy:** serve an auto-reloading update page during app restarts (AYC-1186) ([#1872](https://github.com/ayunis-core/ayunis-core/issues/1872)) ([0f47845](https://github.com/ayunis-core/ayunis-core/commit/0f47845c417409265682515fafa9f1fd7f0bac52))
+* **deploy:** start app dependencies before replacing the app (AYC-1186) ([#1870](https://github.com/ayunis-core/ayunis-core/issues/1870)) ([69ffd88](https://github.com/ayunis-core/ayunis-core/commit/69ffd88782603addc836a8afefb0928aa36acf04))
+
 ## [2.50.1](https://github.com/ayunis-core/ayunis-core/compare/v2.50.0...v2.50.1) (2026-10-07)
 
 
