@@ -43,6 +43,38 @@ path. Changing a dependency's image or configuration is also a maintenance
 operation: restart its dependent services so they reconnect to the replacement
 instead of relying on client-specific connection recovery.
 
+### Update page during the app restart
+
+While the `app` container restarts (about 17s on staging), the host's reverse
+proxy has no upstream for both the frontend and the API. Open tabs retry their
+API reads, but a page load or refresh in that window gets the proxy's bare 502.
+`deploy/maintenance/updating.html` replaces that with a self-contained page
+that reloads the same URL every 5 seconds until the app is back. The deploy
+keeps the host checkout on the deployed commit, so nginx can serve the file
+from it directly. Add this once per host, at `server` level (outside the
+`location` blocks) in the block that proxies to the app:
+
+```nginx
+# Keep the original status: API clients retry on 502-504 and must not see 200.
+error_page 502 503 504 /__ayunis_updating.html;
+location = /__ayunis_updating.html {
+    internal;
+    root /home/ayunis/apps/ayunis-core/deploy/maintenance;
+    # Missing file (e.g. before a release ships it) falls back to the plain 502.
+    try_files /updating.html =502;
+    add_header Cache-Control "no-store" always;
+}
+```
+
+Do not add `proxy_intercept_errors on`: without it, nginx shows the page only
+when it cannot reach the app, and 5xx responses from a running app pass through
+unchanged. nginx must be able to read the checkout:
+
+```bash
+sudo -u www-data test -r /home/ayunis/apps/ayunis-core/deploy/maintenance/updating.html && echo readable
+sudo nginx -t && sudo systemctl reload nginx
+```
+
 ### Prerequisites
 
 - Node.js 24 or higher
