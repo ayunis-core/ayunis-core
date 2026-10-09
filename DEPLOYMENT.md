@@ -68,12 +68,25 @@ location = /__ayunis_updating.html {
 
 Do not add `proxy_intercept_errors on`: without it, nginx shows the page only
 when it cannot reach the app, and 5xx responses from a running app pass through
-unchanged. nginx must be able to read the checkout:
+unchanged.
+
+Point `proxy_pass` at `http://127.0.0.1:3000`, not `localhost:3000`.
+`localhost` resolves to both `::1` and `127.0.0.1`, which nginx treats as a
+group: after one failed attempt during the restart it stops trying both for
+10 seconds (`no live upstreams` in the error log), even once the app is
+listening again. A single address is never marked unavailable.
+
+nginx (`www-data`) must be able to pass through the home directory to read the
+page. Grant it traverse-only access, then check and reload:
 
 ```bash
+sudo setfacl -m u:www-data:x /home/ayunis /home/ayunis/apps /home/ayunis/apps/ayunis-core /home/ayunis/apps/ayunis-core/deploy /home/ayunis/apps/ayunis-core/deploy/maintenance
 sudo -u www-data test -r /home/ayunis/apps/ayunis-core/deploy/maintenance/updating.html && echo readable
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+Without the access, nginx logs `stat() ... failed (13: Permission denied)` and
+serves its plain 502 instead of the page.
 
 ### Prerequisites
 
