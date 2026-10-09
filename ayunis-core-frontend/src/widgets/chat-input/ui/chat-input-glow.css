@@ -1,4 +1,4 @@
-/* Brand: #6055A6 — smooth orbit glow + matching send/stop button */
+/* Brand: #6055A6 — send/stop button matching the shared processing glow */
 
 :root {
   --chat-input-ease: cubic-bezier(0.45, 0.05, 0.55, 0.95);
@@ -123,22 +123,18 @@
 .chat-input-shell {
   --chat-input-brand: #6055a6;
   --chat-input-brand-rgb: 96, 85, 166;
-  --chat-input-brand-light-rgb: 125, 115, 184;
-  --chat-input-glow-ring: 2px;
-  position: relative;
-  border-radius: 0.75rem;
-  /* Reserve ring space always — toggling --active must not change layout width */
-  padding: var(--chat-input-glow-ring);
-  box-sizing: border-box;
 }
 
-@keyframes chat-input-glow-orbit {
-  from {
-    transform: translate3d(-50%, -50%, 0) rotate(0deg);
-  }
-  to {
-    transform: translate3d(-50%, -50%, 0) rotate(360deg);
-  }
+/* Doubled class so these win over the shared defaults regardless of
+   stylesheet order. The ring follows the card's rounded-xl corners. */
+.processing-glow.chat-input-shell {
+  --processing-glow-content-radius: calc(var(--radius) + 4px);
+  --processing-glow-surface: var(--card);
+}
+
+.processing-glow--active .chat-input-shell__card {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 @keyframes chat-input-glow-breathe {
@@ -149,94 +145,6 @@
   50% {
     opacity: 1;
   }
-}
-
-@keyframes chat-input-glow-halo {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.82;
-  }
-}
-
-.chat-input-shell--active {
-  isolation: isolate;
-}
-
-.chat-input-shell__glow {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.chat-input-shell__glow-spinner {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 220%;
-  height: 220%;
-  transform: translate3d(-50%, -50%, 0);
-  transform-origin: center center;
-  will-change: transform;
-  animation: chat-input-glow-orbit 5.2s linear infinite;
-}
-
-.chat-input-shell__glow-arc {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 270deg,
-    rgba(var(--chat-input-brand-rgb), 0.55) 0deg,
-    rgba(var(--chat-input-brand-light-rgb), 0.36) 14deg,
-    rgba(var(--chat-input-brand-light-rgb), 0.14) 26deg,
-    transparent 40deg,
-    transparent 360deg
-  );
-  animation: chat-input-glow-breathe 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
-    infinite;
-}
-
-.chat-input-shell__glow-bloom {
-  position: absolute;
-  inset: 8%;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 270deg,
-    rgba(var(--chat-input-brand-rgb), 0.2) 0deg,
-    rgba(var(--chat-input-brand-light-rgb), 0.11) 18deg,
-    transparent 36deg,
-    transparent 360deg
-  );
-  filter: blur(8px);
-  animation: chat-input-glow-halo 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
-    infinite;
-}
-
-.chat-input-shell--active .chat-input-shell__card {
-  position: relative;
-  z-index: 1;
-  border-color: transparent;
-  box-shadow: 0 0 0 var(--chat-input-glow-ring)
-    rgba(var(--chat-input-brand-rgb), 0.2);
-}
-
-.chat-input-shell--active .chat-input-shell__card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  pointer-events: none;
-  box-shadow: 0 0 18px rgba(var(--chat-input-brand-rgb), 0.14);
-  opacity: 0.55;
-  animation: chat-input-glow-halo 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
-    infinite;
 }
 
 .chat-input-send-button--stop {
@@ -281,25 +189,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chat-input-shell__glow-spinner {
-    animation: none;
-    transform: translate3d(-50%, -50%, 0);
-  }
-
-  .chat-input-shell__glow-arc,
-  .chat-input-shell__glow-bloom,
-  .chat-input-shell--active .chat-input-shell__card::after,
   .chat-input-send-button--stop {
     animation: none;
     opacity: 0.85;
-  }
-
-  .chat-input-shell--active .chat-input-shell__card {
-    box-shadow: 0 0 0 var(--chat-input-glow-ring)
-      rgba(var(--chat-input-brand-rgb), 0.32);
-  }
-
-  .chat-input-shell--active .chat-input-shell__card::after {
-    opacity: 0;
   }
 }

@@ -122,11 +122,16 @@
   },
   "common": {
     "loading": "Loading...",
+    "pagePending": {
+      "title": "Loading page…",
+      "description": "This may take a moment."
+    },
     "helpLink": "Help",
     "pagination": {
       "previous": "Previous",
       "next": "Next"
-    }
+    },
+    "hintTriggerLabel": "More information about {{label}}"
   },
   "error": {
     "title": "Something went wrong",

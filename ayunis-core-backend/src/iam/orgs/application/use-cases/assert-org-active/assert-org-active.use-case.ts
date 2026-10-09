@@ -14,7 +14,7 @@ export class AssertOrgActiveUseCase {
   private readonly logger = new Logger(AssertOrgActiveUseCase.name);
   constructor(private readonly orgs: OrgsRepository) {}
 
-  @HandleUnexpectedErrors(UnexpectedOrgError)
+  @HandleUnexpectedErrors(UnexpectedOrgError, { databaseUnavailable: true })
   async execute(query: AssertOrgActiveQuery): Promise<Org> {
     this.logger.debug({ orgId: query.orgId }, 'Checking organisation access');
     const org = await this.orgs

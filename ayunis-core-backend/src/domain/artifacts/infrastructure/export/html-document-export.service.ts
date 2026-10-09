@@ -144,7 +144,7 @@ export class HtmlDocumentExportService
         }
         void request.abort();
       });
-      await page.setContent(wrappedHtml, { waitUntil: 'networkidle0' });
+      await page.setContent(wrappedHtml, { waitUntil: 'load' });
 
       const pdfOptions = letterhead
         ? this.buildLetterheadPdfOptions()

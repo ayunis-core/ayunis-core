@@ -66,6 +66,8 @@
       "addRowsCount": "Number of rows",
       "addRowsConfirm": "Add",
       "maxRowsReached": "Maximum of {{count}} rows reached",
+      "undo": "Undo",
+      "redo": "Redo",
       "deleteLastRow": "Delete last row",
       "addColumn": "Add column",
       "maxColumnsReached": "Maximum of {{count}} columns reached",

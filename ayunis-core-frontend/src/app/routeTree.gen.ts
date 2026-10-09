@@ -72,7 +72,7 @@ import { Route as AuthenticatedAdminSettingsCreditLimitsIndexRouteImport } from 
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
-import { Route as AuthenticatedAcademyChapterIdQuizRouteImport } from './routes/_authenticated/academy.$chapterId_.quiz'
+import { Route as AuthenticatedAcademyChapterIdCompleteRouteImport } from './routes/_authenticated/academy.$chapterId_.complete'
 import { Route as AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRouteImport } from './routes/_authenticated/workspaces_.$workspaceId.skills.$skillId'
 import { Route as AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRouteImport } from './routes/_authenticated/workspaces_.$workspaceId.knowledge-bases.$knowledgeBaseId'
 import { Route as AuthenticatedSettingsIntegrationsOauthCallbackRouteImport } from './routes/_authenticated/settings.integrations_.oauth.callback'
@@ -438,10 +438,10 @@ const AuthenticatedAdminSettingsLetterheadsIdRoute =
     path: '/letterheads/$id',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
-const AuthenticatedAcademyChapterIdQuizRoute =
-  AuthenticatedAcademyChapterIdQuizRouteImport.update({
-    id: '/academy/$chapterId_/quiz',
-    path: '/academy/$chapterId/quiz',
+const AuthenticatedAcademyChapterIdCompleteRoute =
+  AuthenticatedAcademyChapterIdCompleteRouteImport.update({
+    id: '/academy/$chapterId_/complete',
+    path: '/academy/$chapterId/complete',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute =
@@ -518,7 +518,7 @@ export interface FileRoutesByFullPath {
   '/skills/': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
-  '/academy/$chapterId/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
+  '/academy/$chapterId/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -585,7 +585,7 @@ export interface FileRoutesByTo {
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/workspaces': typeof AuthenticatedWorkspacesIndexRoute
-  '/academy/$chapterId/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
+  '/academy/$chapterId/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -656,7 +656,7 @@ export interface FileRoutesById {
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/_authenticated/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
-  '/_authenticated/academy/$chapterId_/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
+  '/_authenticated/academy/$chapterId_/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
   '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -727,7 +727,7 @@ export interface FileRouteTypes {
     | '/skills/'
     | '/super-admin-settings/'
     | '/workspaces/'
-    | '/academy/$chapterId/quiz'
+    | '/academy/$chapterId/complete'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -794,7 +794,7 @@ export interface FileRouteTypes {
     | '/skills'
     | '/super-admin-settings'
     | '/workspaces'
-    | '/academy/$chapterId/quiz'
+    | '/academy/$chapterId/complete'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -864,7 +864,7 @@ export interface FileRouteTypes {
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
     | '/_authenticated/workspaces/'
-    | '/_authenticated/academy/$chapterId_/quiz'
+    | '/_authenticated/academy/$chapterId_/complete'
     | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
@@ -1348,11 +1348,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
-    '/_authenticated/academy/$chapterId_/quiz': {
-      id: '/_authenticated/academy/$chapterId_/quiz'
-      path: '/academy/$chapterId/quiz'
-      fullPath: '/academy/$chapterId/quiz'
-      preLoaderRoute: typeof AuthenticatedAcademyChapterIdQuizRouteImport
+    '/_authenticated/academy/$chapterId_/complete': {
+      id: '/_authenticated/academy/$chapterId_/complete'
+      path: '/academy/$chapterId/complete'
+      fullPath: '/academy/$chapterId/complete'
+      preLoaderRoute: typeof AuthenticatedAcademyChapterIdCompleteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/workspaces_/$workspaceId/skills/$skillId': {
@@ -1514,7 +1514,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedWorkspacesIndexRoute: typeof AuthenticatedWorkspacesIndexRoute
-  AuthenticatedAcademyChapterIdQuizRoute: typeof AuthenticatedAcademyChapterIdQuizRoute
+  AuthenticatedAcademyChapterIdCompleteRoute: typeof AuthenticatedAcademyChapterIdCompleteRoute
   AuthenticatedSettingsIntegrationsOauthCallbackRoute: typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
   AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute
   AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute
@@ -1544,8 +1544,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedWorkspacesIndexRoute: AuthenticatedWorkspacesIndexRoute,
-  AuthenticatedAcademyChapterIdQuizRoute:
-    AuthenticatedAcademyChapterIdQuizRoute,
+  AuthenticatedAcademyChapterIdCompleteRoute:
+    AuthenticatedAcademyChapterIdCompleteRoute,
   AuthenticatedSettingsIntegrationsOauthCallbackRoute:
     AuthenticatedSettingsIntegrationsOauthCallbackRoute,
   AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute:

@@ -3,9 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { RuntimeLanguageModelResolver } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
 import {
-  InferenceUsageGuard,
+  InferenceAdmissionGuard,
   type InferencePrincipal,
-} from 'src/domain/runs/application/services/inference-usage-guard.service';
+} from 'src/iam/quotas/application/services/inference-admission-guard.service';
 
 interface CreditGateHookParams {
   principal: InferencePrincipal;
@@ -14,7 +14,9 @@ interface CreditGateHookParams {
 
 @Injectable()
 export class CreditGateHookFactory {
-  constructor(private readonly inferenceUsageGuard: InferenceUsageGuard) {}
+  constructor(
+    private readonly inferenceAdmissionGuard: InferenceAdmissionGuard,
+  ) {}
 
   create(params: CreditGateHookParams): Hook {
     return {
@@ -22,7 +24,7 @@ export class CreditGateHookFactory {
       inheritToChildRuns: true,
       beforeModelCall: async (ctx) => {
         try {
-          await this.inferenceUsageGuard.ensureModelCallAllowed(
+          await this.inferenceAdmissionGuard.ensureModelCallAllowed(
             params.principal,
             params.resolveModel(ctx.model),
           );

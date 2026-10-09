@@ -1,5 +1,7 @@
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { RequestMethod } from '@nestjs/common';
+import { REQUIRE_ACADEMY_CERTIFICATE_KEY } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
+import { REQUIRE_SUBSCRIPTION_KEY } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { SkillsController } from './skills.controller';
 
 interface RouteMetadata {
@@ -29,5 +31,26 @@ describe(SkillsController.name, () => {
     expect(routes.map(({ path }) => path)).not.toEqual(
       expect.arrayContaining([':id/toggle-active', ':id/toggle-pinned']),
     );
+  });
+
+  it('gates the paid text improver behind a subscription or trial', () => {
+    expect(
+      Reflect.getMetadata(
+        REQUIRE_SUBSCRIPTION_KEY,
+        SkillsController.prototype.improveText,
+      ),
+    ).toBeDefined();
+  });
+
+  it('gates the paid text improver behind the academy certificate like chat', () => {
+    expect(
+      Reflect.getMetadata(
+        REQUIRE_ACADEMY_CERTIFICATE_KEY,
+        SkillsController.prototype.improveText,
+      ),
+    ).toBe(true);
+    expect(
+      Reflect.getMetadata(REQUIRE_ACADEMY_CERTIFICATE_KEY, SkillsController),
+    ).toBeUndefined();
   });
 });

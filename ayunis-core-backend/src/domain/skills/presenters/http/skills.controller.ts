@@ -12,6 +12,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -29,6 +30,8 @@ import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-
 import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
 import { FindInstalledMarketplaceSkillQuery } from 'src/domain/skills/application/use-cases/find-installed-marketplace-skill/find-installed-marketplace-skill.query';
 import { FindInstalledMarketplaceSkillUseCase } from 'src/domain/skills/application/use-cases/find-installed-marketplace-skill/find-installed-marketplace-skill.use-case';
+import { ImproveSkillTextCommand } from 'src/domain/skills/application/use-cases/improve-skill-text/improve-skill-text.command';
+import { ImproveSkillTextUseCase } from 'src/domain/skills/application/use-cases/improve-skill-text/improve-skill-text.use-case';
 import { InstallSkillFromMarketplaceCommand } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.command';
 import { InstallSkillFromMarketplaceUseCase } from 'src/domain/skills/application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 import { ListAccessibleSkillsQuery } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.query';
@@ -38,8 +41,15 @@ import { SetSkillPinUseCase } from 'src/domain/skills/application/use-cases/set-
 import { UpdateSkillCommand } from 'src/domain/skills/application/use-cases/update-skill/update-skill.command';
 import { UpdateSkillUseCase } from 'src/domain/skills/application/use-cases/update-skill/update-skill.use-case';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
+import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
+import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { CreateSkillDto } from './dto/create-skill.dto';
+import {
+  ImproveSkillTextDto,
+  ImprovedSkillTextResponseDto,
+} from './dto/improve-skill-text.dto';
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { InstalledMarketplaceSkillResponseDto } from './dto/installed-marketplace-skill-response.dto';
 import { ListSkillsQueryDto } from './dto/list-skills-query.dto';
@@ -71,6 +81,7 @@ export class SkillsController {
     private readonly setActivation: SetSkillActivationUseCase,
     private readonly setPin: SetSkillPinUseCase,
     private readonly mapper: SkillDtoMapper,
+    private readonly improveSkillText: ImproveSkillTextUseCase,
   ) {}
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -89,6 +100,46 @@ export class SkillsController {
       isShared: false,
       isPinned: false,
     });
+  }
+
+  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequireSubscription()
+  @RequireAcademyCertificate()
+  @Post('improve-text')
+  @ApiOperation({
+    summary: 'Rewrite a skill trigger or its instructions',
+  })
+  @ApiBody({ type: ImproveSkillTextDto })
+  @ApiResponse({ status: 200, type: ImprovedSkillTextResponseDto })
+  @ApiResponse({ status: 403, description: 'Subscription required' })
+  @ApiResponse({
+    status: 422,
+    description:
+      'NO_DEFAULT_MODEL_FOUND when the caller may use no model at all; SKILL_TEXT_IMPROVEMENT_UNAVAILABLE when every permitted model is anonymous-only',
+  })
+  @ApiResponse({
+    status: 502,
+    description:
+      'SKILL_TEXT_IMPROVEMENT_FAILED when the model returned no usable text',
+  })
+  @HttpCode(HttpStatus.OK)
+  async improveText(
+    @Body() dto: ImproveSkillTextDto,
+    @Req() request: RequestWithSubscriptionContext,
+  ): Promise<ImprovedSkillTextResponseDto> {
+    this.logger.log({ field: dto.field }, 'improveText');
+    const text = await this.improveSkillText.execute(
+      new ImproveSkillTextCommand({
+        field: dto.field,
+        name: dto.name,
+        trigger: dto.trigger,
+        instructions: dto.instructions,
+        consumeTrialMessage: Boolean(
+          request.subscriptionContext?.hasRemainingTrialMessages,
+        ),
+      }),
+    );
+    return { text };
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)

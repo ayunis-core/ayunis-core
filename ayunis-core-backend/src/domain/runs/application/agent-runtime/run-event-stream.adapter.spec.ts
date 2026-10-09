@@ -1101,6 +1101,49 @@ describe('adaptRunEventsToStream', () => {
     });
   });
 
+  it('rebuilds a thread-mask failure while preserving the client error code', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'ANONYMIZATION_UNAVAILABLE',
+          message: 'Anonymization is unavailable',
+          details: {
+            hostError: {
+              type: 'thread_pii_mask_failure',
+              context: {
+                code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+                stage: 'new_masks_persistence',
+                textLength: 24,
+                newMaskCount: 1,
+                databaseCode: '23505',
+                causeType: 'QueryFailedError',
+              },
+            },
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+    );
+
+    const error: unknown = await result.catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(RunAnonymizationUnavailableError);
+    expect(error).toMatchObject({
+      name: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+      code: 'RUN_ANONYMIZATION_UNAVAILABLE',
+      cause: {
+        code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+        metadata: {
+          stage: 'new_masks_persistence',
+          textLength: 24,
+          newMaskCount: 1,
+          databaseCode: '23505',
+          causeType: 'QueryFailedError',
+        },
+      },
+    });
+  });
+
   it('maps an oversized latest turn to a context-budget error', async () => {
     await expect(
       collect(

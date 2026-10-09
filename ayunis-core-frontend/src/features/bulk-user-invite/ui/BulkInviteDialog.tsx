@@ -33,6 +33,7 @@ import {
   downloadCsv,
   type ParsedInvite,
   type CsvError,
+  decodeCsvFile,
 } from '@/features/bulk-user-invite/lib/csv-utils';
 import {
   type BulkInviteValidationError,
@@ -130,7 +131,7 @@ export default function BulkInviteDialog({
     (file: File) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const content = e.target?.result as string;
+        const content = decodeCsvFile(e.target?.result as ArrayBuffer);
         const result = parseInviteCsv(content);
 
         if (!result.success && result.errors.length > 0) {
@@ -163,7 +164,7 @@ export default function BulkInviteDialog({
       reader.onerror = () => {
         setParseError(t('bulkInvite.parseError'));
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     },
     [t, translateCsvError],
   );

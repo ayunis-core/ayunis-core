@@ -26,7 +26,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RootLayout from './layouts/root-layout';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
+import { PagePending } from '@/shared/ui/page-pending/PagePending';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
+import { shouldRetryQuery } from '@/shared/api/client';
 import {
   createOpenPanelScreenViewAnalytics,
   openPanel,
@@ -47,14 +49,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-      retry: (failureCount, error: unknown) => {
-        // Don't retry on 4xx errors (client errors)
-        const status = (error as { status?: number }).status;
-        if (status && status >= 400 && status < 500) {
-          return false;
-        }
-        return failureCount < 3;
-      },
+      retry: shouldRetryQuery,
     },
     mutations: {
       retry: 1,
@@ -70,6 +65,9 @@ const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  // Shown after the router's 1s pendingMs, e.g. while reads retry through a
+  // deploy restart, so the page isn't blank.
+  defaultPendingComponent: PagePending,
   defaultErrorComponent: ({ error }) => {
     // Auto-reload on chunk load errors (stale deployment)
     if (isChunkLoadError(error) && attemptChunkReload()) {

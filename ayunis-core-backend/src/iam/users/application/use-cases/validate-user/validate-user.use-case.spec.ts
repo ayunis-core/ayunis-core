@@ -19,6 +19,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
 import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 
 describe('ValidateUserUseCase', () => {
   let useCase: ValidateUserUseCase;
@@ -104,6 +105,55 @@ describe('ValidateUserUseCase', () => {
     await expect(useCase.execute(query)).rejects.toThrow(UserNotFoundError);
   });
 
+  it('returns service unavailable when the user lookup cannot reach PostgreSQL', async () => {
+    const databaseError = Object.assign(
+      new Error('the database system is not yet accepting connections'),
+      { code: '57P03' },
+    );
+    jest
+      .spyOn(mockUsersRepository, 'findOneByEmail')
+      .mockRejectedValue(databaseError);
+
+    const error = await useCase
+      .execute(
+        new ValidateUserQuery('maria.muster@stadt.example', 'password123'),
+      )
+      .catch((cause: unknown) => cause);
+
+    expect(error).toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+    expect(error).toBeInstanceOf(ServiceUnavailableError);
+    if (!(error instanceof ServiceUnavailableError)) {
+      throw new Error('Expected ServiceUnavailableError');
+    }
+    const response = error.toHttpException();
+    expect(response.getStatus()).toBe(503);
+    expect(response.getResponse()).toEqual({
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Internal server error',
+    });
+  });
+
+  it('preserves a policy lookup service-unavailable error', async () => {
+    const serviceUnavailable = new ServiceUnavailableError(
+      Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+    jest
+      .spyOn(mockUsersRepository, 'findOneByEmail')
+      .mockResolvedValue(aUser());
+    mockGetOrgAuthenticationPolicy.execute.mockRejectedValue(
+      serviceUnavailable,
+    );
+
+    await expect(
+      useCase.execute(new ValidateUserQuery('test@example.com', 'password')),
+    ).rejects.toBe(serviceUnavailable);
+  });
+
   it('should throw UserAuthenticationFailedError if password is invalid', async () => {
     const query = new ValidateUserQuery('test@example.com', 'wrongpassword');
     const mockUser = aUser();
@@ -116,9 +166,10 @@ describe('ValidateUserUseCase', () => {
       .spyOn(mockUsersRepository, 'registerFailedLoginAttempt')
       .mockResolvedValue(1);
 
-    await expect(useCase.execute(query)).rejects.toThrow(
-      UserAuthenticationFailedError,
-    );
+    await expect(useCase.execute(query)).rejects.toMatchObject({
+      constructor: UserAuthenticationFailedError,
+      statusCode: 401,
+    });
     expect(mockUsersRepository.registerFailedLoginAttempt).toHaveBeenCalled();
   });
 

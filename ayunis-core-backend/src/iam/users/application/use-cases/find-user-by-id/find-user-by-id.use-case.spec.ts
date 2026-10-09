@@ -53,4 +53,19 @@ describe('FindUserByIdUseCase', () => {
     expect(result).toBe(mockUser);
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
   });
+
+  it('returns service unavailable when PostgreSQL cannot load the user', async () => {
+    jest.spyOn(mockUsersRepository, 'findOneById').mockRejectedValue(
+      Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+
+    await expect(
+      useCase.execute(new FindUserByIdQuery('user-id' as UUID)),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
 });

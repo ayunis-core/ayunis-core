@@ -19,9 +19,9 @@ export function parseAlignment(
   return match ? ALIGNMENT_MAP[match[1]] : undefined;
 }
 
-/** Parses an inline `style` attribute into a `property -> value` map. */
-function parseStyleDeclarations(style: string): Map<string, string> {
-  const declarations = new Map<string, string>();
+/** Parses inline declarations without collapsing repeated properties. */
+function parseStyleDeclarations(style: string): Array<[string, string]> {
+  const declarations: Array<[string, string]> = [];
 
   for (const declaration of style.split(';')) {
     const separator = declaration.indexOf(':');
@@ -29,7 +29,7 @@ function parseStyleDeclarations(style: string): Map<string, string> {
 
     const property = declaration.slice(0, separator).trim().toLowerCase();
     const value = declaration.slice(separator + 1).trim();
-    if (property && value) declarations.set(property, value);
+    if (property && value) declarations.push([property, value]);
   }
 
   return declarations;
@@ -79,18 +79,53 @@ function parseLineHeight(
       : { line: twips, lineRule: LineRuleType.EXACT };
   }
 
-  // A unitless multiplier maps to auto line spacing measured in 240ths of a
-  // line (240 = single, 360 = 1.5, 480 = double).
-  const multiplier = toFiniteNumber(trimmed);
+  // A unitless multiplier (or percentage) maps to auto line spacing measured
+  // in 240ths of a line (240 = single, 360 = 1.5, 480 = double).
+  const multiplier = trimmed.endsWith('%')
+    ? divideBy100(toFiniteNumber(trimmed.slice(0, -1)))
+    : toFiniteNumber(trimmed);
   return multiplier === undefined
     ? undefined
     : { line: Math.round(multiplier * 240), lineRule: LineRuleType.AUTO };
 }
 
+function divideBy100(value: number | undefined): number | undefined {
+  return value === undefined ? undefined : value / 100;
+}
+
+function lengthToSpacing(
+  key: 'before' | 'after',
+  value: string,
+): Partial<ISpacingProperties> | undefined {
+  const twips = value.trim() === 'auto' ? 0 : cssLengthToTwips(value);
+  return twips === undefined ? undefined : { [key]: twips };
+}
+
+/** `margin: top [right [bottom [left]]]` — bottom falls back to top. */
+function parseMarginShorthand(
+  value: string,
+): Partial<ISpacingProperties> | undefined {
+  const [top, , bottom = top] = value.trim().split(/\s+/);
+  return {
+    ...lengthToSpacing('before', top),
+    ...lengthToSpacing('after', bottom),
+  };
+}
+
+const SPACING_PARSERS: Partial<
+  Record<string, (value: string) => Partial<ISpacingProperties> | undefined>
+> = {
+  margin: parseMarginShorthand,
+  'margin-top': (value) => lengthToSpacing('before', value),
+  'margin-bottom': (value) => lengthToSpacing('after', value),
+  'line-height': parseLineHeight,
+};
+
 /**
- * Extracts paragraph spacing (`margin-top`/`margin-bottom`/`line-height`) from
- * an element's inline style. Without this, Word falls back to the defaults from
- * the Normal style (8pt after, 1.5 line spacing), ignoring the HTML styling.
+ * Extracts paragraph spacing (`margin`/`margin-top`/`margin-bottom`/
+ * `line-height`) from an element's inline style, in declaration order so a
+ * later longhand overrides the shorthand. Without this, Word falls back to the
+ * defaults from the Normal style (8pt after, 1.5 line spacing).
  */
 export function parseSpacing(
   node: HTMLElement,
@@ -98,25 +133,10 @@ export function parseSpacing(
   const style = node.getAttribute('style') ?? '';
   if (!style) return undefined;
 
-  const declarations = parseStyleDeclarations(style);
   let spacing: ISpacingProperties = {};
-
-  const marginTop = declarations.get('margin-top');
-  if (marginTop !== undefined) {
-    const before = cssLengthToTwips(marginTop);
-    if (before !== undefined) spacing = { ...spacing, before };
-  }
-
-  const marginBottom = declarations.get('margin-bottom');
-  if (marginBottom !== undefined) {
-    const after = cssLengthToTwips(marginBottom);
-    if (after !== undefined) spacing = { ...spacing, after };
-  }
-
-  const lineHeight = declarations.get('line-height');
-  if (lineHeight !== undefined) {
-    const line = parseLineHeight(lineHeight);
-    if (line) spacing = { ...spacing, ...line };
+  for (const [property, value] of parseStyleDeclarations(style)) {
+    const parsed = SPACING_PARSERS[property]?.(value);
+    if (parsed) spacing = { ...spacing, ...parsed };
   }
 
   return Object.keys(spacing).length > 0 ? spacing : undefined;

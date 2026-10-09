@@ -34,6 +34,7 @@ import { SourcesList } from './SourcesList';
 import { ChatInputExpandable } from './ChatInputExpandable';
 import { ChatInputActionBar } from './ChatInputActionBar';
 import { showError } from '@/shared/lib/toast';
+import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import './chat-input-glow.css';
 import type {
   IntegrationSummary,
@@ -303,22 +304,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         className="w-full space-y-2"
         data-testid="chat-input"
       >
-        <div
-          className={cn(
-            'chat-input-shell',
-            showProcessingGlow && 'chat-input-shell--active',
-          )}
+        <ProcessingGlow
+          isActive={showProcessingGlow}
+          className="chat-input-shell"
           aria-busy={showProcessingGlow}
           data-processing={showProcessingGlow ? 'true' : undefined}
         >
-          {showProcessingGlow && (
-            <div className="chat-input-shell__glow" aria-hidden="true">
-              <div className="chat-input-shell__glow-spinner">
-                <div className="chat-input-shell__glow-arc" />
-                <div className="chat-input-shell__glow-bloom" />
-              </div>
-            </div>
-          )}
           <OnboardingTourTarget name={TOUR_TARGET.chatComposer} settleMs={900}>
             <Card
               className={cn(
@@ -412,7 +403,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               </CardContent>
             </Card>
           </OnboardingTourTarget>
-        </div>
+        </ProcessingGlow>
       </div>
     );
   },

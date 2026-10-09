@@ -5,6 +5,9 @@ owns the verified-domain-to-organization mappings, enablement, JIT policy, user
 roles, and seat admission. Zitadel owns customer IdP credentials and metadata.
 Never copy IdP secrets into Core, source control, Linear, or QA evidence.
 
+Share the [customer SSO setup guide](../guides/customer-sso-setup.md) with the
+customer's IT team for the non-technical requirements and onboarding checklist.
+
 ## Collect and verify inputs
 
 - Confirm the requester is authorized to configure SSO for the municipality.

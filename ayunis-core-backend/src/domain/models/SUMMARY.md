@@ -37,7 +37,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **UpdateImageGenerationModelUseCase** (`application/use-cases/update-image-generation-model`): Updates an existing image-generation model in the catalog, enforcing provider constraints via `ModelPolicyService`.
 - **UpdatePermittedModelUseCase** (`application/use-cases/update-permitted-model`): Updates a permitted model's flags (default, anonymous-only).
 - **CreatePermittedModelUseCase** (`application/use-cases/create-permitted-model`): Creates a new org-scoped permitted model entry.
-- **DeletePermittedModelUseCase** (`application/use-cases/delete-permitted-model`): Removes a permitted model entry and clears related defaults.
+- **DeletePermittedModelUseCase** (`application/use-cases/delete-permitted-model`): Removes a permitted model entry and clears related defaults. Deleting a language model first removes user defaults that reference it and moves its threads to each owner's effective default (via the threads module's `ReplaceModelWithUserDefaultUseCase`, which excludes the deleted permit), all in one transaction.
 - **DeleteModelUseCase** (`application/use-cases/delete-model`): Deletes an unreferenced model from the catalog only after its organization permissions have been removed through their dedicated flow. Permitted models return `MODEL_STILL_PERMITTED`; models referenced by historical usage return `MODEL_REFERENCED_BY_USAGE` with archival as the actionable alternative. The model row stays pessimistically locked through the checks and delete, so concurrent usage collection completes first and cannot be dropped; the usage FK is translated to the same conflict.
 - **GetPermittedModelsUseCase** (`application/use-cases/get-permitted-models`): Retrieves all permitted models for an org.
 - **GetPermittedModelUseCase** (`application/use-cases/get-permitted-model`): Retrieves a single permitted model by ID.
@@ -50,17 +50,17 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetModelUseCase** (`application/use-cases/get-model`): Retrieves a single model by slug.
 - **GetModelByIdUseCase** (`application/use-cases/get-model-by-id`): Retrieves a single model by ID.
 - **GetModelProviderInfoUseCase** (`application/use-cases/get-model-provider-info`): Retrieves provider metadata for a model.
-- **GetEffectiveLanguageModelsUseCase** (`application/use-cases/get-effective-language-models`): Computes the effective language set. Without an enabled override it returns organization grants; with any enabled override it returns only the catalog-model union of explicit grants across all enabled teams, including an intentionally empty set. When several teams grant the same catalog model, `anonymousOnly` is enforced if any matching grant requires it.
+- **GetEffectiveLanguageModelsUseCase** (`application/use-cases/get-effective-language-models`): Computes the effective language set. Without an enabled override it returns organization grants; with any enabled override it returns only the catalog-model union of explicit grants across all enabled teams, including an intentionally empty set. When several teams grant the same catalog model, `anonymousOnly` is enforced if any matching grant requires it. Optional `excludedPermittedModelIds` drops specific permits before team grants are merged, so other grants of the same catalog model remain effective.
 - **GetTeamPermittedModelsUseCase** (`application/use-cases/get-team-permitted-models`): Retrieves team-scoped permitted language models.
 - **GetTeamPermittedImageGenerationModelsUseCase** (`application/use-cases/get-team-permitted-image-generation-models`): Retrieves team-scoped permitted image-generation models.
 - **CreateTeamPermittedModelUseCase** (`application/use-cases/create-team-permitted-model`): Creates an independent team-scoped grant directly from an active, configured catalog language or image-generation model. Organization permission is not required, embedding models are rejected, duplicate grants are translated to a typed conflict, and each team may hold at most one image-generation grant.
-- **DeleteTeamPermittedModelUseCase** (`application/use-cases/delete-team-permitted-model`): Removes a team-scoped permitted model entry. Removing an organization grant leaves an independent matching team grant intact; deleting a team still cascades its grants through the existing foreign key.
+- **DeleteTeamPermittedModelUseCase** (`application/use-cases/delete-team-permitted-model`): Removes a team-scoped permitted model entry. For language models it first removes user defaults that reference the permit and moves its threads to each owner's effective default, excluding the deleted permit, in one transaction. If a thread's owner has no other effective model, the whole delete fails with `NO_DEFAULT_MODEL_FOUND`. Removing an organization grant leaves an independent matching team grant intact. Deleting a team still cascades its grants through the existing foreign key, without moving its threads to another model.
 - **SetTeamDefaultModelUseCase** (`application/use-cases/set-team-default-model`): Sets the default model for a team.
 - **SetOrgDefaultLanguageModelUseCase** (`application/use-cases/set-org-default-language-model`): Sets the org-level default language model.
 - **SetUserDefaultLanguageModelUseCase** (`application/use-cases/set-user-default-language-model`): Sets a user's default language model.
 - **GetOrgDefaultModelUseCase** (`application/use-cases/get-org-default-model`): Retrieves the org-level default model.
 - **GetUserDefaultModelUseCase** (`application/use-cases/get-user-default-model`): Retrieves a user's default model.
-- **GetDefaultModelUseCase** (`application/use-cases/get-default-model`): Resolves the effective default model for a user (user → team → org → alphabetical fallback) and returns the permit record from the user's current effective org/team model set.
+- **GetDefaultModelUseCase** (`application/use-cases/get-default-model`): Resolves the effective default model for a user (user → team → org → alphabetical fallback) and returns the permit record from the user's current effective org/team model set. `excludedPermittedModelIds` (used while a permit is being deleted) removes those permits from the effective set and skips them as team defaults.
 - **DeleteUserDefaultModelUseCase** (`application/use-cases/delete-user-default-model`): Removes a user's default model preference.
 - **DeleteUserDefaultModelsByModelIdUseCase** (`application/use-cases/delete-user-default-models-by-model-id`): Removes all user defaults referencing a specific model.
 - **ClearDefaultsByCatalogModelIdUseCase** (`application/use-cases/clear-defaults-by-catalog-model-id`): Clears all default references for a catalog model being deleted.
@@ -85,3 +85,20 @@ Direct-inference streams use `StreamIdleWatchdog` from `src/common/streaming/str
 The module supports image generation via a provider-abstracted handler system. The abstract `ImageGenerationHandler` port (`application/ports/image-generation.handler.ts`) defines the contract for generating images given a model, prompt, size, quality, and optional `referenceImages` (raw buffers with content types). When reference images are present the Azure handler calls the provider's image-edit endpoint (up to 16 reference images per request) instead of plain text-to-image generation, so the image model sees the actual source images rather than a text description. `ImageGenerationHandlerRegistry` (`application/registry/image-generation-handler.registry.ts`) maps model providers to their handler implementations, following the same pattern as `InferenceHandlerRegistry`. Infrastructure implementations include `AzureImageGenerationHandler` (`infrastructure/image-generation/azure.image-generation.ts`) for Azure-hosted generation and `MockImageGenerationHandler` (`infrastructure/image-generation/mock.image-generation.ts`) for test environments. `GenerateImageUseCase` (`application/use-cases/generate-image/generate-image.use-case.ts`) is the facade that resolves the correct handler via the registry and executes the generation request with proper error handling. `ImageGenerationFailedError` (`application/models.errors.ts`) is thrown when image generation encounters an unexpected failure.
 
 Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.
+
+## Eligible default selection and completed-response accounting
+
+`GetDefaultModelUseCase` resolves the caller's effective grants once. Its optional
+`excludeAnonymousOnly` constraint filters those grants before applying defaults;
+`preferOrganizationDefault` moves an eligible organization default ahead of the
+usual user → team → organization → alphabetical fallback order. Existing callers
+retain the usual order and anonymity behavior. No grants produces
+`NO_DEFAULT_MODEL_FOUND`; grants that are all anonymous-only produce
+`ONLY_ANONYMOUS_MODELS_AVAILABLE` when that constraint is requested.
+
+`GetInferenceCommand.onUsage` is an optional awaited callback for callers that
+account completed non-streaming responses. It runs before token-limit rejection,
+so consumed tokens are still recorded for truncated completions. Accounting
+failures retain their identity and prevent returning the result; they are not
+classified as provider failures. Calls that throw before returning a response
+cannot provide usage through this callback.

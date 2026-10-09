@@ -1,8 +1,13 @@
+import os
 import threading
 
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
-from presidio_analyzer.predefined_recognizers import GLiNERRecognizer
+
+from app.batched_gliner_recognizer import BatchedGLiNERRecognizer
+
+
+GLINER_BATCH_SIZE = int(os.getenv("GLINER_BATCH_SIZE", "16"))
 
 GLINER_ENTITY_MAPPING = {
     "person": "PERSON",
@@ -43,9 +48,11 @@ class PresidioService:
             supported_languages=["de"],
         )
 
-        # GLiNER for NER (replaces spaCy NER). The model is multilingual,
-        # so German-only registration still detects PII in any language.
-        gliner_recognizer = GLiNERRecognizer(
+        # GLiNER for NER (replaces spaCy NER). The model is multilingual, so
+        # German-only registration still detects PII in any language. Batching
+        # preserves Presidio's chunk boundaries while amortizing model passes.
+        gliner_recognizer = BatchedGLiNERRecognizer(
+            batch_size=GLINER_BATCH_SIZE,
             model_name="urchade/gliner_multi_pii-v1",
             supported_language="de",
             entity_mapping=GLINER_ENTITY_MAPPING,

@@ -13,6 +13,7 @@ import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 import { setCookies, clearMfaPendingCookie } from 'src/common/util/cookie.util';
 import {
   MfaPendingJwtService,
@@ -167,7 +168,9 @@ export class MfaLoginController {
         payload.authenticationMethod,
       );
     } catch (error: unknown) {
-      clearMfaPendingCookie(res, this.configService);
+      if (!(error instanceof ServiceUnavailableError)) {
+        clearMfaPendingCookie(res, this.configService);
+      }
       throw error;
     }
   }

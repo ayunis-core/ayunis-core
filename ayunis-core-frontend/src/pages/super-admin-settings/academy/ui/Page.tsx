@@ -15,22 +15,22 @@ import {
 } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
 import type {
+  AcademyChapterResponseDto,
   CourseModuleResponseDto,
-  SuperAdminAcademyChapterResponseDto,
 } from '@/shared/api';
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import { Button } from '@ayunis/ui/components/button';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ChapterCard } from './ChapterCard';
 import { ChapterFormDialog } from './ChapterFormDialog';
 import { ModuleFormDialog } from './ModuleFormDialog';
-import { useDeleteChapter } from '../api/useDeleteChapter';
-import { useDeleteModule } from '../api/useDeleteModule';
-import { useReorderChapters } from '../api/useReorderChapters';
+import { useDeleteChapter } from '@/pages/super-admin-settings/academy/api/useDeleteChapter';
+import { useDeleteModule } from '@/pages/super-admin-settings/academy/api/useDeleteModule';
+import { useReorderChapters } from '@/pages/super-admin-settings/academy/api/useReorderChapters';
 import { moveById } from '@/shared/lib/move-by-id';
 
 interface AcademyPageProps {
-  chapters: SuperAdminAcademyChapterResponseDto[];
+  chapters: AcademyChapterResponseDto[];
 }
 
 interface ModuleDialogState {
@@ -42,7 +42,7 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
   const { t } = useTranslation('super-admin-settings-academy');
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [editChapter, setEditChapter] =
-    useState<SuperAdminAcademyChapterResponseDto | null>(null);
+    useState<AcademyChapterResponseDto | null>(null);
   const [moduleDialog, setModuleDialog] = useState<ModuleDialogState | null>(
     null,
   );
@@ -78,7 +78,7 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
     reorderChapters(next.map((chapter) => chapter.id));
   }
 
-  function handleDeleteChapter(chapter: SuperAdminAcademyChapterResponseDto) {
+  function handleDeleteChapter(chapter: AcademyChapterResponseDto) {
     confirm({
       title: t('deleteChapter.title'),
       description: t('deleteChapter.description', { title: chapter.title }),

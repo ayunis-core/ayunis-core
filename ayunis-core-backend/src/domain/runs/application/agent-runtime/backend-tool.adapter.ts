@@ -14,15 +14,13 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
-import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
-import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
 import {
   addToolResultTruncationNotice,
   truncateToolResult,
 } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
-import { serializeRuntimeModelError } from './runtime-model-error';
+import { serializeRuntimeAnonymizationError } from './runtime-model-error';
 import {
   isAcknowledgementOnlyTool,
   isExternallyHandledTool,
@@ -138,21 +136,16 @@ export class BackendToolAdapter {
         ),
       )
       .catch((error: unknown) => {
-        // A classified provider failure must survive the runtime round-trip
-        // in `details` — `cause` is process-local and the event stream only
-        // serializes details — so mapRunError can rebuild it and AppSignal
-        // groups under PROVIDER_UNAVAILABLE_*_ANONYMIZE (AYC-654).
+        // Classified failures must cross the runtime boundary in `details` —
+        // `cause` is process-local and the event stream only serializes details
+        // — so mapRunError can rebuild safe AppSignal grouping information.
+        const details = serializeRuntimeAnonymizationError(error);
         throw new AgentRuntimeError(
           'ANONYMIZATION_UNAVAILABLE',
           'Anonymization is currently unavailable',
           {
             cause: error,
-            ...(error instanceof ProviderUnavailableError && {
-              details: serializeRuntimeModelError(
-                error,
-                STREAM_IDLE_TIMEOUT_MS,
-              ),
-            }),
+            ...(details && { details }),
           },
         );
       });

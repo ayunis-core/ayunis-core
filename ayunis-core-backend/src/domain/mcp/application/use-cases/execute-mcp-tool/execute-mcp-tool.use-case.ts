@@ -5,6 +5,7 @@ import { McpClientService } from 'src/domain/mcp/application/services/mcp-client
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   isMcpConnectivityOutage,
+  McpToolTimeoutError,
   UnexpectedMcpError,
 } from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -151,7 +152,8 @@ export class ExecuteMcpToolUseCase {
    * LLM. This soft-return is the only place classified MCP outages surface
    * during a run, and their raw transport duplicates are suppressed
    * AppSignal-side (AYC-616) — so the classified failure must be reported
-   * here or connection outages become invisible. Tool-level failures (bad
+   * here or connection outages become invisible. Tool timeouts are reported
+   * too, under their own incident type (AYC-1120). Tool-level failures (bad
    * params, server-side tool bugs) stay unreported: they are the
    * integration's expected outcome, not ours.
    */
@@ -176,7 +178,10 @@ export class ExecuteMcpToolUseCase {
       '[MCP] operation=execute_tool',
     );
 
-    if (isMcpConnectivityOutage(toolError)) {
+    if (
+      isMcpConnectivityOutage(toolError) ||
+      toolError instanceof McpToolTimeoutError
+    ) {
       reportUnexpectedError(toolError);
     }
 

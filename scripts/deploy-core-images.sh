@@ -67,7 +67,13 @@ if ! docker pull "$SANDBOX_IMAGE"; then
   exit 1
 fi
 
-docker compose down
+# Compose recreates services whose image or configuration changed while leaving
+# unchanged dependencies running. Besides shortening the interruption, this
+# retains Redis-backed queue state across ordinary deployments.
+# The app waits on its dependencies' health checks after Compose has already
+# stopped the old app, so bring them up first: the old app keeps serving while
+# anonymize loads its model, and the app swap is only its own restart.
+docker compose up -d --no-build --wait --wait-timeout 180 code-execution anonymize
 docker compose up -d --no-build
 timeout 120 bash -c 'until docker compose ps app --format json | grep -q "(healthy)"; do sleep 5; done'
 docker compose ps

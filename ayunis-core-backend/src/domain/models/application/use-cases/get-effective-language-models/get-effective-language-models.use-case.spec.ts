@@ -162,6 +162,42 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
     expect(result.models[0]?.anonymousOnly).toBe(true);
   });
 
+  it('drops excluded permits before merging so other grants of the same catalog model survive', async () => {
+    const sharedCatalogId = '10000000-0000-0000-0000-000000000001' as UUID;
+    const excluded = permit('Municipal Assistant', sharedCatalogId, teamAId);
+    const remaining = permit('Municipal Assistant', sharedCatalogId, teamBId);
+    scopeResolver.resolve.mockResolvedValue({
+      orgId,
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    repository.findManyLanguageByTeams.mockResolvedValue([excluded, remaining]);
+
+    const result = await useCase.execute(
+      new GetEffectiveLanguageModelsQuery(orgId, userId, [excluded.id]),
+    );
+
+    expect(result.models.map((model) => model.id)).toEqual([remaining.id]);
+  });
+
+  it('drops excluded permits from organization scope', async () => {
+    const excluded = permit(
+      'Municipal Assistant',
+      '10000000-0000-0000-0000-000000000001',
+    );
+    const remaining = permit(
+      'Document Helper',
+      '10000000-0000-0000-0000-000000000002',
+    );
+    scopeResolver.resolve.mockResolvedValue({ orgId, overrideTeamIds: [] });
+    repository.findManyLanguage.mockResolvedValue([excluded, remaining]);
+
+    const result = await useCase.execute(
+      new GetEffectiveLanguageModelsQuery(orgId, userId, [excluded.id]),
+    );
+
+    expect(result.models.map((model) => model.id)).toEqual([remaining.id]);
+  });
+
   it('resolves organization scope without a user ID', async () => {
     scopeResolver.resolve.mockResolvedValue({ orgId, overrideTeamIds: [] });
     repository.findManyLanguage.mockResolvedValue([]);

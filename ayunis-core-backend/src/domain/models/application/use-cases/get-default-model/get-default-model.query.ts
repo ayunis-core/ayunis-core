@@ -2,16 +2,22 @@ import type { UUID } from 'crypto';
 
 export class GetDefaultModelQuery {
   public readonly orgId: UUID;
+  public readonly preferOrganizationDefault: boolean;
+  public readonly excludeAnonymousOnly: boolean;
   public readonly userId?: UUID;
-  public readonly blacklistedModelIds?: UUID[];
+  public readonly excludedPermittedModelIds?: UUID[];
 
   constructor(params: {
     orgId: UUID;
     userId?: UUID;
-    blacklistedModelIds?: UUID[];
+    excludedPermittedModelIds?: UUID[];
+    preferOrganizationDefault?: boolean;
+    excludeAnonymousOnly?: boolean;
   }) {
     this.orgId = params.orgId;
+    this.preferOrganizationDefault = params.preferOrganizationDefault ?? false;
+    this.excludeAnonymousOnly = params.excludeAnonymousOnly ?? false;
     this.userId = params.userId;
-    this.blacklistedModelIds = params.blacklistedModelIds;
+    this.excludedPermittedModelIds = params.excludedPermittedModelIds;
   }
 }

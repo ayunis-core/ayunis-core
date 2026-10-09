@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { generateInviteTemplate, parseInviteCsv } from './csv-utils';
+import {
+  decodeCsvFile,
+  generateInviteTemplate,
+  parseInviteCsv,
+} from './csv-utils';
 
 describe(parseInviteCsv.name, () => {
   it('parses multiple pipe-separated teams for one user', () => {
@@ -55,5 +59,27 @@ describe(generateInviteTemplate.name, () => {
   it('documents the optional multi-team column', () => {
     expect(generateInviteTemplate()).toContain('email,role,teams');
     expect(generateInviteTemplate()).toContain('Research|Operations');
+  });
+});
+
+describe(decodeCsvFile.name, () => {
+  const text =
+    'email;role;teams\nada@example.com;user;Amt für Orga und Personal';
+
+  it('decodes UTF-8 and strips the BOM', () => {
+    const bytes = new Uint8Array([
+      0xef,
+      0xbb,
+      0xbf,
+      ...new TextEncoder().encode(text),
+    ]);
+
+    expect(decodeCsvFile(bytes.buffer)).toBe(text);
+  });
+
+  it('falls back to Windows-1252 for Excel "CSV" exports', () => {
+    const bytes = Uint8Array.from(text, (char) => char.charCodeAt(0));
+
+    expect(decodeCsvFile(bytes.buffer)).toBe(text);
   });
 });

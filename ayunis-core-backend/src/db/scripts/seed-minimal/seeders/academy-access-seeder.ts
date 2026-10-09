@@ -4,16 +4,19 @@ import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { OrgAddonRecord } from 'src/iam/addons/infrastructure/persistence/postgres/schema/org-addon.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { AcademyCompletionRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-completion.record';
-import { AcademyChapterProgressRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-chapter-progress.record';
+import { AcademyChapterConfirmationRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-chapter-confirmation.record';
 import { OrgSeeder } from './base-seeder';
-import type { SeedState } from '../seed-state';
-import type { AcademyCompletionFixture, OrgFixture } from '../seed-types';
+import type { SeedState } from 'src/db/scripts/seed-minimal/seed-state';
+import type {
+  AcademyCompletionFixture,
+  OrgFixture,
+} from 'src/db/scripts/seed-minimal/seed-types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * The academy add-on plus a spread of completion dates covering every
- * certificate state the UI can show.
+ * Academy completion state the UI can show.
  *
  * Offsets are relative to seed time, so the same fixture keeps producing valid /
  * expiring-soon / expired rows however long after it was written — that is what
@@ -74,22 +77,19 @@ export class AcademyAccessSeeder extends OrgSeeder {
       },
     );
 
-    // Without matching per-chapter progress the academy page would show a
-    // completed certificate above chapters that read as never passed.
+    // Keep chapter confirmations aligned with seeded whole-academy completion.
     for (const chapter of ctx.getAcademyChapters()) {
       await this.findOrCreate(
-        this.repo(AcademyChapterProgressRecord),
+        this.repo(AcademyChapterConfirmationRecord),
         { userId: user.id, chapterId: chapter.id },
         () => ({
           id: randomUUID(),
           userId: user.id,
           chapterId: chapter.id,
-          passedAt: completedAt,
-          lastScore: 100,
-          lastAttemptAt: completedAt,
+          confirmedAt: completedAt,
         }),
         {
-          entity: 'Academy progress',
+          entity: 'Academy confirmation',
           name: `${fixture.email} — ${chapter.title}`,
         },
       );

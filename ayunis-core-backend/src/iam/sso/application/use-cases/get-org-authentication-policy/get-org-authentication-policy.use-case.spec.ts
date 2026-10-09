@@ -24,4 +24,21 @@ describe(GetOrgAuthenticationPolicyUseCase.name, () => {
       useCase.execute(new GetOrgAuthenticationPolicyQuery(TEST_ORG_ID)),
     ).resolves.toEqual({ localPasswordLoginEnabled: false });
   });
+
+  it('returns service unavailable when PostgreSQL cannot load the policy', async () => {
+    const repository = createMockOrgSsoConnectionsRepository();
+    repository.findLocalPasswordLoginEnabledByOrgId.mockRejectedValue(
+      Object.assign(new Error('the database system is in recovery mode'), {
+        code: '57P03',
+      }),
+    );
+    const useCase = new GetOrgAuthenticationPolicyUseCase(repository);
+
+    await expect(
+      useCase.execute(new GetOrgAuthenticationPolicyQuery(TEST_ORG_ID)),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
 });

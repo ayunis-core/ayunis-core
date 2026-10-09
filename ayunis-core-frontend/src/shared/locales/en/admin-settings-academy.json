@@ -31,7 +31,7 @@
     },
     "column": {
       "member": "Member",
-      "lastPassed": "Last passed",
+      "lastPassed": "Last completed",
       "renewalDue": "Renewal due",
       "status": "Status"
     },
@@ -39,7 +39,7 @@
       "valid": "Valid",
       "expiringSoon": "Expiring soon",
       "expired": "Expired",
-      "notPassed": "Not yet earned"
+      "notPassed": "Not yet completed"
     }
   }
 }

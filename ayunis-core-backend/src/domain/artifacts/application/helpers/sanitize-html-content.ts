@@ -51,6 +51,12 @@ const ALLOWED_TAGS = [
   'summary',
 ];
 
+const CSS_LENGTH = String.raw`(?:-?\d+(?:\.\d+)?(?:pt|px)?|auto)`;
+const CSS_LENGTH_VALUE = new RegExp(String.raw`^${CSS_LENGTH}$`);
+const MARGIN_SHORTHAND = new RegExp(
+  String.raw`^${CSS_LENGTH}(?:\s+${CSS_LENGTH}){0,3}$`,
+);
+
 const SANITIZE_OPTIONS: IOptions = {
   allowedTags: ALLOWED_TAGS,
   allowedAttributes: {
@@ -82,10 +88,12 @@ const SANITIZE_OPTIONS: IOptions = {
       'background-color': [/.*/],
       color: [/.*/],
       // Paragraph spacing preserved for DOCX/PDF export (see
-      // html-to-docx-converter). Restricted to unitless / pt / px numbers.
-      'line-height': [/^\d+(\.\d+)?(pt|px)?$/],
-      'margin-top': [/^-?\d+(\.\d+)?(pt|px)?$/],
-      'margin-bottom': [/^-?\d+(\.\d+)?(pt|px)?$/],
+      // html-to-docx-converter). Restricted to unitless / pt / px numbers
+      // (plus % for line-height and `auto` for margins).
+      'line-height': [/^\d+(\.\d+)?(pt|px|%)?$/],
+      'margin-top': [CSS_LENGTH_VALUE],
+      'margin-bottom': [CSS_LENGTH_VALUE],
+      margin: [MARGIN_SHORTHAND],
     },
   },
 };

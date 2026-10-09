@@ -7,7 +7,7 @@ import { certificateExpiresAt } from './certificate-validity';
  *
  * Deriving `expiresAt` here rather than in a Postgres generated column keeps the
  * validity period in a single language: the column form has to repeat the
- * period in SQL while `isPassWithinValidity` still needs it in TypeScript, and
+ * period in SQL while confirmation validity still needs it in TypeScript, and
  * TypeORM records generated columns in `typeorm_metadata` keyed by database
  * name, which reports phantom drift in any environment whose database is not
  * named the same as the one the migration was generated against.

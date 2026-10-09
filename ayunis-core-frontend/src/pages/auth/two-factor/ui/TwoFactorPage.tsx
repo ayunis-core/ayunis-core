@@ -6,8 +6,9 @@ import {
   RecoveryCodesPanel,
 } from '@/widgets/mfa-enrollment';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
+import { Button } from '@ayunis/ui/components/button';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
-import { useMfaLoginEnroll } from '../api/useMfaLoginEnroll';
+import { useMfaLoginEnroll } from '@/pages/auth/two-factor/api/useMfaLoginEnroll';
 import { TwoFactorVerifyForm } from './TwoFactorVerifyForm';
 
 interface Props {
@@ -47,8 +48,15 @@ export function TwoFactorPage({ redirect, enroll }: Readonly<Props>) {
 function EnrollFlow({ redirect }: Readonly<{ redirect?: string }>) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
-  const { setup, confirm, isConfirming, recoveryCodes, errorMessage } =
-    useMfaLoginEnroll();
+  const {
+    setup,
+    setupUnavailable,
+    retrySetup,
+    confirm,
+    isConfirming,
+    recoveryCodes,
+    errorMessage,
+  } = useMfaLoginEnroll();
 
   if (recoveryCodes) {
     return (
@@ -61,6 +69,16 @@ function EnrollFlow({ redirect }: Readonly<{ redirect?: string }>) {
   }
 
   if (!setup) {
+    if (setupUnavailable) {
+      return (
+        <div className="space-y-4 text-center">
+          <p>{t('serviceUnavailable')}</p>
+          <Button type="button" onClick={retrySetup}>
+            {t('twoFactor.enroll.retry')}
+          </Button>
+        </div>
+      );
+    }
     return (
       <div className="space-y-4">
         <Skeleton className="mx-auto h-44 w-44" />

@@ -31,7 +31,7 @@
     },
     "column": {
       "member": "Benutzer",
-      "lastPassed": "Zuletzt bestanden",
+      "lastPassed": "Zuletzt abgeschlossen",
       "renewalDue": "Erneuerung fällig",
       "status": "Status"
     },
@@ -39,7 +39,7 @@
       "valid": "Gültig",
       "expiringSoon": "Läuft bald ab",
       "expired": "Abgelaufen",
-      "notPassed": "Noch nicht erworben"
+      "notPassed": "Noch nicht abgeschlossen"
     }
   }
 }

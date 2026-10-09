@@ -13,7 +13,7 @@ Domain events are defined in `application/events/`: `UserCreatedEvent` (emitted 
 
 It integrates with **authentication** (credential validation), **hashing** (password storage), **orgs** (org membership), **invites** (user creation on invite acceptance), and **authorization** (role definitions).
 
-Public forgot-password keeps its generic response and consults the organization authentication-policy boundary after resolving a password-capable user. When the organization requires SSO, public, admin, and initial-password flows issue neither a token nor an email. Validation reports outstanding reset or initial-password links as invalid, and redemption rejects them without consuming them; restoring password login makes valid unexpired links usable again.
+Public forgot-password keeps its generic response and consults the organization authentication-policy boundary after resolving a password-capable user. Recognized PostgreSQL availability failures return 503 with `SERVICE_UNAVAILABLE`; unknown emails and SSO-only accounts retain the enumeration-safe no-content response. When the organization requires SSO, public, admin, and initial-password flows issue neither a token nor an email. Validation reports outstanding reset or initial-password links as invalid, and redemption rejects them without consuming them; restoring password login makes valid unexpired links usable again.
 
 `CountUsersByOrgIdUseCase` provides a context-free `COUNT(*)` boundary for transactional capacity checks without loading member records.
 

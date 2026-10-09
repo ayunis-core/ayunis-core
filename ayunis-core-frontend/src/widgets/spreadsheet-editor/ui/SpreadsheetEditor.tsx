@@ -1,5 +1,5 @@
 import { Save } from 'lucide-react';
-import { forwardRef, useCallback, useImperativeHandle } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ArtifactResponseDto } from '@/shared/api';
 import { Button } from '@ayunis/ui/components/button';
@@ -7,6 +7,7 @@ import { VersionHistory } from '@/widgets/artifact-editor';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useSpreadsheetEditorState } from '@/widgets/spreadsheet-editor/model/useSpreadsheetEditorState';
 import type { SpreadsheetExportFormat } from '@/widgets/spreadsheet-editor/model/spreadsheet-export';
+import { useHistoryShortcuts } from '@/widgets/spreadsheet-editor/model/history-shortcuts';
 import { SpreadsheetGrid } from './SpreadsheetGrid';
 import { SpreadsheetToolbar } from './SpreadsheetToolbar';
 import { SpreadsheetExportMenu } from './SpreadsheetExportMenu';
@@ -47,6 +48,8 @@ export const SpreadsheetEditor = forwardRef<
   const { t } = useTranslation('artifacts');
   const { confirm } = useConfirmation();
   const editor = useSpreadsheetEditorState(artifact);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useHistoryShortcuts(rootRef, { undo: editor.undo, redo: editor.redo });
   const canSave =
     editor.isDirty &&
     !editor.isViewingHistory &&
@@ -102,7 +105,10 @@ export const SpreadsheetEditor = forwardRef<
   useImperativeHandle(ref, () => ({ requestExit: handleExit }), [handleExit]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden border-l">
+    <div
+      ref={rootRef}
+      className="flex h-full flex-col overflow-hidden border-l"
+    >
       <ArtifactPanelHeader
         title={
           <h3 className="truncate text-sm font-semibold" title={artifact.title}>
@@ -144,6 +150,10 @@ export const SpreadsheetEditor = forwardRef<
       ) : (
         <SpreadsheetToolbar
           gridState={editor.displayedGridState}
+          canUndo={editor.canUndo}
+          canRedo={editor.canRedo}
+          onUndo={editor.undo}
+          onRedo={editor.redo}
           onAddRows={editor.addRows}
           onDeleteLastRow={editor.deleteLastRow}
           onAddColumn={editor.addColumn}

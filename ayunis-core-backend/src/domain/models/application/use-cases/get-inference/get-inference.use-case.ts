@@ -42,12 +42,26 @@ export class GetInferenceUseCase {
       throw new UnauthorizedException('Organization context required');
     }
 
+    const response = await this.requestInference(command, orgId);
+    // Completed provider work is chargeable even when its output is rejected.
+    // Keep accounting outside provider error mapping so persistence errors retain their identity.
+    await command.onUsage?.(response.meta);
+    this.assertTokenLimitResponseAllowed(
+      response,
+      command.acceptTokenLimitCompletion,
+    );
+    return response;
+  }
+
+  private async requestInference(
+    command: GetInferenceCommand,
+    orgId: string,
+  ): Promise<InferenceResponse> {
     try {
       const inferenceHandler = this.inferenceHandlerRegistry.getHandler(
         command.model.provider,
       );
-
-      const response = await inferenceHandler.answer(
+      return await inferenceHandler.answer(
         new InferenceInput({
           model: command.model,
           messages: stripReplayedToolNulls(command.messages, command.tools),
@@ -57,11 +71,6 @@ export class GetInferenceUseCase {
           orgId,
         }),
       );
-      this.assertTokenLimitResponseAllowed(
-        response,
-        command.acceptTokenLimitCompletion,
-      );
-      return response;
     } catch (error) {
       this.handleInferenceError(error, command);
     }

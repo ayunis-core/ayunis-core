@@ -181,6 +181,18 @@ const SUPPRESSIONS = [
     exceptionType: 'UND_ERR_BODY_TIMEOUT',
   },
   {
+    id: 'transport-connect-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-1212',
+    reason:
+      "TCP connect exceeded undici's 10s deadline. Provider boundaries " +
+      'retry it and classify a terminal failure as ' +
+      'PROVIDER_UNAVAILABLE_TIMEOUT_*; the raw span exception fires on every ' +
+      'attempt, including ones a retry recovered (incidents #692, #693). ' +
+      'Unclassified egress still reports its own wrapper error.',
+    exceptionType: 'UND_ERR_CONNECT_TIMEOUT',
+  },
+  {
     id: 'transport-dns-again',
     lever: 'ignoreErrors',
     ticket: 'AYC-616',

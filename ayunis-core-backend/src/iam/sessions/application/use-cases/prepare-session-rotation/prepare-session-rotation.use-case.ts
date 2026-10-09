@@ -24,7 +24,6 @@ export class PrepareSessionRotationUseCase {
     );
     if (!current) throw new RefreshTokenNotFoundError();
     if (current.isRevoked()) {
-      await this.refreshTokens.revokeFamily(current.familyId);
       this.logger.warn(
         { userId: current.userId, familyId: current.familyId },
         'Refresh token reuse detected (revoked token)',

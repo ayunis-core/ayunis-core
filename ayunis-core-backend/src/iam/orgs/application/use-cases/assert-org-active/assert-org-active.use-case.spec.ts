@@ -32,4 +32,16 @@ describe('AssertOrgActiveUseCase', () => {
       sessionVersion: 1,
     });
   });
+  it('returns service unavailable when PostgreSQL cannot load the org', async () => {
+    repository.findById.mockRejectedValue(
+      Object.assign(new Error('the database system is in recovery mode'), {
+        code: '57P03',
+      }),
+    );
+
+    await expect(useCase.execute({ orgId })).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
 });
