@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { act, createElement, startTransition } from 'react';
+import { createRoot } from 'react-dom/client';
 import { Span } from '@appsignal/javascript';
 import {
   ignoredErrorPatterns,
@@ -8,6 +10,7 @@ import {
   setAppsignalTags,
   clearAppsignalTags,
   applyContextTags,
+  recoverableErrorReport,
 } from './appsignal';
 
 function spanWithStack(stack: string): Span {
@@ -112,5 +115,74 @@ describe('context tags', () => {
     clearAppsignalTags();
     const span = applyContextTags(new Span());
     expect(span.getTags()).toEqual({});
+  });
+});
+
+describe('recoverableErrorReport', () => {
+  const componentStack = '\n    at ThreadMessage\n    at ChatPage';
+  const recoveryMessage =
+    'There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.';
+
+  it('reports the underlying cause with the recovery, component stack and route', () => {
+    const cause = new TypeError(
+      "Cannot read properties of undefined (reading 'id')",
+    );
+    const recovered = new Error(recoveryMessage, { cause });
+
+    expect(
+      recoverableErrorReport(recovered, { componentStack }, '/chats/$threadId'),
+    ).toEqual({
+      error: cause,
+      params: {
+        recoveredFrom: recoveryMessage,
+        componentStack,
+        route: '/chats/$threadId',
+      },
+    });
+  });
+
+  it('reports the React error itself when there is no Error cause', () => {
+    const recovered = new Error(recoveryMessage, { cause: 'thrown string' });
+
+    expect(recoverableErrorReport(recovered, {}, undefined).error).toBe(
+      recovered,
+    );
+  });
+
+  it('wraps a non-Error value so it is still reported', () => {
+    expect(recoverableErrorReport('boom', {}, '/').error).toEqual(
+      new Error('boom'),
+    );
+  });
+});
+
+describe('recoverableErrorReport with a real React recovery', () => {
+  it('surfaces the throwing component and cause of a recovered concurrent render', async () => {
+    (
+      globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+    const cause = new Error('first render failed');
+    let renders = 0;
+    function FlakyWidget() {
+      renders += 1;
+      if (renders === 1) throw cause;
+      return null;
+    }
+    const reports: ReturnType<typeof recoverableErrorReport>[] = [];
+    const root = createRoot(document.createElement('div'), {
+      onRecoverableError: (error, errorInfo) =>
+        reports.push(recoverableErrorReport(error, errorInfo, '/chats')),
+    });
+
+    await act(async () => {
+      startTransition(() => root.render(createElement(FlakyWidget)));
+      await Promise.resolve();
+    });
+    root.unmount();
+
+    expect(reports).toHaveLength(1);
+    expect(reports[0].error).toBe(cause);
+    expect(reports[0].params.recoveredFrom).toMatch(/concurrent rendering/);
+    expect(reports[0].params.componentStack).toContain('FlakyWidget');
   });
 });
