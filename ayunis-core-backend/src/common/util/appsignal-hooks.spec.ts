@@ -177,6 +177,7 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     }),
   'transport-headers-timeout': () => new undiciErrors.HeadersTimeoutError(),
   'transport-body-timeout': () => new undiciErrors.BodyTimeoutError(),
+  'transport-connect-timeout': () => new undiciErrors.ConnectTimeoutError(),
   // Node mints errno errors as plain Errors carrying `code`; these mirror
   // the exact shapes seen in incidents #409, #387, #457, #511.
   'transport-dns-again': () =>
@@ -293,6 +294,22 @@ describe('SUPPRESSIONS registry', () => {
       expect(ignoredErrorTypes).not.toContain(
         exceptionTypeOf(new TypeError('unexpected failure')),
       );
+    });
+
+    // Incidents #692/#693: Mistral connect timeouts recovered by retry.
+    it('suppresses a raw connect timeout but retains its classified provider failure', () => {
+      const raw = new undiciErrors.ConnectTimeoutError();
+      const classified = wrapProviderFailure(
+        new TypeError('fetch failed', { cause: raw }),
+        { provider: 'mistral' },
+      );
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(raw));
+      expect(classified).toBeInstanceOf(ProviderTimeoutError);
+      expect(exceptionTypeOf(classified)).toBe(
+        'PROVIDER_UNAVAILABLE_TIMEOUT_MISTRAL',
+      );
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
     });
 
     it('suppresses a raw socket closure but retains its classified provider failure', () => {
