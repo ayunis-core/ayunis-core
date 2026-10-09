@@ -4,6 +4,7 @@ import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getRequiredUserPrincipal } from 'src/common/context/required-context';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -11,10 +12,10 @@ import {
   PermittedModelNotFoundError,
   PermittedModelNotInTeamError,
   TeamNotFoundInOrgError,
-} from '../models.errors';
-import { PermittedModelsRepository } from '../ports/permitted-models.repository';
-import { PermittedModelScope } from '../../domain/value-objects/permitted-model-scope.enum';
-import type { PermittedModel } from '../../domain/permitted-model.entity';
+} from 'src/domain/models/application/models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import type { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
 export class TeamPermittedModelValidator {
@@ -25,11 +26,10 @@ export class TeamPermittedModelValidator {
   ) {}
 
   validateAdminAccess(commandOrgId: UUID): void {
-    const orgId = this.contextService.get('orgId');
-    const orgRole = this.contextService.get('role');
-    const systemRole = this.contextService.get('systemRole');
-    const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === commandOrgId;
-    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    const principal = getRequiredUserPrincipal(this.contextService);
+    const isOrgAdmin =
+      principal.role === UserRole.ADMIN && principal.orgId === commandOrgId;
+    const isSuperAdmin = principal.systemRole === SystemRole.SUPER_ADMIN;
     if (!isOrgAdmin && !isSuperAdmin) {
       throw new UnauthorizedAccessError();
     }

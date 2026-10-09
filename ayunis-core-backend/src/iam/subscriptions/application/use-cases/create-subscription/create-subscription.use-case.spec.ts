@@ -109,6 +109,7 @@ describe('CreateSubscriptionUseCase', () => {
 
   function setupSuperAdminContext(): void {
     contextService.get.mockImplementation(((key: string) => {
+      if (key === 'userId') return requestingUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.USER;
       if (key === 'orgId') return randomUUID();

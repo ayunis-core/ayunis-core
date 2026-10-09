@@ -5,6 +5,7 @@ import { CreatePermittedModelCommand } from './create-permitted-model.command';
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getRequiredUserPrincipal } from 'src/common/context/required-context';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -34,11 +35,10 @@ export class CreatePermittedModelUseCase {
       'execute',
     );
     try {
-      const orgId = this.contextService.get('orgId');
-      const orgRole = this.contextService.get('role');
-      const systemRole = this.contextService.get('systemRole');
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      const principal = getRequiredUserPrincipal(this.contextService);
+      const isOrgAdmin =
+        principal.role === UserRole.ADMIN && principal.orgId === command.orgId;
+      const isSuperAdmin = principal.systemRole === SystemRole.SUPER_ADMIN;
       if (!isOrgAdmin && !isSuperAdmin) {
         throw new UnauthorizedAccessError();
       }

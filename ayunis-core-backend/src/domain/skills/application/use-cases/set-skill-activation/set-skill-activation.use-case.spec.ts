@@ -10,6 +10,8 @@ import type { SkillRepository } from 'src/domain/skills/application/ports/skill.
 import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { SetSkillActivationUseCase } from './set-skill-activation.use-case';
 
@@ -41,7 +43,13 @@ function setup() {
   };
   const context = {
     get: jest.fn(
-      (key: string) => ({ userId, orgId: randomUUID(), role: 'admin' })[key],
+      (key: string) =>
+        ({
+          userId,
+          orgId: randomUUID(),
+          role: UserRole.ADMIN,
+          systemRole: SystemRole.CUSTOMER,
+        })[key],
     ),
   };
   const permission = { execute: jest.fn().mockResolvedValue(true) };

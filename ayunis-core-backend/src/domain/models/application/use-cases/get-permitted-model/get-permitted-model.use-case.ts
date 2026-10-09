@@ -7,8 +7,8 @@ import {
 import { GetPermittedModelQuery } from './get-permitted-model.query';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedModelUseCase {
@@ -28,13 +28,11 @@ export class GetPermittedModelUseCase {
       this.logger.log(metadata, 'execute');
       this.logger.debug(metadata, 'GetPermittedModelByIdQuery');
       const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
       const model = await this.permittedModelsRepository.findOne({
         id: query.permittedModelId,
       });
       const isFromOrg = orgId === model?.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      if (!isFromOrg && !isSuperAdmin) {
+      if (!isFromOrg && !isSuperAdmin(this.contextService)) {
         throw new UnauthorizedAccessError();
       }
       if (!model) {

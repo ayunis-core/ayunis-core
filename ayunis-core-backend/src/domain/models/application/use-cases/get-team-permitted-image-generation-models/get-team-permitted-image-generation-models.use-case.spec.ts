@@ -25,6 +25,8 @@ describe('GetTeamPermittedImageGenerationModelsUseCase', () => {
   let contextService: jest.Mocked<ContextService>;
 
   const orgId = randomUUID();
+
+  const userId = randomUUID();
   const teamId = randomUUID();
 
   beforeEach(async () => {
@@ -62,6 +64,7 @@ describe('GetTeamPermittedImageGenerationModelsUseCase', () => {
 
   function setAdminContext(): void {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'systemRole') return SystemRole.CUSTOMER;
@@ -100,6 +103,7 @@ describe('GetTeamPermittedImageGenerationModelsUseCase', () => {
 
   it('should throw UnauthorizedAccessError for non-admin users', async () => {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.USER;
       if (key === 'systemRole') return SystemRole.CUSTOMER;

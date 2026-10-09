@@ -109,6 +109,7 @@ describe('GetActiveSubscriptionUseCase', () => {
 
   function setupSuperAdminContext(): void {
     contextService.get.mockImplementation(((key: string) => {
+      if (key === 'userId') return requestingUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.USER;
       if (key === 'orgId') return randomUUID();
@@ -118,6 +119,7 @@ describe('GetActiveSubscriptionUseCase', () => {
 
   function setupOrgAdminContext(contextOrgId: UUID): void {
     contextService.get.mockImplementation(((key: string) => {
+      if (key === 'userId') return requestingUserId;
       if (key === 'systemRole') return SystemRole.CUSTOMER;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'orgId') return contextOrgId;
@@ -147,6 +149,7 @@ describe('GetActiveSubscriptionUseCase', () => {
   describe('authorization', () => {
     it('should throw UnauthorizedSubscriptionAccessError when user is not super admin or org admin', async () => {
       contextService.get.mockImplementation(((key: string) => {
+        if (key === 'userId') return requestingUserId;
         if (key === 'systemRole') return SystemRole.CUSTOMER;
         if (key === 'role') return UserRole.USER;
         if (key === 'orgId') return orgId;

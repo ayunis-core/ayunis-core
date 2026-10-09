@@ -89,6 +89,7 @@ describe('UpdateMonthlyCreditsUseCase', () => {
 
   beforeEach(() => {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return mockUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'orgId') return mockOrgId;

@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  UserPrincipal,
+  getUserPrincipal,
+} from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import {
@@ -24,8 +28,8 @@ export class UnlockUserAccountUseCase {
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: UnlockUserAccountCommand): Promise<void> {
     this.logger.log({ userId: command.userId }, 'unlockUserAccount');
-    const isSuperAdmin =
-      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
+    const principal = getUserPrincipal(this.contextService);
+    const isSuperAdmin = principal?.systemRole === SystemRole.SUPER_ADMIN;
     const user = await this.usersRepository.findOneById(command.userId);
     if (
       !user ||
@@ -33,7 +37,7 @@ export class UnlockUserAccountUseCase {
     ) {
       throw new UserNotFoundError(command.userId);
     }
-    this.assertAuthorized(user, isSuperAdmin);
+    this.assertAuthorized(user, principal, isSuperAdmin);
 
     if (!(await this.usersRepository.clearLoginLock(command.userId))) {
       throw new UserNotFoundError(command.userId);
@@ -41,9 +45,13 @@ export class UnlockUserAccountUseCase {
     this.logger.log({ userId: command.userId }, 'User account unlocked');
   }
 
-  private assertAuthorized(user: User, isSuperAdmin: boolean): void {
+  private assertAuthorized(
+    user: User,
+    principal: UserPrincipal | undefined,
+    isSuperAdmin: boolean,
+  ): void {
     const isOrgAdmin =
-      this.contextService.get('role') === UserRole.ADMIN &&
+      principal?.role === UserRole.ADMIN &&
       this.contextService.get('orgId') === user.orgId;
     const isSelfUnlock = this.contextService.get('userId') === user.id;
     if ((!isSuperAdmin && !isOrgAdmin) || isSelfUnlock) {

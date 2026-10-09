@@ -37,6 +37,8 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 const orgId = randomUUID();
+
+const userId = randomUUID();
 const teamId = randomUUID();
 const modelId = randomUUID();
 
@@ -125,6 +127,7 @@ describe('CreateTeamPermittedModelUseCase', () => {
 
   function setAdminContext(): void {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'systemRole') return SystemRole.CUSTOMER;
@@ -246,6 +249,7 @@ describe('CreateTeamPermittedModelUseCase', () => {
 
   it('rejects non-admin users', async () => {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.USER;
       if (key === 'systemRole') return SystemRole.CUSTOMER;

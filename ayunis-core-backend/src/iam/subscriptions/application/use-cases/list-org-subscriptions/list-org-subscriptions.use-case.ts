@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getUserPrincipal } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
@@ -53,7 +54,7 @@ export class ListOrgSubscriptionsUseCase {
   }
 
   private assertSuperAdmin(orgId: UUID): void {
-    const systemRole = this.contextService.get('systemRole');
+    const systemRole = getUserPrincipal(this.contextService)?.systemRole;
     if (systemRole === SystemRole.SUPER_ADMIN) {
       return;
     }

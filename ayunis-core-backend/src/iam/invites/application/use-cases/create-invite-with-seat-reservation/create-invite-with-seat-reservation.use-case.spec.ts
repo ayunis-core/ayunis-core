@@ -11,6 +11,7 @@ import { CreateInviteCommand } from 'src/iam/invites/application/use-cases/creat
 import { CreateInviteUseCase } from 'src/iam/invites/application/use-cases/create-invite/create-invite.use-case';
 import { CreateInviteWithSeatReservationUseCase } from 'src/iam/invites/application/use-cases/create-invite-with-seat-reservation/create-invite-with-seat-reservation.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -49,8 +50,10 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
     });
     const contextService = {
       get: jest.fn((key: string) => {
+        if (key === 'userId') return command.userId;
         if (key === 'role') return UserRole.ADMIN;
         if (key === 'orgId') return command.orgId;
+        if (key === 'systemRole') return SystemRole.CUSTOMER;
         return undefined;
       }),
     } as unknown as ContextService;
@@ -76,9 +79,17 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
     const publishInviteCreated = {
       publish: jest.fn(),
     } as unknown as jest.Mocked<InviteCreatedEventPublisher>;
+    const requestingUserId = randomUUID();
+    const orgId = randomUUID();
     const contextService = {
-      get: jest.fn((key: string) =>
-        key === 'role' ? UserRole.USER : undefined,
+      get: jest.fn(
+        (key: string) =>
+          ({
+            userId: requestingUserId,
+            orgId,
+            role: UserRole.USER,
+            systemRole: SystemRole.CUSTOMER,
+          })[key],
       ),
     };
     const module = await Test.createTestingModule({
@@ -98,9 +109,9 @@ describe(CreateInviteWithSeatReservationUseCase.name, () => {
     }).compile();
     const command = new CreateInviteCommand({
       email: 'recipient@gemeinde-musterstadt.de',
-      orgId: randomUUID(),
+      orgId,
       role: UserRole.ADMIN,
-      userId: randomUUID(),
+      userId: requestingUserId,
     });
 
     await expect(

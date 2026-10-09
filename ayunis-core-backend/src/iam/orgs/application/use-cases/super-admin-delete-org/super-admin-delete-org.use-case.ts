@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   OrgDeleteConfirmationError,
@@ -9,7 +10,6 @@ import {
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { DeleteOrgUseCase } from 'src/iam/orgs/application/use-cases/delete-org/delete-org.use-case';
 import { DeleteOrgCommand } from 'src/iam/orgs/application/use-cases/delete-org/delete-org.command';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { SuperAdminDeleteOrgCommand } from './super-admin-delete-org.command';
 @Injectable()
 export class SuperAdminDeleteOrgUseCase {
@@ -25,7 +25,7 @@ export class SuperAdminDeleteOrgUseCase {
       { orgId: command.orgId },
       'Deleting organisation as super admin',
     );
-    if (this.context.get('systemRole') !== SystemRole.SUPER_ADMIN)
+    if (!isSuperAdmin(this.context))
       throw new OrgUnauthorizedError('Super admin privileges required');
     const org = await this.orgs.findById(command.orgId);
     if (command.confirmationName !== org.name)

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
@@ -12,7 +13,6 @@ import {
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { ResolveSubscriptionOverlapCommand } from './resolve-subscription-overlap.command';
 
 @Injectable()
@@ -136,7 +136,7 @@ export class ResolveSubscriptionOverlapUseCase {
   }
 
   private assertSuperAdmin(requestingUserId: UUID, orgId: UUID): void {
-    if (this.contextService.get('systemRole') !== SystemRole.SUPER_ADMIN) {
+    if (!isSuperAdmin(this.contextService)) {
       throw new UnauthorizedSubscriptionAccessError(requestingUserId, orgId);
     }
   }

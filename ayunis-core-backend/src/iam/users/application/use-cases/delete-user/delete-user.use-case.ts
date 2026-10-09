@@ -12,6 +12,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { DeleteInviteByEmailCommand } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.command';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getUserPrincipal } from 'src/common/context/required-context';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
@@ -75,10 +76,10 @@ export class DeleteUserUseCase {
     // from their own org. The passed command.orgId must match both the
     // requester's org (from context) and the target user's org to prevent
     // cross-org deletion.
-    const isSuperAdmin =
-      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
+    const principal = getUserPrincipal(this.contextService);
+    const isSuperAdmin = principal?.systemRole === SystemRole.SUPER_ADMIN;
     const isOrgAdmin =
-      this.contextService.get('role') === UserRole.ADMIN &&
+      principal?.role === UserRole.ADMIN &&
       requestUserOrgId === command.orgId &&
       command.orgId === userToDelete.orgId;
     if (!isSuperAdmin && !isOrgAdmin) {
