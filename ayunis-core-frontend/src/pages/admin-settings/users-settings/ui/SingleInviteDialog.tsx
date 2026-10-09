@@ -25,8 +25,8 @@ import {
 } from '@ayunis/ui/components/select';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import type { InviteRole } from '../model/openapi';
-import { useInviteCreate } from '../api/useInviteCreate';
+import type { InviteRole } from '@/pages/admin-settings/users-settings/model/openapi';
+import { useInviteCreate } from '@/pages/admin-settings/users-settings/api/useInviteCreate';
 import { useTranslation } from 'react-i18next';
 import { Copy, Check } from 'lucide-react';
 import { showSuccess } from '@/shared/lib/toast';
@@ -129,6 +129,7 @@ export default function SingleInviteDialog({
               <FormControl>
                 <Input
                   placeholder={t('inviteDialog.emailPlaceholder')}
+                  data-testid="invite-create-email"
                   {...field}
                 />
               </FormControl>
@@ -147,14 +148,20 @@ export default function SingleInviteDialog({
               <FormLabel>{t('inviteDialog.roleLabel')}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className="w-full"
+                    data-testid="invite-create-role"
+                  >
                     <SelectValue
                       placeholder={t('inviteDialog.roleSelectPlaceholder')}
                     />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="user">
+                  <SelectItem
+                    value="user"
+                    data-testid="invite-create-role-user"
+                  >
                     {t('inviteDialog.roleUser')}
                   </SelectItem>
                   <SelectItem value="manager">
@@ -178,7 +185,11 @@ export default function SingleInviteDialog({
           >
             {t('inviteDialog.cancel')}
           </Button>
-          <Button type="submit" disabled={isCreatingInvite}>
+          <Button
+            type="submit"
+            data-testid="invite-create-submit"
+            disabled={isCreatingInvite}
+          >
             {isCreatingInvite
               ? t('inviteDialog.sending')
               : t('inviteDialog.sendInvitation')}

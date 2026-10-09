@@ -9,7 +9,6 @@ import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.er
 import {
   aRefreshToken,
   createMockRefreshTokensRepository,
-  TEST_FAMILY_ID,
 } from 'src/iam/sessions/application/testing/refresh-token.fixtures';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
@@ -109,12 +108,12 @@ describe('RotateSessionUseCase', () => {
     expect(repository.revokeFamily).not.toHaveBeenCalled();
   });
 
-  it('should revoke the family on a post-grace replay (lost rotation, past grace)', async () => {
+  it('reports post-grace replay for post-transaction family revocation', async () => {
     repository.markUsedAndInsertSuccessor.mockResolvedValue(false);
     repository.wasUsedWithinGrace.mockResolvedValue(false);
 
     await expect(rotate()).rejects.toThrow(RefreshTokenReuseError);
-    expect(repository.revokeFamily).toHaveBeenCalledWith(TEST_FAMILY_ID);
+    expect(repository.revokeFamily).not.toHaveBeenCalled();
     expect(repository.insert).not.toHaveBeenCalled();
   });
 });

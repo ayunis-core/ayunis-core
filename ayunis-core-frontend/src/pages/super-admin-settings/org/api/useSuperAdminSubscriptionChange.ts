@@ -48,6 +48,12 @@ export default function useSuperAdminSubscriptionChange({
               case 'TOO_MANY_USED_SEATS':
                 showError(t('subscription.changeErrorTooManyUsedSeats'));
                 break;
+              case 'SUBSCRIPTION_ACCESS_OVERLAP':
+                showError(t('subscription.changeErrorAccessOverlap'));
+                break;
+              case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+                showError(t('subscription.multipleActiveSubscriptions'));
+                break;
               default:
                 showError(t('subscription.changeErrorUnexpected'));
             }

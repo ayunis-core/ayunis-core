@@ -15,6 +15,7 @@ import { aUser } from 'src/iam/users/application/testing/user.fixtures';
 import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import type { ConfirmTotpUseCase } from 'src/iam/mfa/application/use-cases/confirm-totp/confirm-totp.use-case';
 import type { VerifyMfaCodeUseCase } from 'src/iam/mfa/application/use-cases/verify-mfa-code/verify-mfa-code.use-case';
+import { UnexpectedMfaError } from 'src/iam/mfa/application/mfa.errors';
 
 describe(CompleteMfaLoginUseCase.name, () => {
   const user = aUser();
@@ -62,6 +63,20 @@ describe(CompleteMfaLoginUseCase.name, () => {
       recoveryCodes: ['RECOVERY-CODE'],
     });
     expect(verifyMfaCode.execute).not.toHaveBeenCalled();
+  });
+
+  it('returns service unavailable when MFA completion loses PostgreSQL', async () => {
+    const databaseError = Object.assign(new Error('connection refused'), {
+      code: 'ECONNREFUSED',
+    });
+    verifyMfaCode.execute.mockRejectedValue(
+      new UnexpectedMfaError(databaseError),
+    );
+
+    await expect(useCase.execute(command('verify'))).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
   });
 
   function command(

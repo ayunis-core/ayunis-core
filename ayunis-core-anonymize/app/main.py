@@ -25,12 +25,12 @@ from app.presidio_service import (
 # inference, so it must not run on the event loop — there it blocks every other
 # request, including /health, until it finishes (AYC-561).
 #
-# The bound matters as much as the dispatch: working memory scales with input
-# length (~3.3 MB per 1k characters), so unbounded concurrency on long inputs
-# can exhaust the container. The production allocation is 4 CPUs; a local
-# four-thread benchmark of four 6k inputs completed 21% sooner with 4 workers
-# than with 2, while the 6 GB memory limit still covers four maximum-size jobs.
-MAX_CONCURRENT_ANALYSES = int(os.getenv("MAX_CONCURRENT_ANALYSES", "4"))
+# GLiNER inference must share the four-CPU allocation deliberately. Without
+# batching, four workers with four threads each took ~135-138s for four
+# maximum-size requests in a local container with production's 4-CPU/6-GB
+# limits. With batching, two workers with two threads each completed the same
+# burst at roughly 29/29/57/57s (AYC-1182).
+MAX_CONCURRENT_ANALYSES = int(os.getenv("MAX_CONCURRENT_ANALYSES", "2"))
 
 # Each workload gets a dedicated thread budget instead of the global default
 # threadpool, and the handlers stay `async def` so they dispatch to it

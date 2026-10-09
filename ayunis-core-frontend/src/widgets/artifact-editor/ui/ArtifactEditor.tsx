@@ -7,6 +7,10 @@ import UnderlineExtension from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TableKit } from '@tiptap/extension-table';
+import {
+  BLOCK_STYLE_TYPES,
+  ParagraphSpacing,
+} from '@/widgets/artifact-editor/lib/paragraph-spacing';
 import { Save } from 'lucide-react';
 import {
   forwardRef,
@@ -60,14 +64,22 @@ export const ArtifactEditor = forwardRef<
     (v) => v.versionNumber === artifact.currentVersionNumber,
   );
 
+  // TipTap re-serializes the stored HTML, so dirtiness is measured against the
+  // editor's own output for the loaded version, not the stored string.
+  const loadedHtmlRef = useRef<string | null>(null);
+
   const editor = useEditor({
+    onCreate: ({ editor: created }) => {
+      loadedHtmlRef.current = created.getHTML();
+    },
     extensions: [
       StarterKit,
       LinkExtension.configure({ openOnClick: false }),
       UnderlineExtension,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TextAlign.configure({ types: BLOCK_STYLE_TYPES }),
       Placeholder.configure({ placeholder: t('editor.placeholder') }),
       TableKit.configure({ table: { resizable: false } }),
+      ParagraphSpacing,
     ],
     content: currentVersion?.content ?? '',
     editorProps: {
@@ -90,6 +102,7 @@ export const ArtifactEditor = forwardRef<
     if (loadedVersionRef.current !== artifact.currentVersionNumber) {
       loadedVersionRef.current = artifact.currentVersionNumber;
       editor.commands.setContent(currentVersion.content);
+      loadedHtmlRef.current = editor.getHTML();
     }
   }, [editor, currentVersion, artifact.currentVersionNumber]);
 
@@ -100,7 +113,7 @@ export const ArtifactEditor = forwardRef<
   const requestExit = useCallback(
     (onExit: () => void) => {
       const content = editor.getHTML();
-      if (!currentVersion || content === currentVersion.content) {
+      if (!currentVersion || content === loadedHtmlRef.current) {
         onExit();
         return;
       }
@@ -122,9 +135,9 @@ export const ArtifactEditor = forwardRef<
 
   const handleExport = useCallback(
     (format: 'docx' | 'pdf') => {
-      const isDirty =
-        currentVersion && editor.getHTML() !== currentVersion.content;
-      onExport(format, isDirty ? editor.getHTML() : undefined);
+      const content = editor.getHTML();
+      const isDirty = currentVersion && content !== loadedHtmlRef.current;
+      onExport(format, isDirty ? content : undefined);
     },
     [editor, currentVersion, onExport],
   );

@@ -2,19 +2,34 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDiscoverSso } from '@/features/sso/api/useDiscoverSso';
 
-const { mutateAsync } = vi.hoisted(() => ({
+const { mutateAsync, useSsoLoginControllerDiscover } = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
+  useSsoLoginControllerDiscover: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
-  useSsoLoginControllerDiscover: () => ({
-    mutateAsync,
-    isPending: false,
-  }),
+  useSsoLoginControllerDiscover,
 }));
 
 describe(useDiscoverSso.name, () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useSsoLoginControllerDiscover.mockReturnValue({
+      mutateAsync,
+      isPending: false,
+    });
+  });
+
+  it('does not retry SSO discovery failures', () => {
+    renderHook(() => useDiscoverSso());
+
+    expect(useSsoLoginControllerDiscover).toHaveBeenCalledWith({
+      mutation: { retry: false },
+    });
+  });
 
   it('discovers SSO through the generated API client', async () => {
     const response = { available: true, orgId: 'org-id' };

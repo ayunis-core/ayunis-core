@@ -22,6 +22,7 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { ThreadPiiMaskAnonymizationError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { BackendToolAdapter } from './backend-tool.adapter';
 
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -299,6 +300,50 @@ describe('BackendToolAdapter', () => {
         hostError: {
           type: 'provider_timeout',
           context: { provider: 'anonymize' },
+        },
+      },
+    });
+  });
+
+  it('serializes a thread-mask failure without raw persistence details', async () => {
+    execute.mockResolvedValue('call Jane at 555-1234');
+    anonymize.mockRejectedValue(
+      new ThreadPiiMaskAnonymizationError(
+        'new_masks_persistence',
+        {
+          textLength: 24,
+          existingMaskCount: 2,
+          newMaskCount: 1,
+        },
+        Object.assign(new Error('duplicate sensitive value'), {
+          code: '23505',
+          constraint: 'UQ_thread_pii_masks_thread_category_value',
+          detail: 'sensitive value',
+        }),
+      ),
+    );
+    const piiTool = {
+      ...fakeTool('lookup'),
+      returnsPii: true,
+    } as unknown as BackendTool;
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+
+    await expect(tool.execute!({}, toolCtx(true))).rejects.toMatchObject({
+      code: 'ANONYMIZATION_UNAVAILABLE',
+      details: {
+        hostError: {
+          type: 'thread_pii_mask_failure',
+          context: {
+            code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+            stage: 'new_masks_persistence',
+            textLength: 24,
+            existingMaskCount: 2,
+            newMaskCount: 1,
+            databaseCode: '23505',
+            databaseConstraint: 'UQ_thread_pii_masks_thread_category_value',
+            causeType: 'Error',
+          },
         },
       },
     });

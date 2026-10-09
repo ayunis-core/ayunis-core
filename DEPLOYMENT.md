@@ -30,6 +30,64 @@ This guide covers deploying Ayunis Core to production and managing configuration
 > The steps below still describe a from-source deployment, which is the path
 > for self-hosters building their own images.
 
+The managed deployment script pulls every required image before changing the
+running stack, then lets Compose recreate only services whose image or
+configuration changed. This keeps unchanged dependencies running and retains
+Redis-backed queue state. The application, code-execution, and anonymization
+services still have a brief interruption while their single containers are
+replaced, so active requests, executions, or analyses may be interrupted. This
+is not a zero-downtime rollout. Changes that retire services, modify project
+networks, or require every dependency to be recreated must use an explicitly
+planned maintenance deployment rather than the routine selective replacement
+path. Changing a dependency's image or configuration is also a maintenance
+operation: restart its dependent services so they reconnect to the replacement
+instead of relying on client-specific connection recovery.
+
+### Update page during the app restart
+
+While the `app` container restarts (about 17s on staging), the host's reverse
+proxy has no upstream for both the frontend and the API. Open tabs retry their
+API reads, but a page load or refresh in that window gets the proxy's bare 502.
+`deploy/maintenance/updating.html` replaces that with a self-contained page
+that reloads the same URL every 5 seconds until the app is back. The deploy
+keeps the host checkout on the deployed commit, so nginx can serve the file
+from it directly. Add this once per host, at `server` level (outside the
+`location` blocks) in the block that proxies to the app:
+
+```nginx
+# Keep the original status: API clients retry on 502-504 and must not see 200.
+error_page 502 503 504 /__ayunis_updating.html;
+location = /__ayunis_updating.html {
+    internal;
+    root /home/ayunis/apps/ayunis-core/deploy/maintenance;
+    # Missing file (e.g. before a release ships it) falls back to the plain 502.
+    try_files /updating.html =502;
+    add_header Cache-Control "no-store" always;
+}
+```
+
+Do not add `proxy_intercept_errors on`: without it, nginx shows the page only
+when it cannot reach the app, and 5xx responses from a running app pass through
+unchanged.
+
+Point `proxy_pass` at `http://127.0.0.1:3000`, not `localhost:3000`.
+`localhost` resolves to both `::1` and `127.0.0.1`, which nginx treats as a
+group: after one failed attempt during the restart it stops trying both for
+10 seconds (`no live upstreams` in the error log), even once the app is
+listening again. A single address is never marked unavailable.
+
+nginx (`www-data`) must be able to pass through the home directory to read the
+page. Grant it traverse-only access, then check and reload:
+
+```bash
+sudo setfacl -m u:www-data:x /home/ayunis /home/ayunis/apps /home/ayunis/apps/ayunis-core /home/ayunis/apps/ayunis-core/deploy /home/ayunis/apps/ayunis-core/deploy/maintenance
+sudo -u www-data test -r /home/ayunis/apps/ayunis-core/deploy/maintenance/updating.html && echo readable
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Without the access, nginx logs `stat() ... failed (13: Permission denied)` and
+serves its plain 502 instead of the page.
+
 ### Prerequisites
 
 - Node.js 24 or higher

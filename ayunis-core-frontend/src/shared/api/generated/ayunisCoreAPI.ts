@@ -53,6 +53,7 @@ import type {
   BulkAddTeamMembersDto,
   CSVDataSourceResponseDto,
   ChangeSubscriptionRequestDto,
+  ChapterConfirmationResponseDto,
   ChatCompletionRequestDto,
   ChatStartDefaultsResponseDto,
   CompleteMcpOAuthDto,
@@ -79,7 +80,6 @@ import type {
   CreateOrgRequestDto,
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
-  CreateQuizQuestionRequestDto,
   CreateSkillDto,
   CreateSkillShareDto,
   CreateSkillTemplateDto,
@@ -110,6 +110,8 @@ import type {
   GlobalPiiWhitelistWordDto,
   GrantCrawlDomainRequestDto,
   ImageGenerationModelResponseDto,
+  ImproveSkillTextDto,
+  ImprovedSkillTextResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InstalledMarketplaceSkillResponseDto,
@@ -168,9 +170,6 @@ import type {
   PromoteToSuperAdminDto,
   ProviderUsageChartResponseDto,
   ProviderUsageResponseDto,
-  QuizQuestionForTakingResponseDto,
-  QuizQuestionResponseDto,
-  QuizResultResponseDto,
   RecoveryCodesResponseDto,
   RegisterDto,
   ReorderChaptersRequestDto,
@@ -217,11 +216,9 @@ import type {
   SsoAuthorizationResponseDto,
   SsoBackchannelLogoutRequestDto,
   SsoDiscoveryResponseDto,
-  SubmitQuizRequestDto,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
-  SuperAdminAcademyChapterResponseDto,
   SuperAdminInvitesControllerGetInvitesParams,
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
@@ -268,7 +265,6 @@ import type {
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
-  UpdateQuizQuestionRequestDto,
   UpdateRetentionPolicyRequestDto,
   UpdateRolePermissionsDto,
   UpdateSeatsDto,
@@ -11503,6 +11499,74 @@ export const useSkillsControllerInstallFromMarketplace = <TError = unknown,
     }
 
 /**
+ * @summary Rewrite a skill trigger or its instructions
+ */
+export const skillsControllerImproveText = (
+    improveSkillTextDto: ImproveSkillTextDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ImprovedSkillTextResponseDto>(
+      {url: `/skills/improve-text`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: improveSkillTextDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillsControllerImproveTextMutationKey = () => ['skillsControllerImproveText'] as const;
+
+export const getSkillsControllerImproveTextMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerImproveText>>, TError,SkillsControllerImproveTextMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerImproveText>>, TError,SkillsControllerImproveTextMutationVariables, TContext> => {
+
+const mutationKey = getSkillsControllerImproveTextMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerImproveText>>, SkillsControllerImproveTextMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  skillsControllerImproveText(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillsControllerImproveTextMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerImproveText>>>
+    export type SkillsControllerImproveTextMutationBody = ImproveSkillTextDto
+    export type SkillsControllerImproveTextMutationError = void
+    export type SkillsControllerImproveTextMutationVariables = {data: ImproveSkillTextDto}
+
+    /**
+ * @summary Rewrite a skill trigger or its instructions
+ */
+export const useSkillsControllerImproveText = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerImproveText>>, TError,SkillsControllerImproveTextMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillsControllerImproveText>>,
+        TError,
+        SkillsControllerImproveTextMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillsControllerImproveTextMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Create a new skill
  */
 export const skillsControllerCreate = (
@@ -15592,6 +15656,3162 @@ export const useSuperAdminAnonymizationWhitelistControllerRemove = <TError = voi
     }
 
 /**
+ * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
+ * @summary Get the current credits-per-euro configuration
+ */
+export const superAdminPlatformConfigControllerGetCreditsPerEuro = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<CreditsPerEuroResponseDto>(
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey = () => {
+    return [
+    `/super-admin/platform-config/credits-per-euro`
+    ] as const;
+    }
+
+
+export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>> = ({ signal }) => superAdminPlatformConfigControllerGetCreditsPerEuro(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminPlatformConfigControllerGetCreditsPerEuroQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>>
+export type SuperAdminPlatformConfigControllerGetCreditsPerEuroQueryError = void
+
+
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current credits-per-euro configuration
+ */
+
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Update the global credits-per-euro value used for credit calculations. Super admin only.
+ * @summary Set the credits-per-euro configuration
+ */
+export const superAdminPlatformConfigControllerSetCreditsPerEuro = (
+    setCreditsPerEuroRequestDto: SetCreditsPerEuroRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditsPerEuroRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationKey = () => ['superAdminPlatformConfigControllerSetCreditsPerEuro'] as const;
+
+export const getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetCreditsPerEuro(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>>
+    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationBody = SetCreditsPerEuroRequestDto
+    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationError = void
+    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables = {data: SetCreditsPerEuroRequestDto}
+
+    /**
+ * @summary Set the credits-per-euro configuration
+ */
+export const useSuperAdminPlatformConfigControllerSetCreditsPerEuro = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>,
+        TError,
+        SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationOptions(options), queryClient);
+    }
+
+/**
+ * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
+ * @summary Get the current fair-use limits
+ */
+export const superAdminPlatformConfigControllerGetFairUseLimits = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<FairUseLimitsResponseDto>(
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey = () => {
+    return [
+    `/super-admin/platform-config/fair-use-limits`
+    ] as const;
+    }
+
+
+export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>> = ({ signal }) => superAdminPlatformConfigControllerGetFairUseLimits(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminPlatformConfigControllerGetFairUseLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>>
+export type SuperAdminPlatformConfigControllerGetFairUseLimitsQueryError = void
+
+
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current fair-use limits
+ */
+
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.
+ * @summary Set the fair-use limit for a single model tier
+ */
+export const superAdminPlatformConfigControllerSetFairUseLimit = (
+    setFairUseLimitRequestDto: SetFairUseLimitRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setFairUseLimitRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerSetFairUseLimitMutationKey = () => ['superAdminPlatformConfigControllerSetFairUseLimit'] as const;
+
+export const getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminPlatformConfigControllerSetFairUseLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetFairUseLimit(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>>
+    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationBody = SetFairUseLimitRequestDto
+    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationError = void
+    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables = {data: SetFairUseLimitRequestDto}
+
+    /**
+ * @summary Set the fair-use limit for a single model tier
+ */
+export const useSuperAdminPlatformConfigControllerSetFairUseLimit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>,
+        TError,
+        SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.
+ * @summary Set the fair-use limit for image generation
+ */
+export const superAdminPlatformConfigControllerSetImageFairUseLimit = (
+    setImageFairUseLimitRequestDto: SetImageFairUseLimitRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/image-fair-use-limit`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setImageFairUseLimitRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationKey = () => ['superAdminPlatformConfigControllerSetImageFairUseLimit'] as const;
+
+export const getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetImageFairUseLimit(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>>
+    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationBody = SetImageFairUseLimitRequestDto
+    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationError = void
+    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables = {data: SetImageFairUseLimitRequestDto}
+
+    /**
+ * @summary Set the fair-use limit for image generation
+ */
+export const useSuperAdminPlatformConfigControllerSetImageFairUseLimit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>,
+        TError,
+        SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.
+ * @summary Set the app-wide alert banner
+ */
+export const superAdminPlatformConfigControllerSetAppAlert = (
+    setAppAlertRequestDto: SetAppAlertRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/app-alert`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setAppAlertRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerSetAppAlertMutationKey = () => ['superAdminPlatformConfigControllerSetAppAlert'] as const;
+
+export const getSuperAdminPlatformConfigControllerSetAppAlertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,SuperAdminPlatformConfigControllerSetAppAlertMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,SuperAdminPlatformConfigControllerSetAppAlertMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminPlatformConfigControllerSetAppAlertMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, SuperAdminPlatformConfigControllerSetAppAlertMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetAppAlert(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetAppAlertMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>>
+    export type SuperAdminPlatformConfigControllerSetAppAlertMutationBody = SetAppAlertRequestDto
+    export type SuperAdminPlatformConfigControllerSetAppAlertMutationError = void
+    export type SuperAdminPlatformConfigControllerSetAppAlertMutationVariables = {data: SetAppAlertRequestDto}
+
+    /**
+ * @summary Set the app-wide alert banner
+ */
+export const useSuperAdminPlatformConfigControllerSetAppAlert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,SuperAdminPlatformConfigControllerSetAppAlertMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>,
+        TError,
+        SuperAdminPlatformConfigControllerSetAppAlertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminPlatformConfigControllerSetAppAlertMutationOptions(options), queryClient);
+    }
+
+/**
+ * Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.
+ * @summary Get the current app-wide alert banner
+ */
+export const appAlertControllerGetAppAlert = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<AppAlertResponseDto>(
+      {url: `/app-alert`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getAppAlertControllerGetAppAlertQueryKey = () => {
+    return [
+    `/app-alert`
+    ] as const;
+    }
+
+
+export const getAppAlertControllerGetAppAlertQueryOptions = <TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAppAlertControllerGetAppAlertQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>> = ({ signal }) => appAlertControllerGetAppAlert(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AppAlertControllerGetAppAlertQueryResult = NonNullable<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>>
+export type AppAlertControllerGetAppAlertQueryError = void
+
+
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>,
+          TError,
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>,
+          TError,
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current app-wide alert banner
+ */
+
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAppAlertControllerGetAppAlertQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.
+ * @summary Get usage dashboard configuration
+ */
+export const usageControllerGetUsageConfig = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UsageConfigResponseDto>(
+      {url: `/usage/config`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getUsageControllerGetUsageConfigQueryKey = () => {
+    return [
+    `/usage/config`
+    ] as const;
+    }
+
+
+export const getUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUsageConfigQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>> = ({ signal }) => usageControllerGetUsageConfig(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsageControllerGetUsageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>>
+export type UsageControllerGetUsageConfigQueryError = unknown
+
+
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage dashboard configuration
+ */
+
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsageControllerGetUsageConfigQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
+ * @summary Get credit usage for the current month
+ */
+export const usageControllerGetCreditUsage = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<CreditUsageResponseDto>(
+      {url: `/usage/credits`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getUsageControllerGetCreditUsageQueryKey = () => {
+    return [
+    `/usage/credits`
+    ] as const;
+    }
+
+
+export const getUsageControllerGetCreditUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetCreditUsageQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>> = ({ signal }) => usageControllerGetCreditUsage(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsageControllerGetCreditUsageQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>>
+export type UsageControllerGetCreditUsageQueryError = unknown
+
+
+export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get credit usage for the current month
+ */
+
+export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsageControllerGetCreditUsageQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.
+ * @summary Get usage statistics by user
+ */
+export const usageControllerGetUserUsage = (
+    params?: UsageControllerGetUserUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UserUsageResponseDto>(
+      {url: `/usage/users`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getUsageControllerGetUserUsageQueryKey = (params?: UsageControllerGetUserUsageParams,) => {
+    return [
+    `/usage/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getUsageControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUserUsageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUserUsage>>> = ({ signal }) => usageControllerGetUserUsage(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsageControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUserUsage>>>
+export type UsageControllerGetUserUsageQueryError = unknown
+
+
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params: undefined |  UsageControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by user
+ */
+
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsageControllerGetUserUsageQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get overall usage statistics for the current organization
+ */
+export const usageControllerGetUsageStats = (
+    params?: UsageControllerGetUsageStatsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UsageStatsResponseDto>(
+      {url: `/usage/stats`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getUsageControllerGetUsageStatsQueryKey = (params?: UsageControllerGetUsageStatsParams,) => {
+    return [
+    `/usage/stats`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getUsageControllerGetUsageStatsQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUsageStatsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUsageStats>>> = ({ signal }) => usageControllerGetUsageStats(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsageControllerGetUsageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUsageStats>>>
+export type UsageControllerGetUsageStatsQueryError = unknown
+
+
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params: undefined |  UsageControllerGetUsageStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get overall usage statistics for the current organization
+ */
+
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsageControllerGetUsageStatsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get usage distribution by model for the current organization
+ */
+export const usageControllerGetModelDistribution = (
+    params?: UsageControllerGetModelDistributionParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ModelDistributionResponseDto>(
+      {url: `/usage/models`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getUsageControllerGetModelDistributionQueryKey = (params?: UsageControllerGetModelDistributionParams,) => {
+    return [
+    `/usage/models`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getUsageControllerGetModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetModelDistributionQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>> = ({ signal }) => usageControllerGetModelDistribution(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsageControllerGetModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>>
+export type UsageControllerGetModelDistributionQueryError = unknown
+
+
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params: undefined |  UsageControllerGetModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage distribution by model for the current organization
+ */
+
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsageControllerGetModelDistributionQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get provider usage time series for the current organization (chart-ready)
+ */
+export const usageControllerGetProviderUsageChart = (
+    params?: UsageControllerGetProviderUsageChartParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ProviderUsageChartResponseDto>(
+      {url: `/usage/providers/chart`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getUsageControllerGetProviderUsageChartQueryKey = (params?: UsageControllerGetProviderUsageChartParams,) => {
+    return [
+    `/usage/providers/chart`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getUsageControllerGetProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetProviderUsageChartQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>> = ({ signal }) => usageControllerGetProviderUsageChart(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsageControllerGetProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>>
+export type UsageControllerGetProviderUsageChartQueryError = unknown
+
+
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params: undefined |  UsageControllerGetProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get provider usage time series for the current organization (chart-ready)
+ */
+
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsageControllerGetProviderUsageChartQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns token, request and credit usage for every API key of the current organization, including revoked and expired keys. startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive. Without dates, all usage is returned.
+ * @summary Get usage statistics by API key
+ */
+export const apiKeyUsageControllerGetApiKeyUsage = (
+    params?: ApiKeyUsageControllerGetApiKeyUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyUsageResponseDto>(
+      {url: `/usage/api-keys`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getApiKeyUsageControllerGetApiKeyUsageQueryKey = (params?: ApiKeyUsageControllerGetApiKeyUsageParams,) => {
+    return [
+    `/usage/api-keys`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getApiKeyUsageControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApiKeyUsageControllerGetApiKeyUsageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>> = ({ signal }) => apiKeyUsageControllerGetApiKeyUsage(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApiKeyUsageControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>>
+export type ApiKeyUsageControllerGetApiKeyUsageQueryError = unknown
+
+
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params: undefined |  ApiKeyUsageControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by API key
+ */
+
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApiKeyUsageControllerGetApiKeyUsageQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get usage dashboard configuration for an organization
+ */
+export const superAdminUsageControllerGetUsageConfig = (
+    orgId: unknown,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UsageConfigResponseDto>(
+      {url: `/super-admin/usage/${orgId}/config`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageControllerGetUsageConfigQueryKey = (orgId: unknown,) => {
+    return [
+    `/super-admin/usage/${orgId}/config`
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetUsageConfigQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>> = ({ signal }) => superAdminUsageControllerGetUsageConfig(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageControllerGetUsageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>>
+export type SuperAdminUsageControllerGetUsageConfigQueryError = unknown
+
+
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage dashboard configuration for an organization
+ */
+
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageControllerGetUsageConfigQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
+ * @summary Get credit usage for an organization
+ */
+export const superAdminUsageControllerGetCreditUsage = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<CreditUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/credits`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageControllerGetCreditUsageQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/usage/${orgId}/credits`
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageControllerGetCreditUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetCreditUsageQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>> = ({ signal }) => superAdminUsageControllerGetCreditUsage(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageControllerGetCreditUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>>
+export type SuperAdminUsageControllerGetCreditUsageQueryError = unknown
+
+
+export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get credit usage for an organization
+ */
+
+export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageControllerGetCreditUsageQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get overall usage statistics for an organization
+ */
+export const superAdminUsageControllerGetUsageStats = (
+    orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UsageStatsResponseDto>(
+      {url: `/super-admin/usage/${orgId}/stats`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageControllerGetUsageStatsQueryKey = (orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/stats`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageControllerGetUsageStatsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetUsageStatsQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>> = ({ signal }) => superAdminUsageControllerGetUsageStats(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageControllerGetUsageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>>
+export type SuperAdminUsageControllerGetUsageStatsQueryError = unknown
+
+
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageControllerGetUsageStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get overall usage statistics for an organization
+ */
+
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageControllerGetUsageStatsQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get usage distribution by model for an organization
+ */
+export const superAdminUsageControllerGetModelDistribution = (
+    orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ModelDistributionResponseDto>(
+      {url: `/super-admin/usage/${orgId}/models`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageControllerGetModelDistributionQueryKey = (orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/models`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageControllerGetModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetModelDistributionQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>> = ({ signal }) => superAdminUsageControllerGetModelDistribution(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageControllerGetModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>>
+export type SuperAdminUsageControllerGetModelDistributionQueryError = unknown
+
+
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageControllerGetModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage distribution by model for an organization
+ */
+
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageControllerGetModelDistributionQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get usage statistics by provider for an organization
+ */
+export const superAdminUsageDataControllerGetProviderUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ProviderUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/providers`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageDataControllerGetProviderUsageQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/providers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageDataControllerGetProviderUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetProviderUsageQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>> = ({ signal }) => superAdminUsageDataControllerGetProviderUsage(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetProviderUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>>
+export type SuperAdminUsageDataControllerGetProviderUsageQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetProviderUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by provider for an organization
+ */
+
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetProviderUsageQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get provider usage time series for an organization (chart-ready)
+ */
+export const superAdminUsageDataControllerGetProviderUsageChart = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ProviderUsageChartResponseDto>(
+      {url: `/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/providers/chart`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>> = ({ signal }) => superAdminUsageDataControllerGetProviderUsageChart(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>>
+export type SuperAdminUsageDataControllerGetProviderUsageChartQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get provider usage time series for an organization (chart-ready)
+ */
+
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetProviderUsageChartQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get usage statistics by user for an organization
+ */
+export const superAdminUsageDataControllerGetUserUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UserUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/users`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageDataControllerGetUserUsageQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageDataControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetUserUsageQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>> = ({ signal }) => superAdminUsageDataControllerGetUserUsage(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>>
+export type SuperAdminUsageDataControllerGetUserUsageQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by user for an organization
+ */
+
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetUserUsageQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive.
+ * @summary Get usage statistics by API key for an organization
+ */
+export const superAdminUsageDataControllerGetApiKeyUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/api-keys`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/api-keys`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>> = ({ signal }) => superAdminUsageDataControllerGetApiKeyUsage(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>>
+export type SuperAdminUsageDataControllerGetApiKeyUsageQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by API key for an organization
+ */
+
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List configured user credit limits with current consumption
+ */
+export const creditLimitsControllerGetUserLimits = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UserCreditLimitItemDto[]>(
+      {url: `/credit-limits/users`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerGetUserLimitsQueryKey = () => {
+    return [
+    `/credit-limits/users`
+    ] as const;
+    }
+
+
+export const getCreditLimitsControllerGetUserLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetUserLimitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>> = ({ signal }) => creditLimitsControllerGetUserLimits(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetUserLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>>
+export type CreditLimitsControllerGetUserLimitsQueryError = unknown
+
+
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List configured user credit limits with current consumption
+ */
+
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetUserLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List configured team credit limits with current consumption
+ */
+export const creditLimitsControllerGetTeamLimits = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamCreditLimitItemDto[]>(
+      {url: `/credit-limits/teams`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerGetTeamLimitsQueryKey = () => {
+    return [
+    `/credit-limits/teams`
+    ] as const;
+    }
+
+
+export const getCreditLimitsControllerGetTeamLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetTeamLimitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>> = ({ signal }) => creditLimitsControllerGetTeamLimits(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetTeamLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>>
+export type CreditLimitsControllerGetTeamLimitsQueryError = unknown
+
+
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List configured team credit limits with current consumption
+ */
+
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetTeamLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List configured API key credit limits with current consumption
+ */
+export const creditLimitsControllerGetApiKeyLimits = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyCreditLimitItemDto[]>(
+      {url: `/credit-limits/api-keys`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerGetApiKeyLimitsQueryKey = () => {
+    return [
+    `/credit-limits/api-keys`
+    ] as const;
+    }
+
+
+export const getCreditLimitsControllerGetApiKeyLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetApiKeyLimitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>> = ({ signal }) => creditLimitsControllerGetApiKeyLimits(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetApiKeyLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>>
+export type CreditLimitsControllerGetApiKeyLimitsQueryError = unknown
+
+
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List configured API key credit limits with current consumption
+ */
+
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetApiKeyLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set a monthly credit limit for a user
+ */
+export const creditLimitsControllerSetUserLimit = (
+    userId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UserCreditLimitResponseDto>(
+      {url: `/credit-limits/users/${userId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerSetUserLimitMutationKey = () => ['creditLimitsControllerSetUserLimit'] as const;
+
+export const getCreditLimitsControllerSetUserLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,CreditLimitsControllerSetUserLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,CreditLimitsControllerSetUserLimitMutationVariables, TContext> => {
+
+const mutationKey = getCreditLimitsControllerSetUserLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, CreditLimitsControllerSetUserLimitMutationVariables> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  creditLimitsControllerSetUserLimit(userId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerSetUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>>
+    export type CreditLimitsControllerSetUserLimitMutationBody = SetCreditLimitDto
+    export type CreditLimitsControllerSetUserLimitMutationError = unknown
+    export type CreditLimitsControllerSetUserLimitMutationVariables = {userId: string;data: SetCreditLimitDto}
+
+    /**
+ * @summary Set a monthly credit limit for a user
+ */
+export const useCreditLimitsControllerSetUserLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,CreditLimitsControllerSetUserLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>,
+        TError,
+        CreditLimitsControllerSetUserLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerSetUserLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Remove a user credit limit (back to unlimited)
+ */
+export const creditLimitsControllerRemoveUserLimit = (
+    userId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/credit-limits/users/${userId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerRemoveUserLimitMutationKey = () => ['creditLimitsControllerRemoveUserLimit'] as const;
+
+export const getCreditLimitsControllerRemoveUserLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,CreditLimitsControllerRemoveUserLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,CreditLimitsControllerRemoveUserLimitMutationVariables, TContext> => {
+
+const mutationKey = getCreditLimitsControllerRemoveUserLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, CreditLimitsControllerRemoveUserLimitMutationVariables> = (props) => {
+          const {userId} = props ?? {};
+
+          return  creditLimitsControllerRemoveUserLimit(userId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerRemoveUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>>
+
+    export type CreditLimitsControllerRemoveUserLimitMutationError = unknown
+    export type CreditLimitsControllerRemoveUserLimitMutationVariables = {userId: string}
+
+    /**
+ * @summary Remove a user credit limit (back to unlimited)
+ */
+export const useCreditLimitsControllerRemoveUserLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,CreditLimitsControllerRemoveUserLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>,
+        TError,
+        CreditLimitsControllerRemoveUserLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerRemoveUserLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Set a monthly credit limit for a team
+ */
+export const creditLimitsControllerSetTeamLimit = (
+    teamId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamCreditLimitResponseDto>(
+      {url: `/credit-limits/teams/${teamId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerSetTeamLimitMutationKey = () => ['creditLimitsControllerSetTeamLimit'] as const;
+
+export const getCreditLimitsControllerSetTeamLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,CreditLimitsControllerSetTeamLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,CreditLimitsControllerSetTeamLimitMutationVariables, TContext> => {
+
+const mutationKey = getCreditLimitsControllerSetTeamLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, CreditLimitsControllerSetTeamLimitMutationVariables> = (props) => {
+          const {teamId,data} = props ?? {};
+
+          return  creditLimitsControllerSetTeamLimit(teamId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerSetTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>>
+    export type CreditLimitsControllerSetTeamLimitMutationBody = SetCreditLimitDto
+    export type CreditLimitsControllerSetTeamLimitMutationError = unknown
+    export type CreditLimitsControllerSetTeamLimitMutationVariables = {teamId: string;data: SetCreditLimitDto}
+
+    /**
+ * @summary Set a monthly credit limit for a team
+ */
+export const useCreditLimitsControllerSetTeamLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,CreditLimitsControllerSetTeamLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>,
+        TError,
+        CreditLimitsControllerSetTeamLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerSetTeamLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Remove a team credit limit (back to unlimited)
+ */
+export const creditLimitsControllerRemoveTeamLimit = (
+    teamId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/credit-limits/teams/${teamId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerRemoveTeamLimitMutationKey = () => ['creditLimitsControllerRemoveTeamLimit'] as const;
+
+export const getCreditLimitsControllerRemoveTeamLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,CreditLimitsControllerRemoveTeamLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,CreditLimitsControllerRemoveTeamLimitMutationVariables, TContext> => {
+
+const mutationKey = getCreditLimitsControllerRemoveTeamLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, CreditLimitsControllerRemoveTeamLimitMutationVariables> = (props) => {
+          const {teamId} = props ?? {};
+
+          return  creditLimitsControllerRemoveTeamLimit(teamId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerRemoveTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>>
+
+    export type CreditLimitsControllerRemoveTeamLimitMutationError = unknown
+    export type CreditLimitsControllerRemoveTeamLimitMutationVariables = {teamId: string}
+
+    /**
+ * @summary Remove a team credit limit (back to unlimited)
+ */
+export const useCreditLimitsControllerRemoveTeamLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,CreditLimitsControllerRemoveTeamLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>,
+        TError,
+        CreditLimitsControllerRemoveTeamLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerRemoveTeamLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Set a monthly credit limit for an API key
+ */
+export const creditLimitsControllerSetApiKeyLimit = (
+    apiKeyId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyCreditLimitResponseDto>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerSetApiKeyLimitMutationKey = () => ['creditLimitsControllerSetApiKeyLimit'] as const;
+
+export const getCreditLimitsControllerSetApiKeyLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,CreditLimitsControllerSetApiKeyLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,CreditLimitsControllerSetApiKeyLimitMutationVariables, TContext> => {
+
+const mutationKey = getCreditLimitsControllerSetApiKeyLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, CreditLimitsControllerSetApiKeyLimitMutationVariables> = (props) => {
+          const {apiKeyId,data} = props ?? {};
+
+          return  creditLimitsControllerSetApiKeyLimit(apiKeyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerSetApiKeyLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>>
+    export type CreditLimitsControllerSetApiKeyLimitMutationBody = SetCreditLimitDto
+    export type CreditLimitsControllerSetApiKeyLimitMutationError = unknown
+    export type CreditLimitsControllerSetApiKeyLimitMutationVariables = {apiKeyId: string;data: SetCreditLimitDto}
+
+    /**
+ * @summary Set a monthly credit limit for an API key
+ */
+export const useCreditLimitsControllerSetApiKeyLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,CreditLimitsControllerSetApiKeyLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>,
+        TError,
+        CreditLimitsControllerSetApiKeyLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerSetApiKeyLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Remove an API key credit limit
+ */
+export const creditLimitsControllerRemoveApiKeyLimit = (
+    apiKeyId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerRemoveApiKeyLimitMutationKey = () => ['creditLimitsControllerRemoveApiKeyLimit'] as const;
+
+export const getCreditLimitsControllerRemoveApiKeyLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,CreditLimitsControllerRemoveApiKeyLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,CreditLimitsControllerRemoveApiKeyLimitMutationVariables, TContext> => {
+
+const mutationKey = getCreditLimitsControllerRemoveApiKeyLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, CreditLimitsControllerRemoveApiKeyLimitMutationVariables> = (props) => {
+          const {apiKeyId} = props ?? {};
+
+          return  creditLimitsControllerRemoveApiKeyLimit(apiKeyId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerRemoveApiKeyLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>>
+
+    export type CreditLimitsControllerRemoveApiKeyLimitMutationError = unknown
+    export type CreditLimitsControllerRemoveApiKeyLimitMutationVariables = {apiKeyId: string}
+
+    /**
+ * @summary Remove an API key credit limit
+ */
+export const useCreditLimitsControllerRemoveApiKeyLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,CreditLimitsControllerRemoveApiKeyLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>,
+        TError,
+        CreditLimitsControllerRemoveApiKeyLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreditLimitsControllerRemoveApiKeyLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List API keys for the current organization
+ */
+export const apiKeysControllerListApiKeys = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyResponseDto[]>(
+      {url: `/api-keys`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getApiKeysControllerListApiKeysQueryKey = () => {
+    return [
+    `/api-keys`
+    ] as const;
+    }
+
+
+export const getApiKeysControllerListApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApiKeysControllerListApiKeysQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>> = ({ signal }) => apiKeysControllerListApiKeys(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApiKeysControllerListApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>>
+export type ApiKeysControllerListApiKeysQueryError = void
+
+
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List API keys for the current organization
+ */
+
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApiKeysControllerListApiKeysQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+export const apiKeysControllerCreateApiKey = (
+    createApiKeyDto: CreateApiKeyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<CreateApiKeyResponseDto>(
+      {url: `/api-keys`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createApiKeyDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getApiKeysControllerCreateApiKeyMutationKey = () => ['apiKeysControllerCreateApiKey'] as const;
+
+export const getApiKeysControllerCreateApiKeyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,ApiKeysControllerCreateApiKeyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,ApiKeysControllerCreateApiKeyMutationVariables, TContext> => {
+
+const mutationKey = getApiKeysControllerCreateApiKeyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, ApiKeysControllerCreateApiKeyMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  apiKeysControllerCreateApiKey(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApiKeysControllerCreateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>>
+    export type ApiKeysControllerCreateApiKeyMutationBody = CreateApiKeyDto
+    export type ApiKeysControllerCreateApiKeyMutationError = void
+    export type ApiKeysControllerCreateApiKeyMutationVariables = {data: CreateApiKeyDto}
+
+    /**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+export const useApiKeysControllerCreateApiKey = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,ApiKeysControllerCreateApiKeyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>,
+        TError,
+        ApiKeysControllerCreateApiKeyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApiKeysControllerCreateApiKeyMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Revoke an API key
+ */
+export const apiKeysControllerRevokeApiKey = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/api-keys/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getApiKeysControllerRevokeApiKeyMutationKey = () => ['apiKeysControllerRevokeApiKey'] as const;
+
+export const getApiKeysControllerRevokeApiKeyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,ApiKeysControllerRevokeApiKeyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,ApiKeysControllerRevokeApiKeyMutationVariables, TContext> => {
+
+const mutationKey = getApiKeysControllerRevokeApiKeyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, ApiKeysControllerRevokeApiKeyMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  apiKeysControllerRevokeApiKey(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApiKeysControllerRevokeApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>>
+
+    export type ApiKeysControllerRevokeApiKeyMutationError = void
+    export type ApiKeysControllerRevokeApiKeyMutationVariables = {id: string}
+
+    /**
+ * @summary Revoke an API key
+ */
+export const useApiKeysControllerRevokeApiKey = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,ApiKeysControllerRevokeApiKeyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>,
+        TError,
+        ApiKeysControllerRevokeApiKeyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApiKeysControllerRevokeApiKeyMutationOptions(options), queryClient);
+    }
+
+/**
+ * Create a new trial for an organization. Only accessible to users with the super admin system role.
+ * @summary Create a new trial
+ */
+export const superAdminTrialsControllerCreateTrial = (
+    createTrialRequestDto: CreateTrialRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTrialRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTrialsControllerCreateTrialMutationKey = () => ['superAdminTrialsControllerCreateTrial'] as const;
+
+export const getSuperAdminTrialsControllerCreateTrialMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTrialsControllerCreateTrialMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, SuperAdminTrialsControllerCreateTrialMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminTrialsControllerCreateTrial(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTrialsControllerCreateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>>
+    export type SuperAdminTrialsControllerCreateTrialMutationBody = CreateTrialRequestDto
+    export type SuperAdminTrialsControllerCreateTrialMutationError = void
+    export type SuperAdminTrialsControllerCreateTrialMutationVariables = {data: CreateTrialRequestDto}
+
+    /**
+ * @summary Create a new trial
+ */
+export const useSuperAdminTrialsControllerCreateTrial = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>,
+        TError,
+        SuperAdminTrialsControllerCreateTrialMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTrialsControllerCreateTrialMutationOptions(options), queryClient);
+    }
+
+/**
+ * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
+ * @summary Get a trial by organization ID
+ */
+export const superAdminTrialsControllerGetTrialByOrgId = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
+      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/trials/${orgId}`
+    ] as const;
+    }
+
+
+export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>> = ({ signal }) => superAdminTrialsControllerGetTrialByOrgId(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminTrialsControllerGetTrialByOrgIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>>
+export type SuperAdminTrialsControllerGetTrialByOrgIdQueryError = void
+
+
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a trial by organization ID
+ */
+
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
+ * @summary Update a trial
+ */
+export const superAdminTrialsControllerUpdateTrial = (
+    orgId: string,
+    updateTrialRequestDto: UpdateTrialRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTrialRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTrialsControllerUpdateTrialMutationKey = () => ['superAdminTrialsControllerUpdateTrial'] as const;
+
+export const getSuperAdminTrialsControllerUpdateTrialMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTrialsControllerUpdateTrialMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, SuperAdminTrialsControllerUpdateTrialMutationVariables> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminTrialsControllerUpdateTrial(orgId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTrialsControllerUpdateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>>
+    export type SuperAdminTrialsControllerUpdateTrialMutationBody = UpdateTrialRequestDto
+    export type SuperAdminTrialsControllerUpdateTrialMutationError = void
+    export type SuperAdminTrialsControllerUpdateTrialMutationVariables = {orgId: string;data: UpdateTrialRequestDto}
+
+    /**
+ * @summary Update a trial
+ */
+export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>,
+        TError,
+        SuperAdminTrialsControllerUpdateTrialMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTrialsControllerUpdateTrialMutationOptions(options), queryClient);
+    }
+
+/**
  * Create a new skill template. Only accessible to super admins.
  * @summary Create a new skill template
  */
@@ -17179,2018 +20399,6 @@ export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awai
 
 
 /**
- * Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.
- * @summary Get usage dashboard configuration
- */
-export const usageControllerGetUsageConfig = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UsageConfigResponseDto>(
-      {url: `/usage/config`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getUsageControllerGetUsageConfigQueryKey = () => {
-    return [
-    `/usage/config`
-    ] as const;
-    }
-
-
-export const getUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUsageConfigQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>> = ({ signal }) => usageControllerGetUsageConfig(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsageControllerGetUsageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>>
-export type UsageControllerGetUsageConfigQueryError = unknown
-
-
-export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage dashboard configuration
- */
-
-export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsageControllerGetUsageConfigQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
- * @summary Get credit usage for the current month
- */
-export const usageControllerGetCreditUsage = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<CreditUsageResponseDto>(
-      {url: `/usage/credits`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getUsageControllerGetCreditUsageQueryKey = () => {
-    return [
-    `/usage/credits`
-    ] as const;
-    }
-
-
-export const getUsageControllerGetCreditUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetCreditUsageQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>> = ({ signal }) => usageControllerGetCreditUsage(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsageControllerGetCreditUsageQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>>
-export type UsageControllerGetCreditUsageQueryError = unknown
-
-
-export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetCreditUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get credit usage for the current month
- */
-
-export function useUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetCreditUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsageControllerGetCreditUsageQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.
- * @summary Get usage statistics by user
- */
-export const usageControllerGetUserUsage = (
-    params?: UsageControllerGetUserUsageParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UserUsageResponseDto>(
-      {url: `/usage/users`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getUsageControllerGetUserUsageQueryKey = (params?: UsageControllerGetUserUsageParams,) => {
-    return [
-    `/usage/users`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getUsageControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUserUsageQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUserUsage>>> = ({ signal }) => usageControllerGetUserUsage(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsageControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUserUsage>>>
-export type UsageControllerGetUserUsageQueryError = unknown
-
-
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
- params: undefined |  UsageControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetUserUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
- params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetUserUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
- params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage statistics by user
- */
-
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
- params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsageControllerGetUserUsageQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get overall usage statistics for the current organization
- */
-export const usageControllerGetUsageStats = (
-    params?: UsageControllerGetUsageStatsParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UsageStatsResponseDto>(
-      {url: `/usage/stats`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getUsageControllerGetUsageStatsQueryKey = (params?: UsageControllerGetUsageStatsParams,) => {
-    return [
-    `/usage/stats`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getUsageControllerGetUsageStatsQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUsageStatsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUsageStats>>> = ({ signal }) => usageControllerGetUsageStats(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsageControllerGetUsageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUsageStats>>>
-export type UsageControllerGetUsageStatsQueryError = unknown
-
-
-export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
- params: undefined |  UsageControllerGetUsageStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetUsageStats>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetUsageStats>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
- params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetUsageStats>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetUsageStats>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
- params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get overall usage statistics for the current organization
- */
-
-export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
- params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsageControllerGetUsageStatsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get usage distribution by model for the current organization
- */
-export const usageControllerGetModelDistribution = (
-    params?: UsageControllerGetModelDistributionParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ModelDistributionResponseDto>(
-      {url: `/usage/models`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getUsageControllerGetModelDistributionQueryKey = (params?: UsageControllerGetModelDistributionParams,) => {
-    return [
-    `/usage/models`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getUsageControllerGetModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetModelDistributionQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>> = ({ signal }) => usageControllerGetModelDistribution(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsageControllerGetModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>>
-export type UsageControllerGetModelDistributionQueryError = unknown
-
-
-export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
- params: undefined |  UsageControllerGetModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
- params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
- params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage distribution by model for the current organization
- */
-
-export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
- params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsageControllerGetModelDistributionQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get provider usage time series for the current organization (chart-ready)
- */
-export const usageControllerGetProviderUsageChart = (
-    params?: UsageControllerGetProviderUsageChartParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ProviderUsageChartResponseDto>(
-      {url: `/usage/providers/chart`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getUsageControllerGetProviderUsageChartQueryKey = (params?: UsageControllerGetProviderUsageChartParams,) => {
-    return [
-    `/usage/providers/chart`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getUsageControllerGetProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetProviderUsageChartQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>> = ({ signal }) => usageControllerGetProviderUsageChart(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsageControllerGetProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>>
-export type UsageControllerGetProviderUsageChartQueryError = unknown
-
-
-export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
- params: undefined |  UsageControllerGetProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
- params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>,
-          TError,
-          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
- params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get provider usage time series for the current organization (chart-ready)
- */
-
-export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
- params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsageControllerGetProviderUsageChartQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Returns token, request and credit usage for every API key of the current organization, including revoked and expired keys. startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive. Without dates, all usage is returned.
- * @summary Get usage statistics by API key
- */
-export const apiKeyUsageControllerGetApiKeyUsage = (
-    params?: ApiKeyUsageControllerGetApiKeyUsageParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ApiKeyUsageResponseDto>(
-      {url: `/usage/api-keys`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getApiKeyUsageControllerGetApiKeyUsageQueryKey = (params?: ApiKeyUsageControllerGetApiKeyUsageParams,) => {
-    return [
-    `/usage/api-keys`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getApiKeyUsageControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getApiKeyUsageControllerGetApiKeyUsageQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>> = ({ signal }) => apiKeyUsageControllerGetApiKeyUsage(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ApiKeyUsageControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>>
-export type ApiKeyUsageControllerGetApiKeyUsageQueryError = unknown
-
-
-export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
- params: undefined |  ApiKeyUsageControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
-          TError,
-          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
- params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
-          TError,
-          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
- params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage statistics by API key
- */
-
-export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
- params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getApiKeyUsageControllerGetApiKeyUsageQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get usage dashboard configuration for an organization
- */
-export const superAdminUsageControllerGetUsageConfig = (
-    orgId: unknown,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UsageConfigResponseDto>(
-      {url: `/super-admin/usage/${orgId}/config`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageControllerGetUsageConfigQueryKey = (orgId: unknown,) => {
-    return [
-    `/super-admin/usage/${orgId}/config`
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetUsageConfigQueryKey(orgId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>> = ({ signal }) => superAdminUsageControllerGetUsageConfig(orgId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageControllerGetUsageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>>
-export type SuperAdminUsageControllerGetUsageConfigQueryError = unknown
-
-
-export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage dashboard configuration for an organization
- */
-
-export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageControllerGetUsageConfigQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
- * @summary Get credit usage for an organization
- */
-export const superAdminUsageControllerGetCreditUsage = (
-    orgId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<CreditUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/credits`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageControllerGetCreditUsageQueryKey = (orgId: string,) => {
-    return [
-    `/super-admin/usage/${orgId}/credits`
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageControllerGetCreditUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetCreditUsageQueryKey(orgId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>> = ({ signal }) => superAdminUsageControllerGetCreditUsage(orgId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageControllerGetCreditUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>>
-export type SuperAdminUsageControllerGetCreditUsageQueryError = unknown
-
-
-export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get credit usage for an organization
- */
-
-export function useSuperAdminUsageControllerGetCreditUsage<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError = unknown>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetCreditUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageControllerGetCreditUsageQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get overall usage statistics for an organization
- */
-export const superAdminUsageControllerGetUsageStats = (
-    orgId: string,
-    params?: SuperAdminUsageControllerGetUsageStatsParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UsageStatsResponseDto>(
-      {url: `/super-admin/usage/${orgId}/stats`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageControllerGetUsageStatsQueryKey = (orgId: string,
-    params?: SuperAdminUsageControllerGetUsageStatsParams,) => {
-    return [
-    `/super-admin/usage/${orgId}/stats`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageControllerGetUsageStatsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(orgId: string,
-    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetUsageStatsQueryKey(orgId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>> = ({ signal }) => superAdminUsageControllerGetUsageStats(orgId,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageControllerGetUsageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>>
-export type SuperAdminUsageControllerGetUsageStatsQueryError = unknown
-
-
-export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
- orgId: string,
-    params: undefined |  SuperAdminUsageControllerGetUsageStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get overall usage statistics for an organization
- */
-
-export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageControllerGetUsageStatsQueryOptions(orgId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get usage distribution by model for an organization
- */
-export const superAdminUsageControllerGetModelDistribution = (
-    orgId: string,
-    params?: SuperAdminUsageControllerGetModelDistributionParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ModelDistributionResponseDto>(
-      {url: `/super-admin/usage/${orgId}/models`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageControllerGetModelDistributionQueryKey = (orgId: string,
-    params?: SuperAdminUsageControllerGetModelDistributionParams,) => {
-    return [
-    `/super-admin/usage/${orgId}/models`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageControllerGetModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(orgId: string,
-    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetModelDistributionQueryKey(orgId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>> = ({ signal }) => superAdminUsageControllerGetModelDistribution(orgId,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageControllerGetModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>>
-export type SuperAdminUsageControllerGetModelDistributionQueryError = unknown
-
-
-export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
- orgId: string,
-    params: undefined |  SuperAdminUsageControllerGetModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage distribution by model for an organization
- */
-
-export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageControllerGetModelDistributionQueryOptions(orgId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get usage statistics by provider for an organization
- */
-export const superAdminUsageDataControllerGetProviderUsage = (
-    orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ProviderUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/providers`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageDataControllerGetProviderUsageQueryKey = (orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageParams,) => {
-    return [
-    `/super-admin/usage/${orgId}/providers`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageDataControllerGetProviderUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetProviderUsageQueryKey(orgId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>> = ({ signal }) => superAdminUsageDataControllerGetProviderUsage(orgId,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageDataControllerGetProviderUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>>
-export type SuperAdminUsageDataControllerGetProviderUsageQueryError = unknown
-
-
-export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
- orgId: string,
-    params: undefined |  SuperAdminUsageDataControllerGetProviderUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage statistics by provider for an organization
- */
-
-export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageDataControllerGetProviderUsageQueryOptions(orgId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get provider usage time series for an organization (chart-ready)
- */
-export const superAdminUsageDataControllerGetProviderUsageChart = (
-    orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ProviderUsageChartResponseDto>(
-      {url: `/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey = (orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,) => {
-    return [
-    `/super-admin/usage/${orgId}/providers/chart`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey(orgId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>> = ({ signal }) => superAdminUsageDataControllerGetProviderUsageChart(orgId,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageDataControllerGetProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>>
-export type SuperAdminUsageDataControllerGetProviderUsageChartQueryError = unknown
-
-
-export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
- orgId: string,
-    params: undefined |  SuperAdminUsageDataControllerGetProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get provider usage time series for an organization (chart-ready)
- */
-
-export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageDataControllerGetProviderUsageChartQueryOptions(orgId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get usage statistics by user for an organization
- */
-export const superAdminUsageDataControllerGetUserUsage = (
-    orgId: string,
-    params?: SuperAdminUsageDataControllerGetUserUsageParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UserUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/users`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageDataControllerGetUserUsageQueryKey = (orgId: string,
-    params?: SuperAdminUsageDataControllerGetUserUsageParams,) => {
-    return [
-    `/super-admin/usage/${orgId}/users`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageDataControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(orgId: string,
-    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetUserUsageQueryKey(orgId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>> = ({ signal }) => superAdminUsageDataControllerGetUserUsage(orgId,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageDataControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>>
-export type SuperAdminUsageDataControllerGetUserUsageQueryError = unknown
-
-
-export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
- orgId: string,
-    params: undefined |  SuperAdminUsageDataControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage statistics by user for an organization
- */
-
-export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageDataControllerGetUserUsageQueryOptions(orgId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive.
- * @summary Get usage statistics by API key for an organization
- */
-export const superAdminUsageDataControllerGetApiKeyUsage = (
-    orgId: string,
-    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ApiKeyUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/api-keys`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey = (orgId: string,
-    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,) => {
-    return [
-    `/super-admin/usage/${orgId}/api-keys`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(orgId: string,
-    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey(orgId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>> = ({ signal }) => superAdminUsageDataControllerGetApiKeyUsage(orgId,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminUsageDataControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>>
-export type SuperAdminUsageDataControllerGetApiKeyUsageQueryError = unknown
-
-
-export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
- orgId: string,
-    params: undefined |  SuperAdminUsageDataControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get usage statistics by API key for an organization
- */
-
-export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
- orgId: string,
-    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions(orgId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
- * @summary Get the current credits-per-euro configuration
- */
-export const superAdminPlatformConfigControllerGetCreditsPerEuro = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<CreditsPerEuroResponseDto>(
-      {url: `/super-admin/platform-config/credits-per-euro`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey = () => {
-    return [
-    `/super-admin/platform-config/credits-per-euro`
-    ] as const;
-    }
-
-
-export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>> = ({ signal }) => superAdminPlatformConfigControllerGetCreditsPerEuro(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminPlatformConfigControllerGetCreditsPerEuroQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>>
-export type SuperAdminPlatformConfigControllerGetCreditsPerEuroQueryError = void
-
-
-export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the current credits-per-euro configuration
- */
-
-export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Update the global credits-per-euro value used for credit calculations. Super admin only.
- * @summary Set the credits-per-euro configuration
- */
-export const superAdminPlatformConfigControllerSetCreditsPerEuro = (
-    setCreditsPerEuroRequestDto: SetCreditsPerEuroRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/super-admin/platform-config/credits-per-euro`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditsPerEuroRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationKey = () => ['superAdminPlatformConfigControllerSetCreditsPerEuro'] as const;
-
-export const getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminPlatformConfigControllerSetCreditsPerEuro(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>>
-    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationBody = SetCreditsPerEuroRequestDto
-    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationError = void
-    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables = {data: SetCreditsPerEuroRequestDto}
-
-    /**
- * @summary Set the credits-per-euro configuration
- */
-export const useSuperAdminPlatformConfigControllerSetCreditsPerEuro = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>,
-        TError,
-        SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationOptions(options), queryClient);
-    }
-
-/**
- * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
- * @summary Get the current fair-use limits
- */
-export const superAdminPlatformConfigControllerGetFairUseLimits = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<FairUseLimitsResponseDto>(
-      {url: `/super-admin/platform-config/fair-use-limits`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey = () => {
-    return [
-    `/super-admin/platform-config/fair-use-limits`
-    ] as const;
-    }
-
-
-export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>> = ({ signal }) => superAdminPlatformConfigControllerGetFairUseLimits(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminPlatformConfigControllerGetFairUseLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>>
-export type SuperAdminPlatformConfigControllerGetFairUseLimitsQueryError = void
-
-
-export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the current fair-use limits
- */
-
-export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.
- * @summary Set the fair-use limit for a single model tier
- */
-export const superAdminPlatformConfigControllerSetFairUseLimit = (
-    setFairUseLimitRequestDto: SetFairUseLimitRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/super-admin/platform-config/fair-use-limits`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setFairUseLimitRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminPlatformConfigControllerSetFairUseLimitMutationKey = () => ['superAdminPlatformConfigControllerSetFairUseLimit'] as const;
-
-export const getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminPlatformConfigControllerSetFairUseLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminPlatformConfigControllerSetFairUseLimit(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>>
-    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationBody = SetFairUseLimitRequestDto
-    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationError = void
-    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables = {data: SetFairUseLimitRequestDto}
-
-    /**
- * @summary Set the fair-use limit for a single model tier
- */
-export const useSuperAdminPlatformConfigControllerSetFairUseLimit = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>,
-        TError,
-        SuperAdminPlatformConfigControllerSetFairUseLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.
- * @summary Set the fair-use limit for image generation
- */
-export const superAdminPlatformConfigControllerSetImageFairUseLimit = (
-    setImageFairUseLimitRequestDto: SetImageFairUseLimitRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/super-admin/platform-config/image-fair-use-limit`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setImageFairUseLimitRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationKey = () => ['superAdminPlatformConfigControllerSetImageFairUseLimit'] as const;
-
-export const getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminPlatformConfigControllerSetImageFairUseLimit(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>>
-    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationBody = SetImageFairUseLimitRequestDto
-    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationError = void
-    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables = {data: SetImageFairUseLimitRequestDto}
-
-    /**
- * @summary Set the fair-use limit for image generation
- */
-export const useSuperAdminPlatformConfigControllerSetImageFairUseLimit = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>,
-        TError,
-        SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.
- * @summary Set the app-wide alert banner
- */
-export const superAdminPlatformConfigControllerSetAppAlert = (
-    setAppAlertRequestDto: SetAppAlertRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/super-admin/platform-config/app-alert`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setAppAlertRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminPlatformConfigControllerSetAppAlertMutationKey = () => ['superAdminPlatformConfigControllerSetAppAlert'] as const;
-
-export const getSuperAdminPlatformConfigControllerSetAppAlertMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,SuperAdminPlatformConfigControllerSetAppAlertMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,SuperAdminPlatformConfigControllerSetAppAlertMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminPlatformConfigControllerSetAppAlertMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, SuperAdminPlatformConfigControllerSetAppAlertMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminPlatformConfigControllerSetAppAlert(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminPlatformConfigControllerSetAppAlertMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>>
-    export type SuperAdminPlatformConfigControllerSetAppAlertMutationBody = SetAppAlertRequestDto
-    export type SuperAdminPlatformConfigControllerSetAppAlertMutationError = void
-    export type SuperAdminPlatformConfigControllerSetAppAlertMutationVariables = {data: SetAppAlertRequestDto}
-
-    /**
- * @summary Set the app-wide alert banner
- */
-export const useSuperAdminPlatformConfigControllerSetAppAlert = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,SuperAdminPlatformConfigControllerSetAppAlertMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>,
-        TError,
-        SuperAdminPlatformConfigControllerSetAppAlertMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminPlatformConfigControllerSetAppAlertMutationOptions(options), queryClient);
-    }
-
-/**
- * Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.
- * @summary Get the current app-wide alert banner
- */
-export const appAlertControllerGetAppAlert = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<AppAlertResponseDto>(
-      {url: `/app-alert`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getAppAlertControllerGetAppAlertQueryKey = () => {
-    return [
-    `/app-alert`
-    ] as const;
-    }
-
-
-export const getAppAlertControllerGetAppAlertQueryOptions = <TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAppAlertControllerGetAppAlertQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>> = ({ signal }) => appAlertControllerGetAppAlert(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AppAlertControllerGetAppAlertQueryResult = NonNullable<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>>
-export type AppAlertControllerGetAppAlertQueryError = void
-
-
-export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>,
-          TError,
-          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>,
-          TError,
-          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the current app-wide alert banner
- */
-
-export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAppAlertControllerGetAppAlertQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
  * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
  * @summary Send a message with optional images and receive streaming response
  */
@@ -19471,1150 +20679,6 @@ export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awai
 
 
 
-
-/**
- * Create a new trial for an organization. Only accessible to users with the super admin system role.
- * @summary Create a new trial
- */
-export const superAdminTrialsControllerCreateTrial = (
-    createTrialRequestDto: CreateTrialRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTrialRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminTrialsControllerCreateTrialMutationKey = () => ['superAdminTrialsControllerCreateTrial'] as const;
-
-export const getSuperAdminTrialsControllerCreateTrialMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminTrialsControllerCreateTrialMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, SuperAdminTrialsControllerCreateTrialMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminTrialsControllerCreateTrial(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminTrialsControllerCreateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>>
-    export type SuperAdminTrialsControllerCreateTrialMutationBody = CreateTrialRequestDto
-    export type SuperAdminTrialsControllerCreateTrialMutationError = void
-    export type SuperAdminTrialsControllerCreateTrialMutationVariables = {data: CreateTrialRequestDto}
-
-    /**
- * @summary Create a new trial
- */
-export const useSuperAdminTrialsControllerCreateTrial = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>,
-        TError,
-        SuperAdminTrialsControllerCreateTrialMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminTrialsControllerCreateTrialMutationOptions(options), queryClient);
-    }
-
-/**
- * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
- * @summary Get a trial by organization ID
- */
-export const superAdminTrialsControllerGetTrialByOrgId = (
-    orgId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
-      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId: string,) => {
-    return [
-    `/super-admin/trials/${orgId}`
-    ] as const;
-    }
-
-
-export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>> = ({ signal }) => superAdminTrialsControllerGetTrialByOrgId(orgId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminTrialsControllerGetTrialByOrgIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>>
-export type SuperAdminTrialsControllerGetTrialByOrgIdQueryError = void
-
-
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a trial by organization ID
- */
-
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
- * @summary Update a trial
- */
-export const superAdminTrialsControllerUpdateTrial = (
-    orgId: string,
-    updateTrialRequestDto: UpdateTrialRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateTrialRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminTrialsControllerUpdateTrialMutationKey = () => ['superAdminTrialsControllerUpdateTrial'] as const;
-
-export const getSuperAdminTrialsControllerUpdateTrialMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminTrialsControllerUpdateTrialMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, SuperAdminTrialsControllerUpdateTrialMutationVariables> = (props) => {
-          const {orgId,data} = props ?? {};
-
-          return  superAdminTrialsControllerUpdateTrial(orgId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminTrialsControllerUpdateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>>
-    export type SuperAdminTrialsControllerUpdateTrialMutationBody = UpdateTrialRequestDto
-    export type SuperAdminTrialsControllerUpdateTrialMutationError = void
-    export type SuperAdminTrialsControllerUpdateTrialMutationVariables = {orgId: string;data: UpdateTrialRequestDto}
-
-    /**
- * @summary Update a trial
- */
-export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>,
-        TError,
-        SuperAdminTrialsControllerUpdateTrialMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminTrialsControllerUpdateTrialMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary List configured user credit limits with current consumption
- */
-export const creditLimitsControllerGetUserLimits = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UserCreditLimitItemDto[]>(
-      {url: `/credit-limits/users`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerGetUserLimitsQueryKey = () => {
-    return [
-    `/credit-limits/users`
-    ] as const;
-    }
-
-
-export const getCreditLimitsControllerGetUserLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetUserLimitsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>> = ({ signal }) => creditLimitsControllerGetUserLimits(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreditLimitsControllerGetUserLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>>
-export type CreditLimitsControllerGetUserLimitsQueryError = unknown
-
-
-export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>,
-          TError,
-          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>,
-          TError,
-          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List configured user credit limits with current consumption
- */
-
-export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreditLimitsControllerGetUserLimitsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary List configured team credit limits with current consumption
- */
-export const creditLimitsControllerGetTeamLimits = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<TeamCreditLimitItemDto[]>(
-      {url: `/credit-limits/teams`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerGetTeamLimitsQueryKey = () => {
-    return [
-    `/credit-limits/teams`
-    ] as const;
-    }
-
-
-export const getCreditLimitsControllerGetTeamLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetTeamLimitsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>> = ({ signal }) => creditLimitsControllerGetTeamLimits(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreditLimitsControllerGetTeamLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>>
-export type CreditLimitsControllerGetTeamLimitsQueryError = unknown
-
-
-export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>,
-          TError,
-          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>,
-          TError,
-          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List configured team credit limits with current consumption
- */
-
-export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreditLimitsControllerGetTeamLimitsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary List configured API key credit limits with current consumption
- */
-export const creditLimitsControllerGetApiKeyLimits = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ApiKeyCreditLimitItemDto[]>(
-      {url: `/credit-limits/api-keys`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerGetApiKeyLimitsQueryKey = () => {
-    return [
-    `/credit-limits/api-keys`
-    ] as const;
-    }
-
-
-export const getCreditLimitsControllerGetApiKeyLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetApiKeyLimitsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>> = ({ signal }) => creditLimitsControllerGetApiKeyLimits(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreditLimitsControllerGetApiKeyLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>>
-export type CreditLimitsControllerGetApiKeyLimitsQueryError = unknown
-
-
-export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>,
-          TError,
-          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>,
-          TError,
-          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List configured API key credit limits with current consumption
- */
-
-export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreditLimitsControllerGetApiKeyLimitsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Set a monthly credit limit for a user
- */
-export const creditLimitsControllerSetUserLimit = (
-    userId: string,
-    setCreditLimitDto: SetCreditLimitDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UserCreditLimitResponseDto>(
-      {url: `/credit-limits/users/${userId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditLimitDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerSetUserLimitMutationKey = () => ['creditLimitsControllerSetUserLimit'] as const;
-
-export const getCreditLimitsControllerSetUserLimitMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,CreditLimitsControllerSetUserLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,CreditLimitsControllerSetUserLimitMutationVariables, TContext> => {
-
-const mutationKey = getCreditLimitsControllerSetUserLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, CreditLimitsControllerSetUserLimitMutationVariables> = (props) => {
-          const {userId,data} = props ?? {};
-
-          return  creditLimitsControllerSetUserLimit(userId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreditLimitsControllerSetUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>>
-    export type CreditLimitsControllerSetUserLimitMutationBody = SetCreditLimitDto
-    export type CreditLimitsControllerSetUserLimitMutationError = unknown
-    export type CreditLimitsControllerSetUserLimitMutationVariables = {userId: string;data: SetCreditLimitDto}
-
-    /**
- * @summary Set a monthly credit limit for a user
- */
-export const useCreditLimitsControllerSetUserLimit = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,CreditLimitsControllerSetUserLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>,
-        TError,
-        CreditLimitsControllerSetUserLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreditLimitsControllerSetUserLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Remove a user credit limit (back to unlimited)
- */
-export const creditLimitsControllerRemoveUserLimit = (
-    userId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/credit-limits/users/${userId}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerRemoveUserLimitMutationKey = () => ['creditLimitsControllerRemoveUserLimit'] as const;
-
-export const getCreditLimitsControllerRemoveUserLimitMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,CreditLimitsControllerRemoveUserLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,CreditLimitsControllerRemoveUserLimitMutationVariables, TContext> => {
-
-const mutationKey = getCreditLimitsControllerRemoveUserLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, CreditLimitsControllerRemoveUserLimitMutationVariables> = (props) => {
-          const {userId} = props ?? {};
-
-          return  creditLimitsControllerRemoveUserLimit(userId,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreditLimitsControllerRemoveUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>>
-
-    export type CreditLimitsControllerRemoveUserLimitMutationError = unknown
-    export type CreditLimitsControllerRemoveUserLimitMutationVariables = {userId: string}
-
-    /**
- * @summary Remove a user credit limit (back to unlimited)
- */
-export const useCreditLimitsControllerRemoveUserLimit = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,CreditLimitsControllerRemoveUserLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>,
-        TError,
-        CreditLimitsControllerRemoveUserLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreditLimitsControllerRemoveUserLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Set a monthly credit limit for a team
- */
-export const creditLimitsControllerSetTeamLimit = (
-    teamId: string,
-    setCreditLimitDto: SetCreditLimitDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<TeamCreditLimitResponseDto>(
-      {url: `/credit-limits/teams/${teamId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditLimitDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerSetTeamLimitMutationKey = () => ['creditLimitsControllerSetTeamLimit'] as const;
-
-export const getCreditLimitsControllerSetTeamLimitMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,CreditLimitsControllerSetTeamLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,CreditLimitsControllerSetTeamLimitMutationVariables, TContext> => {
-
-const mutationKey = getCreditLimitsControllerSetTeamLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, CreditLimitsControllerSetTeamLimitMutationVariables> = (props) => {
-          const {teamId,data} = props ?? {};
-
-          return  creditLimitsControllerSetTeamLimit(teamId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreditLimitsControllerSetTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>>
-    export type CreditLimitsControllerSetTeamLimitMutationBody = SetCreditLimitDto
-    export type CreditLimitsControllerSetTeamLimitMutationError = unknown
-    export type CreditLimitsControllerSetTeamLimitMutationVariables = {teamId: string;data: SetCreditLimitDto}
-
-    /**
- * @summary Set a monthly credit limit for a team
- */
-export const useCreditLimitsControllerSetTeamLimit = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,CreditLimitsControllerSetTeamLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>,
-        TError,
-        CreditLimitsControllerSetTeamLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreditLimitsControllerSetTeamLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Remove a team credit limit (back to unlimited)
- */
-export const creditLimitsControllerRemoveTeamLimit = (
-    teamId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/credit-limits/teams/${teamId}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerRemoveTeamLimitMutationKey = () => ['creditLimitsControllerRemoveTeamLimit'] as const;
-
-export const getCreditLimitsControllerRemoveTeamLimitMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,CreditLimitsControllerRemoveTeamLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,CreditLimitsControllerRemoveTeamLimitMutationVariables, TContext> => {
-
-const mutationKey = getCreditLimitsControllerRemoveTeamLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, CreditLimitsControllerRemoveTeamLimitMutationVariables> = (props) => {
-          const {teamId} = props ?? {};
-
-          return  creditLimitsControllerRemoveTeamLimit(teamId,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreditLimitsControllerRemoveTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>>
-
-    export type CreditLimitsControllerRemoveTeamLimitMutationError = unknown
-    export type CreditLimitsControllerRemoveTeamLimitMutationVariables = {teamId: string}
-
-    /**
- * @summary Remove a team credit limit (back to unlimited)
- */
-export const useCreditLimitsControllerRemoveTeamLimit = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,CreditLimitsControllerRemoveTeamLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>,
-        TError,
-        CreditLimitsControllerRemoveTeamLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreditLimitsControllerRemoveTeamLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Set a monthly credit limit for an API key
- */
-export const creditLimitsControllerSetApiKeyLimit = (
-    apiKeyId: string,
-    setCreditLimitDto: SetCreditLimitDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ApiKeyCreditLimitResponseDto>(
-      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditLimitDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerSetApiKeyLimitMutationKey = () => ['creditLimitsControllerSetApiKeyLimit'] as const;
-
-export const getCreditLimitsControllerSetApiKeyLimitMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,CreditLimitsControllerSetApiKeyLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,CreditLimitsControllerSetApiKeyLimitMutationVariables, TContext> => {
-
-const mutationKey = getCreditLimitsControllerSetApiKeyLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, CreditLimitsControllerSetApiKeyLimitMutationVariables> = (props) => {
-          const {apiKeyId,data} = props ?? {};
-
-          return  creditLimitsControllerSetApiKeyLimit(apiKeyId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreditLimitsControllerSetApiKeyLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>>
-    export type CreditLimitsControllerSetApiKeyLimitMutationBody = SetCreditLimitDto
-    export type CreditLimitsControllerSetApiKeyLimitMutationError = unknown
-    export type CreditLimitsControllerSetApiKeyLimitMutationVariables = {apiKeyId: string;data: SetCreditLimitDto}
-
-    /**
- * @summary Set a monthly credit limit for an API key
- */
-export const useCreditLimitsControllerSetApiKeyLimit = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,CreditLimitsControllerSetApiKeyLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>,
-        TError,
-        CreditLimitsControllerSetApiKeyLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreditLimitsControllerSetApiKeyLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Remove an API key credit limit
- */
-export const creditLimitsControllerRemoveApiKeyLimit = (
-    apiKeyId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getCreditLimitsControllerRemoveApiKeyLimitMutationKey = () => ['creditLimitsControllerRemoveApiKeyLimit'] as const;
-
-export const getCreditLimitsControllerRemoveApiKeyLimitMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,CreditLimitsControllerRemoveApiKeyLimitMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,CreditLimitsControllerRemoveApiKeyLimitMutationVariables, TContext> => {
-
-const mutationKey = getCreditLimitsControllerRemoveApiKeyLimitMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, CreditLimitsControllerRemoveApiKeyLimitMutationVariables> = (props) => {
-          const {apiKeyId} = props ?? {};
-
-          return  creditLimitsControllerRemoveApiKeyLimit(apiKeyId,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreditLimitsControllerRemoveApiKeyLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>>
-
-    export type CreditLimitsControllerRemoveApiKeyLimitMutationError = unknown
-    export type CreditLimitsControllerRemoveApiKeyLimitMutationVariables = {apiKeyId: string}
-
-    /**
- * @summary Remove an API key credit limit
- */
-export const useCreditLimitsControllerRemoveApiKeyLimit = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,CreditLimitsControllerRemoveApiKeyLimitMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>,
-        TError,
-        CreditLimitsControllerRemoveApiKeyLimitMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreditLimitsControllerRemoveApiKeyLimitMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary List API keys for the current organization
- */
-export const apiKeysControllerListApiKeys = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ApiKeyResponseDto[]>(
-      {url: `/api-keys`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getApiKeysControllerListApiKeysQueryKey = () => {
-    return [
-    `/api-keys`
-    ] as const;
-    }
-
-
-export const getApiKeysControllerListApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getApiKeysControllerListApiKeysQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>> = ({ signal }) => apiKeysControllerListApiKeys(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ApiKeysControllerListApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>>
-export type ApiKeysControllerListApiKeysQueryError = void
-
-
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
-          TError,
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
-          TError,
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List API keys for the current organization
- */
-
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getApiKeysControllerListApiKeysQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
- */
-export const apiKeysControllerCreateApiKey = (
-    createApiKeyDto: CreateApiKeyDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<CreateApiKeyResponseDto>(
-      {url: `/api-keys`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createApiKeyDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getApiKeysControllerCreateApiKeyMutationKey = () => ['apiKeysControllerCreateApiKey'] as const;
-
-export const getApiKeysControllerCreateApiKeyMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,ApiKeysControllerCreateApiKeyMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,ApiKeysControllerCreateApiKeyMutationVariables, TContext> => {
-
-const mutationKey = getApiKeysControllerCreateApiKeyMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, ApiKeysControllerCreateApiKeyMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  apiKeysControllerCreateApiKey(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ApiKeysControllerCreateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>>
-    export type ApiKeysControllerCreateApiKeyMutationBody = CreateApiKeyDto
-    export type ApiKeysControllerCreateApiKeyMutationError = void
-    export type ApiKeysControllerCreateApiKeyMutationVariables = {data: CreateApiKeyDto}
-
-    /**
- * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
- */
-export const useApiKeysControllerCreateApiKey = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,ApiKeysControllerCreateApiKeyMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>,
-        TError,
-        ApiKeysControllerCreateApiKeyMutationVariables,
-        TContext
-      > => {
-      return useMutation(getApiKeysControllerCreateApiKeyMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Revoke an API key
- */
-export const apiKeysControllerRevokeApiKey = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/api-keys/${id}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getApiKeysControllerRevokeApiKeyMutationKey = () => ['apiKeysControllerRevokeApiKey'] as const;
-
-export const getApiKeysControllerRevokeApiKeyMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,ApiKeysControllerRevokeApiKeyMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,ApiKeysControllerRevokeApiKeyMutationVariables, TContext> => {
-
-const mutationKey = getApiKeysControllerRevokeApiKeyMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, ApiKeysControllerRevokeApiKeyMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  apiKeysControllerRevokeApiKey(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ApiKeysControllerRevokeApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>>
-
-    export type ApiKeysControllerRevokeApiKeyMutationError = void
-    export type ApiKeysControllerRevokeApiKeyMutationVariables = {id: string}
-
-    /**
- * @summary Revoke an API key
- */
-export const useApiKeysControllerRevokeApiKey = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,ApiKeysControllerRevokeApiKeyMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>,
-        TError,
-        ApiKeysControllerRevokeApiKeyMutationVariables,
-        TContext
-      > => {
-      return useMutation(getApiKeysControllerRevokeApiKeyMutationOptions(options), queryClient);
-    }
 
 /**
  * Returns the custom system prompt for the authenticated user, or null if not set.
@@ -21657,17 +21721,17 @@ export function useAcademyChaptersControllerGetChapters<TData = Awaited<ReturnTy
 
 
 /**
- * Draw up to 10 random questions from the chapter pool (the whole pool if smaller). Correct answers are never included.
- * @summary Get a chapter quiz
+ * Confirm that the current user watched all videos in the chapter. Reconfirmation refreshes the confirmation date.
+ * @summary Confirm an academy chapter
  */
-export const academyQuizControllerGetChapterQuiz = (
+export const academyChaptersControllerConfirmChapter = (
     chapterId: string,
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<QuizQuestionForTakingResponseDto[]>(
-      {url: `/academy/chapters/${chapterId}/quiz`, method: 'GET', signal
+      return customAxiosInstance<ChapterConfirmationResponseDto>(
+      {url: `/academy/chapters/${chapterId}/confirm`, method: 'POST', signal
     },
       );
     }
@@ -21675,110 +21739,13 @@ export const academyQuizControllerGetChapterQuiz = (
 
 
 
-export const getAcademyQuizControllerGetChapterQuizQueryKey = (chapterId: string,) => {
-    return [
-    `/academy/chapters/${chapterId}/quiz`
-    ] as const;
-    }
+export const getAcademyChaptersControllerConfirmChapterMutationKey = () => ['academyChaptersControllerConfirmChapter'] as const;
 
+export const getAcademyChaptersControllerConfirmChapterMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, TError,AcademyChaptersControllerConfirmChapterMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, TError,AcademyChaptersControllerConfirmChapterMutationVariables, TContext> => {
 
-export const getAcademyQuizControllerGetChapterQuizQueryOptions = <TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAcademyQuizControllerGetChapterQuizQueryKey(chapterId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>> = ({ signal }) => academyQuizControllerGetChapterQuiz(chapterId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: chapterId !== null && chapterId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AcademyQuizControllerGetChapterQuizQueryResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>>
-export type AcademyQuizControllerGetChapterQuizQueryError = void
-
-
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>,
-          TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>,
-          TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a chapter quiz
- */
-
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAcademyQuizControllerGetChapterQuizQueryOptions(chapterId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Grade a quiz submission against the chapter pass threshold, record progress and, when the whole academy is passed, stamp completion. Unlimited retries.
- * @summary Submit a chapter quiz
- */
-export const academyQuizControllerSubmitChapterQuiz = (
-    chapterId: string,
-    submitQuizRequestDto: SubmitQuizRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<QuizResultResponseDto>(
-      {url: `/academy/chapters/${chapterId}/quiz/submit`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: submitQuizRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getAcademyQuizControllerSubmitChapterQuizMutationKey = () => ['academyQuizControllerSubmitChapterQuiz'] as const;
-
-export const getAcademyQuizControllerSubmitChapterQuizMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,AcademyQuizControllerSubmitChapterQuizMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,AcademyQuizControllerSubmitChapterQuizMutationVariables, TContext> => {
-
-const mutationKey = getAcademyQuizControllerSubmitChapterQuizMutationKey();
+const mutationKey = getAcademyChaptersControllerConfirmChapterMutationKey();
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -21788,10 +21755,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, AcademyQuizControllerSubmitChapterQuizMutationVariables> = (props) => {
-          const {chapterId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, AcademyChaptersControllerConfirmChapterMutationVariables> = (props) => {
+          const {chapterId} = props ?? {};
 
-          return  academyQuizControllerSubmitChapterQuiz(chapterId,data,)
+          return  academyChaptersControllerConfirmChapter(chapterId,)
         }
 
 
@@ -21801,30 +21768,30 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type AcademyQuizControllerSubmitChapterQuizMutationResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>>
-    export type AcademyQuizControllerSubmitChapterQuizMutationBody = SubmitQuizRequestDto
-    export type AcademyQuizControllerSubmitChapterQuizMutationError = void
-    export type AcademyQuizControllerSubmitChapterQuizMutationVariables = {chapterId: string;data: SubmitQuizRequestDto}
+    export type AcademyChaptersControllerConfirmChapterMutationResult = NonNullable<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>>
+
+    export type AcademyChaptersControllerConfirmChapterMutationError = void
+    export type AcademyChaptersControllerConfirmChapterMutationVariables = {chapterId: string}
 
     /**
- * @summary Submit a chapter quiz
+ * @summary Confirm an academy chapter
  */
-export const useAcademyQuizControllerSubmitChapterQuiz = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,AcademyQuizControllerSubmitChapterQuizMutationVariables, TContext>, }
+export const useAcademyChaptersControllerConfirmChapter = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, TError,AcademyChaptersControllerConfirmChapterMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>,
+        Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>,
         TError,
-        AcademyQuizControllerSubmitChapterQuizMutationVariables,
+        AcademyChaptersControllerConfirmChapterMutationVariables,
         TContext
       > => {
-      return useMutation(getAcademyQuizControllerSubmitChapterQuizMutationOptions(options), queryClient);
+      return useMutation(getAcademyChaptersControllerConfirmChapterMutationOptions(options), queryClient);
     }
 
 /**
- * Get the current user per-chapter pass state and the whole-academy completion date.
+ * Get the current user chapter confirmations and whole-academy completion date.
  * @summary Get academy progress
  */
-export const academyQuizControllerGetProgress = (
+export const academyProgressControllerGetProgress = (
 
  signal?: AbortSignal
 ) => {
@@ -21839,69 +21806,69 @@ export const academyQuizControllerGetProgress = (
 
 
 
-export const getAcademyQuizControllerGetProgressQueryKey = () => {
+export const getAcademyProgressControllerGetProgressQueryKey = () => {
     return [
     `/academy/progress`
     ] as const;
     }
 
 
-export const getAcademyQuizControllerGetProgressQueryOptions = <TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+export const getAcademyProgressControllerGetProgressQueryOptions = <TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAcademyQuizControllerGetProgressQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getAcademyProgressControllerGetProgressQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>> = ({ signal }) => academyQuizControllerGetProgress(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>> = ({ signal }) => academyProgressControllerGetProgress(signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AcademyQuizControllerGetProgressQueryResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>>
-export type AcademyQuizControllerGetProgressQueryError = void
+export type AcademyProgressControllerGetProgressQueryResult = NonNullable<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>>
+export type AcademyProgressControllerGetProgressQueryError = void
 
 
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>> & Pick<
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>,
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>,
           TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>> & Pick<
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>,
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>,
           TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get academy progress
  */
 
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAcademyQuizControllerGetProgressQueryOptions(options)
+  const queryOptions = getAcademyProgressControllerGetProgressQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -21915,8 +21882,8 @@ export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<t
 
 
 /**
- * Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.
- * @summary Download the academy completion certificate
+ * Render the KI-Schulung nach EU AI Act participation confirmation PDF for the current user. Available once the whole academy has been completed.
+ * @summary Download the academy participation confirmation
  */
 export const academyCertificateControllerGetCertificate = (
 
@@ -21988,7 +21955,7 @@ export function useAcademyCertificateControllerGetCertificate<TData = Awaited<Re
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Download the academy completion certificate
+ * @summary Download the academy participation confirmation
  */
 
 export function useAcademyCertificateControllerGetCertificate<TData = Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError = void>(
@@ -22019,7 +21986,7 @@ export const superAdminAcademyChaptersControllerGetChapters = (
 ) => {
 
 
-      return customAxiosInstance<SuperAdminAcademyChapterResponseDto[]>(
+      return customAxiosInstance<AcademyChapterResponseDto[]>(
       {url: `/super-admin/academy/chapters`, method: 'GET', signal
     },
       );
@@ -22653,213 +22620,6 @@ export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TE
         TContext
       > => {
       return useMutation(getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options), queryClient);
-    }
-
-/**
- * Add a question to a chapter quiz pool, appended after the last position. Only accessible to super admins.
- * @summary Create a new academy quiz question
- */
-export const superAdminAcademyQuizQuestionsControllerCreateQuizQuestion = (
-    chapterId: string,
-    createQuizQuestionRequestDto: CreateQuizQuestionRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<QuizQuestionResponseDto>(
-      {url: `/super-admin/academy/chapters/${chapterId}/quiz-questions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createQuizQuestionRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationKey = () => ['superAdminAcademyQuizQuestionsControllerCreateQuizQuestion'] as const;
-
-export const getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationVariables> = (props) => {
-          const {chapterId,data} = props ?? {};
-
-          return  superAdminAcademyQuizQuestionsControllerCreateQuizQuestion(chapterId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>>
-    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationBody = CreateQuizQuestionRequestDto
-    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationError = void
-    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationVariables = {chapterId: string;data: CreateQuizQuestionRequestDto}
-
-    /**
- * @summary Create a new academy quiz question
- */
-export const useSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestion = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>,
-        TError,
-        SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationOptions(options), queryClient);
-    }
-
-/**
- * Replace the prompt and answer options of a quiz question. Only accessible to super admins.
- * @summary Update an academy quiz question
- */
-export const superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion = (
-    id: string,
-    updateQuizQuestionRequestDto: UpdateQuizQuestionRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<QuizQuestionResponseDto>(
-      {url: `/super-admin/academy/quiz-questions/${id}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateQuizQuestionRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationKey = () => ['superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion'] as const;
-
-export const getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>>
-    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationBody = UpdateQuizQuestionRequestDto
-    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationError = void
-    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationVariables = {id: string;data: UpdateQuizQuestionRequestDto}
-
-    /**
- * @summary Update an academy quiz question
- */
-export const useSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestion = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>,
-        TError,
-        SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationOptions(options), queryClient);
-    }
-
-/**
- * Delete a quiz question. Only accessible to super admins.
- * @summary Delete an academy quiz question
- */
-export const superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/super-admin/academy/quiz-questions/${id}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationKey = () => ['superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion'] as const;
-
-export const getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>>
-
-    export type SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationError = void
-    export type SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationVariables = {id: string}
-
-    /**
- * @summary Delete an academy quiz question
- */
-export const useSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestion = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>,
-        TError,
-        SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationOptions(options), queryClient);
     }
 
 export const chatCompletionsControllerCreate = (

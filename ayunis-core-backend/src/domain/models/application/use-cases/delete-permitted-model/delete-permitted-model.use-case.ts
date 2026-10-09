@@ -165,7 +165,6 @@ export class DeletePermittedModelUseCase {
       new ReplaceModelWithUserDefaultCommand({
         orgId,
         oldPermittedModelId: model.id,
-        catalogModelId: model.model.id,
       }),
     );
 

@@ -1,4 +1,4 @@
-import { ListMinus, ListPlus } from 'lucide-react';
+import { ListMinus, ListPlus, Redo2, Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
@@ -11,11 +11,15 @@ import {
 import {
   MAX_SPREADSHEET_ROWS,
   type GridState,
-} from '../model/spreadsheet-grid-state';
+} from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
 import { SpreadsheetColumnManager } from './SpreadsheetColumnManager';
 
 interface SpreadsheetToolbarProps {
   readonly gridState: GridState;
+  readonly canUndo: boolean;
+  readonly canRedo: boolean;
+  readonly onUndo: () => void;
+  readonly onRedo: () => void;
   readonly onAddRows: (count: number) => void;
   readonly onDeleteLastRow: () => void;
   readonly onAddColumn: (label: string) => void;
@@ -26,6 +30,10 @@ interface SpreadsheetToolbarProps {
 
 export function SpreadsheetToolbar({
   gridState,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   onAddRows,
   onDeleteLastRow,
   onAddColumn,
@@ -59,6 +67,28 @@ export function SpreadsheetToolbar({
 
   return (
     <div className="flex items-center gap-1 border-b px-3 py-1.5">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="size-7 p-0"
+        disabled={!canUndo}
+        onClick={onUndo}
+        aria-label={t('spreadsheet.toolbar.undo')}
+        title={t('spreadsheet.toolbar.undo')}
+      >
+        <Undo2 className="size-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="size-7 p-0"
+        disabled={!canRedo}
+        onClick={onRedo}
+        aria-label={t('spreadsheet.toolbar.redo')}
+        title={t('spreadsheet.toolbar.redo')}
+      >
+        <Redo2 className="size-3.5" />
+      </Button>
       <Popover open={addRowsOpen} onOpenChange={setAddRowsOpen}>
         <PopoverTrigger asChild>
           <Button

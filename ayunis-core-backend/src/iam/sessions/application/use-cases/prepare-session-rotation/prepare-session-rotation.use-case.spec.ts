@@ -4,7 +4,6 @@ import {
   RefreshTokenReuseError,
 } from 'src/iam/sessions/application/sessions.errors';
 import {
-  TEST_FAMILY_ID,
   aRefreshToken,
   createMockRefreshTokensRepository,
 } from 'src/iam/sessions/application/testing/refresh-token.fixtures';
@@ -31,13 +30,13 @@ describe(PrepareSessionRotationUseCase.name, () => {
     await expect(prepare()).rejects.toThrow(RefreshTokenNotFoundError);
   });
 
-  it('revokes the family and rejects a revoked token', async () => {
+  it('reports a revoked token for post-transaction family revocation', async () => {
     repository.findByTokenHash.mockResolvedValue(
       aRefreshToken({ revokedAt: new Date() }),
     );
 
     await expect(prepare()).rejects.toThrow(RefreshTokenReuseError);
-    expect(repository.revokeFamily).toHaveBeenCalledWith(TEST_FAMILY_ID);
+    expect(repository.revokeFamily).not.toHaveBeenCalled();
   });
 
   it('rejects an expired token', async () => {

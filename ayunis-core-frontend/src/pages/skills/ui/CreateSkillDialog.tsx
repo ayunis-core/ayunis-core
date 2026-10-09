@@ -7,12 +7,16 @@ interface CreateSkillDialogProps {
   buttonText?: string;
   showIcon?: boolean;
   buttonClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function CreateSkillDialog({
   buttonText,
   showIcon = false,
   buttonClassName = '',
+  open,
+  onOpenChange,
 }: Readonly<CreateSkillDialogProps>) {
   const { t } = useTranslation('skills');
   const { createSkill } = useCreateSkill();
@@ -27,6 +31,8 @@ export default function CreateSkillDialog({
       buttonClassName={buttonClassName}
       footerHint={t('createDialog.marketplaceHint')}
       onCreate={createSkill}
+      open={open}
+      onOpenChange={onOpenChange}
     />
   );
 }

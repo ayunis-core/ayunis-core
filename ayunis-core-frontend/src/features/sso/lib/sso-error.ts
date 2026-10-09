@@ -8,6 +8,7 @@ export type SsoErrorKind =
   | 'expired'
   | 'invalidResponse'
   | 'providerUnavailable'
+  | 'serviceUnavailable'
   | 'unexpected';
 
 const ERROR_KIND_BY_CODE: Record<string, SsoErrorKind> = {
@@ -21,6 +22,7 @@ const ERROR_KIND_BY_CODE: Record<string, SsoErrorKind> = {
   SSO_ORGANIZATION_MISMATCH: 'invalidResponse',
   SSO_BROKER_RESPONSE_INVALID: 'invalidResponse',
   SSO_BROKER_NOT_CONFIGURED: 'providerUnavailable',
+  SERVICE_UNAVAILABLE: 'serviceUnavailable',
 };
 
 export function resolveSsoError(code: string | undefined): SsoErrorKind {

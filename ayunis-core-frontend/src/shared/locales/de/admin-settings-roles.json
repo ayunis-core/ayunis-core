@@ -25,7 +25,6 @@
     "manage_knowledge_bases": "Wissenssammlungen und die darin enthaltenen Dokumente erstellen, bearbeiten und löschen.",
     "share_knowledge_bases": "Eine Wissenssammlung für ein Team oder die gesamte Organisation freigeben."
   },
-  "hintTriggerLabel": "Weitere Informationen zu {{label}}",
   "permissions": {
     "manage_teams": "Teams verwalten",
     "assign_users_to_teams": "Benutzer zu Teams zuordnen",

@@ -23,6 +23,9 @@ import { LocalPasswordLoginPolicyService } from 'src/iam/authentication/applicat
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrepareSessionRotationCommand } from 'src/iam/sessions/application/use-cases/prepare-session-rotation/prepare-session-rotation.command';
 import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-cases/prepare-session-rotation/prepare-session-rotation.use-case';
+import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
+import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
+import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
 
 interface RefreshTokenPayload {
   sub?: string;
@@ -42,16 +45,30 @@ export class RefreshTokenUseCase {
     private readonly prepareSessionRotation: PrepareSessionRotationUseCase,
     private readonly rotateSessionUseCase: RotateSessionUseCase,
     private readonly createSessionUseCase: CreateSessionUseCase,
+    private readonly revokeSessionFamilyUseCase: RevokeSessionFamilyUseCase,
     private readonly localPasswordLoginPolicy: LocalPasswordLoginPolicyService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
-  @Transactional()
   async execute(command: RefreshTokenCommand): Promise<AuthTokens> {
     this.logger.log('refreshToken');
-    return this.isJwt(command.refreshToken)
-      ? this.refreshLegacy(command.refreshToken)
-      : this.refreshOpaque(command.refreshToken);
+    try {
+      return await this.refreshTransactionally(command.refreshToken);
+    } catch (error) {
+      if (error instanceof RefreshTokenReuseError) {
+        await this.revokeSessionFamilyUseCase.execute(
+          new RevokeSessionFamilyCommand(command.refreshToken),
+        );
+      }
+      throw error;
+    }
+  }
+
+  @Transactional()
+  private async refreshTransactionally(refreshToken: string) {
+    return this.isJwt(refreshToken)
+      ? this.refreshLegacy(refreshToken)
+      : this.refreshOpaque(refreshToken);
   }
 
   private isJwt(token: string): boolean {

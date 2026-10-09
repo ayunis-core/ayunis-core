@@ -31,7 +31,7 @@ export class ValidateUserUseCase {
     private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
-  @HandleUnexpectedErrors(UserUnexpectedError)
+  @HandleUnexpectedErrors(UserUnexpectedError, { databaseUnavailable: true })
   async execute(query: ValidateUserQuery): Promise<User> {
     this.logger.log({ email: query.email }, 'validateUser');
 

@@ -13,6 +13,7 @@ describe('AnonymizeTextUseCase', () => {
   beforeEach(() => {
     detect = jest.fn();
     logger.log.mockReset();
+    logger.error.mockReset();
     useCase = new AnonymizeTextUseCase({ detect });
   });
 
@@ -124,5 +125,75 @@ describe('AnonymizeTextUseCase', () => {
       'Ich bin der {{pii:PERSON_NAME_1}}, erreichbar unter amt32@stadt-marl.de',
     );
     expect(result.newMasks).toEqual([]);
+  });
+
+  it('classifies mask application failures without exposing detected text', async () => {
+    detect.mockResolvedValue([
+      {
+        ...detections[0],
+        category: undefined,
+        text: 'sensitive value',
+      },
+    ]);
+
+    const result = useCase.execute(
+      new AnonymizeTextCommand(text, undefined, undefined, []),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      name: 'ANONYMIZATION_MASK_APPLICATION_FAILED',
+      code: 'ANONYMIZATION_MASK_APPLICATION_FAILED',
+      metadata: {
+        stage: 'mask_application',
+        textLength: text.length,
+        detectionCount: 1,
+        causeType: 'TypeError',
+      },
+    });
+    await expect(result).rejects.not.toMatchObject({
+      metadata: expect.objectContaining({
+        originalError: expect.stringContaining('sensitive value'),
+      }),
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        errorCode: 'ANONYMIZATION_MASK_APPLICATION_FAILED',
+        stage: 'mask_application',
+        textLength: text.length,
+        detectionCount: 1,
+        causeType: 'TypeError',
+      },
+      'Anonymization failed after detection',
+    );
+  });
+
+  it('classifies whitelist filtering failures without exposing detected text', async () => {
+    detect.mockResolvedValue(detections);
+    const malformedWhitelist = [undefined] as unknown as PiiWhitelistEntry[];
+
+    const result = useCase.execute(
+      new AnonymizeTextCommand(text, undefined, malformedWhitelist),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      name: 'ANONYMIZATION_WHITELIST_FILTER_FAILED',
+      code: 'ANONYMIZATION_WHITELIST_FILTER_FAILED',
+      metadata: {
+        stage: 'whitelist_filter',
+        textLength: text.length,
+        detectionCount: detections.length,
+        causeType: 'TypeError',
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        errorCode: 'ANONYMIZATION_WHITELIST_FILTER_FAILED',
+        stage: 'whitelist_filter',
+        textLength: text.length,
+        detectionCount: detections.length,
+        causeType: 'TypeError',
+      },
+      'Anonymization failed after detection',
+    );
   });
 });

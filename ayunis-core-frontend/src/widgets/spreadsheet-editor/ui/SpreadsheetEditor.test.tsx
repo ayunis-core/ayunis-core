@@ -1,5 +1,5 @@
 import { createRef } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ArtifactResponseDto } from '@/shared/api';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
@@ -30,6 +30,10 @@ const mocks = vi.hoisted(() => ({
     selectVersion: vi.fn(),
     setRows: vi.fn(),
     moveColumn: vi.fn(),
+    canUndo: true,
+    canRedo: true,
+    undo: vi.fn(),
+    redo: vi.fn(),
   },
 }));
 
@@ -54,7 +58,11 @@ vi.mock('./SpreadsheetExportMenu', () => ({
 }));
 
 vi.mock('./SpreadsheetGrid', () => ({
-  SpreadsheetGrid: () => null,
+  SpreadsheetGrid: () => (
+    <div data-testid="grid">
+      <input aria-label="cell editor" />
+    </div>
+  ),
 }));
 
 vi.mock('./SpreadsheetToolbar', () => ({
@@ -165,5 +173,63 @@ describe('SpreadsheetEditor', () => {
     await confirmationPromise;
 
     expect(mocks.onClose).toHaveBeenCalledOnce();
+  });
+
+  describe('undo/redo shortcuts', () => {
+    function renderEditor() {
+      render(
+        <>
+          <SpreadsheetEditor
+            artifact={artifact}
+            onSave={mocks.onSave}
+            onRevert={mocks.onRevert}
+            onExport={mocks.onExport}
+            onClose={mocks.onClose}
+            onBack={mocks.onBack}
+          />
+          <textarea aria-label="outside" />
+        </>,
+      );
+    }
+
+    it('undoes and redoes after the grid was clicked', () => {
+      renderEditor();
+      fireEvent.pointerDown(screen.getByTestId('grid'));
+
+      fireEvent.keyDown(document.body, { key: 'z', metaKey: true });
+      fireEvent.keyDown(document.body, {
+        key: 'z',
+        ctrlKey: true,
+        shiftKey: true,
+      });
+
+      expect(mocks.editor.undo).toHaveBeenCalledOnce();
+      expect(mocks.editor.redo).toHaveBeenCalledOnce();
+    });
+
+    it('leaves native undo to in-cell text editing', () => {
+      renderEditor();
+      const cellEditor = screen.getByLabelText('cell editor');
+      fireEvent.pointerDown(cellEditor);
+
+      const notPrevented = fireEvent.keyDown(cellEditor, {
+        key: 'z',
+        ctrlKey: true,
+      });
+
+      expect(notPrevented).toBe(true);
+      expect(mocks.editor.undo).not.toHaveBeenCalled();
+    });
+
+    it('ignores shortcuts after interacting outside the editor', () => {
+      renderEditor();
+      fireEvent.pointerDown(screen.getByTestId('grid'));
+      const outside = screen.getByLabelText('outside');
+      fireEvent.pointerDown(outside);
+
+      fireEvent.keyDown(outside, { key: 'z', ctrlKey: true });
+
+      expect(mocks.editor.undo).not.toHaveBeenCalled();
+    });
   });
 });

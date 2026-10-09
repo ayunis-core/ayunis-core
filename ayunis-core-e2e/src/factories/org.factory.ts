@@ -12,6 +12,7 @@ import { permitFirstLanguageModelAsDefault } from '../clients/api/models.client'
 import type { DefaultModel } from '../clients/api/models.client';
 import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
 import { MailcatcherClient } from '../clients/mailcatcher.client';
+import { generatedApi } from '../clients/api/generated-api';
 
 export interface OrgAdmin {
   email: string;
@@ -20,6 +21,7 @@ export interface OrgAdmin {
 }
 
 export interface OrgContext {
+  orgId: string;
   orgName: string;
   admin: OrgAdmin;
   storageState: string;
@@ -61,8 +63,15 @@ export async function createOrg(
     const defaultModel = await permitFirstLanguageModelAsDefault(api);
     await dismissWelcomeVideo(api);
     await skipChatPersonalization(api);
+    const currentUser = await generatedApi.authenticationControllerMe({ api });
     await api.storageState({ path: storageStatePath });
-    return { orgName, admin, storageState: storageStatePath, defaultModel };
+    return {
+      orgId: currentUser.orgId,
+      orgName,
+      admin,
+      storageState: storageStatePath,
+      defaultModel,
+    };
   } finally {
     await api.dispose();
   }

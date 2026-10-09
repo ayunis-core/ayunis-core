@@ -200,6 +200,64 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toMatch(/<w:spacing[^>]*w:line="360"[^>]*w:lineRule="auto"/);
   });
 
+  it('should render a percentage line-height as auto line spacing', async () => {
+    const xml = await extractDocumentXml(
+      await convertHtmlToDocx('<p style="line-height: 150%">Loose</p>'),
+    );
+
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="360"[^>]*w:lineRule="auto"/);
+  });
+
+  it.each([
+    ['0', 0, 0],
+    ['auto', 0, 0],
+    ['0 auto', 0, 0],
+    ['6pt 0', 120, 120],
+    ['6pt 0 12pt', 120, 240],
+    ['6pt 0 12pt 0', 120, 240],
+  ])(
+    'should render margin: %s as spacing before/after',
+    async (margin, before, after) => {
+      const xml = await extractDocumentXml(
+        await convertHtmlToDocx(`<p style="margin: ${margin}">Shorthand</p>`),
+      );
+
+      expect(xml).toMatch(
+        new RegExp(
+          `<w:spacing[^>]*w:after="${after}"[^>]*w:before="${before}"`,
+        ),
+      );
+    },
+  );
+
+  it('should let a later margin longhand override the shorthand', async () => {
+    const xml = await extractDocumentXml(
+      await convertHtmlToDocx(
+        '<p style="margin: 0; margin-bottom: 6pt">Cascade</p>',
+      ),
+    );
+
+    expect(xml).toMatch(/<w:spacing[^>]*w:after="120"[^>]*w:before="0"/);
+  });
+
+  it.each([
+    ['margin: 0; margin-top: 6pt; margin: 12pt', 240, 240],
+    ['margin-top: 6pt; margin: 0; margin-top: 12pt', 240, 0],
+  ])(
+    'should apply repeated margin declarations in order: %s',
+    async (style, before, after) => {
+      const xml = await extractDocumentXml(
+        await convertHtmlToDocx(`<p style="${style}">Cascade</p>`),
+      );
+
+      expect(xml).toMatch(
+        new RegExp(
+          `<w:spacing[^>]*w:after="${after}"[^>]*w:before="${before}"`,
+        ),
+      );
+    },
+  );
+
   it('should render margin-bottom as spacing after the paragraph', async () => {
     const buffer = await convertHtmlToDocx(
       '<p style="margin-bottom: 0pt">No gap after</p>',
@@ -261,6 +319,27 @@ describe('convertHtmlToDocx', () => {
       /<w:spacing[^>]*w:after="0"[^>]*w:before="0"[^>]*w:line="240"[^>]*w:lineRule="auto"/,
     );
     expect(xml).toContain('w:val="both"');
+  });
+
+  it.each([
+    [
+      'list item',
+      '<ul><li style="margin-bottom: 0"><p style="line-height: 1">Item</p></li></ul>',
+    ],
+    [
+      'blockquote',
+      '<blockquote style="margin-bottom: 0"><p style="line-height: 1">Quote</p></blockquote>',
+    ],
+    [
+      'table cell',
+      '<table><tr><td style="margin-bottom: 0"><p style="line-height: 1">Cell</p></td></tr></table>',
+    ],
+  ])('should merge %s and nested paragraph spacing', async (_name, html) => {
+    const xml = await extractDocumentXml(await convertHtmlToDocx(html));
+
+    expect(xml).toMatch(
+      /<w:spacing[^>]*w:after="0"[^>]*w:line="240"[^>]*w:lineRule="auto"/,
+    );
   });
 
   it('should convert px margins to twips', async () => {

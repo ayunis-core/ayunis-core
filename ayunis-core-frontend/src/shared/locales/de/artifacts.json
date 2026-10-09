@@ -66,6 +66,8 @@
       "addRowsCount": "Anzahl der Zeilen",
       "addRowsConfirm": "Hinzufügen",
       "maxRowsReached": "Maximal {{count}} Zeilen erreicht",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
       "deleteLastRow": "Letzte Zeile löschen",
       "addColumn": "Spalte hinzufügen",
       "maxColumnsReached": "Maximal {{count}} Spalten erreicht",

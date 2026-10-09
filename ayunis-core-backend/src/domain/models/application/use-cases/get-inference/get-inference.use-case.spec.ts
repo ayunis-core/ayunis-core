@@ -338,3 +338,59 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
     });
   });
 });
+
+describe('GetInferenceUseCase completed-response accounting', () => {
+  it('awaits accounting before returning a successful completion', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('Rewritten instructions')],
+      {
+        inputTokens: 120,
+        outputTokens: 30,
+      },
+      'stop',
+    );
+    let releaseAccounting: (() => void) | undefined;
+    const persisted = new Promise<void>((resolve) => {
+      releaseAccounting = resolve;
+    });
+    const command = makeCommand();
+    command.onUsage = () => persisted;
+    let returned = false;
+    const result = useCaseWithResponse(response)
+      .execute(command)
+      .then((value) => {
+        returned = true;
+        return value;
+      });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(returned).toBe(false);
+    releaseAccounting?.();
+    await expect(result).resolves.toBe(response);
+  });
+
+  it('preserves accounting failures without classifying them as provider failures', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('Rewritten instructions')],
+      {
+        inputTokens: 120,
+        outputTokens: 30,
+      },
+    );
+    const failure = new Error('usage persistence unavailable');
+    const command = makeCommand();
+    command.onUsage = () => Promise.reject(failure);
+    await expect(useCaseWithResponse(response).execute(command)).rejects.toBe(
+      failure,
+    );
+  });
+
+  it('does not account a provider failure that returned no response', async () => {
+    const command = makeCommand();
+    const onUsage = jest.fn();
+    command.onUsage = onUsage;
+    await expect(
+      useCaseWithFailingHandler(new Error('provider failed')).execute(command),
+    ).rejects.toThrow(InferenceFailedError);
+    expect(onUsage).not.toHaveBeenCalled();
+  });
+});

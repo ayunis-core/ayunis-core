@@ -18,7 +18,7 @@ export class StartOrgSsoLoginUseCase {
     private readonly authorizationTransactions: SsoAuthorizationTransactionService,
   ) {}
 
-  @HandleUnexpectedErrors(UnexpectedSsoError)
+  @HandleUnexpectedErrors(UnexpectedSsoError, { databaseUnavailable: true })
   async execute(
     command: StartOrgSsoLoginCommand,
   ): Promise<{ authorizationUrl: string; browserBinding: string }> {

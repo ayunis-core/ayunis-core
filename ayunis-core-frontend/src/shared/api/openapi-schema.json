@@ -5769,6 +5769,39 @@
         "tags": ["skills"]
       }
     },
+    "/skills/improve-text": {
+      "post": {
+        "operationId": "SkillsController_improveText",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImproveSkillTextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImprovedSkillTextResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Subscription required"
+          }
+        },
+        "summary": "Rewrite a skill trigger or its instructions",
+        "tags": ["skills"]
+      }
+    },
     "/skills": {
       "post": {
         "operationId": "SkillsController_create",
@@ -7544,97 +7577,18 @@
         "tags": ["Super Admin Anonymization Whitelist"]
       }
     },
-    "/super-admin/skill-templates": {
-      "post": {
-        "description": "Create a new skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSkillTemplateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "409": {
-            "description": "Skill template with this name already exists"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a new skill template",
-        "tags": ["Super Admin Skill Templates"]
-      },
+    "/super-admin/platform-config/credits-per-euro": {
       "get": {
-        "description": "Retrieve all skill templates. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_findAll",
+        "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getCreditsPerEuro",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successfully retrieved skill templates",
+            "description": "Successfully retrieved credits-per-euro value",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all skill templates",
-        "tags": ["Super Admin Skill Templates"]
-      }
-    },
-    "/super-admin/skill-templates/{id}": {
-      "get": {
-        "description": "Retrieve a specific skill template by its ID. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                  "$ref": "#/components/schemas/CreditsPerEuroResponseDto"
                 }
               }
             }
@@ -7643,621 +7597,196 @@
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
-            "description": "Skill template not found"
+            "description": "Credits-per-euro value has not been configured"
           },
           "500": {
             "description": "Internal server error"
           }
         },
-        "summary": "Get a skill template by ID",
-        "tags": ["Super Admin Skill Templates"]
+        "summary": "Get the current credits-per-euro configuration",
+        "tags": ["Super Admin Platform Config"]
       },
-      "patch": {
-        "description": "Partially update an existing skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
+      "put": {
+        "description": "Update the global credits-per-euro value used for credit calculations. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setCreditsPerEuro",
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateSkillTemplateDto"
+                "$ref": "#/components/schemas/SetCreditsPerEuroRequestDto"
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Successfully updated skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "409": {
-            "description": "Skill template with this name already exists"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update a skill template",
-        "tags": ["Super Admin Skill Templates"]
-      },
-      "delete": {
-        "description": "Delete a skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_delete",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "204": {
-            "description": "Successfully deleted skill template"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a skill template",
-        "tags": ["Super Admin Skill Templates"]
-      }
-    },
-    "/artifacts": {
-      "post": {
-        "operationId": "ArtifactsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateArtifactDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The artifact has been created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactResponseDto"
-                }
-              }
-            }
+            "description": "Successfully updated credits-per-euro value"
           },
           "400": {
-            "description": "Invalid input data"
+            "description": "Invalid value provided (must be positive number)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         },
-        "summary": "Create a new artifact (document)",
-        "tags": ["artifacts"]
+        "summary": "Set the credits-per-euro configuration",
+        "tags": ["Super Admin Platform Config"]
       }
     },
-    "/artifacts/{id}": {
-      "patch": {
-        "operationId": "ArtifactsController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateArtifactDto"
-              }
-            }
-          }
-        },
+    "/super-admin/platform-config/fair-use-limits": {
+      "get": {
+        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
+        "parameters": [],
         "responses": {
           "200": {
-            "description": "The new version has been created",
+            "description": "Successfully retrieved fair-use limits",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                  "$ref": "#/components/schemas/FairUseLimitsResponseDto"
                 }
               }
             }
           },
-          "204": {
-            "description": "Letterhead updated (no content change)"
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
           },
-          "404": {
-            "description": "Artifact not found"
+          "500": {
+            "description": "Internal server error"
           }
         },
-        "summary": "Update an artifact (add a new version)",
-        "tags": ["artifacts"]
+        "summary": "Get the current fair-use limits",
+        "tags": ["Super Admin Platform Config"]
       },
-      "get": {
-        "operationId": "ArtifactsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The artifact with all versions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Artifact not found"
-          }
-        },
-        "summary": "Get an artifact by ID with all versions",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/thread/{threadId}": {
-      "get": {
-        "operationId": "ArtifactsController_findByThread",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of artifacts for the thread",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ArtifactResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get all artifacts for a thread",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/workspace/{workspaceId}": {
-      "get": {
-        "operationId": "ArtifactsController_findByWorkspace",
-        "parameters": [
-          {
-            "name": "workspaceId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the workspace",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search artifacts by title",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "Filter by type",
-            "schema": {
-              "enum": ["document", "diagram", "spreadsheet"],
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of artifacts to return",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of artifacts to skip",
-            "schema": {
-              "default": 0,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of artifacts from chats in the workspace",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactListResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get all artifacts in a workspace",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/{id}/revert": {
-      "post": {
-        "operationId": "ArtifactsController_revert",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RevertArtifactDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "A new version was created with the reverted content",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Artifact or version not found"
-          }
-        },
-        "summary": "Revert an artifact to a specific version",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/{id}/export": {
-      "get": {
-        "operationId": "ArtifactsController_export",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "format",
-            "required": true,
-            "in": "query",
-            "description": "Export format",
-            "schema": {
-              "enum": ["docx", "pdf", "xlsx", "csv"],
-              "type": "string"
-            }
-          },
-          {
-            "name": "versionNumber",
-            "required": false,
-            "in": "query",
-            "description": "Version number to export; defaults to the current version",
-            "schema": {
-              "example": 2,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The exported file",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Artifact not found"
-          }
-        },
-        "summary": "Export an artifact as DOCX, PDF, XLSX, or CSV",
-        "tags": ["artifacts"]
-      }
-    },
-    "/letterheads": {
-      "post": {
-        "operationId": "LetterheadsController_create",
+      "put": {
+        "description": "Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setFairUseLimit",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateLetterheadDto"
+                "$ref": "#/components/schemas/SetFairUseLimitRequestDto"
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "The letterhead has been created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LetterheadResponseDto"
-                }
-              }
-            }
+          "204": {
+            "description": "Successfully updated fair-use limit for the given tier"
           },
           "400": {
-            "description": "Invalid input data"
+            "description": "Invalid value provided (limit and windowMs must be positive)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         },
-        "summary": "Create a new letterhead",
-        "tags": ["letterheads"]
-      },
-      "get": {
-        "operationId": "LetterheadsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of letterheads",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LetterheadResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List all letterheads for the current org",
-        "tags": ["letterheads"]
+        "summary": "Set the fair-use limit for a single model tier",
+        "tags": ["Super Admin Platform Config"]
       }
     },
-    "/letterheads/{id}": {
-      "get": {
-        "operationId": "LetterheadsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The letterhead",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LetterheadResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Get a letterhead by ID",
-        "tags": ["letterheads"]
-      },
-      "patch": {
-        "operationId": "LetterheadsController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
+    "/super-admin/platform-config/image-fair-use-limit": {
+      "put": {
+        "description": "Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setImageFairUseLimit",
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateLetterheadDto"
+                "$ref": "#/components/schemas/SetImageFairUseLimitRequestDto"
               }
             }
           }
         },
         "responses": {
+          "204": {
+            "description": "Successfully updated image fair-use limit"
+          },
+          "400": {
+            "description": "Invalid value provided (limit and windowMs must be positive)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the fair-use limit for image generation",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/super-admin/platform-config/app-alert": {
+      "put": {
+        "description": "Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setAppAlert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAppAlertRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated the app alert banner"
+          },
+          "400": {
+            "description": "Invalid value provided (message required when enabled, or message too long)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the app-wide alert banner",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/app-alert": {
+      "get": {
+        "description": "Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.",
+        "operationId": "AppAlertController_getAppAlert",
+        "parameters": [],
+        "responses": {
           "200": {
-            "description": "The updated letterhead",
+            "description": "Successfully retrieved the app alert configuration",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                  "$ref": "#/components/schemas/AppAlertResponseDto"
                 }
               }
             }
           },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Update a letterhead",
-        "tags": ["letterheads"]
-      },
-      "delete": {
-        "operationId": "LetterheadsController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Letterhead deleted"
+          "401": {
+            "description": "User not authenticated"
           },
-          "404": {
-            "description": "Letterhead not found"
+          "500": {
+            "description": "Internal server error"
           }
         },
-        "summary": "Delete a letterhead",
-        "tags": ["letterheads"]
-      }
-    },
-    "/letterheads/{id}/first-page-pdf": {
-      "get": {
-        "operationId": "LetterheadsController_downloadFirstPagePdf",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The first-page PDF file"
-          },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Download the first-page PDF of a letterhead",
-        "tags": ["letterheads"]
-      }
-    },
-    "/letterheads/{id}/continuation-page-pdf": {
-      "get": {
-        "operationId": "LetterheadsController_downloadContinuationPagePdf",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The continuation-page PDF file"
-          },
-          "404": {
-            "description": "Letterhead or PDF not found"
-          }
-        },
-        "summary": "Download the continuation-page PDF of a letterhead",
-        "tags": ["letterheads"]
+        "summary": "Get the current app-wide alert banner",
+        "tags": ["App Alert"]
       }
     },
     "/usage/config": {
@@ -9024,539 +8553,6 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/platform-config/credits-per-euro": {
-      "get": {
-        "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_getCreditsPerEuro",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved credits-per-euro value",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreditsPerEuroResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Credits-per-euro value has not been configured"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the current credits-per-euro configuration",
-        "tags": ["Super Admin Platform Config"]
-      },
-      "put": {
-        "description": "Update the global credits-per-euro value used for credit calculations. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setCreditsPerEuro",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetCreditsPerEuroRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated credits-per-euro value"
-          },
-          "400": {
-            "description": "Invalid value provided (must be positive number)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the credits-per-euro configuration",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/super-admin/platform-config/fair-use-limits": {
-      "get": {
-        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved fair-use limits",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FairUseLimitsResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the current fair-use limits",
-        "tags": ["Super Admin Platform Config"]
-      },
-      "put": {
-        "description": "Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setFairUseLimit",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetFairUseLimitRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated fair-use limit for the given tier"
-          },
-          "400": {
-            "description": "Invalid value provided (limit and windowMs must be positive)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the fair-use limit for a single model tier",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/super-admin/platform-config/image-fair-use-limit": {
-      "put": {
-        "description": "Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setImageFairUseLimit",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetImageFairUseLimitRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated image fair-use limit"
-          },
-          "400": {
-            "description": "Invalid value provided (limit and windowMs must be positive)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the fair-use limit for image generation",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/super-admin/platform-config/app-alert": {
-      "put": {
-        "description": "Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setAppAlert",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetAppAlertRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated the app alert banner"
-          },
-          "400": {
-            "description": "Invalid value provided (message required when enabled, or message too long)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the app-wide alert banner",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/app-alert": {
-      "get": {
-        "description": "Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.",
-        "operationId": "AppAlertController_getAppAlert",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the app alert configuration",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppAlertResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the current app-wide alert banner",
-        "tags": ["App Alert"]
-      }
-    },
-    "/runs/send-message": {
-      "post": {
-        "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
-        "operationId": "RunsController_sendMessage",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": ["threadId"],
-                "properties": {
-                  "threadId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "text": {
-                    "type": "string",
-                    "description": "Message text (optional if images provided)"
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "binary"
-                    },
-                    "description": "Image files to attach (max 10, max 10MB each, 50MB total)"
-                  },
-                  "imageAltTexts": {
-                    "type": "string",
-                    "description": "JSON array of alt texts matching image order"
-                  },
-                  "toolResult": {
-                    "type": "string",
-                    "description": "JSON object for tool result input"
-                  },
-                  "skillId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Skill ID to activate for this message"
-                  },
-                  "streaming": {
-                    "type": "boolean",
-                    "default": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Server-sent events stream with discriminated response types",
-            "content": {
-              "text/event-stream": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/RunSessionResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunMessageResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunErrorResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunThreadResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunMasksResponseDto"
-                    }
-                  ],
-                  "discriminator": {
-                    "propertyName": "type",
-                    "mapping": {
-                      "session": "#/components/schemas/RunSessionResponseDto",
-                      "message": "#/components/schemas/RunMessageResponseDto",
-                      "error": "#/components/schemas/RunErrorResponseDto",
-                      "thread": "#/components/schemas/RunThreadResponseDto",
-                      "masks": "#/components/schemas/RunMasksResponseDto"
-                    }
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "description": "Content type for server-sent events",
-                "schema": {
-                  "type": "string",
-                  "example": "text/event-stream"
-                }
-              },
-              "Cache-Control": {
-                "description": "Cache control header",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache"
-                }
-              },
-              "Connection": {
-                "description": "Connection type",
-                "schema": {
-                  "type": "string",
-                  "example": "keep-alive"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          },
-          "403": {
-            "description": "Subscription required"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Send a message with optional images and receive streaming response",
-        "tags": ["runs"]
-      }
-    },
-    "/threads/{threadId}/ai-context": {
-      "get": {
-        "operationId": "ThreadAiContextController_getAiContext",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ThreadAiContextResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Thread not found"
-          }
-        },
-        "summary": "Get the AI resources available in a thread",
-        "tags": ["threads"]
-      }
-    },
-    "/threads/{threadId}/source-chunks/{chunkId}": {
-      "get": {
-        "operationId": "ThreadSourceCitationsController_getSourceCitation",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "chunkId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the cited chunk and source metadata",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SourceCitationResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Citation not found"
-          }
-        },
-        "summary": "Get a source citation in a thread",
-        "tags": ["threads"]
-      }
-    },
-    "/super-admin/trials": {
-      "post": {
-        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_createTrial",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Trial information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Create a new trial",
-        "tags": ["Super Admin Trials"]
-      }
-    },
-    "/super-admin/trials/{orgId}": {
-      "get": {
-        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to retrieve.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Trial not found for the organization."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Get a trial by organization ID",
-        "tags": ["Super Admin Trials"]
-      },
-      "put": {
-        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_updateTrial",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to update.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Trial update information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Update a trial",
-        "tags": ["Super Admin Trials"]
-      }
-    },
     "/credit-limits/users": {
       "get": {
         "operationId": "CreditLimitsController_getUserLimits",
@@ -9900,6 +8896,1043 @@
         "tags": ["api-keys"]
       }
     },
+    "/super-admin/trials": {
+      "post": {
+        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_createTrial",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Trial information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Create a new trial",
+        "tags": ["Super Admin Trials"]
+      }
+    },
+    "/super-admin/trials/{orgId}": {
+      "get": {
+        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to retrieve.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Trial not found for the organization."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Get a trial by organization ID",
+        "tags": ["Super Admin Trials"]
+      },
+      "put": {
+        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_updateTrial",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Trial update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Update a trial",
+        "tags": ["Super Admin Trials"]
+      }
+    },
+    "/super-admin/skill-templates": {
+      "post": {
+        "description": "Create a new skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "409": {
+            "description": "Skill template with this name already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new skill template",
+        "tags": ["Super Admin Skill Templates"]
+      },
+      "get": {
+        "description": "Retrieve all skill templates. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved skill templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all skill templates",
+        "tags": ["Super Admin Skill Templates"]
+      }
+    },
+    "/super-admin/skill-templates/{id}": {
+      "get": {
+        "description": "Retrieve a specific skill template by its ID. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a skill template by ID",
+        "tags": ["Super Admin Skill Templates"]
+      },
+      "patch": {
+        "description": "Partially update an existing skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSkillTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "409": {
+            "description": "Skill template with this name already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a skill template",
+        "tags": ["Super Admin Skill Templates"]
+      },
+      "delete": {
+        "description": "Delete a skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted skill template"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a skill template",
+        "tags": ["Super Admin Skill Templates"]
+      }
+    },
+    "/artifacts": {
+      "post": {
+        "operationId": "ArtifactsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The artifact has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new artifact (document)",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/{id}": {
+      "patch": {
+        "operationId": "ArtifactsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The new version has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Letterhead updated (no content change)"
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        },
+        "summary": "Update an artifact (add a new version)",
+        "tags": ["artifacts"]
+      },
+      "get": {
+        "operationId": "ArtifactsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The artifact with all versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        },
+        "summary": "Get an artifact by ID with all versions",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/thread/{threadId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByThread",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts for the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArtifactResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all artifacts for a thread",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByWorkspace",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search artifacts by title",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by type",
+            "schema": {
+              "enum": ["document", "diagram", "spreadsheet"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of artifacts to return",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of artifacts to skip",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts from chats in the workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all artifacts in a workspace",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/{id}/revert": {
+      "post": {
+        "operationId": "ArtifactsController_revert",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevertArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A new version was created with the reverted content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact or version not found"
+          }
+        },
+        "summary": "Revert an artifact to a specific version",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/{id}/export": {
+      "get": {
+        "operationId": "ArtifactsController_export",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": true,
+            "in": "query",
+            "description": "Export format",
+            "schema": {
+              "enum": ["docx", "pdf", "xlsx", "csv"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionNumber",
+            "required": false,
+            "in": "query",
+            "description": "Version number to export; defaults to the current version",
+            "schema": {
+              "example": 2,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The exported file",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        },
+        "summary": "Export an artifact as DOCX, PDF, XLSX, or CSV",
+        "tags": ["artifacts"]
+      }
+    },
+    "/letterheads": {
+      "post": {
+        "operationId": "LetterheadsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The letterhead has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new letterhead",
+        "tags": ["letterheads"]
+      },
+      "get": {
+        "operationId": "LetterheadsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of letterheads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LetterheadResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all letterheads for the current org",
+        "tags": ["letterheads"]
+      }
+    },
+    "/letterheads/{id}": {
+      "get": {
+        "operationId": "LetterheadsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The letterhead",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Get a letterhead by ID",
+        "tags": ["letterheads"]
+      },
+      "patch": {
+        "operationId": "LetterheadsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated letterhead",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Update a letterhead",
+        "tags": ["letterheads"]
+      },
+      "delete": {
+        "operationId": "LetterheadsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Letterhead deleted"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Delete a letterhead",
+        "tags": ["letterheads"]
+      }
+    },
+    "/letterheads/{id}/first-page-pdf": {
+      "get": {
+        "operationId": "LetterheadsController_downloadFirstPagePdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The first-page PDF file"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Download the first-page PDF of a letterhead",
+        "tags": ["letterheads"]
+      }
+    },
+    "/letterheads/{id}/continuation-page-pdf": {
+      "get": {
+        "operationId": "LetterheadsController_downloadContinuationPagePdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The continuation-page PDF file"
+          },
+          "404": {
+            "description": "Letterhead or PDF not found"
+          }
+        },
+        "summary": "Download the continuation-page PDF of a letterhead",
+        "tags": ["letterheads"]
+      }
+    },
+    "/runs/send-message": {
+      "post": {
+        "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
+        "operationId": "RunsController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["threadId"],
+                "properties": {
+                  "threadId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Message text (optional if images provided)"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Image files to attach (max 10, max 10MB each, 50MB total)"
+                  },
+                  "imageAltTexts": {
+                    "type": "string",
+                    "description": "JSON array of alt texts matching image order"
+                  },
+                  "toolResult": {
+                    "type": "string",
+                    "description": "JSON object for tool result input"
+                  },
+                  "skillId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Skill ID to activate for this message"
+                  },
+                  "streaming": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events stream with discriminated response types",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/RunSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMessageResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunErrorResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunThreadResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMasksResponseDto"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "session": "#/components/schemas/RunSessionResponseDto",
+                      "message": "#/components/schemas/RunMessageResponseDto",
+                      "error": "#/components/schemas/RunErrorResponseDto",
+                      "thread": "#/components/schemas/RunThreadResponseDto",
+                      "masks": "#/components/schemas/RunMasksResponseDto"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "Content type for server-sent events",
+                "schema": {
+                  "type": "string",
+                  "example": "text/event-stream"
+                }
+              },
+              "Cache-Control": {
+                "description": "Cache control header",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Connection": {
+                "description": "Connection type",
+                "schema": {
+                  "type": "string",
+                  "example": "keep-alive"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "403": {
+            "description": "Subscription required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Send a message with optional images and receive streaming response",
+        "tags": ["runs"]
+      }
+    },
+    "/threads/{threadId}/ai-context": {
+      "get": {
+        "operationId": "ThreadAiContextController_getAiContext",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadAiContextResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found"
+          }
+        },
+        "summary": "Get the AI resources available in a thread",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{threadId}/source-chunks/{chunkId}": {
+      "get": {
+        "operationId": "ThreadSourceCitationsController_getSourceCitation",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "chunkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the cited chunk and source metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCitationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Citation not found"
+          }
+        },
+        "summary": "Get a source citation in a thread",
+        "tags": ["threads"]
+      }
+    },
     "/chat-settings/system-prompt": {
       "get": {
         "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
@@ -10216,7 +10249,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successfully retrieved academy chapters",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -10239,99 +10272,44 @@
         "tags": ["Academy"]
       }
     },
-    "/academy/chapters/{chapterId}/quiz": {
-      "get": {
-        "description": "Draw up to 10 random questions from the chapter pool (the whole pool if smaller). Correct answers are never included.",
-        "operationId": "AcademyQuizController_getChapterQuiz",
-        "parameters": [
-          {
-            "name": "chapterId",
-            "required": true,
-            "in": "path",
-            "description": "Chapter ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuizQuestionForTakingResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or academy add-on not active"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get a chapter quiz",
-        "tags": ["Academy"]
-      }
-    },
-    "/academy/chapters/{chapterId}/quiz/submit": {
+    "/academy/chapters/{chapterId}/confirm": {
       "post": {
-        "description": "Grade a quiz submission against the chapter pass threshold, record progress and, when the whole academy is passed, stamp completion. Unlimited retries.",
-        "operationId": "AcademyQuizController_submitChapterQuiz",
+        "description": "Confirm that the current user watched all videos in the chapter. Reconfirmation refreshes the confirmation date.",
+        "operationId": "AcademyChaptersController_confirmChapter",
         "parameters": [
           {
             "name": "chapterId",
             "required": true,
             "in": "path",
-            "description": "Chapter ID",
             "schema": {
               "format": "uuid",
               "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitQuizRequestDto"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuizResultResponseDto"
+                  "$ref": "#/components/schemas/ChapterConfirmationResponseDto"
                 }
               }
             }
           },
           "401": {
             "description": "User not authenticated or academy add-on not active"
-          },
-          "500": {
-            "description": "Internal server error"
           }
         },
-        "summary": "Submit a chapter quiz",
+        "summary": "Confirm an academy chapter",
         "tags": ["Academy"]
       }
     },
     "/academy/progress": {
       "get": {
-        "description": "Get the current user per-chapter pass state and the whole-academy completion date.",
-        "operationId": "AcademyQuizController_getProgress",
+        "description": "Get the current user chapter confirmations and whole-academy completion date.",
+        "operationId": "AcademyProgressController_getProgress",
         "parameters": [],
         "responses": {
           "200": {
@@ -10357,12 +10335,12 @@
     },
     "/academy/certificate": {
       "get": {
-        "description": "Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.",
+        "description": "Render the KI-Schulung nach EU AI Act participation confirmation PDF for the current user. Available once the whole academy has been completed.",
         "operationId": "AcademyCertificateController_getCertificate",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "The certificate PDF",
+            "description": "The participation confirmation PDF",
             "content": {
               "application/octet-stream": {
                 "schema": {
@@ -10382,7 +10360,7 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Download the academy completion certificate",
+        "summary": "Download the academy participation confirmation",
         "tags": ["Academy"]
       }
     },
@@ -10399,7 +10377,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SuperAdminAcademyChapterResponseDto"
+                    "$ref": "#/components/schemas/AcademyChapterResponseDto"
                   }
                 }
               }
@@ -10745,146 +10723,6 @@
           }
         },
         "summary": "Delete an academy module",
-        "tags": ["Super Admin Academy"]
-      }
-    },
-    "/super-admin/academy/chapters/{chapterId}/quiz-questions": {
-      "post": {
-        "description": "Add a question to a chapter quiz pool, appended after the last position. Only accessible to super admins.",
-        "operationId": "SuperAdminAcademyQuizQuestionsController_createQuizQuestion",
-        "parameters": [
-          {
-            "name": "chapterId",
-            "required": true,
-            "in": "path",
-            "description": "Chapter ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateQuizQuestionRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created quiz question",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QuizQuestionResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid question (bad option count or no single correct)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Chapter not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a new academy quiz question",
-        "tags": ["Super Admin Academy"]
-      }
-    },
-    "/super-admin/academy/quiz-questions/{id}": {
-      "put": {
-        "description": "Replace the prompt and answer options of a quiz question. Only accessible to super admins.",
-        "operationId": "SuperAdminAcademyQuizQuestionsController_updateQuizQuestion",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Quiz question ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateQuizQuestionRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated quiz question",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QuizQuestionResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid question (bad option count or no single correct)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Quiz question not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update an academy quiz question",
-        "tags": ["Super Admin Academy"]
-      },
-      "delete": {
-        "description": "Delete a quiz question. Only accessible to super admins.",
-        "operationId": "SuperAdminAcademyQuizQuestionsController_deleteQuizQuestion",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Quiz question ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully deleted quiz question"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Quiz question not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete an academy quiz question",
         "tags": ["Super Admin Academy"]
       }
     },
@@ -16680,6 +16518,39 @@
           "creatorName"
         ]
       },
+      "ImproveSkillTextDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": ["trigger", "instructions"],
+            "description": "Which of the two texts should come back rewritten"
+          },
+          "name": {
+            "type": "string",
+            "description": "The skill name, when it already exists"
+          },
+          "trigger": {
+            "type": "string",
+            "description": "The trigger as it currently stands in the form"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions as they currently stand in the form"
+          }
+        },
+        "required": ["field", "trigger", "instructions"]
+      },
+      "ImprovedSkillTextResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The rewritten text for the requested field"
+          }
+        },
+        "required": ["text"]
+      },
       "CreateSkillDto": {
         "type": "object",
         "properties": {
@@ -18153,6 +18024,978 @@
         },
         "required": ["added", "duplicates"]
       },
+      "CreditsPerEuroResponseDto": {
+        "type": "object",
+        "properties": {
+          "creditsPerEuro": {
+            "type": "number",
+            "description": "Number of credits per euro of token cost",
+            "example": 1000
+          }
+        },
+        "required": ["creditsPerEuro"]
+      },
+      "SetCreditsPerEuroRequestDto": {
+        "type": "object",
+        "properties": {
+          "creditsPerEuro": {
+            "type": "number",
+            "description": "Number of credits per euro of token cost. Must be positive.",
+            "example": 1000
+          }
+        },
+        "required": ["creditsPerEuro"]
+      },
+      "FairUseTierLimitDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of messages allowed within the window",
+            "example": 200
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds",
+            "example": 10800000
+          }
+        },
+        "required": ["limit", "windowMs"]
+      },
+      "FairUseLimitsResponseDto": {
+        "type": "object",
+        "properties": {
+          "zero": {
+            "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "low": {
+            "description": "Fair-use limit for low-tier (cheap) language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "medium": {
+            "description": "Fair-use limit for medium-tier language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "high": {
+            "description": "Fair-use limit for high-tier (expensive) language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "images": {
+            "description": "Fair-use limit for image generation. Single global bucket (no tiering).",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          }
+        },
+        "required": ["zero", "low", "medium", "high", "images"]
+      },
+      "SetFairUseLimitRequestDto": {
+        "type": "object",
+        "properties": {
+          "tier": {
+            "type": "string",
+            "description": "Model tier whose fair-use limit is being updated",
+            "enum": ["zero", "low", "medium", "high"],
+            "example": "medium"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of messages allowed within the sliding window. Must be a positive integer.",
+            "example": 200,
+            "minimum": 1
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
+            "example": 10800000,
+            "minimum": 1
+          }
+        },
+        "required": ["tier", "limit", "windowMs"]
+      },
+      "SetImageFairUseLimitRequestDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of images allowed within the sliding window. Must be a positive integer.",
+            "example": 50,
+            "minimum": 1
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
+            "example": 86400000,
+            "minimum": 1
+          }
+        },
+        "required": ["limit", "windowMs"]
+      },
+      "SetAppAlertRequestDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether to show the app-wide alert banner",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The alert banner text. Required (non-empty) when enabled is true.",
+            "example": "The system is currently experiencing degraded performance.",
+            "maxLength": 1000
+          }
+        },
+        "required": ["enabled", "message"]
+      },
+      "AppAlertResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the app-wide alert banner is currently shown",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The alert banner text shown to all users",
+            "example": "The system is currently experiencing degraded performance."
+          }
+        },
+        "required": ["enabled", "message"]
+      },
+      "UsageConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "isSelfHosted": {
+            "type": "boolean",
+            "description": "Whether the deployment is self-hosted. Determines feature availability.",
+            "example": true
+          }
+        },
+        "required": ["isSelfHosted"]
+      },
+      "CreditUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.",
+            "example": 10000,
+            "nullable": true
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Total credits consumed in the current calendar month.",
+            "example": 4250.5
+          },
+          "creditsRemaining": {
+            "type": "number",
+            "description": "Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.",
+            "example": 5749.5,
+            "nullable": true
+          }
+        },
+        "required": ["monthlyCredits", "creditsUsed", "creditsRemaining"]
+      },
+      "UserUsageDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "userName": {
+            "type": "string",
+            "description": "User name"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "User email"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Total credits consumed by this user"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Total requests for this user"
+          },
+          "lastActivity": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last activity date (null if no activity)",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the user is considered active"
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "userEmail",
+          "credits",
+          "requests",
+          "lastActivity",
+          "isActive"
+        ]
+      },
+      "UserUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "User usage statistics",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserUsageDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          },
+          "totalCredits": {
+            "type": "number",
+            "description": "Total credits consumed across all users in the filtered period"
+          }
+        },
+        "required": ["data", "pagination", "totalCredits"]
+      },
+      "UsageStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalCredits": {
+            "type": "number",
+            "description": "Total credits consumed across all users and models in the specified period",
+            "example": 1250.5
+          },
+          "totalRequests": {
+            "type": "number",
+            "description": "Total number of API requests made in the specified period",
+            "example": 3450
+          },
+          "activeUsers": {
+            "type": "number",
+            "description": "Number of users who made requests within the active user threshold (last 30 days)",
+            "example": 42
+          },
+          "totalUsers": {
+            "type": "number",
+            "description": "Total number of unique users who made requests in the specified period",
+            "example": 67
+          },
+          "topModels": {
+            "description": "List of the most frequently used model names, ordered by usage",
+            "example": ["gpt-4", "claude-3-sonnet", "gpt-3.5-turbo"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "totalCredits",
+          "totalRequests",
+          "activeUsers",
+          "totalUsers",
+          "topModels"
+        ]
+      },
+      "ModelDistributionDto": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "description": "Model ID"
+          },
+          "modelName": {
+            "type": "string",
+            "description": "Model name"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Model display name"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "bedrock",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis",
+              "otc",
+              "azure",
+              "gemini",
+              "stackit",
+              "scaleway"
+            ],
+            "description": "Model provider"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Total credits for this model"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Total requests for this model"
+          },
+          "percentage": {
+            "type": "number",
+            "description": "Percentage of total usage"
+          }
+        },
+        "required": [
+          "modelId",
+          "modelName",
+          "displayName",
+          "provider",
+          "credits",
+          "requests",
+          "percentage"
+        ]
+      },
+      "ModelDistributionResponseDto": {
+        "type": "object",
+        "properties": {
+          "models": {
+            "description": "Model distribution statistics",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelDistributionDto"
+            }
+          }
+        },
+        "required": ["models"]
+      },
+      "ProviderValuesDto": {
+        "type": "object",
+        "properties": {
+          "openai": {
+            "type": "number",
+            "description": "Credits for OpenAI"
+          },
+          "anthropic": {
+            "type": "number",
+            "description": "Credits for Anthropic"
+          },
+          "mistral": {
+            "type": "number",
+            "description": "Credits for Mistral"
+          },
+          "ollama": {
+            "type": "number",
+            "description": "Credits for Ollama"
+          },
+          "synaforce": {
+            "type": "number",
+            "description": "Credits for Synaforce"
+          },
+          "ayunis": {
+            "type": "number",
+            "description": "Credits for Ayunis (internal)"
+          }
+        }
+      },
+      "ProviderTimeSeriesRowDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date of the data point",
+            "format": "date-time"
+          },
+          "values": {
+            "description": "Credits per provider for this date",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProviderValuesDto"
+              }
+            ]
+          }
+        },
+        "required": ["date", "values"]
+      },
+      "ProviderUsageChartResponseDto": {
+        "type": "object",
+        "properties": {
+          "timeSeries": {
+            "description": "Aligned time series rows by date with provider credit values",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderTimeSeriesRowDto"
+            }
+          }
+        },
+        "required": ["timeSeries"]
+      },
+      "ApiKeyUsageDto": {
+        "type": "object",
+        "properties": {
+          "apiKeyId": {
+            "type": "string",
+            "description": "API key ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "API key name"
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Revocation timestamp, or null if the key was not revoked",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Expiration date, or null if the key never expires",
+            "nullable": true
+          },
+          "inputTokens": {
+            "type": "number",
+            "description": "Input tokens in the filtered period"
+          },
+          "outputTokens": {
+            "type": "number",
+            "description": "Output tokens in the filtered period"
+          },
+          "totalTokens": {
+            "type": "number",
+            "description": "Total tokens in the filtered period"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Recorded inferences in the filtered period. Calls that produced no usage data are not counted."
+          },
+          "credits": {
+            "type": "number",
+            "description": "Credits of all priced requests in the filtered period. Null when the key has requests but none of them could be priced.",
+            "nullable": true
+          },
+          "unpricedRequests": {
+            "type": "number",
+            "description": "Requests without a credit value, for example because the model had no price configured"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last recorded use in the filtered period (null if none)",
+            "nullable": true
+          }
+        },
+        "required": [
+          "apiKeyId",
+          "name",
+          "revokedAt",
+          "expiresAt",
+          "inputTokens",
+          "outputTokens",
+          "totalTokens",
+          "requests",
+          "credits",
+          "unpricedRequests",
+          "lastUsedAt"
+        ]
+      },
+      "ApiKeyUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Usage per API key of the organization, including revoked and expired keys",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyUsageDto"
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "TimeSeriesPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date of the data point"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Number of credits at this point"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Number of requests at this point"
+          }
+        },
+        "required": ["date", "credits", "requests"]
+      },
+      "ProviderUsageDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "bedrock",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis",
+              "otc",
+              "azure",
+              "gemini",
+              "stackit",
+              "scaleway"
+            ],
+            "description": "Model provider"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Total credits for this provider"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Total requests for this provider"
+          },
+          "percentage": {
+            "type": "number",
+            "description": "Percentage of total usage"
+          },
+          "timeSeriesData": {
+            "description": "Time series data for this provider",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimeSeriesPointDto"
+            }
+          }
+        },
+        "required": [
+          "provider",
+          "credits",
+          "requests",
+          "percentage",
+          "timeSeriesData"
+        ]
+      },
+      "ProviderUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "description": "Provider usage statistics",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderUsageDto"
+            }
+          }
+        },
+        "required": ["providers"]
+      },
+      "UserCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "jane.doe@example.com"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
+      },
+      "TeamCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 20000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed by all current team members in the current month",
+            "example": 8300
+          }
+        },
+        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
+      },
+      "ApiKeyCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          },
+          "name": {
+            "type": "string",
+            "example": "Finance export"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
+      },
+      "SetCreditLimitDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
+            "example": 5000,
+            "minimum": 0
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
+      "UserCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          }
+        },
+        "required": ["id", "monthlyCredits", "userId"]
+      },
+      "TeamCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "teamId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          }
+        },
+        "required": ["id", "monthlyCredits", "teamId"]
+      },
+      "ApiKeyCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          }
+        },
+        "required": ["id", "monthlyCredits", "apiKeyId"]
+      },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot",
+            "maxLength": 100
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": ["name"]
+      },
+      "ApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt"
+        ]
+      },
+      "CreateApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
+            "example": "ayk_live_abc123def456ghi789..."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt",
+          "secret"
+        ]
+      },
+      "SuperAdminTrialResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Trial unique identifier",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID associated with this trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages sent in this trial",
+            "example": 150,
+            "minimum": 0
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in this trial",
+            "example": 1000,
+            "minimum": 1
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was last updated",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "orgId",
+          "messagesSent",
+          "maxMessages",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SuperAdminTrialResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "trial": {
+            "description": "Trial",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+              }
+            ]
+          }
+        }
+      },
+      "CreateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID for which to create the trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 1000,
+            "minimum": 1
+          }
+        },
+        "required": ["orgId", "maxMessages"]
+      },
+      "UpdateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 2000,
+            "minimum": 1
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages already sent (can be used to reset or adjust)",
+            "example": 0,
+            "minimum": 0
+          }
+        }
+      },
       "CreateSkillTemplateDto": {
         "type": "object",
         "properties": {
@@ -18656,601 +19499,6 @@
           }
         }
       },
-      "UsageConfigResponseDto": {
-        "type": "object",
-        "properties": {
-          "isSelfHosted": {
-            "type": "boolean",
-            "description": "Whether the deployment is self-hosted. Determines feature availability.",
-            "example": true
-          }
-        },
-        "required": ["isSelfHosted"]
-      },
-      "CreditUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.",
-            "example": 10000,
-            "nullable": true
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Total credits consumed in the current calendar month.",
-            "example": 4250.5
-          },
-          "creditsRemaining": {
-            "type": "number",
-            "description": "Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.",
-            "example": 5749.5,
-            "nullable": true
-          }
-        },
-        "required": ["monthlyCredits", "creditsUsed", "creditsRemaining"]
-      },
-      "UserUsageDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "User ID"
-          },
-          "userName": {
-            "type": "string",
-            "description": "User name"
-          },
-          "userEmail": {
-            "type": "string",
-            "description": "User email"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Total credits consumed by this user"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Total requests for this user"
-          },
-          "lastActivity": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Last activity date (null if no activity)",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the user is considered active"
-          }
-        },
-        "required": [
-          "userId",
-          "userName",
-          "userEmail",
-          "credits",
-          "requests",
-          "lastActivity",
-          "isActive"
-        ]
-      },
-      "UserUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "User usage statistics",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserUsageDto"
-            }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
-          },
-          "totalCredits": {
-            "type": "number",
-            "description": "Total credits consumed across all users in the filtered period"
-          }
-        },
-        "required": ["data", "pagination", "totalCredits"]
-      },
-      "UsageStatsResponseDto": {
-        "type": "object",
-        "properties": {
-          "totalCredits": {
-            "type": "number",
-            "description": "Total credits consumed across all users and models in the specified period",
-            "example": 1250.5
-          },
-          "totalRequests": {
-            "type": "number",
-            "description": "Total number of API requests made in the specified period",
-            "example": 3450
-          },
-          "activeUsers": {
-            "type": "number",
-            "description": "Number of users who made requests within the active user threshold (last 30 days)",
-            "example": 42
-          },
-          "totalUsers": {
-            "type": "number",
-            "description": "Total number of unique users who made requests in the specified period",
-            "example": 67
-          },
-          "topModels": {
-            "description": "List of the most frequently used model names, ordered by usage",
-            "example": ["gpt-4", "claude-3-sonnet", "gpt-3.5-turbo"],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "totalCredits",
-          "totalRequests",
-          "activeUsers",
-          "totalUsers",
-          "topModels"
-        ]
-      },
-      "ModelDistributionDto": {
-        "type": "object",
-        "properties": {
-          "modelId": {
-            "type": "string",
-            "description": "Model ID"
-          },
-          "modelName": {
-            "type": "string",
-            "description": "Model name"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "Model display name"
-          },
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc",
-              "azure",
-              "gemini",
-              "stackit",
-              "scaleway"
-            ],
-            "description": "Model provider"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Total credits for this model"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Total requests for this model"
-          },
-          "percentage": {
-            "type": "number",
-            "description": "Percentage of total usage"
-          }
-        },
-        "required": [
-          "modelId",
-          "modelName",
-          "displayName",
-          "provider",
-          "credits",
-          "requests",
-          "percentage"
-        ]
-      },
-      "ModelDistributionResponseDto": {
-        "type": "object",
-        "properties": {
-          "models": {
-            "description": "Model distribution statistics",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ModelDistributionDto"
-            }
-          }
-        },
-        "required": ["models"]
-      },
-      "ProviderValuesDto": {
-        "type": "object",
-        "properties": {
-          "openai": {
-            "type": "number",
-            "description": "Credits for OpenAI"
-          },
-          "anthropic": {
-            "type": "number",
-            "description": "Credits for Anthropic"
-          },
-          "mistral": {
-            "type": "number",
-            "description": "Credits for Mistral"
-          },
-          "ollama": {
-            "type": "number",
-            "description": "Credits for Ollama"
-          },
-          "synaforce": {
-            "type": "number",
-            "description": "Credits for Synaforce"
-          },
-          "ayunis": {
-            "type": "number",
-            "description": "Credits for Ayunis (internal)"
-          }
-        }
-      },
-      "ProviderTimeSeriesRowDto": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Date of the data point",
-            "format": "date-time"
-          },
-          "values": {
-            "description": "Credits per provider for this date",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ProviderValuesDto"
-              }
-            ]
-          }
-        },
-        "required": ["date", "values"]
-      },
-      "ProviderUsageChartResponseDto": {
-        "type": "object",
-        "properties": {
-          "timeSeries": {
-            "description": "Aligned time series rows by date with provider credit values",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProviderTimeSeriesRowDto"
-            }
-          }
-        },
-        "required": ["timeSeries"]
-      },
-      "ApiKeyUsageDto": {
-        "type": "object",
-        "properties": {
-          "apiKeyId": {
-            "type": "string",
-            "description": "API key ID"
-          },
-          "name": {
-            "type": "string",
-            "description": "API key name"
-          },
-          "revokedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Revocation timestamp, or null if the key was not revoked",
-            "nullable": true
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Expiration date, or null if the key never expires",
-            "nullable": true
-          },
-          "inputTokens": {
-            "type": "number",
-            "description": "Input tokens in the filtered period"
-          },
-          "outputTokens": {
-            "type": "number",
-            "description": "Output tokens in the filtered period"
-          },
-          "totalTokens": {
-            "type": "number",
-            "description": "Total tokens in the filtered period"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Recorded inferences in the filtered period. Calls that produced no usage data are not counted."
-          },
-          "credits": {
-            "type": "number",
-            "description": "Credits of all priced requests in the filtered period. Null when the key has requests but none of them could be priced.",
-            "nullable": true
-          },
-          "unpricedRequests": {
-            "type": "number",
-            "description": "Requests without a credit value, for example because the model had no price configured"
-          },
-          "lastUsedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Last recorded use in the filtered period (null if none)",
-            "nullable": true
-          }
-        },
-        "required": [
-          "apiKeyId",
-          "name",
-          "revokedAt",
-          "expiresAt",
-          "inputTokens",
-          "outputTokens",
-          "totalTokens",
-          "requests",
-          "credits",
-          "unpricedRequests",
-          "lastUsedAt"
-        ]
-      },
-      "ApiKeyUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Usage per API key of the organization, including revoked and expired keys",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApiKeyUsageDto"
-            }
-          }
-        },
-        "required": ["data"]
-      },
-      "TimeSeriesPointDto": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date of the data point"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Number of credits at this point"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Number of requests at this point"
-          }
-        },
-        "required": ["date", "credits", "requests"]
-      },
-      "ProviderUsageDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc",
-              "azure",
-              "gemini",
-              "stackit",
-              "scaleway"
-            ],
-            "description": "Model provider"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Total credits for this provider"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Total requests for this provider"
-          },
-          "percentage": {
-            "type": "number",
-            "description": "Percentage of total usage"
-          },
-          "timeSeriesData": {
-            "description": "Time series data for this provider",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TimeSeriesPointDto"
-            }
-          }
-        },
-        "required": [
-          "provider",
-          "credits",
-          "requests",
-          "percentage",
-          "timeSeriesData"
-        ]
-      },
-      "ProviderUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "providers": {
-            "description": "Provider usage statistics",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProviderUsageDto"
-            }
-          }
-        },
-        "required": ["providers"]
-      },
-      "CreditsPerEuroResponseDto": {
-        "type": "object",
-        "properties": {
-          "creditsPerEuro": {
-            "type": "number",
-            "description": "Number of credits per euro of token cost",
-            "example": 1000
-          }
-        },
-        "required": ["creditsPerEuro"]
-      },
-      "SetCreditsPerEuroRequestDto": {
-        "type": "object",
-        "properties": {
-          "creditsPerEuro": {
-            "type": "number",
-            "description": "Number of credits per euro of token cost. Must be positive.",
-            "example": 1000
-          }
-        },
-        "required": ["creditsPerEuro"]
-      },
-      "FairUseTierLimitDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of messages allowed within the window",
-            "example": 200
-          },
-          "windowMs": {
-            "type": "number",
-            "description": "Sliding window duration in milliseconds",
-            "example": 10800000
-          }
-        },
-        "required": ["limit", "windowMs"]
-      },
-      "FairUseLimitsResponseDto": {
-        "type": "object",
-        "properties": {
-          "zero": {
-            "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "low": {
-            "description": "Fair-use limit for low-tier (cheap) language models",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "medium": {
-            "description": "Fair-use limit for medium-tier language models",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "high": {
-            "description": "Fair-use limit for high-tier (expensive) language models",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "images": {
-            "description": "Fair-use limit for image generation. Single global bucket (no tiering).",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          }
-        },
-        "required": ["zero", "low", "medium", "high", "images"]
-      },
-      "SetFairUseLimitRequestDto": {
-        "type": "object",
-        "properties": {
-          "tier": {
-            "type": "string",
-            "description": "Model tier whose fair-use limit is being updated",
-            "enum": ["zero", "low", "medium", "high"],
-            "example": "medium"
-          },
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of messages allowed within the sliding window. Must be a positive integer.",
-            "example": 200,
-            "minimum": 1
-          },
-          "windowMs": {
-            "type": "number",
-            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
-            "example": 10800000,
-            "minimum": 1
-          }
-        },
-        "required": ["tier", "limit", "windowMs"]
-      },
-      "SetImageFairUseLimitRequestDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of images allowed within the sliding window. Must be a positive integer.",
-            "example": 50,
-            "minimum": 1
-          },
-          "windowMs": {
-            "type": "number",
-            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
-            "example": 86400000,
-            "minimum": 1
-          }
-        },
-        "required": ["limit", "windowMs"]
-      },
-      "SetAppAlertRequestDto": {
-        "type": "object",
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether to show the app-wide alert banner",
-            "example": true
-          },
-          "message": {
-            "type": "string",
-            "description": "The alert banner text. Required (non-empty) when enabled is true.",
-            "example": "The system is currently experiencing degraded performance.",
-            "maxLength": 1000
-          }
-        },
-        "required": ["enabled", "message"]
-      },
-      "AppAlertResponseDto": {
-        "type": "object",
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether the app-wide alert banner is currently shown",
-            "example": true
-          },
-          "message": {
-            "type": "string",
-            "description": "The alert banner text shown to all users",
-            "example": "The system is currently experiencing degraded performance."
-          }
-        },
-        "required": ["enabled", "message"]
-      },
       "MessageContentResponseDto": {
         "type": "object",
         "properties": {
@@ -19637,383 +19885,6 @@
         },
         "required": ["chunk", "source"]
       },
-      "SuperAdminTrialResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Trial unique identifier",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID associated with this trial",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "messagesSent": {
-            "type": "number",
-            "description": "Number of messages sent in this trial",
-            "example": 150,
-            "minimum": 0
-          },
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in this trial",
-            "example": 1000,
-            "minimum": 1
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the trial was created",
-            "example": "2024-01-15T10:30:00Z"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the trial was last updated",
-            "example": "2024-01-15T10:30:00Z"
-          }
-        },
-        "required": [
-          "id",
-          "orgId",
-          "messagesSent",
-          "maxMessages",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "SuperAdminTrialResponseDtoNullable": {
-        "type": "object",
-        "properties": {
-          "trial": {
-            "description": "Trial",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-              }
-            ]
-          }
-        }
-      },
-      "CreateTrialRequestDto": {
-        "type": "object",
-        "properties": {
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID for which to create the trial",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in the trial",
-            "example": 1000,
-            "minimum": 1
-          }
-        },
-        "required": ["orgId", "maxMessages"]
-      },
-      "UpdateTrialRequestDto": {
-        "type": "object",
-        "properties": {
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in the trial",
-            "example": 2000,
-            "minimum": 1
-          },
-          "messagesSent": {
-            "type": "number",
-            "description": "Number of messages already sent (can be used to reset or adjust)",
-            "example": 0,
-            "minimum": 0
-          }
-        }
-      },
-      "UserCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          },
-          "name": {
-            "type": "string",
-            "example": "Jane Doe"
-          },
-          "email": {
-            "type": "string",
-            "example": "jane.doe@example.com"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 5000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed in the current calendar month",
-            "example": 1240
-          }
-        },
-        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
-      },
-      "TeamCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "teamId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440002"
-          },
-          "name": {
-            "type": "string",
-            "example": "Engineering"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 20000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed by all current team members in the current month",
-            "example": 8300
-          }
-        },
-        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
-      },
-      "ApiKeyCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "apiKeyId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440003"
-          },
-          "name": {
-            "type": "string",
-            "example": "Finance export"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 5000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed in the current calendar month",
-            "example": 1240
-          }
-        },
-        "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
-      },
-      "SetCreditLimitDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
-            "example": 5000,
-            "minimum": 0
-          }
-        },
-        "required": ["monthlyCredits"]
-      },
-      "UserCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "userId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          }
-        },
-        "required": ["id", "monthlyCredits", "userId"]
-      },
-      "TeamCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "teamId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440002"
-          }
-        },
-        "required": ["id", "monthlyCredits", "teamId"]
-      },
-      "ApiKeyCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "apiKeyId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440003"
-          }
-        },
-        "required": ["id", "monthlyCredits", "apiKeyId"]
-      },
-      "CreateApiKeyDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot",
-            "maxLength": 100
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": ["name"]
-      },
-      "ApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt"
-        ]
-      },
-      "CreateApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          },
-          "secret": {
-            "type": "string",
-            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
-            "example": "ayk_live_abc123def456ghi789..."
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt",
-          "secret"
-        ]
-      },
       "UserSystemPromptResponseDto": {
         "type": "object",
         "properties": {
@@ -20261,16 +20132,6 @@
             "description": "The position of the chapter (0-based)",
             "example": 0
           },
-          "quizEnabled": {
-            "type": "boolean",
-            "description": "Whether a quiz is activated for this chapter (shown at chapter end)",
-            "example": false
-          },
-          "passThreshold": {
-            "type": "integer",
-            "description": "Percentage of correct answers required to pass this chapter quiz",
-            "example": 80
-          },
           "courseModules": {
             "description": "The modules of the chapter, ordered by position",
             "type": "array",
@@ -20294,158 +20155,62 @@
           "title",
           "description",
           "position",
-          "quizEnabled",
-          "passThreshold",
           "courseModules",
           "createdAt",
           "updatedAt"
         ]
       },
-      "QuizAnswerOptionForTakingResponseDto": {
+      "ChapterConfirmationResponseDto": {
         "type": "object",
         "properties": {
-          "text": {
+          "chapterId": {
             "type": "string",
-            "description": "The answer option text",
-            "example": "A large language model"
-          }
-        },
-        "required": ["text"]
-      },
-      "QuizQuestionForTakingResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
+            "format": "uuid"
+          },
+          "confirmedAt": {
             "type": "string",
-            "format": "uuid",
-            "description": "The unique identifier of the question"
-          },
-          "text": {
-            "type": "string",
-            "description": "The question prompt",
-            "example": "What is an LLM?"
-          },
-          "options": {
-            "description": "The answer options, without indicating the correct one",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuizAnswerOptionForTakingResponseDto"
-            }
-          }
-        },
-        "required": ["id", "text", "options"]
-      },
-      "SubmitQuizAnswerDto": {
-        "type": "object",
-        "properties": {
-          "questionId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The id of the answered question"
-          },
-          "selectedOptionIndex": {
-            "type": "integer",
-            "description": "The 0-based index of the selected answer option",
-            "example": 0
-          }
-        },
-        "required": ["questionId", "selectedOptionIndex"]
-      },
-      "SubmitQuizRequestDto": {
-        "type": "object",
-        "properties": {
-          "answers": {
-            "description": "One answer per drawn question",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SubmitQuizAnswerDto"
-            }
-          }
-        },
-        "required": ["answers"]
-      },
-      "QuizResultResponseDto": {
-        "type": "object",
-        "properties": {
-          "passed": {
-            "type": "boolean",
-            "description": "Whether the attempt met the chapter pass threshold"
-          },
-          "correctCount": {
-            "type": "integer",
-            "description": "Number of questions answered correctly",
-            "example": 8
-          },
-          "totalCount": {
-            "type": "integer",
-            "description": "Number of questions in the attempt",
-            "example": 10
-          },
-          "requiredCount": {
-            "type": "integer",
-            "description": "Number of correct answers required to pass",
-            "example": 8
-          },
-          "score": {
-            "type": "integer",
-            "description": "Score as a percentage of correct answers",
-            "example": 80
+            "format": "date-time"
           },
           "academyCompleted": {
             "type": "boolean",
-            "description": "Whether passing this chapter completed the whole academy for the user"
+            "description": "Whether all configured academy chapters are now confirmed"
           }
         },
-        "required": [
-          "passed",
-          "correctCount",
-          "totalCount",
-          "requiredCount",
-          "score",
-          "academyCompleted"
-        ]
+        "required": ["chapterId", "confirmedAt", "academyCompleted"]
       },
       "ChapterProgressResponseDto": {
         "type": "object",
         "properties": {
           "chapterId": {
             "type": "string",
-            "format": "uuid",
-            "description": "The chapter this progress refers to"
+            "format": "uuid"
           },
-          "passed": {
+          "confirmed": {
             "type": "boolean",
-            "description": "Whether the learner has passed this chapter quiz"
+            "description": "Whether the learner has confirmed this chapter"
           },
-          "passValid": {
+          "confirmationValid": {
             "type": "boolean",
-            "description": "Whether the pass is recent enough to still count toward a completion. False once it has aged out of the certificate validity period."
+            "description": "Whether the confirmation still counts toward annual renewal"
           },
-          "lastScore": {
-            "type": "integer",
-            "description": "Score of the most recent attempt, as a percentage",
-            "example": 80
-          },
-          "lastPassedAt": {
+          "confirmedAt": {
             "type": "string",
             "format": "date-time",
-            "nullable": true,
-            "description": "When the chapter was most recently passed, if ever"
+            "description": "When the learner most recently confirmed the chapter"
           }
         },
         "required": [
           "chapterId",
-          "passed",
-          "passValid",
-          "lastScore",
-          "lastPassedAt"
+          "confirmed",
+          "confirmationValid",
+          "confirmedAt"
         ]
       },
       "AcademyProgressResponseDto": {
         "type": "object",
         "properties": {
           "chapters": {
-            "description": "Per-chapter progress for the current user",
+            "description": "Per-chapter confirmations for the current user",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ChapterProgressResponseDto"
@@ -20461,151 +20226,13 @@
             "type": "string",
             "format": "date-time",
             "nullable": true,
-            "description": "When the completion stops being valid, or null if the academy was never completed. Only enforced by orgs requiring annual recertification."
+            "description": "When the completion stops being valid, or null if never completed"
           }
         },
         "required": [
           "chapters",
           "academyCompletedAt",
           "academyCompletionExpiresAt"
-        ]
-      },
-      "QuizAnswerOptionResponseDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "The answer option text",
-            "example": "A large language model"
-          },
-          "isCorrect": {
-            "type": "boolean",
-            "description": "Whether this option is the correct answer",
-            "example": true
-          }
-        },
-        "required": ["text", "isCorrect"]
-      },
-      "QuizQuestionResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The unique identifier of the quiz question"
-          },
-          "chapterId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The id of the chapter the question belongs to"
-          },
-          "text": {
-            "type": "string",
-            "description": "The question prompt",
-            "example": "What is an LLM?"
-          },
-          "options": {
-            "description": "The answer options with the correct one flagged",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuizAnswerOptionResponseDto"
-            }
-          },
-          "position": {
-            "type": "integer",
-            "description": "The position of the question within its chapter (0-based)",
-            "example": 0
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the question was created"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the question was last updated"
-          }
-        },
-        "required": [
-          "id",
-          "chapterId",
-          "text",
-          "options",
-          "position",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "SuperAdminAcademyChapterResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The unique identifier of the chapter"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the chapter",
-            "example": "Getting Started"
-          },
-          "description": {
-            "type": "string",
-            "description": "A description of what the chapter covers",
-            "example": "Learn the basics of working with Ayunis Core."
-          },
-          "position": {
-            "type": "integer",
-            "description": "The position of the chapter (0-based)",
-            "example": 0
-          },
-          "quizEnabled": {
-            "type": "boolean",
-            "description": "Whether a quiz is activated for this chapter (shown at chapter end)",
-            "example": false
-          },
-          "passThreshold": {
-            "type": "integer",
-            "description": "Percentage of correct answers required to pass this chapter quiz",
-            "example": 80
-          },
-          "courseModules": {
-            "description": "The modules of the chapter, ordered by position",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CourseModuleResponseDto"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the chapter was created"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the chapter was last updated"
-          },
-          "quizQuestions": {
-            "description": "The quiz question pool of the chapter, ordered by position",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuizQuestionResponseDto"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "description",
-          "position",
-          "quizEnabled",
-          "passThreshold",
-          "courseModules",
-          "createdAt",
-          "updatedAt",
-          "quizQuestions"
         ]
       },
       "CreateChapterRequestDto": {
@@ -20654,18 +20281,6 @@
             "description": "A description of what the chapter covers",
             "example": "Learn the basics of working with Ayunis Core.",
             "maxLength": 2000
-          },
-          "quizEnabled": {
-            "type": "boolean",
-            "description": "Whether a quiz is activated for this chapter",
-            "example": false
-          },
-          "passThreshold": {
-            "type": "number",
-            "description": "Percentage of correct answers required to pass this chapter quiz",
-            "example": 80,
-            "minimum": 1,
-            "maximum": 100
           }
         },
         "required": ["title", "description"]
@@ -20731,65 +20346,6 @@
           }
         },
         "required": ["title", "loomUrl"]
-      },
-      "QuizAnswerOptionRequestDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "The answer option text",
-            "example": "A large language model",
-            "maxLength": 500
-          },
-          "isCorrect": {
-            "type": "boolean",
-            "description": "Whether this option is the correct answer",
-            "example": true
-          }
-        },
-        "required": ["text", "isCorrect"]
-      },
-      "CreateQuizQuestionRequestDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "The question prompt",
-            "example": "What is an LLM?",
-            "maxLength": 2000
-          },
-          "options": {
-            "description": "The answer options. Between 2 and 6 options with exactly one marked correct.",
-            "minItems": 2,
-            "maxItems": 6,
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuizAnswerOptionRequestDto"
-            }
-          }
-        },
-        "required": ["text", "options"]
-      },
-      "UpdateQuizQuestionRequestDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "The question prompt",
-            "example": "What is an LLM?",
-            "maxLength": 2000
-          },
-          "options": {
-            "description": "The answer options. Between 2 and 6 options with exactly one marked correct.",
-            "minItems": 2,
-            "maxItems": 6,
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuizAnswerOptionRequestDto"
-            }
-          }
-        },
-        "required": ["text", "options"]
       },
       "ChatCompletionRequestDto": {
         "type": "object",

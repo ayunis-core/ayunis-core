@@ -49,6 +49,12 @@ import { SkillAuthorizationService } from './application/services/skill-authoriz
 import { GetWorkspaceSkillsUseCase } from './application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
 import { SkillActivationService } from './application/services/skill-activation.service';
 import { SkillCreatorNameService } from './application/services/skill-creator-name.service';
+import { SkillTextModelResolver } from './application/services/skill-text-model-resolver.service';
+import { ImproveSkillTextUseCase } from './application/use-cases/improve-skill-text/improve-skill-text.use-case';
+import { UsageModule } from 'src/domain/usage/usage.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
+import { TrialsModule } from 'src/iam/trials/trials.module';
+import { ModelsModule } from 'src/domain/models/models.module';
 
 // Listeners
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
@@ -93,6 +99,10 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     forwardRef(() => ThreadsModule),
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
+    forwardRef(() => ModelsModule),
+    QuotasModule,
+    UsageModule,
+    TrialsModule,
   ],
   providers: [
     ActivateWorkspaceSkillByNameUseCase,
@@ -106,6 +116,8 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     FindActivatableSkillUseCase,
     SkillActivationService,
     SkillCreatorNameService,
+    SkillTextModelResolver,
+    ImproveSkillTextUseCase,
 
     // Use Cases
     CreateSkillUseCase,

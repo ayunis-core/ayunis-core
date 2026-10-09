@@ -26,7 +26,10 @@ import {
 } from './inference-message.mapper';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
-import { reconstructRuntimeModelError } from './runtime-model-error';
+import {
+  reconstructRuntimeAnonymizationError,
+  reconstructRuntimeModelError,
+} from './runtime-model-error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
 import { mapPortableProviderError } from './provider-failure.mapper';
@@ -299,7 +302,7 @@ function mapRunError(
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
     return new RunAnonymizationUnavailableError(
       undefined,
-      reconstructRuntimeModelError(event.details),
+      reconstructRuntimeAnonymizationError(event.details),
     );
   }
   const policyError =

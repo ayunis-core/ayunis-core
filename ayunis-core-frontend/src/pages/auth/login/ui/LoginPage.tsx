@@ -25,6 +25,7 @@ import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { LoginFormFields } from '@/pages/auth/login/model/login-form';
 import { showError } from '@/shared/lib/toast';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function LoginPage({
   redirect,
@@ -64,10 +65,21 @@ export function LoginPage({
       setLocalPasswordLoginEnabled(
         !result.available || result.localPasswordLoginEnabled !== false,
       );
-    } catch {
+    } catch (error) {
       setSsoOrgId(null);
       setLocalPasswordLoginEnabled(true);
-      showError(t('login.ssoDiscoveryFailed'));
+      try {
+        const { code } = extractErrorData(error);
+        showError(
+          t(
+            code === 'SERVICE_UNAVAILABLE'
+              ? 'serviceUnavailable'
+              : 'login.ssoDiscoveryFailed',
+          ),
+        );
+      } catch {
+        showError(t('login.ssoDiscoveryFailed'));
+      }
     }
     setShowMethods(true);
   }

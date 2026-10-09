@@ -73,7 +73,6 @@ export class RotateSessionUseCase {
       };
     }
 
-    await this.refreshTokensRepository.revokeFamily(current.familyId);
     this.logger.warn(
       {
         userId: current.userId,

@@ -6,7 +6,7 @@ import {
 } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
 import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
 import { CreditGateHookFactory } from './credit-gate-hook.factory';
 
@@ -33,7 +33,7 @@ describe('CreditGateHookFactory', () => {
     const ensureModelCallAllowed = jest.fn().mockResolvedValue(undefined);
     const factory = new CreditGateHookFactory({
       ensureModelCallAllowed,
-    } as unknown as InferenceUsageGuard);
+    } as unknown as InferenceAdmissionGuard);
     const provider = new MockProvider([
       [{ usage: { inputTokens: 4 }, finishReason: 'stop' }],
       textTurn('The office opens at 8.'),
@@ -76,7 +76,7 @@ describe('CreditGateHookFactory', () => {
     );
     const factory = new CreditGateHookFactory({
       ensureModelCallAllowed,
-    } as unknown as InferenceUsageGuard);
+    } as unknown as InferenceAdmissionGuard);
     const provider = new MockProvider([textTurn('Not called')]);
 
     const events = await collectEvents(

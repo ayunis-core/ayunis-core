@@ -31,7 +31,9 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   }
 
   async findByTokenHash(tokenHash: string): Promise<RefreshToken | null> {
-    const record = await this.repository.findOne({ where: { tokenHash } });
+    const record = await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
+      .findOne({ where: { tokenHash } });
     return record ? RefreshTokenMapper.toDomain(record) : null;
   }
 
@@ -69,7 +71,8 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   }
 
   async wasUsedWithinGrace(id: UUID, graceSeconds: number): Promise<boolean> {
-    const count = await this.repository
+    const count = await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
       .createQueryBuilder('t')
       .where('t.id = :id', { id })
       .andWhere('t.revokedAt IS NULL')
@@ -82,6 +85,8 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
     return count > 0;
   }
 
+  // Reuse handling calls this after the refresh transaction rolls back, so
+  // the theft-response revocation commits independently.
   async revokeFamily(familyId: UUID): Promise<void> {
     await this.repository
       .createQueryBuilder()

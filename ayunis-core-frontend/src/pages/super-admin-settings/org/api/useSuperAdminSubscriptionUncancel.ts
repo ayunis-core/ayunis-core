@@ -19,10 +19,18 @@ export default function useSuperAdminSubscriptionUncancel(orgId: string) {
         onError: (error) => {
           try {
             const { code } = extractErrorData(error);
-            if (code === 'SUBSCRIPTION_NOT_FOUND') {
-              showError(t('subscription.uncancelErrorSubscriptionNotFound'));
-            } else {
-              showError(t('subscription.uncancelError'));
+            switch (code) {
+              case 'SUBSCRIPTION_NOT_FOUND':
+                showError(t('subscription.uncancelErrorSubscriptionNotFound'));
+                break;
+              case 'SUBSCRIPTION_ACCESS_OVERLAP':
+                showError(t('subscription.uncancelErrorAccessOverlap'));
+                break;
+              case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+                showError(t('subscription.multipleActiveSubscriptions'));
+                break;
+              default:
+                showError(t('subscription.uncancelError'));
             }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)

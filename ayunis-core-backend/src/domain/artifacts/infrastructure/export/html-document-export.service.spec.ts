@@ -191,12 +191,12 @@ describe('HtmlDocumentExportService', () => {
       expect(header).toBe('%PDF');
     });
 
-    it('should set page content with networkidle0', async () => {
+    it('should render after document load without waiting for network idle', async () => {
       await service.exportToPdf('<p>Hello</p>');
 
       expect(mockPage.setContent).toHaveBeenCalledWith(
         expect.stringContaining('Hello'),
-        { waitUntil: 'networkidle0' },
+        { waitUntil: 'load' },
       );
     });
 

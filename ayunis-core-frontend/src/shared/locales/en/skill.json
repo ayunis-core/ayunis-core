@@ -66,8 +66,8 @@
       "nameLabel": "Name",
       "namePlaceholder": "Enter skill name...",
       "shortDescriptionLabel": "Trigger",
-      "shortDescriptionPlaceholder": "Describe when the AI should activate this skill...",
-      "shortDescriptionHint": "A good trigger helps the AI understand when to use this skill.",
+      "shortDescriptionPlaceholder": "Describe when Ayunis Core should activate this skill...",
+      "shortDescriptionHint": "A good trigger helps Ayunis Core understand when to use this skill.",
       "instructionsLabel": "Instructions",
       "instructionsPlaceholder": "Detailed instructions injected when the skill is activated..."
     },

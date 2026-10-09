@@ -13,9 +13,12 @@ describe(LocalRefreshTokensRepository.name, () => {
     const records = {
       createQueryBuilder: jest.fn().mockReturnValue(query),
     } as unknown as Repository<RefreshTokenRecord>;
+    const txHost = {
+      tx: { getRepository: jest.fn().mockReturnValue(records) },
+    } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
     const repository = new LocalRefreshTokensRepository(
-      records,
-      {} as TransactionHost<TransactionalAdapterTypeOrm>,
+      {} as Repository<RefreshTokenRecord>,
+      txHost,
     );
     expect(await repository.wasUsedWithinGrace(TEST_ORG_ID, 60)).toBe(false);
     expect(query.andWhere).toHaveBeenCalledWith('t.revokedAt IS NULL');
