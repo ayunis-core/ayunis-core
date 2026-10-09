@@ -19,28 +19,31 @@ export function useMfaLoginEnroll() {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const [setup, setSetup] = useState<MfaSetupResponseDto | null>(null);
+  const [setupUnavailable, setSetupUnavailable] = useState(false);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const startedRef = useRef(false);
 
-  const handlePendingError = (error: unknown) => {
+  const handlePendingError = (error: unknown): string | undefined => {
     try {
       const { code: errorCode } = extractErrorData(error);
       if (errorCode === 'INVALID_MFA_CODE') {
         setErrorMessage(t('twoFactor.error.invalidCode'));
-        return;
-      }
-      if (
+      } else if (
         errorCode === 'MFA_PENDING_TOKEN_INVALID' ||
         errorCode === 'MFA_ENROLLMENT_NOT_ALLOWED'
       ) {
         showError(t('twoFactor.error.expired'));
         void navigate({ to: '/login' });
-        return;
+      } else if (errorCode === 'SERVICE_UNAVAILABLE') {
+        showError(t('serviceUnavailable'));
+      } else {
+        showError(t('twoFactor.error.unexpected'));
       }
-      showError(t('twoFactor.error.unexpected'));
+      return errorCode;
     } catch {
       showError(t('twoFactor.error.unexpected'));
+      return undefined;
     }
   };
 
@@ -50,12 +53,21 @@ export function useMfaLoginEnroll() {
   // mutate-level callbacks.
   const setupMutation = useMfaLoginControllerSetup({
     mutation: {
-      onSuccess: (data) => setSetup(data),
-      onError: handlePendingError,
+      retry: false,
+      onSuccess: (data) => {
+        setSetupUnavailable(false);
+        setSetup(data);
+      },
+      onError: (error) => {
+        setSetupUnavailable(
+          handlePendingError(error) === 'SERVICE_UNAVAILABLE',
+        );
+      },
     },
   });
   const confirmMutation = useMfaLoginControllerConfirmSetup({
     mutation: {
+      retry: false,
       onSuccess: (data) => {
         rememberSuccessfulSsoLogin();
         setRecoveryCodes(data.recoveryCodes);
@@ -76,8 +88,15 @@ export function useMfaLoginEnroll() {
     confirmMutation.mutate({ data: { code } });
   };
 
+  const retrySetup = () => {
+    setSetupUnavailable(false);
+    setupMutation.mutate();
+  };
+
   return {
     setup,
+    setupUnavailable,
+    retrySetup,
     isSettingUp: setupMutation.isPending,
     confirm,
     isConfirming: confirmMutation.isPending,

@@ -22,7 +22,7 @@ export class TriggerPasswordResetUseCase {
     private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
-  @HandleUnexpectedErrors(UserUnexpectedError)
+  @HandleUnexpectedErrors(UserUnexpectedError, { databaseUnavailable: true })
   async execute(command: TriggerPasswordResetCommand): Promise<boolean> {
     this.logger.log({ email: command.email }, 'execute');
 

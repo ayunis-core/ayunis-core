@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { ProviderConnectionError } from 'src/common/errors/provider.errors';
 import { CompleteOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.command';
 import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
 import { SsoLoginTransaction } from 'src/iam/sso/domain/sso-login-transaction.entity';
@@ -140,6 +141,73 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
         ),
       ),
     ).rejects.toMatchObject({ code: 'SSO_LOGIN_TRANSACTION_INVALID' });
+  });
+
+  it('returns service unavailable when transaction consumption cannot reach PostgreSQL', async () => {
+    const transactions = {
+      save: jest.fn(),
+      consume: jest.fn().mockRejectedValue(
+        Object.assign(new Error('connection refused'), {
+          code: 'ECONNREFUSED',
+        }),
+      ),
+      deleteExpired: jest.fn(),
+    };
+    const useCase = new CompleteOrgSsoLoginUseCase(
+      transactions,
+      { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
+      { encrypt: jest.fn(), decrypt: jest.fn() },
+      connectionRepository(),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
+
+  it('preserves a typed broker connection error', async () => {
+    const providerError = new ProviderConnectionError(
+      { provider: 'zitadel' },
+      Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+    const useCase = new CompleteOrgSsoLoginUseCase(
+      {
+        save: jest.fn(),
+        consume: jest.fn().mockResolvedValue(pendingTransaction()),
+        deleteExpired: jest.fn(),
+      },
+      {
+        createAuthorizationRequest: jest.fn(),
+        validateCallback: jest.fn().mockRejectedValue(providerError),
+      },
+      {
+        encrypt: jest.fn(),
+        decrypt: jest
+          .fn()
+          .mockReturnValueOnce('pkce-verifier')
+          .mockReturnValueOnce('oidc-nonce'),
+      },
+      connectionRepository(),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).rejects.toBe(providerError);
   });
 
   it('rejects a broker organization that differs from the pinned organization', async () => {

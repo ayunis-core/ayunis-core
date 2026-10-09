@@ -33,17 +33,13 @@ export class StartAuthenticatedSessionUseCase {
     private readonly localPasswordLoginPolicy: LocalPasswordLoginPolicyService,
   ) {}
 
-  @HandleUnexpectedErrors(UnexpectedAuthenticationError)
+  @HandleUnexpectedErrors(UnexpectedAuthenticationError, {
+    databaseUnavailable: 'includingExpectedErrors',
+  })
   async execute(
     command: StartAuthenticatedSessionCommand,
   ): Promise<StartAuthenticatedSessionResult> {
-    this.logger.log(
-      {
-        userId: command.user.id,
-        authenticationMethod: command.authenticationMethod,
-      },
-      'Starting authenticated session',
-    );
+    this.logStart(command);
     const brokerMfaSatisfied =
       command.authenticationMethod === SessionAuthenticationMethod.SSO &&
       command.brokerMfaSatisfied;
@@ -82,5 +78,15 @@ export class StartAuthenticatedSessionUseCase {
       }),
       enrollmentRequired: requirement === 'enroll',
     };
+  }
+
+  private logStart(command: StartAuthenticatedSessionCommand): void {
+    this.logger.log(
+      {
+        userId: command.user.id,
+        authenticationMethod: command.authenticationMethod,
+      },
+      'Starting authenticated session',
+    );
   }
 }

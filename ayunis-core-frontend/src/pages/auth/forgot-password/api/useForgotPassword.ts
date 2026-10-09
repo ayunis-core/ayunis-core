@@ -27,14 +27,21 @@ export function useForgotPassword() {
   const { mutate: forgotPassword, isPending } =
     useUserPasswordResetControllerForgotPassword({
       mutation: {
+        retry: false,
         onSuccess: () => {
           showSuccess(t('forgotPassword.success'));
           void navigate({ to: '/login' });
         },
         onError: (error) => {
           try {
-            extractErrorData(error);
-            showError(t('forgotPassword.error'));
+            const { code } = extractErrorData(error);
+            showError(
+              t(
+                code === 'SERVICE_UNAVAILABLE'
+                  ? 'serviceUnavailable'
+                  : 'forgotPassword.error',
+              ),
+            );
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('forgotPassword.error'));

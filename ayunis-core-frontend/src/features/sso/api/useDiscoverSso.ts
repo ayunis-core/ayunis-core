@@ -3,7 +3,9 @@ import { useSsoLoginControllerDiscover } from '@/shared/api/generated/ayunisCore
 import type { SsoDiscoveryResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 export function useDiscoverSso() {
-  const { mutateAsync, isPending } = useSsoLoginControllerDiscover();
+  const { mutateAsync, isPending } = useSsoLoginControllerDiscover({
+    mutation: { retry: false },
+  });
 
   const discover = useCallback(
     (email: string): Promise<SsoDiscoveryResponseDto> =>

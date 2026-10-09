@@ -7,6 +7,8 @@ import { SendPasswordResetEmailUseCase } from 'src/iam/users/application/use-cas
 import { TriggerPasswordResetCommand } from './trigger-password-reset.command';
 import { TriggerPasswordResetUseCase } from './trigger-password-reset.use-case';
 import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import { EmailSendFailedError } from 'src/common/emails/application/emails.errors';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 
 describe('TriggerPasswordResetUseCase', () => {
   let useCase: TriggerPasswordResetUseCase;
@@ -30,9 +32,82 @@ describe('TriggerPasswordResetUseCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    usersRepository.findOneByEmail.mockReset();
+    tokenService.issue.mockReset();
+    emailUseCase.execute.mockReset().mockResolvedValue(undefined);
+    getPolicy.execute.mockReset();
     getPolicy.execute.mockResolvedValue({
       localPasswordLoginEnabled: true,
     });
+  });
+
+  it('returns service unavailable when the user lookup cannot reach PostgreSQL', async () => {
+    usersRepository.findOneByEmail.mockRejectedValue(
+      Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:5432'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+
+    await expect(
+      useCase.execute(
+        new TriggerPasswordResetCommand('maria@gemeinde.example'),
+      ),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
+
+  it('preserves a typed email-provider connection failure', async () => {
+    usersRepository.findOneByEmail.mockResolvedValue(
+      new User({
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Maria Müller',
+        email: 'maria@gemeinde.de',
+        emailVerified: true,
+        passwordHash: 'hash',
+        role: UserRole.USER,
+        orgId: '660e8400-e29b-41d4-a716-446655440000',
+        hasAcceptedMarketing: false,
+      }),
+    );
+    tokenService.issue.mockResolvedValue('reset-token');
+    const providerError = Object.assign(new Error('connection refused'), {
+      code: 'ECONNREFUSED',
+    });
+    const emailError = new EmailSendFailedError('connection refused', {
+      error: providerError,
+    });
+    emailUseCase.execute.mockRejectedValue(emailError);
+
+    await expect(
+      useCase.execute(new TriggerPasswordResetCommand('maria@gemeinde.de')),
+    ).rejects.toBe(emailError);
+  });
+
+  it('preserves a policy lookup service-unavailable error', async () => {
+    usersRepository.findOneByEmail.mockResolvedValue(
+      new User({
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Maria Müller',
+        email: 'maria@gemeinde.de',
+        emailVerified: true,
+        passwordHash: 'hash',
+        role: UserRole.USER,
+        orgId: '660e8400-e29b-41d4-a716-446655440000',
+        hasAcceptedMarketing: false,
+      }),
+    );
+    const serviceUnavailable = new ServiceUnavailableError(
+      Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+    getPolicy.execute.mockRejectedValue(serviceUnavailable);
+
+    await expect(
+      useCase.execute(new TriggerPasswordResetCommand('maria@gemeinde.de')),
+    ).rejects.toBe(serviceUnavailable);
   });
 
   it('does not issue a reset token for a user without a local password', async () => {

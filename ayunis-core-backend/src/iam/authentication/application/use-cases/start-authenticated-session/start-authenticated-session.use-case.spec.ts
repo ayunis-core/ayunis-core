@@ -12,6 +12,7 @@ import type { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-ca
 import { UserAuthenticationFailedError } from 'src/iam/users/application/users.errors';
 import type { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
 import { LocalPasswordLoginDisabledError } from 'src/iam/authentication/application/authentication.errors';
+import { UnexpectedMfaError } from 'src/iam/mfa/application/mfa.errors';
 
 describe(StartAuthenticatedSessionUseCase.name, () => {
   const user = new ActiveUser({
@@ -173,6 +174,19 @@ describe(StartAuthenticatedSessionUseCase.name, () => {
       UserAuthenticationFailedError,
     );
     expect(pendingTokens.generate).not.toHaveBeenCalled();
+  });
+
+  it('returns service unavailable when session setup cannot reach PostgreSQL', async () => {
+    const databaseError = Object.assign(
+      new Error('the database system is in recovery mode'),
+      { code: '57P03' },
+    );
+    checkMfa.execute.mockRejectedValue(new UnexpectedMfaError(databaseError));
+
+    await expect(useCase.execute(passwordCommand())).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
   });
 
   function ssoCommand(): StartAuthenticatedSessionCommand {

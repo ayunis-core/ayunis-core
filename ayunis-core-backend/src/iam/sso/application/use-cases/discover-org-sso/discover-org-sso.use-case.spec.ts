@@ -33,6 +33,23 @@ describe(DiscoverOrgSsoUseCase.name, () => {
     ).resolves.toEqual({ available: false });
   });
 
+  it('returns service unavailable when PostgreSQL cannot serve discovery', async () => {
+    const repository = createMockOrgSsoConnectionsRepository();
+    repository.findByEmailDomain.mockRejectedValue(
+      Object.assign(new Error('the database system is in recovery mode'), {
+        code: '57P03',
+      }),
+    );
+    const useCase = new DiscoverOrgSsoUseCase(repository);
+
+    await expect(
+      useCase.execute(new DiscoverOrgSsoQuery('staff@demo.com')),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
+
   it.each(['not-an-email', 'staff@invalid_domain', 'staff@dept@demo.com'])(
     'rejects malformed email routing input %s',
     async (email) => {

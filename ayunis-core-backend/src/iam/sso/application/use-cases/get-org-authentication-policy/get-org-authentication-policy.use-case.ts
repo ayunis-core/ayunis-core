@@ -14,7 +14,7 @@ export class GetOrgAuthenticationPolicyUseCase {
 
   constructor(private readonly connections: OrgSsoConnectionsRepository) {}
 
-  @HandleUnexpectedErrors(UnexpectedSsoError)
+  @HandleUnexpectedErrors(UnexpectedSsoError, { databaseUnavailable: true })
   async execute(
     query: GetOrgAuthenticationPolicyQuery,
   ): Promise<OrgAuthenticationPolicy> {

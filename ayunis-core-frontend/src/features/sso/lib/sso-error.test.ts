@@ -14,6 +14,7 @@ describe('resolveSsoError', () => {
     ['SSO_BROKER_RESPONSE_INVALID', 'invalidResponse'],
     ['SSO_BROKER_NOT_CONFIGURED', 'providerUnavailable'],
     ['PROVIDER_UNAVAILABLE_TIMEOUT_ZITADEL', 'providerUnavailable'],
+    ['SERVICE_UNAVAILABLE', 'serviceUnavailable'],
     ['SOMETHING_INTERNAL', 'unexpected'],
     [undefined, 'unexpected'],
   ])('maps %s to %s', (code, expected) => {

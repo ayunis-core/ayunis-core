@@ -96,7 +96,7 @@ export class UnexpectedMfaError extends ApplicationError {
       MfaErrorCode.UNEXPECTED_MFA_ERROR,
       500,
       {
-        error: error instanceof Error ? error.message : String(error),
+        error,
         ...metadata,
       },
     );
