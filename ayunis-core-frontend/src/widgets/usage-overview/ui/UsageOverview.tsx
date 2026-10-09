@@ -3,11 +3,12 @@ import { getMonthDateRange } from '@/shared/lib/getMonthDateRange';
 import { UsageStatsCardsWidget } from '@/widgets/usage-stats-cards';
 import { ProviderConsumptionWidget } from '@/widgets/provider-consumption-chart';
 import { ModelDistributionWidget } from '@/widgets/model-distribution-chart';
-import { buildModelFilterOptions } from '../lib/buildModelFilterOptions';
+import { buildModelFilterOptions } from '@/widgets/usage-overview/lib/buildModelFilterOptions';
 import { CreditBudgetCard } from './CreditBudgetCard';
 import { UsageOverviewFilters } from './UsageOverviewFilters';
 import { UserUsageSection } from './UserUsageSection';
-import type { UsageOverviewHooks } from '../model/types';
+import { ApiKeyUsageSection } from './ApiKeyUsageSection';
+import type { UsageOverviewHooks } from '@/widgets/usage-overview/model/types';
 
 interface UsageOverviewProps {
   hooks: UsageOverviewHooks;
@@ -102,6 +103,12 @@ export function UsageOverview({ hooks }: Readonly<UsageOverviewProps>) {
       <UserUsageSection
         key={`${year}-${month}`}
         useUserUsage={hooks.useUserUsage}
+        startDate={startIso}
+        endDate={endIso}
+      />
+
+      <ApiKeyUsageSection
+        useApiKeyUsage={hooks.useApiKeyUsage}
         startDate={startIso}
         endDate={endIso}
       />
