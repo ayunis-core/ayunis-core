@@ -48,6 +48,7 @@ describe('GetDefaultModelUseCase', () => {
       scope?: PermittedModelScope;
       scopeId?: UUID | null;
       isDefault?: boolean;
+      anonymousOnly?: boolean;
     },
   ): PermittedLanguageModel {
     return new PermittedLanguageModel({
@@ -57,6 +58,7 @@ describe('GetDefaultModelUseCase', () => {
       scope: overrides?.scope ?? PermittedModelScope.ORG,
       scopeId: overrides?.scopeId ?? null,
       isDefault: overrides?.isDefault ?? false,
+      anonymousOnly: overrides?.anonymousOnly ?? false,
     });
   }
 
@@ -97,6 +99,90 @@ describe('GetDefaultModelUseCase', () => {
     userDefaultModelsRepository.findByUserId.mockResolvedValue(null);
     permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(null);
     permittedModelsRepository.findManyTeamDefaultLanguage.mockResolvedValue([]);
+  });
+
+  it('prefers an eligible organization default when requested', async () => {
+    const orgDefault = makePermittedLanguageModel(
+      makeLanguageModel('municipal-standard'),
+    );
+    const userDefault = makePermittedLanguageModel(
+      makeLanguageModel('personal-preference'),
+    );
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [orgDefault, userDefault],
+      overrideTeamIds: [],
+    });
+    userDefaultModelsRepository.findByUserId.mockResolvedValue(userDefault);
+    permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(
+      orgDefault,
+    );
+
+    const result = await useCase.execute(
+      new GetDefaultModelQuery({
+        orgId,
+        userId,
+        preferOrganizationDefault: true,
+      }),
+    );
+    expect(result).toBe(orgDefault);
+  });
+
+  it('falls back to the team default when the user default is anonymous-only', async () => {
+    const userDefault = makePermittedLanguageModel(
+      makeLanguageModel('anonymous-preference'),
+      {
+        anonymousOnly: true,
+      },
+    );
+    const fallback = makePermittedLanguageModel(
+      makeLanguageModel('alphabetically-first'),
+    );
+    const teamDefault = makePermittedLanguageModel(
+      makeLanguageModel('team-standard'),
+      {
+        scope: PermittedModelScope.TEAM,
+        scopeId: teamAId,
+        isDefault: true,
+      },
+    );
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [fallback, userDefault, teamDefault],
+      overrideTeamIds: [teamAId],
+    });
+    userDefaultModelsRepository.findByUserId.mockResolvedValue(userDefault);
+    permittedModelsRepository.findManyTeamDefaultLanguage.mockResolvedValue([
+      teamDefault,
+    ]);
+
+    const result = await useCase.execute(
+      new GetDefaultModelQuery({
+        orgId,
+        userId,
+        excludeAnonymousOnly: true,
+        preferOrganizationDefault: true,
+      }),
+    );
+    expect(result).toBe(teamDefault);
+  });
+
+  it('distinguishes anonymous-only availability from having no permitted models', async () => {
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [
+        makePermittedLanguageModel(makeLanguageModel('private-drafts'), {
+          anonymousOnly: true,
+        }),
+      ],
+      overrideTeamIds: [],
+    });
+    await expect(
+      useCase.execute(
+        new GetDefaultModelQuery({
+          orgId,
+          userId,
+          excludeAnonymousOnly: true,
+        }),
+      ),
+    ).rejects.toMatchObject({ code: 'ONLY_ANONYMOUS_MODELS_AVAILABLE' });
   });
 
   it('should return user default when it is in the effective set', async () => {

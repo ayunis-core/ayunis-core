@@ -5769,6 +5769,39 @@
         "tags": ["skills"]
       }
     },
+    "/skills/improve-text": {
+      "post": {
+        "operationId": "SkillsController_improveText",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImproveSkillTextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImprovedSkillTextResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Subscription required"
+          }
+        },
+        "summary": "Rewrite a skill trigger or its instructions",
+        "tags": ["skills"]
+      }
+    },
     "/skills": {
       "post": {
         "operationId": "SkillsController_create",
@@ -7544,6 +7577,1354 @@
         "tags": ["Super Admin Anonymization Whitelist"]
       }
     },
+    "/super-admin/platform-config/credits-per-euro": {
+      "get": {
+        "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getCreditsPerEuro",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved credits-per-euro value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditsPerEuroResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Credits-per-euro value has not been configured"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current credits-per-euro configuration",
+        "tags": ["Super Admin Platform Config"]
+      },
+      "put": {
+        "description": "Update the global credits-per-euro value used for credit calculations. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setCreditsPerEuro",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditsPerEuroRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated credits-per-euro value"
+          },
+          "400": {
+            "description": "Invalid value provided (must be positive number)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the credits-per-euro configuration",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/super-admin/platform-config/fair-use-limits": {
+      "get": {
+        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved fair-use limits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FairUseLimitsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current fair-use limits",
+        "tags": ["Super Admin Platform Config"]
+      },
+      "put": {
+        "description": "Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setFairUseLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetFairUseLimitRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated fair-use limit for the given tier"
+          },
+          "400": {
+            "description": "Invalid value provided (limit and windowMs must be positive)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the fair-use limit for a single model tier",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/super-admin/platform-config/image-fair-use-limit": {
+      "put": {
+        "description": "Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setImageFairUseLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetImageFairUseLimitRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated image fair-use limit"
+          },
+          "400": {
+            "description": "Invalid value provided (limit and windowMs must be positive)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the fair-use limit for image generation",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/super-admin/platform-config/app-alert": {
+      "put": {
+        "description": "Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setAppAlert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAppAlertRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated the app alert banner"
+          },
+          "400": {
+            "description": "Invalid value provided (message required when enabled, or message too long)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the app-wide alert banner",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/app-alert": {
+      "get": {
+        "description": "Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.",
+        "operationId": "AppAlertController_getAppAlert",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the app alert configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppAlertResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current app-wide alert banner",
+        "tags": ["App Alert"]
+      }
+    },
+    "/usage/config": {
+      "get": {
+        "description": "Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.",
+        "operationId": "UsageController_getUsageConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Usage configuration retrieved successfully. Returns deployment mode information.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage dashboard configuration",
+        "tags": ["Admin Usage"]
+      }
+    },
+    "/usage/credits": {
+      "get": {
+        "description": "Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.",
+        "operationId": "UsageController_getCreditUsage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Credit usage retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get credit usage for the current month",
+        "tags": ["Admin Usage"]
+      }
+    },
+    "/usage/users": {
+      "get": {
+        "description": "Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.",
+        "operationId": "UsageController_getUserUsage",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "description": "Start date in ISO format",
+            "schema": {
+              "example": "2024-01-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "description": "End date in ISO format",
+            "schema": {
+              "example": "2024-01-31T23:59:59.999Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of users per page (1-1000). Defaults to 50.",
+            "schema": {
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip for pagination. Defaults to 0.",
+            "schema": {
+              "example": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search term to filter users by name or email",
+            "schema": {
+              "example": "john.doe",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort users by. Defaults to credits.",
+            "schema": {
+              "enum": ["credits", "requests", "lastActivity", "userName"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (ascending or descending). Defaults to desc.",
+            "schema": {
+              "enum": ["asc", "desc"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User usage statistics retrieved successfully. Includes pagination metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage statistics by user",
+        "tags": ["Admin Usage"]
+      }
+    },
+    "/usage/stats": {
+      "get": {
+        "operationId": "UsageController_getUsageStats",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageStatsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get overall usage statistics for the current organization",
+        "tags": ["Admin Usage"]
+      }
+    },
+    "/usage/models": {
+      "get": {
+        "operationId": "UsageController_getModelDistribution",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxModels",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "modelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDistributionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage distribution by model for the current organization",
+        "tags": ["Admin Usage"]
+      }
+    },
+    "/usage/providers/chart": {
+      "get": {
+        "operationId": "UsageController_getProviderUsageChart",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderUsageChartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get provider usage time series for the current organization (chart-ready)",
+        "tags": ["Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/config": {
+      "get": {
+        "operationId": "SuperAdminUsageController_getUsageConfig",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage dashboard configuration for an organization",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/credits": {
+      "get": {
+        "description": "Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.",
+        "operationId": "SuperAdminUsageController_getCreditUsage",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get credit usage for an organization",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/stats": {
+      "get": {
+        "operationId": "SuperAdminUsageController_getUsageStats",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageStatsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get overall usage statistics for an organization",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/models": {
+      "get": {
+        "operationId": "SuperAdminUsageController_getModelDistribution",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxModels",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "modelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDistributionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage distribution by model for an organization",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/providers": {
+      "get": {
+        "operationId": "SuperAdminUsageDataController_getProviderUsage",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeTimeSeries",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "provider",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage statistics by provider for an organization",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/providers/chart": {
+      "get": {
+        "operationId": "SuperAdminUsageDataController_getProviderUsageChart",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderUsageChartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get provider usage time series for an organization (chart-ready)",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/super-admin/usage/{orgId}/users": {
+      "get": {
+        "operationId": "SuperAdminUsageDataController_getUserUsage",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["credits", "requests", "lastActivity", "userName"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["asc", "desc"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get usage statistics by user for an organization",
+        "tags": ["Super Admin Usage"]
+      }
+    },
+    "/credit-limits/users": {
+      "get": {
+        "operationId": "CreditLimitsController_getUserLimits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserCreditLimitItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List configured user credit limits with current consumption",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/teams": {
+      "get": {
+        "operationId": "CreditLimitsController_getTeamLimits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamCreditLimitItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List configured team credit limits with current consumption",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/api-keys": {
+      "get": {
+        "operationId": "CreditLimitsController_getApiKeyLimits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyCreditLimitItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List configured API key credit limits with current consumption",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/users/{userId}": {
+      "put": {
+        "operationId": "CreditLimitsController_setUserLimit",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set a monthly credit limit for a user",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeUserLimit",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a user credit limit (back to unlimited)",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/teams/{teamId}": {
+      "put": {
+        "operationId": "CreditLimitsController_setTeamLimit",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set a monthly credit limit for a team",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeTeamLimit",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a team credit limit (back to unlimited)",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/api-keys/{apiKeyId}": {
+      "put": {
+        "operationId": "CreditLimitsController_setApiKeyLimit",
+        "parameters": [
+          {
+            "name": "apiKeyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set a monthly credit limit for an API key",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeApiKeyLimit",
+        "parameters": [
+          {
+            "name": "apiKeyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove an API key credit limit",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/api-keys": {
+      "get": {
+        "operationId": "ApiKeysController_listApiKeys",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved API keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view API keys"
+          }
+        },
+        "summary": "List API keys for the current organization",
+        "tags": ["api-keys"]
+      },
+      "post": {
+        "operationId": "ApiKeysController_createApiKey",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApiKeyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to create API keys"
+          }
+        },
+        "summary": "Create a new API key. The full plaintext secret is returned ONLY in this response.",
+        "tags": ["api-keys"]
+      }
+    },
+    "/api-keys/{id}": {
+      "delete": {
+        "operationId": "ApiKeysController_revokeApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "API key successfully revoked"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to revoke this API key"
+          },
+          "404": {
+            "description": "API key not found"
+          }
+        },
+        "summary": "Revoke an API key",
+        "tags": ["api-keys"]
+      }
+    },
+    "/super-admin/trials": {
+      "post": {
+        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_createTrial",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Trial information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Create a new trial",
+        "tags": ["Super Admin Trials"]
+      }
+    },
+    "/super-admin/trials/{orgId}": {
+      "get": {
+        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to retrieve.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Trial not found for the organization."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Get a trial by organization ID",
+        "tags": ["Super Admin Trials"]
+      },
+      "put": {
+        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_updateTrial",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Trial update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Update a trial",
+        "tags": ["Super Admin Trials"]
+      }
+    },
     "/super-admin/skill-templates": {
       "post": {
         "description": "Create a new skill template. Only accessible to super admins.",
@@ -8260,1233 +9641,6 @@
         "tags": ["letterheads"]
       }
     },
-    "/usage/config": {
-      "get": {
-        "description": "Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.",
-        "operationId": "UsageController_getUsageConfig",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Usage configuration retrieved successfully. Returns deployment mode information.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UsageConfigResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get usage dashboard configuration",
-        "tags": ["Admin Usage"]
-      }
-    },
-    "/usage/credits": {
-      "get": {
-        "description": "Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.",
-        "operationId": "UsageController_getCreditUsage",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Credit usage retrieved successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreditUsageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get credit usage for the current month",
-        "tags": ["Admin Usage"]
-      }
-    },
-    "/usage/users": {
-      "get": {
-        "description": "Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.",
-        "operationId": "UsageController_getUserUsage",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "description": "Start date in ISO format",
-            "schema": {
-              "example": "2024-01-01T00:00:00.000Z",
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "description": "End date in ISO format",
-            "schema": {
-              "example": "2024-01-31T23:59:59.999Z",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Number of users per page (1-1000). Defaults to 50.",
-            "schema": {
-              "example": 50,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of users to skip for pagination. Defaults to 0.",
-            "schema": {
-              "example": 0,
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search term to filter users by name or email",
-            "schema": {
-              "example": "john.doe",
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "description": "Field to sort users by. Defaults to credits.",
-            "schema": {
-              "enum": ["credits", "requests", "lastActivity", "userName"],
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": false,
-            "in": "query",
-            "description": "Sort order (ascending or descending). Defaults to desc.",
-            "schema": {
-              "enum": ["asc", "desc"],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User usage statistics retrieved successfully. Includes pagination metadata.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserUsageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get usage statistics by user",
-        "tags": ["Admin Usage"]
-      }
-    },
-    "/usage/stats": {
-      "get": {
-        "operationId": "UsageController_getUsageStats",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UsageStatsResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get overall usage statistics for the current organization",
-        "tags": ["Admin Usage"]
-      }
-    },
-    "/usage/models": {
-      "get": {
-        "operationId": "UsageController_getModelDistribution",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "maxModels",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "modelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ModelDistributionResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get usage distribution by model for the current organization",
-        "tags": ["Admin Usage"]
-      }
-    },
-    "/usage/providers/chart": {
-      "get": {
-        "operationId": "UsageController_getProviderUsageChart",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "provider",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "modelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProviderUsageChartResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get provider usage time series for the current organization (chart-ready)",
-        "tags": ["Admin Usage"]
-      }
-    },
-    "/super-admin/usage/{orgId}/config": {
-      "get": {
-        "operationId": "SuperAdminUsageController_getUsageConfig",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID",
-            "schema": {
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UsageConfigResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get usage dashboard configuration for an organization",
-        "tags": ["Super Admin Usage"]
-      }
-    },
-    "/super-admin/usage/{orgId}/credits": {
-      "get": {
-        "description": "Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.",
-        "operationId": "SuperAdminUsageController_getCreditUsage",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreditUsageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get credit usage for an organization",
-        "tags": ["Super Admin Usage"]
-      }
-    },
-    "/super-admin/usage/{orgId}/stats": {
-      "get": {
-        "operationId": "SuperAdminUsageController_getUsageStats",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UsageStatsResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get overall usage statistics for an organization",
-        "tags": ["Super Admin Usage"]
-      }
-    },
-    "/super-admin/usage/{orgId}/models": {
-      "get": {
-        "operationId": "SuperAdminUsageController_getModelDistribution",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "maxModels",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "modelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ModelDistributionResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get usage distribution by model for an organization",
-        "tags": ["Super Admin Usage"]
-      }
-    },
-    "/super-admin/usage/{orgId}/providers": {
-      "get": {
-        "operationId": "SuperAdminUsageDataController_getProviderUsage",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "includeTimeSeries",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "provider",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "modelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProviderUsageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get usage statistics by provider for an organization",
-        "tags": ["Super Admin Usage"]
-      }
-    },
-    "/super-admin/usage/{orgId}/providers/chart": {
-      "get": {
-        "operationId": "SuperAdminUsageDataController_getProviderUsageChart",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "provider",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "modelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProviderUsageChartResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get provider usage time series for an organization (chart-ready)",
-        "tags": ["Super Admin Usage"]
-      }
-    },
-    "/super-admin/usage/{orgId}/users": {
-      "get": {
-        "operationId": "SuperAdminUsageDataController_getUserUsage",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "enum": ["credits", "requests", "lastActivity", "userName"],
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "enum": ["asc", "desc"],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserUsageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get usage statistics by user for an organization",
-        "tags": ["Super Admin Usage"]
-      }
-    },
-    "/super-admin/platform-config/credits-per-euro": {
-      "get": {
-        "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_getCreditsPerEuro",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved credits-per-euro value",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreditsPerEuroResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Credits-per-euro value has not been configured"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the current credits-per-euro configuration",
-        "tags": ["Super Admin Platform Config"]
-      },
-      "put": {
-        "description": "Update the global credits-per-euro value used for credit calculations. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setCreditsPerEuro",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetCreditsPerEuroRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated credits-per-euro value"
-          },
-          "400": {
-            "description": "Invalid value provided (must be positive number)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the credits-per-euro configuration",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/super-admin/platform-config/fair-use-limits": {
-      "get": {
-        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved fair-use limits",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FairUseLimitsResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the current fair-use limits",
-        "tags": ["Super Admin Platform Config"]
-      },
-      "put": {
-        "description": "Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setFairUseLimit",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetFairUseLimitRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated fair-use limit for the given tier"
-          },
-          "400": {
-            "description": "Invalid value provided (limit and windowMs must be positive)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the fair-use limit for a single model tier",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/super-admin/platform-config/image-fair-use-limit": {
-      "put": {
-        "description": "Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setImageFairUseLimit",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetImageFairUseLimitRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated image fair-use limit"
-          },
-          "400": {
-            "description": "Invalid value provided (limit and windowMs must be positive)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the fair-use limit for image generation",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/super-admin/platform-config/app-alert": {
-      "put": {
-        "description": "Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.",
-        "operationId": "SuperAdminPlatformConfigController_setAppAlert",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetAppAlertRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated the app alert banner"
-          },
-          "400": {
-            "description": "Invalid value provided (message required when enabled, or message too long)"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Set the app-wide alert banner",
-        "tags": ["Super Admin Platform Config"]
-      }
-    },
-    "/app-alert": {
-      "get": {
-        "description": "Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.",
-        "operationId": "AppAlertController_getAppAlert",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the app alert configuration",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppAlertResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the current app-wide alert banner",
-        "tags": ["App Alert"]
-      }
-    },
-    "/credit-limits/users": {
-      "get": {
-        "operationId": "CreditLimitsController_getUserLimits",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserCreditLimitItemDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List configured user credit limits with current consumption",
-        "tags": ["credit-limits"]
-      }
-    },
-    "/credit-limits/teams": {
-      "get": {
-        "operationId": "CreditLimitsController_getTeamLimits",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TeamCreditLimitItemDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List configured team credit limits with current consumption",
-        "tags": ["credit-limits"]
-      }
-    },
-    "/credit-limits/api-keys": {
-      "get": {
-        "operationId": "CreditLimitsController_getApiKeyLimits",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ApiKeyCreditLimitItemDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List configured API key credit limits with current consumption",
-        "tags": ["credit-limits"]
-      }
-    },
-    "/credit-limits/users/{userId}": {
-      "put": {
-        "operationId": "CreditLimitsController_setUserLimit",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetCreditLimitDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserCreditLimitResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Set a monthly credit limit for a user",
-        "tags": ["credit-limits"]
-      },
-      "delete": {
-        "operationId": "CreditLimitsController_removeUserLimit",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "summary": "Remove a user credit limit (back to unlimited)",
-        "tags": ["credit-limits"]
-      }
-    },
-    "/credit-limits/teams/{teamId}": {
-      "put": {
-        "operationId": "CreditLimitsController_setTeamLimit",
-        "parameters": [
-          {
-            "name": "teamId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetCreditLimitDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TeamCreditLimitResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Set a monthly credit limit for a team",
-        "tags": ["credit-limits"]
-      },
-      "delete": {
-        "operationId": "CreditLimitsController_removeTeamLimit",
-        "parameters": [
-          {
-            "name": "teamId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "summary": "Remove a team credit limit (back to unlimited)",
-        "tags": ["credit-limits"]
-      }
-    },
-    "/credit-limits/api-keys/{apiKeyId}": {
-      "put": {
-        "operationId": "CreditLimitsController_setApiKeyLimit",
-        "parameters": [
-          {
-            "name": "apiKeyId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetCreditLimitDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyCreditLimitResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Set a monthly credit limit for an API key",
-        "tags": ["credit-limits"]
-      },
-      "delete": {
-        "operationId": "CreditLimitsController_removeApiKeyLimit",
-        "parameters": [
-          {
-            "name": "apiKeyId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "summary": "Remove an API key credit limit",
-        "tags": ["credit-limits"]
-      }
-    },
-    "/api-keys": {
-      "get": {
-        "operationId": "ApiKeysController_listApiKeys",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved API keys",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ApiKeyResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User is not authenticated"
-          },
-          "403": {
-            "description": "User is not authorized to view API keys"
-          }
-        },
-        "summary": "List API keys for the current organization",
-        "tags": ["api-keys"]
-      },
-      "post": {
-        "operationId": "ApiKeysController_createApiKey",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateApiKeyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created API key",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateApiKeyResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          },
-          "401": {
-            "description": "User is not authenticated"
-          },
-          "403": {
-            "description": "User is not authorized to create API keys"
-          }
-        },
-        "summary": "Create a new API key. The full plaintext secret is returned ONLY in this response.",
-        "tags": ["api-keys"]
-      }
-    },
-    "/api-keys/{id}": {
-      "delete": {
-        "operationId": "ApiKeysController_revokeApiKey",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "API key successfully revoked"
-          },
-          "401": {
-            "description": "User is not authenticated"
-          },
-          "403": {
-            "description": "User is not authorized to revoke this API key"
-          },
-          "404": {
-            "description": "API key not found"
-          }
-        },
-        "summary": "Revoke an API key",
-        "tags": ["api-keys"]
-      }
-    },
     "/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
@@ -9685,127 +9839,6 @@
         },
         "summary": "Get a source citation in a thread",
         "tags": ["threads"]
-      }
-    },
-    "/super-admin/trials": {
-      "post": {
-        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_createTrial",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Trial information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Create a new trial",
-        "tags": ["Super Admin Trials"]
-      }
-    },
-    "/super-admin/trials/{orgId}": {
-      "get": {
-        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to retrieve.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Trial not found for the organization."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Get a trial by organization ID",
-        "tags": ["Super Admin Trials"]
-      },
-      "put": {
-        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_updateTrial",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to update.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Trial update information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Update a trial",
-        "tags": ["Super Admin Trials"]
       }
     },
     "/chat-settings/system-prompt": {
@@ -16393,6 +16426,39 @@
           "creatorName"
         ]
       },
+      "ImproveSkillTextDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": ["trigger", "instructions"],
+            "description": "Which of the two texts should come back rewritten"
+          },
+          "name": {
+            "type": "string",
+            "description": "The skill name, when it already exists"
+          },
+          "trigger": {
+            "type": "string",
+            "description": "The trigger as it currently stands in the form"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions as they currently stand in the form"
+          }
+        },
+        "required": ["field", "trigger", "instructions"]
+      },
+      "ImprovedSkillTextResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The rewritten text for the requested field"
+          }
+        },
+        "required": ["text"]
+      },
       "CreateSkillDto": {
         "type": "object",
         "properties": {
@@ -17866,6 +17932,896 @@
         },
         "required": ["added", "duplicates"]
       },
+      "CreditsPerEuroResponseDto": {
+        "type": "object",
+        "properties": {
+          "creditsPerEuro": {
+            "type": "number",
+            "description": "Number of credits per euro of token cost",
+            "example": 1000
+          }
+        },
+        "required": ["creditsPerEuro"]
+      },
+      "SetCreditsPerEuroRequestDto": {
+        "type": "object",
+        "properties": {
+          "creditsPerEuro": {
+            "type": "number",
+            "description": "Number of credits per euro of token cost. Must be positive.",
+            "example": 1000
+          }
+        },
+        "required": ["creditsPerEuro"]
+      },
+      "FairUseTierLimitDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of messages allowed within the window",
+            "example": 200
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds",
+            "example": 10800000
+          }
+        },
+        "required": ["limit", "windowMs"]
+      },
+      "FairUseLimitsResponseDto": {
+        "type": "object",
+        "properties": {
+          "zero": {
+            "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "low": {
+            "description": "Fair-use limit for low-tier (cheap) language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "medium": {
+            "description": "Fair-use limit for medium-tier language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "high": {
+            "description": "Fair-use limit for high-tier (expensive) language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "images": {
+            "description": "Fair-use limit for image generation. Single global bucket (no tiering).",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          }
+        },
+        "required": ["zero", "low", "medium", "high", "images"]
+      },
+      "SetFairUseLimitRequestDto": {
+        "type": "object",
+        "properties": {
+          "tier": {
+            "type": "string",
+            "description": "Model tier whose fair-use limit is being updated",
+            "enum": ["zero", "low", "medium", "high"],
+            "example": "medium"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of messages allowed within the sliding window. Must be a positive integer.",
+            "example": 200,
+            "minimum": 1
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
+            "example": 10800000,
+            "minimum": 1
+          }
+        },
+        "required": ["tier", "limit", "windowMs"]
+      },
+      "SetImageFairUseLimitRequestDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of images allowed within the sliding window. Must be a positive integer.",
+            "example": 50,
+            "minimum": 1
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
+            "example": 86400000,
+            "minimum": 1
+          }
+        },
+        "required": ["limit", "windowMs"]
+      },
+      "SetAppAlertRequestDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether to show the app-wide alert banner",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The alert banner text. Required (non-empty) when enabled is true.",
+            "example": "The system is currently experiencing degraded performance.",
+            "maxLength": 1000
+          }
+        },
+        "required": ["enabled", "message"]
+      },
+      "AppAlertResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the app-wide alert banner is currently shown",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The alert banner text shown to all users",
+            "example": "The system is currently experiencing degraded performance."
+          }
+        },
+        "required": ["enabled", "message"]
+      },
+      "UsageConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "isSelfHosted": {
+            "type": "boolean",
+            "description": "Whether the deployment is self-hosted. Determines feature availability.",
+            "example": true
+          }
+        },
+        "required": ["isSelfHosted"]
+      },
+      "CreditUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.",
+            "example": 10000,
+            "nullable": true
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Total credits consumed in the current calendar month.",
+            "example": 4250.5
+          },
+          "creditsRemaining": {
+            "type": "number",
+            "description": "Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.",
+            "example": 5749.5,
+            "nullable": true
+          }
+        },
+        "required": ["monthlyCredits", "creditsUsed", "creditsRemaining"]
+      },
+      "UserUsageDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "userName": {
+            "type": "string",
+            "description": "User name"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "User email"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Total credits consumed by this user"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Total requests for this user"
+          },
+          "lastActivity": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last activity date (null if no activity)",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the user is considered active"
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "userEmail",
+          "credits",
+          "requests",
+          "lastActivity",
+          "isActive"
+        ]
+      },
+      "UserUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "User usage statistics",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserUsageDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          },
+          "totalCredits": {
+            "type": "number",
+            "description": "Total credits consumed across all users in the filtered period"
+          }
+        },
+        "required": ["data", "pagination", "totalCredits"]
+      },
+      "UsageStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalCredits": {
+            "type": "number",
+            "description": "Total credits consumed across all users and models in the specified period",
+            "example": 1250.5
+          },
+          "totalRequests": {
+            "type": "number",
+            "description": "Total number of API requests made in the specified period",
+            "example": 3450
+          },
+          "activeUsers": {
+            "type": "number",
+            "description": "Number of users who made requests within the active user threshold (last 30 days)",
+            "example": 42
+          },
+          "totalUsers": {
+            "type": "number",
+            "description": "Total number of unique users who made requests in the specified period",
+            "example": 67
+          },
+          "topModels": {
+            "description": "List of the most frequently used model names, ordered by usage",
+            "example": ["gpt-4", "claude-3-sonnet", "gpt-3.5-turbo"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "totalCredits",
+          "totalRequests",
+          "activeUsers",
+          "totalUsers",
+          "topModels"
+        ]
+      },
+      "ModelDistributionDto": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "description": "Model ID"
+          },
+          "modelName": {
+            "type": "string",
+            "description": "Model name"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Model display name"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "bedrock",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis",
+              "otc",
+              "azure",
+              "gemini",
+              "stackit",
+              "scaleway"
+            ],
+            "description": "Model provider"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Total credits for this model"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Total requests for this model"
+          },
+          "percentage": {
+            "type": "number",
+            "description": "Percentage of total usage"
+          }
+        },
+        "required": [
+          "modelId",
+          "modelName",
+          "displayName",
+          "provider",
+          "credits",
+          "requests",
+          "percentage"
+        ]
+      },
+      "ModelDistributionResponseDto": {
+        "type": "object",
+        "properties": {
+          "models": {
+            "description": "Model distribution statistics",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelDistributionDto"
+            }
+          }
+        },
+        "required": ["models"]
+      },
+      "ProviderValuesDto": {
+        "type": "object",
+        "properties": {
+          "openai": {
+            "type": "number",
+            "description": "Credits for OpenAI"
+          },
+          "anthropic": {
+            "type": "number",
+            "description": "Credits for Anthropic"
+          },
+          "mistral": {
+            "type": "number",
+            "description": "Credits for Mistral"
+          },
+          "ollama": {
+            "type": "number",
+            "description": "Credits for Ollama"
+          },
+          "synaforce": {
+            "type": "number",
+            "description": "Credits for Synaforce"
+          },
+          "ayunis": {
+            "type": "number",
+            "description": "Credits for Ayunis (internal)"
+          }
+        }
+      },
+      "ProviderTimeSeriesRowDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date of the data point",
+            "format": "date-time"
+          },
+          "values": {
+            "description": "Credits per provider for this date",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProviderValuesDto"
+              }
+            ]
+          }
+        },
+        "required": ["date", "values"]
+      },
+      "ProviderUsageChartResponseDto": {
+        "type": "object",
+        "properties": {
+          "timeSeries": {
+            "description": "Aligned time series rows by date with provider credit values",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderTimeSeriesRowDto"
+            }
+          }
+        },
+        "required": ["timeSeries"]
+      },
+      "TimeSeriesPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date of the data point"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Number of credits at this point"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Number of requests at this point"
+          }
+        },
+        "required": ["date", "credits", "requests"]
+      },
+      "ProviderUsageDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "bedrock",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis",
+              "otc",
+              "azure",
+              "gemini",
+              "stackit",
+              "scaleway"
+            ],
+            "description": "Model provider"
+          },
+          "credits": {
+            "type": "number",
+            "description": "Total credits for this provider"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Total requests for this provider"
+          },
+          "percentage": {
+            "type": "number",
+            "description": "Percentage of total usage"
+          },
+          "timeSeriesData": {
+            "description": "Time series data for this provider",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimeSeriesPointDto"
+            }
+          }
+        },
+        "required": [
+          "provider",
+          "credits",
+          "requests",
+          "percentage",
+          "timeSeriesData"
+        ]
+      },
+      "ProviderUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "description": "Provider usage statistics",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderUsageDto"
+            }
+          }
+        },
+        "required": ["providers"]
+      },
+      "UserCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "jane.doe@example.com"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
+      },
+      "TeamCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 20000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed by all current team members in the current month",
+            "example": 8300
+          }
+        },
+        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
+      },
+      "ApiKeyCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          },
+          "name": {
+            "type": "string",
+            "example": "Finance export"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
+      },
+      "SetCreditLimitDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
+            "example": 5000,
+            "minimum": 0
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
+      "UserCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          }
+        },
+        "required": ["id", "monthlyCredits", "userId"]
+      },
+      "TeamCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "teamId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          }
+        },
+        "required": ["id", "monthlyCredits", "teamId"]
+      },
+      "ApiKeyCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          }
+        },
+        "required": ["id", "monthlyCredits", "apiKeyId"]
+      },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot",
+            "maxLength": 100
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": ["name"]
+      },
+      "ApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt"
+        ]
+      },
+      "CreateApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
+            "example": "ayk_live_abc123def456ghi789..."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt",
+          "secret"
+        ]
+      },
+      "SuperAdminTrialResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Trial unique identifier",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID associated with this trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages sent in this trial",
+            "example": 150,
+            "minimum": 0
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in this trial",
+            "example": 1000,
+            "minimum": 1
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was last updated",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "orgId",
+          "messagesSent",
+          "maxMessages",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SuperAdminTrialResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "trial": {
+            "description": "Trial",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+              }
+            ]
+          }
+        }
+      },
+      "CreateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID for which to create the trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 1000,
+            "minimum": 1
+          }
+        },
+        "required": ["orgId", "maxMessages"]
+      },
+      "UpdateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 2000,
+            "minimum": 1
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages already sent (can be used to reset or adjust)",
+            "example": 0,
+            "minimum": 0
+          }
+        }
+      },
       "CreateSkillTemplateDto": {
         "type": "object",
         "properties": {
@@ -18369,799 +19325,6 @@
           }
         }
       },
-      "UsageConfigResponseDto": {
-        "type": "object",
-        "properties": {
-          "isSelfHosted": {
-            "type": "boolean",
-            "description": "Whether the deployment is self-hosted. Determines feature availability.",
-            "example": true
-          }
-        },
-        "required": ["isSelfHosted"]
-      },
-      "CreditUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.",
-            "example": 10000,
-            "nullable": true
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Total credits consumed in the current calendar month.",
-            "example": 4250.5
-          },
-          "creditsRemaining": {
-            "type": "number",
-            "description": "Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.",
-            "example": 5749.5,
-            "nullable": true
-          }
-        },
-        "required": ["monthlyCredits", "creditsUsed", "creditsRemaining"]
-      },
-      "UserUsageDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "User ID"
-          },
-          "userName": {
-            "type": "string",
-            "description": "User name"
-          },
-          "userEmail": {
-            "type": "string",
-            "description": "User email"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Total credits consumed by this user"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Total requests for this user"
-          },
-          "lastActivity": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Last activity date (null if no activity)",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the user is considered active"
-          }
-        },
-        "required": [
-          "userId",
-          "userName",
-          "userEmail",
-          "credits",
-          "requests",
-          "lastActivity",
-          "isActive"
-        ]
-      },
-      "UserUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "User usage statistics",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserUsageDto"
-            }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
-          },
-          "totalCredits": {
-            "type": "number",
-            "description": "Total credits consumed across all users in the filtered period"
-          }
-        },
-        "required": ["data", "pagination", "totalCredits"]
-      },
-      "UsageStatsResponseDto": {
-        "type": "object",
-        "properties": {
-          "totalCredits": {
-            "type": "number",
-            "description": "Total credits consumed across all users and models in the specified period",
-            "example": 1250.5
-          },
-          "totalRequests": {
-            "type": "number",
-            "description": "Total number of API requests made in the specified period",
-            "example": 3450
-          },
-          "activeUsers": {
-            "type": "number",
-            "description": "Number of users who made requests within the active user threshold (last 30 days)",
-            "example": 42
-          },
-          "totalUsers": {
-            "type": "number",
-            "description": "Total number of unique users who made requests in the specified period",
-            "example": 67
-          },
-          "topModels": {
-            "description": "List of the most frequently used model names, ordered by usage",
-            "example": ["gpt-4", "claude-3-sonnet", "gpt-3.5-turbo"],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "totalCredits",
-          "totalRequests",
-          "activeUsers",
-          "totalUsers",
-          "topModels"
-        ]
-      },
-      "ModelDistributionDto": {
-        "type": "object",
-        "properties": {
-          "modelId": {
-            "type": "string",
-            "description": "Model ID"
-          },
-          "modelName": {
-            "type": "string",
-            "description": "Model name"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "Model display name"
-          },
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc",
-              "azure",
-              "gemini",
-              "stackit",
-              "scaleway"
-            ],
-            "description": "Model provider"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Total credits for this model"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Total requests for this model"
-          },
-          "percentage": {
-            "type": "number",
-            "description": "Percentage of total usage"
-          }
-        },
-        "required": [
-          "modelId",
-          "modelName",
-          "displayName",
-          "provider",
-          "credits",
-          "requests",
-          "percentage"
-        ]
-      },
-      "ModelDistributionResponseDto": {
-        "type": "object",
-        "properties": {
-          "models": {
-            "description": "Model distribution statistics",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ModelDistributionDto"
-            }
-          }
-        },
-        "required": ["models"]
-      },
-      "ProviderValuesDto": {
-        "type": "object",
-        "properties": {
-          "openai": {
-            "type": "number",
-            "description": "Credits for OpenAI"
-          },
-          "anthropic": {
-            "type": "number",
-            "description": "Credits for Anthropic"
-          },
-          "mistral": {
-            "type": "number",
-            "description": "Credits for Mistral"
-          },
-          "ollama": {
-            "type": "number",
-            "description": "Credits for Ollama"
-          },
-          "synaforce": {
-            "type": "number",
-            "description": "Credits for Synaforce"
-          },
-          "ayunis": {
-            "type": "number",
-            "description": "Credits for Ayunis (internal)"
-          }
-        }
-      },
-      "ProviderTimeSeriesRowDto": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Date of the data point",
-            "format": "date-time"
-          },
-          "values": {
-            "description": "Credits per provider for this date",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ProviderValuesDto"
-              }
-            ]
-          }
-        },
-        "required": ["date", "values"]
-      },
-      "ProviderUsageChartResponseDto": {
-        "type": "object",
-        "properties": {
-          "timeSeries": {
-            "description": "Aligned time series rows by date with provider credit values",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProviderTimeSeriesRowDto"
-            }
-          }
-        },
-        "required": ["timeSeries"]
-      },
-      "TimeSeriesPointDto": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date of the data point"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Number of credits at this point"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Number of requests at this point"
-          }
-        },
-        "required": ["date", "credits", "requests"]
-      },
-      "ProviderUsageDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc",
-              "azure",
-              "gemini",
-              "stackit",
-              "scaleway"
-            ],
-            "description": "Model provider"
-          },
-          "credits": {
-            "type": "number",
-            "description": "Total credits for this provider"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Total requests for this provider"
-          },
-          "percentage": {
-            "type": "number",
-            "description": "Percentage of total usage"
-          },
-          "timeSeriesData": {
-            "description": "Time series data for this provider",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TimeSeriesPointDto"
-            }
-          }
-        },
-        "required": [
-          "provider",
-          "credits",
-          "requests",
-          "percentage",
-          "timeSeriesData"
-        ]
-      },
-      "ProviderUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "providers": {
-            "description": "Provider usage statistics",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProviderUsageDto"
-            }
-          }
-        },
-        "required": ["providers"]
-      },
-      "CreditsPerEuroResponseDto": {
-        "type": "object",
-        "properties": {
-          "creditsPerEuro": {
-            "type": "number",
-            "description": "Number of credits per euro of token cost",
-            "example": 1000
-          }
-        },
-        "required": ["creditsPerEuro"]
-      },
-      "SetCreditsPerEuroRequestDto": {
-        "type": "object",
-        "properties": {
-          "creditsPerEuro": {
-            "type": "number",
-            "description": "Number of credits per euro of token cost. Must be positive.",
-            "example": 1000
-          }
-        },
-        "required": ["creditsPerEuro"]
-      },
-      "FairUseTierLimitDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of messages allowed within the window",
-            "example": 200
-          },
-          "windowMs": {
-            "type": "number",
-            "description": "Sliding window duration in milliseconds",
-            "example": 10800000
-          }
-        },
-        "required": ["limit", "windowMs"]
-      },
-      "FairUseLimitsResponseDto": {
-        "type": "object",
-        "properties": {
-          "zero": {
-            "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "low": {
-            "description": "Fair-use limit for low-tier (cheap) language models",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "medium": {
-            "description": "Fair-use limit for medium-tier language models",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "high": {
-            "description": "Fair-use limit for high-tier (expensive) language models",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          },
-          "images": {
-            "description": "Fair-use limit for image generation. Single global bucket (no tiering).",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/FairUseTierLimitDto"
-              }
-            ]
-          }
-        },
-        "required": ["zero", "low", "medium", "high", "images"]
-      },
-      "SetFairUseLimitRequestDto": {
-        "type": "object",
-        "properties": {
-          "tier": {
-            "type": "string",
-            "description": "Model tier whose fair-use limit is being updated",
-            "enum": ["zero", "low", "medium", "high"],
-            "example": "medium"
-          },
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of messages allowed within the sliding window. Must be a positive integer.",
-            "example": 200,
-            "minimum": 1
-          },
-          "windowMs": {
-            "type": "number",
-            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
-            "example": 10800000,
-            "minimum": 1
-          }
-        },
-        "required": ["tier", "limit", "windowMs"]
-      },
-      "SetImageFairUseLimitRequestDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of images allowed within the sliding window. Must be a positive integer.",
-            "example": 50,
-            "minimum": 1
-          },
-          "windowMs": {
-            "type": "number",
-            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
-            "example": 86400000,
-            "minimum": 1
-          }
-        },
-        "required": ["limit", "windowMs"]
-      },
-      "SetAppAlertRequestDto": {
-        "type": "object",
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether to show the app-wide alert banner",
-            "example": true
-          },
-          "message": {
-            "type": "string",
-            "description": "The alert banner text. Required (non-empty) when enabled is true.",
-            "example": "The system is currently experiencing degraded performance.",
-            "maxLength": 1000
-          }
-        },
-        "required": ["enabled", "message"]
-      },
-      "AppAlertResponseDto": {
-        "type": "object",
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether the app-wide alert banner is currently shown",
-            "example": true
-          },
-          "message": {
-            "type": "string",
-            "description": "The alert banner text shown to all users",
-            "example": "The system is currently experiencing degraded performance."
-          }
-        },
-        "required": ["enabled", "message"]
-      },
-      "UserCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          },
-          "name": {
-            "type": "string",
-            "example": "Jane Doe"
-          },
-          "email": {
-            "type": "string",
-            "example": "jane.doe@example.com"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 5000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed in the current calendar month",
-            "example": 1240
-          }
-        },
-        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
-      },
-      "TeamCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "teamId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440002"
-          },
-          "name": {
-            "type": "string",
-            "example": "Engineering"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 20000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed by all current team members in the current month",
-            "example": 8300
-          }
-        },
-        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
-      },
-      "ApiKeyCreditLimitItemDto": {
-        "type": "object",
-        "properties": {
-          "apiKeyId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440003"
-          },
-          "name": {
-            "type": "string",
-            "example": "Finance export"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Configured monthly credit limit",
-            "example": 5000
-          },
-          "creditsUsed": {
-            "type": "number",
-            "description": "Credits consumed in the current calendar month",
-            "example": 1240
-          }
-        },
-        "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
-      },
-      "SetCreditLimitDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
-            "example": 5000,
-            "minimum": 0
-          }
-        },
-        "required": ["monthlyCredits"]
-      },
-      "UserCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "userId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          }
-        },
-        "required": ["id", "monthlyCredits", "userId"]
-      },
-      "TeamCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "teamId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440002"
-          }
-        },
-        "required": ["id", "monthlyCredits", "teamId"]
-      },
-      "ApiKeyCreditLimitResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "example": 5000
-          },
-          "apiKeyId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440003"
-          }
-        },
-        "required": ["id", "monthlyCredits", "apiKeyId"]
-      },
-      "CreateApiKeyDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot",
-            "maxLength": 100
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": ["name"]
-      },
-      "ApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt"
-        ]
-      },
-      "CreateApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          },
-          "secret": {
-            "type": "string",
-            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
-            "example": "ayk_live_abc123def456ghi789..."
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt",
-          "secret"
-        ]
-      },
       "MessageContentResponseDto": {
         "type": "object",
         "properties": {
@@ -19547,103 +19710,6 @@
           }
         },
         "required": ["chunk", "source"]
-      },
-      "SuperAdminTrialResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Trial unique identifier",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID associated with this trial",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "messagesSent": {
-            "type": "number",
-            "description": "Number of messages sent in this trial",
-            "example": 150,
-            "minimum": 0
-          },
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in this trial",
-            "example": 1000,
-            "minimum": 1
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the trial was created",
-            "example": "2024-01-15T10:30:00Z"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the trial was last updated",
-            "example": "2024-01-15T10:30:00Z"
-          }
-        },
-        "required": [
-          "id",
-          "orgId",
-          "messagesSent",
-          "maxMessages",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "SuperAdminTrialResponseDtoNullable": {
-        "type": "object",
-        "properties": {
-          "trial": {
-            "description": "Trial",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-              }
-            ]
-          }
-        }
-      },
-      "CreateTrialRequestDto": {
-        "type": "object",
-        "properties": {
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID for which to create the trial",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in the trial",
-            "example": 1000,
-            "minimum": 1
-          }
-        },
-        "required": ["orgId", "maxMessages"]
-      },
-      "UpdateTrialRequestDto": {
-        "type": "object",
-        "properties": {
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in the trial",
-            "example": 2000,
-            "minimum": 1
-          },
-          "messagesSent": {
-            "type": "number",
-            "description": "Number of messages already sent (can be used to reset or adjust)",
-            "example": 0,
-            "minimum": 0
-          }
-        }
       },
       "UserSystemPromptResponseDto": {
         "type": "object",

@@ -4,6 +4,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import {
   DefaultModelNotFoundError,
+  OnlyAnonymousModelsAvailableError,
   UnexpectedModelError,
 } from 'src/domain/models/application/models.errors';
 import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
@@ -40,10 +41,19 @@ export class GetDefaultModelUseCase {
           query.excludedPermittedModelIds,
         ),
       );
-    const effectiveModels = this.indexEffectiveModels(models);
-    if (effectiveModels.size === 0) {
-      throw new DefaultModelNotFoundError(query.orgId);
-    }
+    const effectiveModels = this.indexEligibleModels(models, query);
+    return this.resolveDefault(query, effectiveModels, overrideTeamIds);
+  }
+
+  private async resolveDefault(
+    query: GetDefaultModelQuery,
+    effectiveModels: Map<UUID, PermittedLanguageModel>,
+    overrideTeamIds: UUID[],
+  ): Promise<PermittedLanguageModel> {
+    const orgDefault = query.preferOrganizationDefault
+      ? await this.resolveOrgDefault(query.orgId, effectiveModels)
+      : null;
+    if (orgDefault) return orgDefault;
 
     const userDefault = await this.resolveUserDefault(
       query.userId,
@@ -59,21 +69,31 @@ export class GetDefaultModelUseCase {
     );
     if (teamDefault) return teamDefault;
 
-    const orgDefault = await this.resolveOrgDefault(
-      query.orgId,
-      effectiveModels,
-    );
-    if (orgDefault) return orgDefault;
+    if (!query.preferOrganizationDefault) {
+      const fallback = await this.resolveOrgDefault(
+        query.orgId,
+        effectiveModels,
+      );
+      if (fallback) return fallback;
+    }
 
     return [...effectiveModels.values()].sort((a, b) =>
       a.model.name.localeCompare(b.model.name),
     )[0];
   }
 
-  private indexEffectiveModels(
+  private indexEligibleModels(
     models: PermittedLanguageModel[],
+    query: GetDefaultModelQuery,
   ): Map<UUID, PermittedLanguageModel> {
-    return new Map(models.map((model) => [model.model.id, model]));
+    if (models.length === 0) throw new DefaultModelNotFoundError(query.orgId);
+    const eligible = query.excludeAnonymousOnly
+      ? models.filter((model) => !model.anonymousOnly)
+      : models;
+    if (eligible.length === 0) {
+      throw new OnlyAnonymousModelsAvailableError(query.orgId);
+    }
+    return new Map(eligible.map((model) => [model.model.id, model]));
   }
 
   private async resolveUserDefault(

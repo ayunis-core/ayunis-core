@@ -7,6 +7,7 @@ export enum ModelErrorCode {
   MODEL_NOT_FOUND = 'MODEL_NOT_FOUND',
   NO_PERMITTED_EMBEDDING_MODEL = 'NO_PERMITTED_EMBEDDING_MODEL',
   NO_DEFAULT_MODEL_FOUND = 'NO_DEFAULT_MODEL_FOUND',
+  ONLY_ANONYMOUS_MODELS_AVAILABLE = 'ONLY_ANONYMOUS_MODELS_AVAILABLE',
   MODEL_INVALID = 'MODEL_INVALID',
   MODEL_PROVIDER_NOT_SUPPORTED = 'MODEL_PROVIDER_NOT_SUPPORTED',
   INFERENCE_FAILED = 'INFERENCE_FAILED',
@@ -90,6 +91,16 @@ export class DefaultModelNotFoundError extends ModelError {
       ModelErrorCode.NO_DEFAULT_MODEL_FOUND,
       422,
       metadata,
+    );
+  }
+}
+
+export class OnlyAnonymousModelsAvailableError extends ModelError {
+  constructor(orgId: string) {
+    super(
+      `Only anonymous-only models are available for org '${orgId}'`,
+      ModelErrorCode.ONLY_ANONYMOUS_MODELS_AVAILABLE,
+      422,
     );
   }
 }
