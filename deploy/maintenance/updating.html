@@ -7,23 +7,29 @@
     <meta http-equiv="refresh" content="5" />
     <meta name="robots" content="noindex" />
     <title>Ayunis wird aktualisiert</title>
+    <script>
+      // Match the app: light unless the user chose dark (same origin, same key).
+      try {
+        if (localStorage.getItem('ayunis-theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
     <style>
       :root {
-        color-scheme: light dark;
         --bg: #ffffff;
         --fg: #0a0a0a;
         --muted: #737373;
         --ring: #e5e5e5;
         --accent: #0a0a0a;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0a0a0a;
-          --fg: #fafafa;
-          --muted: #a3a3a3;
-          --ring: #262626;
-          --accent: #fafafa;
-        }
+      :root.dark {
+        color-scheme: dark;
+        --bg: #0a0a0a;
+        --fg: #fafafa;
+        --muted: #a3a3a3;
+        --ring: #262626;
+        --accent: #fafafa;
       }
       * {
         box-sizing: border-box;
