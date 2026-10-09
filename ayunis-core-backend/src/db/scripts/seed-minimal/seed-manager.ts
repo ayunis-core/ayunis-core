@@ -21,9 +21,8 @@ export class SeedManager {
     new AcademyContentSeeder(),
   ];
 
-  // AcademyAccessSeeder runs after OrgUserSeeder: its per-chapter progress
-  // rows need both the org's users and the chapters the global seeders
-  // created.
+  // AcademyAccessSeeder runs after OrgUserSeeder: its chapter confirmations
+  // need both the org's users and the globally seeded chapters.
   private readonly orgSeeders: OrgSeeder[] = [
     new OrgUserSeeder(),
     new BillingSeeder(),

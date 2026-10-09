@@ -39,7 +39,6 @@ import { CreateChapterRequestDto } from './dto/create-chapter-request.dto';
 import { UpdateChapterRequestDto } from './dto/update-chapter-request.dto';
 import { ReorderChaptersRequestDto } from './dto/reorder-chapters-request.dto';
 import { AcademyChapterResponseDto } from './dto/academy-chapter-response.dto';
-import { SuperAdminAcademyChapterResponseDto } from './dto/super-admin-academy-chapter-response.dto';
 import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper';
 
 @ApiTags('Super Admin Academy')
@@ -68,18 +67,18 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiOkResponse({
     description: 'Successfully retrieved academy chapters',
-    type: [SuperAdminAcademyChapterResponseDto],
+    type: [AcademyChapterResponseDto],
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
-  async getChapters(): Promise<SuperAdminAcademyChapterResponseDto[]> {
+  async getChapters(): Promise<AcademyChapterResponseDto[]> {
     this.logger.log('Getting academy chapters');
     const chapters = await this.getAcademyManagementContentUseCase.execute(
       new GetAcademyManagementContentQuery(),
     );
-    return this.responseMapper.chapterToSuperAdminDtoArray(chapters);
+    return this.responseMapper.chapterToDtoArray(chapters);
   }
 
   @Post()
@@ -175,8 +174,6 @@ export class SuperAdminAcademyChaptersController {
         chapterId: id,
         title: dto.title,
         description: dto.description,
-        quizEnabled: dto.quizEnabled,
-        passThreshold: dto.passThreshold,
       }),
     );
     return this.responseMapper.chapterToDto(chapter);

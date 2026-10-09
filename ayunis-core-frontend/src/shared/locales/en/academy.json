@@ -15,53 +15,32 @@
     "letsGo": "Let's go!",
     "previous": "Previous",
     "next": "Next",
-    "finish": "Finish",
-    "startQuiz": "Start quiz",
+    "openConfirmation": "Complete chapter",
     "modulesTitle": "Modules",
     "noModules": {
       "title": "No modules yet",
       "description": "This chapter doesn't have any modules yet."
     }
   },
-  "quiz": {
-    "title": "Quiz",
-    "questionCounter": "Question {{current}} of {{total}}",
-    "submit": "Submit answers",
-    "answerAll": "Answer all questions to submit",
-    "retry": "Try again",
-    "backToAcademy": "Back to academy",
-    "passed": {
-      "title": "Chapter passed!"
-    },
-    "failed": {
-      "title": "Not quite yet"
-    },
-    "result": {
-      "score": "You scored {{correct}} of {{total}} ({{score}}%)",
-      "required": "You need {{required}} correct to pass."
-    },
-    "completed": {
-      "title": "Academy complete!",
-      "description": "You've passed every chapter. Congratulations!"
-    },
+  "confirmation": {
+    "title": "Complete chapter",
+    "description": "Confirm that you have watched all videos in this chapter.",
+    "watchedVideos": "I've watched the videos",
+    "completeChapter": "Complete chapter",
     "errors": {
-      "loadFailed": "Couldn't load the quiz.",
-      "loadFailedDescription": "Please try again.",
-      "notAvailable": "This quiz isn't available.",
-      "notAvailableDescription": "This chapter has no quiz to take right now.",
-      "invalidSubmission": "Your submission was invalid. Please try again.",
-      "submitFailed": "Couldn't submit your answers. Please try again."
+      "chapterNotFound": "The chapter could not be found.",
+      "submitFailed": "The chapter could not be completed. Please try again."
     }
   },
   "progress": {
-    "passed": "Passed",
+    "confirmed": "Completed",
     "completed": {
       "title": "Academy complete!",
-      "description": "You've passed every chapter."
+      "description": "You've completed every chapter."
     },
     "renewalDue": "Renewal due"
   },
-  "certificate": {
+  "participationConfirmation": {
     "downloadError": "The confirmation of participation could not be downloaded. Please try again.",
     "download": "Download confirmation of participation"
   },
@@ -77,7 +56,7 @@
   },
   "account": {
     "title": "EU AI Act training",
-    "lastPassed": "Last passed:",
+    "lastPassed": "Last completed:",
     "nextRenewal": "Next renewal due:",
     "expiredOn": "Expired on:",
     "notPassedDescription": "You haven't completed the EU AI Act training yet.",
@@ -86,7 +65,7 @@
       "valid": "Valid",
       "expiringSoon": "Expiring soon",
       "expired": "Expired",
-      "notPassed": "Not yet earned"
+      "notPassed": "Not yet completed"
     }
   },
   "gate": {
