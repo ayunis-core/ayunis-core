@@ -3025,6 +3025,33 @@ export interface SkillResponseDto {
   creatorName: string | null;
 }
 
+/**
+ * Which of the two texts should come back rewritten
+ */
+export type ImproveSkillTextDtoField = typeof ImproveSkillTextDtoField[keyof typeof ImproveSkillTextDtoField];
+
+
+export const ImproveSkillTextDtoField = {
+  trigger: 'trigger',
+  instructions: 'instructions',
+} as const;
+
+export interface ImproveSkillTextDto {
+  /** Which of the two texts should come back rewritten */
+  field: ImproveSkillTextDtoField;
+  /** The skill name, when it already exists */
+  name?: string;
+  /** The trigger as it currently stands in the form */
+  trigger: string;
+  /** The instructions as they currently stand in the form */
+  instructions: string;
+}
+
+export interface ImprovedSkillTextResponseDto {
+  /** The rewritten text for the requested field */
+  text: string;
+}
+
 export type CreateSkillDtoOwnerType = typeof CreateSkillDtoOwnerType[keyof typeof CreateSkillDtoOwnerType];
 
 
@@ -3847,6 +3874,470 @@ export interface AddGlobalPiiWhitelistWordsResponseDto {
   duplicates: string[];
 }
 
+export interface CreditsPerEuroResponseDto {
+  /** Number of credits per euro of token cost */
+  creditsPerEuro: number;
+}
+
+export interface SetCreditsPerEuroRequestDto {
+  /** Number of credits per euro of token cost. Must be positive. */
+  creditsPerEuro: number;
+}
+
+export interface FairUseTierLimitDto {
+  /** Maximum number of messages allowed within the window */
+  limit: number;
+  /** Sliding window duration in milliseconds */
+  windowMs: number;
+}
+
+export interface FairUseLimitsResponseDto {
+  /** Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted. */
+  zero: FairUseTierLimitDto;
+  /** Fair-use limit for low-tier (cheap) language models */
+  low: FairUseTierLimitDto;
+  /** Fair-use limit for medium-tier language models */
+  medium: FairUseTierLimitDto;
+  /** Fair-use limit for high-tier (expensive) language models */
+  high: FairUseTierLimitDto;
+  /** Fair-use limit for image generation. Single global bucket (no tiering). */
+  images: FairUseTierLimitDto;
+}
+
+/**
+ * Model tier whose fair-use limit is being updated
+ */
+export type SetFairUseLimitRequestDtoTier = typeof SetFairUseLimitRequestDtoTier[keyof typeof SetFairUseLimitRequestDtoTier];
+
+
+export const SetFairUseLimitRequestDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface SetFairUseLimitRequestDto {
+  /** Model tier whose fair-use limit is being updated */
+  tier: SetFairUseLimitRequestDtoTier;
+  /**
+     * Maximum number of messages allowed within the sliding window. Must be a positive integer.
+     * @minimum 1
+     */
+  limit: number;
+  /**
+     * Sliding window duration in milliseconds. Must be a positive integer.
+     * @minimum 1
+     */
+  windowMs: number;
+}
+
+export interface SetImageFairUseLimitRequestDto {
+  /**
+     * Maximum number of images allowed within the sliding window. Must be a positive integer.
+     * @minimum 1
+     */
+  limit: number;
+  /**
+     * Sliding window duration in milliseconds. Must be a positive integer.
+     * @minimum 1
+     */
+  windowMs: number;
+}
+
+export interface SetAppAlertRequestDto {
+  /** Whether to show the app-wide alert banner */
+  enabled: boolean;
+  /**
+     * The alert banner text. Required (non-empty) when enabled is true.
+     * @maxLength 1000
+     */
+  message: string;
+}
+
+export interface AppAlertResponseDto {
+  /** Whether the app-wide alert banner is currently shown */
+  enabled: boolean;
+  /** The alert banner text shown to all users */
+  message: string;
+}
+
+export interface UsageConfigResponseDto {
+  /** Whether the deployment is self-hosted. Determines feature availability. */
+  isSelfHosted: boolean;
+}
+
+export interface CreditUsageResponseDto {
+  /**
+     * Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.
+     * @nullable
+     */
+  monthlyCredits: number | null;
+  /** Total credits consumed in the current calendar month. */
+  creditsUsed: number;
+  /**
+     * Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.
+     * @nullable
+     */
+  creditsRemaining: number | null;
+}
+
+export interface UserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total credits consumed by this user */
+  credits: number;
+  /** Total requests for this user */
+  requests: number;
+  /**
+     * Last activity date (null if no activity)
+     * @nullable
+     */
+  lastActivity: string | null;
+  /** Whether the user is considered active */
+  isActive: boolean;
+}
+
+export interface UserUsageResponseDto {
+  /** User usage statistics */
+  data: UserUsageDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+  /** Total credits consumed across all users in the filtered period */
+  totalCredits: number;
+}
+
+export interface UsageStatsResponseDto {
+  /** Total credits consumed across all users and models in the specified period */
+  totalCredits: number;
+  /** Total number of API requests made in the specified period */
+  totalRequests: number;
+  /** Number of users who made requests within the active user threshold (last 30 days) */
+  activeUsers: number;
+  /** Total number of unique users who made requests in the specified period */
+  totalUsers: number;
+  /** List of the most frequently used model names, ordered by usage */
+  topModels: string[];
+}
+
+/**
+ * Model provider
+ */
+export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
+
+
+export const ModelDistributionDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+export interface ModelDistributionDto {
+  /** Model ID */
+  modelId: string;
+  /** Model name */
+  modelName: string;
+  /** Model display name */
+  displayName: string;
+  /** Model provider */
+  provider: ModelDistributionDtoProvider;
+  /** Total credits for this model */
+  credits: number;
+  /** Total requests for this model */
+  requests: number;
+  /** Percentage of total usage */
+  percentage: number;
+}
+
+export interface ModelDistributionResponseDto {
+  /** Model distribution statistics */
+  models: ModelDistributionDto[];
+}
+
+export interface ProviderValuesDto {
+  /** Credits for OpenAI */
+  openai?: number;
+  /** Credits for Anthropic */
+  anthropic?: number;
+  /** Credits for Mistral */
+  mistral?: number;
+  /** Credits for Ollama */
+  ollama?: number;
+  /** Credits for Synaforce */
+  synaforce?: number;
+  /** Credits for Ayunis (internal) */
+  ayunis?: number;
+}
+
+export interface ProviderTimeSeriesRowDto {
+  /** Date of the data point */
+  date: string;
+  /** Credits per provider for this date */
+  values: ProviderValuesDto;
+}
+
+export interface ProviderUsageChartResponseDto {
+  /** Aligned time series rows by date with provider credit values */
+  timeSeries: ProviderTimeSeriesRowDto[];
+}
+
+export interface TimeSeriesPointDto {
+  /** Date of the data point */
+  date: string;
+  /** Number of credits at this point */
+  credits: number;
+  /** Number of requests at this point */
+  requests: number;
+}
+
+/**
+ * Model provider
+ */
+export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
+
+
+export const ProviderUsageDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+export interface ProviderUsageDto {
+  /** Model provider */
+  provider: ProviderUsageDtoProvider;
+  /** Total credits for this provider */
+  credits: number;
+  /** Total requests for this provider */
+  requests: number;
+  /** Percentage of total usage */
+  percentage: number;
+  /** Time series data for this provider */
+  timeSeriesData: TimeSeriesPointDto[];
+}
+
+export interface ProviderUsageResponseDto {
+  /** Provider usage statistics */
+  providers: ProviderUsageDto[];
+}
+
+export interface UserCreditLimitItemDto {
+  userId: string;
+  name: string;
+  email: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed in the current calendar month */
+  creditsUsed: number;
+}
+
+export interface TeamCreditLimitItemDto {
+  teamId: string;
+  name: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed by all current team members in the current month */
+  creditsUsed: number;
+}
+
+export interface ApiKeyCreditLimitItemDto {
+  apiKeyId: string;
+  name: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed in the current calendar month */
+  creditsUsed: number;
+}
+
+export interface SetCreditLimitDto {
+  /**
+     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
+     * @minimum 0
+     */
+  monthlyCredits: number;
+}
+
+export interface UserCreditLimitResponseDto {
+  id: string;
+  monthlyCredits: number;
+  userId: string;
+}
+
+export interface TeamCreditLimitResponseDto {
+  id: string;
+  monthlyCredits: number;
+  teamId: string;
+}
+
+export interface ApiKeyCreditLimitResponseDto {
+  id: string;
+  monthlyCredits: number;
+  apiKeyId: string;
+}
+
+export interface CreateApiKeyDto {
+  /**
+     * Human-readable name for the API key
+     * @maxLength 100
+     */
+  name: string;
+  /**
+     * Optional plain-text description of what the key is used for
+     * @maxLength 500
+     */
+  description?: string;
+  /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
+  expiresAt?: string;
+}
+
+export interface UpdateApiKeyDto {
+  /**
+     * New name for the API key. Omit to keep the current name.
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Plain-text description of what the key is used for. Omit to keep it, send null or an empty string to remove it.
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+}
+
+export interface ApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /**
+     * Plain-text description of what the key is used for
+     * @nullable
+     */
+  description: string | null;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+     * Expiration date of the API key, or null if it never expires
+     * @nullable
+     */
+  expiresAt: string | null;
+  /**
+     * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
+     * @nullable
+     */
+  revokedAt: string | null;
+  /**
+     * ID of the user who created the key. May be null if that user has been deleted.
+     * @nullable
+     */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+}
+
+export interface CreateApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /**
+     * Plain-text description of what the key is used for
+     * @nullable
+     */
+  description: string | null;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+     * Expiration date of the API key, or null if it never expires
+     * @nullable
+     */
+  expiresAt: string | null;
+  /**
+     * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
+     * @nullable
+     */
+  revokedAt: string | null;
+  /**
+     * ID of the user who created the key. May be null if that user has been deleted.
+     * @nullable
+     */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+  /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
+  secret: string;
+}
+
+export interface SuperAdminTrialResponseDto {
+  /** Trial unique identifier */
+  id: string;
+  /** Organization ID associated with this trial */
+  orgId: string;
+  /**
+     * Number of messages sent in this trial
+     * @minimum 0
+     */
+  messagesSent: number;
+  /**
+     * Maximum number of messages allowed in this trial
+     * @minimum 1
+     */
+  maxMessages: number;
+  /** Date when the trial was created */
+  createdAt: string;
+  /** Date when the trial was last updated */
+  updatedAt: string;
+}
+
+export interface SuperAdminTrialResponseDtoNullable {
+  /** Trial */
+  trial?: SuperAdminTrialResponseDto;
+}
+
+export interface CreateTrialRequestDto {
+  /** Organization ID for which to create the trial */
+  orgId: string;
+  /**
+     * Maximum number of messages allowed in the trial
+     * @minimum 1
+     */
+  maxMessages: number;
+}
+
+export interface UpdateTrialRequestDto {
+  /**
+     * Maximum number of messages allowed in the trial
+     * @minimum 1
+     */
+  maxMessages?: number;
+  /**
+     * Number of messages already sent (can be used to reset or adjust)
+     * @minimum 0
+     */
+  messagesSent?: number;
+}
+
 /**
  * The distribution mode of the skill template
  */
@@ -4140,274 +4631,6 @@ export interface UpdateLetterheadDto {
   removeContinuationPage?: string;
 }
 
-export interface UsageConfigResponseDto {
-  /** Whether the deployment is self-hosted. Determines feature availability. */
-  isSelfHosted: boolean;
-}
-
-export interface CreditUsageResponseDto {
-  /**
-     * Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.
-     * @nullable
-     */
-  monthlyCredits: number | null;
-  /** Total credits consumed in the current calendar month. */
-  creditsUsed: number;
-  /**
-     * Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.
-     * @nullable
-     */
-  creditsRemaining: number | null;
-}
-
-export interface UserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total credits consumed by this user */
-  credits: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-     * Last activity date (null if no activity)
-     * @nullable
-     */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-}
-
-export interface UserUsageResponseDto {
-  /** User usage statistics */
-  data: UserUsageDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-  /** Total credits consumed across all users in the filtered period */
-  totalCredits: number;
-}
-
-export interface UsageStatsResponseDto {
-  /** Total credits consumed across all users and models in the specified period */
-  totalCredits: number;
-  /** Total number of API requests made in the specified period */
-  totalRequests: number;
-  /** Number of users who made requests within the active user threshold (last 30 days) */
-  activeUsers: number;
-  /** Total number of unique users who made requests in the specified period */
-  totalUsers: number;
-  /** List of the most frequently used model names, ordered by usage */
-  topModels: string[];
-}
-
-/**
- * Model provider
- */
-export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
-
-
-export const ModelDistributionDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ModelDistributionDto {
-  /** Model ID */
-  modelId: string;
-  /** Model name */
-  modelName: string;
-  /** Model display name */
-  displayName: string;
-  /** Model provider */
-  provider: ModelDistributionDtoProvider;
-  /** Total credits for this model */
-  credits: number;
-  /** Total requests for this model */
-  requests: number;
-  /** Percentage of total usage */
-  percentage: number;
-}
-
-export interface ModelDistributionResponseDto {
-  /** Model distribution statistics */
-  models: ModelDistributionDto[];
-}
-
-export interface ProviderValuesDto {
-  /** Credits for OpenAI */
-  openai?: number;
-  /** Credits for Anthropic */
-  anthropic?: number;
-  /** Credits for Mistral */
-  mistral?: number;
-  /** Credits for Ollama */
-  ollama?: number;
-  /** Credits for Synaforce */
-  synaforce?: number;
-  /** Credits for Ayunis (internal) */
-  ayunis?: number;
-}
-
-export interface ProviderTimeSeriesRowDto {
-  /** Date of the data point */
-  date: string;
-  /** Credits per provider for this date */
-  values: ProviderValuesDto;
-}
-
-export interface ProviderUsageChartResponseDto {
-  /** Aligned time series rows by date with provider credit values */
-  timeSeries: ProviderTimeSeriesRowDto[];
-}
-
-export interface TimeSeriesPointDto {
-  /** Date of the data point */
-  date: string;
-  /** Number of credits at this point */
-  credits: number;
-  /** Number of requests at this point */
-  requests: number;
-}
-
-/**
- * Model provider
- */
-export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
-
-
-export const ProviderUsageDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ProviderUsageDto {
-  /** Model provider */
-  provider: ProviderUsageDtoProvider;
-  /** Total credits for this provider */
-  credits: number;
-  /** Total requests for this provider */
-  requests: number;
-  /** Percentage of total usage */
-  percentage: number;
-  /** Time series data for this provider */
-  timeSeriesData: TimeSeriesPointDto[];
-}
-
-export interface ProviderUsageResponseDto {
-  /** Provider usage statistics */
-  providers: ProviderUsageDto[];
-}
-
-export interface CreditsPerEuroResponseDto {
-  /** Number of credits per euro of token cost */
-  creditsPerEuro: number;
-}
-
-export interface SetCreditsPerEuroRequestDto {
-  /** Number of credits per euro of token cost. Must be positive. */
-  creditsPerEuro: number;
-}
-
-export interface FairUseTierLimitDto {
-  /** Maximum number of messages allowed within the window */
-  limit: number;
-  /** Sliding window duration in milliseconds */
-  windowMs: number;
-}
-
-export interface FairUseLimitsResponseDto {
-  /** Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted. */
-  zero: FairUseTierLimitDto;
-  /** Fair-use limit for low-tier (cheap) language models */
-  low: FairUseTierLimitDto;
-  /** Fair-use limit for medium-tier language models */
-  medium: FairUseTierLimitDto;
-  /** Fair-use limit for high-tier (expensive) language models */
-  high: FairUseTierLimitDto;
-  /** Fair-use limit for image generation. Single global bucket (no tiering). */
-  images: FairUseTierLimitDto;
-}
-
-/**
- * Model tier whose fair-use limit is being updated
- */
-export type SetFairUseLimitRequestDtoTier = typeof SetFairUseLimitRequestDtoTier[keyof typeof SetFairUseLimitRequestDtoTier];
-
-
-export const SetFairUseLimitRequestDtoTier = {
-  zero: 'zero',
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
-} as const;
-
-export interface SetFairUseLimitRequestDto {
-  /** Model tier whose fair-use limit is being updated */
-  tier: SetFairUseLimitRequestDtoTier;
-  /**
-     * Maximum number of messages allowed within the sliding window. Must be a positive integer.
-     * @minimum 1
-     */
-  limit: number;
-  /**
-     * Sliding window duration in milliseconds. Must be a positive integer.
-     * @minimum 1
-     */
-  windowMs: number;
-}
-
-export interface SetImageFairUseLimitRequestDto {
-  /**
-     * Maximum number of images allowed within the sliding window. Must be a positive integer.
-     * @minimum 1
-     */
-  limit: number;
-  /**
-     * Sliding window duration in milliseconds. Must be a positive integer.
-     * @minimum 1
-     */
-  windowMs: number;
-}
-
-export interface SetAppAlertRequestDto {
-  /** Whether to show the app-wide alert banner */
-  enabled: boolean;
-  /**
-     * The alert banner text. Required (non-empty) when enabled is true.
-     * @maxLength 1000
-     */
-  message: string;
-}
-
-export interface AppAlertResponseDto {
-  /** Whether the app-wide alert banner is currently shown */
-  enabled: boolean;
-  /** The alert banner text shown to all users */
-  message: string;
-}
-
 /**
  * Type of the message content
  */
@@ -4649,173 +4872,6 @@ export interface SourceCitationSourceResponseDto {
 export interface SourceCitationResponseDto {
   chunk: SourceCitationChunkResponseDto;
   source: SourceCitationSourceResponseDto;
-}
-
-export interface SuperAdminTrialResponseDto {
-  /** Trial unique identifier */
-  id: string;
-  /** Organization ID associated with this trial */
-  orgId: string;
-  /**
-     * Number of messages sent in this trial
-     * @minimum 0
-     */
-  messagesSent: number;
-  /**
-     * Maximum number of messages allowed in this trial
-     * @minimum 1
-     */
-  maxMessages: number;
-  /** Date when the trial was created */
-  createdAt: string;
-  /** Date when the trial was last updated */
-  updatedAt: string;
-}
-
-export interface SuperAdminTrialResponseDtoNullable {
-  /** Trial */
-  trial?: SuperAdminTrialResponseDto;
-}
-
-export interface CreateTrialRequestDto {
-  /** Organization ID for which to create the trial */
-  orgId: string;
-  /**
-     * Maximum number of messages allowed in the trial
-     * @minimum 1
-     */
-  maxMessages: number;
-}
-
-export interface UpdateTrialRequestDto {
-  /**
-     * Maximum number of messages allowed in the trial
-     * @minimum 1
-     */
-  maxMessages?: number;
-  /**
-     * Number of messages already sent (can be used to reset or adjust)
-     * @minimum 0
-     */
-  messagesSent?: number;
-}
-
-export interface UserCreditLimitItemDto {
-  userId: string;
-  name: string;
-  email: string;
-  /** Configured monthly credit limit */
-  monthlyCredits: number;
-  /** Credits consumed in the current calendar month */
-  creditsUsed: number;
-}
-
-export interface TeamCreditLimitItemDto {
-  teamId: string;
-  name: string;
-  /** Configured monthly credit limit */
-  monthlyCredits: number;
-  /** Credits consumed by all current team members in the current month */
-  creditsUsed: number;
-}
-
-export interface ApiKeyCreditLimitItemDto {
-  apiKeyId: string;
-  name: string;
-  /** Configured monthly credit limit */
-  monthlyCredits: number;
-  /** Credits consumed in the current calendar month */
-  creditsUsed: number;
-}
-
-export interface SetCreditLimitDto {
-  /**
-     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
-     * @minimum 0
-     */
-  monthlyCredits: number;
-}
-
-export interface UserCreditLimitResponseDto {
-  id: string;
-  monthlyCredits: number;
-  userId: string;
-}
-
-export interface TeamCreditLimitResponseDto {
-  id: string;
-  monthlyCredits: number;
-  teamId: string;
-}
-
-export interface ApiKeyCreditLimitResponseDto {
-  id: string;
-  monthlyCredits: number;
-  apiKeyId: string;
-}
-
-export interface CreateApiKeyDto {
-  /**
-     * Human-readable name for the API key
-     * @maxLength 100
-     */
-  name: string;
-  /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
-  expiresAt?: string;
-}
-
-export interface ApiKeyResponseDto {
-  /** Unique identifier of the API key */
-  id: string;
-  /** Human-readable name for the API key */
-  name: string;
-  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
-  prefixPreview: string;
-  /**
-     * Expiration date of the API key, or null if it never expires
-     * @nullable
-     */
-  expiresAt: string | null;
-  /**
-     * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
-     * @nullable
-     */
-  revokedAt: string | null;
-  /**
-     * ID of the user who created the key. May be null if that user has been deleted.
-     * @nullable
-     */
-  createdByUserId: string | null;
-  /** When the key was created */
-  createdAt: string;
-}
-
-export interface CreateApiKeyResponseDto {
-  /** Unique identifier of the API key */
-  id: string;
-  /** Human-readable name for the API key */
-  name: string;
-  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
-  prefixPreview: string;
-  /**
-     * Expiration date of the API key, or null if it never expires
-     * @nullable
-     */
-  expiresAt: string | null;
-  /**
-     * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
-     * @nullable
-     */
-  revokedAt: string | null;
-  /**
-     * ID of the user who created the key. May be null if that user has been deleted.
-     * @nullable
-     */
-  createdByUserId: string | null;
-  /** When the key was created */
-  createdAt: string;
-  /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
-  secret: string;
 }
 
 export interface UserSystemPromptResponseDto {
@@ -5665,55 +5721,6 @@ export const WorkspacesControllerFindAllSort = {
   name: 'name',
 } as const;
 
-export type ArtifactsControllerFindByWorkspaceParams = {
-/**
- * Search artifacts by title
- */
-search?: string;
-/**
- * Filter by type
- */
-type?: ArtifactsControllerFindByWorkspaceType;
-/**
- * Maximum number of artifacts to return
- */
-limit?: number;
-/**
- * Number of artifacts to skip
- */
-offset?: number;
-};
-
-export type ArtifactsControllerFindByWorkspaceType = typeof ArtifactsControllerFindByWorkspaceType[keyof typeof ArtifactsControllerFindByWorkspaceType];
-
-
-export const ArtifactsControllerFindByWorkspaceType = {
-  document: 'document',
-  diagram: 'diagram',
-  spreadsheet: 'spreadsheet',
-} as const;
-
-export type ArtifactsControllerExportParams = {
-/**
- * Export format
- */
-format: ArtifactsControllerExportFormat;
-/**
- * Version number to export; defaults to the current version
- */
-versionNumber?: number;
-};
-
-export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
-
-
-export const ArtifactsControllerExportFormat = {
-  docx: 'docx',
-  pdf: 'pdf',
-  xlsx: 'xlsx',
-  csv: 'csv',
-} as const;
-
 export type UsageControllerGetUserUsageParams = {
 /**
  * Start date in ISO format
@@ -5835,6 +5842,55 @@ export type SuperAdminUsageDataControllerGetUserUsageSortOrder = typeof SuperAdm
 export const SuperAdminUsageDataControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
+} as const;
+
+export type ArtifactsControllerFindByWorkspaceParams = {
+/**
+ * Search artifacts by title
+ */
+search?: string;
+/**
+ * Filter by type
+ */
+type?: ArtifactsControllerFindByWorkspaceType;
+/**
+ * Maximum number of artifacts to return
+ */
+limit?: number;
+/**
+ * Number of artifacts to skip
+ */
+offset?: number;
+};
+
+export type ArtifactsControllerFindByWorkspaceType = typeof ArtifactsControllerFindByWorkspaceType[keyof typeof ArtifactsControllerFindByWorkspaceType];
+
+
+export const ArtifactsControllerFindByWorkspaceType = {
+  document: 'document',
+  diagram: 'diagram',
+  spreadsheet: 'spreadsheet',
+} as const;
+
+export type ArtifactsControllerExportParams = {
+/**
+ * Export format
+ */
+format: ArtifactsControllerExportFormat;
+/**
+ * Version number to export; defaults to the current version
+ */
+versionNumber?: number;
+};
+
+export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
+
+
+export const ArtifactsControllerExportFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+  xlsx: 'xlsx',
+  csv: 'csv',
 } as const;
 
 export type RunsControllerSendMessageBody = {

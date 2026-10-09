@@ -24,6 +24,7 @@
       "namePlaceholder": "z. B. CI-Bot, Produktionsserver",
       "nameRequired": "Name ist erforderlich",
       "nameTooLong": "Name muss weniger als 100 Zeichen haben",
+      "descriptionLabel": "Beschreibung (optional)",
       "expiresAtLabel": "Ablaufdatum",
       "expiresAtPlaceholder": "Datum wählen",
       "expiresAtClear": "Ablaufdatum löschen",
@@ -32,6 +33,25 @@
       "cancel": "Abbrechen",
       "create": "Schlüssel erstellen",
       "creating": "Wird erstellt..."
+    },
+    "editDialog": {
+      "menuItem": "Bearbeiten",
+      "title": "API-Schlüssel bearbeiten",
+      "description": "Name und Beschreibung ändern. Der Schlüssel selbst bleibt gleich, Anwendungen müssen nichts anpassen.",
+      "nameLabel": "Name",
+      "nameRequired": "Name ist erforderlich",
+      "nameTooLong": "Name muss kürzer als 100 Zeichen sein",
+      "descriptionLabel": "Beschreibung (optional)",
+      "descriptionPlaceholder": "Wofür wird der Schlüssel genutzt? Zum Beispiel Anwendung und zuständige Stelle.",
+      "descriptionHelper": "Bitte die zuständige Stelle statt Namen von Personen eintragen. {{count}}/{{max}}",
+      "descriptionTooLong": "Beschreibung darf höchstens 500 Zeichen lang sein",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "success": "API-Schlüssel aktualisiert",
+      "error": "API-Schlüssel konnte nicht aktualisiert werden",
+      "notEditable": "Widerrufene oder abgelaufene API-Schlüssel können nicht bearbeitet werden",
+      "notFound": "API-Schlüssel nicht gefunden"
     },
     "revealDialog": {
       "title": "Ihr neuer API-Schlüssel",
@@ -102,7 +122,12 @@
         "isDate": "Ungültiges Ablaufdatum",
         "invalid": "Ungültiges Ablaufdatum"
       },
-      "invalid": "Ungültige Eingabe"
+      "invalid": "Ungültige Eingabe",
+      "description": {
+        "isString": "Ungültige Beschreibung",
+        "maxLength": "Beschreibung darf höchstens 500 Zeichen lang sein",
+        "invalid": "Ungültige Beschreibung"
+      }
     }
   }
 }

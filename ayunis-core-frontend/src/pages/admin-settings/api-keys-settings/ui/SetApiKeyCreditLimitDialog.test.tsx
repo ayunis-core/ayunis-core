@@ -25,6 +25,7 @@ vi.mock('../api/useRemoveApiKeyCreditLimit', () => ({
 const apiKey = {
   id: '11111111-1111-1111-1111-111111111111',
   name: 'Finance export',
+  description: null,
   prefixPreview: 'ayk_live_abc...',
   expiresAt: null,
   revokedAt: null,

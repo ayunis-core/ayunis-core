@@ -10,7 +10,7 @@ import type { CreateApiKeyResponseDto } from '@/shared/api/generated/ayunisCoreA
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import type { CreateApiKeyFormValues } from '../model/createApiKeyFormSchema';
+import type { CreateApiKeyFormValues } from '@/pages/admin-settings/api-keys-settings/model/createApiKeyFormSchema';
 
 export function useCreateApiKey(
   form: UseFormReturn<CreateApiKeyFormValues>,
@@ -51,10 +51,17 @@ export function useCreateApiKey(
     },
   });
 
-  function createApiKey(data: { name: string; expiresAt?: string }) {
+  function createApiKey(data: {
+    name: string;
+    description?: string;
+    expiresAt?: string;
+  }) {
     mutation.mutate({
       data: {
         name: data.name.trim(),
+        ...(data.description?.trim()
+          ? { description: data.description.trim() }
+          : {}),
         ...(data.expiresAt ? { expiresAt: data.expiresAt } : {}),
       },
     });
