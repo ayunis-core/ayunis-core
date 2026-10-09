@@ -1,3 +1,9 @@
-export const RUN_EXECUTION_PATHS = ['legacy', 'agent_runtime'] as const;
+import {
+  RUN_USAGE_EXECUTION_PATHS,
+  type RunUsageExecutionPath,
+} from 'src/domain/usage/application/events/run-usage-collection.event';
 
-export type RunExecutionPath = (typeof RUN_EXECUTION_PATHS)[number];
+// Usage owns the execution-path vocabulary because it records it; runs only
+// names it for its own events and telemetry.
+export const RUN_EXECUTION_PATHS = RUN_USAGE_EXECUTION_PATHS;
+export type RunExecutionPath = RunUsageExecutionPath;
