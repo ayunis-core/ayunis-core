@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { AxiosError, AxiosHeaders } from 'axios';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPage } from '@/pages/auth/login/ui/LoginPage';
@@ -267,6 +268,20 @@ describe(LoginPage.name, () => {
     expect(screen.getByTestId('password')).toBeTruthy();
   });
 
+  it('explains when sign-in option discovery is temporarily unavailable', async () => {
+    discover.mockRejectedValue(serviceUnavailableError());
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByTestId('email'), {
+      target: { value: 'local@example.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'login.continue' }));
+
+    await waitFor(() => {
+      expect(showError).toHaveBeenCalledWith('serviceUnavailable');
+    });
+  });
+
   it('preserves password login after email discovery', async () => {
     const passwordValue = ['Local', 'Password', '01!'].join('');
     discover.mockResolvedValue({ available: false });
@@ -315,3 +330,13 @@ describe(LoginPage.name, () => {
     expect(screen.getByTestId('email').hasAttribute('readonly')).toBe(true);
   });
 });
+
+function serviceUnavailableError(): AxiosError {
+  return new AxiosError('Request failed', undefined, undefined, undefined, {
+    data: { code: 'SERVICE_UNAVAILABLE' },
+    status: 503,
+    statusText: 'Service Unavailable',
+    headers: {},
+    config: { headers: new AxiosHeaders() },
+  });
+}

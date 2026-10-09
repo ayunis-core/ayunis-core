@@ -39,7 +39,9 @@ export class CompleteMfaLoginUseCase {
     private readonly login: LoginUseCase,
   ) {}
 
-  @HandleUnexpectedErrors(UnexpectedAuthenticationError)
+  @HandleUnexpectedErrors(UnexpectedAuthenticationError, {
+    databaseUnavailable: 'includingExpectedErrors',
+  })
   async execute(
     command: CompleteMfaLoginCommand,
   ): Promise<CompleteMfaLoginResult> {

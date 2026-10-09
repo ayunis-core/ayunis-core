@@ -12,6 +12,7 @@ import {
 } from 'src/iam/sso/application/sso.errors';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 
 jest.mock('src/common/errors/report-unexpected-error.helper', () => ({
   reportUnexpectedError: jest.fn(),
@@ -107,6 +108,17 @@ describe(SsoLoginController.name, () => {
       'Cache-Control',
       'no-store',
     );
+  });
+
+  it('redirects a database outage during SSO start to the service-unavailable page', async () => {
+    start.execute.mockRejectedValue(
+      new ServiceUnavailableError(new Error('database unavailable')),
+    );
+
+    await expect(controller.start(SSO_TEST_ORG_ID, response)).resolves.toEqual({
+      url: 'http://localhost:3001/sso/error?code=SERVICE_UNAVAILABLE',
+      statusCode: 302,
+    });
   });
 
   it('reports unexpected start failures before redirecting', async () => {
@@ -286,6 +298,21 @@ describe(SsoLoginController.name, () => {
       statusCode: 302,
     });
     expect(reportUnexpectedError).toHaveBeenCalledWith(error);
+  });
+
+  it('redirects a database outage during the callback to the service-unavailable page', async () => {
+    completeAuthentication.execute.mockRejectedValue(
+      new ServiceUnavailableError(new Error('database unavailable')),
+    );
+    const request = {
+      originalUrl: '/api/auth/sso/oidc/callback?state=state',
+      cookies: { ayunis_sso_login: 'browser-binding' },
+    } as unknown as Request;
+
+    await expect(controller.callback(request, response)).resolves.toEqual({
+      url: 'http://localhost:3001/sso/error?code=SERVICE_UNAVAILABLE',
+      statusCode: 302,
+    });
   });
 
   it('passes the signed broker logout token to the back-channel boundary', async () => {

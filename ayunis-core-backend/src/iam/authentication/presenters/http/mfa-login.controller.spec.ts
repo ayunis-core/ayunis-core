@@ -12,6 +12,7 @@ import { LocalPasswordLoginDisabledError } from 'src/iam/authentication/applicat
 import type { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
 import type { CompleteMfaLoginUseCase } from 'src/iam/authentication/application/use-cases/complete-mfa-login/complete-mfa-login.use-case';
 import { InvalidMfaCodeError } from 'src/iam/mfa/application/mfa.errors';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 
 describe(MfaLoginController.name, () => {
   const userId = 'f532bbf9-1f0a-4a8d-b08b-4f2e8da09a7e' as UUID;
@@ -141,5 +142,32 @@ describe(MfaLoginController.name, () => {
     ).rejects.toBeInstanceOf(InvalidMfaCodeError);
 
     expect(response.clearCookie).not.toHaveBeenCalled();
+  });
+
+  it('keeps forced enrollment retryable during a database outage', async () => {
+    pendingTokens.verify.mockReturnValue({
+      sub: userId,
+      type: 'mfa_pending',
+      enrollmentRequired: true,
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      zitadelSessionId: null,
+    });
+    const serviceUnavailable = new ServiceUnavailableError(
+      Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+    localPasswordLoginPolicy.assertAllowedForUser.mockRejectedValue(
+      serviceUnavailable,
+    );
+    const request = {
+      cookies: { mfa_pending_token: 'retryable-enrollment' },
+    } as unknown as Request;
+
+    await expect(controller.setup(request, response)).rejects.toBe(
+      serviceUnavailable,
+    );
+    expect(response.clearCookie).not.toHaveBeenCalled();
+    expect(setupTotp.execute).not.toHaveBeenCalled();
   });
 });

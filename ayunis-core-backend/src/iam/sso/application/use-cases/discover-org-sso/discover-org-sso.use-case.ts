@@ -22,7 +22,7 @@ export class DiscoverOrgSsoUseCase {
 
   constructor(private readonly connections: OrgSsoConnectionsRepository) {}
 
-  @HandleUnexpectedErrors(UnexpectedSsoError)
+  @HandleUnexpectedErrors(UnexpectedSsoError, { databaseUnavailable: true })
   async execute(query: DiscoverOrgSsoQuery): Promise<SsoDiscoveryResult> {
     this.logger.log('Discovering organization SSO connection');
     const domain = this.emailDomain(query.email);

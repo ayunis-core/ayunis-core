@@ -85,4 +85,28 @@ describe(StartOrgSsoLoginUseCase.name, () => {
       useCase.execute(new StartOrgSsoLoginCommand(SSO_TEST_ORG_ID)),
     ).rejects.toMatchObject({ code: 'SSO_CONNECTION_NOT_AVAILABLE' });
   });
+
+  it('returns service unavailable when the connection lookup cannot reach PostgreSQL', async () => {
+    const repository = createMockOrgSsoConnectionsRepository();
+    repository.findByOrgId.mockRejectedValue(
+      Object.assign(new Error('not yet accepting connections'), {
+        code: '57P03',
+      }),
+    );
+    const useCase = new StartOrgSsoLoginUseCase(
+      repository,
+      new SsoAuthorizationTransactionService(
+        { save: jest.fn(), consume: jest.fn(), deleteExpired: jest.fn() },
+        { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
+        { encrypt: jest.fn(), decrypt: jest.fn() },
+      ),
+    );
+
+    await expect(
+      useCase.execute(new StartOrgSsoLoginCommand(SSO_TEST_ORG_ID)),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
 });

@@ -3,10 +3,10 @@ import { UsersRepository } from 'src/iam/users/application/ports/users.repositor
 import { FindUserByIdQuery } from './find-user-by-id.query';
 import { User } from 'src/iam/users/domain/user.entity';
 import {
-  UserError,
   UserNotFoundError,
   UserUnexpectedError,
 } from 'src/iam/users/application/users.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class FindUserByIdUseCase {
@@ -14,19 +14,13 @@ export class FindUserByIdUseCase {
 
   constructor(private readonly usersRepository: UsersRepository) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError, { databaseUnavailable: true })
   async execute(query: FindUserByIdQuery): Promise<User> {
     this.logger.log({ id: query.id }, 'findOneById');
-    try {
-      const user = await this.usersRepository.findOneById(query.id);
-      if (!user) {
-        throw new UserNotFoundError(query.id);
-      }
-      return user;
-    } catch (error) {
-      if (error instanceof UserError) {
-        throw error;
-      }
-      throw new UserUnexpectedError(error as Error);
+    const user = await this.usersRepository.findOneById(query.id);
+    if (!user) {
+      throw new UserNotFoundError(query.id);
     }
+    return user;
   }
 }

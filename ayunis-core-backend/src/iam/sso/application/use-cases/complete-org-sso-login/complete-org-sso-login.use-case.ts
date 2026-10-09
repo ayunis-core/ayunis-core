@@ -37,7 +37,7 @@ export class CompleteOrgSsoLoginUseCase {
     private readonly connections: OrgSsoConnectionsRepository,
   ) {}
 
-  @HandleUnexpectedErrors(UnexpectedSsoError)
+  @HandleUnexpectedErrors(UnexpectedSsoError, { databaseUnavailable: true })
   async execute(
     command: CompleteOrgSsoLoginCommand,
   ): Promise<CompletedOrgSsoLogin> {
