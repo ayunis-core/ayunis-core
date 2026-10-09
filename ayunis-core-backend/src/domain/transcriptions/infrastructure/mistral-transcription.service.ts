@@ -22,6 +22,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('models.mistral.apiKey'),
+      server: 'eu',
       timeoutMs: 30_000,
     });
     this.model = this.configService.get<string>(
