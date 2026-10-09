@@ -34,6 +34,10 @@ elif [[ "$*" == 'images --filter reference=ghcr.io/ayunis-core/ayunis-core-* --f
     "ghcr.io/ayunis-core/ayunis-core-python-sandbox:${CORE_TAG}"
 elif [[ "$*" == 'compose pull app code-execution anonymize' ]]; then
   exit "${FAKE_COMPOSE_PULL_EXIT:-0}"
+elif [[ "$*" == 'compose up -d --no-build' ]]; then
+  exit "${FAKE_COMPOSE_UP_EXIT:-0}"
+elif [[ "$*" == 'compose ps app --format json' ]]; then
+  printf '%s\n' '{"Status":"Up 1 second (healthy)"}'
 elif [[ "$1" == 'pull' ]]; then
   exit "${FAKE_SANDBOX_PULL_EXIT:-0}"
 fi
@@ -48,7 +52,13 @@ EOF
 
 cat > "$FAKE_BIN/timeout" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
 printf 'timeout %s\n' "$*" >> "$FAKE_DOCKER_LOG"
+if [[ "${FAKE_HEALTH_EXIT:-0}" -ne 0 ]]; then
+  exit "$FAKE_HEALTH_EXIT"
+fi
+shift
+"$@"
 EOF
 
 chmod +x "$FAKE_BIN/docker" "$FAKE_BIN/df" "$FAKE_BIN/timeout"
@@ -65,8 +75,8 @@ assert_log_order() {
   local after="$2"
   local before_line
   local after_line
-  before_line=$(grep -nF "$before" "$DOCKER_LOG" | head -1 | cut -d: -f1)
-  after_line=$(grep -nF "$after" "$DOCKER_LOG" | head -1 | cut -d: -f1)
+  before_line=$(grep -nF "$before" "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
+  after_line=$(grep -nF "$after" "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
   if [[ -z "$before_line" || -z "$after_line" || "$before_line" -ge "$after_line" ]]; then
     fail "Expected '$before' before '$after'."
   fi
@@ -81,7 +91,9 @@ run_deploy() {
     FAKE_COMPOSE_FILE_LOG="$COMPOSE_FILE_LOG" \
     FAKE_FREE_GB="${FAKE_FREE_GB:-20}" \
     FAKE_COMPOSE_PULL_EXIT="${FAKE_COMPOSE_PULL_EXIT:-0}" \
+    FAKE_COMPOSE_UP_EXIT="${FAKE_COMPOSE_UP_EXIT:-0}" \
     FAKE_SANDBOX_PULL_EXIT="${FAKE_SANDBOX_PULL_EXIT:-0}" \
+    FAKE_HEALTH_EXIT="${FAKE_HEALTH_EXIT:-0}" \
     bash "$DEPLOY_SCRIPT"
 }
 
@@ -89,9 +101,11 @@ run_deploy() {
 COMPOSE_FILE=unexpected-compose.yml run_deploy
 
 assert_log_order 'builder prune -af' 'compose pull app code-execution anonymize'
-assert_log_order 'compose pull app code-execution anonymize' 'compose down'
-assert_log_order 'compose down' 'compose up -d --no-build'
+assert_log_order 'compose pull app code-execution anonymize' 'compose up -d --no-build'
 assert_log_order 'compose up -d --no-build' 'timeout 120 bash -c'
+if grep -Fq 'compose down' "$DOCKER_LOG"; then
+  fail "Expected successful deploys to leave unchanged services running."
+fi
 if [[ "$(cat "$COMPOSE_FILE_LOG")" != 'docker-compose.yml:compose.release.yml' ]]; then
   fail "Expected the deploy script to force the release compose files."
 fi
@@ -121,8 +135,8 @@ set -e
 if [[ $status -eq 0 || "$output" != *'only 5G free, need 9G'* ]]; then
   fail "Expected low disk space to abort with a clear error."
 fi
-if grep -Eq '^compose (pull|down)' "$DOCKER_LOG"; then
-  fail "Expected low disk space to abort before pull and shutdown."
+if grep -Eq '^compose (pull|down|up)' "$DOCKER_LOG"; then
+  fail "Expected low disk space to abort before pull and replacement."
 fi
 
 : > "$DOCKER_LOG"
@@ -133,7 +147,7 @@ set -e
 if [[ $status -eq 0 || "$output" != *'image pull failed'* ]]; then
   fail "Expected a failed compose pull to abort the deploy."
 fi
-if grep -Fq 'compose down' "$DOCKER_LOG"; then
+if grep -Eq '^compose (down|up)' "$DOCKER_LOG"; then
   fail "Expected a failed compose pull to preserve the running containers."
 fi
 if ! grep -F 'rmi ' "$DOCKER_LOG" | tr ' ' '\n' | grep -Fxq 'ghcr.io/ayunis-core/ayunis-core-app:v1.2.3'; then
@@ -148,8 +162,38 @@ set -e
 if [[ $status -eq 0 || "$output" != *'sandbox image pull failed'* ]]; then
   fail "Expected a failed sandbox pull to abort the deploy."
 fi
-if grep -Fq 'compose down' "$DOCKER_LOG"; then
+if grep -Eq '^compose (down|up)' "$DOCKER_LOG"; then
   fail "Expected a failed sandbox pull to preserve the running containers."
+fi
+
+: > "$DOCKER_LOG"
+set +e
+FAKE_COMPOSE_UP_EXIT=1 run_deploy >/dev/null 2>&1
+status=$?
+set -e
+if [[ $status -eq 0 ]]; then
+  fail "Expected a failed compose replacement to abort the deploy."
+fi
+if grep -Fq 'timeout 120 bash -c' "$DOCKER_LOG"; then
+  fail "Expected a failed compose replacement to abort before the health check."
+fi
+if grep -F 'rmi ' "$DOCKER_LOG" | grep -Fq 'ghcr.io/ayunis-core/ayunis-core-python-sandbox:v-old'; then
+  fail "Expected a failed compose replacement to preserve the old sandbox image."
+fi
+
+: > "$DOCKER_LOG"
+set +e
+FAKE_HEALTH_EXIT=1 run_deploy >/dev/null 2>&1
+status=$?
+set -e
+if [[ $status -eq 0 ]]; then
+  fail "Expected a failed application health check to abort the deploy."
+fi
+if grep -Fxq 'compose ps' "$DOCKER_LOG"; then
+  fail "Expected a failed application health check to abort before reporting success."
+fi
+if grep -F 'rmi ' "$DOCKER_LOG" | grep -Fq 'ghcr.io/ayunis-core/ayunis-core-python-sandbox:v-old'; then
+  fail "Expected a failed application health check to preserve the old sandbox image."
 fi
 
 workflow_expectations=(

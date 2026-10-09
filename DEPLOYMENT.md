@@ -30,6 +30,19 @@ This guide covers deploying Ayunis Core to production and managing configuration
 > The steps below still describe a from-source deployment, which is the path
 > for self-hosters building their own images.
 
+The managed deployment script pulls every required image before changing the
+running stack, then lets Compose recreate only services whose image or
+configuration changed. This keeps unchanged dependencies running and retains
+Redis-backed queue state. The application, code-execution, and anonymization
+services still have a brief interruption while their single containers are
+replaced, so active requests, executions, or analyses may be interrupted. This
+is not a zero-downtime rollout. Changes that retire services, modify project
+networks, or require every dependency to be recreated must use an explicitly
+planned maintenance deployment rather than the routine selective replacement
+path. Changing a dependency's image or configuration is also a maintenance
+operation: restart its dependent services so they reconnect to the replacement
+instead of relying on client-specific connection recovery.
+
 ### Prerequisites
 
 - Node.js 24 or higher
