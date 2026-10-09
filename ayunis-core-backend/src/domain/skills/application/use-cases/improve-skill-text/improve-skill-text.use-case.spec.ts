@@ -1,4 +1,8 @@
 import { Test } from '@nestjs/testing';
+import {
+  aUserContext,
+  getFromUserContext,
+} from 'src/common/context/testing/context.fixtures';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -42,7 +46,9 @@ describe('ImproveSkillTextUseCase', () => {
     };
   }
 
-  async function setup(values: Record<string, unknown> = { userId, orgId }) {
+  async function setup(
+    values: Record<string, unknown> = { ...aUserContext({ userId, orgId }) },
+  ) {
     getInference = {
       execute: jest
         .fn()
@@ -327,7 +333,7 @@ describe('ImproveSkillTextUseCase trial accounting', () => {
         },
         {
           provide: ContextService,
-          useValue: { get: (key: string) => ({ userId, orgId })[key] },
+          useValue: { get: getFromUserContext({ userId, orgId }) },
         },
       ],
     }).compile();
@@ -426,7 +432,7 @@ describe('ImproveSkillTextUseCase with real inference accounting', () => {
         },
         {
           provide: ContextService,
-          useValue: { get: (key: string) => ({ userId, orgId })[key] },
+          useValue: { get: getFromUserContext({ userId, orgId }) },
         },
         {
           provide: InferenceHandlerRegistry,

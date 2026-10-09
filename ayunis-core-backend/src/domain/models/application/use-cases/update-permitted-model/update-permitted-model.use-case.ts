@@ -9,7 +9,7 @@ import {
 } from 'src/domain/models/domain/permitted-model.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserPrincipal } from 'src/common/context/required-context';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -53,7 +53,7 @@ export class UpdatePermittedModelUseCase {
   }
 
   private assertAuthorized(command: UpdatePermittedModelCommand): void {
-    const principal = getRequiredUserPrincipal(this.contextService);
+    const principal = getRequiredUserContext(this.contextService);
     const isOrgAdmin =
       principal.role === UserRole.ADMIN && principal.orgId === command.orgId;
     const isSuperAdmin = principal.systemRole === SystemRole.SUPER_ADMIN;

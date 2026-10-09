@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { Logger } from '@nestjs/common';
@@ -26,7 +27,7 @@ import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-b
 function setup(scope: 'personal' | 'workspace' = 'personal') {
   const userId = randomUUID(),
     orgId = randomUUID();
-  const principal = { userId, orgId };
+  const principal = aUserContext({ userId, orgId });
   const context = {
     get: (key: keyof typeof principal) => principal[key],
   } as unknown as ContextService;

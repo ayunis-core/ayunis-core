@@ -5,7 +5,7 @@ import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { UnauthorizedInviteAccessError } from 'src/iam/invites/application/invites.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getUserPrincipal } from 'src/common/context/required-context';
+import { getUserContext } from 'src/common/context/required-context';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -32,7 +32,7 @@ export class GetInvitesByOrgUseCase {
         'execute',
       );
 
-      const principal = getUserPrincipal(this.contextService);
+      const principal = getUserContext(this.contextService);
       const isSuperAdmin = principal?.systemRole === SystemRole.SUPER_ADMIN;
       const isOrgAdmin =
         principal?.role === UserRole.ADMIN && principal.orgId === query.orgId;

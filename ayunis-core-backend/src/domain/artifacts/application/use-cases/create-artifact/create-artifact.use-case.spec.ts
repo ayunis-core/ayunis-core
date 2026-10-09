@@ -8,6 +8,7 @@ import {
   createLoggerMock,
   type LoggerMock,
 } from 'src/common/testing/logger.mock';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -58,11 +59,9 @@ describe('CreateArtifactUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockFindThreadUseCase = {

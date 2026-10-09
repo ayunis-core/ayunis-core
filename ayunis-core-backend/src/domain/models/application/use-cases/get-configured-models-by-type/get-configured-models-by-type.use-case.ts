@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserPrincipal } from 'src/common/context/required-context';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
@@ -23,7 +23,7 @@ export class GetConfiguredModelsByTypeUseCase {
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(query: GetConfiguredModelsByTypeQuery): Promise<Model[]> {
-    const { role, systemRole } = getRequiredUserPrincipal(this.contextService);
+    const { role, systemRole } = getRequiredUserContext(this.contextService);
     if (role !== UserRole.ADMIN && systemRole !== SystemRole.SUPER_ADMIN) {
       throw new UnauthorizedAccessError();
     }

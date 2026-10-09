@@ -18,11 +18,11 @@ const loggerMetadataFirst = {
 
 // Roles only exist on user-backed requests; reading them straight from the
 // request context skips the check that the caller is a user at all.
-const roleReadsThroughUserPrincipal = {
+const roleReadsThroughUserContext = {
   selector:
     "CallExpression[callee.property.name='get'][arguments.0.value=/^(role|systemRole)$/]",
   message:
-    'Read roles via getUserPrincipal / getRequiredUserPrincipal / isSuperAdmin from src/common/context/required-context.',
+    'Read roles via getUserContext / getRequiredUserContext / isSuperAdmin from src/common/context/required-context.',
 };
 
 export default tseslint.config(
@@ -178,7 +178,7 @@ export default tseslint.config(
       'no-restricted-syntax': [
         'error',
         loggerMetadataFirst,
-        roleReadsThroughUserPrincipal,
+        roleReadsThroughUserContext,
       ],
     },
   },

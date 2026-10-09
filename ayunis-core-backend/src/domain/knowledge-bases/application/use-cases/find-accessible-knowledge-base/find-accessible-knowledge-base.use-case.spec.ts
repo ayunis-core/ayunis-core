@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
@@ -14,7 +15,7 @@ const ORG_ID = '22222222-2222-2222-2222-222222222222' as UUID;
 async function setup() {
   const repository = { findById: jest.fn() };
   const readAccess = { requireRead: jest.fn() };
-  const principal = { userId: USER_ID, orgId: ORG_ID };
+  const principal = aUserContext({ userId: USER_ID, orgId: ORG_ID });
   const context = {
     get: jest.fn((key: keyof typeof principal) => principal[key]),
   };

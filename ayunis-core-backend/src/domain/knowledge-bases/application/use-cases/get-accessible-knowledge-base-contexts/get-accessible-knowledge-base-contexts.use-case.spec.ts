@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import type { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
@@ -30,7 +31,7 @@ describe(GetAccessibleKnowledgeBaseContextsUseCase.name, () => {
       countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     };
     const readAccess = { requireRead: jest.fn() };
-    const principal = { userId, orgId };
+    const principal = aUserContext({ userId, orgId });
     const context = {
       get: jest.fn((key: keyof typeof principal) => principal[key]),
     };

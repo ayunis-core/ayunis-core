@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FavoritesRepository } from 'src/domain/favorites/application/ports/favorites-repository.port';
@@ -62,6 +63,6 @@ function createRepository(
 
 function createContextService(): jest.Mocked<ContextService> {
   return {
-    get: jest.fn((key: string) => ({ userId: USER_ID, orgId: ORG_ID })[key]),
+    get: jest.fn(getFromUserContext({ userId: USER_ID, orgId: ORG_ID })),
   } as unknown as jest.Mocked<ContextService>;
 }

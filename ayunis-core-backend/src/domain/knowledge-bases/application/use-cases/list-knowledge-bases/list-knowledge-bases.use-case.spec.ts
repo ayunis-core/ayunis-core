@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -30,7 +31,7 @@ async function setup() {
   };
   const findShares = { execute: jest.fn().mockResolvedValue([]) };
   const findSkillSharedIds = { execute: jest.fn().mockResolvedValue([]) };
-  const principal = { userId: USER_ID, orgId: ORG_ID };
+  const principal = aUserContext({ userId: USER_ID, orgId: ORG_ID });
   const context = {
     get: jest.fn((key: keyof typeof principal) => principal[key]),
   };
