@@ -122,6 +122,10 @@
   },
   "common": {
     "loading": "Loading...",
+    "pagePending": {
+      "title": "Loading page…",
+      "description": "This may take a moment."
+    },
     "helpLink": "Help",
     "pagination": {
       "previous": "Previous",
