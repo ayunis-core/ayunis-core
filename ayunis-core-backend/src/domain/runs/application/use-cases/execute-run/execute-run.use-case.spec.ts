@@ -49,7 +49,8 @@ import {
   AnonymizationInputTooLongError,
 } from 'src/common/anonymization/application/anonymization.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
-import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
+import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
@@ -201,12 +202,14 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const effectiveRunModelResolver = {
     resolve: resolveModelAccess,
   } as unknown as EffectiveRunModelResolverService;
-  const inferenceUsageGuard = {
+  const inferenceAdmissionGuard = {
     preflight: jest.fn().mockResolvedValue(undefined),
     ensureModelCallAllowed: jest.fn().mockResolvedValue(undefined),
-    collectUsage: jest.fn(),
-    collectUsageCritical: jest.fn().mockResolvedValue(undefined),
-  } as unknown as jest.Mocked<InferenceUsageGuard>;
+  } as unknown as jest.Mocked<InferenceAdmissionGuard>;
+  const collectUsageAsyncService = {
+    collect: jest.fn(),
+    collectCritical: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<CollectUsageAsyncService>;
   const initialRunContext = {
     tools: overrides.backendTools ?? [],
     instructions: 'system prompt',
@@ -348,9 +351,11 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     { execute: flushToolResult } as never,
     addMessageToThreadUseCase,
   );
-  const collectUsage = inferenceUsageGuard.collectUsageCritical as jest.Mock;
-  const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
-  const creditGateHookFactory = new CreditGateHookFactory(inferenceUsageGuard);
+  const collectUsage = collectUsageAsyncService.collectCritical as jest.Mock;
+  const usageHookFactory = new UsageHookFactory(collectUsageAsyncService);
+  const creditGateHookFactory = new CreditGateHookFactory(
+    inferenceAdmissionGuard,
+  );
   const toolUsageHookFactory = new ToolUsageHookFactory(eventEmitter);
   const toolResultCollector = overrides.toolResultCollector ?? {
     collectToolResults: jest
@@ -369,7 +374,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     contextService,
     findThreadUseCase,
     effectiveRunModelResolver,
-    inferenceUsageGuard,
+    inferenceAdmissionGuard,
     toolAssemblyService,
     backendToolAdapter,
     skillActivationService,
@@ -399,7 +404,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     save,
     collectUsage,
     ensureModelCallAllowed:
-      inferenceUsageGuard.ensureModelCallAllowed as jest.Mock,
+      inferenceAdmissionGuard.ensureModelCallAllowed as jest.Mock,
     cleanup,
     createToolResult: flushToolResult,
     createSeedToolResult: createToolResult,
@@ -505,7 +510,8 @@ describe('ExecuteRunUseCase', () => {
     expect(savedMessage.id).toBe(assistant!.id);
     expect(collectUsage).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ inputTokens: expect.any(Number) }),
+      expect.any(Number),
+      expect.any(Number),
       expect.any(String),
       'agent_runtime',
     );
@@ -789,7 +795,8 @@ describe('ExecuteRunUseCase', () => {
     expect(createToolResult).toHaveBeenCalledTimes(1);
     expect(collectUsage).toHaveBeenCalledWith(
       childModel,
-      { inputTokens: 7, outputTokens: 2 },
+      7,
+      2,
       expect.any(String),
       'agent_runtime',
     );
@@ -816,7 +823,7 @@ describe('ExecuteRunUseCase', () => {
     expect(
       collectUsage.mock.calls.find(
         ([usedModel]) => usedModel === childModel,
-      )?.[2],
+      )?.[3],
     ).toBe(childCompletion?.modelCallId);
     expect(new Set(completions.map((event) => event.modelCallId)).size).toBe(
       completions.length,
@@ -905,7 +912,8 @@ describe('ExecuteRunUseCase', () => {
     expect(collectUsage).toHaveBeenCalledTimes(1);
     expect(collectUsage).toHaveBeenCalledWith(
       expect.anything(),
-      { inputTokens: 17, outputTokens: 0 },
+      17,
+      0,
       expect.any(String),
       'agent_runtime',
     );
@@ -927,7 +935,8 @@ describe('ExecuteRunUseCase', () => {
     expect(collectUsage).toHaveBeenCalledTimes(1);
     expect(collectUsage).toHaveBeenCalledWith(
       expect.anything(),
-      { inputTokens: 23, outputTokens: 5 },
+      23,
+      5,
       expect.any(String),
       'agent_runtime',
     );

@@ -29,15 +29,10 @@ import { ArtifactToolAssemblerService } from './application/services/artifact-to
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
-import { ApiKeyCreditLimitGuardService } from './application/services/api-key-credit-limit-guard.service';
-import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
-import { CreditLimitGuardService } from './application/services/credit-limit-guard.service';
-import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
 import { EffectiveRunModelResolverService } from './application/services/effective-run-model-resolver.service';
 import { UnmaskedTermsService } from './application/services/unmasked-terms.service';
 
-import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
@@ -45,7 +40,6 @@ import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/a
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
-import { CreditLimitsModule } from 'src/iam/credit-limits/credit-limits.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
@@ -63,7 +57,6 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ThreadsModule,
     MessagesModule,
     ToolsModule,
-    SubscriptionsModule,
     TrialsModule,
     McpModule,
     SourcesModule,
@@ -71,7 +64,6 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ThreadPiiMasksModule,
     UsageModule,
     QuotasModule,
-    CreditLimitsModule,
     SkillsModule,
     SkillTemplatesModule,
     ChatSettingsModule,
@@ -112,18 +104,10 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     McpToolAssemblerService,
     ToolResultCollectorService,
     MessageCleanupService,
-    CreditBudgetGuardService,
-    CreditLimitGuardService,
-    ApiKeyCreditLimitGuardService,
-    InferenceUsageGuard,
     RunTelemetryService,
     EffectiveRunModelResolverService,
     UnmaskedTermsService,
   ],
-  exports: [
-    ExecuteRunUseCase,
-    ExecuteRunAndSetTitleUseCase,
-    InferenceUsageGuard,
-  ],
+  exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
 export class RunsModule {}

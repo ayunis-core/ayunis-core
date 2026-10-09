@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { ModelsModule } from 'src/domain/models/models.module';
-import { RunsModule } from 'src/domain/runs/runs.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { AuthorizationModule } from 'src/iam/authorization/authorization.module';
 import { ChatCompletionsController } from './presenters/http/chat-completions.controller';
 import { ModelsController } from './presenters/http/models.controller';
@@ -23,8 +24,9 @@ import { OpenAIFileContentService } from './application/services/openai-file-con
     // Required to consume GetInferenceUseCase, StreamInferenceUseCase,
     // and PermittedModelsRepository.
     ModelsModule,
-    // Required to consume InferenceUsageGuard.
-    RunsModule,
+    // Required to consume InferenceAdmissionGuard and CollectUsageAsyncService.
+    QuotasModule,
+    UsageModule,
     // Provides SubscriptionGuard for `@UseGuards(AuthGuard('api-key'),
     // SubscriptionGuard)` so subscription gating runs AFTER api-key auth
     // populates `request.user`. Also exposes TrialsModule transitively, which

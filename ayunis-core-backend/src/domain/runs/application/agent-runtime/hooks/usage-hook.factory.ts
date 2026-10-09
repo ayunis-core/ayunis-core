@@ -2,11 +2,13 @@ import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { RuntimeLanguageModelResolver } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
-import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 
 @Injectable()
 export class UsageHookFactory {
-  constructor(private readonly inferenceUsageGuard: InferenceUsageGuard) {}
+  constructor(
+    private readonly collectUsageAsyncService: CollectUsageAsyncService,
+  ) {}
 
   create(params: { resolveModel: RuntimeLanguageModelResolver }): Hook {
     return {
@@ -31,15 +33,12 @@ export class UsageHookFactory {
           return;
         }
 
-        await this.inferenceUsageGuard.collectUsageCritical(
+        await this.collectUsageAsyncService.collectCritical(
           model,
-          {
-            inputTokens:
-              (usage.inputTokens ?? 0) +
-              (usage.cacheReadInputTokens ?? 0) +
-              (usage.cacheWriteInputTokens ?? 0),
-            outputTokens: usage.outputTokens ?? 0,
-          },
+          (usage.inputTokens ?? 0) +
+            (usage.cacheReadInputTokens ?? 0) +
+            (usage.cacheWriteInputTokens ?? 0),
+          usage.outputTokens ?? 0,
           ctx.modelCallId as UUID,
           'agent_runtime',
         );

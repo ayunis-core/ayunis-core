@@ -7,7 +7,7 @@ import {
   type RunEvent,
 } from '@ayunis/agent-runtime';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { UsageHookFactory } from './usage-hook.factory';
 
 async function collectEvents(
@@ -48,10 +48,10 @@ const freeCatalogModel = {
 
 describe('UsageHookFactory', () => {
   it('records every call outcome with the actual call model and model-call ID', async () => {
-    const collectUsageCritical = jest.fn().mockResolvedValue(undefined);
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const provider = providerWithCalls([
       [
         {
@@ -101,30 +101,32 @@ describe('UsageHookFactory', () => {
     expect(resolveModel).toHaveBeenCalledTimes(2);
     expect(resolveModel).toHaveBeenNthCalledWith(1, provider);
     expect(resolveModel).toHaveBeenNthCalledWith(2, provider);
-    expect(collectUsageCritical).toHaveBeenNthCalledWith(
+    expect(collectCritical).toHaveBeenNthCalledWith(
       1,
       catalogModel,
-      { inputTokens: 7, outputTokens: 0 },
+      7,
+      0,
       expect.any(String),
       'agent_runtime',
     );
-    expect(collectUsageCritical).toHaveBeenNthCalledWith(
+    expect(collectCritical).toHaveBeenNthCalledWith(
       2,
       catalogModel,
-      { inputTokens: 17, outputTokens: 6 },
+      17,
+      6,
       expect.any(String),
       'agent_runtime',
     );
-    expect(collectUsageCritical.mock.calls.map((call) => call[2])).toEqual(
+    expect(collectCritical.mock.calls.map((call) => call[3])).toEqual(
       modelCallIds,
     );
   });
 
   it('records a reported zero-token dimension', async () => {
-    const collectUsageCritical = jest.fn().mockResolvedValue(undefined);
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const provider = new MockProvider([
       textTurn('No additional context was needed.', { inputTokens: 0 }),
     ]);
@@ -138,19 +140,20 @@ describe('UsageHookFactory', () => {
       }),
     );
 
-    expect(collectUsageCritical).toHaveBeenCalledWith(
+    expect(collectCritical).toHaveBeenCalledWith(
       catalogModel,
-      { inputTokens: 0, outputTokens: 0 },
+      0,
+      0,
       expect.any(String),
       'agent_runtime',
     );
   });
 
   it('fails closed after a paid call emits output without usage', async () => {
-    const collectUsageCritical = jest.fn();
+    const collectCritical = jest.fn();
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const provider = new MockProvider([textTurn('The office opens at 8.', {})]);
 
     const completedEvents = await collectEvents(
@@ -177,14 +180,14 @@ describe('UsageHookFactory', () => {
       type: 'run_end',
       status: 'error',
     });
-    expect(collectUsageCritical).not.toHaveBeenCalled();
+    expect(collectCritical).not.toHaveBeenCalled();
   });
 
   it('blocks retries after a completed paid call reports no usage', async () => {
-    const collectUsageCritical = jest.fn();
+    const collectCritical = jest.fn();
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const stream = jest.fn(async function* () {
       yield { finishReason: 'stop' as const };
     });
@@ -208,15 +211,15 @@ describe('UsageHookFactory', () => {
       type: 'run_end',
       status: 'error',
     });
-    expect(collectUsageCritical).not.toHaveBeenCalled();
+    expect(collectCritical).not.toHaveBeenCalled();
   });
 
   it('fails closed when a paid call consumed provider data before cancellation', async () => {
     const controller = new AbortController();
-    const collectUsageCritical = jest.fn();
+    const collectCritical = jest.fn();
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const stream = jest.fn(async function* () {
       yield {};
       controller.abort();
@@ -242,14 +245,14 @@ describe('UsageHookFactory', () => {
       type: 'run_end',
       status: 'error',
     });
-    expect(collectUsageCritical).not.toHaveBeenCalled();
+    expect(collectCritical).not.toHaveBeenCalled();
   });
 
   it('blocks retries after hidden paid output arrives without usage', async () => {
-    const collectUsageCritical = jest.fn();
+    const collectCritical = jest.fn();
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const stream = jest.fn(async function* () {
       yield {
         toolCallDeltas: [
@@ -283,14 +286,14 @@ describe('UsageHookFactory', () => {
       type: 'run_end',
       status: 'error',
     });
-    expect(collectUsageCritical).not.toHaveBeenCalled();
+    expect(collectCritical).not.toHaveBeenCalled();
   });
 
   it('allows free-model output without usage', async () => {
-    const collectUsageCritical = jest.fn();
+    const collectCritical = jest.fn();
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const provider = new MockProvider([textTurn('The office opens at 8.', {})]);
 
     const completedEvents = await collectEvents(
@@ -306,15 +309,15 @@ describe('UsageHookFactory', () => {
       type: 'run_end',
       status: 'completed',
     });
-    expect(collectUsageCritical).not.toHaveBeenCalled();
+    expect(collectCritical).not.toHaveBeenCalled();
   });
 
   it('blocks retry when critical usage persistence fails', async () => {
     const persistenceError = new Error('Usage database unavailable');
-    const collectUsageCritical = jest.fn().mockRejectedValue(persistenceError);
+    const collectCritical = jest.fn().mockRejectedValue(persistenceError);
     const factory = new UsageHookFactory({
-      collectUsageCritical,
-    } as unknown as InferenceUsageGuard);
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
     const stream = jest.fn(async function* () {
       yield {
         usage: { inputTokens: 12 },

@@ -18985,521 +18985,6 @@ export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<type
 
 
 /**
- * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
- * @summary Send a message with optional images and receive streaming response
- */
-export const runsControllerSendMessage = (
-    runsControllerSendMessageBody: RunsControllerSendMessageBody,
- signal?: AbortSignal
-) => {
-
-      const formData = new FormData();
-formData.append(`threadId`, runsControllerSendMessageBody.threadId);
-if(runsControllerSendMessageBody.text !== undefined) {
- formData.append(`text`, runsControllerSendMessageBody.text);
- }
-if(runsControllerSendMessageBody.images !== undefined) {
- runsControllerSendMessageBody.images.forEach(value => formData.append(`images`, value));
- }
-if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
- formData.append(`imageAltTexts`, runsControllerSendMessageBody.imageAltTexts);
- }
-if(runsControllerSendMessageBody.toolResult !== undefined) {
- formData.append(`toolResult`, runsControllerSendMessageBody.toolResult);
- }
-if(runsControllerSendMessageBody.skillId !== undefined) {
- formData.append(`skillId`, runsControllerSendMessageBody.skillId);
- }
-if(runsControllerSendMessageBody.streaming !== undefined) {
- formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
- }
-
-      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto>(
-      {url: `/runs/send-message`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-
-
-
-
-export const getRunsControllerSendMessageMutationKey = () => ['runsControllerSendMessage'] as const;
-
-export const getRunsControllerSendMessageMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext> => {
-
-const mutationKey = getRunsControllerSendMessageMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, RunsControllerSendMessageMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  runsControllerSendMessage(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RunsControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof runsControllerSendMessage>>>
-    export type RunsControllerSendMessageMutationBody = RunsControllerSendMessageBody
-    export type RunsControllerSendMessageMutationError = void
-    export type RunsControllerSendMessageMutationVariables = {data: RunsControllerSendMessageBody}
-
-    /**
- * @summary Send a message with optional images and receive streaming response
- */
-export const useRunsControllerSendMessage = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof runsControllerSendMessage>>,
-        TError,
-        RunsControllerSendMessageMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Get the AI resources available in a thread
- */
-export const threadAiContextControllerGetAiContext = (
-    threadId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ThreadAiContextResponseDto>(
-      {url: `/threads/${threadId}/ai-context`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getThreadAiContextControllerGetAiContextQueryKey = (threadId: string,) => {
-    return [
-    `/threads/${threadId}/ai-context`
-    ] as const;
-    }
-
-
-export const getThreadAiContextControllerGetAiContextQueryOptions = <TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getThreadAiContextControllerGetAiContextQueryKey(threadId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>> = ({ signal }) => threadAiContextControllerGetAiContext(threadId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ThreadAiContextControllerGetAiContextQueryResult = NonNullable<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>>
-export type ThreadAiContextControllerGetAiContextQueryError = void
-
-
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
-          TError,
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
-          TError,
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the AI resources available in a thread
- */
-
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getThreadAiContextControllerGetAiContextQueryOptions(threadId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get a source citation in a thread
- */
-export const threadSourceCitationsControllerGetSourceCitation = (
-    threadId: string,
-    chunkId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SourceCitationResponseDto>(
-      {url: `/threads/${threadId}/source-chunks/${chunkId}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getThreadSourceCitationsControllerGetSourceCitationQueryKey = (threadId: string,
-    chunkId: string,) => {
-    return [
-    `/threads/${threadId}/source-chunks/${chunkId}`
-    ] as const;
-    }
-
-
-export const getThreadSourceCitationsControllerGetSourceCitationQueryOptions = <TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getThreadSourceCitationsControllerGetSourceCitationQueryKey(threadId,chunkId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>> = ({ signal }) => threadSourceCitationsControllerGetSourceCitation(threadId,chunkId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined && chunkId !== null && chunkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ThreadSourceCitationsControllerGetSourceCitationQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>>
-export type ThreadSourceCitationsControllerGetSourceCitationQueryError = void
-
-
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
-          TError,
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
-          TError,
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a source citation in a thread
- */
-
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getThreadSourceCitationsControllerGetSourceCitationQueryOptions(threadId,chunkId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Create a new trial for an organization. Only accessible to users with the super admin system role.
- * @summary Create a new trial
- */
-export const superAdminTrialsControllerCreateTrial = (
-    createTrialRequestDto: CreateTrialRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTrialRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminTrialsControllerCreateTrialMutationKey = () => ['superAdminTrialsControllerCreateTrial'] as const;
-
-export const getSuperAdminTrialsControllerCreateTrialMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminTrialsControllerCreateTrialMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, SuperAdminTrialsControllerCreateTrialMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminTrialsControllerCreateTrial(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminTrialsControllerCreateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>>
-    export type SuperAdminTrialsControllerCreateTrialMutationBody = CreateTrialRequestDto
-    export type SuperAdminTrialsControllerCreateTrialMutationError = void
-    export type SuperAdminTrialsControllerCreateTrialMutationVariables = {data: CreateTrialRequestDto}
-
-    /**
- * @summary Create a new trial
- */
-export const useSuperAdminTrialsControllerCreateTrial = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>,
-        TError,
-        SuperAdminTrialsControllerCreateTrialMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminTrialsControllerCreateTrialMutationOptions(options), queryClient);
-    }
-
-/**
- * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
- * @summary Get a trial by organization ID
- */
-export const superAdminTrialsControllerGetTrialByOrgId = (
-    orgId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
-      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId: string,) => {
-    return [
-    `/super-admin/trials/${orgId}`
-    ] as const;
-    }
-
-
-export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>> = ({ signal }) => superAdminTrialsControllerGetTrialByOrgId(orgId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminTrialsControllerGetTrialByOrgIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>>
-export type SuperAdminTrialsControllerGetTrialByOrgIdQueryError = void
-
-
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a trial by organization ID
- */
-
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
- * @summary Update a trial
- */
-export const superAdminTrialsControllerUpdateTrial = (
-    orgId: string,
-    updateTrialRequestDto: UpdateTrialRequestDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateTrialRequestDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminTrialsControllerUpdateTrialMutationKey = () => ['superAdminTrialsControllerUpdateTrial'] as const;
-
-export const getSuperAdminTrialsControllerUpdateTrialMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminTrialsControllerUpdateTrialMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, SuperAdminTrialsControllerUpdateTrialMutationVariables> = (props) => {
-          const {orgId,data} = props ?? {};
-
-          return  superAdminTrialsControllerUpdateTrial(orgId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminTrialsControllerUpdateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>>
-    export type SuperAdminTrialsControllerUpdateTrialMutationBody = UpdateTrialRequestDto
-    export type SuperAdminTrialsControllerUpdateTrialMutationError = void
-    export type SuperAdminTrialsControllerUpdateTrialMutationVariables = {orgId: string;data: UpdateTrialRequestDto}
-
-    /**
- * @summary Update a trial
- */
-export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>,
-        TError,
-        SuperAdminTrialsControllerUpdateTrialMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminTrialsControllerUpdateTrialMutationOptions(options), queryClient);
-    }
-
-/**
  * @summary List configured user credit limits with current consumption
  */
 export const creditLimitsControllerGetUserLimits = (
@@ -20408,6 +19893,521 @@ export const useApiKeysControllerRevokeApiKey = <TError = void,
         TContext
       > => {
       return useMutation(getApiKeysControllerRevokeApiKeyMutationOptions(options), queryClient);
+    }
+
+/**
+ * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
+ * @summary Send a message with optional images and receive streaming response
+ */
+export const runsControllerSendMessage = (
+    runsControllerSendMessageBody: RunsControllerSendMessageBody,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+formData.append(`threadId`, runsControllerSendMessageBody.threadId);
+if(runsControllerSendMessageBody.text !== undefined) {
+ formData.append(`text`, runsControllerSendMessageBody.text);
+ }
+if(runsControllerSendMessageBody.images !== undefined) {
+ runsControllerSendMessageBody.images.forEach(value => formData.append(`images`, value));
+ }
+if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
+ formData.append(`imageAltTexts`, runsControllerSendMessageBody.imageAltTexts);
+ }
+if(runsControllerSendMessageBody.toolResult !== undefined) {
+ formData.append(`toolResult`, runsControllerSendMessageBody.toolResult);
+ }
+if(runsControllerSendMessageBody.skillId !== undefined) {
+ formData.append(`skillId`, runsControllerSendMessageBody.skillId);
+ }
+if(runsControllerSendMessageBody.streaming !== undefined) {
+ formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
+ }
+
+      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto>(
+      {url: `/runs/send-message`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+
+
+
+
+export const getRunsControllerSendMessageMutationKey = () => ['runsControllerSendMessage'] as const;
+
+export const getRunsControllerSendMessageMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext> => {
+
+const mutationKey = getRunsControllerSendMessageMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, RunsControllerSendMessageMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  runsControllerSendMessage(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunsControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof runsControllerSendMessage>>>
+    export type RunsControllerSendMessageMutationBody = RunsControllerSendMessageBody
+    export type RunsControllerSendMessageMutationError = void
+    export type RunsControllerSendMessageMutationVariables = {data: RunsControllerSendMessageBody}
+
+    /**
+ * @summary Send a message with optional images and receive streaming response
+ */
+export const useRunsControllerSendMessage = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runsControllerSendMessage>>,
+        TError,
+        RunsControllerSendMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get the AI resources available in a thread
+ */
+export const threadAiContextControllerGetAiContext = (
+    threadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ThreadAiContextResponseDto>(
+      {url: `/threads/${threadId}/ai-context`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadAiContextControllerGetAiContextQueryKey = (threadId: string,) => {
+    return [
+    `/threads/${threadId}/ai-context`
+    ] as const;
+    }
+
+
+export const getThreadAiContextControllerGetAiContextQueryOptions = <TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadAiContextControllerGetAiContextQueryKey(threadId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>> = ({ signal }) => threadAiContextControllerGetAiContext(threadId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadAiContextControllerGetAiContextQueryResult = NonNullable<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>>
+export type ThreadAiContextControllerGetAiContextQueryError = void
+
+
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
+          TError,
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
+          TError,
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the AI resources available in a thread
+ */
+
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadAiContextControllerGetAiContextQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get a source citation in a thread
+ */
+export const threadSourceCitationsControllerGetSourceCitation = (
+    threadId: string,
+    chunkId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceCitationResponseDto>(
+      {url: `/threads/${threadId}/source-chunks/${chunkId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryKey = (threadId: string,
+    chunkId: string,) => {
+    return [
+    `/threads/${threadId}/source-chunks/${chunkId}`
+    ] as const;
+    }
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryOptions = <TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadSourceCitationsControllerGetSourceCitationQueryKey(threadId,chunkId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>> = ({ signal }) => threadSourceCitationsControllerGetSourceCitation(threadId,chunkId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined && chunkId !== null && chunkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadSourceCitationsControllerGetSourceCitationQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>>
+export type ThreadSourceCitationsControllerGetSourceCitationQueryError = void
+
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a source citation in a thread
+ */
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadSourceCitationsControllerGetSourceCitationQueryOptions(threadId,chunkId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Create a new trial for an organization. Only accessible to users with the super admin system role.
+ * @summary Create a new trial
+ */
+export const superAdminTrialsControllerCreateTrial = (
+    createTrialRequestDto: CreateTrialRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTrialRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTrialsControllerCreateTrialMutationKey = () => ['superAdminTrialsControllerCreateTrial'] as const;
+
+export const getSuperAdminTrialsControllerCreateTrialMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTrialsControllerCreateTrialMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, SuperAdminTrialsControllerCreateTrialMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminTrialsControllerCreateTrial(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTrialsControllerCreateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>>
+    export type SuperAdminTrialsControllerCreateTrialMutationBody = CreateTrialRequestDto
+    export type SuperAdminTrialsControllerCreateTrialMutationError = void
+    export type SuperAdminTrialsControllerCreateTrialMutationVariables = {data: CreateTrialRequestDto}
+
+    /**
+ * @summary Create a new trial
+ */
+export const useSuperAdminTrialsControllerCreateTrial = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,SuperAdminTrialsControllerCreateTrialMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>,
+        TError,
+        SuperAdminTrialsControllerCreateTrialMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTrialsControllerCreateTrialMutationOptions(options), queryClient);
+    }
+
+/**
+ * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
+ * @summary Get a trial by organization ID
+ */
+export const superAdminTrialsControllerGetTrialByOrgId = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
+      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/trials/${orgId}`
+    ] as const;
+    }
+
+
+export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>> = ({ signal }) => superAdminTrialsControllerGetTrialByOrgId(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminTrialsControllerGetTrialByOrgIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>>
+export type SuperAdminTrialsControllerGetTrialByOrgIdQueryError = void
+
+
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a trial by organization ID
+ */
+
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
+ * @summary Update a trial
+ */
+export const superAdminTrialsControllerUpdateTrial = (
+    orgId: string,
+    updateTrialRequestDto: UpdateTrialRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTrialRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTrialsControllerUpdateTrialMutationKey = () => ['superAdminTrialsControllerUpdateTrial'] as const;
+
+export const getSuperAdminTrialsControllerUpdateTrialMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTrialsControllerUpdateTrialMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, SuperAdminTrialsControllerUpdateTrialMutationVariables> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminTrialsControllerUpdateTrial(orgId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTrialsControllerUpdateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>>
+    export type SuperAdminTrialsControllerUpdateTrialMutationBody = UpdateTrialRequestDto
+    export type SuperAdminTrialsControllerUpdateTrialMutationError = void
+    export type SuperAdminTrialsControllerUpdateTrialMutationVariables = {orgId: string;data: UpdateTrialRequestDto}
+
+    /**
+ * @summary Update a trial
+ */
+export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,SuperAdminTrialsControllerUpdateTrialMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>,
+        TError,
+        SuperAdminTrialsControllerUpdateTrialMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTrialsControllerUpdateTrialMutationOptions(options), queryClient);
     }
 
 /**

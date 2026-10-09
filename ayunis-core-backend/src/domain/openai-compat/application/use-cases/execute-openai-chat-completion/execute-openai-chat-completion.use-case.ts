@@ -15,7 +15,8 @@ import {
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
-import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
+import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { OpenAIRequestMapper } from 'src/domain/openai-compat/application/mappers/openai-request.mapper';
 import { OpenAIResponseMapper } from 'src/domain/openai-compat/application/mappers/openai-response.mapper';
 import {
@@ -37,7 +38,7 @@ import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-di
 
 /**
  * Sole orchestrator on the OpenAI-compat path. Wraps `Get/StreamInference`
- * and is the only caller of `InferenceUsageGuard` on this surface.
+ * and is the only caller of `InferenceAdmissionGuard` on this surface.
  * The controller stays purely DTO↔command + SSE framing + HTTP filter.
  *
  * Direct stream attempt gating and critical accounting are supplied through
@@ -51,7 +52,8 @@ export class ExecuteOpenAIChatCompletionUseCase {
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
-    private readonly inferenceUsageGuard: InferenceUsageGuard,
+    private readonly inferenceAdmissionGuard: InferenceAdmissionGuard,
+    private readonly collectUsageAsyncService: CollectUsageAsyncService,
     private readonly fileContentService: OpenAIFileContentService,
     private readonly requestMapper: OpenAIRequestMapper,
     private readonly responseMapper: OpenAIResponseMapper,
@@ -80,7 +82,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
       instructions: systemPrompt || undefined,
       acceptTokenLimitCompletion: true,
     });
-    await this.inferenceUsageGuard.ensureModelCallAllowed(
+    await this.inferenceAdmissionGuard.ensureModelCallAllowed(
       command.principal,
       model,
     );
@@ -90,12 +92,10 @@ export class ExecuteOpenAIChatCompletionUseCase {
       response.meta.inputTokens !== undefined ||
       response.meta.outputTokens !== undefined
     ) {
-      this.inferenceUsageGuard.collectUsage(
+      this.collectUsageAsyncService.collect(
         model,
-        {
-          inputTokens: response.meta.inputTokens ?? 0,
-          outputTokens: response.meta.outputTokens ?? 0,
-        },
+        response.meta.inputTokens ?? 0,
+        response.meta.outputTokens ?? 0,
         requestId,
       );
     }
@@ -133,7 +133,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
     );
 
     const completionId = this.completionId();
-    await this.inferenceUsageGuard.ensureModelCallAllowed(
+    await this.inferenceAdmissionGuard.ensureModelCallAllowed(
       command.principal,
       model,
     );
@@ -183,13 +183,17 @@ export class ExecuteOpenAIChatCompletionUseCase {
           firstAttemptPreauthorized = false;
           return;
         }
-        await this.inferenceUsageGuard.ensureModelCallAllowed(principal, model);
+        await this.inferenceAdmissionGuard.ensureModelCallAllowed(
+          principal,
+          model,
+        );
       },
       onAttemptTerminal: async (attempt) => {
         if (attempt.usage) {
-          await this.inferenceUsageGuard.collectUsageCritical(
+          await this.collectUsageAsyncService.collectCritical(
             model,
-            attempt.usage,
+            attempt.usage.inputTokens,
+            attempt.usage.outputTokens,
             attempt.requestId,
           );
           return;
@@ -212,7 +216,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
       command.principal.orgId,
       command.request.model,
     );
-    await this.inferenceUsageGuard.preflight(command.principal, model);
+    await this.inferenceAdmissionGuard.preflight(command.principal, model);
     // Synthetic threadId for the domain Message entities — OpenAI-compat is
     // stateless, no thread persistence. Mappers only require a non-null UUID.
     const threadId = randomUUID();

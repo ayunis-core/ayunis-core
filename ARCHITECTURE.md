@@ -104,7 +104,7 @@ none of these packages implements the Agent Plugins standard.
 | [subscriptions](ayunis-core-backend/src/iam/subscriptions/SUMMARY.md)         | Billing            | Package and subscription management                                                   |
 | [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md)                       | Add-ons            | Per-org add-on activation managed by super admins                                     |
 | [academy-access](ayunis-core-backend/src/iam/academy-access/SUMMARY.md)       | Access Gate        | Per-org KI-Schulung nach EU AI Act completion requirement for the chat surface        |
-| [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md)                       | Limits             | Usage quota enforcement                                                               |
+| [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md)                       | Limits             | Fair-use quotas and paid-call admission (credit budget and limits)                    |
 | [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md)         | Limits             | Per-user, per-team, and per-API-key monthly credit allowances                         |
 | [budget-alerts](ayunis-core-backend/src/iam/budget-alerts/SUMMARY.md)         | Alerts             | Budget-warning and budget-exhausted emails when credit budgets cross usage thresholds |
 | [teams](ayunis-core-backend/src/iam/teams/SUMMARY.md)                         | Groups             | Team-based access control                                                             |

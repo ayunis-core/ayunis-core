@@ -11,9 +11,8 @@ import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/sub
  * subscriptions domain (monthly credit limit) and the usage domain
  * (credits consumed this month).
  *
- * Lives in the runs module because it is the run execution flow that
- * needs this cross-domain decision — neither subscriptions nor usage
- * should depend on each other.
+ * Lives in quotas because neither subscriptions nor usage should depend
+ * on the other.
  */
 export interface CreditBudgetAvailability {
   monetaryLimitsApply: boolean;
