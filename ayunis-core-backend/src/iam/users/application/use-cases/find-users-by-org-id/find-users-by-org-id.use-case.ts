@@ -5,7 +5,7 @@ import { User } from 'src/iam/users/domain/user.entity';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserPrincipal } from 'src/common/context/required-context';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
@@ -31,7 +31,7 @@ export class FindUsersByOrgIdUseCase {
       },
       'findManyByOrgId',
     );
-    const { role, systemRole } = getRequiredUserPrincipal(this.contextService);
+    const { role, systemRole } = getRequiredUserContext(this.contextService);
     // Listing org users is allowed for super-admins, org admins (admins hold
     // every permission), and members who can assign users to teams — the
     // add-team-member picker needs the list.

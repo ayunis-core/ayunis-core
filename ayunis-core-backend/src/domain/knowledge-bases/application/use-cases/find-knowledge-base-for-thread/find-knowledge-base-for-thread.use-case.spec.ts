@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
@@ -25,7 +26,9 @@ function fixture() {
     requireRead: jest.fn().mockResolvedValue(undefined),
     requireExecution: jest.fn().mockResolvedValue(undefined),
   };
-  const principal: Record<string, string | undefined> = { userId, orgId };
+  const principal: Record<string, string | undefined> = {
+    ...aUserContext({ userId, orgId }),
+  };
   const context = { get: jest.fn((key: string) => principal[key]) };
   const useCase = new FindKnowledgeBaseForThreadUseCase(
     repository as unknown as KnowledgeBaseRepository,
@@ -89,7 +92,10 @@ describe(FindKnowledgeBaseForThreadUseCase.name, () => {
     async (missingKey) => {
       const { useCase, query, context, userId, orgId, repository } = fixture();
       context.get.mockImplementation(
-        (key) => ({ userId, orgId, [missingKey]: undefined })[key],
+        (key) =>
+          ({ ...aUserContext({ userId, orgId }), [missingKey]: undefined })[
+            key
+          ],
       );
       await expect(useCase.execute(query)).rejects.toBeInstanceOf(
         UnauthorizedAccessError,

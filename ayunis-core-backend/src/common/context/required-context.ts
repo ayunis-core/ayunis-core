@@ -10,25 +10,6 @@ import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 // runtime. Taking the service as an argument also keeps the existing
 // `{ get: jest.fn() }` test doubles working unchanged.
 
-/**
- * Reads the principal of an operation that requires an authenticated human
- * user. Not for API-key requests: those carry `orgId` and `apiKeyId` but
- * intentionally no `userId` — use {@link getRequiredOrgId} there.
- */
-export function getRequiredUserContext(context: ContextService): {
-  userId: UUID;
-  orgId: UUID;
-} {
-  const userId = context.get('userId');
-  const orgId = context.get('orgId');
-
-  if (!userId || !orgId) {
-    throw new UnauthorizedAccessError();
-  }
-
-  return { userId, orgId };
-}
-
 /** Reads the organization of an operation that accepts either principal type. */
 export function getRequiredOrgId(context: ContextService): UUID {
   const orgId = context.get('orgId');
@@ -40,7 +21,7 @@ export function getRequiredOrgId(context: ContextService): UUID {
   return orgId;
 }
 
-export interface UserPrincipal {
+export interface UserContext {
   userId: UUID;
   orgId: UUID;
   role: UserRole;
@@ -50,11 +31,13 @@ export interface UserPrincipal {
 /**
  * The only sanctioned read of `role` / `systemRole` (enforced by ESLint):
  * roles are returned only when the request is backed by a human user, so an
- * API-key or background context can never be mistaken for an admin.
+ * API-key or background context can never be mistaken for an admin. The
+ * interceptor sets all four keys together for a user login, so a missing
+ * role means "not a user", never "a user without a role".
  */
-export function getUserPrincipal(
+export function getUserContext(
   context: ContextService,
-): UserPrincipal | undefined {
+): UserContext | undefined {
   const userId = context.get('userId');
   const orgId = context.get('orgId');
   const role = context.get('role');
@@ -67,18 +50,21 @@ export function getUserPrincipal(
   return { userId, orgId, role, systemRole };
 }
 
-export function getRequiredUserPrincipal(
-  context: ContextService,
-): UserPrincipal {
-  const principal = getUserPrincipal(context);
+/**
+ * Reads the user of an operation that requires an authenticated human user.
+ * Not for API-key requests: those carry `orgId` and `apiKeyId` but
+ * intentionally no `userId` — use {@link getRequiredOrgId} there.
+ */
+export function getRequiredUserContext(context: ContextService): UserContext {
+  const user = getUserContext(context);
 
-  if (!principal) {
+  if (!user) {
     throw new UnauthorizedAccessError();
   }
 
-  return principal;
+  return user;
 }
 
 export function isSuperAdmin(context: ContextService): boolean {
-  return getUserPrincipal(context)?.systemRole === SystemRole.SUPER_ADMIN;
+  return getUserContext(context)?.systemRole === SystemRole.SUPER_ADMIN;
 }

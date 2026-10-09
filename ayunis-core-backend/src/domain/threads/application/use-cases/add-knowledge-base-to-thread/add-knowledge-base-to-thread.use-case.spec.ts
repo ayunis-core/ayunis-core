@@ -1,4 +1,5 @@
 import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -39,11 +40,9 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     };
 
     mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({

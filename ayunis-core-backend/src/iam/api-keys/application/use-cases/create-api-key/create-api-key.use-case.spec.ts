@@ -1,4 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
 import { QueryFailedError } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -25,7 +26,9 @@ describe('CreateApiKeyUseCase', () => {
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
-    const contextValues: Record<string, unknown> = { orgId, userId };
+    const contextValues: Record<string, unknown> = {
+      ...aUserContext({ orgId, userId }),
+    };
 
     const mockApiKeysRepository = {
       findById: jest.fn(),

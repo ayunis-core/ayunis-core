@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
-  UserPrincipal,
-  getUserPrincipal,
+  UserContext,
+  getUserContext,
 } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
@@ -28,7 +28,7 @@ export class UnlockUserAccountUseCase {
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: UnlockUserAccountCommand): Promise<void> {
     this.logger.log({ userId: command.userId }, 'unlockUserAccount');
-    const principal = getUserPrincipal(this.contextService);
+    const principal = getUserContext(this.contextService);
     const isSuperAdmin = principal?.systemRole === SystemRole.SUPER_ADMIN;
     const user = await this.usersRepository.findOneById(command.userId);
     if (
@@ -47,7 +47,7 @@ export class UnlockUserAccountUseCase {
 
   private assertAuthorized(
     user: User,
-    principal: UserPrincipal | undefined,
+    principal: UserContext | undefined,
     isSuperAdmin: boolean,
   ): void {
     const isOrgAdmin =
