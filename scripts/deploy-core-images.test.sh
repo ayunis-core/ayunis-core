@@ -34,6 +34,8 @@ elif [[ "$*" == 'images --filter reference=ghcr.io/ayunis-core/ayunis-core-* --f
     "ghcr.io/ayunis-core/ayunis-core-python-sandbox:${CORE_TAG}"
 elif [[ "$*" == 'compose pull app code-execution anonymize' ]]; then
   exit "${FAKE_COMPOSE_PULL_EXIT:-0}"
+elif [[ "$*" == 'compose up -d --no-build --wait --wait-timeout 180 code-execution anonymize' ]]; then
+  exit "${FAKE_DEPS_UP_EXIT:-0}"
 elif [[ "$*" == 'compose up -d --no-build' ]]; then
   exit "${FAKE_COMPOSE_UP_EXIT:-0}"
 elif [[ "$*" == 'compose ps app --format json' ]]; then
@@ -92,6 +94,7 @@ run_deploy() {
     FAKE_FREE_GB="${FAKE_FREE_GB:-20}" \
     FAKE_COMPOSE_PULL_EXIT="${FAKE_COMPOSE_PULL_EXIT:-0}" \
     FAKE_COMPOSE_UP_EXIT="${FAKE_COMPOSE_UP_EXIT:-0}" \
+    FAKE_DEPS_UP_EXIT="${FAKE_DEPS_UP_EXIT:-0}" \
     FAKE_SANDBOX_PULL_EXIT="${FAKE_SANDBOX_PULL_EXIT:-0}" \
     FAKE_HEALTH_EXIT="${FAKE_HEALTH_EXIT:-0}" \
     bash "$DEPLOY_SCRIPT"
@@ -103,6 +106,11 @@ COMPOSE_FILE=unexpected-compose.yml run_deploy
 assert_log_order 'builder prune -af' 'compose pull app code-execution anonymize'
 assert_log_order 'compose pull app code-execution anonymize' 'compose up -d --no-build'
 assert_log_order 'compose up -d --no-build' 'timeout 120 bash -c'
+deps_up_line=$(grep -nFx 'compose up -d --no-build --wait --wait-timeout 180 code-execution anonymize' "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
+stack_up_line=$(grep -nFx 'compose up -d --no-build' "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
+if [[ -z "$deps_up_line" || -z "$stack_up_line" || "$deps_up_line" -ge "$stack_up_line" ]]; then
+  fail "Expected app dependencies to be healthy before the app container is replaced."
+fi
 if grep -Fq 'compose down' "$DOCKER_LOG"; then
   fail "Expected successful deploys to leave unchanged services running."
 fi
@@ -179,6 +187,18 @@ if grep -Fq 'timeout 120 bash -c' "$DOCKER_LOG"; then
 fi
 if grep -F 'rmi ' "$DOCKER_LOG" | grep -Fq 'ghcr.io/ayunis-core/ayunis-core-python-sandbox:v-old'; then
   fail "Expected a failed compose replacement to preserve the old sandbox image."
+fi
+
+: > "$DOCKER_LOG"
+set +e
+FAKE_DEPS_UP_EXIT=1 run_deploy >/dev/null 2>&1
+status=$?
+set -e
+if [[ $status -eq 0 ]]; then
+  fail "Expected unhealthy app dependencies to abort the deploy."
+fi
+if grep -Fxq 'compose up -d --no-build' "$DOCKER_LOG"; then
+  fail "Expected unhealthy app dependencies to keep the running app container."
 fi
 
 : > "$DOCKER_LOG"
