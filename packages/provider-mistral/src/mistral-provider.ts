@@ -55,6 +55,7 @@ export const mistral = (options: MistralProviderOptions): ModelProvider => {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const client = new Mistral({
     apiKey: options.apiKey,
+    server: 'eu',
     timeoutMs,
     ...(options.baseUrl ? { serverURL: options.baseUrl } : {}),
     retryConfig: toRetryConfig(options.maxRetries ?? 0),

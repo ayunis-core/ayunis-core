@@ -54,6 +54,8 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   constructor(private readonly configService: ConfigService) {
     super();
     this.client = new Mistral({
+      // Not pinned to server: 'eu' — api.eu.mistral.ai has no Files API
+      // (404), and this handler uploads before running OCR.
       apiKey: this.configService.get('retrieval.mistral.apiKey'),
       serverURL: this.configService.get('retrieval.mistral.serverUrl'),
       timeoutMs: this.TIMEOUT_MS,
