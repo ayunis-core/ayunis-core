@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -90,6 +91,39 @@ describe('GetApiKeyCreditLimitsOverviewUseCase', () => {
       },
     ]);
     expect(getUsage.execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps only active keys when asked to', async () => {
+    const revokedId = '99999999-0000-0000-0000-000000000001' as UUID;
+    const expiredId = '99999999-0000-0000-0000-000000000002' as UUID;
+    repository.findApiKeyLimits.mockResolvedValue([
+      anApiKeyCreditLimit(),
+      anApiKeyCreditLimit({ apiKeyId: revokedId }),
+      anApiKeyCreditLimit({ apiKeyId: expiredId }),
+    ]);
+    listApiKeys.execute.mockResolvedValue([
+      {
+        id: TEST_API_KEY_ID,
+        name: 'Finance export',
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+      { id: revokedId, name: 'Old', revokedAt: new Date(), expiresAt: null },
+      {
+        id: expiredId,
+        name: 'Pilot',
+        revokedAt: null,
+        expiresAt: new Date(Date.now() - 60_000),
+      },
+    ]);
+
+    const active = await useCase.execute(
+      new GetApiKeyCreditLimitsOverviewQuery(undefined, true),
+    );
+    const all = await useCase.execute();
+
+    expect(active.map((item) => item.apiKeyId)).toEqual([TEST_API_KEY_ID]);
+    expect(all).toHaveLength(3);
   });
 
   it('rejects when there is no organization in context', async () => {

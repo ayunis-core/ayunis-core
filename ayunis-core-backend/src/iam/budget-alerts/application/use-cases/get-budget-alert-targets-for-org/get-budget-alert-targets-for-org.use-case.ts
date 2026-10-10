@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
 import type { TeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/team-credit-limit.view';
+import type { ApiKeyCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/api-key-credit-limit.view';
 import { GetMonthlyCreditUsageUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
 import { GetMonthlyCreditUsageQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.query';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
@@ -11,6 +12,8 @@ import { GetUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/applic
 import { GetUserCreditLimitsOverviewQuery } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/get-user-credit-limits-overview.query';
 import { GetTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.use-case';
 import { GetTeamCreditLimitsOverviewQuery } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.query';
+import { GetApiKeyCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/get-api-key-credit-limits-overview.use-case';
+import { GetApiKeyCreditLimitsOverviewQuery } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/get-api-key-credit-limits-overview.query';
 import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 import type { BudgetTarget } from 'src/iam/budget-alerts/application/utils/budget-alert-crossing';
 import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
@@ -36,6 +39,7 @@ export class GetBudgetAlertTargetsForOrgUseCase {
     private readonly getMonthlyCreditUsageUseCase: GetMonthlyCreditUsageUseCase,
     private readonly getUserCreditLimitsOverviewUseCase: GetUserCreditLimitsOverviewUseCase,
     private readonly getTeamCreditLimitsOverviewUseCase: GetTeamCreditLimitsOverviewUseCase,
+    private readonly getApiKeyCreditLimitsOverviewUseCase: GetApiKeyCreditLimitsOverviewUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedBudgetAlertError)
@@ -55,10 +59,10 @@ export class GetBudgetAlertTargetsForOrgUseCase {
 
     // Each scope must measure the same window its enforcement uses: the org
     // budget guard anchors on the subscription start, while user and team
-    // limits are enforced over the plain calendar month
-    // (CreditLimitGuardService) — narrowing them to the subscription start
-    // would under-count and alert late or never.
-    const [orgUsage, userItems, teamItems] = await Promise.all([
+    // and API key limits are enforced over the plain calendar month
+    // (CreditLimitGuardService, ApiKeyCreditLimitGuardService) — narrowing
+    // them to the subscription start would under-count and alert late or never.
+    const [orgUsage, userItems, teamItems, apiKeyItems] = await Promise.all([
       this.getMonthlyCreditUsageUseCase.execute(
         new GetMonthlyCreditUsageQuery(query.orgId, startsAt ?? undefined),
       ),
@@ -67,6 +71,11 @@ export class GetBudgetAlertTargetsForOrgUseCase {
       ),
       this.getTeamCreditLimitsOverviewUseCase.execute(
         new GetTeamCreditLimitsOverviewQuery(),
+      ),
+      // Revoked or expired keys cannot consume credits anymore, so a warning
+      // (especially "raise the limit to continue") would be misleading.
+      this.getApiKeyCreditLimitsOverviewUseCase.execute(
+        new GetApiKeyCreditLimitsOverviewQuery(undefined, true),
       ),
     ]);
 
@@ -78,16 +87,18 @@ export class GetBudgetAlertTargetsForOrgUseCase {
           monthlyCredits,
           creditsUsed: orgUsage.creditsUsed,
         },
-        userItems,
-        teamItems,
+        { userItems, teamItems, apiKeyItems },
       ),
     };
   }
 
   private buildTargets(
     org: { orgId: UUID; monthlyCredits: number; creditsUsed: number },
-    userItems: UserCreditLimitOverviewItem[],
-    teamItems: TeamCreditLimitOverviewItem[],
+    items: {
+      userItems: UserCreditLimitOverviewItem[];
+      teamItems: TeamCreditLimitOverviewItem[];
+      apiKeyItems: ApiKeyCreditLimitOverviewItem[];
+    },
   ): BudgetTarget[] {
     return [
       {
@@ -97,16 +108,23 @@ export class GetBudgetAlertTargetsForOrgUseCase {
         monthlyCredits: org.monthlyCredits,
         creditsUsed: org.creditsUsed,
       },
-      ...userItems.map((item) => ({
+      ...items.userItems.map((item) => ({
         scope: BudgetAlertScope.USER,
         targetId: item.userId,
         name: item.name,
         monthlyCredits: item.monthlyCredits,
         creditsUsed: item.creditsUsed,
       })),
-      ...teamItems.map((item) => ({
+      ...items.teamItems.map((item) => ({
         scope: BudgetAlertScope.TEAM,
         targetId: item.teamId,
+        name: item.name,
+        monthlyCredits: item.monthlyCredits,
+        creditsUsed: item.creditsUsed,
+      })),
+      ...items.apiKeyItems.map((item) => ({
+        scope: BudgetAlertScope.API_KEY,
+        targetId: item.apiKeyId,
         name: item.name,
         monthlyCredits: item.monthlyCredits,
         creditsUsed: item.creditsUsed,
