@@ -11,6 +11,7 @@ export enum WebhookEventType {
   SUBSCRIPTION_SEATS_UPDATED = 'subscription.seats_updated',
   SUBSCRIPTION_BILLING_INFO_UPDATED = 'subscription.billing_info_updated',
   USAGE_COLLECTED = 'usage.collected',
+  USAGE_MONTHLY_CREDITS_SNAPSHOT = 'usage.monthly_credits_snapshot',
   CHAT_SENT = 'chat.sent',
   SKILL_USED = 'skill.used',
   SKILL_INSTALLED = 'skill.installed',

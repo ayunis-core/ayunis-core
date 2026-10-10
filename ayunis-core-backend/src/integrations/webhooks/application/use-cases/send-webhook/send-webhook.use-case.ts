@@ -9,14 +9,8 @@ export class SendWebhookUseCase {
   constructor(private readonly webhookHandler: WebhookHandler) {}
 
   async execute(command: SendWebhookCommand): Promise<void> {
-    this.logger.log({ eventType: command.event.eventType }, 'Sending webhook');
-
     try {
-      await this.webhookHandler.sendWebhook(command.event);
-      this.logger.debug(
-        { eventId: command.event.id, eventType: command.event.eventType },
-        'Webhook sent successfully',
-      );
+      await this.executeOrThrow(command);
     } catch (error) {
       // Log error but don't fail the main operation
       this.logger.warn(
@@ -29,5 +23,14 @@ export class SendWebhookUseCase {
       );
       // We intentionally don't rethrow the error to avoid failing the main business operation
     }
+  }
+
+  async executeOrThrow(command: SendWebhookCommand): Promise<void> {
+    this.logger.log({ eventType: command.event.eventType }, 'Sending webhook');
+    await this.webhookHandler.sendWebhook(command.event);
+    this.logger.debug(
+      { eventId: command.event.id, eventType: command.event.eventType },
+      'Webhook sent successfully',
+    );
   }
 }

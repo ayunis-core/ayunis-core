@@ -106,6 +106,38 @@ describe('LocalUsageRepository', () => {
     expect(queryBuilder.getRawMany).toHaveBeenCalledTimes(1);
   });
 
+  it('returns credit totals grouped by organization for a closed period', async () => {
+    const { queryBuilder, typeOrmRepository } = createQueryBuilderFixture();
+    const firstOrgId = randomUUID();
+    const secondOrgId = randomUUID();
+    queryBuilder.getRawMany.mockResolvedValue([
+      { organizationId: firstOrgId, creditsConsumed: '125.5' },
+      { organizationId: secondOrgId, creditsConsumed: '40' },
+    ]);
+    const repository = createRepository(typeOrmRepository);
+    const startDate = new Date('2026-09-01T00:00:00.000Z');
+    const endDate = new Date('2026-10-01T00:00:00.000Z');
+
+    const result = await repository.getCreditTotalsByOrganization(
+      startDate,
+      endDate,
+    );
+
+    expect(result).toEqual([
+      { organizationId: firstOrgId, creditsConsumed: 125.5 },
+      { organizationId: secondOrgId, creditsConsumed: 40 },
+    ]);
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'usage.createdAt >= :startDate',
+      { startDate },
+    );
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'usage.createdAt < :endDate',
+      { endDate },
+    );
+    expect(queryBuilder.groupBy).toHaveBeenCalledWith('usage.organizationId');
+  });
+
   it('sums monthly credits for one API key within its organization', async () => {
     const { queryBuilder, typeOrmRepository } = createQueryBuilderFixture();
     queryBuilder.getRawOne.mockResolvedValue({ total: '37.25' });
