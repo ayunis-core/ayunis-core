@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.51.1](https://github.com/ayunis-core/ayunis-core/compare/v2.51.0...v2.51.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **frontend:** add a header comment to robots.txt (AYC-000) ([#1885](https://github.com/ayunis-core/ayunis-core/issues/1885)) ([95fb974](https://github.com/ayunis-core/ayunis-core/commit/95fb9747989c2a1095462c9158ade584fc0c908e))
+
+
+### CI/CD
+
+* **deploy:** remove the manual production deploy to the old server (AYC-1229) ([#1884](https://github.com/ayunis-core/ayunis-core/issues/1884)) ([d6d9587](https://github.com/ayunis-core/ayunis-core/commit/d6d95871ec634d6742f3ba1ff13f1e5c34a982ff))
+* **release:** stop deploying releases to the old production server (AYC-855) ([#1882](https://github.com/ayunis-core/ayunis-core/issues/1882)) ([6e4871d](https://github.com/ayunis-core/ayunis-core/commit/6e4871dce571a28c02135b888bbdd990de9e25e0))
+
 ## [2.51.0](https://github.com/ayunis-core/ayunis-core/compare/v2.50.1...v2.51.0) (2026-10-09)
 
 
