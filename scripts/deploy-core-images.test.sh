@@ -219,7 +219,7 @@ fi
 workflow_expectations=(
   'deploy-staging.yml:1'
   'deploy-production-manual.yml:1'
-  'release-please.yml:1'
+  'release-please.yml:0'
 )
 
 for expectation in "${workflow_expectations[@]}"; do
@@ -243,6 +243,10 @@ if grep -Fq 'deploy-internal:' "$REPO_DIR/.github/workflows/release-please.yml" 
   || grep -Fq 'INTERNAL_HOST' "$REPO_DIR/.github/workflows/release-please.yml"; then
   fail "Expected releases to leave Internal deployment to ayunis-infra."
 fi
+if grep -Fq 'deploy-production:' "$REPO_DIR/.github/workflows/release-please.yml" \
+  || grep -Fq 'PRODUCTION_HOST' "$REPO_DIR/.github/workflows/release-please.yml"; then
+  fail "Expected releases to leave Production deployment to ayunis-infra."
+fi
 if ! grep -Fq 'DEPLOY_WORKFLOW_SHA: ${{ github.sha }}' \
   "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
   || ! grep -Fq 'DEPLOY_SCRIPT=$(git show "$DEPLOY_WORKFLOW_SHA":scripts/deploy-core-images.sh)' \
@@ -256,11 +260,6 @@ if ! grep -Fq 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
   || ! grep -Fq 'git checkout -f --detach "origin/$RELEASE_TAG"' \
   "$REPO_DIR/.github/workflows/deploy-production-manual.yml"; then
   fail "Expected the production manual workflow to use explicit tag and remote branch refs."
-fi
-release_tag_checkouts=$(grep -Fc 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/release-please.yml" || true)
-if [[ "$release_tag_checkouts" -ne 1 ]]; then
-  fail "Expected the automated production release deploy to use an explicit tag ref."
 fi
 if ! grep -Fq 'bash scripts/deploy-core-images.test.sh' \
   "$REPO_DIR/.github/workflows/deploy-script-tests.yml" 2>/dev/null; then
