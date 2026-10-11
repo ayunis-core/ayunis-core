@@ -218,7 +218,6 @@ fi
 
 workflow_expectations=(
   'deploy-staging.yml:1'
-  'deploy-production-manual.yml:1'
   'release-please.yml:0'
 )
 
@@ -247,19 +246,8 @@ if grep -Fq 'deploy-production:' "$REPO_DIR/.github/workflows/release-please.yml
   || grep -Fq 'PRODUCTION_HOST' "$REPO_DIR/.github/workflows/release-please.yml"; then
   fail "Expected releases to leave Production deployment to ayunis-infra."
 fi
-if ! grep -Fq 'DEPLOY_WORKFLOW_SHA: ${{ github.sha }}' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
-  || ! grep -Fq 'DEPLOY_SCRIPT=$(git show "$DEPLOY_WORKFLOW_SHA":scripts/deploy-core-images.sh)' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
-  || ! grep -Fq "printf '%s\n' \"\$DEPLOY_SCRIPT\" | MIN_FREE_GB=9 PRUNE_BUILD_CACHE=true bash" \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml"; then
-  fail "Expected the production manual workflow to execute the workflow commit's shared script."
-fi
-if ! grep -Fq 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
-  || ! grep -Fq 'git checkout -f --detach "origin/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml"; then
-  fail "Expected the production manual workflow to use explicit tag and remote branch refs."
+if [[ -e "$REPO_DIR/.github/workflows/deploy-production-manual.yml" ]]; then
+  fail "Expected Production deployment to live only in ayunis-infra."
 fi
 if ! grep -Fq 'bash scripts/deploy-core-images.test.sh' \
   "$REPO_DIR/.github/workflows/deploy-script-tests.yml" 2>/dev/null; then
