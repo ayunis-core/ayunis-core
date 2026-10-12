@@ -34,6 +34,8 @@ describe('ignoredErrorPatterns', () => {
     'Load failed',
     'ResizeObserver loop limit exceeded',
     'ResizeObserver loop completed with undelivered notifications.',
+    // Observed iPhone Safari signature in production incident #680 (AYC-1207).
+    "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')",
   ])('ignores expected browser noise: %s', (message) => {
     expect(matchesAnyIgnore(message)).toBe(true);
   });
@@ -42,6 +44,11 @@ describe('ignoredErrorPatterns', () => {
     "Cannot read properties of undefined (reading 'map')",
     'Maximum update depth exceeded',
     'Objects are not valid as a React child',
+    "undefined is not an object (evaluating 'invite.organization.name')",
+    "undefined is not an object (evaluating 'window.ethereum.request')",
+    "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined') while accepting invite",
+    'e.at is not a function',
+    'Fullscreen request denied',
     // Unrecovered deploy skew, reported by the ErrorBoundary after the
     // chunk-reload guard gives up — must never be filtered.
     'Failed to fetch dynamically imported module: https://app.example.com/assets/ChatPage-abc.js',
@@ -90,6 +97,16 @@ describe('dropBrowserExtensionErrors', () => {
 
   it('keeps errors without any backtrace URLs', () => {
     const span = spanWithStack('Error: boom');
+    expect(dropBrowserExtensionErrors(span)).toBe(span);
+  });
+
+  it('keeps errors whose origin frame is the page document', () => {
+    const span = spanWithStack(
+      [
+        "TypeError: undefined is not an object (evaluating 'invite.organization.name')",
+        '    global code@https://core.ayunis.com/accept-invite:1:16',
+      ].join('\n'),
+    );
     expect(dropBrowserExtensionErrors(span)).toBe(span);
   });
 
