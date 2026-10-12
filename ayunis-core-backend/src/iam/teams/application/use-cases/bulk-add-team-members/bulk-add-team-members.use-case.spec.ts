@@ -2,16 +2,21 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { BulkAddTeamMembersUseCase } from './bulk-add-team-members.use-case';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
-import { AddTeamMemberUseCase } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.use-case';
+import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
+import { ContextService } from 'src/common/context/services/context.service';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
-import { UserAlreadyTeamMemberError } from 'src/iam/teams/application/team-members.errors';
+import {
+  UnexpectedTeamMemberError,
+  UserAlreadyTeamMemberError,
+} from 'src/iam/teams/application/team-members.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
 describe('BulkAddTeamMembersUseCase', () => {
   let useCase: BulkAddTeamMembersUseCase;
-  let mockAddTeamMemberUseCase: { execute: jest.Mock };
+  let mockCreateMember: { add: jest.Mock };
 
   const teamId = 'team-1' as UUID;
   const userA = 'user-a' as UUID;
@@ -20,12 +25,20 @@ describe('BulkAddTeamMembersUseCase', () => {
   const member = (userId: UUID) => new TeamMember({ teamId, userId });
 
   beforeAll(async () => {
-    mockAddTeamMemberUseCase = { execute: jest.fn() };
+    mockCreateMember = { add: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BulkAddTeamMembersUseCase,
-        { provide: AddTeamMemberUseCase, useValue: mockAddTeamMemberUseCase },
+        {
+          provide: ContextService,
+          useValue: { get: () => '11111111-1111-4111-8111-111111111111' },
+        },
+        {
+          provide: AssertTeamManagementAllowedUseCase,
+          useValue: { execute: jest.fn().mockResolvedValue(undefined) },
+        },
+        { provide: TeamMemberCreationService, useValue: mockCreateMember },
       ],
     }).compile();
 
@@ -35,7 +48,7 @@ describe('BulkAddTeamMembersUseCase', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('adds every user and returns the created members', async () => {
-    mockAddTeamMemberUseCase.execute
+    mockCreateMember.add
       .mockResolvedValueOnce(member(userA))
       .mockResolvedValueOnce(member(userB));
 
@@ -44,21 +57,21 @@ describe('BulkAddTeamMembersUseCase', () => {
     );
 
     expect(result).toHaveLength(2);
-    expect(mockAddTeamMemberUseCase.execute).toHaveBeenCalledTimes(2);
+    expect(mockCreateMember.add).toHaveBeenCalledTimes(2);
   });
 
   it('deduplicates repeated user ids', async () => {
-    mockAddTeamMemberUseCase.execute.mockResolvedValue(member(userA));
+    mockCreateMember.add.mockResolvedValue(member(userA));
 
     await useCase.execute(
       new BulkAddTeamMembersCommand({ teamId, userIds: [userA, userA] }),
     );
 
-    expect(mockAddTeamMemberUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(mockCreateMember.add).toHaveBeenCalledTimes(1);
   });
 
   it('skips per-user failures and returns only the successful ones', async () => {
-    mockAddTeamMemberUseCase.execute
+    mockCreateMember.add
       .mockRejectedValueOnce(new UserAlreadyTeamMemberError(teamId, userA))
       .mockResolvedValueOnce(member(userB));
 
@@ -71,9 +84,7 @@ describe('BulkAddTeamMembersUseCase', () => {
   });
 
   it('fails the whole request when the team is not found', async () => {
-    mockAddTeamMemberUseCase.execute.mockRejectedValueOnce(
-      new TeamNotFoundError(teamId),
-    );
+    mockCreateMember.add.mockRejectedValueOnce(new TeamNotFoundError(teamId));
 
     await expect(
       useCase.execute(
@@ -83,9 +94,7 @@ describe('BulkAddTeamMembersUseCase', () => {
   });
 
   it('propagates non-per-user errors instead of skipping them', async () => {
-    mockAddTeamMemberUseCase.execute.mockRejectedValueOnce(
-      new UnauthorizedAccessError(),
-    );
+    mockCreateMember.add.mockRejectedValueOnce(new UnauthorizedAccessError());
 
     await expect(
       useCase.execute(
@@ -94,14 +103,19 @@ describe('BulkAddTeamMembersUseCase', () => {
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
   });
 
-  it('re-throws unexpected (non-ApplicationError) faults raw, without wrapping (no metadata leak)', async () => {
+  it('wraps unexpected faults while omitting their details from the client response', async () => {
     const fault = new Error('database is on fire');
-    mockAddTeamMemberUseCase.execute.mockRejectedValueOnce(fault);
+    mockCreateMember.add.mockRejectedValueOnce(fault);
 
-    await expect(
-      useCase.execute(
-        new BulkAddTeamMembersCommand({ teamId, userIds: [userA] }),
-      ),
-    ).rejects.toBe(fault);
+    const result = useCase.execute(
+      new BulkAddTeamMembersCommand({ teamId, userIds: [userA] }),
+    );
+    await expect(result).rejects.toBeInstanceOf(UnexpectedTeamMemberError);
+    await result.catch((error: UnexpectedTeamMemberError) => {
+      expect(error.toClientResponse()).toEqual({
+        code: 'UNEXPECTED_TEAM_MEMBER_ERROR',
+        message: 'Internal server error',
+      });
+    });
   });
 });

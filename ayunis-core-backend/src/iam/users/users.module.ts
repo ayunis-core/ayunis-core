@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
+import { forwardRef, Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
 import { UsersExportRepository } from './application/ports/users-export.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
@@ -85,6 +86,7 @@ import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/applica
 
 @Module({
   imports: [
+    forwardRef(() => TeamsApplicationModule),
     TypeOrmModule.forFeature([UserRecord, PasswordSetTokenRecord]),
     InvitesModule,
     OrgsModule,

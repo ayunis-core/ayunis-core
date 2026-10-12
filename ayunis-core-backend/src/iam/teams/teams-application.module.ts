@@ -1,3 +1,7 @@
+import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
+import { GetTeamManagementAccessUseCase } from 'src/iam/teams/application/use-cases/get-team-management-access/get-team-management-access.use-case';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
@@ -28,10 +32,14 @@ import { UsersModule } from 'src/iam/users/users.module';
   imports: [
     TypeOrmModule.forFeature([TeamRecord, TeamMemberRecord]),
     forwardRef(() => UsersModule),
+    OrgsModule,
   ],
   providers: [
+    TeamMemberCreationService,
     { provide: TeamsRepository, useClass: LocalTeamsRepository },
     { provide: TeamMembersRepository, useClass: LocalTeamMembersRepository },
+    GetTeamManagementAccessUseCase,
+    AssertTeamManagementAllowedUseCase,
     CreateTeamUseCase,
     UpdateTeamUseCase,
     DeleteTeamUseCase,
@@ -50,6 +58,8 @@ import { UsersModule } from 'src/iam/users/users.module';
     AssignUserToTeamsUseCase,
   ],
   exports: [
+    GetTeamManagementAccessUseCase,
+    AssertTeamManagementAllowedUseCase,
     CreateTeamUseCase,
     UpdateTeamUseCase,
     DeleteTeamUseCase,

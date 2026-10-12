@@ -1,3 +1,4 @@
+import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 import { Tabs, TabsList, TabsTrigger } from '@ayunis/ui/components/tabs';
@@ -48,6 +49,7 @@ function CreditLimitDirectory({
   const { t } = useTranslation('admin-settings-credit-limits');
   const navigate = useNavigate();
   const directory = useCreditLimitDirectory(filters, true);
+  const { canManageTeams } = useTeamManagementAccess();
   const update = (next: Partial<CreditLimitSearch>, replace = false) =>
     void navigate({
       to: '/admin-settings/credit-limits',
@@ -91,6 +93,7 @@ function CreditLimitDirectory({
             className="max-w-sm"
           />
           <CreditLimitsTable
+            canManageTeams={canManageTeams}
             rows={directory.rows}
             filters={filters}
             isPending={directory.isPending}

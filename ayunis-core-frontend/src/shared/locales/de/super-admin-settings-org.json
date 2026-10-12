@@ -673,5 +673,13 @@
     "processingActive": "Die Dokumentverarbeitung läuft noch. Die Organisation wurde nicht gelöscht. Versuchen Sie es nach Abschluss erneut.",
     "managementTitle": "Organisation verwalten",
     "deleteActionDescription": "Diese Organisation, ihre Mitglieder, Daten und gespeicherten Dateien endgültig entfernen. Dies kann nicht rückgängig gemacht werden."
+  },
+  "usageVisibility": {
+    "title": "Nutzungsdaten",
+    "label": "Verbrauch einzelner Benutzer ausblenden",
+    "success": "Verbrauchssichtbarkeit aktualisiert",
+    "error": "Verbrauchssichtbarkeit konnte nicht aktualisiert werden",
+    "notFound": "Organisation nicht gefunden",
+    "description": "Bei aktiviertem Schalter können nur Super-Admins Teammitgliedschaften und Teamlimits ändern sowie Teams und Benutzer löschen."
   }
 }

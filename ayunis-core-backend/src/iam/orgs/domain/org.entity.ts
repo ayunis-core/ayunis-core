@@ -6,6 +6,7 @@ export class Org {
   public id: UUID;
   public name: string;
   public archived: boolean;
+  public hideIndividualUsage: boolean;
   public sessionVersion: number;
   public users: User[];
   public createdAt: Date;
@@ -15,6 +16,7 @@ export class Org {
     id?: UUID;
     name: string;
     archived?: boolean;
+    hideIndividualUsage?: boolean;
     sessionVersion?: number;
     users?: User[];
     createdAt?: Date;
@@ -23,6 +25,7 @@ export class Org {
     this.id = params.id ?? randomUUID();
     this.name = params.name;
     this.archived = params.archived ?? false;
+    this.hideIndividualUsage = params.hideIndividualUsage ?? false;
     this.sessionVersion = params.sessionVersion ?? 0;
     this.users = params.users ?? [];
     this.createdAt = params.createdAt ?? new Date();

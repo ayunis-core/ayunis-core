@@ -1,3 +1,6 @@
+import { UnexpectedTeamMemberError } from 'src/iam/teams/application/team-members.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
@@ -5,7 +8,6 @@ import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-memb
 import { RemoveTeamMemberCommand } from './remove-team-member.command';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { TeamMemberNotFoundError } from 'src/iam/teams/application/team-members.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
 import { getRequiredOrgId } from 'src/common/context/required-context';
@@ -15,14 +17,17 @@ export class RemoveTeamMemberUseCase {
   private readonly logger = new Logger(RemoveTeamMemberUseCase.name);
 
   constructor(
+    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedTeamMemberError)
   async execute(command: RemoveTeamMemberCommand): Promise<void> {
-    const orgId = getRequiredOrgId(this.contextService);
+    const orgId = getRequiredOrgId(this.contextService, command.orgId);
+    await this.teamManagementAccess.execute({ orgId });
 
     this.logger.log(
       {
@@ -33,16 +38,7 @@ export class RemoveTeamMemberUseCase {
       'execute',
     );
 
-    try {
-      await this.removeMember(command, orgId);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        { err: error as Error, teamId: command.teamId, userId: command.userId },
-        'Failed to remove team member',
-      );
-      throw error;
-    }
+    await this.removeMember(command, orgId);
   }
 
   private async removeMember(

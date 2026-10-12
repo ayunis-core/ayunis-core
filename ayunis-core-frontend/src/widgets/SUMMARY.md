@@ -17,3 +17,5 @@ The `list-toolbar/` widget provides the compact responsive toolbar layout and la
 Failed attachments in `chat-input/SourcesList` map the typed API `processingErrorCode` to localized guidance, with a generic fallback for missing or unknown codes. Backend diagnostic text is never inspected or displayed. Failed attachments are keyboard-focusable and remain removable without creating another chat.
 
 The `knowledge-base-documents-card/` widget provides scope-agnostic document management through an injected controller, including optional personal URL ingestion.
+
+The `usage-overview/` widget shares aggregate usage displays between organisation admins and super admins. Its `showIndividualUsage` input controls whether `UserUsageSection` mounts at all, so hidden reports render no table, placeholder or hint and make no per-user usage request.

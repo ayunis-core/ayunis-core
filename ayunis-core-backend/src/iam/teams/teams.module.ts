@@ -1,3 +1,5 @@
+import { TeamManagementController } from 'src/iam/teams/presenters/http/team-management.controller';
+import { SuperAdminTeamsController } from 'src/iam/teams/presenters/http/super-admin-teams.controller';
 import { Module } from '@nestjs/common';
 
 import { TeamsController } from './presenters/http/teams.controller';
@@ -8,7 +10,11 @@ import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
 
 @Module({
   imports: [TeamsApplicationModule],
-  controllers: [TeamsController],
+  controllers: [
+    TeamManagementController,
+    TeamsController,
+    SuperAdminTeamsController,
+  ],
   providers: [TeamDtoMapper, TeamMemberDtoMapper],
   exports: [TeamsApplicationModule],
 })

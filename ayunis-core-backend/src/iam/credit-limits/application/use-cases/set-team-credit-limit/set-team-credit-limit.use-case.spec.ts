@@ -1,3 +1,4 @@
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -33,6 +34,10 @@ describe('SetTeamCreditLimitUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: AssertTeamManagementAllowedUseCase,
+          useValue: { execute: jest.fn().mockResolvedValue(undefined) },
+        },
         SetTeamCreditLimitUseCase,
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },

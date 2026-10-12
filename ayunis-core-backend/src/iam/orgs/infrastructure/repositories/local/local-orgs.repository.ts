@@ -234,6 +234,22 @@ export class LocalOrgsRepository extends OrgsRepository {
     }
   }
 
+  async updateUsageVisibility(
+    id: UUID,
+    hideIndividualUsage: boolean,
+  ): Promise<Org> {
+    const result = await this.orgRepository
+      .createQueryBuilder()
+      .update(OrgRecord)
+      .set({ hideIndividualUsage })
+      .where('id = :id', { id })
+      .returning('*')
+      .execute();
+    const record = (result.raw as OrgRecord[]).at(0);
+    if (!record) throw new OrgNotFoundError(id);
+    return OrgMapper.toDomain(record);
+  }
+
   async updateArchived(id: UUID, archived: boolean): Promise<Org> {
     const result = await this.orgRepository
       .createQueryBuilder()

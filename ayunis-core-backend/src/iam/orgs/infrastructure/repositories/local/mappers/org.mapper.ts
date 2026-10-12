@@ -8,6 +8,7 @@ export class OrgMapper {
       id: entity.id,
       name: entity.name,
       archived: entity.archived,
+      hideIndividualUsage: entity.hideIndividualUsage,
       sessionVersion: entity.sessionVersion,
       users: Array.isArray(entity.users)
         ? entity.users.map((user) => UserMapper.toDomain(user))
@@ -22,6 +23,7 @@ export class OrgMapper {
     entity.id = domain.id;
     entity.name = domain.name;
     entity.archived = domain.archived;
+    entity.hideIndividualUsage = domain.hideIndividualUsage;
     entity.sessionVersion = domain.sessionVersion;
     entity.users = domain.users.map((user) => UserMapper.toEntity(user));
     entity.createdAt = domain.createdAt;

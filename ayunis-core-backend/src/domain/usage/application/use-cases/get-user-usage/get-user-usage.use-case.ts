@@ -10,29 +10,41 @@ import {
 } from 'src/domain/usage/application/usage.errors';
 import { validateOptionalDateRange } from 'src/domain/usage/application/usage.utils';
 import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { ContextService } from 'src/common/context/services/context.service';
+import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import {
+  getRequiredUserContext,
+  getSuperAdminContext,
+} from 'src/common/context/required-context';
+import { IndividualUsageForbiddenError } from 'src/domain/usage/application/usage.errors';
 
 @Injectable()
 export class GetUserUsageUseCase {
   private readonly logger = new Logger(GetUserUsageUseCase.name);
 
-  constructor(private readonly usageRepository: UsageRepository) {}
+  constructor(
+    private readonly usageRepository: UsageRepository,
+    private readonly findOrg: FindOrgByIdUseCase,
+    private readonly context: ContextService,
+  ) {}
 
+  @HandleUnexpectedErrors(UnexpectedUsageError)
   async execute(query: GetUserUsageQuery): Promise<UserUsageResult> {
+    this.logger.log(
+      { organizationId: query.organizationId },
+      'Getting user usage',
+    );
     this.validateQuery(query);
-
-    try {
-      return await this.usageRepository.getUserUsage(query);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        { err: error instanceof Error ? error : new Error(String(error)) },
-        'Failed to get user usage',
-      );
-      throw new UnexpectedUsageError(error as Error, {
-        organizationId: query.organizationId,
-      });
+    if (!getSuperAdminContext(this.context)) {
+      const user = getRequiredUserContext(this.context);
+      if (user.orgId !== query.organizationId) {
+        throw new IndividualUsageForbiddenError();
+      }
+      const org = await this.findOrg.execute({ id: query.organizationId });
+      if (org.hideIndividualUsage) throw new IndividualUsageForbiddenError();
     }
+    return this.usageRepository.getUserUsage(query);
   }
 
   private validateQuery(query: GetUserUsageQuery): void {

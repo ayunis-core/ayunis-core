@@ -91,3 +91,7 @@ describe('team policy shortcuts', () => {
     expect(screen.queryByRole('button', { name: 'Credit limit' })).toBeNull();
   });
 });
+
+vi.mock('@/features/permissions/api/useTeamManagementAccess', () => ({
+  useTeamManagementAccess: () => ({ canManageTeams: true, isLoading: false }),
+}));

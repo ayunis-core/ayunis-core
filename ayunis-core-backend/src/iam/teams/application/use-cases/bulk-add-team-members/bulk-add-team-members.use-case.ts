@@ -1,5 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AddTeamMemberUseCase } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.use-case';
+import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
+import { ContextService } from 'src/common/context/services/context.service';
+import { getRequiredOrgId } from 'src/common/context/required-context';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
+import type { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedTeamMemberError } from 'src/iam/teams/application/team-members.errors';
 import { AddTeamMemberCommand } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.command';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
@@ -8,58 +14,66 @@ import {
   UserNotInSameOrgError,
 } from 'src/iam/teams/application/team-members.errors';
 import { UserNotFoundError } from 'src/iam/users/application/users.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class BulkAddTeamMembersUseCase {
   private readonly logger = new Logger(BulkAddTeamMembersUseCase.name);
 
-  constructor(private readonly addTeamMemberUseCase: AddTeamMemberUseCase) {}
+  constructor(
+    private readonly createMember: TeamMemberCreationService,
+    private readonly access: AssertTeamManagementAllowedUseCase,
+    private readonly context: ContextService,
+  ) {}
 
+  @HandleUnexpectedErrors(UnexpectedTeamMemberError)
   async execute(command: BulkAddTeamMembersCommand): Promise<TeamMember[]> {
+    const orgId = getRequiredOrgId(this.context, command.orgId);
+    await this.access.execute({ orgId });
     const uniqueUserIds = [...new Set(command.userIds)];
     this.logger.log(
       { teamId: command.teamId, count: uniqueUserIds.length },
       'execute',
     );
 
-    try {
-      const added = await this.addMembers(command, uniqueUserIds);
-      this.logger.debug(
-        {
-          teamId: command.teamId,
-          requested: uniqueUserIds.length,
-          added: added.length,
-        },
-        'Bulk add finished',
-      );
-      return added;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        { err: error as Error, teamId: command.teamId },
-        'Error bulk adding team members',
-      );
-      throw error;
-    }
+    const added = await this.addMembers(command, uniqueUserIds, orgId);
+    this.logger.debug(
+      {
+        teamId: command.teamId,
+        requested: uniqueUserIds.length,
+        added: added.length,
+      },
+      'Bulk add finished',
+    );
+    return added;
   }
 
   private async addMembers(
     command: BulkAddTeamMembersCommand,
     userIds: BulkAddTeamMembersCommand['userIds'],
+    orgId: UUID,
   ): Promise<TeamMember[]> {
     const added: TeamMember[] = [];
     for (const userId of userIds) {
       try {
         added.push(
-          await this.addTeamMemberUseCase.execute(
-            new AddTeamMemberCommand({ teamId: command.teamId, userId }),
+          await this.createMember.add(
+            new AddTeamMemberCommand({
+              teamId: command.teamId,
+              orgId: command.orgId,
+              userId,
+            }),
+            orgId,
           ),
         );
       } catch (error) {
         if (!this.isSkippable(error)) throw error;
         this.logger.warn(
-          { teamId: command.teamId, userId, reason: error.code },
+          {
+            teamId: command.teamId,
+            orgId: command.orgId,
+            userId,
+            reason: error.code,
+          },
           'Skipped user during bulk add',
         );
       }

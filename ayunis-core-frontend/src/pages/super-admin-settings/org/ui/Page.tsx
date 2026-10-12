@@ -118,7 +118,9 @@ export default function SuperAdminSettingsOrgPage({
       >
         <div className="overflow-x-auto">
           <TabsList>
-            <TabsTrigger value="org">{t('tabs.org')}</TabsTrigger>
+            <TabsTrigger value="org" data-testid="super-admin-org-details-tab">
+              {t('tabs.org')}
+            </TabsTrigger>
             <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
             <TabsTrigger
               value="subscriptions"
@@ -132,7 +134,9 @@ export default function SuperAdminSettingsOrgPage({
               {t('tabs.crawlDomains')}
             </TabsTrigger>
             <TabsTrigger value="addons">{t('tabs.addons')}</TabsTrigger>
-            <TabsTrigger value="usage">{t('tabs.usage')}</TabsTrigger>
+            <TabsTrigger value="usage" data-testid="super-admin-org-usage-tab">
+              {t('tabs.usage')}
+            </TabsTrigger>
             <TabsTrigger value="sso">{t('tabs.sso')}</TabsTrigger>
           </TabsList>
         </div>

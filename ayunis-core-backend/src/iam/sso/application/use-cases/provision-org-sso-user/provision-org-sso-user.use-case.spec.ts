@@ -1,3 +1,12 @@
+import type { ContextService } from 'src/common/context/services/context.service';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
+import { AssignUserToTeamsUseCase } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.use-case';
+import type { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import type { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
+import type { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { Team } from 'src/iam/teams/domain/team.entity';
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () =>
@@ -470,6 +479,66 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
       code: 'SSO_INVITE_EXPIRED',
     });
   });
+
+  it.each([SystemRole.CUSTOMER, SystemRole.SUPER_ADMIN])(
+    'applies the live team privacy policy to an SSO invite from %s',
+    async (inviterRole) => {
+      const inviterId = randomUUID();
+      const teamId = randomUUID();
+      findInvite.execute.mockResolvedValue(
+        new Invite({
+          email: login().email,
+          orgId: ORG_ID,
+          role: UserRole.USER,
+          inviterId,
+          teamIds: [teamId],
+          expiresAt: new Date('2099-01-01'),
+        }),
+      );
+      const memberWrites = jest.fn().mockResolvedValue(undefined);
+      const findMember = { execute: jest.fn().mockResolvedValue(user()) };
+      const policy = new AssertTeamManagementAllowedUseCase(
+        { get: () => undefined } as unknown as ContextService,
+        {
+          execute: async () => ({ hideIndividualUsage: true }),
+        } as unknown as FindOrgByIdUseCase,
+        {
+          execute: async () => ({ systemRole: inviterRole }),
+        } as unknown as FindUserByIdUseCase,
+      );
+      const assignments = new AssignUserToTeamsUseCase(
+        policy,
+        {
+          findByIdsAndOrgId: async () => [
+            new Team({
+              id: teamId,
+              name: 'Municipal Operations',
+              orgId: ORG_ID,
+            }),
+          ],
+        } as unknown as TeamsRepository,
+        { createMany: memberWrites } as unknown as TeamMembersRepository,
+        findMember as unknown as FindUserByIdUseCase,
+      );
+      assignUserToTeams.execute.mockImplementation((input) =>
+        assignments.execute(input),
+      );
+      if (inviterRole === SystemRole.CUSTOMER) {
+        await expect(useCase().execute(command())).rejects.toMatchObject({
+          code: 'TEAM_MANAGEMENT_RESTRICTED',
+        });
+        expect(memberWrites).not.toHaveBeenCalled();
+        expect(publishUserCreated.publish).not.toHaveBeenCalled();
+      } else {
+        await expect(useCase().execute(command())).resolves.toMatchObject({
+          id: USER_ID,
+        });
+        expect(memberWrites).toHaveBeenCalledWith([
+          expect.objectContaining({ teamId, userId: USER_ID }),
+        ]);
+      }
+    },
+  );
 
   function useCase(): ProvisionOrgSsoUserUseCase {
     return new ProvisionOrgSsoUserUseCase(

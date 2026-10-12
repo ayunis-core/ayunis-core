@@ -16,6 +16,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { useTranslation } from 'react-i18next';
+import UsageVisibilitySection from './UsageVisibilitySection';
 import OrgLifecycleActions from './OrgLifecycleActions';
 import OrgNameItem from '@/pages/super-admin-settings/org/ui/OrgNameItem';
 
@@ -55,6 +56,7 @@ export default function OrgDetails({ org }: Readonly<OrgDetailsProps>) {
           </ItemGroup>
         </CardContent>
       </Card>
+      <UsageVisibilitySection org={org} />
       <OrgLifecycleActions org={org} />
     </div>
   );
