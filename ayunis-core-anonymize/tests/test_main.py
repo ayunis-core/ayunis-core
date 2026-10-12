@@ -134,5 +134,76 @@ class AnalyzeMetricsTests(unittest.TestCase):
         self.assertNotIn("Anna", captured.records[0].getMessage())
 
 
+class AnalyzeQueueDeadlineTests(unittest.TestCase):
+    def test_default_deadline_stays_below_the_callers_timeout(self):
+        self.assertEqual(main.ANALYSIS_QUEUE_DEADLINE_MS, 55_000)
+
+    def test_worker_drops_requests_that_outlived_the_callers_timeout(self):
+        service = Mock()
+
+        with (
+            patch.object(main, "get_presidio_service", return_value=service),
+            patch.object(main, "is_presidio_service_loaded", return_value=True),
+            patch.object(main.time, "perf_counter", return_value=70.0),
+            self.assertLogs(
+                "uvicorn.error.anonymize.analysis", level="INFO"
+            ) as captured,
+            self.assertRaises(main.AnalysisQueueExpiredError) as raised,
+        ):
+            main._analyze("Anna wohnt in Berlin", None, enqueued_at=10.0)
+
+        service.analyze.assert_not_called()
+        self.assertEqual(raised.exception.queue_duration_ms, 60_000.0)
+        payload = json.loads(captured.records[0].getMessage())
+        self.assertEqual(payload["event"], "anonymize_analysis")
+        self.assertEqual(payload["outcome"], "expired")
+        self.assertEqual(payload["text_length"], 20)
+        self.assertEqual(payload["queue_duration_ms"], 60_000.0)
+        self.assertEqual(payload["processing_duration_ms"], 0)
+        self.assertNotIn("Anna", captured.records[0].getMessage())
+
+    def test_worker_runs_requests_that_waited_less_than_the_deadline(self):
+        service = Mock()
+        service.analyze.return_value = []
+
+        with (
+            patch.object(main, "get_presidio_service", return_value=service),
+            patch.object(main, "is_presidio_service_loaded", return_value=True),
+            patch.object(
+                main.time,
+                "perf_counter",
+                side_effect=[64.0, 64.01, 64.02, 64.42],
+            ),
+            self.assertLogs("uvicorn.error.anonymize.analysis", level="INFO"),
+        ):
+            run = main._analyze("Anna wohnt in Berlin", None, enqueued_at=10.0)
+
+        service.analyze.assert_called_once()
+        self.assertEqual(run.metrics.queue_duration_ms, 54_000.0)
+
+    def test_expired_request_answers_service_unavailable(self):
+        async def exercise_endpoint():
+            transport = httpx.ASGITransport(app=main.app)
+            async with httpx.AsyncClient(
+                transport=transport,
+                base_url="http://anonymize.test",
+            ) as client:
+                return await client.post("/analyze", json={"text": "Hallo Anna"})
+
+        with patch.object(
+            main,
+            "_analyze",
+            side_effect=main.AnalysisQueueExpiredError(61_234.5),
+        ):
+            response = asyncio.run(exercise_endpoint())
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.headers["retry-after"], "5")
+        self.assertEqual(
+            response.json()["detail"],
+            "Analysis not started: analysis request expired after 61234ms in queue",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
