@@ -1,10 +1,13 @@
 import { EventEmitter } from 'events';
+import { setNamespace } from '@appsignal/nodejs';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
 import type { RunEventResponseMapper } from 'src/domain/runs/presenters/http/mappers/run-event-response.mapper';
 import { RunSsePresenter } from './run-sse.presenter';
+
+jest.mock('@appsignal/nodejs', () => ({ setNamespace: jest.fn() }));
 
 const THREAD_ID = 'f4b2e1d0-3c5a-4b7e-9d8f-1a2b3c4d5e6f' as UUID;
 
@@ -64,6 +67,12 @@ describe('RunSsePresenter', () => {
 
   const stream = (events: AsyncGenerator<RunEvent>) =>
     presenter.stream(response as unknown as Response, THREAD_ID, () => events);
+
+  it('reports the request under the streaming namespace, not web', async () => {
+    await stream(eventsOf());
+
+    expect(setNamespace).toHaveBeenCalledWith('streaming');
+  });
 
   it('sends sse headers and a connection comment before any event', async () => {
     await stream(eventsOf());
