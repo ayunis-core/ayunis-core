@@ -36,6 +36,7 @@ export class RefreshTokenRecord extends BaseRecord {
   @Column({ type: 'timestamptz', nullable: true })
   familyExpiresAt: Date | null;
 
+  @Index()
   @Column({ type: 'timestamptz' })
   expiresAt: Date;
 
@@ -45,6 +46,7 @@ export class RefreshTokenRecord extends BaseRecord {
   @Column({ type: 'timestamptz', nullable: true })
   revokedAt: Date | null;
 
+  @Index()
   @Column({ type: 'varchar', nullable: true })
   replacedByTokenId: UUID | null;
 

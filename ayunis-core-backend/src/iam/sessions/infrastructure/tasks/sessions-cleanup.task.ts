@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { checkIn } from '@appsignal/nodejs';
 import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 
 /**
@@ -32,10 +33,12 @@ export class SessionsCleanupTask {
     this.logger.log('Starting scheduled sessions cleanup');
 
     try {
-      const deleted = await this.refreshTokensRepository.deleteExpired(
-        new Date(),
-      );
-      this.logger.log({ deleted }, 'Scheduled sessions cleanup completed');
+      await checkIn.cron('sessions_cleanup', async () => {
+        const deleted = await this.refreshTokensRepository.deleteExpired(
+          new Date(),
+        );
+        this.logger.log({ deleted }, 'Scheduled sessions cleanup completed');
+      });
     } catch (error) {
       this.logger.error(
         { err: error as Error },

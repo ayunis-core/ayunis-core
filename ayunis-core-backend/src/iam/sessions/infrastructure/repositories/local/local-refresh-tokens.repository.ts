@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
@@ -13,6 +13,11 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 
 /** Internal control flow: aborts the rotation transaction to roll it back. */
 class RotationLostError extends Error {}
+
+// Each deleted row also fires the self-referencing FK's SET NULL lookup, so a
+// bounded batch keeps every DELETE inside the statement timeout no matter how
+// large the expired backlog has grown (AYC-1237).
+export const EXPIRED_TOKEN_DELETE_BATCH_SIZE = 1000;
 
 @Injectable()
 export class LocalRefreshTokensRepository extends RefreshTokensRepository {
@@ -183,7 +188,28 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   }
 
   async deleteExpired(now: Date): Promise<number> {
-    const result = await this.repository.delete({ expiresAt: LessThan(now) });
+    let deleted = 0;
+    let batch: number;
+    do {
+      batch = await this.deleteExpiredBatch(now);
+      deleted += batch;
+    } while (batch === EXPIRED_TOKEN_DELETE_BATCH_SIZE);
+    return deleted;
+  }
+
+  private async deleteExpiredBatch(now: Date): Promise<number> {
+    const expiredIds = this.repository
+      .createQueryBuilder('token')
+      .select('token.id')
+      .where('token.expiresAt < :now')
+      .limit(EXPIRED_TOKEN_DELETE_BATCH_SIZE)
+      .getQuery();
+    const result = await this.repository
+      .createQueryBuilder()
+      .delete()
+      .from(RefreshTokenRecord)
+      .where(`id IN (${expiredIds})`, { now })
+      .execute();
     return result.affected ?? 0;
   }
 }
