@@ -4,6 +4,7 @@ import {
   parseRetryAfterMs,
 } from '@ayunis/inference';
 import { extractUpstreamStatus } from './extract-upstream-status.helper';
+import { redactProviderMessage } from './redact-provider-message.helper';
 
 export interface ProviderErrorDiagnostics {
   upstreamStatus?: number;
@@ -64,6 +65,19 @@ export function hasRateLimitDiagnostics(
   );
 }
 
+/**
+ * The provider's own explanation of a rejection, redacted for logging. Kept
+ * out of `ProviderErrorDiagnostics` on purpose: diagnostics travel into error
+ * metadata, which 4xx responses expose to clients, while this text may still
+ * carry the provider's wording about the request.
+ */
+export function extractProviderExplanation(error: unknown): string | undefined {
+  const record = asRecord(portableErrorSource(error));
+  const body = asRecord(read(record, 'error'));
+  const nestedError = asRecord(read(body, 'error'));
+  return redactProviderMessage(providerExplanation(record, body, nestedError));
+}
+
 export function extractProviderErrorDiagnostics(
   error: unknown,
 ): ProviderErrorDiagnostics {
@@ -101,6 +115,51 @@ export function extractProviderErrorDiagnostics(
       extractRetryAfterMs(headers),
     ),
   });
+}
+
+const MAX_VALIDATION_MESSAGES = 3;
+
+/**
+ * The explanation lives in the parsed error body where the SDK exposes one
+ * (OpenAI-compatible `error.message`, Mistral's raw `body`). The SDK message
+ * is the fallback; some SDKs prefix it with the status or append the raw
+ * body, which `redactProviderMessage` cuts away.
+ */
+function providerExplanation(
+  record: Record<string, unknown> | undefined,
+  body: Record<string, unknown> | undefined,
+  nestedError: Record<string, unknown> | undefined,
+): string | undefined {
+  return firstString(
+    read(body, 'message'),
+    read(nestedError, 'message'),
+    rawBodyExplanation(read(record, 'body')),
+    read(record, 'message'),
+  );
+}
+
+/** Mistral keeps the response body as a JSON string on the error. */
+function rawBodyExplanation(rawBody: unknown): string | undefined {
+  if (typeof rawBody !== 'string') return undefined;
+  const parsed = asRecord(parseJson(rawBody));
+  const message = read(parsed, 'message');
+  if (typeof message === 'string') return message;
+  const detail = read(parsed, 'detail');
+  const validationMessages = (Array.isArray(detail) ? detail : [])
+    .map((item: unknown) => read(asRecord(item), 'msg'))
+    .filter((msg): msg is string => typeof msg === 'string')
+    .slice(0, MAX_VALIDATION_MESSAGES);
+  return validationMessages.length > 0
+    ? validationMessages.join('; ')
+    : undefined;
+}
+
+function parseJson(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
 }
 
 /** `retry-after-ms` is non-standard but exact, so it wins over `retry-after`. */

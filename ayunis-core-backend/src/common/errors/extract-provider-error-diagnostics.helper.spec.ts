@@ -1,6 +1,7 @@
 import { ModelProviderError } from '@ayunis/inference';
 import {
   extractProviderErrorDiagnostics,
+  extractProviderExplanation,
   hasRateLimitDiagnostics,
   ProviderErrorReason,
 } from './extract-provider-error-diagnostics.helper';
@@ -129,7 +130,7 @@ describe('extractProviderErrorDiagnostics', () => {
 
   it('combines portable facts with safe rejection diagnostics from the cause', () => {
     const cause = Object.assign(
-      new Error("Invalid tool schema containing resident prompt 'classified'"),
+      new Error("Invalid tool schema containing resident prompt '…"),
       {
         status: 400,
         code: 'invalid_function_parameters',
@@ -152,6 +153,120 @@ describe('extractProviderErrorDiagnostics', () => {
       upstreamParam: 'tools[4].function.parameters',
       upstreamRequestId: 'req_portable_456',
       upstreamReason: ProviderErrorReason.INVALID_TOOL_SCHEMA,
+    });
+  });
+
+  describe('extractProviderExplanation', () => {
+    it('prefers the parsed error body over the SDK message', () => {
+      const error = Object.assign(new Error('400 Invalid value for input'), {
+        status: 400,
+        error: { message: 'Invalid value for input', param: 'input' },
+        response: { body: 'resident prompt text' },
+      });
+
+      const explanation = extractProviderExplanation(error);
+
+      expect(explanation).toBe('Invalid value for input');
+      expect(explanation).not.toContain('resident prompt text');
+    });
+
+    it('reads the explanation from a Mistral raw body', () => {
+      const error = Object.assign(
+        new Error(
+          'API error occurred: Status 400 Body: {"object":"error","message":"Invalid tool name"}',
+        ),
+        {
+          statusCode: 400,
+          body: '{"object":"error","message":"Invalid tool name","type":"invalid_request_error"}',
+        },
+      );
+
+      expect(extractProviderExplanation(error)).toBe('Invalid tool name');
+    });
+
+    it('joins validation messages from a Mistral raw body and drops the echoed input', () => {
+      const error = Object.assign(
+        new Error('Unprocessable Entity: Status 422. Body: {"detail":[]}'),
+        {
+          statusCode: 422,
+          body: '{"detail":[{"type":"string_type","loc":["body","messages",2,"content"],"msg":"Input should be a valid string","input":"Sehr geehrte Frau Anna Muster, Ihr Antrag"},{"msg":"Field required","input":{"text":"resident data"}}]}',
+        },
+      );
+
+      const explanation = extractProviderExplanation(error);
+
+      expect(explanation).toBe(
+        'Input should be a valid string; Field required',
+      );
+      expect(explanation).not.toContain('Anna');
+      expect(explanation).not.toContain('resident data');
+    });
+
+    it('never exposes a body that only exists inside the SDK message', () => {
+      const error = Object.assign(
+        new Error(
+          'API error occurred: Status 400\nBody: {"message":"resident text"}',
+        ),
+        { statusCode: 400 },
+      );
+
+      const explanation = extractProviderExplanation(error);
+
+      expect(explanation).toBe('API error occurred: Status 400 Body: {\u2026');
+      expect(explanation).not.toContain('resident text');
+    });
+
+    it('cuts the explanation before an echoed request value', () => {
+      const error = Object.assign(
+        new Error(
+          "400 Invalid value: 'patient's record MRN-4451'. Supported values for 'input[2].type' are listed.",
+        ),
+        { status: 400 },
+      );
+
+      expect(extractProviderExplanation(error)).toBe(
+        "400 Invalid value: '\u2026",
+      );
+    });
+
+    it('returns undefined when the provider sent no message', () => {
+      expect(extractProviderExplanation({ status: 400 })).toBeUndefined();
+      expect(
+        extractProviderExplanation(
+          Object.assign(new Error('  \n '), { status: 400 }),
+        ),
+      ).toBeUndefined();
+    });
+
+    it('never travels inside the diagnostics object', () => {
+      const error = Object.assign(new Error('400 Invalid value for input'), {
+        status: 400,
+        error: { message: 'Invalid value for input' },
+      });
+
+      expect(extractProviderErrorDiagnostics(error)).not.toHaveProperty(
+        'upstreamMessage',
+      );
+    });
+
+    it('reads a Bedrock-style message from the portable error cause', () => {
+      const error = new ModelProviderError({
+        kind: 'rejection',
+        stage: 'stream_establishment',
+        upstreamStatus: 400,
+        cause: Object.assign(
+          new Error('400 Malformed input request, please reformat your input'),
+          { $metadata: { httpStatusCode: 400 } },
+        ),
+      });
+
+      expect(extractProviderErrorDiagnostics(error)).toMatchObject({
+        upstreamStatus: 400,
+        upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
+      });
+      expect(extractProviderExplanation(error)).toBe(
+        '400 Malformed input request, please reformat your input',
+      );
     });
   });
 });

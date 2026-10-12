@@ -216,12 +216,52 @@ describe('ModelCallObservabilityHookFactory', () => {
         upstreamRequestId: 'req_anthropic_400',
         upstreamCode: 'invalid_function_parameters',
         upstreamParam: 'tools[0].function.parameters',
+        upstreamMessage: "Invalid schema echoed resident prompt '…",
         toolSchemaBytes: expect.any(Number),
         toolSetHash: expect.stringMatching(/^[a-f0-9]{64}$/),
       }),
       'Provider stream inference failed',
     );
-    expect(JSON.stringify(logger.error.mock.calls)).not.toContain('classified');
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
+      'Summarize the permit.',
+    );
+  });
+
+  it('logs the bounded upstream message when the provider is unavailable', async () => {
+    const logger = createLoggerMock();
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream() {
+        yield await Promise.reject(
+          new ModelProviderError({
+            kind: 'server',
+            stage: 'stream_establishment',
+            upstreamStatus: 503,
+            cause: new Error('503 Service  overloaded,\n  retry later'),
+          }),
+        );
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        hooks: [hook],
+        retry: { maxRetries: 0 },
+      }),
+    );
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureKind: 'server',
+        upstreamStatus: 503,
+        upstreamMessage: '503 Service overloaded, retry later',
+      }),
+      'Provider unavailable during runtime inference',
+    );
   });
 
   it('does not let completion-event listener failures affect execution', async () => {

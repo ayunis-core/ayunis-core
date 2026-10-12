@@ -751,11 +751,46 @@ describe('adaptRunEventsToStream', () => {
         upstreamType: 'upstream_error',
       }),
     });
+    expect(error).not.toHaveProperty('metadata.upstreamMessage');
     expect((error as InferenceFailedError).toClientResponse()).toEqual({
       code: 'INFERENCE_FAILED',
       message: 'Internal server error',
     });
-    expect(JSON.stringify(error)).not.toContain('sensitive provider response');
+  });
+
+  it('keeps the upstream message out of the incident metadata of a portable rejection', async () => {
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-sol',
+      stream() {
+        throw new ModelProviderError({
+          kind: 'rejection',
+          stage: 'stream_establishment',
+          upstreamStatus: 400,
+          cause: Object.assign(
+            new Error("400 Invalid value for 'input[3]':\n  unsupported item"),
+            { status: 400, type: 'invalid_request_error', param: 'input' },
+          ),
+        });
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'gpt-5.6-sol',
+      provider: 'azure',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceFailedError);
+    expect(error).toMatchObject({
+      metadata: expect.objectContaining({
+        status: 400,
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'input',
+      }),
+    });
+    expect(error).not.toHaveProperty('metadata.upstreamMessage');
+    expect(
+      JSON.stringify((error as InferenceFailedError).toClientResponse()),
+    ).not.toContain('input[3]');
   });
 
   it('maps a full runtime idle stream timeout to INFERENCE_TIMEOUT', async () => {

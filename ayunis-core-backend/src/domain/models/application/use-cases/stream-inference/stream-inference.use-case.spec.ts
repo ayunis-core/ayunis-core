@@ -126,7 +126,7 @@ describe('StreamInferenceUseCase error mapping', () => {
     ).rejects.toBeInstanceOf(InferenceFailedError);
   });
 
-  it('records safe provider diagnostics without the raw provider message', async () => {
+  it('records bounded provider diagnostics that never reach the client', async () => {
     const upstream = Object.assign(
       new Error("Invalid schema containing resident prompt 'classified text'"),
       {
@@ -153,17 +153,21 @@ describe('StreamInferenceUseCase error mapping', () => {
         upstreamReason: 'invalid_tool_schema',
       },
     });
+    await expect(result).rejects.not.toHaveProperty('metadata.upstreamMessage');
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         upstreamCode: 'invalid_function_parameters',
         upstreamParam: 'tools[62].function.parameters',
         upstreamReason: 'invalid_tool_schema',
+        upstreamMessage: "Invalid schema containing resident prompt '…",
       }),
       'Provider stream inference failed',
     );
-    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
-      'classified text',
-    );
+    await expect(
+      result.catch((error: InferenceFailedError) =>
+        JSON.stringify(error.toClientResponse()),
+      ),
+    ).resolves.not.toContain('classified text');
   });
 
   it('recognizes oversized-image rejections through a portable failure cause', async () => {
