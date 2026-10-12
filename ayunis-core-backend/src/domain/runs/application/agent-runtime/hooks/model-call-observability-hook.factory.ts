@@ -96,6 +96,10 @@ export class ModelCallObservabilityHookFactory {
       provider: model.provider,
       modelCallId: outcome.modelCallId,
       trigger: outcome.trigger,
+      callSequence: outcome.callSequence,
+      providerConsumptionStarted: outcome.providerConsumptionStarted,
+      producedOutput: outcome.producedOutput,
+      visibleOutput: outcome.visibleOutput,
       ...providerFailureContext(outcome.providerFailure),
       ...request,
     };

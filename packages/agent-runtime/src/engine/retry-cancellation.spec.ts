@@ -101,6 +101,70 @@ describe('provider retry policy', () => {
     expect(calls).toBe(2);
   });
 
+  it('retries a zero-wait rate limit after a consumed chunk that produced nothing visible', async () => {
+    const outcomes: Array<Record<string, unknown>> = [];
+    let calls = 0;
+    const model: ModelProvider = {
+      name: 'consumed-then-rate-limited',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield { usage: { inputTokens: 10 } };
+          throw new ModelProviderError({
+            kind: 'rate_limit',
+            stage: 'stream_consumption',
+            upstreamStatus: 429,
+            retryAfterMs: 0,
+            cause: new Error('limited'),
+          });
+        }
+        yield* chunks(textTurn('Recovered'));
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [
+          {
+            name: 'outcome-observer',
+            afterModelCall: (ctx) => {
+              outcomes.push({
+                type: ctx.outcome.type,
+                trigger: ctx.trigger,
+                callSequence: ctx.callSequence,
+                providerConsumptionStarted:
+                  ctx.outcome.providerConsumptionStarted,
+                visibleOutput: ctx.outcome.visibleOutput,
+              });
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(calls).toBe(2);
+    expect(outcomes).toEqual([
+      {
+        type: 'provider_failure',
+        trigger: 'initial',
+        callSequence: 1,
+        providerConsumptionStarted: true,
+        visibleOutput: false,
+      },
+      {
+        type: 'accepted',
+        trigger: 'provider_retry',
+        callSequence: 2,
+        providerConsumptionStarted: true,
+        visibleOutput: true,
+      },
+    ]);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
   it('does not retry a consumption-stage rate limit after visible output', async () => {
     let calls = 0;
     const model: ModelProvider = {
