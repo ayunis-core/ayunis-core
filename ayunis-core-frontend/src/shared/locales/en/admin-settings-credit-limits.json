@@ -1,6 +1,11 @@
 {
-  "page": { "title": "Credit limits" },
-  "tabs": { "teams": "Teams", "users": "Users" },
+  "page": {
+    "title": "Credit limits"
+  },
+  "tabs": {
+    "teams": "Teams",
+    "users": "Users"
+  },
   "budget": {
     "title": "Organization credit budget",
     "monthly": "Monthly budget",
@@ -44,7 +49,8 @@
   "creditLimits": {
     "teamCard": {
       "title": "Credit limit",
-      "current": "{{used}} / {{limit}} credits used this month"
+      "current": "{{used}} / {{limit}} credits used this month",
+      "limitOnly": "Monthly credit limit: {{limit}}"
     },
     "set": {
       "success": "Credit limit saved",

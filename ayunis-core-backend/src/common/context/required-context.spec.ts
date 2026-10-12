@@ -8,6 +8,7 @@ import {
   getRequiredOrgId,
   getRequiredUserContext,
   getUserContext,
+  getSuperAdminContext,
   isSuperAdmin,
 } from 'src/common/context/required-context';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -135,5 +136,73 @@ describe('isSuperAdmin', () => {
     });
 
     expect(isSuperAdmin(context)).toBe(false);
+  });
+});
+
+describe('getSuperAdminContext', () => {
+  it('returns the complete context of a super-admin user', () => {
+    expect(getSuperAdminContext(contextWith(USER_STORE))).toEqual(USER_STORE);
+  });
+
+  it('returns undefined for an organisation admin', () => {
+    expect(
+      getSuperAdminContext(
+        contextWith({
+          ...USER_STORE,
+          systemRole: SystemRole.CUSTOMER,
+        }),
+      ),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined for an API key with leaked super-admin roles', () => {
+    expect(
+      getSuperAdminContext(
+        contextWith({
+          apiKeyId: API_KEY_ID,
+          orgId: ORG_ID,
+          role: UserRole.ADMIN,
+          systemRole: SystemRole.SUPER_ADMIN,
+        }),
+      ),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined for an org-only background context', () => {
+    expect(
+      getSuperAdminContext(contextWith({ orgId: ORG_ID })),
+    ).toBeUndefined();
+  });
+
+  it.each(['userId', 'orgId', 'role', 'systemRole'] as const)(
+    'returns undefined when %s is missing',
+    (key) => {
+      expect(
+        getSuperAdminContext(
+          contextWith({
+            ...USER_STORE,
+            [key]: undefined,
+          }),
+        ),
+      ).toBeUndefined();
+    },
+  );
+});
+
+describe('explicit organization targeting', () => {
+  const targetOrgId = '44444444-4444-4444-8444-444444444444' as UUID;
+  it('allows a complete super-admin context to target another organisation', () => {
+    expect(getRequiredOrgId(contextWith(USER_STORE), targetOrgId)).toBe(
+      targetOrgId,
+    );
+  });
+  it.each([
+    { ...USER_STORE, systemRole: SystemRole.CUSTOMER },
+    { orgId: ORG_ID, apiKeyId: API_KEY_ID, systemRole: SystemRole.SUPER_ADMIN },
+    { orgId: ORG_ID },
+  ])('rejects a target override without a human super admin', (store) => {
+    expect(() => getRequiredOrgId(contextWith(store), targetOrgId)).toThrow(
+      UnauthorizedAccessError,
+    );
   });
 });

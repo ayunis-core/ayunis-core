@@ -513,6 +513,8 @@ export interface SuperAdminOrgResponseDto {
   name: string;
   /** Whether the organisation is archived */
   archived: boolean;
+  /** Whether individual usage is hidden from organisation admins */
+  hideIndividualUsage: boolean;
   /** Date when the organization was created */
   createdAt: string;
 }
@@ -561,6 +563,11 @@ export interface SetOrgArchivedRequestDto {
 export interface DeleteOrgRequestDto {
   /** Exact organisation name confirming irreversible deletion */
   confirmationName: string;
+}
+
+export interface SetOrgUsageVisibilityRequestDto {
+  /** Hide individual user usage from organisation admins */
+  hideIndividualUsage: boolean;
 }
 
 export type RolePermissionSetDtoRole = typeof RolePermissionSetDtoRole[keyof typeof RolePermissionSetDtoRole];
@@ -1893,6 +1900,11 @@ export interface UpdateImageGenerationModelRequestDto {
      * @minimum 0
      */
   outputTokenCost?: number;
+}
+
+export interface TeamManagementAccessDto {
+  /** Whether the current human principal satisfies the organisation usage-privacy restriction; mutation permissions are checked separately */
+  canManage: boolean;
 }
 
 export interface CreateTeamDto {
@@ -3965,6 +3977,8 @@ export interface AppAlertResponseDto {
 export interface UsageConfigResponseDto {
   /** Whether the deployment is self-hosted. Determines feature availability. */
   isSelfHosted: boolean;
+  /** Whether individual usage is hidden for this organisation */
+  hideIndividualUsage: boolean;
 }
 
 export interface CreditUsageResponseDto {
@@ -4148,8 +4162,8 @@ export interface UserCreditLimitItemDto {
   email: string;
   /** Configured monthly credit limit */
   monthlyCredits: number;
-  /** Credits consumed in the current calendar month */
-  creditsUsed: number;
+  /** Credits consumed in the current calendar month; omitted when individual usage is hidden */
+  creditsUsed?: number;
 }
 
 export interface TeamCreditLimitItemDto {
@@ -4157,8 +4171,8 @@ export interface TeamCreditLimitItemDto {
   name: string;
   /** Configured monthly credit limit */
   monthlyCredits: number;
-  /** Credits consumed by all current team members in the current month */
-  creditsUsed: number;
+  /** Credits consumed by all current team members in the current month; omitted when individual usage is hidden */
+  creditsUsed?: number;
 }
 
 export interface ApiKeyCreditLimitItemDto {
@@ -5559,6 +5573,17 @@ export const SuperAdminOrgsControllerGetAllOrgsStatus = {
 } as const;
 
 export type TeamsControllerListTeamMembersParams = {
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Number of items to skip
+ */
+offset?: number;
+};
+
+export type SuperAdminTeamsControllerGetMembersParams = {
 /**
  * Maximum number of items per page
  */

@@ -1,3 +1,4 @@
+import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
@@ -58,6 +59,7 @@ export default function BulkInviteDialog({
   orgId,
 }: Readonly<BulkInviteDialogProps>) {
   const { t } = useTranslation('admin-settings-users');
+  const { canManageTeams } = useTeamManagementAccess();
   const [step, setStep] = useState<DialogStep>('upload');
   const [parsedData, setParsedData] = useState<ParsedInvite[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -399,7 +401,12 @@ export default function BulkInviteDialog({
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={!allValid || parsedData.length === 0}
+          disabled={
+            !allValid ||
+            parsedData.length === 0 ||
+            (!canManageTeams &&
+              parsedData.some((item) => item.teamNames.length > 0))
+          }
           data-testid="bulk-invite-submit"
         >
           {t('bulkInvite.submit', { count: validCount })}

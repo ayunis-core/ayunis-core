@@ -1,3 +1,7 @@
+import { SuperAdminTeamCreditLimitsController } from 'src/iam/credit-limits/presenters/http/super-admin-team-credit-limits.controller';
+import { GetAdminUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-admin-user-credit-limits-overview/get-admin-user-credit-limits-overview.use-case';
+import { GetAdminTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-admin-team-credit-limits-overview/get-admin-team-credit-limits-overview.use-case';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsageModule } from 'src/domain/usage/usage.module';
@@ -48,8 +52,9 @@ const apiKeyCreditLimitUseCases = [
     TeamsModule,
     UsersModule,
     UsageModule,
+    OrgsModule,
   ],
-  controllers: [CreditLimitsController],
+  controllers: [CreditLimitsController, SuperAdminTeamCreditLimitsController],
   providers: [
     {
       provide: CreditLimitRepository,
@@ -63,6 +68,8 @@ const apiKeyCreditLimitUseCases = [
     RemoveTeamCreditLimitUseCase,
     ResolveCreditLimitsForUserUseCase,
     GetUserCreditLimitsOverviewUseCase,
+    GetAdminUserCreditLimitsOverviewUseCase,
+    GetAdminTeamCreditLimitsOverviewUseCase,
     GetTeamCreditLimitsOverviewUseCase,
     RemoveOrgCreditLimitsUseCase,
     SubscriptionCancelledListener,
@@ -75,6 +82,8 @@ const apiKeyCreditLimitUseCases = [
     RemoveTeamCreditLimitUseCase,
     ResolveCreditLimitsForUserUseCase,
     GetUserCreditLimitsOverviewUseCase,
+    GetAdminUserCreditLimitsOverviewUseCase,
+    GetAdminTeamCreditLimitsOverviewUseCase,
     GetTeamCreditLimitsOverviewUseCase,
     ...apiKeyCreditLimitUseCases,
   ],

@@ -1740,6 +1740,48 @@
         "tags": ["Super Admin Orgs"]
       }
     },
+    "/super-admin/orgs/{id}/usage-visibility": {
+      "patch": {
+        "operationId": "SuperAdminOrgUsageVisibilityController_setUsageVisibility",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgUsageVisibilityRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Super admin privileges required"
+          }
+        },
+        "summary": "Set individual user usage visibility for an organisation",
+        "tags": ["Super Admin Orgs"]
+      }
+    },
     "/role-permissions": {
       "get": {
         "operationId": "RolePermissionsController_get",
@@ -3886,6 +3928,25 @@
         "tags": ["Super Admin Models"]
       }
     },
+    "/teams/management-access": {
+      "get": {
+        "operationId": "TeamManagementController_getTeamManagementAccess",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamManagementAccessDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["teams"]
+      }
+    },
     "/teams": {
       "get": {
         "operationId": "TeamsController_listTeams",
@@ -4310,6 +4371,205 @@
         },
         "summary": "Remove a user from a team",
         "tags": ["teams"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/teams": {
+      "get": {
+        "operationId": "SuperAdminTeamsController_getTeams",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["super-admin-teams"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/teams/{teamId}/members": {
+      "get": {
+        "operationId": "SuperAdminTeamsController_getMembers",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of items per page",
+            "schema": {
+              "default": 50,
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of items to skip",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTeamMembersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["super-admin-teams"]
+      },
+      "post": {
+        "operationId": "SuperAdminTeamsController_createMember",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTeamMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamMemberResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["super-admin-teams"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/teams/{teamId}/members/{userId}": {
+      "delete": {
+        "operationId": "SuperAdminTeamsController_deleteMember",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["super-admin-teams"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/teams/{teamId}": {
+      "delete": {
+        "operationId": "SuperAdminTeamsController_removeTeam",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["super-admin-teams"]
       }
     },
     "/transcriptions": {
@@ -5796,6 +6056,12 @@
           },
           "403": {
             "description": "Subscription required"
+          },
+          "422": {
+            "description": "NO_DEFAULT_MODEL_FOUND when the caller may use no model at all; SKILL_TEXT_IMPROVEMENT_UNAVAILABLE when every permitted model is anonymous-only"
+          },
+          "502": {
+            "description": "SKILL_TEXT_IMPROVEMENT_FAILED when the model returned no usable text"
           }
         },
         "summary": "Rewrite a skill trigger or its instructions",
@@ -7917,6 +8183,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Individual usage is not accessible"
           }
         },
         "summary": "Get usage statistics by user",
@@ -8076,7 +8345,8 @@
             "in": "path",
             "description": "Organization ID",
             "schema": {
-              "format": "uuid"
+              "format": "uuid",
+              "type": "string"
             }
           }
         ],
@@ -8705,6 +8975,110 @@
         },
         "summary": "Remove an API key credit limit",
         "tags": ["credit-limits"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/credit-limits/teams": {
+      "get": {
+        "operationId": "SuperAdminTeamCreditLimitsController_getTeamLimits",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamCreditLimitItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["super-admin-credit-limits"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/credit-limits/teams/{teamId}": {
+      "put": {
+        "operationId": "SuperAdminTeamCreditLimitsController_setTeamLimit",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["super-admin-credit-limits"]
+      },
+      "delete": {
+        "operationId": "SuperAdminTeamCreditLimitsController_removeTeamLimit",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["super-admin-credit-limits"]
       }
     },
     "/api-keys": {
@@ -12761,6 +13135,11 @@
             "type": "boolean",
             "description": "Whether the organisation is archived"
           },
+          "hideIndividualUsage": {
+            "type": "boolean",
+            "description": "Whether individual usage is hidden from organisation admins",
+            "default": false
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -12768,7 +13147,13 @@
             "example": "2024-01-15T10:30:00Z"
           }
         },
-        "required": ["id", "name", "archived", "createdAt"]
+        "required": [
+          "id",
+          "name",
+          "archived",
+          "hideIndividualUsage",
+          "createdAt"
+        ]
       },
       "SuperAdminOrgListResponseDto": {
         "type": "object",
@@ -12855,6 +13240,17 @@
           }
         },
         "required": ["confirmationName"]
+      },
+      "SetOrgUsageVisibilityRequestDto": {
+        "type": "object",
+        "properties": {
+          "hideIndividualUsage": {
+            "type": "boolean",
+            "description": "Hide individual user usage from organisation admins",
+            "default": false
+          }
+        },
+        "required": ["hideIndividualUsage"]
       },
       "RolePermissionSetDto": {
         "type": "object",
@@ -14742,6 +15138,16 @@
           }
         },
         "required": ["name", "provider", "displayName", "isArchived"]
+      },
+      "TeamManagementAccessDto": {
+        "type": "object",
+        "properties": {
+          "canManage": {
+            "type": "boolean",
+            "description": "Whether the current human principal satisfies the organisation usage-privacy restriction; mutation permissions are checked separately"
+          }
+        },
+        "required": ["canManage"]
       },
       "CreateTeamDto": {
         "type": "object",
@@ -18098,9 +18504,14 @@
             "type": "boolean",
             "description": "Whether the deployment is self-hosted. Determines feature availability.",
             "example": true
+          },
+          "hideIndividualUsage": {
+            "type": "boolean",
+            "description": "Whether individual usage is hidden for this organisation",
+            "default": false
           }
         },
-        "required": ["isSelfHosted"]
+        "required": ["isSelfHosted", "hideIndividualUsage"]
       },
       "CreditUsageResponseDto": {
         "type": "object",
@@ -18467,11 +18878,11 @@
           },
           "creditsUsed": {
             "type": "number",
-            "description": "Credits consumed in the current calendar month",
+            "description": "Credits consumed in the current calendar month; omitted when individual usage is hidden",
             "example": 1240
           }
         },
-        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
+        "required": ["userId", "name", "email", "monthlyCredits"]
       },
       "TeamCreditLimitItemDto": {
         "type": "object",
@@ -18491,11 +18902,11 @@
           },
           "creditsUsed": {
             "type": "number",
-            "description": "Credits consumed by all current team members in the current month",
+            "description": "Credits consumed by all current team members in the current month; omitted when individual usage is hidden",
             "example": 8300
           }
         },
-        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
+        "required": ["teamId", "name", "monthlyCredits"]
       },
       "ApiKeyCreditLimitItemDto": {
         "type": "object",

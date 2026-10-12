@@ -1,3 +1,4 @@
+import type { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import type { UUID } from 'crypto';
 import { AssignUserToTeamsCommand } from './assign-user-to-teams.command';
 import { AssignUserToTeamsUseCase } from './assign-user-to-teams.use-case';
@@ -46,7 +47,14 @@ describe(AssignUserToTeamsUseCase.name, () => {
         }),
       ),
     } as unknown as jest.Mocked<FindUserByIdUseCase>;
-    useCase = new AssignUserToTeamsUseCase(teams, members, findUser);
+    useCase = new AssignUserToTeamsUseCase(
+      {
+        execute: jest.fn().mockResolvedValue(undefined),
+      } as unknown as AssertTeamManagementAllowedUseCase,
+      teams,
+      members,
+      findUser,
+    );
   });
 
   it('assigns a user to multiple teams in one write', async () => {

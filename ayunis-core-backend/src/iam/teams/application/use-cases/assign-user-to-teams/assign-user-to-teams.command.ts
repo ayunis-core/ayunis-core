@@ -5,5 +5,6 @@ export class AssignUserToTeamsCommand {
     public readonly userId: UUID,
     public readonly orgId: UUID,
     public readonly teamIds: UUID[],
+    public readonly inviterId?: UUID,
   ) {}
 }

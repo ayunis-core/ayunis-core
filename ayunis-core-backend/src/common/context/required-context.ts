@@ -11,7 +11,14 @@ import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 // `{ get: jest.fn() }` test doubles working unchanged.
 
 /** Reads the organization of an operation that accepts either principal type. */
-export function getRequiredOrgId(context: ContextService): UUID {
+export function getRequiredOrgId(
+  context: ContextService,
+  targetOrgId?: UUID,
+): UUID {
+  if (targetOrgId) {
+    if (!getSuperAdminContext(context)) throw new UnauthorizedAccessError();
+    return targetOrgId;
+  }
   const orgId = context.get('orgId');
 
   if (!orgId) {
@@ -65,6 +72,13 @@ export function getRequiredUserContext(context: ContextService): UserContext {
   return user;
 }
 
+export function getSuperAdminContext(
+  context: ContextService,
+): UserContext | undefined {
+  const user = getUserContext(context);
+  return user?.systemRole === SystemRole.SUPER_ADMIN ? user : undefined;
+}
+
 export function isSuperAdmin(context: ContextService): boolean {
-  return getUserContext(context)?.systemRole === SystemRole.SUPER_ADMIN;
+  return getSuperAdminContext(context) !== undefined;
 }

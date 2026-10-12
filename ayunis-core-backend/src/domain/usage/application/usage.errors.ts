@@ -3,6 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import type { UUID } from 'crypto';
 
 export enum UsageErrorCode {
+  INDIVIDUAL_USAGE_FORBIDDEN = 'INDIVIDUAL_USAGE_FORBIDDEN',
   USAGE_NOT_FOUND = 'USAGE_NOT_FOUND',
   INVALID_USAGE_DATA = 'INVALID_USAGE_DATA',
   USAGE_COLLECTION_FAILED = 'USAGE_COLLECTION_FAILED',
@@ -19,6 +20,16 @@ export abstract class UsageError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
+  }
+}
+
+export class IndividualUsageForbiddenError extends UsageError {
+  constructor() {
+    super(
+      'Individual usage is not accessible',
+      UsageErrorCode.INDIVIDUAL_USAGE_FORBIDDEN,
+      403,
+    );
   }
 }
 

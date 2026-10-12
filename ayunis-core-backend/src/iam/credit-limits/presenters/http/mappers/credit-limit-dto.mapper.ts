@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { ApiKeyCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/api-key-credit-limit.view';
-import type { TeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/team-credit-limit.view';
-import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
+import type { AdminTeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-admin-team-credit-limits-overview/admin-team-credit-limit.view';
+import type { AdminUserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-admin-user-credit-limits-overview/admin-user-credit-limit.view';
 import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
@@ -42,7 +42,9 @@ export class CreditLimitDtoMapper {
     };
   }
 
-  toUserItems(items: UserCreditLimitOverviewItem[]): UserCreditLimitItemDto[] {
+  toUserItems(
+    items: AdminUserCreditLimitOverviewItem[],
+  ): UserCreditLimitItemDto[] {
     return items.map((item) => ({ ...item }));
   }
 
@@ -52,7 +54,9 @@ export class CreditLimitDtoMapper {
     return items.map((item) => ({ ...item }));
   }
 
-  toTeamItems(items: TeamCreditLimitOverviewItem[]): TeamCreditLimitItemDto[] {
+  toTeamItems(
+    items: AdminTeamCreditLimitOverviewItem[],
+  ): TeamCreditLimitItemDto[] {
     return items.map((item) => ({ ...item }));
   }
 }

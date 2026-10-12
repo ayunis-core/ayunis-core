@@ -28,25 +28,26 @@ export class GetTeamCreditLimitsOverviewUseCase {
   async execute(
     query: GetTeamCreditLimitsOverviewQuery = new GetTeamCreditLimitsOverviewQuery(),
   ): Promise<TeamCreditLimitOverviewItem[]> {
-    const orgId = getRequiredOrgId(this.contextService);
+    const orgId = getRequiredOrgId(this.contextService, query.orgId);
 
     this.logger.log({ orgId }, 'Listing team credit limits');
 
     const limits = await this.creditLimitRepository.findTeamLimits(orgId);
-    return this.enrich(orgId, limits, query.since);
+    return this.enrich(orgId, limits, query.since, query.orgId);
   }
 
   private async enrich(
     orgId: UUID,
     limits: TeamCreditLimit[],
     since?: Date,
+    targetOrgId?: UUID,
   ): Promise<TeamCreditLimitOverviewItem[]> {
     const teamLimits = selectTeamCreditLimits(limits);
     if (teamLimits.length === 0) {
       return [];
     }
 
-    const teams = await this.listTeamsUseCase.execute();
+    const teams = await this.listTeamsUseCase.execute(targetOrgId);
     const teamNameById = new Map<UUID, string>(
       teams.map(({ team }) => [team.id, team.name]),
     );

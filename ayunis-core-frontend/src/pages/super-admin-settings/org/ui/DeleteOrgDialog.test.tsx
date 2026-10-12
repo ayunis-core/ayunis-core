@@ -18,6 +18,7 @@ describe('DeleteOrgDialog', () => {
           name: 'Stadt Musterhausen',
           createdAt: '2026-10-01',
           archived: false,
+          hideIndividualUsage: false,
         }}
       />,
     );

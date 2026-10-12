@@ -1,3 +1,5 @@
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { GetUsageConfigUseCase } from 'src/domain/usage/application/use-cases/get-usage-config/get-usage-config.use-case';
 import { Module } from '@nestjs/common';
 import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
 import { CollectUsageUseCase } from './application/use-cases/collect-usage/collect-usage.use-case';
@@ -30,6 +32,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
 @Module({
   imports: [
     LocalUsageRepositoryModule,
+    OrgsModule,
     PlatformConfigModule,
     SubscriptionsModule,
     TeamsModule,
@@ -47,6 +50,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     GetProviderUsageUseCase,
     GetModelDistributionUseCase,
     GetUserUsageUseCase,
+    GetUsageConfigUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
     GetMonthlyCreditUsageForUserUseCase,
@@ -71,6 +75,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     GetProviderUsageUseCase,
     GetModelDistributionUseCase,
     GetUserUsageUseCase,
+    GetUsageConfigUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
     GetMonthlyCreditUsageForUserUseCase,

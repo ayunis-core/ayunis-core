@@ -22,6 +22,10 @@ export abstract class OrgsRepository {
   ): Promise<Paginated<Org>>;
   abstract create(org: Org): Promise<Org>;
   abstract updateName(id: UUID, name: string): Promise<Org>;
+  abstract updateUsageVisibility(
+    id: UUID,
+    hideIndividualUsage: boolean,
+  ): Promise<Org>;
   abstract updateArchived(id: UUID, archived: boolean): Promise<Org>;
   abstract lockForLifecycleMutation(id: UUID): Promise<void>;
   abstract delete(id: UUID, confirmationName?: string): Promise<void>;

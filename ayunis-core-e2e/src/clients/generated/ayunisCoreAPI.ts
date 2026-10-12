@@ -88,6 +88,8 @@ import type {
   GlobalPiiWhitelistWordDto,
   GrantCrawlDomainRequestDto,
   ImageGenerationModelResponseDto,
+  ImproveSkillTextDto,
+  ImprovedSkillTextResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InstalledMarketplaceSkillResponseDto,
@@ -174,6 +176,7 @@ import type {
   SetOrgSsoEnabledRequestDto,
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
+  SetOrgUsageVisibilityRequestDto,
   SetSkillActivationDto,
   SetSkillPinDto,
   SetTeamDefaultModelDto,
@@ -198,6 +201,7 @@ import type {
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
+  SuperAdminTeamsControllerGetMembersParams,
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
   SuperAdminUsageControllerGetModelDistributionParams,
@@ -210,6 +214,7 @@ import type {
   SuperAdminUsersControllerGetUsersByOrgIdParams,
   TeamCreditLimitItemDto,
   TeamCreditLimitResponseDto,
+  TeamManagementAccessDto,
   TeamMemberResponseDto,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
@@ -874,6 +879,21 @@ const superAdminOrgLifecycleControllerSetOrgArchived = (
       {url: `/super-admin/orgs/${id}/archive`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: setOrgArchivedRequestDto
+    },
+      options);
+    }
+
+/**
+ * @summary Set individual user usage visibility for an organisation
+ */
+const superAdminOrgUsageVisibilityControllerSetUsageVisibility = (
+    id: string,
+    setOrgUsageVisibilityRequestDto: SetOrgUsageVisibilityRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminOrgResponseDto>>,) => {
+      return playwrightApiClient<SuperAdminOrgResponseDto>(
+      {url: `/super-admin/orgs/${id}/usage-visibility`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgUsageVisibilityRequestDto
     },
       options);
     }
@@ -1655,6 +1675,15 @@ const superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel
       options);
     }
 
+const teamManagementControllerGetTeamManagementAccess = (
+
+ options?: SecondParameter<typeof playwrightApiClient<TeamManagementAccessDto>>,) => {
+      return playwrightApiClient<TeamManagementAccessDto>(
+      {url: `/teams/management-access`, method: 'GET'
+    },
+      options);
+    }
+
 /**
  * @summary List all teams for the current organization
  */
@@ -1786,6 +1815,61 @@ const teamsControllerRemoveTeamMember = (
  options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
       return playwrightApiClient<void>(
       {url: `/teams/${id}/members/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+const superAdminTeamsControllerGetTeams = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<TeamResponseDto[]>>,) => {
+      return playwrightApiClient<TeamResponseDto[]>(
+      {url: `/super-admin/orgs/${orgId}/teams`, method: 'GET'
+    },
+      options);
+    }
+
+const superAdminTeamsControllerGetMembers = (
+    orgId: string,
+    teamId: string,
+    params?: SuperAdminTeamsControllerGetMembersParams,
+ options?: SecondParameter<typeof playwrightApiClient<PaginatedTeamMembersResponseDto>>,) => {
+      return playwrightApiClient<PaginatedTeamMembersResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}/members`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+const superAdminTeamsControllerCreateMember = (
+    orgId: string,
+    teamId: string,
+    addTeamMemberDto: AddTeamMemberDto,
+ options?: SecondParameter<typeof playwrightApiClient<TeamMemberResponseDto>>,) => {
+      return playwrightApiClient<TeamMemberResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addTeamMemberDto
+    },
+      options);
+    }
+
+const superAdminTeamsControllerDeleteMember = (
+    orgId: string,
+    teamId: string,
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}/members/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+const superAdminTeamsControllerRemoveTeam = (
+    orgId: string,
+    teamId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}`, method: 'DELETE'
     },
       options);
     }
@@ -2266,6 +2350,20 @@ const skillsControllerInstallFromMarketplace = (
       {url: `/skills/install-from-marketplace`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: installSkillFromMarketplaceDto
+    },
+      options);
+    }
+
+/**
+ * @summary Rewrite a skill trigger or its instructions
+ */
+const skillsControllerImproveText = (
+    improveSkillTextDto: ImproveSkillTextDto,
+ options?: SecondParameter<typeof playwrightApiClient<ImprovedSkillTextResponseDto>>,) => {
+      return playwrightApiClient<ImprovedSkillTextResponseDto>(
+      {url: `/skills/improve-text`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: improveSkillTextDto
     },
       options);
     }
@@ -2946,6 +3044,510 @@ const superAdminAnonymizationWhitelistControllerRemove = (
     }
 
 /**
+ * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
+ * @summary Get the current credits-per-euro configuration
+ */
+const superAdminPlatformConfigControllerGetCreditsPerEuro = (
+
+ options?: SecondParameter<typeof playwrightApiClient<CreditsPerEuroResponseDto>>,) => {
+      return playwrightApiClient<CreditsPerEuroResponseDto>(
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Update the global credits-per-euro value used for credit calculations. Super admin only.
+ * @summary Set the credits-per-euro configuration
+ */
+const superAdminPlatformConfigControllerSetCreditsPerEuro = (
+    setCreditsPerEuroRequestDto: SetCreditsPerEuroRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditsPerEuroRequestDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
+ * @summary Get the current fair-use limits
+ */
+const superAdminPlatformConfigControllerGetFairUseLimits = (
+
+ options?: SecondParameter<typeof playwrightApiClient<FairUseLimitsResponseDto>>,) => {
+      return playwrightApiClient<FairUseLimitsResponseDto>(
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.
+ * @summary Set the fair-use limit for a single model tier
+ */
+const superAdminPlatformConfigControllerSetFairUseLimit = (
+    setFairUseLimitRequestDto: SetFairUseLimitRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setFairUseLimitRequestDto
+    },
+      options);
+    }
+
+/**
+ * Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.
+ * @summary Set the fair-use limit for image generation
+ */
+const superAdminPlatformConfigControllerSetImageFairUseLimit = (
+    setImageFairUseLimitRequestDto: SetImageFairUseLimitRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/platform-config/image-fair-use-limit`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setImageFairUseLimitRequestDto
+    },
+      options);
+    }
+
+/**
+ * Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.
+ * @summary Set the app-wide alert banner
+ */
+const superAdminPlatformConfigControllerSetAppAlert = (
+    setAppAlertRequestDto: SetAppAlertRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/platform-config/app-alert`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setAppAlertRequestDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.
+ * @summary Get the current app-wide alert banner
+ */
+const appAlertControllerGetAppAlert = (
+
+ options?: SecondParameter<typeof playwrightApiClient<AppAlertResponseDto>>,) => {
+      return playwrightApiClient<AppAlertResponseDto>(
+      {url: `/app-alert`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.
+ * @summary Get usage dashboard configuration
+ */
+const usageControllerGetUsageConfig = (
+
+ options?: SecondParameter<typeof playwrightApiClient<UsageConfigResponseDto>>,) => {
+      return playwrightApiClient<UsageConfigResponseDto>(
+      {url: `/usage/config`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
+ * @summary Get credit usage for the current month
+ */
+const usageControllerGetCreditUsage = (
+
+ options?: SecondParameter<typeof playwrightApiClient<CreditUsageResponseDto>>,) => {
+      return playwrightApiClient<CreditUsageResponseDto>(
+      {url: `/usage/credits`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.
+ * @summary Get usage statistics by user
+ */
+const usageControllerGetUserUsage = (
+    params?: UsageControllerGetUserUsageParams,
+ options?: SecondParameter<typeof playwrightApiClient<UserUsageResponseDto>>,) => {
+      return playwrightApiClient<UserUsageResponseDto>(
+      {url: `/usage/users`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get overall usage statistics for the current organization
+ */
+const usageControllerGetUsageStats = (
+    params?: UsageControllerGetUsageStatsParams,
+ options?: SecondParameter<typeof playwrightApiClient<UsageStatsResponseDto>>,) => {
+      return playwrightApiClient<UsageStatsResponseDto>(
+      {url: `/usage/stats`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get usage distribution by model for the current organization
+ */
+const usageControllerGetModelDistribution = (
+    params?: UsageControllerGetModelDistributionParams,
+ options?: SecondParameter<typeof playwrightApiClient<ModelDistributionResponseDto>>,) => {
+      return playwrightApiClient<ModelDistributionResponseDto>(
+      {url: `/usage/models`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get provider usage time series for the current organization (chart-ready)
+ */
+const usageControllerGetProviderUsageChart = (
+    params?: UsageControllerGetProviderUsageChartParams,
+ options?: SecondParameter<typeof playwrightApiClient<ProviderUsageChartResponseDto>>,) => {
+      return playwrightApiClient<ProviderUsageChartResponseDto>(
+      {url: `/usage/providers/chart`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get usage dashboard configuration for an organization
+ */
+const superAdminUsageControllerGetUsageConfig = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<UsageConfigResponseDto>>,) => {
+      return playwrightApiClient<UsageConfigResponseDto>(
+      {url: `/super-admin/usage/${orgId}/config`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
+ * @summary Get credit usage for an organization
+ */
+const superAdminUsageControllerGetCreditUsage = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<CreditUsageResponseDto>>,) => {
+      return playwrightApiClient<CreditUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/credits`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get overall usage statistics for an organization
+ */
+const superAdminUsageControllerGetUsageStats = (
+    orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams,
+ options?: SecondParameter<typeof playwrightApiClient<UsageStatsResponseDto>>,) => {
+      return playwrightApiClient<UsageStatsResponseDto>(
+      {url: `/super-admin/usage/${orgId}/stats`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get usage distribution by model for an organization
+ */
+const superAdminUsageControllerGetModelDistribution = (
+    orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams,
+ options?: SecondParameter<typeof playwrightApiClient<ModelDistributionResponseDto>>,) => {
+      return playwrightApiClient<ModelDistributionResponseDto>(
+      {url: `/super-admin/usage/${orgId}/models`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get usage statistics by provider for an organization
+ */
+const superAdminUsageDataControllerGetProviderUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams,
+ options?: SecondParameter<typeof playwrightApiClient<ProviderUsageResponseDto>>,) => {
+      return playwrightApiClient<ProviderUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/providers`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get provider usage time series for an organization (chart-ready)
+ */
+const superAdminUsageDataControllerGetProviderUsageChart = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,
+ options?: SecondParameter<typeof playwrightApiClient<ProviderUsageChartResponseDto>>,) => {
+      return playwrightApiClient<ProviderUsageChartResponseDto>(
+      {url: `/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get usage statistics by user for an organization
+ */
+const superAdminUsageDataControllerGetUserUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams,
+ options?: SecondParameter<typeof playwrightApiClient<UserUsageResponseDto>>,) => {
+      return playwrightApiClient<UserUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/users`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary List configured user credit limits with current consumption
+ */
+const creditLimitsControllerGetUserLimits = (
+
+ options?: SecondParameter<typeof playwrightApiClient<UserCreditLimitItemDto[]>>,) => {
+      return playwrightApiClient<UserCreditLimitItemDto[]>(
+      {url: `/credit-limits/users`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary List configured team credit limits with current consumption
+ */
+const creditLimitsControllerGetTeamLimits = (
+
+ options?: SecondParameter<typeof playwrightApiClient<TeamCreditLimitItemDto[]>>,) => {
+      return playwrightApiClient<TeamCreditLimitItemDto[]>(
+      {url: `/credit-limits/teams`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary List configured API key credit limits with current consumption
+ */
+const creditLimitsControllerGetApiKeyLimits = (
+
+ options?: SecondParameter<typeof playwrightApiClient<ApiKeyCreditLimitItemDto[]>>,) => {
+      return playwrightApiClient<ApiKeyCreditLimitItemDto[]>(
+      {url: `/credit-limits/api-keys`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Set a monthly credit limit for a user
+ */
+const creditLimitsControllerSetUserLimit = (
+    userId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ options?: SecondParameter<typeof playwrightApiClient<UserCreditLimitResponseDto>>,) => {
+      return playwrightApiClient<UserCreditLimitResponseDto>(
+      {url: `/credit-limits/users/${userId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      options);
+    }
+
+/**
+ * @summary Remove a user credit limit (back to unlimited)
+ */
+const creditLimitsControllerRemoveUserLimit = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/credit-limits/users/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Set a monthly credit limit for a team
+ */
+const creditLimitsControllerSetTeamLimit = (
+    teamId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ options?: SecondParameter<typeof playwrightApiClient<TeamCreditLimitResponseDto>>,) => {
+      return playwrightApiClient<TeamCreditLimitResponseDto>(
+      {url: `/credit-limits/teams/${teamId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      options);
+    }
+
+/**
+ * @summary Remove a team credit limit (back to unlimited)
+ */
+const creditLimitsControllerRemoveTeamLimit = (
+    teamId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/credit-limits/teams/${teamId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Set a monthly credit limit for an API key
+ */
+const creditLimitsControllerSetApiKeyLimit = (
+    apiKeyId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ options?: SecondParameter<typeof playwrightApiClient<ApiKeyCreditLimitResponseDto>>,) => {
+      return playwrightApiClient<ApiKeyCreditLimitResponseDto>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      options);
+    }
+
+/**
+ * @summary Remove an API key credit limit
+ */
+const creditLimitsControllerRemoveApiKeyLimit = (
+    apiKeyId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+const superAdminTeamCreditLimitsControllerGetTeamLimits = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<TeamCreditLimitItemDto[]>>,) => {
+      return playwrightApiClient<TeamCreditLimitItemDto[]>(
+      {url: `/super-admin/orgs/${orgId}/credit-limits/teams`, method: 'GET'
+    },
+      options);
+    }
+
+const superAdminTeamCreditLimitsControllerSetTeamLimit = (
+    orgId: string,
+    teamId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ options?: SecondParameter<typeof playwrightApiClient<TeamCreditLimitResponseDto>>,) => {
+      return playwrightApiClient<TeamCreditLimitResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/credit-limits/teams/${teamId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      options);
+    }
+
+const superAdminTeamCreditLimitsControllerRemoveTeamLimit = (
+    orgId: string,
+    teamId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/orgs/${orgId}/credit-limits/teams/${teamId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary List API keys for the current organization
+ */
+const apiKeysControllerListApiKeys = (
+
+ options?: SecondParameter<typeof playwrightApiClient<ApiKeyResponseDto[]>>,) => {
+      return playwrightApiClient<ApiKeyResponseDto[]>(
+      {url: `/api-keys`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+const apiKeysControllerCreateApiKey = (
+    createApiKeyDto: CreateApiKeyDto,
+ options?: SecondParameter<typeof playwrightApiClient<CreateApiKeyResponseDto>>,) => {
+      return playwrightApiClient<CreateApiKeyResponseDto>(
+      {url: `/api-keys`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createApiKeyDto
+    },
+      options);
+    }
+
+/**
+ * @summary Revoke an API key
+ */
+const apiKeysControllerRevokeApiKey = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/api-keys/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Create a new trial for an organization. Only accessible to users with the super admin system role.
+ * @summary Create a new trial
+ */
+const superAdminTrialsControllerCreateTrial = (
+    createTrialRequestDto: CreateTrialRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminTrialResponseDto>>,) => {
+      return playwrightApiClient<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTrialRequestDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
+ * @summary Get a trial by organization ID
+ */
+const superAdminTrialsControllerGetTrialByOrgId = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminTrialResponseDtoNullable>>,) => {
+      return playwrightApiClient<SuperAdminTrialResponseDtoNullable>(
+      {url: `/super-admin/trials/${orgId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
+ * @summary Update a trial
+ */
+const superAdminTrialsControllerUpdateTrial = (
+    orgId: string,
+    updateTrialRequestDto: UpdateTrialRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminTrialResponseDto>>,) => {
+      return playwrightApiClient<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTrialRequestDto
+    },
+      options);
+    }
+
+/**
  * Create a new skill template. Only accessible to super admins.
  * @summary Create a new skill template
  */
@@ -3225,279 +3827,6 @@ const letterheadsControllerDownloadContinuationPagePdf = (
     }
 
 /**
- * Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.
- * @summary Get usage dashboard configuration
- */
-const usageControllerGetUsageConfig = (
-
- options?: SecondParameter<typeof playwrightApiClient<UsageConfigResponseDto>>,) => {
-      return playwrightApiClient<UsageConfigResponseDto>(
-      {url: `/usage/config`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
- * @summary Get credit usage for the current month
- */
-const usageControllerGetCreditUsage = (
-
- options?: SecondParameter<typeof playwrightApiClient<CreditUsageResponseDto>>,) => {
-      return playwrightApiClient<CreditUsageResponseDto>(
-      {url: `/usage/credits`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.
- * @summary Get usage statistics by user
- */
-const usageControllerGetUserUsage = (
-    params?: UsageControllerGetUserUsageParams,
- options?: SecondParameter<typeof playwrightApiClient<UserUsageResponseDto>>,) => {
-      return playwrightApiClient<UserUsageResponseDto>(
-      {url: `/usage/users`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get overall usage statistics for the current organization
- */
-const usageControllerGetUsageStats = (
-    params?: UsageControllerGetUsageStatsParams,
- options?: SecondParameter<typeof playwrightApiClient<UsageStatsResponseDto>>,) => {
-      return playwrightApiClient<UsageStatsResponseDto>(
-      {url: `/usage/stats`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get usage distribution by model for the current organization
- */
-const usageControllerGetModelDistribution = (
-    params?: UsageControllerGetModelDistributionParams,
- options?: SecondParameter<typeof playwrightApiClient<ModelDistributionResponseDto>>,) => {
-      return playwrightApiClient<ModelDistributionResponseDto>(
-      {url: `/usage/models`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get provider usage time series for the current organization (chart-ready)
- */
-const usageControllerGetProviderUsageChart = (
-    params?: UsageControllerGetProviderUsageChartParams,
- options?: SecondParameter<typeof playwrightApiClient<ProviderUsageChartResponseDto>>,) => {
-      return playwrightApiClient<ProviderUsageChartResponseDto>(
-      {url: `/usage/providers/chart`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get usage dashboard configuration for an organization
- */
-const superAdminUsageControllerGetUsageConfig = (
-    orgId: unknown,
- options?: SecondParameter<typeof playwrightApiClient<UsageConfigResponseDto>>,) => {
-      return playwrightApiClient<UsageConfigResponseDto>(
-      {url: `/super-admin/usage/${orgId}/config`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.
- * @summary Get credit usage for an organization
- */
-const superAdminUsageControllerGetCreditUsage = (
-    orgId: string,
- options?: SecondParameter<typeof playwrightApiClient<CreditUsageResponseDto>>,) => {
-      return playwrightApiClient<CreditUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/credits`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Get overall usage statistics for an organization
- */
-const superAdminUsageControllerGetUsageStats = (
-    orgId: string,
-    params?: SuperAdminUsageControllerGetUsageStatsParams,
- options?: SecondParameter<typeof playwrightApiClient<UsageStatsResponseDto>>,) => {
-      return playwrightApiClient<UsageStatsResponseDto>(
-      {url: `/super-admin/usage/${orgId}/stats`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get usage distribution by model for an organization
- */
-const superAdminUsageControllerGetModelDistribution = (
-    orgId: string,
-    params?: SuperAdminUsageControllerGetModelDistributionParams,
- options?: SecondParameter<typeof playwrightApiClient<ModelDistributionResponseDto>>,) => {
-      return playwrightApiClient<ModelDistributionResponseDto>(
-      {url: `/super-admin/usage/${orgId}/models`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get usage statistics by provider for an organization
- */
-const superAdminUsageDataControllerGetProviderUsage = (
-    orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageParams,
- options?: SecondParameter<typeof playwrightApiClient<ProviderUsageResponseDto>>,) => {
-      return playwrightApiClient<ProviderUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/providers`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get provider usage time series for an organization (chart-ready)
- */
-const superAdminUsageDataControllerGetProviderUsageChart = (
-    orgId: string,
-    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,
- options?: SecondParameter<typeof playwrightApiClient<ProviderUsageChartResponseDto>>,) => {
-      return playwrightApiClient<ProviderUsageChartResponseDto>(
-      {url: `/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get usage statistics by user for an organization
- */
-const superAdminUsageDataControllerGetUserUsage = (
-    orgId: string,
-    params?: SuperAdminUsageDataControllerGetUserUsageParams,
- options?: SecondParameter<typeof playwrightApiClient<UserUsageResponseDto>>,) => {
-      return playwrightApiClient<UserUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/users`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
- * @summary Get the current credits-per-euro configuration
- */
-const superAdminPlatformConfigControllerGetCreditsPerEuro = (
-
- options?: SecondParameter<typeof playwrightApiClient<CreditsPerEuroResponseDto>>,) => {
-      return playwrightApiClient<CreditsPerEuroResponseDto>(
-      {url: `/super-admin/platform-config/credits-per-euro`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Update the global credits-per-euro value used for credit calculations. Super admin only.
- * @summary Set the credits-per-euro configuration
- */
-const superAdminPlatformConfigControllerSetCreditsPerEuro = (
-    setCreditsPerEuroRequestDto: SetCreditsPerEuroRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/platform-config/credits-per-euro`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditsPerEuroRequestDto
-    },
-      options);
-    }
-
-/**
- * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
- * @summary Get the current fair-use limits
- */
-const superAdminPlatformConfigControllerGetFairUseLimits = (
-
- options?: SecondParameter<typeof playwrightApiClient<FairUseLimitsResponseDto>>,) => {
-      return playwrightApiClient<FairUseLimitsResponseDto>(
-      {url: `/super-admin/platform-config/fair-use-limits`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.
- * @summary Set the fair-use limit for a single model tier
- */
-const superAdminPlatformConfigControllerSetFairUseLimit = (
-    setFairUseLimitRequestDto: SetFairUseLimitRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/platform-config/fair-use-limits`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setFairUseLimitRequestDto
-    },
-      options);
-    }
-
-/**
- * Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.
- * @summary Set the fair-use limit for image generation
- */
-const superAdminPlatformConfigControllerSetImageFairUseLimit = (
-    setImageFairUseLimitRequestDto: SetImageFairUseLimitRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/platform-config/image-fair-use-limit`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setImageFairUseLimitRequestDto
-    },
-      options);
-    }
-
-/**
- * Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.
- * @summary Set the app-wide alert banner
- */
-const superAdminPlatformConfigControllerSetAppAlert = (
-    setAppAlertRequestDto: SetAppAlertRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/platform-config/app-alert`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setAppAlertRequestDto
-    },
-      options);
-    }
-
-/**
- * Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.
- * @summary Get the current app-wide alert banner
- */
-const appAlertControllerGetAppAlert = (
-
- options?: SecondParameter<typeof playwrightApiClient<AppAlertResponseDto>>,) => {
-      return playwrightApiClient<AppAlertResponseDto>(
-      {url: `/app-alert`, method: 'GET'
-    },
-      options);
-    }
-
-/**
  * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
  * @summary Send a message with optional images and receive streaming response
  */
@@ -3553,205 +3882,6 @@ const threadSourceCitationsControllerGetSourceCitation = (
  options?: SecondParameter<typeof playwrightApiClient<SourceCitationResponseDto>>,) => {
       return playwrightApiClient<SourceCitationResponseDto>(
       {url: `/threads/${threadId}/source-chunks/${chunkId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Create a new trial for an organization. Only accessible to users with the super admin system role.
- * @summary Create a new trial
- */
-const superAdminTrialsControllerCreateTrial = (
-    createTrialRequestDto: CreateTrialRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<SuperAdminTrialResponseDto>>,) => {
-      return playwrightApiClient<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTrialRequestDto
-    },
-      options);
-    }
-
-/**
- * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
- * @summary Get a trial by organization ID
- */
-const superAdminTrialsControllerGetTrialByOrgId = (
-    orgId: string,
- options?: SecondParameter<typeof playwrightApiClient<SuperAdminTrialResponseDtoNullable>>,) => {
-      return playwrightApiClient<SuperAdminTrialResponseDtoNullable>(
-      {url: `/super-admin/trials/${orgId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
- * @summary Update a trial
- */
-const superAdminTrialsControllerUpdateTrial = (
-    orgId: string,
-    updateTrialRequestDto: UpdateTrialRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<SuperAdminTrialResponseDto>>,) => {
-      return playwrightApiClient<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateTrialRequestDto
-    },
-      options);
-    }
-
-/**
- * @summary List configured user credit limits with current consumption
- */
-const creditLimitsControllerGetUserLimits = (
-
- options?: SecondParameter<typeof playwrightApiClient<UserCreditLimitItemDto[]>>,) => {
-      return playwrightApiClient<UserCreditLimitItemDto[]>(
-      {url: `/credit-limits/users`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary List configured team credit limits with current consumption
- */
-const creditLimitsControllerGetTeamLimits = (
-
- options?: SecondParameter<typeof playwrightApiClient<TeamCreditLimitItemDto[]>>,) => {
-      return playwrightApiClient<TeamCreditLimitItemDto[]>(
-      {url: `/credit-limits/teams`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary List configured API key credit limits with current consumption
- */
-const creditLimitsControllerGetApiKeyLimits = (
-
- options?: SecondParameter<typeof playwrightApiClient<ApiKeyCreditLimitItemDto[]>>,) => {
-      return playwrightApiClient<ApiKeyCreditLimitItemDto[]>(
-      {url: `/credit-limits/api-keys`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Set a monthly credit limit for a user
- */
-const creditLimitsControllerSetUserLimit = (
-    userId: string,
-    setCreditLimitDto: SetCreditLimitDto,
- options?: SecondParameter<typeof playwrightApiClient<UserCreditLimitResponseDto>>,) => {
-      return playwrightApiClient<UserCreditLimitResponseDto>(
-      {url: `/credit-limits/users/${userId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditLimitDto
-    },
-      options);
-    }
-
-/**
- * @summary Remove a user credit limit (back to unlimited)
- */
-const creditLimitsControllerRemoveUserLimit = (
-    userId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/credit-limits/users/${userId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Set a monthly credit limit for a team
- */
-const creditLimitsControllerSetTeamLimit = (
-    teamId: string,
-    setCreditLimitDto: SetCreditLimitDto,
- options?: SecondParameter<typeof playwrightApiClient<TeamCreditLimitResponseDto>>,) => {
-      return playwrightApiClient<TeamCreditLimitResponseDto>(
-      {url: `/credit-limits/teams/${teamId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditLimitDto
-    },
-      options);
-    }
-
-/**
- * @summary Remove a team credit limit (back to unlimited)
- */
-const creditLimitsControllerRemoveTeamLimit = (
-    teamId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/credit-limits/teams/${teamId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Set a monthly credit limit for an API key
- */
-const creditLimitsControllerSetApiKeyLimit = (
-    apiKeyId: string,
-    setCreditLimitDto: SetCreditLimitDto,
- options?: SecondParameter<typeof playwrightApiClient<ApiKeyCreditLimitResponseDto>>,) => {
-      return playwrightApiClient<ApiKeyCreditLimitResponseDto>(
-      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setCreditLimitDto
-    },
-      options);
-    }
-
-/**
- * @summary Remove an API key credit limit
- */
-const creditLimitsControllerRemoveApiKeyLimit = (
-    apiKeyId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary List API keys for the current organization
- */
-const apiKeysControllerListApiKeys = (
-
- options?: SecondParameter<typeof playwrightApiClient<ApiKeyResponseDto[]>>,) => {
-      return playwrightApiClient<ApiKeyResponseDto[]>(
-      {url: `/api-keys`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
- */
-const apiKeysControllerCreateApiKey = (
-    createApiKeyDto: CreateApiKeyDto,
- options?: SecondParameter<typeof playwrightApiClient<CreateApiKeyResponseDto>>,) => {
-      return playwrightApiClient<CreateApiKeyResponseDto>(
-      {url: `/api-keys`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createApiKeyDto
-    },
-      options);
-    }
-
-/**
- * @summary Revoke an API key
- */
-const apiKeysControllerRevokeApiKey = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/api-keys/${id}`, method: 'DELETE'
     },
       options);
     }
@@ -4670,7 +4800,7 @@ const logoutControllerLogout = (
       options);
     }
 
-return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,superAdminInvitesControllerGetInvites,superAdminInvitesControllerCreateBulk,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerListTeamMembers,teamsControllerAddTeamMember,teamsControllerBulkAddTeamMembers,teamsControllerRemoveTeamMember,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerResolve,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,appAlertControllerGetAppAlert,runsControllerSendMessage,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,creditLimitsControllerGetUserLimits,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerRevokeApiKey,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,logoutControllerLogout}};
+return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,superAdminInvitesControllerGetInvites,superAdminInvitesControllerCreateBulk,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,superAdminOrgUsageVisibilityControllerSetUsageVisibility,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,teamManagementControllerGetTeamManagementAccess,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerListTeamMembers,teamsControllerAddTeamMember,teamsControllerBulkAddTeamMembers,teamsControllerRemoveTeamMember,superAdminTeamsControllerGetTeams,superAdminTeamsControllerGetMembers,superAdminTeamsControllerCreateMember,superAdminTeamsControllerDeleteMember,superAdminTeamsControllerRemoveTeam,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerResolve,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerImproveText,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,appAlertControllerGetAppAlert,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,creditLimitsControllerGetUserLimits,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,superAdminTeamCreditLimitsControllerGetTeamLimits,superAdminTeamCreditLimitsControllerSetTeamLimit,superAdminTeamCreditLimitsControllerRemoveTeamLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerRevokeApiKey,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,runsControllerSendMessage,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,logoutControllerLogout}};
 export type AppControllerIsCloudResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerIsCloud']>>>
 export type AppControllerHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerHealth']>>>
 export type AppControllerFeatureTogglesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerFeatureToggles']>>>
@@ -4713,6 +4843,7 @@ export type SuperAdminOrgsControllerGetOrgByIdResult = NonNullable<Awaited<Retur
 export type SuperAdminOrgsControllerUpdateOrgResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerUpdateOrg']>>>
 export type SuperAdminOrgLifecycleControllerDeleteOrgResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgLifecycleControllerDeleteOrg']>>>
 export type SuperAdminOrgLifecycleControllerSetOrgArchivedResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgLifecycleControllerSetOrgArchived']>>>
+export type SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgUsageVisibilityControllerSetUsageVisibility']>>>
 export type RolePermissionsControllerGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['rolePermissionsControllerGet']>>>
 export type RolePermissionsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['rolePermissionsControllerUpdate']>>>
 export type MyPermissionsControllerGetMineResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['myPermissionsControllerGetMine']>>>
@@ -4769,6 +4900,7 @@ export type SuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModelResult
 export type SuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel']>>>
 export type SuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel']>>>
 export type SuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel']>>>
+export type TeamManagementControllerGetTeamManagementAccessResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamManagementControllerGetTeamManagementAccess']>>>
 export type TeamsControllerListTeamsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerListTeams']>>>
 export type TeamsControllerCreateTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerCreateTeam']>>>
 export type TeamsControllerListMyTeamsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerListMyTeams']>>>
@@ -4779,6 +4911,11 @@ export type TeamsControllerListTeamMembersResult = NonNullable<Awaited<ReturnTyp
 export type TeamsControllerAddTeamMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerAddTeamMember']>>>
 export type TeamsControllerBulkAddTeamMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerBulkAddTeamMembers']>>>
 export type TeamsControllerRemoveTeamMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerRemoveTeamMember']>>>
+export type SuperAdminTeamsControllerGetTeamsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamsControllerGetTeams']>>>
+export type SuperAdminTeamsControllerGetMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamsControllerGetMembers']>>>
+export type SuperAdminTeamsControllerCreateMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamsControllerCreateMember']>>>
+export type SuperAdminTeamsControllerDeleteMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamsControllerDeleteMember']>>>
+export type SuperAdminTeamsControllerRemoveTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamsControllerRemoveTeam']>>>
 export type TranscriptionsControllerTranscribeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['transcriptionsControllerTranscribe']>>>
 export type SuperAdminCrawlDomainsControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerList']>>>
 export type SuperAdminCrawlDomainsControllerGrantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerGrant']>>>
@@ -4814,6 +4951,7 @@ export type SharesControllerCreateKnowledgeBaseShareResult = NonNullable<Awaited
 export type SharesControllerGetSharesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['sharesControllerGetShares']>>>
 export type SharesControllerDeleteShareResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['sharesControllerDeleteShare']>>>
 export type SkillsControllerInstallFromMarketplaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['skillsControllerInstallFromMarketplace']>>>
+export type SkillsControllerImproveTextResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['skillsControllerImproveText']>>>
 export type SkillsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['skillsControllerCreate']>>>
 export type SkillsControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['skillsControllerFindAll']>>>
 export type SkillsControllerFindInstalledFromMarketplaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['skillsControllerFindInstalledFromMarketplace']>>>
@@ -4867,6 +5005,44 @@ export type AnonymizationSettingsControllerUpdateResult = NonNullable<Awaited<Re
 export type SuperAdminAnonymizationWhitelistControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminAnonymizationWhitelistControllerList']>>>
 export type SuperAdminAnonymizationWhitelistControllerAddResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminAnonymizationWhitelistControllerAdd']>>>
 export type SuperAdminAnonymizationWhitelistControllerRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminAnonymizationWhitelistControllerRemove']>>>
+export type SuperAdminPlatformConfigControllerGetCreditsPerEuroResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerGetCreditsPerEuro']>>>
+export type SuperAdminPlatformConfigControllerSetCreditsPerEuroResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetCreditsPerEuro']>>>
+export type SuperAdminPlatformConfigControllerGetFairUseLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerGetFairUseLimits']>>>
+export type SuperAdminPlatformConfigControllerSetFairUseLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetFairUseLimit']>>>
+export type SuperAdminPlatformConfigControllerSetImageFairUseLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetImageFairUseLimit']>>>
+export type SuperAdminPlatformConfigControllerSetAppAlertResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetAppAlert']>>>
+export type AppAlertControllerGetAppAlertResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appAlertControllerGetAppAlert']>>>
+export type UsageControllerGetUsageConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetUsageConfig']>>>
+export type UsageControllerGetCreditUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetCreditUsage']>>>
+export type UsageControllerGetUserUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetUserUsage']>>>
+export type UsageControllerGetUsageStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetUsageStats']>>>
+export type UsageControllerGetModelDistributionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetModelDistribution']>>>
+export type UsageControllerGetProviderUsageChartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetProviderUsageChart']>>>
+export type SuperAdminUsageControllerGetUsageConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetUsageConfig']>>>
+export type SuperAdminUsageControllerGetCreditUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetCreditUsage']>>>
+export type SuperAdminUsageControllerGetUsageStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetUsageStats']>>>
+export type SuperAdminUsageControllerGetModelDistributionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetModelDistribution']>>>
+export type SuperAdminUsageDataControllerGetProviderUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageDataControllerGetProviderUsage']>>>
+export type SuperAdminUsageDataControllerGetProviderUsageChartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageDataControllerGetProviderUsageChart']>>>
+export type SuperAdminUsageDataControllerGetUserUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageDataControllerGetUserUsage']>>>
+export type CreditLimitsControllerGetUserLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetUserLimits']>>>
+export type CreditLimitsControllerGetTeamLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetTeamLimits']>>>
+export type CreditLimitsControllerGetApiKeyLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetApiKeyLimits']>>>
+export type CreditLimitsControllerSetUserLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetUserLimit']>>>
+export type CreditLimitsControllerRemoveUserLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveUserLimit']>>>
+export type CreditLimitsControllerSetTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetTeamLimit']>>>
+export type CreditLimitsControllerRemoveTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveTeamLimit']>>>
+export type CreditLimitsControllerSetApiKeyLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetApiKeyLimit']>>>
+export type CreditLimitsControllerRemoveApiKeyLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveApiKeyLimit']>>>
+export type SuperAdminTeamCreditLimitsControllerGetTeamLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamCreditLimitsControllerGetTeamLimits']>>>
+export type SuperAdminTeamCreditLimitsControllerSetTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamCreditLimitsControllerSetTeamLimit']>>>
+export type SuperAdminTeamCreditLimitsControllerRemoveTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamCreditLimitsControllerRemoveTeamLimit']>>>
+export type ApiKeysControllerListApiKeysResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerListApiKeys']>>>
+export type ApiKeysControllerCreateApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerCreateApiKey']>>>
+export type ApiKeysControllerRevokeApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerRevokeApiKey']>>>
+export type SuperAdminTrialsControllerCreateTrialResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerCreateTrial']>>>
+export type SuperAdminTrialsControllerGetTrialByOrgIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerGetTrialByOrgId']>>>
+export type SuperAdminTrialsControllerUpdateTrialResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerUpdateTrial']>>>
 export type SuperAdminSkillTemplatesControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerCreate']>>>
 export type SuperAdminSkillTemplatesControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerFindAll']>>>
 export type SuperAdminSkillTemplatesControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerFindOne']>>>
@@ -4886,44 +5062,9 @@ export type LetterheadsControllerUpdateResult = NonNullable<Awaited<ReturnType<R
 export type LetterheadsControllerRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerRemove']>>>
 export type LetterheadsControllerDownloadFirstPagePdfResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerDownloadFirstPagePdf']>>>
 export type LetterheadsControllerDownloadContinuationPagePdfResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerDownloadContinuationPagePdf']>>>
-export type UsageControllerGetUsageConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetUsageConfig']>>>
-export type UsageControllerGetCreditUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetCreditUsage']>>>
-export type UsageControllerGetUserUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetUserUsage']>>>
-export type UsageControllerGetUsageStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetUsageStats']>>>
-export type UsageControllerGetModelDistributionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetModelDistribution']>>>
-export type UsageControllerGetProviderUsageChartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['usageControllerGetProviderUsageChart']>>>
-export type SuperAdminUsageControllerGetUsageConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetUsageConfig']>>>
-export type SuperAdminUsageControllerGetCreditUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetCreditUsage']>>>
-export type SuperAdminUsageControllerGetUsageStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetUsageStats']>>>
-export type SuperAdminUsageControllerGetModelDistributionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageControllerGetModelDistribution']>>>
-export type SuperAdminUsageDataControllerGetProviderUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageDataControllerGetProviderUsage']>>>
-export type SuperAdminUsageDataControllerGetProviderUsageChartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageDataControllerGetProviderUsageChart']>>>
-export type SuperAdminUsageDataControllerGetUserUsageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsageDataControllerGetUserUsage']>>>
-export type SuperAdminPlatformConfigControllerGetCreditsPerEuroResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerGetCreditsPerEuro']>>>
-export type SuperAdminPlatformConfigControllerSetCreditsPerEuroResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetCreditsPerEuro']>>>
-export type SuperAdminPlatformConfigControllerGetFairUseLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerGetFairUseLimits']>>>
-export type SuperAdminPlatformConfigControllerSetFairUseLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetFairUseLimit']>>>
-export type SuperAdminPlatformConfigControllerSetImageFairUseLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetImageFairUseLimit']>>>
-export type SuperAdminPlatformConfigControllerSetAppAlertResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetAppAlert']>>>
-export type AppAlertControllerGetAppAlertResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appAlertControllerGetAppAlert']>>>
 export type RunsControllerSendMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['runsControllerSendMessage']>>>
 export type ThreadAiContextControllerGetAiContextResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadAiContextControllerGetAiContext']>>>
 export type ThreadSourceCitationsControllerGetSourceCitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadSourceCitationsControllerGetSourceCitation']>>>
-export type SuperAdminTrialsControllerCreateTrialResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerCreateTrial']>>>
-export type SuperAdminTrialsControllerGetTrialByOrgIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerGetTrialByOrgId']>>>
-export type SuperAdminTrialsControllerUpdateTrialResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerUpdateTrial']>>>
-export type CreditLimitsControllerGetUserLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetUserLimits']>>>
-export type CreditLimitsControllerGetTeamLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetTeamLimits']>>>
-export type CreditLimitsControllerGetApiKeyLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetApiKeyLimits']>>>
-export type CreditLimitsControllerSetUserLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetUserLimit']>>>
-export type CreditLimitsControllerRemoveUserLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveUserLimit']>>>
-export type CreditLimitsControllerSetTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetTeamLimit']>>>
-export type CreditLimitsControllerRemoveTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveTeamLimit']>>>
-export type CreditLimitsControllerSetApiKeyLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetApiKeyLimit']>>>
-export type CreditLimitsControllerRemoveApiKeyLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveApiKeyLimit']>>>
-export type ApiKeysControllerListApiKeysResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerListApiKeys']>>>
-export type ApiKeysControllerCreateApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerCreateApiKey']>>>
-export type ApiKeysControllerRevokeApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerRevokeApiKey']>>>
 export type ChatSettingsControllerGetSystemPromptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['chatSettingsControllerGetSystemPrompt']>>>
 export type ChatSettingsControllerUpsertSystemPromptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['chatSettingsControllerUpsertSystemPrompt']>>>
 export type ChatSettingsControllerDeleteSystemPromptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['chatSettingsControllerDeleteSystemPrompt']>>>

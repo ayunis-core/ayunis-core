@@ -3,14 +3,15 @@ import { getMonthDateRange } from '@/shared/lib/getMonthDateRange';
 import { UsageStatsCardsWidget } from '@/widgets/usage-stats-cards';
 import { ProviderConsumptionWidget } from '@/widgets/provider-consumption-chart';
 import { ModelDistributionWidget } from '@/widgets/model-distribution-chart';
-import { buildModelFilterOptions } from '../lib/buildModelFilterOptions';
+import { buildModelFilterOptions } from '@/widgets/usage-overview/lib/buildModelFilterOptions';
 import { CreditBudgetCard } from './CreditBudgetCard';
 import { UsageOverviewFilters } from './UsageOverviewFilters';
 import { UserUsageSection } from './UserUsageSection';
-import type { UsageOverviewHooks } from '../model/types';
+import type { UsageOverviewHooks } from '@/widgets/usage-overview/model/types';
 
 interface UsageOverviewProps {
   hooks: UsageOverviewHooks;
+  showIndividualUsage?: boolean;
 }
 
 /**
@@ -20,7 +21,10 @@ interface UsageOverviewProps {
  * month only. Data access is injected via `hooks` so each surface calls its
  * own generated endpoints.
  */
-export function UsageOverview({ hooks }: Readonly<UsageOverviewProps>) {
+export function UsageOverview({
+  hooks,
+  showIndividualUsage = true,
+}: Readonly<UsageOverviewProps>) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -99,12 +103,14 @@ export function UsageOverview({ hooks }: Readonly<UsageOverviewProps>) {
         error={modelError}
       />
 
-      <UserUsageSection
-        key={`${year}-${month}`}
-        useUserUsage={hooks.useUserUsage}
-        startDate={startIso}
-        endDate={endIso}
-      />
+      {showIndividualUsage && (
+        <UserUsageSection
+          key={`${year}-${month}`}
+          useUserUsage={hooks.useUserUsage}
+          startDate={startIso}
+          endDate={endIso}
+        />
+      )}
     </div>
   );
 }

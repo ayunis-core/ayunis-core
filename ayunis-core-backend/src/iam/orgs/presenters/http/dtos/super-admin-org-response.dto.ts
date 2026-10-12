@@ -20,6 +20,12 @@ export class SuperAdminOrgResponseDto {
   archived: boolean;
 
   @ApiProperty({
+    description: 'Whether individual usage is hidden from organisation admins',
+    default: false,
+  })
+  hideIndividualUsage: boolean;
+
+  @ApiProperty({
     description: 'Date when the organization was created',
     example: '2024-01-15T10:30:00Z',
     type: Date,

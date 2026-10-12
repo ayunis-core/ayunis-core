@@ -4,5 +4,6 @@ export class SetTeamCreditLimitCommand {
   constructor(
     public readonly teamId: UUID,
     public readonly monthlyCredits: number,
+    public readonly orgId?: UUID,
   ) {}
 }

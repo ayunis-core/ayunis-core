@@ -1,3 +1,4 @@
+import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import {
   Card,
   CardContent,
@@ -40,7 +41,7 @@ import { useTriggerPasswordReset } from '@/pages/admin-settings/users-settings/a
 import { useResetUserMfa } from '@/pages/admin-settings/users-settings/api/useResetUserMfa';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import EditUserDialog from './EditUserDialog';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type {
   User,
   UserRole,
@@ -68,6 +69,11 @@ export default function UsersSection({
   paginationSlot,
 }: Readonly<UsersSectionProps>) {
   const { t } = useTranslation('admin-settings-users');
+  const { canManageTeams } = useTeamManagementAccess();
+  const managementAllowed = useRef(canManageTeams);
+  useEffect(() => {
+    managementAllowed.current = canManageTeams;
+  }, [canManageTeams]);
   const { t: tAccountLock } = useTranslation('common', {
     keyPrefix: 'accountLock',
   });
@@ -130,6 +136,7 @@ export default function UsersSection({
       cancelText: t('confirmations.cancelText'),
       variant: 'destructive',
       onConfirm: () => {
+        if (!managementAllowed.current) return;
         setLoadingUserId(user.id);
         deleteUser(user.id);
       },
@@ -315,7 +322,7 @@ export default function UsersSection({
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => handleDeleteUser(user)}
-                        disabled={isUserLoading(user.id)}
+                        disabled={!canManageTeams || isUserLoading(user.id)}
                       >
                         <Trash2 />
                         {t('users.delete')}

@@ -13,6 +13,7 @@ export class SuperAdminOrgResponseDtoMapper {
       id: org.id,
       name: org.name,
       archived: org.archived,
+      hideIndividualUsage: org.hideIndividualUsage,
       createdAt: org.createdAt,
     };
   }

@@ -36,7 +36,10 @@ export function UsageStatsCardsWidget({
   if (!stats) return null;
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div
+      data-testid="usage-aggregate-stats"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+    >
       <Card>
         <CardHeader>
           <CardTitle>{t('stats.totalCredits')}</CardTitle>

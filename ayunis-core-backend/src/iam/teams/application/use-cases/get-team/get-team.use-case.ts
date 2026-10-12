@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { GetTeamQuery } from './get-team.query';
@@ -6,7 +7,6 @@ import {
   TeamNotFoundError,
   UnexpectedTeamError,
 } from 'src/iam/teams/application/teams.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredOrgId } from 'src/common/context/required-context';
 
@@ -19,51 +19,38 @@ export class GetTeamUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedTeamError)
   async execute(query: GetTeamQuery): Promise<Team> {
-    const orgId = getRequiredOrgId(this.contextService);
+    const orgId = getRequiredOrgId(this.contextService, query.orgId);
 
     this.logger.log({ teamId: query.teamId, orgId }, 'execute');
 
-    try {
-      const team = await this.teamsRepository.findById(query.teamId);
+    const team = await this.teamsRepository.findById(query.teamId);
 
-      if (!team) {
-        this.logger.error({ teamId: query.teamId }, 'Team not found');
-        throw new TeamNotFoundError(query.teamId);
-      }
+    if (!team) {
+      this.logger.error({ teamId: query.teamId }, 'Team not found');
+      throw new TeamNotFoundError(query.teamId);
+    }
 
-      if (team.orgId !== orgId) {
-        this.logger.error(
-          {
-            teamId: query.teamId,
-            teamOrgId: team.orgId,
-            requestOrgId: orgId,
-          },
-          'Team does not belong to organization',
-        );
-        throw new TeamNotFoundError(query.teamId);
-      }
-
-      this.logger.debug(
-        {
-          teamId: query.teamId,
-        },
-        'Team retrieved successfully',
-      );
-
-      return team;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
+    if (team.orgId !== orgId) {
       this.logger.error(
         {
-          err: error as Error,
           teamId: query.teamId,
+          teamOrgId: team.orgId,
+          requestOrgId: orgId,
         },
-        'Failed to retrieve team',
+        'Team does not belong to organization',
       );
-      throw new UnexpectedTeamError(error);
+      throw new TeamNotFoundError(query.teamId);
     }
+
+    this.logger.debug(
+      {
+        teamId: query.teamId,
+      },
+      'Team retrieved successfully',
+    );
+
+    return team;
   }
 }
