@@ -1,5 +1,9 @@
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
+import {
+  aUserContext,
+  createMockContextService as createMockUserContextService,
+} from 'src/common/context/testing/context.fixtures';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 
@@ -28,9 +32,10 @@ export function createMockContextService(
     orgId: TEST_ORG_ID,
   },
 ): jest.Mocked<ContextService> {
-  return {
-    get: jest.fn((key: string) => values[key as keyof typeof values]),
-  } as unknown as jest.Mocked<ContextService>;
+  const isAuthenticated = values.userId !== undefined;
+  return createMockUserContextService(
+    isAuthenticated ? aUserContext(values) : values,
+  );
 }
 
 export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesRepository> {

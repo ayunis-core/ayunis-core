@@ -8,8 +8,8 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedEmbeddingModelUseCase {
@@ -32,10 +32,8 @@ export class GetPermittedEmbeddingModelUseCase {
 
     try {
       const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
       const isFromOrg = orgId === query.orgId;
-      if (!isFromOrg && !isSuperAdmin) {
+      if (!isFromOrg && !isSuperAdmin(this.contextService)) {
         throw new UnauthorizedAccessError();
       }
       const model = await this.permittedModelsRepository.findOneEmbedding(

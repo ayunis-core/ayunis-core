@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { FindThreadsByIdsUseCase } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -24,7 +25,7 @@ function setup() {
       ]),
   };
   const context = {
-    get: jest.fn((key: string) => ({ userId, orgId })[key]),
+    get: jest.fn(getFromUserContext({ userId, orgId })),
   };
   return {
     workspaceId,
