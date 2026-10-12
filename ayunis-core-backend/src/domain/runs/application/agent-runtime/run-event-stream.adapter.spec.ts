@@ -36,6 +36,7 @@ import {
   RunContextBudgetExceededError,
   RunMaxIterationsReachedError,
   RunToolRepeatedlyFailingError,
+  RunUsageAccountingFailedError,
   type RunExecutionFailedError,
 } from 'src/domain/runs/application/runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
@@ -400,16 +401,20 @@ describe('adaptRunEventsToStream', () => {
   });
 
   it('maps the usage hook through the specialized accounting error', async () => {
+    const logger = createLoggerMock();
     const result = collect(
       eventsFrom([
         {
           type: 'error',
           code: 'HOOK_FAILED',
-          message: 'usage persistence failed',
+          message:
+            "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
           details: {
             hookName: 'ayunis-usage',
             phase: 'afterModelCall',
+            underlyingError: { code: 'PROVIDER_FAILED' },
           },
+          providerFailure: { kind: 'server', stage: 'stream_consumption' },
           modelCall: {
             modelCallId: 'call-2',
             runId: 'run-1',
@@ -421,14 +426,37 @@ describe('adaptRunEventsToStream', () => {
         },
         { type: 'run_end', status: 'error', usage: {} },
       ]),
+      logger,
     );
 
+    const diagnostics = {
+      hookName: 'ayunis-usage',
+      phase: 'afterModelCall',
+      underlyingErrorCode: 'PROVIDER_FAILED',
+      modelCallId: 'call-2',
+      modelTurn: 2,
+      callSequence: 1,
+      trigger: 'initial',
+      provider: 'anthropic:claude-sonnet-4-5',
+      providerFailureKind: 'server',
+      providerFailureStage: 'stream_consumption',
+    };
     await expect(result).rejects.toMatchObject<
       Partial<RunExecutionFailedError>
     >({
       message: 'Run execution failed: Agent runtime failed',
-      metadata: { modelTurn: 2 },
+      metadata: diagnostics,
     });
+    await expect(result).rejects.toBeInstanceOf(RunUsageAccountingFailedError);
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        execution_path: 'agent_runtime',
+        ...diagnostics,
+        message:
+          "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+      },
+      'Run usage accounting failed',
+    );
   });
 
   it('surfaces a critical hook failure with its execution path', async () => {

@@ -306,7 +306,7 @@ function mapRunError(
     );
   }
   const policyError =
-    mapCreditPolicyError(event) ?? mapUsageAccountingError(event);
+    mapCreditPolicyError(event) ?? mapUsageAccountingError(event, logger);
   if (policyError) return policyError;
   const hookFailure = mapRuntimeHookError(event, logger);
   if (hookFailure) return hookFailure;

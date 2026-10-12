@@ -22,7 +22,7 @@ export function mapRuntimeHookError(
   return new RunExecutionFailedError('Agent runtime hook failed', metadata);
 }
 
-function hookFailureMetadata(
+export function hookFailureMetadata(
   details: Readonly<Record<string, unknown>> | undefined,
 ): ErrorMetadata {
   const metadata: ErrorMetadata = {
