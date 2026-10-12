@@ -214,6 +214,10 @@ describe('ModelCallObservabilityHookFactory', () => {
         provider: model.provider,
         upstreamStatus: 400,
         upstreamRequestId: 'req_anthropic_400',
+        callSequence: 1,
+        providerConsumptionStarted: false,
+        producedOutput: false,
+        visibleOutput: false,
         upstreamCode: 'invalid_function_parameters',
         upstreamParam: 'tools[0].function.parameters',
         toolSchemaBytes: expect.any(Number),
@@ -222,6 +226,105 @@ describe('ModelCallObservabilityHookFactory', () => {
       'Provider stream inference failed',
     );
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain('classified');
+  });
+
+  it('logs that a terminal mid-stream rate limit had already reached the user', async () => {
+    const logger = createLoggerMock();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-terra',
+      async *stream() {
+        calls += 1;
+        yield { thinkingDelta: 'Considering the permit' };
+        throw new ModelProviderError({
+          kind: 'rate_limit',
+          stage: 'stream_consumption',
+          upstreamStatus: 429,
+          retryAfterMs: 3_000,
+          cause: new Error('limited'),
+        });
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    const events = await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        hooks: [hook],
+        retry: { maxRetries: 3, backoff: { initialDelayMs: 0 } },
+      }),
+    );
+
+    expect(calls).toBe(1);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureKind: 'rate_limit',
+        failureStage: 'stream_consumption',
+        trigger: 'initial',
+        callSequence: 1,
+        providerConsumptionStarted: true,
+        producedOutput: true,
+        visibleOutput: true,
+        retryAfterMs: 3_000,
+      }),
+      'Provider unavailable during runtime inference',
+    );
+  });
+
+  it('logs a retried rate limit as not yet visible and with its attempt position', async () => {
+    const logger = createLoggerMock();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-sol',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          throw new ModelProviderError({
+            kind: 'rate_limit',
+            stage: 'stream_consumption',
+            upstreamStatus: 429,
+            retryAfterMs: 0,
+            cause: new Error('limited'),
+          });
+        }
+        yield { textDelta: 'Recovered.', finishReason: 'stop' };
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    const events = await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        hooks: [hook],
+        retry: { maxRetries: 1 },
+      }),
+    );
+
+    expect(calls).toBe(2);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureKind: 'rate_limit',
+        failureStage: 'stream_consumption',
+        trigger: 'initial',
+        callSequence: 1,
+        providerConsumptionStarted: false,
+        producedOutput: false,
+        visibleOutput: false,
+        retryAfterMs: 0,
+      }),
+      'Provider unavailable during runtime inference',
+    );
   });
 
   it('does not let completion-event listener failures affect execution', async () => {
