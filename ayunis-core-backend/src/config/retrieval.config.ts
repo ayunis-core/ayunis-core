@@ -14,7 +14,7 @@ export default registerAs('retrieval', (): RetrievalConfig => ({
     serverUrl: process.env.MISTRAL_OCR_SERVER_URL,
   },
   // Mistral OCR rejects documents above 1000 pages — enforce the cap
-  // before upload so oversized documents fail fast with a clear error.
+  // before OCR so oversized documents fail fast with a clear error.
   processingMaxPdfPages: parseInt(
     process.env.PROCESSING_MAX_PDF_PAGES || '1000',
     10,

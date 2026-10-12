@@ -61,6 +61,17 @@ describe('MistralTranscriptionService', () => {
     return service;
   }
 
+  it('targets the EU server', async () => {
+    await createService({ 'models.mistral.apiKey': 'test-api-key' });
+
+    const { Mistral } = jest.requireMock<{ Mistral: jest.Mock }>(
+      '@mistralai/mistralai',
+    );
+    expect(Mistral).toHaveBeenCalledWith(
+      expect.objectContaining({ server: 'eu' }),
+    );
+  });
+
   it('should send the transcription model configured via models.mistral.transcriptionModel', async () => {
     const service = await createService({
       'models.mistral.apiKey': 'test-api-key',

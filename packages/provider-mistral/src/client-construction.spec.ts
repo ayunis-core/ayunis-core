@@ -22,6 +22,26 @@ describe('mistral client construction', () => {
     );
   });
 
+  it('targets the EU server by default', () => {
+    mistral({ apiKey: 'mistral-key', model: 'mistral-large-latest' });
+
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ server: 'eu' }),
+    );
+  });
+
+  it('lets the host override the server URL', () => {
+    mistral({
+      apiKey: 'mistral-key',
+      model: 'mistral-large-latest',
+      baseUrl: 'http://127.0.0.1:3199',
+    });
+
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ serverURL: 'http://127.0.0.1:3199' }),
+    );
+  });
+
   it('lets the host override the timeout', () => {
     mistral({
       apiKey: 'mistral-key',

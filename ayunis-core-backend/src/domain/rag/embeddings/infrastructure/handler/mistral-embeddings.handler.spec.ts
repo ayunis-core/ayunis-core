@@ -63,6 +63,12 @@ describe('MistralEmbeddingsHandler', () => {
     );
   });
 
+  it('targets the EU server', () => {
+    expect(Mistral).toHaveBeenCalledWith(
+      expect.objectContaining({ server: 'eu' }),
+    );
+  });
+
   it('retries client-side timeouts instead of failing the run', async () => {
     const client = (Mistral as unknown as jest.Mock).mock.results[0].value as {
       embeddings: { create: jest.Mock };
