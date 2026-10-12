@@ -120,7 +120,7 @@ function readFields(fileData: Buffer): FieldsData {
 
 /**
  * Flatten an Outlook message (.msg) into the same plain-text representation
- * {@link extractTextFromEml} produces. Throws when the file is not a readable
+ * {@link parseEml} produces. Throws when the file is not a readable
  * Outlook message.
  */
 export function extractTextFromMsg(fileData: Buffer): string {

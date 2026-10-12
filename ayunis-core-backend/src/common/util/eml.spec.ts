@@ -1,11 +1,11 @@
-import { extractTextFromEml } from './eml';
+import { parseEml } from './eml';
 
 function toBuffer(raw: string): Buffer {
   // Normalize to CRLF line endings, as real .eml files use.
   return Buffer.from(raw.replace(/\n/g, '\r\n'), 'utf8');
 }
 
-describe('extractTextFromEml', () => {
+describe('parseEml', () => {
   it('extracts headers and the text/plain body', async () => {
     const eml = toBuffer(
       [
@@ -20,7 +20,7 @@ describe('extractTextFromEml', () => {
       ].join('\n'),
     );
 
-    const result = await extractTextFromEml(eml);
+    const { text: result } = await parseEml(eml);
 
     expect(result).toContain('From: ');
     expect(result).toContain('alice@example.com');
@@ -42,7 +42,7 @@ describe('extractTextFromEml', () => {
       ].join('\n'),
     );
 
-    const result = await extractTextFromEml(eml);
+    const { text: result } = await parseEml(eml);
 
     expect(result).toContain('Subject: HTML only');
     expect(result).toContain('Hallo');
@@ -71,9 +71,43 @@ describe('extractTextFromEml', () => {
       ].join('\n'),
     );
 
-    const result = await extractTextFromEml(eml);
+    const { text: result } = await parseEml(eml);
 
     expect(result).toContain('Siehe Anhang.');
     expect(result).toContain('Attachments: notiz.txt');
+  });
+
+  it('returns named attachments with their content and drops unnamed ones', async () => {
+    const boundary = 'boundary-456';
+    const eml = toBuffer(
+      [
+        'Subject: Mit Anhang',
+        `Content-Type: multipart/mixed; boundary="${boundary}"`,
+        '',
+        `--${boundary}`,
+        'Content-Type: text/plain; charset=utf-8',
+        '',
+        'Siehe Anhang.',
+        `--${boundary}`,
+        'Content-Type: application/pdf',
+        'Content-Disposition: attachment; filename="bericht.pdf"',
+        'Content-Transfer-Encoding: base64',
+        '',
+        Buffer.from('%PDF-1.4').toString('base64'),
+        `--${boundary}`,
+        'Content-Type: application/octet-stream',
+        'Content-Disposition: attachment',
+        '',
+        'unnamed',
+        `--${boundary}--`,
+      ].join('\n'),
+    );
+
+    const { attachments } = await parseEml(eml);
+
+    expect(attachments).toHaveLength(1);
+    expect(attachments[0].filename).toBe('bericht.pdf');
+    expect(attachments[0].contentType).toBe('application/pdf');
+    expect(attachments[0].content.toString()).toBe('%PDF-1.4');
   });
 });
