@@ -22,6 +22,7 @@ import { METRICS_PATH } from './integrations/metrics/metrics.constants';
 import { parsePositiveIntWithDefault } from './common/util/number.util';
 import { startBackendProcessHeartbeat } from './common/process/backend-process-heartbeat';
 import { installNestLogger } from './common/logger/install-nest-logger';
+import { jsonBodyParser } from 'src/common/middleware/json-body-parser.middleware';
 
 // bufferLogs replays boot logs with the flush time, so durations are measured
 // here and logged once the app listens (AYC-1186: ~20s deploy boots).
@@ -35,6 +36,8 @@ class Bootstrap {
     const createStartedMs = performance.now();
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       bufferLogs: true,
+      // Register parsers explicitly so malformed JSON is tagged before instrumentation.
+      bodyParser: false,
     });
     const createdMs = performance.now();
     installNestLogger(app);
@@ -79,17 +82,17 @@ class Bootstrap {
    * Express defaults to a 100kb body limit, which rejects legitimate
    * OpenAI-compatible requests carrying long conversation histories and makes
    * the 512k artifact content cap unreachable — body-parser fails before any
-   * validation runs (AYC-553). Must be called before listen(), which is when
-   * Nest registers its own parsers for any type not already applied.
+   * validation runs (AYC-553). Nest's own parsers are disabled so the JSON
+   * one can classify malformed client bodies for AppSignal (AYC-1226).
    */
-  private static configureBodyParser(app: NestExpressApplication) {
+  private static configureBodyParsers(app: NestExpressApplication) {
     const limit = process.env.HTTP_BODY_LIMIT ?? this.DEFAULT_BODY_LIMIT;
-    app.useBodyParser('json', { limit });
+    app.use(jsonBodyParser({ limit }));
     app.useBodyParser('urlencoded', { limit, extended: true });
   }
 
   private static configureApp(app: NestExpressApplication) {
-    this.configureBodyParser(app);
+    this.configureBodyParsers(app);
     this.configureCors(app);
     this.setupSwagger(app);
     app.setGlobalPrefix('api', {
