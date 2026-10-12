@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.52.0](https://github.com/ayunis-core/ayunis-core/compare/v2.51.1...v2.52.0) (2026-10-12)
+
+
+### Features
+
+* **usage:** allow organisations to hide individual usage (AYC-1195) ([#1893](https://github.com/ayunis-core/ayunis-core/issues/1893)) ([306d6c4](https://github.com/ayunis-core/ayunis-core/commit/306d6c473986ddfe0444d85e42d6681da9cc548e))
+
+
+### Bug Fixes
+
+* **agent-runtime:** clone errors with getter-only names without throwing (AYC-1233) ([#1888](https://github.com/ayunis-core/ayunis-core/issues/1888)) ([ecac04d](https://github.com/ayunis-core/ayunis-core/commit/ecac04d81d4086fed2ea3219a873f5baf8389232))
+* **anonymize:** drop queued analyses the caller has already abandoned (AYC-1225) ([#1891](https://github.com/ayunis-core/ayunis-core/issues/1891)) ([2072455](https://github.com/ayunis-core/ayunis-core/commit/2072455bd5eec2a1372565704ef1eb5e3ef77d4e))
+* **cleanup:** keep the nightly sessions and stale thread source cleanups inside the statement timeout (AYC-1237) ([#1903](https://github.com/ayunis-core/ayunis-core/issues/1903)) ([cb76cb8](https://github.com/ayunis-core/ayunis-core/commit/cb76cb8ce738fd959e0a365feff216620ffc357e))
+* **mcp:** report unreachable servers during oauth authorization (AYC-1234) ([#1889](https://github.com/ayunis-core/ayunis-core/issues/1889)) ([96de31d](https://github.com/ayunis-core/ayunis-core/commit/96de31df6598b6543e398379841bc4923c564b24))
+* **mistral:** route mistral sdk clients to the eu region (AYC-000) ([#1873](https://github.com/ayunis-core/ayunis-core/issues/1873)) ([245c98f](https://github.com/ayunis-core/ayunis-core/commit/245c98f2cc9600bc1350cd74ac35e32e2320dc48))
+* **runs:** log bounded upstream messages for provider rejections (AYC-1235) ([#1892](https://github.com/ayunis-core/ayunis-core/issues/1892)) ([b0125e7](https://github.com/ayunis-core/ayunis-core/commit/b0125e7ca1561db943d094e8a87fd88add913462))
+* **runs:** log output visibility for terminal provider failures (AYC-1236) ([#1890](https://github.com/ayunis-core/ayunis-core/issues/1890)) ([ca2c259](https://github.com/ayunis-core/ayunis-core/commit/ca2c259a715e8d6c4bb9f15fb0570d17d96615f2))
+
+
+### Code Refactoring
+
+* **auth:** read roles only through a user context (AYC-85) ([#1852](https://github.com/ayunis-core/ayunis-core/issues/1852)) ([7d3fd84](https://github.com/ayunis-core/ayunis-core/commit/7d3fd84bf74b0f17c31135336b635298aa4420f4))
+
+
+### Documentation
+
+* **deploy:** point internal and production deploys at ayunis-infra (AYC-1186) ([#1886](https://github.com/ayunis-core/ayunis-core/issues/1886)) ([1ff4776](https://github.com/ayunis-core/ayunis-core/commit/1ff47766ac55e4dc678d8104ff876033b8e9629c))
+
 ## [2.51.1](https://github.com/ayunis-core/ayunis-core/compare/v2.51.0...v2.51.1) (2026-10-11)
 
 
