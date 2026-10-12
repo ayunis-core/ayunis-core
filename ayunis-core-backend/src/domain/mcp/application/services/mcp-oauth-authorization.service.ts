@@ -17,9 +17,14 @@ import { McpOAuthClientRegistrationRepositoryPort } from 'src/domain/mcp/applica
 import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
 import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fetch.port';
 import {
+  McpOAuthInvalidResponseError,
   McpOAuthServerUnreachableError,
   McpOAuthStage,
 } from 'src/domain/mcp/application/mcp.errors';
+import {
+  ObservedOAuthResponse,
+  observeOAuthResponses,
+} from 'src/domain/mcp/application/util/mcp-oauth-response-observer.helper';
 import { McpClientService } from './mcp-client.service';
 
 export interface CompleteMcpOAuthInput {
@@ -58,14 +63,14 @@ export class McpOAuthAuthorizationService {
       state: randomBytes(32).toString('base64url'),
     });
     const scope = integration.configSchema.oauth?.scopes?.join(' ');
-    const result = await this.reportUnreachable(
+    const result = await this.callUpstream(
       integration,
       'authorization',
-      () =>
+      (fetchFn) =>
         auth(provider, {
           serverUrl: integration.serverUrl,
           scope: scope || undefined,
-          fetchFn: this.oauthFetch.fetch,
+          fetchFn,
         }),
     );
     const authorizationUrl = provider.getAuthorizationUrl();
@@ -101,15 +106,15 @@ export class McpOAuthAuthorizationService {
       ...identity,
       pendingSession: pending,
     });
-    const result = await this.reportUnreachable(
+    const result = await this.callUpstream(
       integration,
       'token exchange',
-      () =>
+      (fetchFn) =>
         auth(provider, {
           serverUrl: integration.serverUrl,
           authorizationCode: input.code,
           iss: pending.issuer,
-          fetchFn: this.oauthFetch.fetch,
+          fetchFn,
         }),
     );
     if (result !== 'AUTHORIZED') this.rejectCallback();
@@ -205,14 +210,14 @@ export class McpOAuthAuthorizationService {
   private async requireProtectedResourceMetadata(
     integration: SchemaConfiguredMcpIntegration,
   ): Promise<void> {
-    const metadata = await this.reportUnreachable(
+    const metadata = await this.callUpstream(
       integration,
       'discovery',
-      () =>
+      (fetchFn) =>
         discoverOAuthProtectedResourceMetadata(
           integration.serverUrl,
           undefined,
-          this.oauthFetch.fetch,
+          fetchFn,
         ),
     );
     // The SDK declaration is non-nullable, but its documented 404 path returns undefined.
@@ -224,28 +229,67 @@ export class McpOAuthAuthorizationService {
     }
   }
 
-  private async reportUnreachable<T>(
+  private async callUpstream<T>(
     integration: SchemaConfiguredMcpIntegration,
     stage: McpOAuthStage,
-    request: () => Promise<T>,
+    request: (fetchFn: typeof fetch) => Promise<T>,
   ): Promise<T> {
+    const observer = observeOAuthResponses(this.oauthFetch.fetch);
     try {
-      return await request();
+      return await request(observer.fetch);
     } catch (error) {
-      const transport = classifyTransportError(error);
-      if (!transport) throw error;
-      const diagnostics = {
-        integrationId: integration.id,
-        stage,
-        code: transport.code,
-      };
-      this.logger.warn(diagnostics, 'MCP server unreachable during OAuth');
-      throw new McpOAuthServerUnreachableError(
-        integration.serverUrl,
-        stage,
-        error,
-        diagnostics,
-      );
+      const response = isJsonParseError(error)
+        ? observer.lastResponse()
+        : undefined;
+      if (response) this.rejectInvalidResponse(integration, error, response);
+      this.rejectUnreachable(integration, stage, error);
     }
   }
+
+  private rejectUnreachable(
+    integration: SchemaConfiguredMcpIntegration,
+    stage: McpOAuthStage,
+    error: unknown,
+  ): never {
+    const transport = classifyTransportError(error);
+    if (!transport) throw error;
+    const diagnostics = {
+      integrationId: integration.id,
+      stage,
+      code: transport.code,
+    };
+    this.logger.warn(diagnostics, 'MCP server unreachable during OAuth');
+    throw new McpOAuthServerUnreachableError(
+      integration.serverUrl,
+      stage,
+      error,
+      diagnostics,
+    );
+  }
+
+  private rejectInvalidResponse(
+    integration: SchemaConfiguredMcpIntegration,
+    error: unknown,
+    response: ObservedOAuthResponse,
+  ): never {
+    const diagnostics = { integrationId: integration.id, ...response };
+    this.logger.warn(diagnostics, 'MCP OAuth endpoint returned non-JSON');
+    throw new McpOAuthInvalidResponseError(
+      integration.serverUrl,
+      response.stage,
+      error,
+      diagnostics,
+    );
+  }
+}
+
+// Name check instead of instanceof: undici's Response.json() may throw a
+// SyntaxError from another realm (e.g. under Jest's VM sandbox).
+function isJsonParseError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    error.name === 'SyntaxError'
+  );
 }
