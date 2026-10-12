@@ -10,6 +10,7 @@ export enum McpErrorCode {
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
   MCP_CONNECTION_TIMEOUT = 'MCP_CONNECTION_TIMEOUT',
   MCP_CONNECTION_FAILED = 'MCP_CONNECTION_FAILED',
+  MCP_OAUTH_SERVER_UNREACHABLE = 'MCP_OAUTH_SERVER_UNREACHABLE',
   MCP_TOOL_TIMEOUT = 'MCP_TOOL_TIMEOUT',
   MCP_AUTHENTICATION_FAILED = 'MCP_AUTHENTICATION_FAILED',
   MCP_VALIDATION_FAILED = 'MCP_VALIDATION_FAILED',
@@ -217,6 +218,43 @@ export class McpConnectionFailedError extends McpError {
       `The MCP server at ${redactServerUrl(serverUrl)} could not be ` +
         `reached. Please verify the server is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_FAILED,
+      502,
+      metadata,
+    );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
+  }
+}
+
+export type McpOAuthStage = 'discovery' | 'authorization' | 'token exchange';
+
+function serverOrigin(serverUrl: string): string {
+  try {
+    return new URL(serverUrl).origin;
+  } catch {
+    return serverUrl;
+  }
+}
+
+/**
+ * Transport failure while talking to an MCP server or its authorization
+ * server during a per-user OAuth flow (AYC-1234). The message is shown to
+ * the user, so it carries only the configured server origin: discovery and
+ * token endpoints live on other hosts and may embed secrets in their paths.
+ */
+export class McpOAuthServerUnreachableError extends McpError {
+  constructor(
+    serverUrl: string,
+    stage: McpOAuthStage,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `The MCP server at ${serverOrigin(serverUrl)} could not be reached ` +
+        `during OAuth ${stage}. Please verify the server is running and ` +
+        `accessible, then try again.`,
+      McpErrorCode.MCP_OAUTH_SERVER_UNREACHABLE,
       502,
       metadata,
     );
