@@ -11,7 +11,10 @@ import {
 } from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { extractProviderErrorDiagnostics } from 'src/common/errors/extract-provider-error-diagnostics.helper';
+import {
+  extractProviderErrorDiagnostics,
+  extractProviderExplanation,
+} from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -126,6 +129,7 @@ export class GetInferenceUseCase {
         errorName: error instanceof Error ? error.name : 'Unknown',
         status,
         ...diagnostics,
+        upstreamMessage: extractProviderExplanation(error),
       },
       'Provider inference failed',
     );

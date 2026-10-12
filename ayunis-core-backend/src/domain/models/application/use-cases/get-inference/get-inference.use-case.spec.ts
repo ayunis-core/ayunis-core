@@ -167,7 +167,7 @@ describe('GetInferenceUseCase error mapping', () => {
     ).rejects.toBeInstanceOf(InferenceFailedError);
   });
 
-  it('records safe provider diagnostics without the raw provider message', async () => {
+  it('records bounded provider diagnostics that never reach the client', async () => {
     const upstream = Object.assign(
       new Error("Maximum context length exceeded by 'classified text'"),
       {
@@ -192,17 +192,21 @@ describe('GetInferenceUseCase error mapping', () => {
         upstreamReason: 'context_length_exceeded',
       },
     });
+    await expect(result).rejects.not.toHaveProperty('metadata.upstreamMessage');
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         upstreamCode: 'context_length_exceeded',
         upstreamParam: 'messages',
         upstreamReason: 'context_length_exceeded',
+        upstreamMessage: "Maximum context length exceeded by '…",
       }),
       'Provider inference failed',
     );
-    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
-      'classified text',
-    );
+    await expect(
+      result.catch((error: InferenceFailedError) =>
+        JSON.stringify(error.toClientResponse()),
+      ),
+    ).resolves.not.toContain('classified text');
   });
 
   it('preserves portable request-rejection diagnostics for OpenAI-compatible mapping', async () => {
