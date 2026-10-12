@@ -8,6 +8,7 @@ import {
 import type { RunEvent } from 'src/domain/runs/application/run-events';
 import type { RunErrorResponseDto } from 'src/domain/runs/presenters/http/dto/run-response.dto';
 import { RunEventResponseMapper } from 'src/domain/runs/presenters/http/mappers/run-event-response.mapper';
+import { markStreamingTransaction } from 'src/common/streaming/streaming-transaction.helper';
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
 
@@ -64,6 +65,7 @@ export class RunSsePresenter {
   }
 
   private openConnection(response: Response): void {
+    markStreamingTransaction();
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('Connection', 'keep-alive');

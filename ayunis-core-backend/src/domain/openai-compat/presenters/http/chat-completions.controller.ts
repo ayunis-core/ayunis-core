@@ -25,6 +25,7 @@ import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-ca
 import { Public } from 'src/common/guards/public.guard';
 import { ExecuteOpenAIChatCompletionUseCase } from 'src/domain/openai-compat/application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case';
 import { ExecuteOpenAIChatCompletionCommand } from 'src/domain/openai-compat/application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.command';
+import { markStreamingTransaction } from 'src/common/streaming/streaming-transaction.helper';
 import { ChatCompletionRequestDto } from './dto/chat-completion-request.dto';
 import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
 
@@ -129,6 +130,7 @@ export class ChatCompletionsController {
   ): Promise<void> {
     const stream$ = await this.useCase.executeStreaming(command);
 
+    markStreamingTransaction();
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('Connection', 'keep-alive');
