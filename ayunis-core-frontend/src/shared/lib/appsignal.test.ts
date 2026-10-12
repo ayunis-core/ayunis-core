@@ -36,6 +36,9 @@ describe('ignoredErrorPatterns', () => {
     'ResizeObserver loop completed with undelivered notifications.',
     // Observed iPhone Safari signature in production incident #680 (AYC-1207).
     "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')",
+    // Outlook Safe Links scanners run CefSharp, whose .NET bridge rejects
+    // with this string while pre-opening emailed links (AYC-1173).
+    'Object Not Found Matching Id:3, MethodName:update, ParamCount:4',
   ])('ignores expected browser noise: %s', (message) => {
     expect(matchesAnyIgnore(message)).toBe(true);
   });
@@ -52,6 +55,8 @@ describe('ignoredErrorPatterns', () => {
     // Unrecovered deploy skew, reported by the ErrorBoundary after the
     // chunk-reload guard gives up — must never be filtered.
     'Failed to fetch dynamically imported module: https://app.example.com/assets/ChatPage-abc.js',
+    'Object Not Found',
+    'Object Not Found Matching Id:3, MethodName:update, ParamCount:4 while loading thread',
   ])('keeps real application errors: %s', (message) => {
     expect(matchesAnyIgnore(message)).toBe(false);
   });
