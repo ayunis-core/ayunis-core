@@ -12,6 +12,41 @@ import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import type { StaleThreadSourceRef } from 'src/domain/threads/application/ports/threads.repository';
+
+// Resolves each directly-assigned thread's latest message once (top-1 probe on
+// the messages (threadId, createdAt) index) instead of probing messages per
+// assignment, which kept the nightly scan at the statement timeout (AYC-1237).
+const STALE_DIRECT_SOURCES_SQL = `
+  WITH direct_assignments AS (
+    SELECT "sourceId", "threadId"
+    FROM "thread_source_assignments"
+    WHERE "originSkillId" IS NULL
+  ),
+  thread_activity AS (
+    SELECT direct_threads."threadId", last_message."createdAt" AS "lastMessageAt"
+    FROM (SELECT DISTINCT "threadId" FROM direct_assignments) direct_threads
+    LEFT JOIN LATERAL (
+      SELECT m."createdAt"
+      FROM "messages" m
+      WHERE m."threadId" = direct_threads."threadId"
+      ORDER BY m."createdAt" DESC
+      LIMIT 1
+    ) last_message ON TRUE
+  ),
+  stale_sources AS (
+    SELECT d."sourceId"
+    FROM direct_assignments d
+    JOIN thread_activity ta ON ta."threadId" = d."threadId"
+    GROUP BY d."sourceId"
+    HAVING bool_and(ta."lastMessageAt" IS NOT NULL AND ta."lastMessageAt" < $1)
+  )
+  SELECT DISTINCT d."sourceId" AS "sourceId", u."orgId" AS "orgId"
+  FROM stale_sources s
+  JOIN direct_assignments d ON d."sourceId" = s."sourceId"
+  JOIN "threads" t ON t."id" = d."threadId"
+  JOIN "users" u ON u."id" = t."userId"
+`;
 
 @Injectable()
 export class LocalThreadAssignmentsRepository {
@@ -275,39 +310,12 @@ export class LocalThreadAssignmentsRepository {
 
   async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
-  ): Promise<{ sourceId: UUID; orgId: UUID }[]> {
+  ): Promise<StaleThreadSourceRef[]> {
     this.logger.log({ olderThan }, 'findSourcesWithOnlyStaleDirectAssignments');
 
-    const rows = await this.threadSourceAssignmentRepository
-      .createQueryBuilder('tsa')
-      .innerJoin('tsa.thread', 'thread')
-      .innerJoin('thread.user', 'user')
-      .select('tsa.sourceId', 'sourceId')
-      .addSelect('user.orgId', 'orgId')
-      .distinct(true)
-      .where('tsa.originSkillId IS NULL')
-      .andWhere(
-        `NOT EXISTS (
-          SELECT 1
-          FROM thread_source_assignments tsa2
-          WHERE tsa2."sourceId" = tsa."sourceId"
-            AND tsa2."originSkillId" IS NULL
-            AND (
-              NOT EXISTS (
-                SELECT 1 FROM messages m WHERE m."threadId" = tsa2."threadId"
-              )
-              OR EXISTS (
-                SELECT 1 FROM messages m
-                WHERE m."threadId" = tsa2."threadId"
-                  AND m."createdAt" >= :cutoff
-              )
-            )
-        )`,
-      )
-      .setParameter('cutoff', olderThan)
-      .getRawMany<{ sourceId: UUID; orgId: UUID }>();
-
-    return rows;
+    return this.threadSourceAssignmentRepository.manager.query<
+      StaleThreadSourceRef[]
+    >(STALE_DIRECT_SOURCES_SQL, [olderThan]);
   }
 
   async removeDirectKnowledgeBaseAssignments(params: {

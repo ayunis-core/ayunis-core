@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { checkIn } from '@appsignal/nodejs';
 import { CleanupStaleThreadSourcesUseCase } from 'src/domain/threads/application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
 
 @Injectable()
@@ -23,24 +24,24 @@ export class StaleThreadSourcesCleanupTask {
     this.logger.log('Starting scheduled stale thread sources cleanup');
 
     try {
-      const result = await this.cleanupStaleThreadSourcesUseCase.execute();
-      this.logger.log(
-        {
-          scanned: result.scannedCount,
-          unreferenced: result.unreferencedCount,
-          deleted: result.deletedCount,
-          failed: result.failedCount,
-        },
-        'Scheduled cleanup completed',
-      );
-      if (result.failedCount > 0) {
-        this.logger.warn(
+      await checkIn.cron('stale_thread_sources_cleanup', async () => {
+        const result = await this.cleanupStaleThreadSourcesUseCase.execute();
+        this.logger.log(
           {
-            error: result.errors,
+            scanned: result.scannedCount,
+            unreferenced: result.unreferencedCount,
+            deleted: result.deletedCount,
+            failed: result.failedCount,
           },
-          'Some sources failed to delete',
+          'Scheduled cleanup completed',
         );
-      }
+        if (result.failedCount > 0) {
+          this.logger.warn(
+            { error: result.errors },
+            'Some sources failed to delete',
+          );
+        }
+      });
     } catch (error) {
       this.logger.error({ err: error as Error }, 'Scheduled cleanup failed');
     } finally {

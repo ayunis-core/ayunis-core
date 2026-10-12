@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
-import { CleanupStaleThreadSourcesUseCase } from './cleanup-stale-thread-sources.use-case';
+import {
+  CleanupStaleThreadSourcesUseCase,
+  STALE_SOURCE_DELETE_BATCH_SIZE,
+} from './cleanup-stale-thread-sources.use-case';
 import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import type { FindUnreferencedSourceIdsUseCase } from 'src/domain/sources/application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 import type { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
@@ -128,6 +131,32 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
     expect(deleteSourcesUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({ sourceIds: [sourceB], orgId: orgB }),
     );
+  });
+
+  it('deletes a large org backlog in bounded batches', async () => {
+    const sourceIds = Array.from(
+      { length: 2 * STALE_SOURCE_DELETE_BATCH_SIZE + 1 },
+      () => randomUUID(),
+    );
+    threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mockResolvedValue(
+      sourceIds.map((sourceId) => ({ sourceId, orgId: orgA })),
+    );
+    findUnreferencedSourceIdsUseCase.execute.mockResolvedValue(sourceIds);
+    deleteSourcesUseCase.execute.mockResolvedValue(undefined);
+
+    const result = await useCase.execute();
+
+    expect(deleteSourcesUseCase.execute).toHaveBeenCalledTimes(3);
+    const batches = deleteSourcesUseCase.execute.mock.calls.map(
+      ([command]) => command.sourceIds,
+    );
+    expect(batches.map((batch) => batch.length)).toEqual([
+      STALE_SOURCE_DELETE_BATCH_SIZE,
+      STALE_SOURCE_DELETE_BATCH_SIZE,
+      1,
+    ]);
+    expect(batches.flat()).toEqual(sourceIds);
+    expect(result.deletedCount).toBe(sourceIds.length);
   });
 
   it('records failed counts and per-source errors when the batch delete throws', async () => {

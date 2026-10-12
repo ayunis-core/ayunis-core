@@ -62,8 +62,8 @@ export abstract class SourceRepository {
   /**
    * Returns the subset of `candidateIds` that are (a) older than `olderThan`,
    * (b) not attached to a knowledge base, and (c) not referenced by any
-   * skill or agent assignment. Used by cross-module cleanup flows that
-   * need to confirm a source is truly orphaned before deleting it.
+   * skill. Used by cross-module cleanup flows that need to confirm a source
+   * is truly orphaned before deleting it.
    */
   abstract findUnreferencedIds(
     candidateIds: UUID[],
