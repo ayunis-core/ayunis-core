@@ -5,4 +5,6 @@ export interface CreditLimitRow {
   name: string;
   email?: string;
   limit: CreditLimitInfo | null;
+  /** Monthly consumption of a user on the org default; absent when an individual limit carries it. */
+  creditsUsed?: number;
 }

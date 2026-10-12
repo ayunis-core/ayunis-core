@@ -31,7 +31,13 @@ vi.mock('@/widgets/credit-limit-editor/ui/CreditLimitDialog', () => ({
   ),
 }));
 const rows = [
-  { id: 'alice', name: 'Alice', email: 'alice@example.test', limit: null },
+  {
+    id: 'alice',
+    name: 'Alice',
+    email: 'alice@example.test',
+    limit: null,
+    creditsUsed: 120,
+  },
   { id: 'bob', name: 'Bob', limit: { monthlyCredits: 0, creditsUsed: 0 } },
 ];
 const filters = { tab: 'users' as const, page: 2, search: 'a' };
@@ -152,7 +158,7 @@ describe('CreditLimitsTable', () => {
     },
   );
 
-  it('shows the org default for users without an individual limit', () => {
+  it('shows consumption against the org default for users without an individual limit', () => {
     render(
       <CreditLimitsTable
         rows={rows}
@@ -163,7 +169,9 @@ describe('CreditLimitsTable', () => {
       />,
     );
     const alice = screen.getAllByTestId('credit-limits-row-alice')[0];
-    expect(alice.textContent).toContain('table.defaultLimit:{"credits":"100"}');
+    expect(alice.textContent).toContain(
+      'table.defaultLimit:{"used":"120","credits":"100"}',
+    );
     expect(alice.textContent).not.toContain('form.noLimit');
     const bob = screen.getAllByTestId('credit-limits-row-bob')[0];
     expect(bob.textContent).not.toContain('table.defaultLimit');
@@ -186,8 +194,25 @@ describe('CreditLimitsTable', () => {
       />,
     );
     const alice = screen.getAllByTestId('credit-limits-row-alice')[0];
-    expect(alice.textContent).toContain('table.defaultLimit:{"credits":"0"}');
+    expect(alice.textContent).toContain(
+      'table.defaultLimit:{"used":"120","credits":"0"}',
+    );
     expect(alice.textContent).toContain('table.blocked');
+  });
+
+  it('shows zero consumption when the API reports no recorded usage', () => {
+    render(
+      <CreditLimitsTable
+        rows={[{ ...rows[0], creditsUsed: 0 }]}
+        filters={filters}
+        defaultLimit={100}
+        isPending={false}
+        isError={false}
+      />,
+    );
+    expect(
+      screen.getAllByTestId('credit-limits-row-alice')[0].textContent,
+    ).toContain('table.defaultLimit:{"used":"0","credits":"100"}');
   });
 
   it('never applies the user default to teams', () => {
@@ -218,4 +243,19 @@ it('allows configuring team limits', () => {
   expect(configure.hasAttribute('disabled')).toBe(false);
   fireEvent.click(configure);
   expect(screen.getByRole('dialog')).toBeTruthy();
+});
+
+it('omits default-user consumption when the API hides individual usage', () => {
+  render(
+    <CreditLimitsTable
+      rows={[{ id: 'private-user', name: 'Private User', limit: null }]}
+      filters={filters}
+      defaultLimit={100}
+      isPending={false}
+      isError={false}
+    />,
+  );
+  expect(
+    screen.getByText('table.defaultLimitHidden:{"credits":"100"}'),
+  ).toBeTruthy();
 });

@@ -16,6 +16,7 @@ import { SetDefaultUserCreditLimitUseCase } from './application/use-cases/set-de
 import { GetApiKeyCreditLimitsOverviewUseCase } from './application/use-cases/get-api-key-credit-limits-overview/get-api-key-credit-limits-overview.use-case';
 import { GetTeamCreditLimitsOverviewUseCase } from './application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.use-case';
 import { GetUserCreditLimitsOverviewUseCase } from './application/use-cases/get-user-credit-limits-overview/get-user-credit-limits-overview.use-case';
+import { GetUserCreditUsageUseCase } from './application/use-cases/get-user-credit-usage/get-user-credit-usage.use-case';
 import { RemoveApiKeyCreditLimitUseCase } from './application/use-cases/remove-api-key-credit-limit/remove-api-key-credit-limit.use-case';
 import { RemoveOrgCreditLimitsUseCase } from './application/use-cases/remove-org-credit-limits/remove-org-credit-limits.use-case';
 import { RemoveTeamCreditLimitUseCase } from './application/use-cases/remove-team-credit-limit/remove-team-credit-limit.use-case';
@@ -81,6 +82,7 @@ const apiKeyCreditLimitUseCases = [
     GetUserCreditLimitsOverviewUseCase,
     GetAdminUserCreditLimitsOverviewUseCase,
     GetAdminTeamCreditLimitsOverviewUseCase,
+    GetUserCreditUsageUseCase,
     GetTeamCreditLimitsOverviewUseCase,
     RemoveOrgCreditLimitsUseCase,
     SubscriptionCancelledListener,

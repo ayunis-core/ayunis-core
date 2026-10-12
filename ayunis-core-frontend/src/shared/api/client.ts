@@ -8,6 +8,9 @@ import config from '@/shared/config';
 const axiosInstance = axios.create({
   baseURL: config.api.baseUrl,
   withCredentials: true,
+  // The backend's query parser does not expand `key[]=` brackets, so array
+  // params go out as repeated keys (`userIds=a&userIds=b`).
+  paramsSerializer: { indexes: null },
 });
 
 // The proxy answers 502-504 while the single app container restarts during a

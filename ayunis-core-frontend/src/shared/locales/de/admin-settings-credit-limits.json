@@ -29,7 +29,8 @@
     "search": "Teams oder Nutzer suchen",
     "empty": "Keine passenden Teams oder Nutzer.",
     "blocked": "Kostenpflichtige Modelle gesperrt",
-    "defaultLimit": "Standard ({{credits}})"
+    "defaultLimitHidden": "Standard ({{credits}})",
+    "defaultLimit": "{{used}} / {{credits}} (Standard)"
   },
   "defaultLimit": {
     "title": "Standardlimit pro Nutzer",
