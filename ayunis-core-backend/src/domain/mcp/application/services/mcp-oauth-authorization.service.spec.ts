@@ -1,14 +1,18 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Logger } from '@nestjs/common';
 import {
   auth,
   discoverOAuthProtectedResourceMetadata,
 } from '@modelcontextprotocol/client';
 import { createHash, randomUUID } from 'crypto';
 import { McpOAuthAuthorizationService } from './mcp-oauth-authorization.service';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { McpOAuthPendingSession } from '../../domain/mcp-oauth-pending-session.entity';
-import { McpOAuthFetchService } from '../../infrastructure/clients/mcp-oauth-fetch.service';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { McpOAuthPendingSession } from 'src/domain/mcp/domain/mcp-oauth-pending-session.entity';
+import { McpOAuthFetchService } from 'src/domain/mcp/infrastructure/clients/mcp-oauth-fetch.service';
+import {
+  McpErrorCode,
+  McpOAuthServerUnreachableError,
+} from 'src/domain/mcp/application/mcp.errors';
 
 jest.mock('@modelcontextprotocol/client', () => ({
   auth: jest.fn(),
@@ -92,6 +96,87 @@ describe('McpOAuthAuthorizationService', () => {
       serverUrl: integration.serverUrl,
       scope: 'tools:read',
       fetchFn: oauthFetch.fetch,
+    });
+  });
+
+  describe('transport failures', () => {
+    const fetchFailed = () =>
+      Object.assign(new TypeError('fetch failed'), {
+        cause: Object.assign(new Error('getaddrinfo ENOTFOUND x'), {
+          code: 'ENOTFOUND',
+        }),
+      });
+    let warn: jest.SpyInstance;
+
+    beforeEach(() => {
+      warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    });
+
+    async function expectUnreachable(
+      act: Promise<unknown>,
+      stage: string,
+    ): Promise<McpOAuthServerUnreachableError> {
+      const error: unknown = await act.then(
+        () => undefined,
+        (caught: unknown) => caught,
+      );
+      expect(error).toBeInstanceOf(McpOAuthServerUnreachableError);
+      const unreachable = error as McpOAuthServerUnreachableError;
+      expect(unreachable.statusCode).toBe(502);
+      expect(unreachable.code).toBe(McpErrorCode.MCP_OAUTH_SERVER_UNREACHABLE);
+      expect(unreachable.message).toContain('https://mcp.example.com');
+      expect(unreachable.message).not.toContain('example.com/mcp');
+      expect(unreachable.message).toContain(stage);
+      expect(unreachable.metadata).toEqual({
+        integrationId: integration.id,
+        stage,
+        code: 'ENOTFOUND',
+      });
+      expect(warn).toHaveBeenCalledWith(
+        { integrationId: integration.id, stage, code: 'ENOTFOUND' },
+        expect.any(String),
+      );
+      return unreachable;
+    }
+
+    it('maps a transport failure during protected-resource discovery', async () => {
+      (discoverOAuthProtectedResourceMetadata as jest.Mock).mockRejectedValue(
+        fetchFailed(),
+      );
+
+      await expectUnreachable(service.authorize(integration.id), 'discovery');
+      expect(auth).not.toHaveBeenCalled();
+    });
+
+    it('maps a transport failure during authorization-server discovery or registration', async () => {
+      (auth as jest.Mock).mockRejectedValue(fetchFailed());
+
+      await expectUnreachable(
+        service.authorize(integration.id),
+        'authorization',
+      );
+    });
+
+    it('maps a transport failure during token exchange', async () => {
+      const state = 'opaque-state';
+      pendingSessions.consumeByStateHash.mockResolvedValue(buildPending(state));
+      (auth as jest.Mock).mockRejectedValue(fetchFailed());
+
+      await expectUnreachable(
+        service.complete({ state, code: 'code' }),
+        'token exchange',
+      );
+      expect(cache.invalidate).not.toHaveBeenCalled();
+    });
+
+    it('leaves non-transport failures untouched', async () => {
+      const failure = new Error('boom');
+      (discoverOAuthProtectedResourceMetadata as jest.Mock).mockRejectedValue(
+        failure,
+      );
+
+      await expect(service.authorize(integration.id)).rejects.toBe(failure);
+      expect(warn).not.toHaveBeenCalled();
     });
   });
 

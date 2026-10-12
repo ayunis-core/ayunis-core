@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { createHash, randomBytes } from 'crypto';
 import type { UUID } from 'crypto';
 import {
@@ -6,15 +6,20 @@ import {
   discoverOAuthProtectedResourceMetadata,
 } from '@modelcontextprotocol/client';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
-import { McpOAuthProviderFactory } from '../../infrastructure/clients/mcp-oauth-provider.factory';
+import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
+import { McpOAuthProviderFactory } from 'src/domain/mcp/infrastructure/clients/mcp-oauth-provider.factory';
 import { McpCapabilityCacheService } from './mcp-capability-cache.service';
 import { ValidateIntegrationAccessService } from './validate-integration-access.service';
-import { McpOAuthPendingSessionRepositoryPort } from '../ports/mcp-oauth-pending-session.repository.port';
-import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
-import { McpOAuthClientRegistrationRepositoryPort } from '../ports/mcp-oauth-client-registration.repository.port';
-import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { McpOAuthFetchPort } from '../ports/mcp-oauth-fetch.port';
+import { McpOAuthPendingSessionRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-pending-session.repository.port';
+import { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
+import { McpOAuthClientRegistrationRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-client-registration.repository.port';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fetch.port';
+import {
+  McpOAuthServerUnreachableError,
+  McpOAuthStage,
+} from 'src/domain/mcp/application/mcp.errors';
 import { McpClientService } from './mcp-client.service';
 
 export interface CompleteMcpOAuthInput {
@@ -26,6 +31,8 @@ export interface CompleteMcpOAuthInput {
 
 @Injectable()
 export class McpOAuthAuthorizationService {
+  private readonly logger = new Logger(McpOAuthAuthorizationService.name);
+
   constructor(
     private readonly access: ValidateIntegrationAccessService,
     private readonly context: ContextService,
@@ -43,7 +50,7 @@ export class McpOAuthAuthorizationService {
     const integration = this.requireOAuthIntegration(
       await this.access.validate(integrationId),
     );
-    await this.requireProtectedResourceMetadata(integration.serverUrl);
+    await this.requireProtectedResourceMetadata(integration);
     const identity = this.requireIdentity();
     const provider = this.providerFactory.create({
       integration,
@@ -51,11 +58,16 @@ export class McpOAuthAuthorizationService {
       state: randomBytes(32).toString('base64url'),
     });
     const scope = integration.configSchema.oauth?.scopes?.join(' ');
-    const result = await auth(provider, {
-      serverUrl: integration.serverUrl,
-      scope: scope || undefined,
-      fetchFn: this.oauthFetch.fetch,
-    });
+    const result = await this.reportUnreachable(
+      integration,
+      'authorization',
+      () =>
+        auth(provider, {
+          serverUrl: integration.serverUrl,
+          scope: scope || undefined,
+          fetchFn: this.oauthFetch.fetch,
+        }),
+    );
     const authorizationUrl = provider.getAuthorizationUrl();
     if (result !== 'REDIRECT' || !authorizationUrl) {
       throw new BadRequestException('OAuth authorization could not be started');
@@ -89,12 +101,17 @@ export class McpOAuthAuthorizationService {
       ...identity,
       pendingSession: pending,
     });
-    const result = await auth(provider, {
-      serverUrl: integration.serverUrl,
-      authorizationCode: input.code,
-      iss: pending.issuer,
-      fetchFn: this.oauthFetch.fetch,
-    });
+    const result = await this.reportUnreachable(
+      integration,
+      'token exchange',
+      () =>
+        auth(provider, {
+          serverUrl: integration.serverUrl,
+          authorizationCode: input.code,
+          iss: pending.issuer,
+          fetchFn: this.oauthFetch.fetch,
+        }),
+    );
     if (result !== 'AUTHORIZED') this.rejectCallback();
     await this.mcpClientService.invalidateConnections(
       integration,
@@ -186,18 +203,48 @@ export class McpOAuthAuthorizationService {
   }
 
   private async requireProtectedResourceMetadata(
-    serverUrl: string,
+    integration: SchemaConfiguredMcpIntegration,
   ): Promise<void> {
-    const metadata = await discoverOAuthProtectedResourceMetadata(
-      serverUrl,
-      undefined,
-      this.oauthFetch.fetch,
+    const metadata = await this.reportUnreachable(
+      integration,
+      'discovery',
+      () =>
+        discoverOAuthProtectedResourceMetadata(
+          integration.serverUrl,
+          undefined,
+          this.oauthFetch.fetch,
+        ),
     );
     // The SDK declaration is non-nullable, but its documented 404 path returns undefined.
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!metadata) {
       throw new BadRequestException(
         'MCP protected-resource metadata is required for OAuth',
+      );
+    }
+  }
+
+  private async reportUnreachable<T>(
+    integration: SchemaConfiguredMcpIntegration,
+    stage: McpOAuthStage,
+    request: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await request();
+    } catch (error) {
+      const transport = classifyTransportError(error);
+      if (!transport) throw error;
+      const diagnostics = {
+        integrationId: integration.id,
+        stage,
+        code: transport.code,
+      };
+      this.logger.warn(diagnostics, 'MCP server unreachable during OAuth');
+      throw new McpOAuthServerUnreachableError(
+        integration.serverUrl,
+        stage,
+        error,
+        diagnostics,
       );
     }
   }

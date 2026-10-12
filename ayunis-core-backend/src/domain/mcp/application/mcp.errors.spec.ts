@@ -1,6 +1,7 @@
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
+  McpOAuthServerUnreachableError,
   McpToolTimeoutError,
 } from './mcp.errors';
 
@@ -28,6 +29,18 @@ describe('MCP server URL error messages', () => {
     expect(message).not.toContain('api_key');
     expect(message).not.toContain('s3cret');
     expect(message).not.toContain('token=xyz');
+  });
+
+  it('McpOAuthServerUnreachableError exposes only the server origin', () => {
+    const message = new McpOAuthServerUnreachableError(secretUrl, 'discovery')
+      .message;
+
+    expect(message).toContain('https://mcp.example.com');
+    expect(message).not.toContain('/api');
+    expect(message).not.toContain('hunter2');
+    expect(message).not.toContain('s3cret');
+    expect(message).not.toContain('token=xyz');
+    expect(message).toContain('OAuth discovery');
   });
 
   it('keeps an unparseable server url untouched', () => {
