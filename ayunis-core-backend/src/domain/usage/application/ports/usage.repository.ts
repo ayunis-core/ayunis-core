@@ -7,12 +7,14 @@ import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
 import { TimeSeriesPoint } from 'src/domain/usage/domain/time-series-point.entity';
 import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
+import { ApiKeyUsageItem } from 'src/domain/usage/domain/api-key-usage-item.entity';
 export {
   UsageStats,
   ProviderUsage,
   TimeSeriesPoint,
   ModelDistribution,
   UserUsageItem,
+  ApiKeyUsageItem,
 };
 
 interface UsageDateRangeParams {
@@ -41,6 +43,8 @@ export interface UserUsageParams extends UsageDateRangeParams {
 }
 
 export type UsageStatsParams = UsageDateRangeParams;
+
+export type ApiKeyUsageParams = UsageDateRangeParams;
 
 export interface UserUsageResult {
   users: Paginated<UserUsageItem>;
@@ -73,6 +77,9 @@ export abstract class UsageRepository {
     params: ModelDistributionParams,
   ): Promise<ModelDistribution[]>;
   abstract getUserUsage(params: UserUsageParams): Promise<UserUsageResult>;
+  abstract getApiKeyUsage(
+    params: ApiKeyUsageParams,
+  ): Promise<ApiKeyUsageItem[]>;
   abstract getUsageStats(params: UsageStatsParams): Promise<UsageStats>;
   abstract getUsageCount(
     organizationId: UUID,

@@ -4,6 +4,7 @@ import { useRouter } from '@tanstack/react-router';
 import {
   useApiKeysControllerRevokeApiKey,
   getApiKeysControllerListApiKeysQueryKey,
+  getApiKeyUsageControllerGetApiKeyUsageQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -36,6 +37,9 @@ export function useRevokeApiKey() {
         void queryClient.invalidateQueries({
           queryKey: getApiKeysControllerListApiKeysQueryKey(),
         });
+        void queryClient.invalidateQueries({
+          queryKey: getApiKeyUsageControllerGetApiKeyUsageQueryKey(),
+        });
         void router.invalidate();
       },
     },
@@ -57,6 +61,6 @@ export function useRevokeApiKey() {
   return {
     revokeApiKey,
     isRevoking: (id: string) =>
-      mutation.isPending && mutation.variables?.id === id,
+      mutation.isPending && mutation.variables.id === id,
   };
 }
