@@ -47,27 +47,29 @@ export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { modelId }, context: { queryClient } }) => {
-    await queryClient.fetchQuery(anonymousModeDefaultQueryOptions());
+    await queryClient.query(anonymousModeDefaultQueryOptions());
     let selectedModelId: string | undefined;
     if (modelId) {
       selectedModelId = modelId;
     } else {
       const defaultModelResponse = await queryClient
-        .fetchQuery(effectiveDefaultModelQueryOptions())
+        .query(effectiveDefaultModelQueryOptions())
         .catch(handleDefaultModelLoadError);
       selectedModelId = defaultModelResponse?.permittedLanguageModel?.id;
     }
-    const { isEmbeddingModelEnabled } = await queryClient.fetchQuery(
+    const { isEmbeddingModelEnabled } = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),
     );
-    const { hasActiveSubscription } = await queryClient.fetchQuery(
+    const { hasActiveSubscription } = await queryClient.query(
       queryHasActiveSubscriptionOptions(),
     );
     // Await system prompt status so PersonalizationCard doesn't flash
-    await queryClient.prefetchQuery({
-      queryKey: getChatSettingsControllerGetSystemPromptQueryKey(),
-      queryFn: () => chatSettingsControllerGetSystemPrompt(),
-    });
+    await queryClient
+      .query({
+        queryKey: getChatSettingsControllerGetSystemPromptQueryKey(),
+        queryFn: () => chatSettingsControllerGetSystemPrompt(),
+      })
+      .catch(() => undefined);
     return {
       selectedModelId,
       hasActiveSubscription,

@@ -18,7 +18,7 @@ export const Route = createFileRoute('/_authenticated/chats/')({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { search, page = 1 }, context: { queryClient } }) => {
     const offset = (page - 1) * CHATS_PER_PAGE;
-    const chatsResponse = await queryClient.fetchQuery({
+    const chatsResponse = await queryClient.query({
       queryKey: getThreadsControllerFindAllQueryKey({
         search,
         limit: CHATS_PER_PAGE,

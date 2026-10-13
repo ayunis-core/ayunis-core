@@ -39,7 +39,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings/academy')({
     deps: { search, status, page = 1 },
     context: { queryClient },
   }) => {
-    const addons = await queryClient.fetchQuery({
+    const addons = await queryClient.query({
       queryKey: getAddonsControllerListQueryKey(),
       queryFn: () => addonsControllerList(),
     });
@@ -51,7 +51,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings/academy')({
     // table, its renewal column and its filter all describe one snapshot. It
     // costs a serial indexed lookup; reading the mode from a separate client
     // query instead produced a column that disagreed with the rows.
-    const orgSettings = await queryClient.fetchQuery({
+    const orgSettings = await queryClient.query({
       queryKey: getAcademyAccessControllerGetOrgSettingsQueryKey(),
       queryFn: () => academyAccessControllerGetOrgSettings(),
     });
@@ -69,7 +69,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings/academy')({
       limit: MEMBERS_PER_PAGE,
       offset: (page - 1) * MEMBERS_PER_PAGE,
     };
-    const certificatesResponse = await queryClient.fetchQuery({
+    const certificatesResponse = await queryClient.query({
       queryKey: getAcademyAccessControllerListOrgCertificatesQueryKey(params),
       queryFn: () => academyAccessControllerListOrgCertificates(params),
     });

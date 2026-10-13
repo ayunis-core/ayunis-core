@@ -54,12 +54,12 @@ export const Route = createFileRoute(
     const offset = (usersPage - 1) * USERS_PER_PAGE;
     const invitesOffset = (invitesPage - 1) * INVITES_PER_PAGE;
 
-    const org = await queryClient.fetchQuery({
+    const org = await queryClient.query({
       queryKey: getSuperAdminOrgsControllerGetOrgByIdQueryKey(id),
       queryFn: () => superAdminOrgsControllerGetOrgById(id),
     });
     const [usersResponse, invitesResponse] = await Promise.all([
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(id, {
           search: usersSearch,
           limit: USERS_PER_PAGE,
@@ -72,7 +72,7 @@ export const Route = createFileRoute(
             offset,
           }),
       }),
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getSuperAdminInvitesControllerGetInvitesQueryKey(id, {
           search: invitesSearch,
           limit: INVITES_PER_PAGE,
@@ -86,17 +86,17 @@ export const Route = createFileRoute(
           }),
       }),
     ]);
-    const subscriptionResult = await queryClient.fetchQuery({
+    const subscriptionResult = await queryClient.query({
       queryKey: getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(id),
       queryFn: () => superAdminSubscriptionsControllerGetSubscription(id),
     });
-    const subscriptionHistoryResult = await queryClient.fetchQuery({
+    const subscriptionHistoryResult = await queryClient.query({
       queryKey:
         getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey(id),
       queryFn: () =>
         superAdminSubscriptionsControllerGetSubscriptionHistory(id),
     });
-    const trialResult = await queryClient.fetchQuery({
+    const trialResult = await queryClient.query({
       queryKey: getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(id),
       queryFn: () => superAdminTrialsControllerGetTrialByOrgId(id),
     });

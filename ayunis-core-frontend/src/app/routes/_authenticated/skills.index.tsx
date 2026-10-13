@@ -9,7 +9,7 @@ import { personalSkillListParams } from '@/shared/api/skill-scopes';
 export const Route = createFileRoute('/_authenticated/skills/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const skills = await queryClient.fetchQuery({
+    const skills = await queryClient.query({
       queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       queryFn: () => skillsControllerFindAll(personalSkillListParams),
     });

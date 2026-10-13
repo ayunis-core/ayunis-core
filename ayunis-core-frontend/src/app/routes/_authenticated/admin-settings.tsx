@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings')({
   // permissions grant (Teams today); anything else redirects. Every settings
   // sub-route flows through here, so admin-only screens stay admin-only.
   beforeLoad: async ({ context: { user, queryClient }, location }) => {
-    const { permissions } = await queryClient.fetchQuery(
+    const { permissions } = await queryClient.query(
       getMyPermissionsControllerGetMineQueryOptions(),
     );
     const authorization = createAuthorization(user.role, permissions);

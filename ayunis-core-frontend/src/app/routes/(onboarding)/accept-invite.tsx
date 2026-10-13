@@ -23,7 +23,7 @@ export const Route = createFileRoute('/(onboarding)/accept-invite')({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { token }, context: { queryClient } }) => {
     const [invite, { isCloud }] = await Promise.all([
-      queryClient.fetchQuery({
+      queryClient.query({
         ...inviteQueryOptions(token),
         staleTime: 0,
       }),

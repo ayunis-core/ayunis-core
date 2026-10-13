@@ -13,11 +13,11 @@ export const Route = createFileRoute(
   component: RouteComponent,
   loader: async ({ context: { queryClient }, params: { id } }) => {
     const [team, membersResponse] = await Promise.all([
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getTeamsControllerGetTeamQueryKey(id),
         queryFn: () => teamsControllerGetTeam(id),
       }),
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getTeamsControllerListTeamMembersQueryKey(id, {
           limit: 50,
           offset: 0,

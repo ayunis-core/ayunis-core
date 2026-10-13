@@ -8,7 +8,7 @@ import {
 export const Route = createFileRoute('/_authenticated/admin-settings/teams/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const teams = await queryClient.fetchQuery({
+    const teams = await queryClient.query({
       queryKey: getTeamsControllerListTeamsQueryKey(),
       queryFn: () => teamsControllerListTeams(),
     });

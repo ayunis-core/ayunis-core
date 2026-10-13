@@ -21,15 +21,15 @@ export const Route = createFileRoute(
   }) => {
     try {
       const [workspace, skill, embeddingModel] = await Promise.all([
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
           queryFn: () => workspacesControllerFindOne(workspaceId),
         }),
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getSkillsControllerFindOneQueryKey(skillId),
           queryFn: () => skillsControllerFindOne(skillId),
         }),
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
           queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
         }),
@@ -40,7 +40,7 @@ export const Route = createFileRoute(
       ) {
         throw new Error('Skill is outside the route workspace scope');
       }
-      const assignedKnowledgeBases = await queryClient.fetchQuery({
+      const assignedKnowledgeBases = await queryClient.query({
         queryKey:
           getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey(
             skillId,
