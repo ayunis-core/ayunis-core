@@ -1,5 +1,6 @@
 import {
   MockProvider,
+  ModelProviderError,
   run,
   textTurn,
   type ModelProvider,
@@ -45,6 +46,15 @@ const freeCatalogModel = {
   name: 'Open Municipal Assistant',
   consumesCredits: false,
 } as LanguageModel;
+
+function rateLimitedOnOpenStream(): ModelProviderError {
+  return new ModelProviderError({
+    kind: 'rate_limit',
+    stage: 'stream_consumption',
+    retryAfterMs: 0,
+    cause: new Error('token rate limit exceeded'),
+  });
+}
 
 describe('UsageHookFactory', () => {
   it('records every call outcome with the actual call model and model-call ID', async () => {
@@ -286,6 +296,125 @@ describe('UsageHookFactory', () => {
       type: 'run_end',
       status: 'error',
     });
+    expect(collectCritical).not.toHaveBeenCalled();
+  });
+
+  it('retries a paid call the provider rate-limited on an open stream without billing it', async () => {
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const stream = jest
+      .fn()
+      .mockImplementationOnce(async function* () {
+        yield* [];
+        throw rateLimitedOnOpenStream();
+      })
+      .mockImplementationOnce(async function* () {
+        yield {
+          textDelta: 'The office opens at 8.',
+          usage: { inputTokens: 12, outputTokens: 6 },
+          finishReason: 'stop' as const,
+        };
+      });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      stream,
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 1 },
+      }),
+    );
+
+    expect(stream).toHaveBeenCalledTimes(2);
+    expect(completedEvents.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+    expect(collectCritical).toHaveBeenCalledTimes(1);
+    expect(collectCritical).toHaveBeenCalledWith(
+      catalogModel,
+      12,
+      6,
+      expect.any(String),
+      'agent_runtime',
+    );
+  });
+
+  it('surfaces an exhausted rate limit as a provider failure, not an accounting failure', async () => {
+    const collectCritical = jest.fn();
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      async *stream() {
+        yield* [];
+        throw rateLimitedOnOpenStream();
+      },
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 0 },
+      }),
+    );
+
+    expect(completedEvents).toContainEqual(
+      expect.objectContaining({ type: 'error', code: 'PROVIDER_FAILED' }),
+    );
+    expect(completedEvents).not.toContainEqual(
+      expect.objectContaining({ type: 'error', code: 'HOOK_FAILED' }),
+    );
+    expect(collectCritical).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when a paid stream breaks for a non-admission reason without usage', async () => {
+    const collectCritical = jest.fn();
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const stream = jest.fn(async function* () {
+      yield* [];
+      throw new ModelProviderError({
+        kind: 'server',
+        stage: 'stream_consumption',
+        cause: new Error('upstream stream failed'),
+      });
+    });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      stream,
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 2 },
+      }),
+    );
+
+    expect(stream).toHaveBeenCalledTimes(1);
+    expect(completedEvents).toContainEqual(
+      expect.objectContaining({
+        type: 'error',
+        code: 'HOOK_FAILED',
+        details: expect.objectContaining({ hookName: 'ayunis-usage' }),
+      }),
+    );
     expect(collectCritical).not.toHaveBeenCalled();
   });
 

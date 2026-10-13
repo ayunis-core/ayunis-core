@@ -58,11 +58,8 @@ export class RunExecutionFailedError extends RunError {
 }
 
 export class RunUsageAccountingFailedError extends RunExecutionFailedError {
-  constructor(modelTurn?: number) {
-    super(
-      'Agent runtime failed',
-      modelTurn === undefined ? undefined : { modelTurn },
-    );
+  constructor(metadata: ErrorMetadata) {
+    super('Agent runtime failed', metadata);
   }
 }
 
