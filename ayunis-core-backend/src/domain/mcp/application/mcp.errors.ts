@@ -1,5 +1,6 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
+import type { McpOAuthRequestStage } from 'src/domain/mcp/application/util/mcp-oauth-response-observer.helper';
 
 export enum McpErrorCode {
   MCP_UNAUTHENTICATED = 'MCP_UNAUTHENTICATED',
@@ -11,6 +12,7 @@ export enum McpErrorCode {
   MCP_CONNECTION_TIMEOUT = 'MCP_CONNECTION_TIMEOUT',
   MCP_CONNECTION_FAILED = 'MCP_CONNECTION_FAILED',
   MCP_OAUTH_SERVER_UNREACHABLE = 'MCP_OAUTH_SERVER_UNREACHABLE',
+  MCP_OAUTH_INVALID_RESPONSE = 'MCP_OAUTH_INVALID_RESPONSE',
   MCP_TOOL_TIMEOUT = 'MCP_TOOL_TIMEOUT',
   MCP_AUTHENTICATION_FAILED = 'MCP_AUTHENTICATION_FAILED',
   MCP_VALIDATION_FAILED = 'MCP_VALIDATION_FAILED',
@@ -255,6 +257,33 @@ export class McpOAuthServerUnreachableError extends McpError {
         `during OAuth ${stage}. Please verify the server is running and ` +
         `accessible, then try again.`,
       McpErrorCode.MCP_OAUTH_SERVER_UNREACHABLE,
+      502,
+      metadata,
+    );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
+  }
+}
+
+/**
+ * An OAuth endpoint answered with something other than JSON — typically an
+ * HTML login, proxy or error page (AYC-1155). Like the unreachable error, the
+ * user-facing message names only the configured server origin.
+ */
+export class McpOAuthInvalidResponseError extends McpError {
+  constructor(
+    serverUrl: string,
+    stage: McpOAuthRequestStage,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `OAuth ${stage} for the MCP server at ${serverOrigin(serverUrl)} ` +
+        `returned a response that is not valid JSON. The OAuth endpoint is ` +
+        `likely misconfigured or served a login or error page. Please verify ` +
+        `the server's OAuth configuration, then try again.`,
+      McpErrorCode.MCP_OAUTH_INVALID_RESPONSE,
       502,
       metadata,
     );

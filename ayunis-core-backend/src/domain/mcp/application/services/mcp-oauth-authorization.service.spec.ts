@@ -90,12 +90,12 @@ describe('McpOAuthAuthorizationService', () => {
     expect(discoverOAuthProtectedResourceMetadata).toHaveBeenCalledWith(
       integration.serverUrl,
       undefined,
-      oauthFetch.fetch,
+      expect.any(Function),
     );
     expect(auth).toHaveBeenCalledWith(provider, {
       serverUrl: integration.serverUrl,
       scope: 'tools:read',
-      fetchFn: oauthFetch.fetch,
+      fetchFn: expect.any(Function),
     });
   });
 
@@ -208,7 +208,7 @@ describe('McpOAuthAuthorizationService', () => {
       serverUrl: integration.serverUrl,
       authorizationCode: 'code',
       iss: pending.issuer,
-      fetchFn: oauthFetch.fetch,
+      fetchFn: expect.any(Function),
     });
     expect(cache.invalidate).toHaveBeenCalledWith(integration.id, userId);
     expect(mcpClient.invalidateConnections).toHaveBeenCalledWith(
