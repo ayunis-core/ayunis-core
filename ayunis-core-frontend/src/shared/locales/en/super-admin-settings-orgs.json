@@ -43,7 +43,7 @@
     "error": "Failed to create organization. Please try again."
   },
   "search": {
-    "placeholder": "Search organizations..."
+    "placeholder": "Search by name or ID..."
   },
   "filter": {
     "label": "Organisation status",

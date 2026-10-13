@@ -12,7 +12,7 @@ export class SuperAdminGetAllOrgsQueryParamsDto {
   status?: 'active' | 'archived' | 'all';
 
   @ApiPropertyOptional({
-    description: 'Search organizations by name',
+    description: 'Search organizations by name, or by exact organization ID',
     example: 'Acme',
   })
   @IsOptional()

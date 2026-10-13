@@ -5652,7 +5652,7 @@ offset?: number;
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 status?: SuperAdminOrgsControllerGetAllOrgsStatus;
 /**
- * Search organizations by name.
+ * Search organizations by name, or by exact organization ID.
  */
 search?: string;
 /**

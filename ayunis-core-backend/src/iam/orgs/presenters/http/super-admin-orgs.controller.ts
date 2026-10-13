@@ -108,7 +108,7 @@ export class SuperAdminOrgsController {
     name: 'search',
     required: false,
     type: String,
-    description: 'Search organizations by name.',
+    description: 'Search organizations by name, or by exact organization ID.',
     example: 'Acme',
   })
   @ApiQuery({

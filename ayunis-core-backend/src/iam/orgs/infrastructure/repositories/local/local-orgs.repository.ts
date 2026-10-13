@@ -5,7 +5,8 @@ import {
   OrgsFilters,
 } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
+import { isUUID } from 'class-validator';
 import { OrgRecord } from './schema/org.record';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
@@ -89,6 +90,17 @@ export class LocalOrgsRepository extends OrgsRepository {
     return orgs.map((org) => org.id);
   }
 
+  private nameOrIdMatches(search: string): Brackets {
+    return new Brackets((where) => {
+      where.where('org.name ILIKE :search', { search: `%${search}%` });
+      // org.id is varchar holding lower-case randomUUID() values, so normalize the
+      // input instead of lower(org.id), which would bypass the primary-key index.
+      if (isUUID(search)) {
+        where.orWhere('org.id = :searchId', { searchId: search.toLowerCase() });
+      }
+    });
+  }
+
   async findAllForSuperAdmin(
     pagination: OrgsPagination,
     filters?: OrgsFilters,
@@ -114,11 +126,9 @@ export class LocalOrgsRepository extends OrgsRepository {
         });
       }
 
-      // Apply search filter (case-insensitive)
-      if (filters?.search) {
-        queryBuilder.andWhere('org.name ILIKE :search', {
-          search: `%${filters.search}%`,
-        });
+      const search = filters?.search?.trim();
+      if (search) {
+        queryBuilder.andWhere(this.nameOrIdMatches(search));
       }
 
       // Apply pagination and get data with count in one call
