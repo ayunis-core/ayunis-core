@@ -1,0 +1,108 @@
+name: Dependabot Lockfile Dedupe
+
+# Dependabot can't run `pnpm dedupe`, so its lockfile updates routinely fail
+# the Lockfile Dedupe check. This dedupes and pushes the result back to the
+# Dependabot branch.
+on:
+  pull_request:
+    paths:
+      - 'pnpm-lock.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Runs pnpm (and everything it downloads) with no secrets. The push job
+  # below holds the CI app key on a separate runner that never executes
+  # pnpm, so a compromised package or tool can't read the key.
+  dedupe:
+    name: Dedupe Dependabot lockfile
+    # Only Dependabot's own pushes: the dedupe commit (pushed as the CI app)
+    # and manual fixes on the branch never re-trigger this, so it can't loop
+    # or overwrite a human's lockfile.
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.dedupe.outputs.changed }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v6.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '24'
+
+      - name: Dedupe lockfile
+        id: dedupe
+        run: |
+          pnpm dedupe --ignore-scripts
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload deduped lockfile
+        if: steps.dedupe.outputs.changed == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deduped-lockfile
+          path: pnpm-lock.yaml
+          retention-days: 1
+
+  push:
+    name: Push deduped lockfile
+    # Both jobs check out the same head SHA. If Dependabot pushes again in
+    # between, the non-force push below is rejected instead of pairing this
+    # lockfile with newer manifests.
+    needs: dedupe
+    if: needs.dedupe.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Download deduped lockfile
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: deduped-lockfile
+          path: ${{ runner.temp }}/deduped
+
+      # Dependabot-triggered workflows only see Dependabot secrets, so
+      # CI_APP_ID / CI_APP_PRIVATE_KEY must be registered there too. A push
+      # made with the app token, unlike GITHUB_TOKEN, re-runs CI on the PR.
+      - name: Mint push token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+
+      - name: Commit and push
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          APP_SLUG: ${{ steps.token.outputs.app-slug }}
+          HEAD_REF: ${{ github.head_ref }}
+          REPOSITORY: ${{ github.repository }}
+          DEDUPED: ${{ runner.temp }}/deduped/pnpm-lock.yaml
+        run: |
+          cp "$DEDUPED" pnpm-lock.yaml
+          bot_id=$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git commit -m "chore(deps): dedupe pnpm-lock.yaml (AYC-000)" -- pnpm-lock.yaml
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${REPOSITORY}.git" "HEAD:refs/heads/${HEAD_REF}"
