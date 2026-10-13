@@ -20,6 +20,9 @@ vi.mock('./UserUsageSection', () => ({
     return <div data-testid="individual-usage" />;
   },
 }));
+vi.mock('./ApiKeyUsageSection', () => ({
+  ApiKeyUsageSection: () => <div data-testid="api-key-usage" />,
+}));
 afterEach(cleanup);
 const query = () => ({ data: undefined, isLoading: false });
 const useUserUsage = vi.fn(query);
@@ -30,6 +33,7 @@ const hooks = {
   useProviderUsageChart: query,
   useModelDistribution: query,
   useUserUsage,
+  useApiKeyUsage: query,
 } as unknown as UsageOverviewHooks;
 
 describe('UsageOverview individual usage visibility', () => {
@@ -39,6 +43,7 @@ describe('UsageOverview individual usage visibility', () => {
     expect(screen.queryByTestId('individual-usage')).toBeNull();
     expect(useUserUsage).not.toHaveBeenCalled();
     expect(screen.getByTestId('aggregate-stats')).toBeTruthy();
+    expect(screen.getByTestId('api-key-usage')).toBeTruthy();
   });
   it('keeps individual usage visible by default for super-admin views', () => {
     render(<UsageOverview hooks={hooks} />);

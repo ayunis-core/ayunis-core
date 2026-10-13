@@ -7,6 +7,7 @@ import { buildModelFilterOptions } from '@/widgets/usage-overview/lib/buildModel
 import { CreditBudgetCard } from './CreditBudgetCard';
 import { UsageOverviewFilters } from './UsageOverviewFilters';
 import { UserUsageSection } from './UserUsageSection';
+import { ApiKeyUsageSection } from './ApiKeyUsageSection';
 import type { UsageOverviewHooks } from '@/widgets/usage-overview/model/types';
 
 interface UsageOverviewProps {
@@ -111,6 +112,12 @@ export function UsageOverview({
           endDate={endIso}
         />
       )}
+
+      <ApiKeyUsageSection
+        useApiKeyUsage={hooks.useApiKeyUsage}
+        startDate={startIso}
+        endDate={endIso}
+      />
     </div>
   );
 }

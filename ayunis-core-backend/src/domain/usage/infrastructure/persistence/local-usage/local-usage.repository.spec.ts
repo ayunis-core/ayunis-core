@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import type { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
 import type { UsageMapper } from './mappers/usage.mapper';
 import type { UsageQueryMapper } from './mappers/usage-query.mapper';
 import type { UsageRecord } from './schema/usage.record';
@@ -46,6 +47,7 @@ function createRepository(
   return new LocalUsageRepository(
     usageRepository,
     {} as Repository<UserRecord>,
+    {} as Repository<ApiKeyRecord>,
     {} as UsageMapper,
     {} as UsageQueryMapper,
   );
