@@ -1,6 +1,7 @@
 import type {
   Message as InferenceMessage,
   MessageContent as InferenceMessageContent,
+  ProviderImageLimits,
 } from '@ayunis/inference';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
@@ -25,10 +26,11 @@ export async function toInferenceMessages(
   messages: Message[],
   orgId: string,
   imageContentService: ImageContentService,
+  imageLimits?: ProviderImageLimits,
 ): Promise<InferenceMessage[]> {
   return Promise.all(
     messages.map((message) =>
-      toInferenceMessage(message, orgId, imageContentService),
+      toInferenceMessage(message, orgId, imageContentService, imageLimits),
     ),
   );
 }
@@ -37,6 +39,7 @@ async function toInferenceMessage(
   message: Message,
   orgId: string,
   imageContentService: ImageContentService,
+  imageLimits?: ProviderImageLimits,
 ): Promise<InferenceMessage> {
   if (message instanceof UserMessage) {
     const context = {
@@ -47,7 +50,7 @@ async function toInferenceMessage(
     const content = (
       await Promise.all(
         message.content.map((c) =>
-          toUserContent(c, context, imageContentService),
+          toUserContent(c, context, imageContentService, imageLimits),
         ),
       )
     ).flat();
@@ -83,13 +86,18 @@ async function toUserContent(
   content: TextMessageContent | ImageMessageContent,
   context: { orgId: string; threadId: string; messageId: string },
   imageContentService: ImageContentService,
+  imageLimits?: ProviderImageLimits,
 ): Promise<InferenceMessageContent[]> {
   if (content instanceof TextMessageContent) {
     return [{ type: 'text', text: content.text }];
   }
   if (content instanceof ImageMessageContent) {
     const { base64, contentType } =
-      await imageContentService.convertImageToBase64(content, context);
+      await imageContentService.convertImageToBase64(
+        content,
+        context,
+        imageLimits,
+      );
     // The label gives the model a stable handle to pass this image to the
     // generate_image tool (reference_uploaded_image_ids); the neutral image
     // block itself carries no identifier.

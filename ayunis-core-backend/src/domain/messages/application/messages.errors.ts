@@ -7,6 +7,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum MessageErrorCode {
   MESSAGE_CONTENT_INVALID = 'MESSAGE_CONTENT_INVALID',
   MESSAGE_TOO_LONG = 'MESSAGE_TOO_LONG',
+  MESSAGE_IMAGE_UNSUPPORTED = 'MESSAGE_IMAGE_UNSUPPORTED',
 }
 
 /**
@@ -104,6 +105,18 @@ export class ThreadMessagesError extends ApplicationError {
         originalError: error.message,
         ...metadata,
       },
+    );
+  }
+}
+
+/** The stored bytes carry no JPEG, PNG, GIF or WebP signature. */
+export class MessageImageUnsupportedError extends MessageError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Image is not a JPEG, PNG, GIF or WebP',
+      MessageErrorCode.MESSAGE_IMAGE_UNSUPPORTED,
+      400,
+      metadata,
     );
   }
 }

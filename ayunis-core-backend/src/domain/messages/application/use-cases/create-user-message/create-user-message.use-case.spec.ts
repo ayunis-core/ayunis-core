@@ -5,6 +5,14 @@ import type { MessagesRepository } from 'src/domain/messages/application/ports/m
 import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import type { ImageUploadData } from './create-user-message.command';
 import { CreateUserMessageCommand } from './create-user-message.command';
+
+const SIGNATURES = {
+  'image/jpeg': Buffer.from([0xff, 0xd8, 0xff]),
+  'image/png': Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+} as const;
+
+const imageBytes = (type: keyof typeof SIGNATURES, label: string) =>
+  Buffer.concat([SIGNATURES[type], Buffer.from(label)]);
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
 import { randomUUID } from 'crypto';
@@ -100,7 +108,7 @@ describe('CreateUserMessageUseCase', () => {
       const threadId = randomUUID();
       const text = 'Check this image';
       const pendingImage: ImageUploadData = {
-        buffer: Buffer.from('fake-image-data'),
+        buffer: imageBytes('image/jpeg', 'fake-image-data'),
         contentType: 'image/jpeg',
         altText: 'alt text',
       };
@@ -136,11 +144,11 @@ describe('CreateUserMessageUseCase', () => {
       const text = 'Multiple images';
       const pendingImages: ImageUploadData[] = [
         {
-          buffer: Buffer.from('image-1'),
+          buffer: imageBytes('image/jpeg', 'image-1'),
           contentType: 'image/jpeg',
         },
         {
-          buffer: Buffer.from('image-2'),
+          buffer: imageBytes('image/png', 'image-2'),
           contentType: 'image/png',
           altText: 'second image',
         },
@@ -187,7 +195,7 @@ describe('CreateUserMessageUseCase', () => {
       // Arrange
       const threadId = randomUUID();
       const pendingImage: ImageUploadData = {
-        buffer: Buffer.from('fake-image'),
+        buffer: imageBytes('image/jpeg', 'fake-image'),
         contentType: 'image/jpeg',
       };
       const command = new CreateUserMessageCommand(threadId, 'Test', [
@@ -331,7 +339,7 @@ describe('CreateUserMessageUseCase', () => {
       const threadId = randomUUID();
       const text = 'With image';
       const pendingImage: ImageUploadData = {
-        buffer: Buffer.from('image'),
+        buffer: imageBytes('image/png', 'image'),
         contentType: 'image/png',
       };
       const command = new CreateUserMessageCommand(threadId, text, [

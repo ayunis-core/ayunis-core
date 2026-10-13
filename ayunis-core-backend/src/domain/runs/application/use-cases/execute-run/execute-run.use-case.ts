@@ -302,6 +302,7 @@ export class ExecuteRunUseCase {
       orgId: prepared.orgId,
       tools: prepared.backendTools,
       request: { ...prepared, tokens: provider.tokens },
+      imageLimits: provider.limits?.image,
     });
     const context = RunContext.create({
       orgId: prepared.orgId,

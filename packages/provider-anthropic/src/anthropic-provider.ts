@@ -13,6 +13,7 @@ import {
 } from '@ayunis/inference';
 
 import { classifyAnthropicRejection } from './classify-rejection';
+import { ANTHROPIC_LIMITS } from './limits';
 import { convertChunk } from './convert-chunk';
 import {
   convertMessages,
@@ -88,6 +89,7 @@ export const createMessagesProvider = (
   maxTokens: number,
 ): ModelProvider => ({
   name,
+  limits: ANTHROPIC_LIMITS,
   stream: (request) => streamMessages(client, model, maxTokens, request),
 });
 

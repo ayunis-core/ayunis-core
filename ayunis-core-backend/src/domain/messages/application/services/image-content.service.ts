@@ -1,5 +1,6 @@
+import type { ProviderImageLimits } from '@ayunis/inference';
 import { Injectable } from '@nestjs/common';
-import { ImageMessageContent } from '../../domain/message-contents/image-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
@@ -8,6 +9,7 @@ import {
   isAllowedImageContentType,
 } from 'src/common/util/content-type.util';
 import { streamToBuffer } from 'src/common/util/stream-to-buffer.util';
+import { fitImageToProviderLimit } from 'src/domain/messages/application/utils/fit-image-to-provider-limit.util';
 
 export interface ValidatedImageData {
   base64: string;
@@ -35,6 +37,7 @@ export class ImageContentService {
   async convertImageToBase64(
     content: ImageMessageContent,
     context: ImageContext,
+    limits?: ProviderImageLimits,
   ): Promise<ValidatedImageData> {
     // Compute storage path from context
     const storagePath = content.getStoragePath(
@@ -50,11 +53,15 @@ export class ImageContentService {
     const buffer = await this.downloadImageBuffer(storagePath);
     this.validateImageSize(buffer);
 
-    const base64Data = buffer.toString('base64');
+    const image = await fitImageToProviderLimit(
+      buffer,
+      validatedContentType,
+      limits,
+    );
 
     return {
-      base64: base64Data,
-      contentType: validatedContentType,
+      base64: image.buffer.toString('base64'),
+      contentType: image.contentType,
     };
   }
 

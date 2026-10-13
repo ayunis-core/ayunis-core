@@ -175,7 +175,8 @@ describe('StreamInferenceUseCase error mapping', () => {
       kind: 'rejection',
       stage: 'stream_establishment',
       upstreamStatus: 400,
-      cause: new Error('image exceeds 5 MB maximum'),
+      rejectionReason: 'image_too_large',
+      cause: new Error('400 provider wording'),
     });
 
     await expect(

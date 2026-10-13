@@ -1,4 +1,8 @@
 import type { ProviderFailureFacts, RunEvent } from '@ayunis/agent-runtime';
+import {
+  ModelProviderError,
+  type ProviderRejectionReason,
+} from '@ayunis/inference';
 import type {
   ApplicationError,
   ErrorMetadata,
@@ -90,7 +94,7 @@ function mapResolvedProviderError(
       upstreamRequestId: failure.upstreamRequestId,
     });
   }
-  if (isOversizedImageError(callError)) {
+  if (hasRejectionReason(callError, 'image_too_large')) {
     return new InferenceImageTooLargeError({
       provider: context.provider,
       modelId: context.modelId,
@@ -267,21 +271,25 @@ function readIdleMs(message: string): number {
   );
 }
 
-function isOversizedImageError(error: unknown): boolean {
+function hasRejectionReason(
+  error: unknown,
+  reason: ProviderRejectionReason,
+): boolean {
+  return findPortableProviderError(error)?.rejectionReason === reason;
+}
+
+function findPortableProviderError(
+  error: unknown,
+): ModelProviderError | undefined {
   let current: unknown = error;
   const seen = new Set<unknown>();
   for (let depth = 0; depth < 8; depth++) {
-    if (current instanceof Error) {
-      const message = current.message.toLowerCase();
-      if (message.includes('image exceeds ') && message.includes(' maximum')) {
-        return true;
-      }
-    }
+    if (current instanceof ModelProviderError) return current;
     if (typeof current !== 'object' || current === null || seen.has(current)) {
-      return false;
+      return undefined;
     }
     seen.add(current);
     current = (current as { cause?: unknown }).cause;
   }
-  return false;
+  return undefined;
 }

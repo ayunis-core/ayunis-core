@@ -55,6 +55,7 @@ describe('RuntimeHistoryMaterializer', () => {
         },
         tokens: fixedEstimator(30),
       },
+      imageLimits: { maxBase64Bytes: 7_000_000, maxEdgePx: 2_048 },
     });
 
     expect(result).toEqual([
@@ -75,6 +76,7 @@ describe('RuntimeHistoryMaterializer', () => {
     expect(convertImageToBase64).toHaveBeenCalledWith(
       retained.content[1],
       expect.objectContaining({ messageId: retained.id }),
+      { maxBase64Bytes: 7_000_000, maxEdgePx: 2_048 },
     );
     expect(messages).toHaveLength(3);
   });

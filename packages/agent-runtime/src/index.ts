@@ -25,6 +25,8 @@ export type {
   ProviderFailureFacts,
   ProviderFailureKind,
   ProviderFailureStage,
+  ProviderImageLimits,
+  ProviderLimits,
   ProviderRequest,
   ProviderTimeoutSource,
   TokenEstimator,

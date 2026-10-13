@@ -42,6 +42,8 @@ export type {
   FinishReason,
   ModelProvider,
   ProviderChunk,
+  ProviderImageLimits,
+  ProviderLimits,
   ProviderRequest,
   ToolCallDelta,
   ToolChoice,

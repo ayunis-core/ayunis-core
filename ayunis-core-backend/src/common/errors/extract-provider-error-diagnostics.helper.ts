@@ -23,6 +23,7 @@ export const ProviderErrorReason = {
   UNSUPPORTED_PARAMETER: 'unsupported_parameter',
   CONTENT_FILTER: 'content_filter',
   AUTHENTICATION_FAILED: 'authentication_failed',
+  IMAGE_TOO_LARGE: 'image_too_large',
   UNKNOWN_REQUEST_REJECTION: 'unknown_request_rejection',
 } as const;
 

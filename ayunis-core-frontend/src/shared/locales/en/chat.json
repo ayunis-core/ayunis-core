@@ -61,6 +61,7 @@
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "errorExecutionError": "Error fetching response",
     "errorImageTooLarge": "The image is too large for the selected model. Please reduce its size (e.g. lower the resolution) and try again.",
+    "errorImageUnsupported": "The image is not a JPEG, PNG, GIF or WebP file. Please upload it in one of these formats.",
     "errorInferenceTimeout": "The model stopped responding and the connection was closed. Please try again.",
     "errorUnexpected": "An unexpected error occurred",
     "errorNoModelFound": "No model found",

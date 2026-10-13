@@ -9,7 +9,8 @@ export type ProviderRejectionReason =
   | 'content_filter'
   | 'invalid_tool_schema'
   | 'unsupported_parameter'
-  | 'authentication_failed';
+  | 'authentication_failed'
+  | 'image_too_large';
 
 export type ProviderRejectionClassifier = (
   error: unknown,

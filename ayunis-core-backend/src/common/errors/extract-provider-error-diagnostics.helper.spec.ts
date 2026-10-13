@@ -151,6 +151,7 @@ describe('extractProviderErrorDiagnostics', () => {
     ['content_filter', ProviderErrorReason.CONTENT_FILTER],
     ['unsupported_parameter', ProviderErrorReason.UNSUPPORTED_PARAMETER],
     ['authentication_failed', ProviderErrorReason.AUTHENTICATION_FAILED],
+    ['image_too_large', ProviderErrorReason.IMAGE_TOO_LARGE],
   ] as const)(
     'takes the %s reason the provider package recognised',
     (rejectionReason, upstreamReason) => {

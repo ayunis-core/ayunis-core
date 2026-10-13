@@ -66,4 +66,17 @@ export interface ModelProvider {
   stream(request: ProviderRequest): AsyncIterable<ProviderChunk>;
   /** How this provider counts a request; absent when it has no better answer than the host's estimate. */
   readonly tokens?: TokenEstimator;
+  /** Request limits the provider enforces; absent when unknown. */
+  readonly limits?: ProviderLimits;
+}
+
+export interface ProviderImageLimits {
+  /** Largest base64 encoding of one image the provider accepts. */
+  readonly maxBase64Bytes: number;
+  /** Longest edge the provider keeps before downscaling. */
+  readonly maxEdgePx: number;
+}
+
+export interface ProviderLimits {
+  readonly image?: ProviderImageLimits;
 }

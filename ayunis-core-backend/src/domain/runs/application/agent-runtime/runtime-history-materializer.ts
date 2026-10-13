@@ -1,6 +1,7 @@
 import {
   estimatedTokens,
   type Message as InferenceMessage,
+  type ProviderImageLimits,
 } from '@ayunis/inference';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
@@ -23,6 +24,7 @@ interface MaterializeRuntimeHistoryParams {
   tools: readonly ToolSchema[];
   /** The model call the history is for; its budget is the hook's budget. */
   request: MessageBudgetParams;
+  imageLimits?: ProviderImageLimits;
 }
 
 @Injectable()
@@ -54,7 +56,12 @@ export class RuntimeHistoryMaterializer {
       throw new RunContextBudgetExceededError();
     }
     return this.mapMessagesToInferenceUseCase.execute(
-      new MapMessagesToInferenceCommand(messages, params.orgId, params.tools),
+      new MapMessagesToInferenceCommand(
+        messages,
+        params.orgId,
+        params.tools,
+        params.imageLimits,
+      ),
     );
   }
 }

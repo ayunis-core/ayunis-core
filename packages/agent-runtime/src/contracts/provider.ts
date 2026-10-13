@@ -10,6 +10,8 @@ export type {
   ProviderChunk,
   ProviderFailureKind,
   ProviderFailureStage,
+  ProviderImageLimits,
+  ProviderLimits,
   ProviderRequest,
   ProviderTimeoutSource,
   TokenEstimator,

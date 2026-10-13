@@ -34,6 +34,7 @@ export class MapMessagesToInferenceUseCase {
       messages,
       command.orgId,
       this.imageContentService,
+      command.imageLimits,
     );
   }
 }

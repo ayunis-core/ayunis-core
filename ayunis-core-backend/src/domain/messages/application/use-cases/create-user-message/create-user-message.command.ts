@@ -1,5 +1,8 @@
 import type { UUID } from 'crypto';
-import { isAllowedImageContentType } from 'src/common/util/content-type.util';
+import {
+  detectAllowedImageContentType,
+  isAllowedImageContentType,
+} from 'src/common/util/content-type.util';
 
 /**
  * Application-layer data structure for image uploads.
@@ -45,6 +48,14 @@ export class CreateUserMessageCommand {
       }
       if (!isAllowedImageContentType(img.contentType)) {
         throw new Error(`Unsupported image content type: ${img.contentType}`);
+      }
+      if (
+        detectAllowedImageContentType(img.buffer) !==
+        img.contentType.toLowerCase()
+      ) {
+        throw new Error(
+          `Image bytes do not match the declared content type ${img.contentType}`,
+        );
       }
     }
 

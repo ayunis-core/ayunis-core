@@ -129,6 +129,27 @@ describe('Anthropic provider error contract', () => {
     });
   });
 
+  it('marks an image over the size limit as an image-too-large rejection', async () => {
+    const message =
+      'messages.10.content.1.image.source.base64: image exceeds 5 MB maximum: 9052272 bytes > 5242880 bytes';
+    createMock.mockRejectedValueOnce(
+      Object.assign(new Error(`400 ${message}`), {
+        status: 400,
+        error: {
+          type: 'error',
+          error: { type: 'invalid_request_error', message },
+        },
+      }),
+    );
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'image_too_large',
+    });
+  });
+
   it('leaves other invalid requests without a rejection reason', async () => {
     createMock.mockRejectedValueOnce(
       Object.assign(new Error('400 messages: roles must alternate'), {
