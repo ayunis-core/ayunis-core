@@ -1,5 +1,5 @@
-import type { BudgetWarningTemplateContent } from '../../../domain/email-template.entity';
-import { BudgetWarningScope } from '../../../domain/value-objects/budget-warning-scope.enum';
+import type { BudgetWarningTemplateContent } from 'src/common/email-templates/domain/email-template.entity';
+import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 import {
   budgetWarningHtml,
   budgetWarningSubject,
@@ -45,8 +45,8 @@ describe('budget-warning template', () => {
       );
     });
 
-    it('renders valid HTML with settings and help links', () => {
-      const result = budgetWarningHtml(content({ threshold: '50' }));
+    it('renders valid HTML with settings and help links', async () => {
+      const result = await budgetWarningHtml(content({ threshold: '50' }));
 
       expect(result.errors).toHaveLength(0);
       expect(result.html).toContain(
@@ -75,8 +75,8 @@ describe('budget-warning template', () => {
       );
     });
 
-    it('renders valid HTML', () => {
-      const result = budgetWarningHtml(content({ threshold: '80' }));
+    it('renders valid HTML', async () => {
+      const result = await budgetWarningHtml(content({ threshold: '80' }));
 
       expect(result.errors).toHaveLength(0);
       expect(result.html).toContain(
@@ -102,8 +102,8 @@ describe('budget-warning template', () => {
       expect(text).not.toContain('mindestens');
     });
 
-    it('renders valid HTML with the exhausted headline', () => {
-      const result = budgetWarningHtml(content({ threshold: '100' }));
+    it('renders valid HTML with the exhausted headline', async () => {
+      const result = await budgetWarningHtml(content({ threshold: '100' }));
 
       expect(result.errors).toHaveLength(0);
       expect(result.html).toContain('Budget aufgebraucht');
@@ -132,8 +132,8 @@ describe('budget-warning template', () => {
       );
     });
 
-    it('renders valid HTML with the user name emphasized', () => {
-      const result = budgetWarningHtml(userContent);
+    it('renders valid HTML with the user name emphasized', async () => {
+      const result = await budgetWarningHtml(userContent);
 
       expect(result.errors).toHaveLength(0);
       expect(result.html).toContain('<strong>Jane Doe</strong>');
@@ -250,8 +250,8 @@ describe('budget-warning template', () => {
   });
 
   describe('rendering safety', () => {
-    it('escapes HTML in the target name', () => {
-      const result = budgetWarningHtml(
+    it('escapes HTML in the target name', async () => {
+      const result = await budgetWarningHtml(
         content({
           scope: BudgetWarningScope.USER,
           targetName: '<Jane> & Co',

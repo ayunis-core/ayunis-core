@@ -40,7 +40,7 @@ export class SendBudgetWarningEmailUseCase {
     this.logger.log({ scope: command.scope }, 'execute');
 
     const template = this.buildTemplate(command);
-    const content = this.renderTemplateUseCase.execute(
+    const content = await this.renderTemplateUseCase.execute(
       new RenderTemplateCommand(template),
     );
     if (!content.subject) {
