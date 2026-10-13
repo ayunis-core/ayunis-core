@@ -90,7 +90,7 @@ describe('UpdateLanguageModelUseCase', () => {
     isArchived: boolean,
     tier?: ModelTier,
     hasProviderFault?: boolean,
-    contextWindowSize?: number,
+    contextWindowSize = 200_000,
   ): UpdateLanguageModelCommand => {
     return new UpdateLanguageModelCommand({
       id,
@@ -357,28 +357,6 @@ describe('UpdateLanguageModelUseCase', () => {
       expect(result).toHaveProperty('contextWindowSize', 128_000);
       expect(modelsRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ contextWindowSize: 128_000 }),
-      );
-    });
-
-    it('clears the context window size when omitted (full-replace semantics)', async () => {
-      const existingModel = createMockLanguageModel(
-        mockModelId,
-        false,
-        undefined,
-        undefined,
-        128_000,
-      );
-      const command = createUpdateCommand(mockModelId, false);
-
-      modelsRepository.findOne.mockResolvedValue(existingModel);
-      modelsRepository.save.mockResolvedValue();
-
-      const result = await useCase.execute(command);
-
-      expect(existingModel).toHaveProperty('contextWindowSize', 128_000);
-      expect(result).toHaveProperty('contextWindowSize', undefined);
-      expect(modelsRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ contextWindowSize: undefined }),
       );
     });
 

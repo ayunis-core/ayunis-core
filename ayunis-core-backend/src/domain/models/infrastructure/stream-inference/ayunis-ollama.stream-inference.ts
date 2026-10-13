@@ -6,6 +6,7 @@ import { ImageContentService } from 'src/domain/messages/application/services/im
 import { ThinkingTagStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/thinking-tag-stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import { STREAMING_PROVIDER_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { ollamaContextWindow } from 'src/domain/models/infrastructure/runtime/ollama-context-window';
 
 @Injectable()
 export class AyunisOllamaStreamInferenceHandler extends ThinkingTagStreamInferenceHandler {
@@ -20,6 +21,7 @@ export class AyunisOllamaStreamInferenceHandler extends ThinkingTagStreamInferen
     return ollama({
       baseUrl: this.configService.get<string>('models.ayunis.baseURL') ?? '',
       model: model.name,
+      numCtx: ollamaContextWindow(model),
       headers: {
         Authorization: `Bearer ${this.configService.get<string>('models.ayunis.authToken') ?? ''}`,
       },

@@ -59,6 +59,7 @@ const model: LanguageModelResponseDto = {
   canUseTools: true,
   isReasoning: false,
   canVision: false,
+  contextWindowSize: 128000,
   hasProviderFault: true,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
@@ -86,6 +87,9 @@ describe('language model provider fault field', () => {
       ),
       { target: { value: 'Fault Test Model' } },
     );
+    fireEvent.change(screen.getByTestId('model-catalog-context-window-size'), {
+      target: { value: '128000' },
+    });
     fireEvent.click(
       screen.getByRole('button', {
         name: 'models.catalog.dialog.create',

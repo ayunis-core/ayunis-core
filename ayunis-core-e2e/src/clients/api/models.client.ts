@@ -17,6 +17,7 @@ interface CreateLanguageCatalogModelInput {
   name: string;
   displayName: string;
   provider?: LanguageModelResponseDtoProvider;
+  contextWindowSize?: number;
 }
 
 export async function createLanguageCatalogModel(
@@ -27,6 +28,7 @@ export async function createLanguageCatalogModel(
     {
       ...input,
       provider: input.provider ?? 'openai',
+      contextWindowSize: input.contextWindowSize ?? 128_000,
       canStream: true,
       canUseTools: false,
       isReasoning: false,

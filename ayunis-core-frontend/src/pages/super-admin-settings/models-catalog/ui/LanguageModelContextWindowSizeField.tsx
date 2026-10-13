@@ -26,6 +26,7 @@ export function LanguageModelContextWindowSizeField({
       control={form.control}
       name="contextWindowSize"
       rules={{
+        required: t('models.catalog.validation.contextWindowSize.required'),
         validate: {
           isInteger: (value) =>
             value === undefined ||

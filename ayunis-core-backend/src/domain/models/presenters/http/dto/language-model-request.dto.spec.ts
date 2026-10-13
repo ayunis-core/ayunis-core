@@ -4,7 +4,7 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { CreateLanguageModelRequestDto } from './create-language-model-request.dto';
 import { UpdateLanguageModelRequestDto } from './update-language-model-request.dto';
 
-const validInput = {
+const inputWithoutContextWindow = {
   name: 'gpt-4o',
   provider: ModelProvider.AZURE,
   displayName: 'GPT-4o',
@@ -14,6 +14,8 @@ const validInput = {
   canVision: true,
   isArchived: false,
 };
+
+const validInput = { ...inputWithoutContextWindow, contextWindowSize: 128_000 };
 
 describe('language model provider fault request validation', () => {
   it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
@@ -56,12 +58,15 @@ describe('language model provider fault request validation', () => {
 
 describe('language model context window request validation', () => {
   it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
-    '%s accepts an omitted context window size',
+    '%s rejects an omitted context window size',
     async (Dto) => {
-      const dto = plainToInstance(Dto, validInput);
+      const dto = plainToInstance(Dto, inputWithoutContextWindow);
 
-      await expect(validate(dto)).resolves.toHaveLength(0);
-      expect(dto).toHaveProperty('contextWindowSize', undefined);
+      const errors = await validate(dto);
+
+      expect(errors.map(({ property }) => property)).toContain(
+        'contextWindowSize',
+      );
     },
   );
 
@@ -79,22 +84,25 @@ describe('language model context window request validation', () => {
   );
 
   it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
-    '%s normalizes a null context window size to undefined',
+    '%s rejects a null context window size',
     async (Dto) => {
       const dto = plainToInstance(Dto, {
         ...validInput,
         contextWindowSize: null,
       });
 
-      await expect(validate(dto)).resolves.toHaveLength(0);
-      expect(dto).toHaveProperty('contextWindowSize', undefined);
+      const errors = await validate(dto);
+
+      expect(errors.map(({ property }) => property)).toContain(
+        'contextWindowSize',
+      );
     },
   );
 
   it.each([0, -1, 1.5, 2_147_483_648, '128000'])(
     'rejects an invalid context window size of %p',
     async (contextWindowSize) => {
-      const dto = plainToInstance(UpdateLanguageModelRequestDto, {
+      const dto = plainToInstance(CreateLanguageModelRequestDto, {
         ...validInput,
         contextWindowSize,
       });

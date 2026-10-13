@@ -9,7 +9,7 @@ export class CreateLanguageModelCommand {
   canUseTools: boolean;
   isReasoning: boolean;
   canVision: boolean;
-  contextWindowSize?: number;
+  contextWindowSize: number;
   isArchived: boolean;
   hasProviderFault: boolean;
   inputTokenCost?: number;
@@ -25,7 +25,7 @@ export class CreateLanguageModelCommand {
     canUseTools: boolean;
     isReasoning: boolean;
     canVision: boolean;
-    contextWindowSize?: number;
+    contextWindowSize: number;
     isArchived: boolean;
     hasProviderFault?: boolean;
     inputTokenCost?: number;

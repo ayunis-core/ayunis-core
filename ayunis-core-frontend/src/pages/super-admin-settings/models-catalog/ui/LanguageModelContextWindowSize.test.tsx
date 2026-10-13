@@ -83,7 +83,7 @@ function fillRequiredCreateFields() {
 describe('language model context window size field', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('submits an omitted create value as undefined', async () => {
+  it('requires a context window size before creating a model', async () => {
     render(<CreateLanguageModelDialog open onOpenChange={vi.fn()} />);
     fillRequiredCreateFields();
 
@@ -96,11 +96,12 @@ describe('language model context window size field', () => {
       screen.getByRole('button', { name: 'models.catalog.dialog.create' }),
     );
 
-    await waitFor(() => {
-      expect(createLanguageModel).toHaveBeenCalledWith(
-        expect.objectContaining({ contextWindowSize: undefined }),
-      );
-    });
+    expect(
+      await screen.findByText(
+        'models.catalog.validation.contextWindowSize.required',
+      ),
+    ).toBeTruthy();
+    expect(createLanguageModel).not.toHaveBeenCalled();
   });
 
   it('submits a context window size as a number', async () => {
@@ -121,7 +122,7 @@ describe('language model context window size field', () => {
     });
   });
 
-  it('hydrates and clears an existing edit value to undefined', async () => {
+  it('hydrates an existing value and refuses to save it cleared', async () => {
     render(
       <EditLanguageModelDialog model={model} open onOpenChange={vi.fn()} />,
     );
@@ -136,12 +137,33 @@ describe('language model context window size field', () => {
       screen.getByRole('button', { name: 'models.catalog.dialog.update' }),
     );
 
-    await waitFor(() => {
-      expect(updateLanguageModel).toHaveBeenCalledWith(
-        model.id,
-        expect.objectContaining({ contextWindowSize: undefined }),
-      );
-    });
+    expect(
+      await screen.findByText(
+        'models.catalog.validation.contextWindowSize.required',
+      ),
+    ).toBeTruthy();
+    expect(updateLanguageModel).not.toHaveBeenCalled();
+  });
+
+  it('requires a value when editing a model that has none yet', async () => {
+    render(
+      <EditLanguageModelDialog
+        model={{ ...model, contextWindowSize: undefined }}
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'models.catalog.dialog.update' }),
+    );
+
+    expect(
+      await screen.findByText(
+        'models.catalog.validation.contextWindowSize.required',
+      ),
+    ).toBeTruthy();
+    expect(updateLanguageModel).not.toHaveBeenCalled();
   });
 
   it('submits an edited context window size as a number', async () => {

@@ -14777,8 +14777,7 @@
             "description": "Maximum context window size in tokens",
             "example": 128000,
             "minimum": 1,
-            "maximum": 2147483647,
-            "nullable": true
+            "maximum": 2147483647
           },
           "isArchived": {
             "type": "boolean",
@@ -14824,6 +14823,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "isArchived"
         ]
       },
@@ -14884,8 +14884,7 @@
             "description": "Maximum context window size in tokens",
             "example": 128000,
             "minimum": 1,
-            "maximum": 2147483647,
-            "nullable": true
+            "maximum": 2147483647
           },
           "isArchived": {
             "type": "boolean",
@@ -14930,6 +14929,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "isArchived"
         ]
       },

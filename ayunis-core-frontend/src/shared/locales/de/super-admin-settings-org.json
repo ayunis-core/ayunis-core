@@ -637,6 +637,7 @@
       },
       "validation": {
         "contextWindowSize": {
+          "required": "Die Kontextfenstergröße ist erforderlich",
           "isInt": "Die Kontextfenstergröße muss eine ganze Zahl sein",
           "min": "Die Kontextfenstergröße muss mindestens 1 betragen",
           "invalid": "Geben Sie eine gültige Kontextfenstergröße ein"
