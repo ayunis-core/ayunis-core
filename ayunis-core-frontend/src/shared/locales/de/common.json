@@ -78,6 +78,7 @@
     "sourceNotFound": "Datei nicht gefunden. Sie wurde möglicherweise gelöscht.",
     "uploadFile": "Datei oder Bild hochladen",
     "imageLimitExceeded": "Maximal {{max}} Bilder erlaubt. Einige Bilder wurden nicht hinzugefügt.",
+    "imageTooLarge": "Bilder dürfen höchstens {{maxMb}} MB groß sein. Einige Bilder wurden nicht hinzugefügt.",
     "addKnowledgeBase": "Wissenssammlung hinzufügen",
     "knowledgeBasesLoadError": "Fehler beim Laden der Wissenssammlungen",
     "knowledgeBasesEmptyState": "Noch keine Wissenssammlung erstellt",

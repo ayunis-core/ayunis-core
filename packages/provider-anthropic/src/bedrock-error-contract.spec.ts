@@ -92,6 +92,22 @@ describe('Bedrock provider error contract', () => {
     expect(createMock).toHaveBeenCalledOnce();
   });
 
+  it('marks a Bedrock prompt over the context window as a context-length rejection', async () => {
+    const message = 'prompt is too long: 200250 tokens > 200000 maximum';
+    createMock.mockRejectedValueOnce(
+      Object.assign(new Error(`400 ${message}`), {
+        status: 400,
+        error: { message },
+      }),
+    );
+    const provider = bedrock({ model: 'anthropic.test', maxRetries: 0 });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'context_length_exceeded',
+    });
+  });
+
   it('normalizes post-chunk failures and cleans up the Bedrock iterator', async () => {
     const cause = Object.assign(new Error('socket closed'), {
       code: 'UND_ERR_SOCKET',

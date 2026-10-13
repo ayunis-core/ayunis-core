@@ -21,9 +21,9 @@ import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usa
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
 import { ModelCallObservabilityHookFactory } from './application/agent-runtime/hooks/model-call-observability-hook.factory';
-import { CompleteTurnSelector } from './application/agent-runtime/complete-turn-selector';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
+import { RunAssemblyService } from './application/services/run-assembly.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
@@ -89,8 +89,8 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ToolUsageHookFactory,
     SkillActivationHookFactory,
     ContextBudgetHookFactory,
-    CompleteTurnSelector,
     RuntimeHistoryMaterializer,
+    RunAssemblyService,
     ModelCallObservabilityHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,

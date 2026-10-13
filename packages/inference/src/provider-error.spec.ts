@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   ModelProviderError,
@@ -63,6 +63,112 @@ describe('normalizeProviderError', () => {
       expect(normalizeProviderError(sdkError, ESTABLISHMENT).kind).toBe(kind);
     },
   );
+
+  it.each([
+    ['code', { status: 400, code: 'context_length_exceeded' }],
+    [
+      'nested code',
+      { status: 400, error: { code: 'context_length_exceeded' } },
+    ],
+    [
+      'doubly nested code',
+      { status: 400, error: { error: { code: 'context_length_exceeded' } } },
+    ],
+  ] as const)(
+    'marks an OpenAI-compatible context-length rejection from its %s',
+    (_label, sdkError) => {
+      expect(normalizeProviderError(sdkError, ESTABLISHMENT)).toMatchObject({
+        kind: 'rejection',
+        rejectionReason: 'context_length_exceeded',
+      });
+    },
+  );
+
+  it.each([
+    ['content_filter', { status: 400, error: { code: 'content_filter' } }],
+    [
+      'unsupported_parameter',
+      { status: 400, error: { code: 'unsupported_parameter' } },
+    ],
+    [
+      'invalid_tool_schema',
+      { status: 400, error: { code: 'invalid_function_parameters' } },
+    ],
+    ['authentication_failed', { status: 401 }],
+    ['authentication_failed', { status: 403, type: 'permission_error' }],
+    [
+      'authentication_failed',
+      { status: 403, error: { code: 'invalid_api_key' } },
+    ],
+  ] as const)(
+    'classifies a %s rejection from structured provider facts',
+    (rejectionReason, sdkError) => {
+      expect(normalizeProviderError(sdkError, ESTABLISHMENT)).toMatchObject({
+        kind: 'rejection',
+        rejectionReason,
+      });
+    },
+  );
+
+  it('leaves a bare 403 without a reason', () => {
+    const error = normalizeProviderError(
+      { status: 403, message: 'Access denied for this region' },
+      ESTABLISHMENT,
+    );
+
+    expect(error.kind).toBe('rejection');
+    expect(error.rejectionReason).toBeUndefined();
+  });
+
+  it('does not guess a reason from free-text wording', () => {
+    const error = normalizeProviderError(
+      {
+        status: 400,
+        message: "This model's maximum context length is 32768 tokens",
+      },
+      ESTABLISHMENT,
+    );
+
+    expect(error.rejectionReason).toBeUndefined();
+  });
+
+  it('takes the rejection reason from the provider classifier', () => {
+    const sdkError = { status: 400, message: 'provider-specific wording' };
+
+    const error = normalizeProviderError(sdkError, {
+      ...ESTABLISHMENT,
+      classifyRejection: (cause) =>
+        cause === sdkError ? 'context_length_exceeded' : undefined,
+    });
+
+    expect(error).toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'context_length_exceeded',
+    });
+  });
+
+  it('leaves an ordinary rejection without a reason', () => {
+    const error = normalizeProviderError(
+      { status: 400, error: { code: 'invalid_request_error' } },
+      { ...ESTABLISHMENT, classifyRejection: () => undefined },
+    );
+
+    expect(error.kind).toBe('rejection');
+    expect(error.rejectionReason).toBeUndefined();
+  });
+
+  it('only classifies rejection reasons for rejections', () => {
+    const classifyRejection = vi.fn(() => 'context_length_exceeded' as const);
+
+    const error = normalizeProviderError(
+      { status: 503, code: 'context_length_exceeded' },
+      { ...ESTABLISHMENT, classifyRejection },
+    );
+
+    expect(error.kind).toBe('server');
+    expect(error.rejectionReason).toBeUndefined();
+    expect(classifyRejection).not.toHaveBeenCalled();
+  });
 
   it('leaves an unknown statusless provider diagnostic unclassified', () => {
     const error = normalizeProviderError(

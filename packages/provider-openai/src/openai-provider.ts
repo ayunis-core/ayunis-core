@@ -6,7 +6,9 @@ import type {
   ModelProvider,
   ProviderChunk,
   ProviderRequest,
+  TokenEstimator,
 } from '@ayunis/inference';
+import { compatibleEndpointTokens, openAITokens } from './openai-tokens';
 import {
   normalizeProviderError,
   normalizeProviderStreamErrors,
@@ -74,7 +76,17 @@ export const openai = (options: OpenAIProviderOptions): ModelProvider => {
       ? { maxRetries: options.maxRetries }
       : {}),
   });
-  return createProvider(client, `openai:${options.model}`, options.model);
+  // A custom base URL serves other vendors' models (Scaleway, STACKIT, OTC),
+  // whose tokenizers are not OpenAI's.
+  const tokens = options.baseUrl
+    ? compatibleEndpointTokens()
+    : openAITokens(options.model);
+  return createProvider(
+    client,
+    `openai:${options.model}`,
+    options.model,
+    tokens,
+  );
 };
 
 const buildAzureV1BaseUrl = (endpoint: string): string => {
@@ -126,6 +138,7 @@ const createResponsesProvider = (
   options: AzureProviderOptions,
 ): ModelProvider => ({
   name: `azure:${options.model}`,
+  tokens: openAITokens(options.model),
   stream: (request) =>
     streamResponses(client, options.model, options.reasoningEffort, request),
 });
@@ -134,8 +147,10 @@ const createProvider = (
   client: OpenAI,
   name: string,
   model: string,
+  tokens: TokenEstimator,
 ): ModelProvider => ({
   name,
+  tokens,
   stream: (request) => streamChat(client, model, request),
 });
 

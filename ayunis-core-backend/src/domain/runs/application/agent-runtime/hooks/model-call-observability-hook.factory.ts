@@ -1,12 +1,12 @@
-import {
-  ModelProviderError,
-  type AfterModelCallContext,
-  type Hook,
-  type ModelCallOutcomeSnapshot,
-  type ProviderFailureKind,
-  type ProviderRequest,
+import type {
+  AfterModelCallContext,
+  Hook,
+  ModelCallOutcomeSnapshot,
+  ProviderFailureKind,
+  ProviderRequest,
 } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
+import { findPortableProviderError } from 'src/common/errors/find-portable-provider-error.helper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import {
@@ -259,20 +259,4 @@ function providerFailureContext(failure: {
 
 function isProviderUnavailable(kind: string): boolean {
   return ['connection', 'timeout', 'server', 'rate_limit'].includes(kind);
-}
-
-function findPortableProviderError(
-  error: unknown,
-): ModelProviderError | undefined {
-  let current: unknown = error;
-  const seen = new Set<unknown>();
-  for (let depth = 0; depth < 8; depth++) {
-    if (current instanceof ModelProviderError) return current;
-    if (typeof current !== 'object' || current === null || seen.has(current)) {
-      return undefined;
-    }
-    seen.add(current);
-    current = (current as { cause?: unknown }).cause;
-  }
-  return undefined;
 }

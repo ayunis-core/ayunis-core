@@ -1,11 +1,14 @@
 import type { ProviderFailureFacts, RunEvent } from '@ayunis/agent-runtime';
+import type { ProviderRejectionReason } from '@ayunis/inference';
 import type {
   ApplicationError,
   ErrorMetadata,
 } from 'src/common/errors/base.error';
+import { findPortableProviderError } from 'src/common/errors/find-portable-provider-error.helper';
 import {
   extractProviderErrorDiagnostics,
   hasRateLimitDiagnostics,
+  ProviderErrorReason,
   type ProviderErrorDiagnostics,
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import {
@@ -18,10 +21,11 @@ import {
 import {
   InferenceAbortedError,
   InferenceFailedError,
-  InferenceImageTooLargeError,
   InferenceStreamStalledError,
+  InferenceImageTooLargeError,
 } from 'src/domain/models/application/models.errors';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
 
 type RunErrorEvent = Extract<RunEvent, { type: 'error' }>;
@@ -77,7 +81,18 @@ function mapResolvedProviderError(
       providerFailureMetadata(failure, context),
     );
   }
-  if (isOversizedImageError(callError)) {
+  if (
+    failure.kind === 'rejection' &&
+    diagnostics.upstreamReason === ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED
+  ) {
+    return new RunContextBudgetExceededError({
+      provider: context.provider,
+      modelId: context.modelId,
+      status: failure.upstreamStatus,
+      upstreamRequestId: failure.upstreamRequestId,
+    });
+  }
+  if (hasRejectionReason(callError, 'image_too_large')) {
     return new InferenceImageTooLargeError({
       provider: context.provider,
       modelId: context.modelId,
@@ -254,21 +269,9 @@ function readIdleMs(message: string): number {
   );
 }
 
-function isOversizedImageError(error: unknown): boolean {
-  let current: unknown = error;
-  const seen = new Set<unknown>();
-  for (let depth = 0; depth < 8; depth++) {
-    if (current instanceof Error) {
-      const message = current.message.toLowerCase();
-      if (message.includes('image exceeds ') && message.includes(' maximum')) {
-        return true;
-      }
-    }
-    if (typeof current !== 'object' || current === null || seen.has(current)) {
-      return false;
-    }
-    seen.add(current);
-    current = (current as { cause?: unknown }).cause;
-  }
-  return false;
+function hasRejectionReason(
+  error: unknown,
+  reason: ProviderRejectionReason,
+): boolean {
+  return findPortableProviderError(error)?.rejectionReason === reason;
 }

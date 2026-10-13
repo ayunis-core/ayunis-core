@@ -38,6 +38,30 @@ describe('openai client construction', () => {
   });
 });
 
+describe('openai token estimator selection', () => {
+  it('counts exactly against api.openai.com', () => {
+    const provider = openai({ apiKey: 'sk-test', model: 'gpt-4o-mini' });
+
+    expect(provider.tokens).toMatchObject({
+      exact: true,
+      tokensPerImage: 48_169,
+    });
+  });
+
+  it('only estimates against a compatible endpoint', () => {
+    const provider = openai({
+      apiKey: 'key',
+      model: 'llama-3.3-70b-instruct',
+      baseUrl: 'https://api.scaleway.ai/v1',
+    });
+
+    expect(provider.tokens).toMatchObject({
+      exact: false,
+      tokensPerMessage: 0,
+    });
+  });
+});
+
 describe('azure client construction', () => {
   const insecureEndpoint = ['http:', '//my-resource.openai.azure.com'].join('');
   it('uses the standard client with the Azure v1 base URL', () => {

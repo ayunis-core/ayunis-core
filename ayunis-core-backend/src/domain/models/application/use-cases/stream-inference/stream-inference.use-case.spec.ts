@@ -150,7 +150,7 @@ describe('StreamInferenceUseCase error mapping', () => {
         upstreamType: 'invalid_request_error',
         upstreamParam: 'tools[62].function.parameters',
         upstreamRequestId: 'req_azure_123',
-        upstreamReason: 'invalid_tool_schema',
+        upstreamReason: 'unknown_request_rejection',
       },
     });
     await expect(result).rejects.not.toHaveProperty('metadata.upstreamMessage');
@@ -158,7 +158,7 @@ describe('StreamInferenceUseCase error mapping', () => {
       expect.objectContaining({
         upstreamCode: 'invalid_function_parameters',
         upstreamParam: 'tools[62].function.parameters',
-        upstreamReason: 'invalid_tool_schema',
+        upstreamReason: 'unknown_request_rejection',
         upstreamMessage: "Invalid schema containing resident prompt '…",
       }),
       'Provider stream inference failed',
@@ -175,11 +175,30 @@ describe('StreamInferenceUseCase error mapping', () => {
       kind: 'rejection',
       stage: 'stream_establishment',
       upstreamStatus: 400,
-      cause: new Error('image exceeds 5 MB maximum'),
+      rejectionReason: 'image_too_large',
+      cause: new Error('400 provider wording'),
     });
 
     await expect(
       firstValueFrom(useCaseWithFailingHandler(rejection).execute(makeInput())),
+    ).rejects.toMatchObject({
+      code: 'INFERENCE_IMAGE_TOO_LARGE',
+      statusCode: 400,
+    });
+  });
+
+  it('recognizes an oversized-image rejection wrapped in another error', async () => {
+    const rejection = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      rejectionReason: 'image_too_large',
+      cause: new Error('400 provider wording'),
+    });
+    const wrapped = new Error('model call failed', { cause: rejection });
+
+    await expect(
+      firstValueFrom(useCaseWithFailingHandler(wrapped).execute(makeInput())),
     ).rejects.toMatchObject({
       code: 'INFERENCE_IMAGE_TOO_LARGE',
       statusCode: 400,

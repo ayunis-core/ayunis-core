@@ -88,17 +88,17 @@ async function toUserContent(
     return [{ type: 'text', text: content.text }];
   }
   if (content instanceof ImageMessageContent) {
-    const { base64, contentType } =
-      await imageContentService.convertImageToBase64(content, context);
+    const stored = await imageContentService.loadImage(content, context);
     // The label gives the model a stable handle to pass this image to the
     // generate_image tool (reference_uploaded_image_ids); the neutral image
     // block itself carries no identifier.
     return [
+      { type: 'text', text: content.getReferenceLabel(context.messageId) },
       {
-        type: 'text',
-        text: `[image ref: ${context.messageId}:${content.index}]`,
+        type: 'image',
+        data: stored.buffer.toString('base64'),
+        mediaType: stored.contentType,
       },
-      { type: 'image', data: base64, mediaType: contentType },
     ];
   }
   throw new InferenceFailedError(

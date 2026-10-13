@@ -8,6 +8,16 @@ export interface PendingImage {
 }
 
 export const MAX_IMAGES = 8;
+// The strictest provider (Anthropic, Bedrock) caps an image at 5 MiB of base64,
+// 3.75 MiB of bytes; the backend refuses larger uploads with the same number.
+export const MAX_IMAGE_SIZE_BYTES = (5 * 1024 * 1024 * 3) / 4;
+export const MAX_IMAGE_SIZE_MB = MAX_IMAGE_SIZE_BYTES / (1024 * 1024);
+
+export interface AddImagesResult {
+  added: number;
+  limitExceeded: boolean;
+  oversizedRejected: boolean;
+}
 
 export function usePendingImages() {
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
@@ -30,15 +40,17 @@ export function usePendingImages() {
   );
 
   const addImages = useCallback(
-    (files: File[]): { added: number; limitExceeded: boolean } => {
+    (files: File[]): AddImagesResult => {
+      const sized = files.filter((file) => file.size <= MAX_IMAGE_SIZE_BYTES);
+      const oversizedRejected = sized.length < files.length;
       const currentCount = pendingImages.length;
       const remainingSlots = MAX_IMAGES - currentCount;
 
       if (remainingSlots <= 0) {
-        return { added: 0, limitExceeded: true };
+        return { added: 0, limitExceeded: true, oversizedRejected };
       }
 
-      const filesToAdd = files.slice(0, remainingSlots);
+      const filesToAdd = sized.slice(0, remainingSlots);
       const newImages = filesToAdd.map((file) => {
         // eslint-disable-next-line sonarjs/pseudo-random -- Unique ID for UI tracking, not security-sensitive
         const id = `${Date.now()}-${Math.random()}`;
@@ -51,7 +63,8 @@ export function usePendingImages() {
 
       return {
         added: newImages.length,
-        limitExceeded: files.length > remainingSlots,
+        limitExceeded: sized.length > remainingSlots,
+        oversizedRejected,
       };
     },
     [pendingImages.length],

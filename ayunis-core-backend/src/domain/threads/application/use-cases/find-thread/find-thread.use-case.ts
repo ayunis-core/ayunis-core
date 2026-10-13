@@ -9,7 +9,7 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 import { CountMessagesTokensUseCase } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.use-case';
 import { CountMessagesTokensCommand } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.command';
-import { getLongChatWarningThresholdTokens } from 'src/common/token-counter/application/context-budget.constants';
+import { getLongChatWarningThresholdTokens } from 'src/common/token-counter/application/util/context-budget.helper';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 

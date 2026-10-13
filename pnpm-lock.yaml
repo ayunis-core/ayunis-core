@@ -851,6 +851,10 @@ importers:
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(jsdom@29.1.1)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.22.4)(yaml@2.9.1))
 
   packages/inference:
+    dependencies:
+      tiktoken:
+        specifier: ^1.0.22
+        version: 1.0.22
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1

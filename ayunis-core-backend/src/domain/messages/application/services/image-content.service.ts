@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ImageMessageContent } from '../../domain/message-contents/image-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
@@ -9,8 +9,8 @@ import {
 } from 'src/common/util/content-type.util';
 import { streamToBuffer } from 'src/common/util/stream-to-buffer.util';
 
-export interface ValidatedImageData {
-  base64: string;
+export interface StoredImage {
+  buffer: Buffer;
   contentType: AllowedImageContentType;
 }
 
@@ -22,20 +22,19 @@ export interface ImageContext {
 
 @Injectable()
 export class ImageContentService {
-  private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB - matches upload limit
+  // The upload limit before AYC-1256; images stored under it still load.
+  private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
   constructor(private readonly downloadObjectUseCase: DownloadObjectUseCase) {}
 
   /**
-   * Convert an image message content to base64 for inference APIs.
-   *
-   * @param content - The ImageMessageContent entity
-   * @param context - Context needed to compute the storage path (orgId, threadId, messageId)
+   * Loads a stored image after checking its declared type and size. Fitting
+   * it to a provider belongs to the inference boundary, not here.
    */
-  async convertImageToBase64(
+  async loadImage(
     content: ImageMessageContent,
     context: ImageContext,
-  ): Promise<ValidatedImageData> {
+  ): Promise<StoredImage> {
     // Compute storage path from context
     const storagePath = content.getStoragePath(
       context.orgId,
@@ -50,12 +49,7 @@ export class ImageContentService {
     const buffer = await this.downloadImageBuffer(storagePath);
     this.validateImageSize(buffer);
 
-    const base64Data = buffer.toString('base64');
-
-    return {
-      base64: base64Data,
-      contentType: validatedContentType,
-    };
+    return { buffer, contentType: validatedContentType };
   }
 
   normalizeContentType(contentType: string): string {

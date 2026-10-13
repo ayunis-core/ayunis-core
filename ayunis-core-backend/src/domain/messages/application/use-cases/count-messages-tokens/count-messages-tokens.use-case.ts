@@ -1,30 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
-import { CountTokensCommand } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.command';
+import {
+  budgetEstimator,
+  countThreadTokens,
+} from 'src/common/token-counter/application/util/context-budget.helper';
+import { toMessageParts } from 'src/domain/messages/application/utils/message-parts.util';
 import { CountMessagesTokensCommand } from './count-messages-tokens.command';
-import { extractTextFromContent } from 'src/domain/messages/application/utils/message-text-extractor.util';
 
+/**
+ * Prices a thread with the context budget's rules and the shared estimate in
+ * one tokenizer call, so the long-chat warning tracks the trimming without
+ * paying a tokenizer round trip per message on every thread fetch.
+ */
 @Injectable()
 export class CountMessagesTokensUseCase {
   private readonly logger = new Logger(CountMessagesTokensUseCase.name);
 
-  constructor(private readonly countTokensUseCase: CountTokensUseCase) {}
-
   execute(command: CountMessagesTokensCommand): number {
     this.logger.log({ messageCount: command.messages.length }, 'execute');
-
-    const allText = command.messages
-      .flatMap((message) => message.content)
-      .map((content) => extractTextFromContent(content))
-      .filter((text) => text.length > 0)
-      .join('\n');
-
-    if (allText.length === 0) {
-      return 0;
-    }
-
-    return this.countTokensUseCase.execute(
-      new CountTokensCommand(allText, command.counterType),
+    return countThreadTokens(
+      budgetEstimator(),
+      command.messages.map(toMessageParts),
     );
   }
 }

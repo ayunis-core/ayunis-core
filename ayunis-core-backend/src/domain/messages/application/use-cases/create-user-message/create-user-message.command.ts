@@ -1,5 +1,10 @@
 import type { UUID } from 'crypto';
-import { isAllowedImageContentType } from 'src/common/util/content-type.util';
+import { MessageContentInvalidError } from 'src/domain/messages/application/messages.errors';
+import { MAX_IMAGE_SIZE_BYTES } from 'src/domain/messages/application/util/provider-image-limit.helper';
+import {
+  detectAllowedImageContentType,
+  isAllowedImageContentType,
+} from 'src/common/util/content-type.util';
 
 /**
  * Application-layer data structure for image uploads.
@@ -11,8 +16,7 @@ export interface ImageUploadData {
   readonly altText?: string;
 }
 
-const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
-const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB total
+const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
 
 export class CreateUserMessageCommand {
   constructor(
@@ -31,7 +35,7 @@ export class CreateUserMessageCommand {
       this.pendingImages.length === 0 &&
       !this.skillInstructions?.trim()
     ) {
-      throw new Error(
+      throw new MessageContentInvalidError(
         'Message must contain text, at least one image, or skill instructions',
       );
     }
@@ -39,12 +43,22 @@ export class CreateUserMessageCommand {
     // Validate each image
     for (const img of this.pendingImages) {
       if (img.buffer.length > MAX_IMAGE_SIZE_BYTES) {
-        throw new Error(
-          `Image exceeds maximum size of ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB`,
+        throw new MessageContentInvalidError(
+          `Image exceeds maximum size of ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)} MiB`,
         );
       }
       if (!isAllowedImageContentType(img.contentType)) {
-        throw new Error(`Unsupported image content type: ${img.contentType}`);
+        throw new MessageContentInvalidError(
+          `Unsupported image content type: ${img.contentType}`,
+        );
+      }
+      if (
+        detectAllowedImageContentType(img.buffer) !==
+        img.contentType.toLowerCase()
+      ) {
+        throw new MessageContentInvalidError(
+          `Image bytes do not match the declared content type ${img.contentType}`,
+        );
       }
     }
 
@@ -54,7 +68,7 @@ export class CreateUserMessageCommand {
       0,
     );
     if (totalSize > MAX_TOTAL_IMAGE_SIZE_BYTES) {
-      throw new Error(
+      throw new MessageContentInvalidError(
         `Total image size exceeds maximum of ${MAX_TOTAL_IMAGE_SIZE_BYTES / (1024 * 1024)}MB`,
       );
     }
