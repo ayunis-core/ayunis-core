@@ -117,3 +117,25 @@ export function reportError(
     }
   });
 }
+
+/**
+ * Builds the report for React's `onRecoverableError`. React wraps the real
+ * failure in a generic error (e.g. #520) whose own stack is React internals,
+ * so report the `cause` and keep the wrapper message as a param (AYC-1206).
+ * `route` must be a route template, never a resolved path with ids.
+ */
+export function recoverableErrorReport(
+  error: unknown,
+  errorInfo: { componentStack?: string },
+  route: string | undefined,
+): { error: Error; params: Record<string, unknown> } {
+  const wrapper = error instanceof Error ? error : new Error(String(error));
+  return {
+    error: wrapper.cause instanceof Error ? wrapper.cause : wrapper,
+    params: {
+      recoveredFrom: wrapper.message,
+      componentStack: errorInfo.componentStack,
+      route,
+    },
+  };
+}

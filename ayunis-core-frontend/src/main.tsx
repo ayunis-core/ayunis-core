@@ -1,7 +1,11 @@
 import { applyDomPatch } from '@/shared/lib/dom-patch';
 applyDomPatch(); // Must be called before React renders
 
-import { initAppsignal } from '@/shared/lib/appsignal';
+import {
+  initAppsignal,
+  recoverableErrorReport,
+  reportError,
+} from '@/shared/lib/appsignal';
 initAppsignal();
 
 import {
@@ -96,7 +100,16 @@ if (openPanel) {
 // Render the app
 const rootElement = document.getElementById('app');
 if (rootElement && !rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
+  const root = ReactDOM.createRoot(rootElement, {
+    onRecoverableError: (error, errorInfo) => {
+      console.error(error);
+      const { matches } = router.state;
+      const route =
+        matches.length > 0 ? matches[matches.length - 1].fullPath : undefined;
+      const report = recoverableErrorReport(error, errorInfo, route);
+      reportError(report.error, report.params);
+    },
+  });
   root.render(
     <StrictMode>
       <ErrorBoundary>
