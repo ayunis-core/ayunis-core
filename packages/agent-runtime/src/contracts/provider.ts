@@ -10,6 +10,7 @@ export type {
   ProviderChunk,
   ProviderFailureKind,
   ProviderFailureStage,
+  ProviderRejectionReason,
   ProviderRequest,
   ProviderTimeoutSource,
   TokenEstimator,
@@ -22,6 +23,7 @@ export type {
 import type {
   ProviderFailureKind,
   ProviderFailureStage,
+  ProviderRejectionReason,
   ProviderTimeoutSource,
 } from '@ayunis/inference';
 
@@ -29,6 +31,8 @@ import type {
 export interface ProviderFailureFacts {
   readonly kind: ProviderFailureKind;
   readonly stage: ProviderFailureStage;
+  readonly rejectionReason?: ProviderRejectionReason;
+  readonly contextOverflowTokens?: number;
   readonly upstreamStatus?: number;
   readonly upstreamRequestId?: string;
   readonly retryAfterMs?: number;

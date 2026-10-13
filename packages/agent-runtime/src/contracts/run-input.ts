@@ -4,6 +4,7 @@ import type { Message } from './message';
 import type {
   ModelProvider,
   ProviderFailureKind,
+  ProviderRejectionReason,
   ToolChoice,
 } from './provider';
 import type { Tool } from './tool';
@@ -31,6 +32,12 @@ export interface RetryConfig {
   /** Calls after the initial call in one logical turn. */
   readonly maxRetries?: number;
   readonly retryableProviderFailureKinds?: readonly ProviderFailureKind[];
+  /**
+   * Rejections retried immediately, without backoff, because the host changes
+   * the request in `beforeModelCall` (for example by trimming history after a
+   * `context_length_exceeded` rejection). Empty by default.
+   */
+  readonly retryableRejectionReasons?: readonly ProviderRejectionReason[];
   readonly backoff?: Partial<RetryBackoffConfig>;
   readonly retryAfter?: Partial<RetryAfterConfig>;
 }
@@ -38,6 +45,7 @@ export interface RetryConfig {
 export interface ResolvedRetryConfig {
   readonly maxRetries: number;
   readonly retryableProviderFailureKinds: readonly ProviderFailureKind[];
+  readonly retryableRejectionReasons: readonly ProviderRejectionReason[];
   readonly backoff: Readonly<RetryBackoffConfig>;
   readonly retryAfter: Readonly<RetryAfterConfig>;
 }
@@ -50,6 +58,9 @@ export const DEFAULT_RETRY_CONFIG: ResolvedRetryConfig = Object.freeze({
     'server',
     'rate_limit',
   ] satisfies ProviderFailureKind[]),
+  retryableRejectionReasons: Object.freeze(
+    [] satisfies ProviderRejectionReason[],
+  ),
   backoff: Object.freeze({
     initialDelayMs: 500,
     multiplier: 2,

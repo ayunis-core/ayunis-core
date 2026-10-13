@@ -12,6 +12,12 @@ export type ProviderRejectionReason =
   | 'authentication_failed'
   | 'image_too_large';
 
+export interface ProviderRejection {
+  readonly reason: ProviderRejectionReason;
+  /** Tokens by which the request exceeded the context window, when reported. */
+  readonly contextOverflowTokens?: number;
+}
+
 /**
  * A provider package's own read of a rejection. It returns `undefined` for
  * anything it does not recognise and never throws: it runs on the error path,
@@ -19,7 +25,7 @@ export type ProviderRejectionReason =
  */
 export type ProviderRejectionClassifier = (
   error: unknown,
-) => ProviderRejectionReason | undefined;
+) => ProviderRejection | undefined;
 
 // Error codes OpenAI and Azure OpenAI document for these rejections; other
 // OpenAI-compatible hosts reuse them.
@@ -45,13 +51,15 @@ export function resolveRejection(
   chain: readonly Record<string, unknown>[],
   status: number | undefined,
   providerClassifier: ProviderRejectionClassifier | undefined,
-): ProviderRejectionReason | undefined {
+): ProviderRejection | undefined {
   // The provider's reading of its own wording beats the shared codes.
-  const providerReason = providerClassifier?.(error);
-  if (providerReason) return providerReason;
-  if (isAuthenticationFailure(status, chain)) return 'authentication_failed';
+  const providerRejection = providerClassifier?.(error);
+  if (providerRejection) return providerRejection;
+  if (isAuthenticationFailure(status, chain)) {
+    return { reason: 'authentication_failed' };
+  }
   for (const [reason, diagnostics] of DIAGNOSTIC_REASONS) {
-    if (hasDiagnosticEvidence(chain, diagnostics)) return reason;
+    if (hasDiagnosticEvidence(chain, diagnostics)) return { reason };
   }
   return undefined;
 }

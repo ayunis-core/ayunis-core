@@ -1,9 +1,4 @@
-import {
-  DEFAULT_RETRY_CONFIG,
-  run,
-  RunContext,
-  type Hook,
-} from '@ayunis/agent-runtime';
+import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
 import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
@@ -17,6 +12,7 @@ import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/
 import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
 import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
 import { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
+import { RUN_RETRY_CONFIG } from 'src/domain/runs/application/agent-runtime/run-retry.config';
 import type { PreparedRun } from 'src/domain/runs/application/use-cases/execute-run/execute-run.types';
 
 const MAX_ITERATIONS = 50;
@@ -86,7 +82,7 @@ export class RunAssemblyService {
         hooks: this.buildHooks(prepared, models),
         context,
         maxIterations: MAX_ITERATIONS,
-        retry: DEFAULT_RETRY_CONFIG,
+        retry: RUN_RETRY_CONFIG,
         ...(signal ? { signal } : {}),
       }),
       models,

@@ -1,16 +1,23 @@
 import {
   AgentRuntimeError,
   type AfterModelCallContext,
+  type BeforeModelCallContext,
   type BeforeModelTurnContext,
   type Hook,
   type Message,
   type MessageContent,
+  type ModelCallOutcomeSnapshot,
+  type ProviderFailureFacts,
+  type ReadonlySnapshot,
+  type RunContext,
+  type TokenEstimator,
 } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   budgetEstimator,
   countMessageTokens,
   countRequestTokens,
+  getContextOverflowReductionTokens,
   getContextWindowTokens,
   getMessageBudgetTokens,
   getTokenizerSafetyRatio,
@@ -23,8 +30,25 @@ interface ContextBudgetHookParams {
   model: BudgetModel;
 }
 
-/** Per-run RunContext key for the estimate of the request the hook last trimmed for. */
-const ESTIMATED_REQUEST_TOKENS = Symbol('ayunis:estimatedRequestTokens');
+/** Per-run RunContext key for the budget state shared by the hook phases. */
+const CONTEXT_BUDGET_STATE = Symbol('ayunis:contextBudget');
+
+interface ContextBudgetState {
+  /** Message budget of the current model turn before any overflow reduction. */
+  turnBudget: number;
+  /** Tokens of the instructions and tool schemas of the current turn. */
+  turnFixedTokens: number;
+  /** Tokens removed from every later request after the provider rejected one as too long. */
+  reduction: number;
+  /** The reduction the turn's own trim already applied to its messages. */
+  appliedReduction: number;
+  /** Message tokens of the request the hook last trimmed for. */
+  sentMessageTokens?: number;
+  /** Message tokens of the request the provider last rejected as too long. */
+  rejectedMessageTokens?: number;
+  /** Estimate of the whole request the hook last trimmed for. */
+  estimatedRequestTokens?: number;
+}
 
 @Injectable()
 export class ContextBudgetHookFactory {
@@ -35,33 +59,73 @@ export class ContextBudgetHookFactory {
       name: 'ayunis-context-budget',
       inheritToChildRuns: false,
       beforeModelTurn: (ctx) => this.trimTurn(ctx, params.model),
-      afterModelCall: (ctx) => this.compareWithProviderCount(ctx, params.model),
+      beforeModelCall: (ctx) => this.retrimBeforeRetry(ctx),
+      afterModelCall: (ctx) => {
+        this.tightenAfterRejection(ctx, params.model);
+        this.compareWithProviderCount(ctx, params.model);
+      },
     };
   }
 
   private trimTurn(ctx: BeforeModelTurnContext, model: BudgetModel): void {
     const estimator = budgetEstimator(ctx.model.tokens);
-    const fixedTokens = countRequestTokens(
+    const state = budgetState(ctx.context);
+    state.turnFixedTokens = countRequestTokens(
       { instructions: ctx.instructions, tools: ctx.tools, model },
       estimator,
     );
-    const budget = getMessageBudgetTokens(
+    state.turnBudget = getMessageBudgetTokens(
       getContextWindowTokens(model.contextWindowSize),
-      fixedTokens,
+      state.turnFixedTokens,
       getTokenizerSafetyRatio(estimator.exact),
     );
-    ctx.transformMessages((messages) => {
-      const selection = selectCompleteTurns(messages, {
-        maxTokens: budget,
-        countTokens: (message) =>
-          countMessageTokens(estimator, toMessageParts(message)),
-      });
-      if (selection.messages.length === 0) {
-        throw contextBudgetExceeded();
-      }
-      ctx.context.set(ESTIMATED_REQUEST_TOKENS, fixedTokens + selection.tokens);
-      return selection.messages;
-    });
+    state.appliedReduction = state.reduction;
+    ctx.transformMessages((messages) =>
+      trimToCompleteTurns(messages, state, estimator),
+    );
+  }
+
+  // Call-local: every later call of the turn, including a recovery for an
+  // empty or malformed response, starts again from the turn's messages.
+  private retrimBeforeRetry(ctx: BeforeModelCallContext): void {
+    const state = budgetState(ctx.context);
+    if (state.reduction === state.appliedReduction) return;
+    const estimator = budgetEstimator(ctx.model.tokens);
+    ctx.transformMessages((messages) =>
+      trimToCompleteTurns(messages, state, estimator),
+    );
+  }
+
+  private tightenAfterRejection(
+    ctx: AfterModelCallContext,
+    model: BudgetModel,
+  ): void {
+    const failure = contextLengthRejection(ctx.outcome);
+    if (!failure) return;
+    const state = budgetState(ctx.context);
+    const contextWindowTokens = getContextWindowTokens(model.contextWindowSize);
+    const step = getContextOverflowReductionTokens(
+      contextWindowTokens,
+      failure.contextOverflowTokens,
+    );
+    // The budget may have had slack above what was sent, so the next request
+    // is capped below the rejected one, not below the budget: at least one
+    // turn always goes.
+    const sent = state.sentMessageTokens ?? state.turnBudget - state.reduction;
+    state.rejectedMessageTokens = sent;
+    state.reduction = Math.max(
+      state.reduction + step,
+      state.turnBudget - sent + step,
+    );
+    this.logger.warn(
+      {
+        modelCallId: ctx.modelCallId,
+        contextWindowTokens,
+        contextOverflowTokens: failure.contextOverflowTokens,
+        messageBudgetTokens: state.turnBudget - state.reduction,
+      },
+      'Provider rejected the request as too long; trimming more history before the retry',
+    );
   }
 
   // The provider's reported input tokens are the only true count. Logging the
@@ -71,7 +135,7 @@ export class ContextBudgetHookFactory {
     ctx: AfterModelCallContext,
     model: BudgetModel,
   ): void {
-    const estimated = ctx.context.get<number>(ESTIMATED_REQUEST_TOKENS);
+    const estimated = budgetState(ctx.context).estimatedRequestTokens;
     const reported = reportedInputTokens(ctx);
     if (estimated === undefined || reported === undefined) return;
     this.logger.log(
@@ -87,6 +151,63 @@ export class ContextBudgetHookFactory {
       'Context budget estimate compared with provider input tokens',
     );
   }
+}
+
+function trimToCompleteTurns(
+  messages: readonly Message[],
+  state: ContextBudgetState,
+  estimator: TokenEstimator,
+): Message[] {
+  const countTokens = (message: Message): number =>
+    countMessageTokens(estimator, toMessageParts(message));
+  let selection = selectCompleteTurns(messages, {
+    maxTokens: state.turnBudget - state.reduction,
+    countTokens,
+  });
+  if (
+    selection.messages.length === 0 &&
+    state.rejectedMessageTokens !== undefined
+  ) {
+    // The older turns together are smaller than the reduction, so dropping
+    // all of them is the most the retry can do. It still has to be smaller
+    // than the request the provider rejected.
+    const latestTurn = selectCompleteTurns(messages, {
+      maxTokens: state.turnBudget,
+      maxTurns: 1,
+      countTokens,
+    });
+    if (latestTurn.tokens < state.rejectedMessageTokens) selection = latestTurn;
+  }
+  if (selection.messages.length === 0) {
+    throw contextBudgetExceeded();
+  }
+  state.sentMessageTokens = selection.tokens;
+  state.estimatedRequestTokens = state.turnFixedTokens + selection.tokens;
+  return selection.messages;
+}
+
+function budgetState(context: RunContext): ContextBudgetState {
+  const existing = context.get<ContextBudgetState>(CONTEXT_BUDGET_STATE);
+  if (existing) return existing;
+  const state: ContextBudgetState = {
+    turnBudget: 0,
+    turnFixedTokens: 0,
+    reduction: 0,
+    appliedReduction: 0,
+  };
+  context.set(CONTEXT_BUDGET_STATE, state);
+  return state;
+}
+
+function contextLengthRejection(
+  outcome: ModelCallOutcomeSnapshot,
+): ReadonlySnapshot<ProviderFailureFacts> | undefined {
+  if (outcome.type !== 'provider_failure') return undefined;
+  const failure = outcome.providerFailure;
+  return failure.kind === 'rejection' &&
+    failure.rejectionReason === 'context_length_exceeded'
+    ? failure
+    : undefined;
 }
 
 function reportedInputTokens(ctx: AfterModelCallContext): number | undefined {

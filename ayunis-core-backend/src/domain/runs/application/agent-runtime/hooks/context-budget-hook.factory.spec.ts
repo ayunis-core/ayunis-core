@@ -240,11 +240,13 @@ describe('ContextBudgetHookFactory', () => {
     ).toThrow(expect.objectContaining({ code: 'CONTEXT_BUDGET_EXCEEDED' }));
   });
 
-  it('registers trimming for model turns instead of retryable model calls', () => {
+  it('trims once per model turn and leaves ordinary calls untouched', () => {
     const hook = buildHook(100);
+    const context = RunContext.create();
 
-    expect(hook.beforeModelTurn).toBeDefined();
-    expect(hook.beforeModelCall).toBeUndefined();
+    getTransform(hook, { tokens: lengthEstimator() }, context);
+
+    expect(retryTransform(hook, context)).toBeUndefined();
   });
 });
 
@@ -297,10 +299,163 @@ describe('ContextBudgetHookFactory calibration', () => {
       modelCallId: 'call-1',
       context,
       model: { name: 'mock', stream: jest.fn() },
-      outcome: { type: 'provider_failure', usage: {} },
+      outcome: {
+        type: 'provider_failure',
+        usage: {},
+        providerFailure: { kind: 'server', stage: 'stream_establishment' },
+      },
     } as never);
 
     expect(log).not.toHaveBeenCalled();
     log.mockRestore();
   });
 });
+
+describe('ContextBudgetHookFactory after the provider rejects a request as too long', () => {
+  const tokens = lengthEstimator();
+
+  it.each([
+    ['by the reported overflow', 200, 20],
+    [
+      'by a turn even when the rejected request sat well under the budget',
+      400,
+      5,
+    ],
+    [
+      'down to the latest turn when the older turns are smaller than the reduction',
+      200,
+      70,
+    ],
+  ])(
+    'trims more history before the retry %s',
+    (_, contextWindowTokens, contextOverflowTokens) => {
+      const hook = buildHook(contextWindowTokens);
+      const context = RunContext.create();
+      expect(getTransform(hook, { tokens }, context)(conversation)).toEqual(
+        conversation,
+      );
+
+      rejectAsTooLong(hook, context, { contextOverflowTokens });
+
+      expect(retryTransform(hook, context, tokens)!(conversation)).toEqual(
+        conversation.slice(2),
+      );
+    },
+  );
+
+  it('falls back to a fixed reduction when the rejection reports no counts', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    const request = { tokens, instructions: 'i'.repeat(50) };
+    expect(getTransform(hook, request, context)(conversation)).toEqual(
+      conversation,
+    );
+
+    rejectAsTooLong(hook, context, {});
+
+    expect(retryTransform(hook, context, tokens)!(conversation)).toEqual(
+      conversation.slice(2),
+    );
+  });
+
+  it('trims every later call of the same turn, not only the next one', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    getTransform(hook, { tokens }, context)(conversation);
+    rejectAsTooLong(hook, context, { contextOverflowTokens: 20 });
+    retryTransform(hook, context, tokens);
+
+    expect(retryTransform(hook, context, tokens)!(conversation)).toEqual(
+      conversation.slice(2),
+    );
+  });
+
+  it('keeps the reduction for the later turns of the run', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    getTransform(hook, { tokens }, context)(conversation);
+    rejectAsTooLong(hook, context, { contextOverflowTokens: 20 });
+    retryTransform(hook, context, tokens);
+
+    expect(getTransform(hook, { tokens }, context)(conversation)).toEqual(
+      conversation.slice(2),
+    );
+    expect(retryTransform(hook, context, tokens)).toBeUndefined();
+  });
+
+  it('resends the latest turn on a later call of the same turn after the fallback', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    getTransform(hook, { tokens }, context)(conversation);
+    rejectAsTooLong(hook, context, { contextOverflowTokens: 70 });
+    expect(retryTransform(hook, context, tokens)!(conversation)).toEqual(
+      conversation.slice(2),
+    );
+
+    expect(retryTransform(hook, context, tokens)!(conversation)).toEqual(
+      conversation.slice(2),
+    );
+  });
+
+  it('fails explicitly instead of resending a rejected single turn', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    const latestTurn = conversation.slice(2);
+    expect(getTransform(hook, { tokens }, context)(latestTurn)).toEqual(
+      latestTurn,
+    );
+
+    rejectAsTooLong(hook, context, { contextOverflowTokens: 20 });
+
+    expect(() => retryTransform(hook, context, tokens)!(latestTurn)).toThrow(
+      expect.objectContaining({ code: 'CONTEXT_BUDGET_EXCEEDED' }),
+    );
+  });
+
+  it('ignores rejections for other reasons', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    getTransform(hook, { tokens }, context);
+
+    rejectAsTooLong(hook, context, { rejectionReason: 'content_filter' });
+
+    expect(retryTransform(hook, context, tokens)).toBeUndefined();
+  });
+});
+
+function rejectAsTooLong(
+  hook: BudgetHook,
+  context: RunContext,
+  failure: Record<string, unknown>,
+): void {
+  hook.afterModelCall!({
+    modelCallId: 'call-1',
+    context,
+    model: { name: 'mock', stream: jest.fn() },
+    outcome: {
+      type: 'provider_failure',
+      usage: {},
+      providerFailure: {
+        kind: 'rejection',
+        stage: 'stream_establishment',
+        upstreamStatus: 400,
+        rejectionReason: 'context_length_exceeded',
+        ...failure,
+      },
+    },
+  } as never);
+}
+
+function retryTransform(
+  hook: BudgetHook,
+  context: RunContext,
+  tokens?: TokenEstimator,
+): Transform | undefined {
+  const transformMessages = jest.fn();
+  hook.beforeModelCall!({
+    transformMessages,
+    context,
+    model: { name: 'mock', stream: jest.fn(), tokens },
+  } as never);
+  return transformMessages.mock.calls[0]?.[0] as Transform | undefined;
+}

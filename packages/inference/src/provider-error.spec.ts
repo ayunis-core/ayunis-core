@@ -138,12 +138,15 @@ describe('normalizeProviderError', () => {
     const error = normalizeProviderError(sdkError, {
       ...ESTABLISHMENT,
       classifyRejection: (cause) =>
-        cause === sdkError ? 'context_length_exceeded' : undefined,
+        cause === sdkError
+          ? { reason: 'context_length_exceeded', contextOverflowTokens: 10_950 }
+          : undefined,
     });
 
     expect(error).toMatchObject({
       kind: 'rejection',
       rejectionReason: 'context_length_exceeded',
+      contextOverflowTokens: 10_950,
     });
   });
 
@@ -158,7 +161,9 @@ describe('normalizeProviderError', () => {
   });
 
   it('only classifies rejection reasons for rejections', () => {
-    const classifyRejection = vi.fn(() => 'context_length_exceeded' as const);
+    const classifyRejection = vi.fn(() => ({
+      reason: 'context_length_exceeded' as const,
+    }));
 
     const error = normalizeProviderError(
       { status: 503, code: 'context_length_exceeded' },

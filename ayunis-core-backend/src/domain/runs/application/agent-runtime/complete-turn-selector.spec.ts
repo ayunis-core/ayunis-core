@@ -76,6 +76,23 @@ describe('selectCompleteTurns', () => {
     ).toEqual({ messages: [], tokens: 0 });
   });
 
+  it('considers only the newest turns when asked', () => {
+    const messages = [
+      textMessage('user', 'old question'),
+      textMessage('assistant', 'old answer'),
+      textMessage('user', 'new question'),
+      textMessage('assistant', 'new answer'),
+    ];
+
+    expect(
+      selectCompleteTurns(messages, {
+        maxTokens: 1_000,
+        maxTurns: 1,
+        countTokens: countTokens(10),
+      }),
+    ).toEqual({ messages: messages.slice(2), tokens: 20 });
+  });
+
   it('ignores messages before the first user turn', () => {
     const messages = [
       textMessage('assistant', 'orphan'),

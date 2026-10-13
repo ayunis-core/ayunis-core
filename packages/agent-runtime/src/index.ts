@@ -25,6 +25,7 @@ export type {
   ProviderFailureFacts,
   ProviderFailureKind,
   ProviderFailureStage,
+  ProviderRejectionReason,
   ProviderRequest,
   ProviderTimeoutSource,
   TokenEstimator,

@@ -4,6 +4,8 @@ interface TurnMessage {
 
 export interface TurnSelectionOptions<T> {
   maxTokens: number;
+  /** Newest turns to consider; all of them without it. */
+  maxTurns?: number;
   countTokens: (message: T) => number;
 }
 
@@ -21,7 +23,9 @@ export function selectCompleteTurns<T extends TurnMessage>(
   messages: readonly T[],
   options: TurnSelectionOptions<T>,
 ): TurnSelection<T> {
-  const turns = splitIntoUserTurns(messages);
+  const turns = splitIntoUserTurns(messages).slice(
+    -(options.maxTurns ?? Infinity),
+  );
   const selected: T[][] = [];
   let totalTokens = 0;
   for (let index = turns.length - 1; index >= 0; index--) {

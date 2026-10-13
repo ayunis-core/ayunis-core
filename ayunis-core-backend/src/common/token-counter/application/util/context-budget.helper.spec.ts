@@ -2,6 +2,7 @@ import { estimatedTokens, type TokenEstimator } from '@ayunis/inference';
 import {
   countMessageTokens,
   countThreadTokens,
+  getContextOverflowReductionTokens,
   getMessageBudget,
   MAX_CONTEXT_TOKENS,
   getContextWindowTokens,
@@ -25,6 +26,14 @@ describe('context budget helper', () => {
 
   it('warns at 80 percent of the fallback context window', () => {
     expect(getLongChatWarningThresholdTokens()).toBe(160_000);
+  });
+
+  it('reduces the budget by the reported overflow plus a window margin', () => {
+    expect(getContextOverflowReductionTokens(200_000, 10_950)).toBe(20_950);
+  });
+
+  it('falls back to a tenth of the window when no overflow was reported', () => {
+    expect(getContextOverflowReductionTokens(200_000)).toBe(20_000);
   });
 
   it('warns before trimming starts for a request with ordinary fixed parts', () => {

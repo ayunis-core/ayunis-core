@@ -47,6 +47,7 @@ run({
       'server',
       'rate_limit',
     ],
+    retryableRejectionReasons: [], // e.g. ['context_length_exceeded']
     backoff: {
       initialDelayMs: 500,
       multiplier: 2,
@@ -72,6 +73,16 @@ factor of two gives transient failures progressively more recovery time, and
 the 8 second cap keeps an interactive retry bounded. Jitter is disabled by
 default so retry timing remains deterministic and preserves prior host
 behavior; deployments that need request spreading can opt in explicitly.
+
+`retryableRejectionReasons` lists the `ModelProviderError.rejectionReason`
+values a host wants retried. A rejection is deterministic, so the runtime
+retries it immediately, without backoff, and only within the same shared
+budget; the host is expected to change the request in a `beforeModelCall`
+hook first, for example by trimming history after `context_length_exceeded`.
+The retried call carries the failure's `rejectionReason` and, when the
+provider reported it, `contextOverflowTokens` in `afterModelCall` facts.
+Child runs do not inherit `retryableRejectionReasons`, because the hook that
+changes the request may not inherit either; a child passes its own list.
 
 The runtime never retries after text, thinking, or tool-call snapshots have
 been emitted, after cancellation, or after a critical terminal hook failure.

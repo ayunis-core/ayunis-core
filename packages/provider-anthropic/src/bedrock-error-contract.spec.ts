@@ -105,6 +105,7 @@ describe('Bedrock provider error contract', () => {
     await expect(drain(provider.stream(request()))).rejects.toMatchObject({
       kind: 'rejection',
       rejectionReason: 'context_length_exceeded',
+      contextOverflowTokens: 250,
     });
   });
 

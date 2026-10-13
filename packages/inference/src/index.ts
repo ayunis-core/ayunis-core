@@ -61,7 +61,10 @@ export type {
   NormalizeProviderErrorOptions,
   ProviderFailureKind,
   ProviderFailureStage,
-  ProviderRejectionClassifier,
-  ProviderRejectionReason,
   ProviderTimeoutSource,
 } from './provider-error';
+export type {
+  ProviderRejection,
+  ProviderRejectionClassifier,
+  ProviderRejectionReason,
+} from './provider-rejection';

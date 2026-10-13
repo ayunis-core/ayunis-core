@@ -128,3 +128,26 @@ export function getLongChatWarningThresholdTokens(
     getContextWindowTokens(contextWindowSize) * LONG_CHAT_WARNING_RATIO,
   );
 }
+
+// When the provider still rejects the request as too long, the retry drops
+// history by the reported overflow plus this share of the window: the overflow
+// is measured in the provider's tokens, the budget in ours.
+const CONTEXT_OVERFLOW_RETRY_MARGIN_RATIO = 0.05;
+
+// Applies when the rejection carries no token counts.
+const CONTEXT_OVERFLOW_RETRY_FALLBACK_RATIO = 0.1;
+
+export function getContextOverflowReductionTokens(
+  contextWindowTokens: number,
+  overflowTokens?: number,
+): number {
+  if (overflowTokens === undefined) {
+    return Math.floor(
+      contextWindowTokens * CONTEXT_OVERFLOW_RETRY_FALLBACK_RATIO,
+    );
+  }
+  return (
+    overflowTokens +
+    Math.floor(contextWindowTokens * CONTEXT_OVERFLOW_RETRY_MARGIN_RATIO)
+  );
+}

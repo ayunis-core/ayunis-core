@@ -25,6 +25,8 @@ export const resolveRetryConfig = (
     retryableProviderFailureKinds:
       override?.retryableProviderFailureKinds ??
       base.retryableProviderFailureKinds,
+    retryableRejectionReasons:
+      override?.retryableRejectionReasons ?? base.retryableRejectionReasons,
     backoff: { ...base.backoff, ...override?.backoff },
     retryAfter: { ...base.retryAfter, ...override?.retryAfter },
   };
@@ -38,6 +40,7 @@ export const providerRetryDelay = (
   retryNumber: number,
 ): number | undefined => {
   if (failure.kind === 'abort') return undefined;
+  if (isRetryableRejection(config, failure)) return 0;
   if (!config.retryableProviderFailureKinds.includes(failure.kind)) {
     return undefined;
   }
@@ -59,6 +62,16 @@ export const providerRetryDelay = (
   return jitteredBackoff(config, retryNumber);
 };
 
+// A rejection is deterministic: it is retried without delay and only because the
+// host is expected to change the request before the next call.
+const isRetryableRejection = (
+  config: ResolvedRetryConfig,
+  failure: ProviderFailureFacts,
+): boolean =>
+  failure.kind === 'rejection' &&
+  failure.rejectionReason !== undefined &&
+  config.retryableRejectionReasons.includes(failure.rejectionReason);
+
 const jitteredBackoff = (
   config: ResolvedRetryConfig,
   retryNumber: number,
@@ -76,6 +89,7 @@ const jitteredBackoff = (
 const validateRetryConfig = (config: ResolvedRetryConfig): void => {
   validateNonNegativeInteger(config.maxRetries, 'retry.maxRetries');
   validateKinds(config.retryableProviderFailureKinds);
+  validateRejectionReasons(config.retryableRejectionReasons);
   validateNonNegativeNumber(
     config.backoff.initialDelayMs,
     'retry.backoff.initialDelayMs',
@@ -123,6 +137,20 @@ const validateKinds = (kinds: unknown): void => {
   }
 };
 
+const validateRejectionReasons = (reasons: unknown): void => {
+  if (!Array.isArray(reasons)) {
+    throw new InvalidRunInputError(
+      'retry.retryableRejectionReasons must be an array',
+    );
+  }
+  const values: readonly unknown[] = reasons;
+  if (values.some((reason) => typeof reason !== 'string' || !reason)) {
+    throw new InvalidRunInputError(
+      'retry.retryableRejectionReasons must contain rejection reasons',
+    );
+  }
+};
+
 const validateNonNegativeInteger = (value: number, path: string): void => {
   if (!Number.isInteger(value) || value < 0) {
     throw new InvalidRunInputError(`${path} must be a non-negative integer`);
@@ -152,6 +180,9 @@ const freezeRetryConfig = (config: ResolvedRetryConfig): ResolvedRetryConfig =>
     ...config,
     retryableProviderFailureKinds: Object.freeze([
       ...config.retryableProviderFailureKinds,
+    ]),
+    retryableRejectionReasons: Object.freeze([
+      ...config.retryableRejectionReasons,
     ]),
     backoff: Object.freeze(config.backoff),
     retryAfter: Object.freeze(config.retryAfter),

@@ -6,11 +6,6 @@ import {
 } from './provider-rejection';
 import { parseRetryAfterMs } from './retry-after';
 
-export type {
-  ProviderRejectionClassifier,
-  ProviderRejectionReason,
-} from './provider-rejection';
-
 /** Provider failure fact; retryability remains a host policy decision. */
 export type ProviderFailureKind =
   | 'connection'
@@ -37,6 +32,7 @@ export interface ModelProviderErrorDetails {
   readonly kind: ProviderFailureKind;
   readonly stage: ProviderFailureStage;
   readonly rejectionReason?: ProviderRejectionReason;
+  readonly contextOverflowTokens?: number;
   readonly upstreamStatus?: number;
   readonly upstreamRequestId?: string;
   readonly retryAfterMs?: number;
@@ -58,6 +54,8 @@ export class ModelProviderError extends Error {
   readonly stage: ProviderFailureStage;
   /** Set only on a `rejection` the provider identified as actionable. */
   readonly rejectionReason?: ProviderRejectionReason;
+  /** Tokens by which a `context_length_exceeded` request overshot the window. */
+  readonly contextOverflowTokens?: number;
   /** HTTP status received from the upstream provider, when available. */
   readonly upstreamStatus?: number;
   /** Sanitized provider request identifier suitable for correlation. */
@@ -79,6 +77,7 @@ export class ModelProviderError extends Error {
     this.kind = details.kind;
     this.stage = details.stage;
     this.rejectionReason = details.rejectionReason;
+    this.contextOverflowTokens = details.contextOverflowTokens;
     this.upstreamStatus = details.upstreamStatus;
     this.upstreamRequestId = details.upstreamRequestId;
     this.retryAfterMs = details.retryAfterMs;
@@ -187,19 +186,21 @@ export function normalizeProviderError(
   const chain = collectCauseChain(error);
   const upstreamStatus = extractUpstreamStatus(record);
   const classification = classifyFailure(error, upstreamStatus, chain, options);
+  const rejection =
+    classification.kind === 'rejection'
+      ? resolveRejection(
+          error,
+          chain,
+          upstreamStatus,
+          options.classifyRejection,
+        )
+      : undefined;
 
   return new ModelProviderError({
     ...classification,
     stage: options.stage,
-    rejectionReason:
-      classification.kind === 'rejection'
-        ? resolveRejection(
-            error,
-            chain,
-            upstreamStatus,
-            options.classifyRejection,
-          )
-        : undefined,
+    rejectionReason: rejection?.reason,
+    contextOverflowTokens: rejection?.contextOverflowTokens,
     upstreamStatus,
     upstreamRequestId: extractRequestId(record),
     retryAfterMs: extractRetryAfterMs(record),

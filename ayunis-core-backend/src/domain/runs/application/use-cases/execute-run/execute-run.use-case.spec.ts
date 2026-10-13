@@ -1674,6 +1674,45 @@ describe('ExecuteRunUseCase', () => {
     expect(provider.requests).toHaveLength(1);
   });
 
+  it('retries with less history after the provider rejects the request as too long', async () => {
+    const requests: ProviderRequest[] = [];
+    const { useCase, materializeHistory } = buildHarness({
+      contextWindowSize: 40,
+      tokensPerMessage: 4,
+      providerStream: async function* (request) {
+        requests.push({ ...request, messages: [...request.messages] });
+        if (requests.length === 1) {
+          throw new ModelProviderError({
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            rejectionReason: 'context_length_exceeded',
+            contextOverflowTokens: 2,
+            cause: new Error('prompt is too long: 202 tokens > 200 maximum'),
+          });
+        }
+        yield { textDelta: 'Fits now', finishReason: 'stop' };
+      },
+    });
+    const text = (role: 'user' | 'assistant', value: string) => ({
+      role,
+      content: [{ type: 'text' as const, text: value }],
+    });
+    materializeHistory.mockResolvedValue([
+      text('user', 'first'),
+      text('assistant', 'one'),
+      text('user', 'second'),
+      text('assistant', 'two'),
+      text('user', 'third'),
+    ]);
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    expect(requests).toHaveLength(2);
+    expect(requests[1].messages).toEqual(requests[0].messages.slice(2));
+    expect(JSON.stringify(items)).toContain('Fits now');
+  });
+
   it('does not call the provider when the latest turn exceeds the context window', async () => {
     const { useCase, provider } = buildHarness({
       contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
