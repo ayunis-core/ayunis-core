@@ -50,5 +50,11 @@
     "active": "Aktiv",
     "archived": "Archiviert",
     "all": "Alle Organisationen"
+  },
+  "subscriptionFilter": {
+    "label": "Abonnement",
+    "all": "Alle Abonnements",
+    "paying": "Zahlend",
+    "non-paying": "Nicht zahlend"
   }
 }

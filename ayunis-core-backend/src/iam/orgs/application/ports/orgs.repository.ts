@@ -10,7 +10,10 @@ export interface OrgsPagination {
 export interface OrgsFilters {
   search?: string;
   status?: 'active' | 'archived' | 'all';
+  subscription?: OrgSubscriptionFilter;
 }
+
+export type OrgSubscriptionFilter = 'all' | 'paying' | 'non-paying';
 
 export abstract class OrgsRepository {
   abstract findById(id: UUID, lockForLifecycle?: boolean): Promise<Org>;

@@ -128,14 +128,11 @@ export class SuperAdminOrgsController {
   async getAllOrgs(
     @Query() queryParams: SuperAdminGetAllOrgsQueryParamsDto,
   ): Promise<SuperAdminOrgListResponseDto> {
+    const { limit, offset, ...filters } = queryParams;
     const orgs = await this.superAdminGetAllOrgsUseCase.execute(
       new SuperAdminGetAllOrgsQuery({
-        search: queryParams.search,
-        status: queryParams.status,
-        pagination: {
-          limit: queryParams.limit,
-          offset: queryParams.offset,
-        },
+        ...filters,
+        pagination: { limit, offset },
       }),
     );
 

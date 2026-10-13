@@ -94,6 +94,21 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     expect(result.data).toHaveLength(1);
   });
 
+  it('passes the subscription filter through to the repository', async () => {
+    orgsRepository.findAllForSuperAdmin.mockResolvedValue(
+      new Paginated<Org>({ data: [], limit: 50, offset: 0, total: 0 }),
+    );
+
+    await useCase.execute(
+      new SuperAdminGetAllOrgsQuery({ status: 'all', subscription: 'paying' }),
+    );
+
+    expect(orgsRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
+      { limit: 50, offset: 0 },
+      { status: 'all', subscription: 'paying' },
+    );
+  });
+
   it('should throw when requester is not super admin', async () => {
     contextService.get.mockReturnValue(SystemRole.CUSTOMER);
     const query = new SuperAdminGetAllOrgsQuery();

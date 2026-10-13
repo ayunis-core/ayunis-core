@@ -50,5 +50,11 @@
     "active": "Active",
     "archived": "Archived",
     "all": "All organisations"
+  },
+  "subscriptionFilter": {
+    "label": "Subscription",
+    "all": "All subscriptions",
+    "paying": "Paying",
+    "non-paying": "Not paying"
   }
 }

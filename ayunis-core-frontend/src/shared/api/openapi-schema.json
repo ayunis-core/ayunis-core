@@ -1467,6 +1467,17 @@
             }
           },
           {
+            "name": "subscription",
+            "required": false,
+            "in": "query",
+            "description": "Filter by whether the organization currently has an active subscription",
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": ["all", "paying", "non-paying"]
+            }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",

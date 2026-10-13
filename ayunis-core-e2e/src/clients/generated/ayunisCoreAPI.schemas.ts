@@ -5652,6 +5652,10 @@ offset?: number;
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 status?: SuperAdminOrgsControllerGetAllOrgsStatus;
 /**
+ * Filter by whether the organization currently has an active subscription
+ */
+subscription?: SuperAdminOrgsControllerGetAllOrgsSubscription;
+/**
  * Search organizations by name, or by exact organization ID.
  */
 search?: string;
@@ -5672,6 +5676,15 @@ export const SuperAdminOrgsControllerGetAllOrgsStatus = {
   active: 'active',
   archived: 'archived',
   all: 'all',
+} as const;
+
+export type SuperAdminOrgsControllerGetAllOrgsSubscription = typeof SuperAdminOrgsControllerGetAllOrgsSubscription[keyof typeof SuperAdminOrgsControllerGetAllOrgsSubscription];
+
+
+export const SuperAdminOrgsControllerGetAllOrgsSubscription = {
+  all: 'all',
+  paying: 'paying',
+  'non-paying': 'non-paying',
 } as const;
 
 export type TeamsControllerListTeamMembersParams = {

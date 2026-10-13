@@ -50,6 +50,7 @@ export class SuperAdminGetAllOrgsUseCase {
       {
         search: query.search,
         status: query.status,
+        subscription: query.subscription,
       },
     );
   }
