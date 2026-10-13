@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as oidc from 'openid-client';
 import {
@@ -31,6 +31,8 @@ const RESOURCE_OWNER_ID_CLAIM =
   'urn:zitadel:iam:user:resourceowner:id' as const;
 const RESOURCE_OWNER_SCOPE = 'urn:zitadel:iam:user:resourceowner';
 
+type BrokerOperation = 'discovery' | 'token_exchange' | 'userinfo';
+
 interface CompleteSsoOidcConfig {
   issuer: string;
   clientId: string;
@@ -51,6 +53,7 @@ export class ZitadelOidcBrokerClient
   extends OidcBrokerClient
   implements OidcBrokerLogoutClient
 {
+  private readonly logger = new Logger(ZitadelOidcBrokerClient.name);
   private configuration?: Promise<oidc.Configuration>;
   private logoutKeySet?: JWTVerifyGetKey;
 
@@ -99,12 +102,6 @@ export class ZitadelOidcBrokerClient
         input,
       );
     } catch (error) {
-      const providerError = wrapProviderFailure(error, {
-        provider: 'zitadel',
-      });
-      if (providerError) {
-        throw providerError;
-      }
       if (this.isOidcProtocolError(error)) {
         throw new InvalidSsoBrokerResponseError('callback');
       }
@@ -160,16 +157,14 @@ export class ZitadelOidcBrokerClient
     callbackUrl: URL,
     input: ValidateOidcCallback,
   ): Promise<ValidatedOidcCallback> {
-    const tokens = await oidc.authorizationCodeGrant(
-      configuration,
-      callbackUrl,
-      {
+    const tokens = await this.requestBroker('token_exchange', () =>
+      oidc.authorizationCodeGrant(configuration, callbackUrl, {
         pkceCodeVerifier: input.codeVerifier,
         expectedState: input.expectedState,
         expectedNonce: input.expectedNonce,
         idTokenExpected: true,
         maxAge: this.requireConfig().reauthenticationMaxAgeSeconds,
-      },
+      }),
     );
     const claims = tokens.claims();
     const subject = this.requiredString(claims?.sub, 'sub');
@@ -177,10 +172,8 @@ export class ZitadelOidcBrokerClient
       tokens.access_token,
       'access_token',
     );
-    const userInfo = await oidc.fetchUserInfo(
-      configuration,
-      accessToken,
-      subject,
+    const userInfo = await this.requestBroker('userinfo', () =>
+      oidc.fetchUserInfo(configuration, accessToken, subject),
     );
     return {
       identity: {
@@ -273,12 +266,14 @@ export class ZitadelOidcBrokerClient
   ): Promise<oidc.Configuration> {
     const pending =
       this.configuration ??
-      oidc.discovery(
-        new URL(config.issuer),
-        config.clientId,
-        config.clientSecret,
-        oidc.ClientSecretBasic(config.clientSecret),
-        this.discoveryOptions(config),
+      this.requestBroker('discovery', () =>
+        oidc.discovery(
+          new URL(config.issuer),
+          config.clientId,
+          config.clientSecret,
+          oidc.ClientSecretBasic(config.clientSecret),
+          this.discoveryOptions(config),
+        ),
       );
     this.configuration = pending;
     try {
@@ -287,13 +282,28 @@ export class ZitadelOidcBrokerClient
       if (this.configuration === pending) {
         this.configuration = undefined;
       }
+      throw error;
+    }
+  }
+
+  // The callback redirects to an error page instead of throwing to the HTTP
+  // filter, so this log line is the only record of the transport cause.
+  private async requestBroker<T>(
+    operation: BrokerOperation,
+    request: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await request();
+    } catch (error) {
       const providerError = wrapProviderFailure(error, {
         provider: 'zitadel',
       });
-      if (providerError) {
-        throw providerError;
-      }
-      throw error;
+      if (!providerError) throw error;
+      this.logger.warn(
+        { operation, code: providerError.code, ...providerError.metadata },
+        'Zitadel broker request failed',
+      );
+      throw providerError;
     }
   }
 
