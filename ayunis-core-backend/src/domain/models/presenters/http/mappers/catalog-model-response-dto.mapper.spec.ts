@@ -17,6 +17,7 @@ describe('CatalogModelResponseDtoMapper', () => {
       canUseTools: true,
       isReasoning: false,
       canVision: true,
+      contextWindowSize: 128_000,
       isArchived: false,
       hasProviderFault: true,
     });

@@ -82,6 +82,7 @@ describe('ModelResponseDtoMapper', () => {
       canUseTools: true,
       isReasoning: false,
       canVision: true,
+      contextWindowSize: 128_000,
       isArchived: false,
       tier: ModelTier.MEDIUM,
       hasProviderFault: true,

@@ -14594,7 +14594,7 @@
           },
           "contextWindowSize": {
             "type": "integer",
-            "description": "Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.",
+            "description": "Maximum context window size in tokens. Undefined for non-language models.",
             "minimum": 1,
             "maximum": 2147483647
           },
@@ -14766,7 +14766,6 @@
           },
           "contextWindowSize": {
             "type": "integer",
-            "nullable": true,
             "minimum": 1,
             "maximum": 2147483647,
             "description": "Maximum context window size in tokens"
@@ -14807,6 +14806,7 @@
           "canStream",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "hasProviderFault",
           "isDefault",
           "anonymousOnly"
@@ -15152,6 +15152,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "hasProviderFault",
           "createdAt",
           "updatedAt"
@@ -15368,8 +15369,7 @@
             "description": "Maximum context window size in tokens",
             "example": 128000,
             "minimum": 1,
-            "maximum": 2147483647,
-            "nullable": true
+            "maximum": 2147483647
           },
           "isArchived": {
             "type": "boolean",
@@ -15415,6 +15415,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "isArchived"
         ]
       },
@@ -15475,8 +15476,7 @@
             "description": "Maximum context window size in tokens",
             "example": 128000,
             "minimum": 1,
-            "maximum": 2147483647,
-            "nullable": true
+            "maximum": 2147483647
           },
           "isArchived": {
             "type": "boolean",
@@ -15521,6 +15521,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "isArchived"
         ]
       },

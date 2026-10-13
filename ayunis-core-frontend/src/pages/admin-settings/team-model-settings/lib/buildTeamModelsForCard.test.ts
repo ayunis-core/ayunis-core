@@ -39,6 +39,7 @@ const grant = (
   canStream: true,
   isReasoning: false,
   canVision: false,
+  contextWindowSize: 128_000,
   hasProviderFault: false,
   isDefault: false,
   anonymousOnly: false,

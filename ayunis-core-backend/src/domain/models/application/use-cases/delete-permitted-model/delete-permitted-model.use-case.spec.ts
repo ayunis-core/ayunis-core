@@ -59,6 +59,7 @@ describe('DeletePermittedModelUseCase', () => {
     isArchived: false,
     canUseTools: true,
     canVision: false,
+    contextWindowSize: 128_000,
   });
 
   const mockLanguageModel2 = new LanguageModel({
@@ -71,6 +72,7 @@ describe('DeletePermittedModelUseCase', () => {
     isArchived: false,
     canUseTools: true,
     canVision: false,
+    contextWindowSize: 128_000,
   });
 
   beforeAll(async () => {

@@ -78,14 +78,14 @@ export class LanguageModelResponseDto {
   })
   canVision: boolean;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: 'integer',
     description: 'Maximum context window size in tokens',
     example: 128000,
     minimum: 1,
     maximum: MAX_CONTEXT_WINDOW_SIZE,
   })
-  contextWindowSize?: number;
+  contextWindowSize: number;
 
   @ApiProperty({
     type: 'boolean',

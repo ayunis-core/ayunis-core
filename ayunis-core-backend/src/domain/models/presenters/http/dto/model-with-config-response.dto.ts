@@ -72,7 +72,7 @@ export class ModelWithConfigResponseDto {
   @ApiPropertyOptional({
     type: 'integer',
     description:
-      'Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.',
+      'Maximum context window size in tokens. Undefined for non-language models.',
     minimum: 1,
     maximum: MAX_CONTEXT_WINDOW_SIZE,
   })

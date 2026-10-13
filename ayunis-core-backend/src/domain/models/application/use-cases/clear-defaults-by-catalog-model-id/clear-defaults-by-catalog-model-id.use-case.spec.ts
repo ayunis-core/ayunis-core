@@ -88,6 +88,7 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
   };
 

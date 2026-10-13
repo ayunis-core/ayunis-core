@@ -47,6 +47,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
     canUseTools: true,
     isReasoning: false,
     canVision: false,
+    contextWindowSize: 128_000,
     isArchived: false,
     tier: ModelTier.MEDIUM,
     inputTokenCost: 2,
@@ -549,6 +550,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         canUseTools: true,
         isReasoning: false,
         canVision: false,
+        contextWindowSize: 128_000,
         isArchived: false,
         tier: ModelTier.LOW,
       });

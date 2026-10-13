@@ -117,6 +117,7 @@ describe('CreatePermittedModelUseCase', () => {
         isArchived: false,
         canUseTools: true,
         canVision: false,
+        contextWindowSize: 128_000,
       });
 
       const mockPermittedModel = new PermittedModel({
@@ -181,6 +182,7 @@ describe('CreatePermittedModelUseCase', () => {
         isArchived: false,
         canUseTools: true,
         canVision: false,
+        contextWindowSize: 128_000,
       });
 
       modelsRepository.findOne.mockResolvedValue(mockModel);

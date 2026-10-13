@@ -121,6 +121,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
     const imageModel = new ImageGenerationModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
@@ -161,6 +162,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([embeddingModel, languageModel]);
@@ -193,6 +195,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([imageModel, languageModel]);
@@ -218,6 +221,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
     const archivedModel = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
@@ -229,6 +233,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: true,
       canUseTools: false,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([activeModel, archivedModel]);
@@ -254,6 +259,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
     const modelWithoutKey = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
@@ -265,6 +271,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([modelWithKey, modelWithoutKey]);

@@ -48,7 +48,7 @@ export class ModelMapper {
       canUseTools: record.canUseTools,
       isReasoning: record.isReasoning,
       canVision: record.canVision,
-      contextWindowSize: record.contextWindowSize ?? undefined,
+      contextWindowSize: record.contextWindowSize,
       isArchived: record.isArchived,
       hasProviderFault: record.hasProviderFault,
       createdAt: record.createdAt,
@@ -107,7 +107,7 @@ export class ModelMapper {
     record.canUseTools = domain.canUseTools;
     record.isReasoning = domain.isReasoning;
     record.canVision = domain.canVision;
-    record.contextWindowSize = domain.contextWindowSize ?? null;
+    record.contextWindowSize = domain.contextWindowSize;
     record.hasProviderFault = domain.hasProviderFault;
     record.isArchived = domain.isArchived;
     record.createdAt = domain.createdAt;
