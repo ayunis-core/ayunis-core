@@ -12,6 +12,7 @@ export class Invite {
   public acceptedAt?: Date;
   public readonly expiresAt: Date;
   public readonly teamIds: UUID[];
+  public readonly teams?: { id: UUID; name: string }[];
 
   constructor(params: {
     id?: UUID;
@@ -23,6 +24,7 @@ export class Invite {
     acceptedAt?: Date;
     expiresAt: Date;
     teamIds?: UUID[];
+    teams?: { id: UUID; name: string }[];
   }) {
     this.id = params.id ?? randomUUID();
     this.email = params.email;
@@ -33,5 +35,6 @@ export class Invite {
     this.acceptedAt = params.acceptedAt;
     this.expiresAt = params.expiresAt;
     this.teamIds = [...new Set(params.teamIds ?? [])];
+    this.teams = params.teams;
   }
 }

@@ -12333,9 +12333,29 @@
         "type": "object",
         "properties": {}
       },
+      "UserTeamResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"]
+      },
       "UserResponseDto": {
         "type": "object",
         "properties": {
+          "teams": {
+            "description": "Current teams, included only for administrators in user lists",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserTeamResponseDto"
+            }
+          },
           "id": {
             "type": "string",
             "description": "User unique identifier",
@@ -12594,6 +12614,13 @@
       "SuperAdminUserListItemResponseDto": {
         "type": "object",
         "properties": {
+          "teams": {
+            "description": "Current teams, included only for administrators in user lists",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserTeamResponseDto"
+            }
+          },
           "id": {
             "type": "string",
             "description": "User unique identifier",
@@ -12679,6 +12706,13 @@
       "SuperAdminUserResponseDto": {
         "type": "object",
         "properties": {
+          "teams": {
+            "description": "Current teams, included only for administrators in user lists",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserTeamResponseDto"
+            }
+          },
           "id": {
             "type": "string",
             "description": "User unique identifier",
@@ -12752,6 +12786,53 @@
         },
         "required": ["email"]
       },
+      "InviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the invite",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the invited user",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role assigned to the invited user",
+            "enum": ["admin", "manager", "user"],
+            "example": "user"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the invite",
+            "enum": ["pending", "accepted", "expired"],
+            "example": "pending"
+          },
+          "sentDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was sent",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite expires",
+            "example": "2023-12-08T10:00:00Z"
+          },
+          "acceptedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was accepted (if applicable)",
+            "example": "2023-12-02T15:30:00Z"
+          }
+        },
+        "required": ["id", "email", "role", "status", "sentDate", "expiresAt"]
+      },
       "CreateInviteDto": {
         "type": "object",
         "properties": {
@@ -12765,6 +12846,14 @@
             "description": "Role to assign to the invited user",
             "enum": ["admin", "manager", "user"],
             "example": "user"
+          },
+          "teamIds": {
+            "description": "Organization teams to assign on acceptance",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         },
         "required": ["email", "role"]
@@ -12897,7 +12986,20 @@
         },
         "required": ["totalCount", "successCount", "failureCount", "results"]
       },
-      "InviteResponseDto": {
+      "InviteTeamResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "InviteListItemResponseDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -12940,6 +13042,12 @@
             "type": "string",
             "description": "Date when the invite was accepted (if applicable)",
             "example": "2023-12-02T15:30:00Z"
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteTeamResponseDto"
+            }
           }
         },
         "required": ["id", "email", "role", "status", "sentDate", "expiresAt"]
@@ -12951,7 +13059,7 @@
             "description": "Array of invites for the current page",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/InviteResponseDto"
+              "$ref": "#/components/schemas/InviteListItemResponseDto"
             }
           },
           "pagination": {

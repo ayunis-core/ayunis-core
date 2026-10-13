@@ -23,20 +23,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ayunis/ui/components/select';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import type { InviteRole } from '@/pages/admin-settings/users-settings/model/openapi';
+import type { InviteFormData } from '@/pages/admin-settings/users-settings/model/types';
+import { InviteTeamSelect } from './InviteTeamSelect';
+import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import { useInviteCreate } from '@/pages/admin-settings/users-settings/api/useInviteCreate';
 import { useTranslation } from 'react-i18next';
 import { Copy, Check } from 'lucide-react';
 import { showSuccess } from '@/shared/lib/toast';
 import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { Label } from '@ayunis/ui/components/label';
-
-interface InviteFormData {
-  email: string;
-  role: InviteRole;
-}
 
 interface SingleInviteDialogProps {
   open: boolean;
@@ -48,6 +45,7 @@ export default function SingleInviteDialog({
   onOpenChange,
 }: Readonly<SingleInviteDialogProps>) {
   const { t } = useTranslation('admin-settings-users');
+  const { canManageTeams } = useTeamManagementAccess();
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
 
@@ -55,8 +53,13 @@ export default function SingleInviteDialog({
     defaultValues: {
       email: '',
       role: undefined,
+      teamIds: [],
     },
   });
+
+  useEffect(() => {
+    if (!canManageTeams) form.setValue('teamIds', []);
+  }, [canManageTeams, form]);
 
   function handleClose() {
     onOpenChange(false);
@@ -74,10 +77,11 @@ export default function SingleInviteDialog({
         handleClose();
       }
     },
+    form,
   );
 
   function onSubmit(data: InviteFormData) {
-    createInvite(data);
+    createInvite({ ...data, teamIds: canManageTeams ? data.teamIds : [] });
   }
 
   function handleCancel() {
@@ -172,6 +176,27 @@ export default function SingleInviteDialog({
                   </SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="teamIds"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('inviteDialog.teamsLabel')}</FormLabel>
+              <InviteTeamSelect
+                key={canManageTeams ? 'available' : 'restricted'}
+                onChange={field.onChange}
+                enabled={open && canManageTeams}
+                disabled={!canManageTeams || isCreatingInvite}
+              />
+              {!canManageTeams && (
+                <p className="text-sm text-muted-foreground">
+                  {t('inviteDialog.teamsRestricted')}
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}

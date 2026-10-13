@@ -117,6 +117,7 @@ export default function InvitesSection({
               <TableRow>
                 <TableHead>{t('users.email')}</TableHead>
                 <TableHead>{t('users.role')}</TableHead>
+                <TableHead>{t('users.teams')}</TableHead>
                 <TableHead>{t('users.status')}</TableHead>
                 <TableHead>{t('users.sentDate')}</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -125,8 +126,19 @@ export default function InvitesSection({
             <TableBody>
               {invites.map((invite) => (
                 <TableRow key={invite.id}>
-                  <TableCell className="font-medium">{invite.email}</TableCell>
+                  <TableCell
+                    className="font-medium max-w-48 truncate"
+                    title={invite.email}
+                  >
+                    {invite.email}
+                  </TableCell>
                   <TableCell>{roleLabels[invite.role]}</TableCell>
+                  <TableCell
+                    className="max-w-56 whitespace-normal"
+                    data-testid={`invite-teams-${invite.id}`}
+                  >
+                    {invite.teams?.map((team) => team.name).join(', ')}
+                  </TableCell>
                   <TableCell>
                     <InviteStatusBadge status={invite.status} />
                   </TableCell>

@@ -1,3 +1,4 @@
+import type { UserWithTeams } from 'src/iam/users/domain/user-team-summary';
 import { Injectable } from '@nestjs/common';
 import {
   UserResponseDto,
@@ -9,7 +10,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class UserResponseDtoMapper {
-  toDto(user: User, includeLockStatus = false): UserResponseDto {
+  toDto(user: UserWithTeams, includeLockStatus = false): UserResponseDto {
     return {
       id: user.id,
       name: user.name,
@@ -19,6 +20,8 @@ export class UserResponseDtoMapper {
       department: user.department,
       ...(includeLockStatus && { isLocked: user.lockedAt !== null }),
       createdAt: user.createdAt,
+      ...(includeLockStatus &&
+        user.teams !== undefined && { teams: user.teams }),
     };
   }
 
@@ -29,7 +32,7 @@ export class UserResponseDtoMapper {
   }
 
   toPaginatedDto(
-    paginated: Paginated<User>,
+    paginated: Paginated<UserWithTeams>,
     includeLockStatus = false,
   ): PaginatedUsersListResponseDto {
     return {

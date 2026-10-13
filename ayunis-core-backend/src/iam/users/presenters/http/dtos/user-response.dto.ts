@@ -3,7 +3,22 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
+export class UserTeamResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  id: UUID;
+
+  @ApiProperty()
+  name: string;
+}
+
 export class UserResponseDto {
+  @ApiPropertyOptional({
+    type: [UserTeamResponseDto],
+    description:
+      'Current teams, included only for administrators in user lists',
+  })
+  teams?: UserTeamResponseDto[];
+
   @ApiProperty({
     description: 'User unique identifier',
     example: '123e4567-e89b-12d3-a456-426614174000',

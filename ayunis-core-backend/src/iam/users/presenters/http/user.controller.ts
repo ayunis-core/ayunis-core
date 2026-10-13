@@ -64,7 +64,6 @@ import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 export class UserController {
   private readonly logger = new Logger(UserController.name);
 
-  // eslint-disable-next-line max-params -- NestJS injects these explicit collaborators.
   constructor(
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
@@ -151,6 +150,7 @@ export class UserController {
     return new FindUsersByOrgIdQuery({
       orgId,
       search: queryParams.search,
+      includeTeams: true,
       pagination: {
         limit: queryParams.limit,
         offset: queryParams.offset,

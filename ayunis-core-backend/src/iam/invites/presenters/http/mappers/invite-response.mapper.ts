@@ -30,7 +30,10 @@ export class InviteResponseMapper {
     paginated: Paginated<Invite>,
   ): PaginatedInvitesListResponseDto {
     return {
-      data: paginated.data.map((invite) => this.toDto(invite)),
+      data: paginated.data.map((invite) => ({
+        ...this.toDto(invite),
+        teams: invite.teams ?? [],
+      })),
       pagination: {
         limit: paginated.limit,
         offset: paginated.offset,

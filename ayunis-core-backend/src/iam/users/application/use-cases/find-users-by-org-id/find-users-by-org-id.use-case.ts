@@ -1,7 +1,11 @@
+import { FindTeamsByUserIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-ids-and-org-id/find-teams-by-user-ids-and-org-id.use-case';
+import type { UserWithTeams } from 'src/iam/users/domain/user-team-summary';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
-import { User } from 'src/iam/users/domain/user.entity';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -19,9 +23,13 @@ export class FindUsersByOrgIdUseCase {
     private readonly usersRepository: UsersRepository,
     private readonly contextService: ContextService,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
+    private readonly findTeamsByUsers: FindTeamsByUserIdsAndOrgIdUseCase,
   ) {}
 
-  async execute(query: FindUsersByOrgIdQuery): Promise<Paginated<User>> {
+  @HandleUnexpectedErrors(UserUnexpectedError)
+  async execute(
+    query: FindUsersByOrgIdQuery,
+  ): Promise<Paginated<UserWithTeams>> {
     this.logger.log(
       {
         orgId: query.orgId,
@@ -47,7 +55,7 @@ export class FindUsersByOrgIdUseCase {
     if (!canListUsers) {
       throw new UnauthorizedAccessError({ orgId: query.orgId });
     }
-    return this.usersRepository.findManyByOrgId(
+    const users = await this.usersRepository.findManyByOrgId(
       query.orgId,
       {
         limit: query.limit,
@@ -57,5 +65,30 @@ export class FindUsersByOrgIdUseCase {
         search: query.search,
       },
     );
+    if (
+      !query.includeTeams ||
+      (role !== UserRole.ADMIN && systemRole !== SystemRole.SUPER_ADMIN)
+    )
+      return users;
+    return this.includeTeams(users, query.orgId);
+  }
+
+  private async includeTeams(
+    users: Paginated<UserWithTeams>,
+    orgId: FindUsersByOrgIdQuery['orgId'],
+  ): Promise<Paginated<UserWithTeams>> {
+    const teams = await this.findTeamsByUsers.execute({
+      userIds: users.data.map((user) => user.id),
+      orgId,
+    });
+    return new Paginated({
+      data: users.data.map((user) => ({
+        ...user,
+        teams: teams.get(user.id) ?? [],
+      })),
+      limit: users.limit,
+      offset: users.offset,
+      total: users.total,
+    });
   }
 }

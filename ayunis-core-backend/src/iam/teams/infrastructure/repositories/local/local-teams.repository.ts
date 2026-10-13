@@ -152,4 +152,35 @@ export class LocalTeamsRepository extends TeamsRepository {
     await this.teamRepository.delete(id);
     this.logger.debug({ id }, 'Team deleted successfully');
   }
+
+  async findByUserIdsAndOrgId(
+    userIds: UUID[],
+    orgId: UUID,
+  ): Promise<Map<UUID, Pick<Team, 'id' | 'name'>[]>> {
+    const result = new Map<UUID, Pick<Team, 'id' | 'name'>[]>();
+    if (userIds.length === 0) return result;
+    const rows = await this.txHost.tx
+      .createQueryBuilder()
+      .select('member.userId', 'userId')
+      .addSelect('team.id', 'id')
+      .addSelect('team.name', 'name')
+      .from(TeamMemberRecord, 'member')
+      .innerJoin(
+        TeamRecord,
+        'team',
+        'team.id = member.teamId AND team.orgId = :orgId',
+        { orgId },
+      )
+      .innerJoin('member.user', 'user', 'user.orgId = :orgId', { orgId })
+      .where('member.userId IN (:...userIds)', { userIds })
+      .orderBy('team.name', 'ASC')
+      .addOrderBy('team.id', 'ASC')
+      .getRawMany<Pick<Team, 'id' | 'name'> & { userId: UUID }>();
+    for (const row of rows) {
+      const teams = result.get(row.userId) ?? [];
+      teams.push({ id: row.id, name: row.name });
+      result.set(row.userId, teams);
+    }
+    return result;
+  }
 }

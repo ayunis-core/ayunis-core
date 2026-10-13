@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags,
+  ApiExtraModels,
   ApiOperation,
   ApiResponse,
   ApiParam,
@@ -31,6 +32,7 @@ import { CreateInviteDto } from './dtos/create-invite.dto';
 import { AcceptInviteDto } from './dtos/accept-invite.dto';
 import {
   InviteDetailResponseDto,
+  InviteResponseDto,
   AcceptInviteResponseDto,
   PaginatedInvitesListResponseDto,
 } from './dtos/invite-response.dto';
@@ -70,6 +72,7 @@ import { DeleteAllPendingInvitesResponseDto } from './dtos/delete-all-pending-in
 import { DeleteAllPendingInvitesUseCase } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 import { DeleteAllPendingInvitesCommand } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
 
+@ApiExtraModels(InviteResponseDto)
 @ApiTags('invites')
 @Controller('invites')
 export class InvitesController {
@@ -121,6 +124,7 @@ export class InvitesController {
         email: createInviteDto.email,
         orgId,
         role: createInviteDto.role,
+        teamIds: createInviteDto.teamIds,
       },
       'create',
     );
@@ -130,6 +134,7 @@ export class InvitesController {
         email: createInviteDto.email,
         orgId,
         role: createInviteDto.role,
+        teamIds: createInviteDto.teamIds,
         userId,
       }),
     );
@@ -231,7 +236,6 @@ export class InvitesController {
     return result;
   }
 
-  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   @Get()
   @ApiOperation({
     summary: "Get all invites for current user's organization",
@@ -266,16 +270,7 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query() queryParams: GetInvitesQueryParamsDto,
   ): Promise<PaginatedInvitesListResponseDto> {
-    this.logger.log(
-      {
-        userId,
-        orgId,
-        input: queryParams.search,
-        limit: queryParams.limit,
-        offset: queryParams.offset,
-      },
-      'getInvites',
-    );
+    this.logInvitesQuery(userId, orgId, queryParams);
 
     const invites = await this.getInvitesByOrgUseCase.execute(
       new GetInvitesByOrgQuery({
@@ -291,6 +286,23 @@ export class InvitesController {
     );
 
     return this.inviteResponseMapper.toPaginatedDto(invites);
+  }
+
+  private logInvitesQuery(
+    userId: UUID,
+    orgId: UUID,
+    queryParams: GetInvitesQueryParamsDto,
+  ): void {
+    this.logger.log(
+      {
+        userId,
+        orgId,
+        hasSearch: queryParams.search !== undefined,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      },
+      'getInvites',
+    );
   }
 
   @Public()
