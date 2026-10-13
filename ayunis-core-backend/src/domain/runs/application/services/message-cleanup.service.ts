@@ -11,7 +11,9 @@ import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-t
 /**
  * Cleans up threads after a failed or interrupted run.
  * Rolls back the incomplete turn to the most recent assistant response that
- * contains no tool calls.
+ * contains no tool calls, deleting only the messages the failed run itself
+ * persisted: a second run on the same thread can be mid-turn, and its
+ * messages are not this run's to remove (AYC-1259).
  *
  * Only called on the error path — successful runs leave the thread in a
  * valid state by design.
@@ -25,7 +27,10 @@ export class MessageCleanupService {
     private readonly deleteMessageUseCase: DeleteMessageUseCase,
   ) {}
 
-  async cleanupTrailingNonAssistantMessages(threadId: UUID): Promise<void> {
+  async cleanupTrailingNonAssistantMessages(
+    threadId: UUID,
+    ownedMessageIds: ReadonlySet<UUID>,
+  ): Promise<void> {
     try {
       const { thread: updatedThread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(threadId),
@@ -37,7 +42,11 @@ export class MessageCleanupService {
         return;
       }
 
-      await this.deleteMessagesUntilAssistant(threadId, threadMessages);
+      await this.deleteMessagesUntilAssistant(
+        threadId,
+        threadMessages,
+        ownedMessageIds,
+      );
     } catch (error) {
       this.logger.error(
         {
@@ -53,10 +62,13 @@ export class MessageCleanupService {
   async deleteMessagesUntilAssistant(
     threadId: UUID,
     threadMessages: Message[],
+    ownedMessageIds: ReadonlySet<UUID>,
   ): Promise<void> {
     await this.deleteTrailingMessages(
       threadId,
-      findFailedTurnMessages(threadMessages),
+      findFailedTurnMessages(threadMessages).filter((message) =>
+        ownedMessageIds.has(message.id),
+      ),
     );
   }
 

@@ -556,7 +556,7 @@ describe('ExecuteRunUseCase', () => {
 
     expect(createUser).toHaveBeenCalledTimes(1);
     expect(provider.requests).toHaveLength(0);
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('preserves a seeded tool result when its continuation call is rejected', async () => {
@@ -602,6 +602,82 @@ describe('ExecuteRunUseCase', () => {
     expect(createSeedToolResult).toHaveBeenCalledTimes(1);
     expect(cleanup).not.toHaveBeenCalled();
   });
+
+  it.each(['failure', 'abort', 'close'] as const)(
+    'keeps a settled mixed tool batch after continuation %s',
+    async (termination) => {
+      const controller = new AbortController();
+      const lastMessage = {
+        content: [
+          new ToolUseMessageContent('chart-1', 'bar_chart', {
+            title: 'Budget',
+          }),
+          new ToolUseMessageContent('search-1', 'internet_search', {
+            query: 'Berlin budget',
+          }),
+        ],
+      } as unknown as Message;
+      const executeTool = jest.fn().mockResolvedValue('Budget found');
+      const collector = new ToolResultCollectorService(
+        { execute: executeTool } as never,
+        { execute: jest.fn() } as never,
+        { get: jest.fn().mockReturnValue(userId) } as never,
+        { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+      );
+      const { useCase, cleanup, createSeedToolResult, findThread } =
+        buildHarness({
+          lastMessage,
+          backendTools: [new BarChartTool(), new InternetSearchTool()],
+          toolResultCollector: collector,
+          providerRejects: termination === 'failure',
+        });
+      const { thread } = (await findThread()) as { thread: Thread };
+      thread.messages = [lastMessage];
+      thread.getLastMessage = () => thread.messages.at(-1);
+      cleanup.mockImplementation((_id: UUID, ownedIds: ReadonlySet<UUID>) => {
+        thread.messages = thread.messages.filter(
+          (message) => !ownedIds.has(message.id),
+        );
+      });
+      const stream = await useCase.execute(
+        new ExecuteRunCommand({
+          threadId,
+          input: new RunToolResultInput('chart-1', 'bar_chart', 'Displayed'),
+          signal: controller.signal,
+        }),
+      );
+      const seed = await stream.next();
+      expect(seed.value).toBeInstanceOf(ToolResultMessage);
+      expect(createSeedToolResult).toHaveBeenCalledTimes(1);
+      expect(executeTool).toHaveBeenCalledTimes(1);
+
+      if (termination === 'failure') {
+        await expect(drain(stream)).rejects.toThrow('provider down');
+      } else if (termination === 'abort') {
+        controller.abort();
+        await expect(drain(stream)).resolves.toEqual([]);
+      } else {
+        await stream.return('aborted');
+      }
+
+      expect(thread.getLastMessage()).toBeInstanceOf(ToolResultMessage);
+      await expect(
+        drain(
+          await useCase.execute(
+            new ExecuteRunCommand({
+              threadId,
+              input: new RunToolResultInput(
+                'chart-1',
+                'bar_chart',
+                'Displayed',
+              ),
+            }),
+          ),
+        ),
+      ).rejects.toMatchObject({ code: 'RUN_INVALID_INPUT' });
+      expect(executeTool).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it('preserves completed tool phases when a later paid call is rejected', async () => {
     const execute = jest.fn().mockResolvedValue('permit found');
@@ -710,7 +786,7 @@ describe('ExecuteRunUseCase', () => {
 
     expect(provider.requests).toHaveLength(1);
     expect(execute).not.toHaveBeenCalled();
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('inherits child usage and observability without persisting its transcript', async () => {
@@ -914,7 +990,7 @@ describe('ExecuteRunUseCase', () => {
       expect.any(String),
       'agent_runtime',
     );
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('collects usage once before surfacing assistant persistence failure', async () => {
@@ -985,12 +1061,12 @@ describe('ExecuteRunUseCase', () => {
 
     await drain(await useCase.execute(command));
 
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('persists partial text before cleanup when the provider fails', async () => {
     const order: string[] = [];
-    const { useCase, save, cleanup } = buildHarness({
+    const { useCase, save, cleanup, createUser } = buildHarness({
       providerStream: async function* () {
         yield { textDelta: 'Partial answer' };
         throw new Error('provider disconnected');
@@ -1010,7 +1086,13 @@ describe('ExecuteRunUseCase', () => {
     expect(save.mock.calls[0][0].message.content).toMatchObject([
       { text: 'Partial answer' },
     ]);
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(
+      threadId,
+      new Set([
+        (await createUser.mock.results[0].value).id,
+        save.mock.calls[0][0].message.id,
+      ]),
+    );
     expect(order).toEqual(['save', 'cleanup']);
   });
 
@@ -1035,7 +1117,7 @@ describe('ExecuteRunUseCase', () => {
     expect(save.mock.calls[0][0].message.content).toMatchObject([
       { text: 'Partial answer' },
     ]);
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('still cleans up when critical usage persistence fails during cancellation', async () => {
@@ -1063,7 +1145,7 @@ describe('ExecuteRunUseCase', () => {
     });
 
     expect(collectUsage).toHaveBeenCalledTimes(1);
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('executes a tool in-loop and persists the grouped tool result', async () => {
@@ -1233,7 +1315,7 @@ describe('ExecuteRunUseCase', () => {
     // 50, not 51: the failed 50th write is not re-attempted by the runEnd
     // flush, so the failure is reported once instead of twice (AYC-904).
     expect(createToolResult).toHaveBeenCalledTimes(50);
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('includes MCP integration metadata in streamed and persisted tool calls', async () => {
@@ -1666,7 +1748,7 @@ describe('ExecuteRunUseCase', () => {
     const { useCase, cleanup } = buildHarness({ providerRejects: true });
 
     await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow();
-    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
 
   it('rejects a tool-result input with no pending tool call', async () => {

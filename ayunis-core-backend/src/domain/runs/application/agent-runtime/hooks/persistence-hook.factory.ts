@@ -26,6 +26,12 @@ import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application
 /** Per-run RunContext key for tool results awaiting a grouped flush. */
 const PENDING_TOOL_RESULTS = Symbol('ayunis:pendingToolResults');
 
+interface PersistenceHookParams {
+  thread: Thread;
+  integrations: RuntimeToolIntegrationRegistry;
+  onMessagePersisted: (messageId: UUID) => void;
+}
+
 /** The tool results of one iteration, grouped for a single-message flush. */
 interface PendingToolResults {
   iteration: number;
@@ -48,20 +54,12 @@ export class PersistenceHookFactory {
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
   ) {}
 
-  create(params: {
-    thread: Thread;
-    integrations: RuntimeToolIntegrationRegistry;
-  }): Hook {
+  create(params: PersistenceHookParams): Hook {
     return {
       name: 'ayunis-persistence',
       inheritToChildRuns: false,
       terminalFailureMode: 'critical',
-      afterModelTurn: (ctx) =>
-        this.persistAssistantMessageOrAbort(
-          ctx,
-          params.thread,
-          params.integrations,
-        ),
+      afterModelTurn: (ctx) => this.persistAssistantMessageOrAbort(ctx, params),
       afterToolCall: async (ctx) => {
         const pending = ctx.context.get<PendingToolResults>(
           PENDING_TOOL_RESULTS,
@@ -76,36 +74,32 @@ export class PersistenceHookFactory {
         );
         ctx.context.set(PENDING_TOOL_RESULTS, pending);
         if (ctx.isLastToolCall) {
-          await this.flushToolResults(ctx.context, params.thread);
+          await this.flushToolResults(ctx.context, params);
         }
       },
-      beforeModelTurn: (ctx) =>
-        this.flushToolResults(ctx.context, params.thread),
-      runEnd: (ctx) => this.flushToolResults(ctx.context, params.thread),
+      beforeModelTurn: (ctx) => this.flushToolResults(ctx.context, params),
+      runEnd: (ctx) => this.flushToolResults(ctx.context, params),
     };
   }
 
   private async persistAssistantMessageOrAbort(
     ctx: AfterModelTurnContext,
-    thread: Thread,
-    integrations: RuntimeToolIntegrationRegistry,
+    params: PersistenceHookParams,
   ): Promise<void> {
     const message = assistantMessageForTurn(ctx);
     if (!message) return;
     const persisted = await this.persistAssistantMessage(
       message,
-      thread,
       assistantMessageId(ctx.context.runId, ctx.iteration),
-      integrations,
+      params,
     );
     if (!persisted) ctx.abort('thread no longer exists');
   }
 
   private async persistAssistantMessage(
     message: RuntimeAssistantMessage,
-    thread: Thread,
     id: UUID,
-    integrations: RuntimeToolIntegrationRegistry,
+    { thread, integrations, onMessagePersisted }: PersistenceHookParams,
   ): Promise<boolean> {
     if (message.content.length === 0) {
       return true;
@@ -120,6 +114,7 @@ export class PersistenceHookFactory {
       new SaveAssistantMessageCommand(backendMessage),
     );
     if (!saved) return false;
+    onMessagePersisted(saved.id);
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(thread, saved),
     );
@@ -128,7 +123,7 @@ export class PersistenceHookFactory {
 
   private async flushToolResults(
     context: RunContext,
-    thread: Thread,
+    { thread, onMessagePersisted }: PersistenceHookParams,
   ): Promise<void> {
     const pending = context.get<PendingToolResults>(PENDING_TOOL_RESULTS);
     if (!pending || pending.contents.length === 0) {
@@ -154,6 +149,7 @@ export class PersistenceHookFactory {
         'Run aborted because the thread no longer exists',
       );
     }
+    onMessagePersisted(saved.id);
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(thread, saved),
     );

@@ -19,7 +19,7 @@ describe('PersistenceHookFactory', () => {
   it('persists only the accepted response after an empty-response retry', async () => {
     const save = saveSuccessfulMessages();
     const context = RunContext.create();
-    const { hook } = buildHook(save);
+    const { hook, onMessagePersisted } = buildHook(save);
     let calls = 0;
     const model: ModelProvider = {
       name: 'empty-then-accepted',
@@ -47,6 +47,9 @@ describe('PersistenceHookFactory', () => {
     expect(save).toHaveBeenCalledTimes(1);
     const command = save.mock.calls[0][0] as SaveAssistantMessageCommand;
     expect(command.message.id).toBe(assistantMessageId(context.runId, 0));
+    expect(onMessagePersisted.mock.calls).toEqual([
+      [assistantMessageId(context.runId, 0)],
+    ]);
     expect(command.message.content).toMatchObject([
       { type: MessageContentType.TEXT, text: 'Accepted answer' },
     ]);
@@ -394,7 +397,10 @@ describe('PersistenceHookFactory', () => {
     const createToolResult = jest
       .fn()
       .mockImplementation((command) => Promise.resolve(command));
-    const { hook, addMessage } = buildHook(jest.fn(), createToolResult);
+    const { hook, addMessage, onMessagePersisted } = buildHook(
+      jest.fn(),
+      createToolResult,
+    );
     const context = RunContext.create();
 
     await hook.afterToolCall?.(
@@ -413,6 +419,9 @@ describe('PersistenceHookFactory', () => {
       { toolId: 'call-2', result: 'second result' },
     ]);
     expect(addMessage).toHaveBeenCalledTimes(1);
+    expect(onMessagePersisted).toHaveBeenCalledWith(
+      toolResultMessageId(context.runId, 0),
+    );
   });
 
   it('defensively flushes pending tool results before the next model turn', async () => {
@@ -469,8 +478,9 @@ describe('PersistenceHookFactory', () => {
 function buildHook(
   save: jest.Mock,
   createToolResult: jest.Mock = jest.fn().mockResolvedValue(undefined),
-): { hook: Hook; addMessage: jest.Mock } {
+): { hook: Hook; addMessage: jest.Mock; onMessagePersisted: jest.Mock } {
   const addMessage = jest.fn();
+  const onMessagePersisted = jest.fn();
   const factory = new PersistenceHookFactory(
     { execute: save } as unknown as SaveAssistantMessageUseCase,
     {
@@ -482,8 +492,9 @@ function buildHook(
   const hook = factory.create({
     thread,
     integrations: new RuntimeToolIntegrationRegistry([]),
+    onMessagePersisted,
   });
-  return { hook, addMessage };
+  return { hook, addMessage, onMessagePersisted };
 }
 
 function saveSuccessfulMessages(): jest.Mock {
