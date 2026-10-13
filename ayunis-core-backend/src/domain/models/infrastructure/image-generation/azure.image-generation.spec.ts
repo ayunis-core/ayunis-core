@@ -60,14 +60,17 @@ describe('AzureImageGenerationHandler', () => {
       prompt: string;
       size: string;
       quality: string;
+      background: 'transparent';
+      model: ImageGenerationModel;
       referenceImages: Array<{ data: Buffer; contentType: string }>;
     }> = {},
   ): ImageGenerationInput =>
     new ImageGenerationInput({
-      model: mockModel,
+      model: overrides.model ?? mockModel,
       prompt: overrides.prompt ?? 'a beautiful sunset',
       size: overrides.size,
       quality: overrides.quality,
+      background: overrides.background,
       referenceImages: overrides.referenceImages,
     });
 
@@ -361,6 +364,120 @@ describe('AzureImageGenerationHandler', () => {
 
       expect(mockImagesEdit).not.toHaveBeenCalled();
       expect(mockImagesGenerate).toHaveBeenCalledTimes(1);
+    });
+
+    it('omits background when transparency is not requested', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(createInput());
+
+      expect(mockImagesGenerate).toHaveBeenCalledWith(
+        expect.not.objectContaining({ background: expect.anything() }),
+      );
+      expect(result.transparencyApplied).toBeUndefined();
+    });
+
+    it.each(['gpt-image-2', 'gpt-image-2.5-flare'])(
+      'sends background transparent when generating with %s',
+      async (modelName) => {
+        const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+        mockImagesGenerate.mockResolvedValue({
+          data: [{ b64_json: fakeB64 }],
+        });
+        const model = new ImageGenerationModel({
+          name: modelName,
+          provider: ModelProvider.AZURE,
+          displayName: modelName,
+          isArchived: false,
+        });
+
+        const result = await handler.generate(
+          createInput({ model, background: 'transparent' }),
+        );
+
+        expect(mockImagesGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({ background: 'transparent' }),
+        );
+        expect(mockImagesGenerate.mock.calls[0][0]).not.toHaveProperty(
+          'output_format',
+        );
+        expect(result.transparencyApplied).toBe(true);
+      },
+    );
+
+    it.each(['gpt-image-2', 'gpt-image-2.5-flare'])(
+      'sends background transparent when editing with %s',
+      async (modelName) => {
+        const fakeB64 = Buffer.from('edited-image-data').toString('base64');
+        mockImagesEdit.mockResolvedValue({
+          data: [{ b64_json: fakeB64 }],
+        });
+        const model = new ImageGenerationModel({
+          name: modelName,
+          provider: ModelProvider.AZURE,
+          displayName: modelName,
+          isArchived: false,
+        });
+
+        const result = await handler.generate(
+          createInput({
+            model,
+            background: 'transparent',
+            referenceImages: [
+              { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+            ],
+          }),
+        );
+
+        expect(mockImagesGenerate).not.toHaveBeenCalled();
+        expect(mockImagesEdit).toHaveBeenCalledWith(
+          expect.objectContaining({ background: 'transparent' }),
+        );
+        expect(mockImagesEdit.mock.calls[0][0]).not.toHaveProperty(
+          'output_format',
+        );
+        expect(result.transparencyApplied).toBe(true);
+      },
+    );
+
+    it('drops background for a model that does not support transparency', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(
+        createInput({ background: 'transparent' }),
+      );
+
+      expect(mockImagesGenerate).toHaveBeenCalledWith(
+        expect.not.objectContaining({ background: expect.anything() }),
+      );
+      expect(result.transparencyApplied).toBe(false);
+    });
+
+    it('drops background on edit for a model that does not support transparency', async () => {
+      const fakeB64 = Buffer.from('edited-image-data').toString('base64');
+      mockImagesEdit.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(
+        createInput({
+          background: 'transparent',
+          referenceImages: [
+            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+          ],
+        }),
+      );
+
+      expect(mockImagesEdit).toHaveBeenCalledWith(
+        expect.not.objectContaining({ background: expect.anything() }),
+      );
+      expect(result.transparencyApplied).toBe(false);
     });
 
     it('should leave usage undefined when Azure omits it (e.g. DALL-E)', async () => {
