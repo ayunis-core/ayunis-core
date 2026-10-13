@@ -321,6 +321,13 @@ export class RetrieveFileContentUseCase {
       fileName,
     );
     const pdfFileName = fileName.replace(/\.\w+$/, '.pdf');
+    await this.preflightCheckUseCase.execute(
+      new PreflightCheckCommand({
+        fileData: pdfBuffer,
+        fileName,
+        fileType: MIME_TYPES.PDF,
+      }),
+    );
     return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF);
   }
 
