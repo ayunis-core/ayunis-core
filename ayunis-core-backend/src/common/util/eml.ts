@@ -38,18 +38,31 @@ export function buildHeaderLines(
     .join('\n');
 }
 
+export interface EmlAttachment {
+  filename: string;
+  contentType: string;
+  content: Buffer;
+}
+
 /**
  * Flatten an RFC 822 email (.eml) into a plain-text representation: a header
  * block (From/To/Cc/Subject/Date/Attachments) followed by the message body.
  * The text/plain part is preferred; HTML-only messages fall back to their
  * stripped text so the downstream chunking pipeline receives readable content.
+ * Named attachments are returned alongside so callers can extract them.
  */
-export async function extractTextFromEml(fileData: Buffer): Promise<string> {
+export async function parseEml(
+  fileData: Buffer,
+): Promise<{ text: string; attachments: EmlAttachment[] }> {
   const parsed = await simpleParser(fileData);
 
-  const attachmentNames = parsed.attachments
-    .map((attachment) => attachment.filename)
-    .filter((name): name is string => Boolean(name));
+  const attachments = parsed.attachments
+    .filter((attachment) => Boolean(attachment.filename))
+    .map((attachment) => ({
+      filename: attachment.filename as string,
+      contentType: attachment.contentType,
+      content: attachment.content,
+    }));
 
   const header = buildHeaderLines([
     { label: 'From', value: formatAddresses(parsed.from) },
@@ -57,10 +70,16 @@ export async function extractTextFromEml(fileData: Buffer): Promise<string> {
     { label: 'Cc', value: formatAddresses(parsed.cc) },
     { label: 'Subject', value: parsed.subject ?? '' },
     { label: 'Date', value: parsed.date ? parsed.date.toISOString() : '' },
-    { label: 'Attachments', value: attachmentNames.join(', ') },
+    {
+      label: 'Attachments',
+      value: attachments.map((attachment) => attachment.filename).join(', '),
+    },
   ]);
 
   const body = extractBody(parsed.text, parsed.html);
 
-  return [header, body].filter((section) => section.length > 0).join('\n\n');
+  const text = [header, body]
+    .filter((section) => section.length > 0)
+    .join('\n\n');
+  return { text, attachments };
 }

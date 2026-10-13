@@ -7,6 +7,8 @@ import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
 import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
+import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
+import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -89,8 +91,8 @@ const sourceRepository = {
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
   refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
   saveTextSource: jest
-    .fn()
-    .mockImplementation((s: unknown) => Promise.resolve(s)),
+    .fn<Promise<unknown>, [unknown, { text: string }]>()
+    .mockResolvedValue(undefined),
   updateStatusConditionally: jest.fn(),
 };
 
@@ -119,6 +121,7 @@ describe('DocumentProcessingConsumer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
+    sourceRepository.saveTextSource.mockResolvedValue(undefined);
     admitOrgProcessing.execute.mockResolvedValue(true);
 
     consumer = new DocumentProcessingConsumer(
@@ -131,6 +134,7 @@ describe('DocumentProcessingConsumer', () => {
       helper as never,
       spreadsheetParser as never,
       admitOrgProcessing as never,
+      new SourceProcessingHeartbeatService(sourceRepository as never),
     );
   });
 
@@ -264,6 +268,109 @@ describe('DocumentProcessingConsumer', () => {
     expect(indexedChunks).toHaveLength(1);
     expect(indexedChunks[0].content).toBe('hello world');
   });
+
+  it('saves a long-running email even when stale cleanup runs during extraction', async () => {
+    jest.useFakeTimers();
+    const source = makeSource();
+    let savedText: string | undefined;
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.refreshProcessingHeartbeat.mockImplementation(async () => {
+      if (source.status !== SourceStatus.PROCESSING) return false;
+      source.processingStartedAt = new Date();
+      return true;
+    });
+    sourceRepository.saveTextSource.mockImplementation(async (_, content) => {
+      savedText = content.text;
+      return source;
+    });
+    sourceRepository.updateStatusConditionally.mockImplementation(async () => {
+      source.status = SourceStatus.READY;
+      return true;
+    });
+    retrieveFileContentUseCase.execute.mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                pages: [
+                  { text: 'Email body and extracted attachment content' },
+                ],
+              }),
+            16 * 60 * 1000,
+          ),
+        ),
+    );
+    const cleanup = new StaleProcessingCleanupTask(
+      {
+        findStaleProcessingSourceIds: async (cutoff: Date) =>
+          source.status === SourceStatus.PROCESSING &&
+          source.processingStartedAt! < cutoff
+            ? [SOURCE_ID]
+            : [],
+      } as never,
+      {
+        execute: async () => {
+          source.status = SourceStatus.FAILED;
+        },
+      } as never,
+    );
+    const cleanupTimer = setTimeout(
+      () => {
+        void cleanup.handleCleanup();
+      },
+      15.5 * 60 * 1000,
+    );
+    try {
+      const processing = consumer.process(
+        makeJob({
+          data: makeJobData({
+            fileName: 'meeting.eml',
+            fileType: 'message/rfc822',
+          }),
+        }),
+      );
+      await jest.advanceTimersByTimeAsync(16 * 60 * 1000);
+      await processing;
+      expect(source.status).toBe(SourceStatus.READY);
+      expect(savedText).toBe('Email body and extracted attachment content');
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      clearTimeout(cleanupTimer);
+      jest.useRealTimers();
+    }
+  });
+
+  it('saves the fresh source state rather than the pre-extraction snapshot', async () => {
+    const initial = makeSource();
+    const fresh = makeSource();
+    fresh.processingStartedAt = new Date(
+      initial.processingStartedAt!.getTime() + 16 * 60 * 1000,
+    );
+    sourceRepository.findById
+      .mockResolvedValueOnce(initial)
+      .mockResolvedValueOnce(fresh);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const [saved] = sourceRepository.saveTextSource.mock.calls[0];
+    expect((saved as FileSource).processingStartedAt).toEqual(
+      fresh.processingStartedAt,
+    );
+  });
+
+  it.each([SourceStatus.FAILED, SourceStatus.READY])(
+    'preserves a source changed to %s during extraction',
+    async (status) => {
+      sourceRepository.findById
+        .mockResolvedValueOnce(makeSource())
+        .mockResolvedValueOnce(makeSource(status));
+      await consumer.process(makeJob());
+      expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+      expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+    },
+  );
 
   it('flattens a workbook to text and never calls the file retriever', async () => {
     sourceRepository.findById.mockResolvedValue(
