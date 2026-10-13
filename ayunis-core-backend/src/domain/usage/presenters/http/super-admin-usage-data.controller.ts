@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -57,7 +57,7 @@ export class SuperAdminUsageDataController {
   @ApiQuery({ name: 'provider', type: String, required: false })
   @ApiQuery({ name: 'modelId', type: String, required: false })
   async getProviderUsage(
-    @Param('orgId') orgId: UUID,
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('includeTimeSeries') includeTimeSeries: boolean = true,
@@ -87,7 +87,7 @@ export class SuperAdminUsageDataController {
   @ApiQuery({ name: 'provider', type: String, required: false })
   @ApiQuery({ name: 'modelId', type: String, required: false })
   async getProviderUsageChart(
-    @Param('orgId') orgId: UUID,
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('provider') provider?: string,
@@ -121,7 +121,7 @@ export class SuperAdminUsageDataController {
   })
   @ApiQuery({ name: 'sortOrder', enum: ['asc', 'desc'], required: false })
   async getUserUsage(
-    @Param('orgId') orgId: UUID,
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('limit') limit: number = UsageConstants.DEFAULT_USER_USAGE_LIMIT,
@@ -165,7 +165,7 @@ export class SuperAdminUsageDataController {
     description: 'Exclusive end of the range in ISO format',
   })
   async getApiKeyUsage(
-    @Param('orgId') orgId: UUID,
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ): Promise<ApiKeyUsageResponseDto> {

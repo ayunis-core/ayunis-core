@@ -118,4 +118,10 @@ test("limits the super-admin API key usage view to super admins and the requeste
     { api: publicApi },
   );
   expect(ownOrg.data.map((item) => item.apiKeyId)).not.toContain(apiKey.id);
+
+  const invalidOrgResponse = await requestSuperAdminApiKeyUsage(
+    publicApi,
+    "not-a-uuid",
+  );
+  expect(invalidOrgResponse.status()).toBe(400);
 });
