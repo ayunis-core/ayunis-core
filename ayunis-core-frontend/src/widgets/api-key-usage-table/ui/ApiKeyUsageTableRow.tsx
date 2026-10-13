@@ -24,8 +24,8 @@ export function ApiKeyUsageTableRow({
       className="border-border/20 transition hover:bg-muted/20"
       data-testid={`api-key-usage-row-${apiKey.apiKeyId}`}
     >
-      <TableCell>
-        <div className="font-medium">{apiKey.name}</div>
+      <TableCell className="whitespace-normal">
+        <div className="max-w-56 font-medium break-words">{apiKey.name}</div>
         <div className="text-sm text-muted-foreground">
           {t(`apiKeyUsage.status.${status}`)}
         </div>
