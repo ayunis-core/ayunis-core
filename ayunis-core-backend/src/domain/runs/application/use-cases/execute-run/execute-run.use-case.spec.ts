@@ -54,6 +54,7 @@ import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/service
 import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
 import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
 import type { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
@@ -393,6 +394,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     toolUsageHookFactory,
     contextBudgetHookFactory,
     buildWorkspaceRunContextUseCase,
+    new ThreadRunLock(),
   );
 
   return {
@@ -440,6 +442,85 @@ function userCommand(input = new RunUserInput('Hi there')): ExecuteRunCommand {
 }
 
 describe('ExecuteRunUseCase', () => {
+  it('reads the thread for a second run only after the first run on it ended', async () => {
+    let releaseFirstAnswer!: () => void;
+    const firstAnswerMayFinish = new Promise<void>(
+      (resolve) => (releaseFirstAnswer = resolve),
+    );
+    let modelCalls = 0;
+    const { useCase, findThread } = buildHarness({
+      providerStream: async function* () {
+        modelCalls += 1;
+        if (modelCalls === 1) await firstAnswerMayFinish;
+        yield { textDelta: `Answer ${modelCalls}` };
+        yield { finishReason: 'stop' };
+      },
+    });
+
+    const firstRun = drain(await useCase.execute(userCommand()));
+    const threadReadsBeforeSecondRun = findThread.mock.calls.length;
+    const secondRun = useCase.execute(
+      userCommand(new RunUserInput('And the next permit?')),
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(findThread).toHaveBeenCalledTimes(threadReadsBeforeSecondRun);
+
+    releaseFirstAnswer();
+    await firstRun;
+    await drain(await secondRun);
+    expect(findThread.mock.calls.length).toBeGreaterThan(
+      threadReadsBeforeSecondRun,
+    );
+  });
+
+  it('does not prepare or persist a cancelled run waiting behind another run', async () => {
+    const controller = new AbortController();
+    const { useCase, findThread, createUser, trackedError } = buildHarness();
+    const first = await useCase.execute(userCommand());
+    const readsBeforeWait = findThread.mock.calls.length;
+    const second = useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Cancelled question'),
+        signal: controller.signal,
+      }),
+    );
+    controller.abort();
+    const cancelled = await second;
+    await expect(cancelled.next()).resolves.toEqual({
+      done: true,
+      value: 'aborted',
+    });
+    expect(trackedError()).toBeUndefined();
+    expect(findThread).toHaveBeenCalledTimes(readsBeforeWait);
+    expect(createUser).not.toHaveBeenCalled();
+    await first.return('aborted');
+    await drain(await useCase.execute(userCommand()));
+    expect(createUser).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not persist input cancelled after preparation but before streaming', async () => {
+    const controller = new AbortController();
+    const { useCase, createUser, cleanup } = buildHarness();
+    const stream = await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Cancelled question'),
+        signal: controller.signal,
+      }),
+    );
+    controller.abort();
+    await expect(stream.next()).resolves.toEqual({
+      done: true,
+      value: 'aborted',
+    });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(cleanup).not.toHaveBeenCalled();
+    await drain(await useCase.execute(userCommand()));
+    expect(createUser).toHaveBeenCalledTimes(1);
+  });
+
   it('attributes every run to the agent-runtime telemetry path', async () => {
     const { useCase, trackRun } = buildHarness();
 

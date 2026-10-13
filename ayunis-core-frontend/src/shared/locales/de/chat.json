@@ -70,6 +70,7 @@
     "errorAnonymizationUnavailable": "Die Anonymisierung ist derzeit nicht verfügbar. Ihre Nachricht wurde nicht gesendet, um Ihre Daten zu schützen.",
     "errorAnonymizationInputTooLong": "Ihre Nachricht überschreitet das Limit von 30.000 Zeichen für die Anonymisierung und wurde nicht gesendet. Bitte kürzen Sie sie und versuchen Sie es erneut.",
     "errorContextBudgetExceeded": "Die letzte Konversationsrunde ist zu groß für das Kontextfenster des Modells.",
+    "errorThreadBusy": "Die vorherige Antwort wird noch gestoppt. Bitte senden Sie Ihre Nachricht gleich noch einmal.",
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "errorRestoreFailedSubmission": "Ihre vorherige Nachricht und Anhänge konnten nicht wiederhergestellt werden, da die Eingabe bereits einen Entwurf enthält.",
     "errorQuotaExceeded": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es später erneut.",

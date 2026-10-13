@@ -16,6 +16,7 @@ export enum RunErrorCode {
   RUN_ANONYMIZATION_UNAVAILABLE = 'RUN_ANONYMIZATION_UNAVAILABLE',
   UNEXPECTED_RUN_ERROR = 'UNEXPECTED_RUN_ERROR',
   RUN_CONTEXT_BUDGET_EXCEEDED = 'RUN_CONTEXT_BUDGET_EXCEEDED',
+  RUN_THREAD_BUSY = 'RUN_THREAD_BUSY',
   SOURCE_CITATION_NOT_FOUND = 'SOURCE_CITATION_NOT_FOUND',
 }
 
@@ -193,6 +194,17 @@ export class RunContextBudgetExceededError extends RunError {
       'The latest conversation turn is too large for the model context window.',
       RunErrorCode.RUN_CONTEXT_BUDGET_EXCEEDED,
       400,
+      metadata,
+    );
+  }
+}
+
+export class RunThreadBusyError extends RunError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The previous answer in this chat is still being stopped.',
+      RunErrorCode.RUN_THREAD_BUSY,
+      409,
       metadata,
     );
   }
