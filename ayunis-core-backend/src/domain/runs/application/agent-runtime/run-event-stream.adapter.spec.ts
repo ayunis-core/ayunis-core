@@ -907,6 +907,163 @@ describe('adaptRunEventsToStream', () => {
     await expect(result).rejects.toBeInstanceOf(InferenceImageTooLargeError);
   });
 
+  it('maps a context-length rejection to the context budget error', async () => {
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream() {
+        yield await Promise.reject(
+          new ModelProviderError({
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            rejectionReason: 'context_length_exceeded',
+            cause: new Error('400 provider wording'),
+          }),
+        );
+      },
+    };
+    const context = RunContext.create();
+    const models = RuntimeModelRegistry.attach(context);
+    models.register(provider, {
+      name: 'claude-sonnet-4-5',
+      provider: 'anthropic',
+    } as LanguageModel);
+    const observability = new ModelCallObservabilityHookFactory({
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as EventEmitter2).create({
+      userId: '223e4567-e89b-12d3-a456-426614174000',
+      orgId: '323e4567-e89b-12d3-a456-426614174000',
+      models,
+    });
+    const result = collect(
+      run({
+        instructions: 'Answer the question.',
+        model: provider,
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'Summarize the thread.' }],
+          },
+        ],
+        context,
+        hooks: [observability],
+        retry: { maxRetries: 0 },
+      }),
+      createLoggerMock(),
+      models,
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'RUN_CONTEXT_BUDGET_EXCEEDED',
+      statusCode: 400,
+    });
+  });
+
+  it('keeps context-length wording without a provider reason in the inference-failed family', async () => {
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream() {
+        yield await Promise.reject(
+          new ModelProviderError({
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            cause: Object.assign(
+              new Error("This model's maximum context length is 32768 tokens"),
+              { status: 400 },
+            ),
+          }),
+        );
+      },
+    };
+    const context = RunContext.create();
+    const models = RuntimeModelRegistry.attach(context);
+    models.register(provider, {
+      name: 'claude-sonnet-4-5',
+      provider: 'anthropic',
+    } as LanguageModel);
+    const observability = new ModelCallObservabilityHookFactory({
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as EventEmitter2).create({
+      userId: '223e4567-e89b-12d3-a456-426614174000',
+      orgId: '323e4567-e89b-12d3-a456-426614174000',
+      models,
+    });
+    const result = collect(
+      run({
+        instructions: 'Answer the question.',
+        model: provider,
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'Summarize the thread.' }],
+          },
+        ],
+        context,
+        hooks: [observability],
+        retry: { maxRetries: 0 },
+      }),
+      createLoggerMock(),
+      models,
+    );
+
+    await expect(result).rejects.not.toMatchObject({
+      code: 'RUN_CONTEXT_BUDGET_EXCEEDED',
+    });
+  });
+
+  it('keeps a rate limit mentioning tokens out of the context budget error', async () => {
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream() {
+        yield await Promise.reject(
+          new ModelProviderError({
+            kind: 'rate_limit',
+            stage: 'stream_establishment',
+            upstreamStatus: 429,
+            cause: Object.assign(new Error('Too many tokens per minute'), {
+              status: 429,
+            }),
+          }),
+        );
+      },
+    };
+    const context = RunContext.create();
+    const models = RuntimeModelRegistry.attach(context);
+    models.register(provider, {
+      name: 'claude-sonnet-4-5',
+      provider: 'anthropic',
+    } as LanguageModel);
+    const observability = new ModelCallObservabilityHookFactory({
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as EventEmitter2).create({
+      userId: '223e4567-e89b-12d3-a456-426614174000',
+      orgId: '323e4567-e89b-12d3-a456-426614174000',
+      models,
+    });
+    const result = collect(
+      run({
+        instructions: 'Answer the question.',
+        model: provider,
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'Summarize the thread.' }],
+          },
+        ],
+        context,
+        hooks: [observability],
+        retry: { maxRetries: 0 },
+      }),
+      createLoggerMock(),
+      models,
+    );
+
+    await expect(result).rejects.not.toMatchObject({
+      code: 'RUN_CONTEXT_BUDGET_EXCEEDED',
+    });
+  });
+
   it('keeps an ordinary portable rejection in the inference-failed incident family', async () => {
     const result = collect(
       eventsFrom([

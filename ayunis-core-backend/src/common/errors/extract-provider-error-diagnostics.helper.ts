@@ -20,7 +20,6 @@ export interface ProviderErrorDiagnostics {
 export const ProviderErrorReason = {
   INVALID_TOOL_SCHEMA: 'invalid_tool_schema',
   CONTEXT_LENGTH_EXCEEDED: 'context_length_exceeded',
-  TOOL_LIMIT_EXCEEDED: 'tool_limit_exceeded',
   UNSUPPORTED_PARAMETER: 'unsupported_parameter',
   CONTENT_FILTER: 'content_filter',
   AUTHENTICATION_FAILED: 'authentication_failed',
@@ -31,29 +30,6 @@ export type ProviderErrorReason =
   (typeof ProviderErrorReason)[keyof typeof ProviderErrorReason];
 
 const SAFE_SCALAR = /^[a-zA-Z0-9_$.[\]:-]+$/;
-const REASON_PATTERNS: ReadonlyArray<readonly [ProviderErrorReason, RegExp]> = [
-  [
-    ProviderErrorReason.INVALID_TOOL_SCHEMA,
-    /invalid schema|function parameters|tool schema/i,
-  ],
-  [
-    ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED,
-    /context length|maximum context|too many tokens/i,
-  ],
-  [
-    ProviderErrorReason.TOOL_LIMIT_EXCEEDED,
-    /too many tools|maximum number of tools|tool limit/i,
-  ],
-  [
-    ProviderErrorReason.UNSUPPORTED_PARAMETER,
-    /unsupported parameter|not supported.*parameter/i,
-  ],
-  [ProviderErrorReason.CONTENT_FILTER, /content filter/i],
-  [
-    ProviderErrorReason.AUTHENTICATION_FAILED,
-    /authentication|unauthorized|invalid api key/i,
-  ],
-];
 
 export function hasRateLimitDiagnostics(
   diagnostics: ProviderErrorDiagnostics,
@@ -94,12 +70,6 @@ export function extractProviderErrorDiagnostics(
     portableError?.upstreamStatus,
     extractUpstreamStatus(diagnosticSource),
   );
-  const message = firstString(
-    read(record, 'message'),
-    read(body, 'message'),
-    read(nestedError, 'message'),
-  );
-
   return compactDiagnostics({
     upstreamStatus,
     upstreamCode: extractCode(record, body),
@@ -109,7 +79,7 @@ export function extractProviderErrorDiagnostics(
       portableError?.upstreamRequestId,
       extractRequestId(record, body, headers, awsMetadata),
     ),
-    upstreamReason: classifyReason(message, upstreamStatus),
+    upstreamReason: classifyReason(portableError, upstreamStatus),
     upstreamRetryAfterMs: firstDefined(
       portableError?.retryAfterMs,
       extractRetryAfterMs(headers),
@@ -179,14 +149,13 @@ function nonNegativeNumber(value: unknown): number | undefined {
     : undefined;
 }
 
+// Provider packages classify their own rejections (AYC-1255); the backend
+// never parses provider wording.
 function classifyReason(
-  message: string | undefined,
+  portableError: ModelProviderError | undefined,
   status: number | undefined,
 ): ProviderErrorReason | undefined {
-  const match = REASON_PATTERNS.find(([, pattern]) =>
-    pattern.test(message ?? ''),
-  );
-  if (match) return match[0];
+  if (portableError?.rejectionReason) return portableError.rejectionReason;
   return status !== undefined && status >= 400 && status < 500
     ? ProviderErrorReason.UNKNOWN_REQUEST_REJECTION
     : undefined;

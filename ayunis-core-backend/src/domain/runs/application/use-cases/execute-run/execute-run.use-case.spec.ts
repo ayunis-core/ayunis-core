@@ -9,6 +9,7 @@ import {
 import type {
   ModelProvider,
   ProviderRequest,
+  TokenEstimator,
   Tool as RuntimeTool,
   ToolExecutionContext,
 } from '@ayunis/agent-runtime';
@@ -17,7 +18,6 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { MAX_CONTEXT_TOKENS } from 'src/common/token-counter/application/context-budget.constants';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -40,7 +40,6 @@ import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
-import type { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -74,7 +73,6 @@ import {
 } from 'src/domain/runs/application/runs.errors';
 import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
-import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
 import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
 import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
@@ -97,7 +95,6 @@ const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 const integrationId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
 const CONFIGURED_CONTEXT_WINDOW_SIZE = 750_000;
-
 interface Harness {
   useCase: ExecuteRunUseCase;
   findThread: jest.Mock;
@@ -115,6 +112,7 @@ interface Harness {
   provider: MockProvider;
   providerSignal: () => AbortSignal | undefined;
   countTokens: jest.Mock;
+  countTools: jest.Mock;
   trackRun: jest.Mock;
   trackedError: () => unknown;
   resolveModelAccess: jest.Mock;
@@ -301,16 +299,24 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const runtimeHistoryMaterializer = {
     materialize: materializeHistory,
   } as unknown as RuntimeHistoryMaterializer;
-  const countTokens = jest
-    .fn()
-    .mockReturnValue(overrides.tokensPerMessage ?? 1);
-  const completeTurnSelector = new CompleteTurnSelector({
-    execute: countTokens,
-  } as unknown as CountTokensUseCase);
-  const contextBudgetHookFactory = new ContextBudgetHookFactory(
-    completeTurnSelector,
+  const tokensPerText = overrides.tokensPerMessage ?? 1;
+  const countTokens = jest.fn((text: string) => (text ? tokensPerText : 0));
+  const countTools = jest.fn((tools: readonly unknown[]) =>
+    tools.length ? tokensPerText : 0,
   );
-  const provider = new MockProvider(overrides.turns ?? [textTurn('Hello')]);
+  const contextBudgetHookFactory = new ContextBudgetHookFactory();
+  const provider = Object.assign(
+    new MockProvider(overrides.turns ?? [textTurn('Hello')]),
+    {
+      tokens: {
+        exact: false,
+        tokensPerMessage: 0,
+        tokensPerImage: 1_600,
+        countText: countTokens,
+        countTools,
+      } satisfies TokenEstimator,
+    },
+  );
   if (overrides.providerStream) {
     provider.stream = overrides.providerStream;
   }
@@ -413,6 +419,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     provider,
     providerSignal: () => providerSignal,
     countTokens,
+    countTools,
     trackRun,
     trackedError: () => telemetryError,
     resolveModelAccess,
@@ -1603,7 +1610,7 @@ describe('ExecuteRunUseCase', () => {
       parameters: { type: 'object' },
       execute: jest.fn().mockResolvedValue('echoed'),
     };
-    const { useCase, countTokens, provider } = buildHarness({
+    const { useCase, countTools, provider } = buildHarness({
       runtimeTools: [echo],
       turns: [
         toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
@@ -1614,10 +1621,13 @@ describe('ExecuteRunUseCase', () => {
     await drain(await useCase.execute(userCommand()));
 
     expect(provider.requests).toHaveLength(2);
-    expect(countTokens).toHaveBeenCalledTimes(4);
+    expect(countTools).toHaveBeenCalledTimes(2);
+    expect(countTools).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'echo' }),
+    ]);
   });
 
-  it('uses the selected model context window when materializing persisted history', async () => {
+  it('materializes persisted history for the selected model', async () => {
     const { useCase, materializeHistory } = buildHarness({
       contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
     });
@@ -1625,24 +1635,34 @@ describe('ExecuteRunUseCase', () => {
     await drain(await useCase.execute(userCommand()));
 
     expect(materializeHistory).toHaveBeenCalledWith(
-      expect.objectContaining({ maxTokens: CONFIGURED_CONTEXT_WINDOW_SIZE }),
+      expect.objectContaining({
+        request: expect.objectContaining({
+          model: expect.objectContaining({
+            contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
+          }),
+        }),
+      }),
     );
   });
 
-  it('uses the fallback context window when the model has none configured', async () => {
+  it('materializes persisted history for a model without a configured window', async () => {
     const { useCase, materializeHistory } = buildHarness();
 
     await drain(await useCase.execute(userCommand()));
 
     expect(materializeHistory).toHaveBeenCalledWith(
-      expect.objectContaining({ maxTokens: MAX_CONTEXT_TOKENS }),
+      expect.objectContaining({
+        request: expect.objectContaining({
+          model: expect.objectContaining({ provider: 'anthropic' }),
+        }),
+      }),
     );
   });
 
-  it('accepts a latest turn at the selected model context window', async () => {
+  it('accepts a latest turn that fits next to the instructions and tools', async () => {
     const { useCase, provider } = buildHarness({
       contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
-      tokensPerMessage: CONFIGURED_CONTEXT_WINDOW_SIZE,
+      tokensPerMessage: Math.floor((CONFIGURED_CONTEXT_WINDOW_SIZE * 0.9) / 2),
     });
 
     await drain(await useCase.execute(userCommand()));

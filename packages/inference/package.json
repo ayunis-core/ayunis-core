@@ -30,6 +30,9 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "deps:check": "madge --circular --extensions ts src"
   },
+  "dependencies": {
+    "tiktoken": "^1.0.22"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.2",

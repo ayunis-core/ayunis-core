@@ -150,7 +150,7 @@ describe('StreamInferenceUseCase error mapping', () => {
         upstreamType: 'invalid_request_error',
         upstreamParam: 'tools[62].function.parameters',
         upstreamRequestId: 'req_azure_123',
-        upstreamReason: 'invalid_tool_schema',
+        upstreamReason: 'unknown_request_rejection',
       },
     });
     await expect(result).rejects.not.toHaveProperty('metadata.upstreamMessage');
@@ -158,7 +158,7 @@ describe('StreamInferenceUseCase error mapping', () => {
       expect.objectContaining({
         upstreamCode: 'invalid_function_parameters',
         upstreamParam: 'tools[62].function.parameters',
-        upstreamReason: 'invalid_tool_schema',
+        upstreamReason: 'unknown_request_rejection',
         upstreamMessage: "Invalid schema containing resident prompt '…",
       }),
       'Provider stream inference failed',

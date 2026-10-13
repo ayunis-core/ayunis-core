@@ -73,7 +73,6 @@ import type {
   PreparedTools,
   SeededInput,
 } from './execute-run.types';
-import { getContextWindowTokens } from 'src/common/token-counter/application/context-budget.constants';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
@@ -290,21 +289,20 @@ export class ExecuteRunUseCase {
   }
 
   private async startRun(prepared: PreparedRun, signal?: AbortSignal) {
-    const maxTokens = getContextWindowTokens(prepared.model.contextWindowSize);
     const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
       prepared.thread.messages,
       prepared.thread.id,
       prepared.isAnonymous,
     );
+    const provider = await this.resolveModelProviderUseCase.execute(
+      new ResolveModelProviderQuery(prepared.model),
+    );
     const messages = await this.runtimeHistoryMaterializer.materialize({
       messages: historyMessages,
       orgId: prepared.orgId,
       tools: prepared.backendTools,
-      maxTokens,
+      request: { ...prepared, tokens: provider.tokens },
     });
-    const provider = await this.resolveModelProviderUseCase.execute(
-      new ResolveModelProviderQuery(prepared.model),
-    );
     const context = RunContext.create({
       orgId: prepared.orgId,
       userId: prepared.userId,
@@ -320,7 +318,7 @@ export class ExecuteRunUseCase {
         messages,
         tools: prepared.tools,
         ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
-        hooks: this.buildHooks(prepared, models, maxTokens),
+        hooks: this.buildHooks(prepared, models),
         context,
         maxIterations: MAX_ITERATIONS,
         retry: DEFAULT_RETRY_CONFIG,
@@ -333,7 +331,6 @@ export class ExecuteRunUseCase {
   private buildHooks(
     prepared: PreparedRun,
     models: RuntimeModelRegistry,
-    maxTokens: number,
   ): Hook[] {
     return [
       this.creditGateHookFactory.create({
@@ -364,7 +361,7 @@ export class ExecuteRunUseCase {
         integrations: prepared.toolIntegrations,
         activatedSkillName: prepared.activatedSkillName,
       }),
-      this.contextBudgetHookFactory.create({ maxTokens }),
+      this.contextBudgetHookFactory.create({ model: prepared.model }),
     ];
   }
 

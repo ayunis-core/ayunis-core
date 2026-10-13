@@ -189,7 +189,7 @@ describe('GetInferenceUseCase error mapping', () => {
         upstreamType: 'invalid_request_error',
         upstreamParam: 'messages',
         upstreamRequestId: 'req_mistral_123',
-        upstreamReason: 'context_length_exceeded',
+        upstreamReason: 'unknown_request_rejection',
       },
     });
     await expect(result).rejects.not.toHaveProperty('metadata.upstreamMessage');
@@ -197,7 +197,7 @@ describe('GetInferenceUseCase error mapping', () => {
       expect.objectContaining({
         upstreamCode: 'context_length_exceeded',
         upstreamParam: 'messages',
-        upstreamReason: 'context_length_exceeded',
+        upstreamReason: 'unknown_request_rejection',
         upstreamMessage: "Maximum context length exceeded by '…",
       }),
       'Provider inference failed',
@@ -215,6 +215,7 @@ describe('GetInferenceUseCase error mapping', () => {
       stage: 'stream_establishment',
       upstreamStatus: 400,
       upstreamRequestId: 'req_portable_context_123',
+      rejectionReason: 'context_length_exceeded',
       cause: Object.assign(new Error('maximum context length exceeded'), {
         code: 'context_length_exceeded',
         type: 'invalid_request_error',

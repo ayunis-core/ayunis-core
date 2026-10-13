@@ -27,11 +27,13 @@ export type {
   ProviderFailureStage,
   ProviderRequest,
   ProviderTimeoutSource,
+  TokenEstimator,
   ToolCallDelta,
   ToolChoice,
+  ToolDescription,
   Usage,
 } from './contracts/provider';
-export { ModelProviderError } from './contracts/provider';
+export { estimatedTokens, ModelProviderError } from './contracts/provider';
 export type {
   AfterModelCallContext,
   AfterModelTurnContext,

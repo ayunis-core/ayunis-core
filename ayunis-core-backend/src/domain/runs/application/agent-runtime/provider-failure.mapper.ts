@@ -6,6 +6,7 @@ import type {
 import {
   extractProviderErrorDiagnostics,
   hasRateLimitDiagnostics,
+  ProviderErrorReason,
   type ProviderErrorDiagnostics,
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import {
@@ -22,6 +23,7 @@ import {
   InferenceStreamStalledError,
 } from 'src/domain/models/application/models.errors';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
 
 type RunErrorEvent = Extract<RunEvent, { type: 'error' }>;
@@ -76,6 +78,17 @@ function mapResolvedProviderError(
       readIdleMs(event.message),
       providerFailureMetadata(failure, context),
     );
+  }
+  if (
+    failure.kind === 'rejection' &&
+    diagnostics.upstreamReason === ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED
+  ) {
+    return new RunContextBudgetExceededError({
+      provider: context.provider,
+      modelId: context.modelId,
+      status: failure.upstreamStatus,
+      upstreamRequestId: failure.upstreamRequestId,
+    });
   }
   if (isOversizedImageError(callError)) {
     return new InferenceImageTooLargeError({

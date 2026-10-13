@@ -1,47 +1,42 @@
-import { Injectable } from '@nestjs/common';
-import { CountTokensCommand } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.command';
-import { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
-
 interface TurnMessage {
   role: string;
 }
 
-@Injectable()
-export class CompleteTurnSelector {
-  constructor(private readonly countTokensUseCase: CountTokensUseCase) {}
+export interface TurnSelectionOptions<T> {
+  maxTokens: number;
+  countTokens: (message: T) => number;
+}
 
-  select<T extends TurnMessage>(
-    messages: readonly T[],
-    maxTokens: number,
-    extractText: (message: T) => string,
-  ): T[] {
-    const turns = splitIntoUserTurns(messages);
-    const selected: T[][] = [];
-    let totalTokens = 0;
-    for (let index = turns.length - 1; index >= 0; index--) {
-      const turn = turns[index];
-      const turnTokens = this.countTurnTokens(turn, extractText);
-      if (totalTokens + turnTokens > maxTokens) {
-        break;
-      }
-      selected.unshift(turn);
-      totalTokens += turnTokens;
+export interface TurnSelection<T> {
+  messages: T[];
+  /** Tokens of the selected messages, as counted by `countTokens`. */
+  tokens: number;
+}
+
+/**
+ * Keeps the newest complete user turns (a user message with everything up to
+ * the next one) whose token total stays within the budget.
+ */
+export function selectCompleteTurns<T extends TurnMessage>(
+  messages: readonly T[],
+  options: TurnSelectionOptions<T>,
+): TurnSelection<T> {
+  const turns = splitIntoUserTurns(messages);
+  const selected: T[][] = [];
+  let totalTokens = 0;
+  for (let index = turns.length - 1; index >= 0; index--) {
+    const turn = turns[index];
+    const turnTokens = turn.reduce(
+      (total, message) => total + options.countTokens(message),
+      0,
+    );
+    if (totalTokens + turnTokens > options.maxTokens) {
+      break;
     }
-    return selected.flat();
+    selected.unshift(turn);
+    totalTokens += turnTokens;
   }
-
-  private countTurnTokens<T extends TurnMessage>(
-    turn: readonly T[],
-    extractText: (message: T) => string,
-  ): number {
-    return turn.reduce((total, message) => {
-      const text = extractText(message);
-      if (!text) return total;
-      return (
-        total + this.countTokensUseCase.execute(new CountTokensCommand(text))
-      );
-    }, 0);
-  }
+  return { messages: selected.flat(), tokens: totalTokens };
 }
 
 function splitIntoUserTurns<T extends TurnMessage>(

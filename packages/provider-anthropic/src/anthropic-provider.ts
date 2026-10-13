@@ -12,6 +12,7 @@ import {
   ToolNameCodec,
 } from '@ayunis/inference';
 
+import { classifyAnthropicRejection } from './classify-rejection';
 import { convertChunk } from './convert-chunk';
 import {
   convertMessages,
@@ -102,6 +103,7 @@ async function* streamMessages(
   const normalizedStream = normalizeProviderStreamErrors(stream, {
     stage: 'stream_consumption',
     signal: request.signal,
+    classifyRejection: classifyAnthropicRejection,
   });
   for await (const event of normalizedStream) {
     const chunk = convertChunk(event, codec);
@@ -124,6 +126,7 @@ const createMessageStream = async (
       stage: 'stream_establishment',
       signal,
       timeoutSource: 'response_start',
+      classifyRejection: classifyAnthropicRejection,
     });
   }
 };

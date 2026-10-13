@@ -2,7 +2,7 @@
  * Re-export shim. Provider contracts live in @ayunis/inference; the runtime
  * also exposes them so hosts need only one package for the complete API.
  */
-export { ModelProviderError } from '@ayunis/inference';
+export { estimatedTokens, ModelProviderError } from '@ayunis/inference';
 export type {
   FinishReason,
   ModelProvider,
@@ -12,8 +12,10 @@ export type {
   ProviderFailureStage,
   ProviderRequest,
   ProviderTimeoutSource,
+  TokenEstimator,
   ToolCallDelta,
   ToolChoice,
+  ToolDescription,
   Usage,
 } from '@ayunis/inference';
 

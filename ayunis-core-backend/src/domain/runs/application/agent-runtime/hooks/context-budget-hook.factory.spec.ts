@@ -1,6 +1,10 @@
-import type { Message } from '@ayunis/agent-runtime';
-import type { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
-import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
+import {
+  RunContext,
+  type Message,
+  type TokenEstimator,
+  type Tool,
+} from '@ayunis/agent-runtime';
+import { Logger } from '@nestjs/common';
 import { ContextBudgetHookFactory } from './context-budget-hook.factory';
 
 const textMessage = (role: Message['role'], text: string): Message => ({
@@ -8,35 +12,76 @@ const textMessage = (role: Message['role'], text: string): Message => ({
   content: [{ type: 'text', text }],
 });
 
-function buildHook(maxTokens: number, tokensPerContent = 20) {
-  const countTokens = jest.fn().mockReturnValue(tokensPerContent);
-  const selector = new CompleteTurnSelector({
-    execute: countTokens,
-  } as unknown as CountTokensUseCase);
-  const factory = new ContextBudgetHookFactory(selector);
+/** Counts every text by its length; tools by their JSON. */
+function lengthEstimator(exact = false): TokenEstimator {
   return {
-    hook: factory.create({ maxTokens }),
-    countTokens,
+    exact,
+    tokensPerMessage: 0,
+    tokensPerImage: 1_600,
+    countText: (text) => text.length,
+    countTools: (tools) => (tools.length ? JSON.stringify(tools).length : 0),
   };
 }
 
-function getTransform(hook: ReturnType<typeof buildHook>['hook']) {
-  const transformMessages = jest.fn();
-  hook.beforeModelTurn!({ transformMessages } as never);
-  return transformMessages.mock.calls[0][0] as (
-    messages: readonly Message[],
-  ) => Message[];
+/** Counts every text and every tool set as a fixed number of tokens. */
+function fixedEstimator(tokensPerContent: number): TokenEstimator {
+  return {
+    exact: false,
+    tokensPerMessage: 0,
+    tokensPerImage: 1_600,
+    countText: (text) => (text ? tokensPerContent : 0),
+    countTools: (tools) => (tools.length ? tokensPerContent : 0),
+  };
 }
+
+type BudgetHook = ReturnType<ContextBudgetHookFactory['create']>;
+type Transform = (messages: readonly Message[]) => Message[];
+
+interface TurnRequest {
+  instructions?: string;
+  tools?: Tool[];
+  tokens?: TokenEstimator;
+}
+
+function buildHook(contextWindowTokens: number): BudgetHook {
+  return new ContextBudgetHookFactory().create({
+    model: {
+      provider: 'anthropic',
+      name: 'claude',
+      contextWindowSize: contextWindowTokens,
+    },
+  });
+}
+
+function getTransform(
+  hook: BudgetHook,
+  request: TurnRequest,
+  context = RunContext.create(),
+): Transform {
+  const transformMessages = jest.fn();
+  hook.beforeModelTurn!({
+    transformMessages,
+    context,
+    model: { name: 'mock', stream: jest.fn(), tokens: request.tokens },
+    instructions: request.instructions ?? '',
+    tools: request.tools ?? [],
+  } as never);
+  return transformMessages.mock.calls[0][0] as Transform;
+}
+
+const conversation = [
+  textMessage('user', 'a'.repeat(30)),
+  textMessage('assistant', 'b'.repeat(30)),
+  textMessage('user', 'c'.repeat(30)),
+  textMessage('assistant', 'd'.repeat(30)),
+];
 
 describe('ContextBudgetHookFactory', () => {
   it('does not inherit the root model context budget into child runs', () => {
-    const { hook } = buildHook(100);
-
-    expect(hook.inheritToChildRuns).toBe(false);
+    expect(buildHook(100).inheritToChildRuns).toBe(false);
   });
 
   it('keeps the newest complete turn when older turns no longer fit', () => {
-    const { hook } = buildHook(70, 30);
     const messages = [
       textMessage('user', 'old question'),
       textMessage('assistant', 'old answer'),
@@ -44,13 +89,14 @@ describe('ContextBudgetHookFactory', () => {
       textMessage('assistant', 'new answer'),
     ];
 
-    const trimmed = getTransform(hook)(messages);
+    const trimmed = getTransform(buildHook(78), {
+      tokens: fixedEstimator(30),
+    })(messages);
 
     expect(trimmed).toEqual(messages.slice(2));
   });
 
   it('keeps tool use and tool results in the same user turn', () => {
-    const { hook } = buildHook(90, 20);
     const messages: Message[] = [
       textMessage('user', 'old question'),
       textMessage('assistant', 'old answer'),
@@ -75,38 +121,201 @@ describe('ContextBudgetHookFactory', () => {
       textMessage('assistant', 'new answer'),
     ];
 
-    const trimmed = getTransform(hook)(messages);
+    const trimmed = getTransform(buildHook(100), {
+      tokens: fixedEstimator(20),
+    })(messages);
 
     expect(trimmed).toEqual(messages.slice(2));
   });
 
   it('fails explicitly when the latest complete turn exceeds the budget', () => {
-    const { hook } = buildHook(50, 30);
     const messages = [
       textMessage('user', 'question'),
       textMessage('assistant', 'answer'),
     ];
 
-    expect(() => getTransform(hook)(messages)).toThrow(
-      expect.objectContaining({ code: 'CONTEXT_BUDGET_EXCEEDED' }),
-    );
+    expect(() =>
+      getTransform(buildHook(56), { tokens: fixedEstimator(30) })(messages),
+    ).toThrow(expect.objectContaining({ code: 'CONTEXT_BUDGET_EXCEEDED' }));
   });
 
   it('fails explicitly when there is no user turn', () => {
-    const { hook } = buildHook(100);
-
     expect(() =>
-      getTransform(hook)([textMessage('assistant', 'orphan')]),
+      getTransform(buildHook(100), { tokens: fixedEstimator(20) })([
+        textMessage('assistant', 'orphan'),
+      ]),
+    ).toThrow(expect.objectContaining({ code: 'CONTEXT_BUDGET_EXCEEDED' }));
+  });
+
+  it('keeps the whole conversation when it fits next to the request parts', () => {
+    expect(
+      getTransform(buildHook(200), { tokens: lengthEstimator() })(conversation),
+    ).toEqual(conversation);
+  });
+
+  it('leaves room for the instructions sent with every model call', () => {
+    const trimmed = getTransform(buildHook(200), {
+      tokens: lengthEstimator(),
+      instructions: 'i'.repeat(70),
+    })(conversation);
+
+    expect(trimmed).toEqual(conversation.slice(2));
+  });
+
+  it('leaves room for the tool schemas sent with every model call', () => {
+    const tool: Tool = {
+      name: 'search',
+      description: 's'.repeat(20),
+      parameters: { type: 'object', properties: {} },
+    };
+
+    const trimmed = getTransform(buildHook(200), {
+      tokens: lengthEstimator(),
+      tools: [tool],
+    })(conversation);
+
+    expect(trimmed).toEqual(conversation.slice(2));
+  });
+
+  it('counts images at the estimator image cost instead of treating them as free', () => {
+    const messages: Message[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'what is this?' },
+          { type: 'image', data: 'base64', mediaType: 'image/png' },
+        ],
+      },
+      textMessage('assistant', 'a cat'),
+      textMessage('user', 'thanks'),
+      textMessage('assistant', 'you are welcome'),
+    ];
+
+    const trimmed = getTransform(buildHook(1_800), {
+      tokens: lengthEstimator(),
+    })(messages);
+
+    expect(trimmed).toEqual(messages.slice(2));
+  });
+
+  it('counts per-message framing for providers that report it', () => {
+    const framed: TokenEstimator = {
+      ...lengthEstimator(true),
+      tokensPerMessage: 5,
+    };
+
+    const trimmed = getTransform(buildHook(140), { tokens: framed })(
+      conversation,
+    );
+
+    expect(trimmed).toEqual(conversation.slice(2));
+  });
+
+  it('gives an exact tokenizer less headroom than the shared estimate', () => {
+    const estimated = getTransform(buildHook(200), {
+      tokens: lengthEstimator(false),
+      instructions: 'i'.repeat(65),
+    })(conversation);
+    const exact = getTransform(buildHook(200), {
+      tokens: lengthEstimator(true),
+      instructions: 'i'.repeat(65),
+    })(conversation);
+
+    expect(estimated).toEqual(conversation.slice(2));
+    expect(exact).toEqual(conversation);
+  });
+
+  it('falls back to the shared estimate when the provider has no estimator', () => {
+    const trimmed = getTransform(buildHook(200_000), {})(conversation);
+
+    expect(trimmed).toEqual(conversation);
+  });
+
+  it('fails explicitly when the request parts leave no room for the latest turn', () => {
+    expect(() =>
+      getTransform(buildHook(200), {
+        tokens: lengthEstimator(),
+        instructions: 'i'.repeat(170),
+      })(conversation),
     ).toThrow(expect.objectContaining({ code: 'CONTEXT_BUDGET_EXCEEDED' }));
   });
 
   it('registers trimming for model turns instead of retryable model calls', () => {
-    const { hook } = buildHook(100);
-    const transformMessages = jest.fn();
+    const hook = buildHook(100);
 
-    hook.beforeModelTurn!({ transformMessages } as never);
-
-    expect(transformMessages).toHaveBeenCalledTimes(1);
+    expect(hook.beforeModelTurn).toBeDefined();
     expect(hook.beforeModelCall).toBeUndefined();
+  });
+
+  it('shares its budget rule with the history materializer', () => {
+    const budget = new ContextBudgetHookFactory().messageBudgetTokens({
+      instructions: 'i'.repeat(10),
+      tools: [],
+      model: {
+        provider: 'azure',
+        name: 'gpt-5.6-sol',
+        contextWindowSize: 1_000,
+      },
+      tokens: lengthEstimator(true),
+    });
+
+    expect(budget).toBe(960);
+  });
+});
+
+describe('ContextBudgetHookFactory calibration', () => {
+  it('logs the estimate next to the provider count after a call', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    const tokens = lengthEstimator();
+    const log = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
+    getTransform(
+      hook,
+      { tokens, instructions: 'i'.repeat(10) },
+      context,
+    )(conversation);
+
+    hook.afterModelCall!({
+      modelCallId: 'call-1',
+      context,
+      model: { name: 'mock', stream: jest.fn(), tokens },
+      outcome: {
+        type: 'accepted',
+        usage: { inputTokens: 120, cacheReadInputTokens: 30 },
+      },
+    } as never);
+
+    expect(log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'anthropic',
+        exactTokenizer: false,
+        estimatedInputTokens: 130,
+        reportedInputTokens: 150,
+        reportedToEstimatedRatio: 1.154,
+      }),
+      expect.any(String),
+    );
+    log.mockRestore();
+  });
+
+  it('logs nothing when the provider reported no usage', () => {
+    const hook = buildHook(200);
+    const context = RunContext.create();
+    const log = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
+    getTransform(hook, { tokens: lengthEstimator() }, context)(conversation);
+
+    hook.afterModelCall!({
+      modelCallId: 'call-1',
+      context,
+      model: { name: 'mock', stream: jest.fn() },
+      outcome: { type: 'provider_failure', usage: {} },
+    } as never);
+
+    expect(log).not.toHaveBeenCalled();
+    log.mockRestore();
   });
 });

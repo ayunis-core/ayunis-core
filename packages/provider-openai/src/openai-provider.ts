@@ -7,6 +7,7 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
+import { openAITokens } from './openai-tokens';
 import {
   normalizeProviderError,
   normalizeProviderStreamErrors,
@@ -126,6 +127,7 @@ const createResponsesProvider = (
   options: AzureProviderOptions,
 ): ModelProvider => ({
   name: `azure:${options.model}`,
+  tokens: openAITokens(options.model),
   stream: (request) =>
     streamResponses(client, options.model, options.reasoningEffort, request),
 });
@@ -136,6 +138,7 @@ const createProvider = (
   model: string,
 ): ModelProvider => ({
   name,
+  tokens: openAITokens(model),
   stream: (request) => streamChat(client, model, request),
 });
 

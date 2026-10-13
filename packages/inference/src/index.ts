@@ -12,6 +12,17 @@ export type {
 } from './message';
 export type { JsonSchema, ToolSchema } from './tool-schema';
 export {
+  createTiktokenEstimator,
+  DEFAULT_TOKENS_PER_IMAGE,
+  estimatedTokens,
+} from './token-estimator';
+export type {
+  TiktokenEstimatorOptions,
+  TokenEncoding,
+  TokenEstimator,
+  ToolDescription,
+} from './token-estimator';
+export {
   CombinatorFlattener,
   SchemaWalker,
   ToolNameCodec,
@@ -48,5 +59,7 @@ export type {
   NormalizeProviderErrorOptions,
   ProviderFailureKind,
   ProviderFailureStage,
+  ProviderRejectionClassifier,
+  ProviderRejectionReason,
   ProviderTimeoutSource,
 } from './provider-error';
