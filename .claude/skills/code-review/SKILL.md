@@ -47,7 +47,7 @@ In parallel, collect:
 
 If the `persistence-query-review` skill is available and the diff changes repositories, finders, QueryBuilder code, or database calls in loops, load it. Trace the affected call paths and include the resulting SQL statements and round-trip count in the review context.
 
-If the diff touches list endpoints, queries on growing tables, `@Cron` tasks, BullMQ producers/consumers, process-local state, external provider calls, or upload/document/file processing, load `scalability-review` and include its Scale notes line in the review context.
+If the `scalability-review` skill is available and the diff touches list endpoints, queries on growing tables, `@Cron` tasks, BullMQ producers/consumers, process-local state, external provider calls, or upload/document/file processing, load it and include its Scale notes line in the review context.
 
 ### 3. Launch review agents
 

@@ -154,6 +154,85 @@ describe('GenerateImageToolHandler', () => {
     expect(command.size).toBe('landscape');
   });
 
+  it('passes a confirmed transparent background to GenerateImageUseCase', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'The word Ostheide in navy lettering',
+        background: 'transparent',
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.background).toBe('transparent');
+  });
+
+  it('returns only the image id when transparency was applied', async () => {
+    setupHappyPath();
+    mockGenerateImage.execute.mockResolvedValue(
+      new ImageGenerationResult(
+        Buffer.from('fake-image-data'),
+        'image/png',
+        undefined,
+        undefined,
+        true,
+      ),
+    );
+
+    const result = await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'The word Ostheide in navy lettering',
+        background: 'transparent',
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(result).toBe(mockImageId);
+  });
+
+  it('tells the model when transparency was not applied', async () => {
+    setupHappyPath();
+    mockGenerateImage.execute.mockResolvedValue(
+      new ImageGenerationResult(
+        Buffer.from('fake-image-data'),
+        'image/png',
+        undefined,
+        undefined,
+        false,
+      ),
+    );
+
+    const result = await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'The word Ostheide in navy lettering',
+        background: 'transparent',
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(result.startsWith(`${mockImageId}\n`)).toBe(true);
+    expect(result).toMatch(/transparency was not applied/i);
+  });
+
+  it('asks for confirmation before setting a transparent background', () => {
+    const tool = new GenerateImageTool();
+    const parameters = tool.parameters as {
+      properties: {
+        background: { enum: string[]; description: string };
+      };
+    };
+    const background = parameters.properties.background;
+
+    expect(background.enum).toEqual(['transparent']);
+    expect(tool.descriptionLong).toMatch(/confirm/i);
+    expect(background.description).toMatch(/explicitly/i);
+  });
+
   it('should leave size undefined when not provided', async () => {
     setupHappyPath();
 

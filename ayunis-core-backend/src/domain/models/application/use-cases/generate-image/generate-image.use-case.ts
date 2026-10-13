@@ -37,6 +37,7 @@ export class GenerateImageUseCase {
           prompt: command.prompt,
           size: command.size,
           quality: command.quality,
+          background: command.background,
           referenceImages: command.referenceImages,
         }),
       );
