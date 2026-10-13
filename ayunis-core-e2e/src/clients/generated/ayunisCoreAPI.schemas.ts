@@ -14,6 +14,11 @@ export interface IsCloudResponseDto {
 
 export interface FeatureTogglesResponseDto { [key: string]: unknown }
 
+export interface UserTeamResponseDto {
+  id: string;
+  name: string;
+}
+
 /**
  * User role
  */
@@ -27,6 +32,8 @@ export const UserResponseDtoRole = {
 } as const;
 
 export interface UserResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
   /** User unique identifier */
   id: string;
   /** User name */
@@ -190,6 +197,8 @@ export const SuperAdminUserListItemResponseDtoRole = {
 } as const;
 
 export interface SuperAdminUserListItemResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
   /** User unique identifier */
   id: string;
   /** User name */
@@ -244,6 +253,8 @@ export const SuperAdminUserResponseDtoSystemRole = {
 } as const;
 
 export interface SuperAdminUserResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
   /** User unique identifier */
   id: string;
   /** User name */
@@ -273,6 +284,47 @@ export interface PromoteToSuperAdminDto {
 }
 
 /**
+ * Role assigned to the invited user
+ */
+export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
+
+
+export const InviteResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
+
+
+export const InviteResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+}
+
+/**
  * Role to assign to the invited user
  */
 export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
@@ -289,6 +341,8 @@ export interface CreateInviteDto {
   email: string;
   /** Role to assign to the invited user */
   role: CreateInviteDtoRole;
+  /** Organization teams to assign on acceptance */
+  teamIds?: string[];
 }
 
 export interface CreateInviteResponseDto {
@@ -379,13 +433,18 @@ export interface CreateBulkInvitesResponseDto {
   results: BulkInviteResultDto[];
 }
 
+export interface InviteTeamResponseDto {
+  id: string;
+  name: string;
+}
+
 /**
  * Role assigned to the invited user
  */
-export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
+export type InviteListItemResponseDtoRole = typeof InviteListItemResponseDtoRole[keyof typeof InviteListItemResponseDtoRole];
 
 
-export const InviteResponseDtoRole = {
+export const InviteListItemResponseDtoRole = {
   admin: 'admin',
   manager: 'manager',
   user: 'user',
@@ -394,35 +453,36 @@ export const InviteResponseDtoRole = {
 /**
  * Current status of the invite
  */
-export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
+export type InviteListItemResponseDtoStatus = typeof InviteListItemResponseDtoStatus[keyof typeof InviteListItemResponseDtoStatus];
 
 
-export const InviteResponseDtoStatus = {
+export const InviteListItemResponseDtoStatus = {
   pending: 'pending',
   accepted: 'accepted',
   expired: 'expired',
 } as const;
 
-export interface InviteResponseDto {
+export interface InviteListItemResponseDto {
   /** Unique identifier of the invite */
   id: string;
   /** Email address of the invited user */
   email: string;
   /** Role assigned to the invited user */
-  role: InviteResponseDtoRole;
+  role: InviteListItemResponseDtoRole;
   /** Current status of the invite */
-  status: InviteResponseDtoStatus;
+  status: InviteListItemResponseDtoStatus;
   /** Date when the invite was sent */
   sentDate: string;
   /** Date when the invite expires */
   expiresAt: string;
   /** Date when the invite was accepted (if applicable) */
   acceptedAt?: string;
+  teams?: InviteTeamResponseDto[];
 }
 
 export interface PaginatedInvitesListResponseDto {
   /** Array of invites for the current page */
-  data: InviteResponseDto[];
+  data: InviteListItemResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
 }

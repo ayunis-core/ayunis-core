@@ -7,12 +7,14 @@ const DEFAULT_LIMIT = 25;
 export interface FindUsersByOrgIdQueryParams {
   orgId: UUID;
   search?: string;
+  includeTeams?: boolean;
   pagination?: Partial<PaginatedQueryParams>;
 }
 
 export class FindUsersByOrgIdQuery extends PaginatedQuery {
   public readonly orgId: UUID;
   public readonly search?: string;
+  public readonly includeTeams: boolean;
 
   constructor(params: FindUsersByOrgIdQueryParams) {
     super({
@@ -21,5 +23,6 @@ export class FindUsersByOrgIdQuery extends PaginatedQuery {
     });
     this.orgId = params.orgId;
     this.search = params.search;
+    this.includeTeams = params.includeTeams ?? false;
   }
 }

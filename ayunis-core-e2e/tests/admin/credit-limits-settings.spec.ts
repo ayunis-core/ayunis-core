@@ -239,8 +239,11 @@ test('users settings omit credit controls while credit limits and team settings 
     const userRow = page.getByTestId(`admin-user-row-${fixture.member.id}`);
     await expect(userRow).toBeVisible();
     const usersTable = page.getByRole('table').filter({ has: userRow });
-    await expect(usersTable.getByRole('columnheader')).toHaveCount(5);
-    await expect(userRow.getByRole('cell')).toHaveCount(5);
+    await expect(usersTable.getByRole('columnheader')).toHaveCount(6);
+    await expect(userRow.getByRole('cell')).toHaveCount(6);
+    await expect(
+      userRow.getByTestId(`user-teams-${fixture.member.id}`),
+    ).toContainText(fixture.team.name);
     await userRow.getByTestId('admin-user-actions').click();
     await expect(page.getByRole('menu')).toBeVisible();
     await expect(

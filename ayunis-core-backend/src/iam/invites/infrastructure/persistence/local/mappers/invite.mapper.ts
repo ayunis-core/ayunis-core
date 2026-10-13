@@ -17,6 +17,9 @@ export class InviteMapper {
       acceptedAt: entity.acceptedAt,
       expiresAt: entity.expiresAt,
       teamIds: entity.inviteTeams?.map((inviteTeam) => inviteTeam.teamId),
+      teams: entity.inviteTeams?.flatMap(({ team }) =>
+        team ? [{ id: team.id, name: team.name }] : [],
+      ),
     });
   }
 

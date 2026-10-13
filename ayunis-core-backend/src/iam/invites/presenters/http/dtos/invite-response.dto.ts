@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
@@ -54,6 +54,19 @@ export class InviteResponseDto {
   acceptedAt?: Date;
 }
 
+export class InviteTeamResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  id: UUID;
+
+  @ApiProperty()
+  name: string;
+}
+
+export class InviteListItemResponseDto extends InviteResponseDto {
+  @ApiPropertyOptional({ type: [InviteTeamResponseDto] })
+  teams?: InviteTeamResponseDto[];
+}
+
 export class InviteDetailResponseDto extends InviteResponseDto {
   @ApiProperty({
     description: 'Organization the invitation belongs to',
@@ -99,9 +112,9 @@ export class AcceptInviteResponseDto {
 export class PaginatedInvitesListResponseDto {
   @ApiProperty({
     description: 'Array of invites for the current page',
-    type: [InviteResponseDto],
+    type: [InviteListItemResponseDto],
   })
-  data: InviteResponseDto[];
+  data: InviteListItemResponseDto[];
 
   @ApiProperty({
     description: 'Pagination metadata',

@@ -23,5 +23,5 @@ export class InviteTeamRecord extends BaseRecord {
 
   @ManyToOne(() => TeamRecord, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'team_id' })
-  team: TeamRecord;
+  team?: TeamRecord;
 }

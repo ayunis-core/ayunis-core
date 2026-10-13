@@ -1,6 +1,8 @@
+import { FindTeamsByIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-ids-and-org-id/find-teams-by-ids-and-org-id.use-case';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
+import type { UUID } from 'crypto';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { CreateInviteUseCase } from './create-invite.use-case';
 import { CreateInviteCommand } from './create-invite.command';
@@ -35,10 +37,9 @@ describe('CreateInviteUseCase', () => {
   let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let findUserByEmailUseCase: jest.Mocked<FindUserByEmailUseCase>;
-  let logger: ReturnType<typeof createLoggerMock>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockEmail = 'test@test.com';
 
   beforeEach(async () => {
@@ -76,10 +77,17 @@ describe('CreateInviteUseCase', () => {
       execute: jest.fn(),
     };
 
-    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateInviteUseCase,
+        {
+          provide: FindTeamsByIdsAndOrgIdUseCase,
+          useValue: { execute: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: AssertTeamManagementAllowedUseCase,
+          useValue: { execute: jest.fn() },
+        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: InviteJwtService, useValue: mockInviteJwtService },
@@ -165,7 +173,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: 5,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new SeatBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
@@ -214,7 +222,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: null,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new UsageBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           monthlyCredits: 500,
           billingInfo: new SubscriptionBillingInfo({
@@ -311,7 +319,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: 0,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new SeatBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
@@ -362,7 +370,9 @@ describe('CreateInviteUseCase', () => {
       });
 
       const mockExistingUser = { id: 'existing-user-id' };
-      findUserByEmailUseCase.execute.mockResolvedValue(mockExistingUser as any);
+      findUserByEmailUseCase.execute.mockResolvedValue(
+        mockExistingUser as never,
+      );
 
       configService.get
         .mockReturnValueOnce([]) // auth.emailProviderBlacklist
@@ -390,7 +400,7 @@ describe('CreateInviteUseCase', () => {
       invitesRepository.findOneByEmail.mockResolvedValue({
         id: 'existing-invite-id',
         email: mockEmail,
-      } as any);
+      } as never);
 
       configService.get.mockReturnValueOnce([]); // auth.emailProviderBlacklist
 
@@ -422,7 +432,7 @@ describe('CreateInviteUseCase', () => {
         id: 'existing-invite-id',
         email: 'schichler-koep@sveinfo.de',
         orgId: '123e4567-e89b-12d3-a456-426614174999',
-      } as any);
+      } as never);
 
       configService.get.mockReturnValueOnce([]); // auth.emailProviderBlacklist
 
@@ -470,7 +480,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: -1,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new SeatBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
@@ -548,10 +558,6 @@ describe('CreateInviteUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedInviteError,
-      );
-      expect(logger.error).toHaveBeenCalledWith(
-        { err: repositoryError },
-        'Error creating invite',
       );
     });
 

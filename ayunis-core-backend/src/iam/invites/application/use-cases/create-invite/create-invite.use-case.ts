@@ -1,3 +1,7 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { FindTeamsByIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-ids-and-org-id/find-teams-by-ids-and-org-id.use-case';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
@@ -17,7 +21,6 @@ import {
   UserAlreadyExistsError,
 } from 'src/iam/invites/application/invites.errors';
 import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
@@ -41,8 +44,11 @@ export class CreateInviteUseCase {
     private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     private readonly configService: ConfigService,
+    private readonly findTeams: FindTeamsByIdsAndOrgIdUseCase,
+    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(command: CreateInviteCommand): Promise<CreateInviteResult> {
     this.logger.log(
       {
@@ -52,52 +58,57 @@ export class CreateInviteUseCase {
       },
       'execute',
     );
-    try {
-      this.validateEmailProvider(command.email);
-      await this.ensureEmailAvailable(command.email, command.orgId);
-      await this.ensureCloudSeatsAvailable(command.orgId, command.userId);
+    this.validateEmailProvider(command.email);
+    await this.ensureEmailAvailable(command.email, command.orgId);
+    await this.validateTeams(command);
+    await this.ensureCloudSeatsAvailable(command.orgId, command.userId);
 
-      const validDuration = this.configService.get<string>(
-        'auth.jwt.inviteExpiresIn',
-        '7d',
-      );
+    const invite = this.buildInvite(command);
+    this.logger.debug({ invite }, 'Invite to be created');
 
-      const invite = new Invite({
-        email: command.email,
-        orgId: command.orgId,
-        role: command.role,
-        inviterId: command.userId,
-        expiresAt: getInviteExpiresAt(validDuration),
-      });
-      this.logger.debug({ invite }, 'Invite to be created');
+    await this.invitesRepository.create(invite);
 
-      await this.invitesRepository.create(invite);
+    const inviteToken = this.inviteJwtService.generateInviteToken({
+      inviteId: invite.id,
+    });
 
-      const inviteToken = this.inviteJwtService.generateInviteToken({
+    this.logger.debug(
+      {
         inviteId: invite.id,
-      });
+        email: invite.email,
+      },
+      'Invite created successfully',
+    );
 
-      this.logger.debug(
-        {
-          inviteId: invite.id,
-          email: invite.email,
-        },
-        'Invite created successfully',
-      );
+    return { token: inviteToken, invite };
+  }
 
-      return { token: inviteToken, invite };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error creating invite',
-      );
-      throw new UnexpectedInviteError(error as Error);
-    }
+  private buildInvite(command: CreateInviteCommand): Invite {
+    const validDuration = this.configService.get<string>(
+      'auth.jwt.inviteExpiresIn',
+      '7d',
+    );
+    return new Invite({
+      email: command.email,
+      orgId: command.orgId,
+      role: command.role,
+      inviterId: command.userId,
+      expiresAt: getInviteExpiresAt(validDuration),
+      teamIds: command.teamIds,
+    });
+  }
+
+  private async validateTeams(command: CreateInviteCommand): Promise<void> {
+    const teamIds = [...new Set(command.teamIds ?? [])];
+    if (teamIds.length === 0) return;
+    await this.teamManagementAccess.execute({ orgId: command.orgId });
+    const teams = await this.findTeams.execute({
+      teamIds,
+      orgId: command.orgId,
+    });
+    const availableIds = new Set(teams.map((team) => team.id));
+    const missingId = teamIds.find((id) => !availableIds.has(id));
+    if (missingId) throw new TeamNotFoundError(missingId);
   }
 
   private validateEmailProvider(email: string): void {

@@ -101,6 +101,10 @@ export class LocalInvitesRepository implements InvitesRepository {
 
     const queryBuilder = this.invites
       .createQueryBuilder('invite')
+      .leftJoinAndSelect('invite.inviteTeams', 'inviteTeam')
+      .leftJoinAndSelect('inviteTeam.team', 'team', 'team.orgId = :orgId', {
+        orgId,
+      })
       .where('invite.orgId = :orgId', { orgId })
       .orderBy('invite.createdAt', 'DESC')
       .addOrderBy('invite.id', 'DESC');
