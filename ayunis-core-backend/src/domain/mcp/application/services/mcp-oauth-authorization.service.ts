@@ -238,10 +238,10 @@ export class McpOAuthAuthorizationService {
     try {
       return await request(observer.fetch);
     } catch (error) {
-      const response = isJsonParseError(error)
-        ? observer.lastResponse()
-        : undefined;
-      if (response) this.rejectInvalidResponse(integration, error, response);
+      const response =
+        observer.invalidResponse() ??
+        (isJsonParseError(error) ? observer.lastResponse() : undefined);
+      if (response) this.rejectInvalidResponse(integration, response);
       this.rejectUnreachable(integration, stage, error);
     }
   }
@@ -269,7 +269,6 @@ export class McpOAuthAuthorizationService {
 
   private rejectInvalidResponse(
     integration: SchemaConfiguredMcpIntegration,
-    error: unknown,
     response: ObservedOAuthResponse,
   ): never {
     const diagnostics = { integrationId: integration.id, ...response };
@@ -277,7 +276,7 @@ export class McpOAuthAuthorizationService {
     throw new McpOAuthInvalidResponseError(
       integration.serverUrl,
       response.stage,
-      error,
+      undefined,
       diagnostics,
     );
   }
