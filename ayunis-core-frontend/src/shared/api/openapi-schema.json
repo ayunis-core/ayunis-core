@@ -1470,7 +1470,7 @@
             "name": "search",
             "required": false,
             "in": "query",
-            "description": "Search organizations by name.",
+            "description": "Search organizations by name, or by exact organization ID.",
             "schema": {
               "example": "Acme",
               "type": "string"

@@ -43,7 +43,7 @@
     "error": "Organisation konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },
   "search": {
-    "placeholder": "Organisationen suchen..."
+    "placeholder": "Nach Name oder ID suchen..."
   },
   "filter": {
     "label": "Organisationsstatus",
