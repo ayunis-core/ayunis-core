@@ -92,7 +92,7 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
         },
         'Failed to encrypt credential',
       );
-      throw new Error('Failed to encrypt credential');
+      throw new Error('Failed to encrypt credential', { cause: error });
     }
   }
 
@@ -140,7 +140,7 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
         },
         'Failed to decrypt credential',
       );
-      throw new Error('Failed to decrypt credential');
+      throw new Error('Failed to decrypt credential', { cause: error });
     }
   }
 }
