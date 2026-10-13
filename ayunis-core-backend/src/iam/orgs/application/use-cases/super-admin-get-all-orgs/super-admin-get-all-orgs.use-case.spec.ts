@@ -102,6 +102,20 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     expect(orgsRepository.findAllForSuperAdmin).not.toHaveBeenCalled();
   });
 
+  it('rejects an api key even when systemRole is super admin', async () => {
+    contextService.get.mockImplementation((key) => {
+      if (key === 'orgId') return '22222222-2222-4222-8222-222222222222';
+      if (key === 'apiKeyId') return '44444444-4444-4444-8444-444444444444';
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      return undefined;
+    });
+
+    await expect(
+      useCase.execute(new SuperAdminGetAllOrgsQuery()),
+    ).rejects.toThrow(OrgUnauthorizedError);
+    expect(orgsRepository.findAllForSuperAdmin).not.toHaveBeenCalled();
+  });
+
   it('should throw when requester context lacks system role', async () => {
     contextService.get.mockReturnValue(undefined);
     const query = new SuperAdminGetAllOrgsQuery();

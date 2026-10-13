@@ -1,13 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import {
+  getRequiredUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { ModelConfigurationService } from 'src/domain/models/application/services/model-configuration.service';
 import { Model } from 'src/domain/models/domain/model.entity';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.query';
 
@@ -23,8 +25,8 @@ export class GetConfiguredModelsByTypeUseCase {
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(query: GetConfiguredModelsByTypeQuery): Promise<Model[]> {
-    const { role, systemRole } = getRequiredUserContext(this.contextService);
-    if (role !== UserRole.ADMIN && systemRole !== SystemRole.SUPER_ADMIN) {
+    const { role } = getRequiredUserContext(this.contextService);
+    if (role !== UserRole.ADMIN && !isSuperAdmin(this.contextService)) {
       throw new UnauthorizedAccessError();
     }
 

@@ -280,6 +280,41 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     expect(result).toStrictEqual([modelWithKey]);
   });
 
+  it('allows a super admin who is not an organisation admin', async () => {
+    const query = new GetConfiguredModelsByTypeQuery(
+      mockOrgId,
+      ModelType.LANGUAGE,
+    );
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return 'test-user-id';
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'role') return UserRole.USER;
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      return null;
+    });
+    modelsRepository.findAll.mockResolvedValue([]);
+
+    await expect(useCase.execute(query)).resolves.toEqual([]);
+  });
+
+  it('rejects an api key even when systemRole is super admin', async () => {
+    const query = new GetConfiguredModelsByTypeQuery(
+      mockOrgId,
+      ModelType.LANGUAGE,
+    );
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'apiKeyId') return 'api-key-id';
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      return undefined;
+    });
+
+    await expect(useCase.execute(query)).rejects.toThrow(
+      UnauthorizedAccessError,
+    );
+    expect(modelsRepository.findAll).not.toHaveBeenCalled();
+  });
+
   it('rejects non-admin callers', async () => {
     const query = new GetConfiguredModelsByTypeQuery(
       mockOrgId,

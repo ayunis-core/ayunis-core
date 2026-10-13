@@ -6,10 +6,12 @@ import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import {
+  getRequiredUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
@@ -39,12 +41,13 @@ export class FindUsersByOrgIdUseCase {
       },
       'findManyByOrgId',
     );
-    const { role, systemRole } = getRequiredUserContext(this.contextService);
+    const { role } = getRequiredUserContext(this.contextService);
+    const callerIsSuperAdmin = isSuperAdmin(this.contextService);
     // Listing org users is allowed for super-admins, org admins (admins hold
     // every permission), and members who can assign users to teams — the
     // add-team-member picker needs the list.
     const canListUsers =
-      systemRole === SystemRole.SUPER_ADMIN ||
+      callerIsSuperAdmin ||
       (await this.hasPermissionUseCase.execute(
         new HasPermissionQuery(
           query.orgId,
@@ -65,10 +68,7 @@ export class FindUsersByOrgIdUseCase {
         search: query.search,
       },
     );
-    if (
-      !query.includeTeams ||
-      (role !== UserRole.ADMIN && systemRole !== SystemRole.SUPER_ADMIN)
-    )
+    if (!query.includeTeams || (role !== UserRole.ADMIN && !callerIsSuperAdmin))
       return users;
     return this.includeTeams(users, query.orgId);
   }

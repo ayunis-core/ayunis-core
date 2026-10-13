@@ -5,9 +5,11 @@ import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { UnauthorizedInviteAccessError } from 'src/iam/invites/application/invites.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getUserContext } from 'src/common/context/required-context';
+import {
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
@@ -33,10 +35,10 @@ export class GetInvitesByOrgUseCase {
       );
 
       const principal = getUserContext(this.contextService);
-      const isSuperAdmin = principal?.systemRole === SystemRole.SUPER_ADMIN;
+      const callerIsSuperAdmin = isSuperAdmin(this.contextService);
       const isOrgAdmin =
         principal?.role === UserRole.ADMIN && principal.orgId === query.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
+      if (!callerIsSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedInviteAccessError();
       }
 
