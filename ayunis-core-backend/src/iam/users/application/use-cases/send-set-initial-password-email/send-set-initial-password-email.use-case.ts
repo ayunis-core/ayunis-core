@@ -49,7 +49,7 @@ export class SendSetInitialPasswordEmailUseCase {
       new FindOrgByIdQuery(command.orgId),
     );
     const template = this.buildTemplate(command, org.name);
-    const emailContent = this.renderTemplateUseCase.execute(
+    const emailContent = await this.renderTemplateUseCase.execute(
       new RenderTemplateCommand(template),
     );
     await this.sendEmailUseCase.execute(

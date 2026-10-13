@@ -33,7 +33,7 @@ Diese E-Mail wurde an ${template.userEmail} gesendet.
 
 export function setInitialPasswordHtml(
   template: SetInitialPasswordTemplateContent,
-): MJMLParseResults {
+): Promise<MJMLParseResults> {
   const userName = escapeText(template.userName);
 
   const body = [
