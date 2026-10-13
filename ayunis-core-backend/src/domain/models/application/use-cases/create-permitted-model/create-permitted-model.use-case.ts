@@ -5,9 +5,11 @@ import { CreatePermittedModelCommand } from './create-permitted-model.command';
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import {
+  getRequiredUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   ModelNotFoundError,
@@ -38,8 +40,7 @@ export class CreatePermittedModelUseCase {
       const principal = getRequiredUserContext(this.contextService);
       const isOrgAdmin =
         principal.role === UserRole.ADMIN && principal.orgId === command.orgId;
-      const isSuperAdmin = principal.systemRole === SystemRole.SUPER_ADMIN;
-      if (!isOrgAdmin && !isSuperAdmin) {
+      if (!isOrgAdmin && !isSuperAdmin(this.contextService)) {
         throw new UnauthorizedAccessError();
       }
       const model = await this.modelsRepository.findOne({

@@ -22,7 +22,7 @@ const roleReadsThroughUserContext = {
   selector:
     "CallExpression[callee.property.name='get'][arguments.0.value=/^(role|systemRole)$/]",
   message:
-    'Read roles via getUserContext / getRequiredUserContext / isSuperAdmin from src/common/context/required-context.',
+    'Read roles via getUserContext / getRequiredUserContext / getSuperAdminContext / isSuperAdmin from src/common/context/required-context.',
 };
 
 export default tseslint.config(

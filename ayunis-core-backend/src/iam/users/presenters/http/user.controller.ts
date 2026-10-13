@@ -53,9 +53,10 @@ import { UpdateUserNameDto } from 'src/iam/users/presenters/http/dtos/update-use
 import { UpdatePasswordDto } from 'src/iam/users/presenters/http/dtos/update-password.dto';
 import { ConfirmEmailDto } from 'src/iam/users/presenters/http/dtos/confirm-email.dto';
 import { ResendEmailConfirmationDto } from 'src/iam/users/presenters/http/dtos/resend-email-confirmation.dto';
+import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 
@@ -73,6 +74,7 @@ export class UserController {
     private readonly confirmEmailUseCase: ConfirmEmailUseCase,
     private readonly resendEmailConfirmationUseCase: ResendEmailConfirmationUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
+    private readonly contextService: ContextService,
   ) {}
 
   @Get('')
@@ -123,8 +125,7 @@ export class UserController {
     );
 
     const includeLockStatus =
-      currentUser.role === UserRole.ADMIN ||
-      currentUser.systemRole === SystemRole.SUPER_ADMIN;
+      currentUser.role === UserRole.ADMIN || isSuperAdmin(this.contextService);
     return this.userResponseDtoMapper.toPaginatedDto(users, includeLockStatus);
   }
 

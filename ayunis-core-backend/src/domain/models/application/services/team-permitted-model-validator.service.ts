@@ -4,9 +4,11 @@ import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import {
+  getRequiredUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   PermittedModelNotFoundError,
@@ -29,8 +31,7 @@ export class TeamPermittedModelValidator {
     const principal = getRequiredUserContext(this.contextService);
     const isOrgAdmin =
       principal.role === UserRole.ADMIN && principal.orgId === commandOrgId;
-    const isSuperAdmin = principal.systemRole === SystemRole.SUPER_ADMIN;
-    if (!isOrgAdmin && !isSuperAdmin) {
+    if (!isOrgAdmin && !isSuperAdmin(this.contextService)) {
       throw new UnauthorizedAccessError();
     }
   }

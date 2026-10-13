@@ -3,6 +3,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import {
   UserContext,
   getUserContext,
+  isSuperAdmin,
 } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
@@ -14,7 +15,6 @@ import {
 import { UnlockUserAccountCommand } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.command';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class UnlockUserAccountUseCase {
@@ -29,15 +29,15 @@ export class UnlockUserAccountUseCase {
   async execute(command: UnlockUserAccountCommand): Promise<void> {
     this.logger.log({ userId: command.userId }, 'unlockUserAccount');
     const principal = getUserContext(this.contextService);
-    const isSuperAdmin = principal?.systemRole === SystemRole.SUPER_ADMIN;
+    const callerIsSuperAdmin = isSuperAdmin(this.contextService);
     const user = await this.usersRepository.findOneById(command.userId);
     if (
       !user ||
-      (!isSuperAdmin && user.orgId !== this.contextService.get('orgId'))
+      (!callerIsSuperAdmin && user.orgId !== this.contextService.get('orgId'))
     ) {
       throw new UserNotFoundError(command.userId);
     }
-    this.assertAuthorized(user, principal, isSuperAdmin);
+    this.assertAuthorized(user, principal, callerIsSuperAdmin);
 
     if (!(await this.usersRepository.clearLoginLock(command.userId))) {
       throw new UserNotFoundError(command.userId);

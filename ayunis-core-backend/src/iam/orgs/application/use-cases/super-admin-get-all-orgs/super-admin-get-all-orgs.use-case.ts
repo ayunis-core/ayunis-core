@@ -4,8 +4,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getUserContext } from 'src/common/context/required-context';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import {
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -30,11 +32,10 @@ export class SuperAdminGetAllOrgsUseCase {
       'superAdminGetAllOrgs',
     );
 
-    const systemRole = getUserContext(this.contextService)?.systemRole;
-    if (systemRole !== SystemRole.SUPER_ADMIN) {
+    if (!isSuperAdmin(this.contextService)) {
       this.logger.warn(
         {
-          systemRole,
+          systemRole: getUserContext(this.contextService)?.systemRole,
         },
         'Non-super admin attempted to list all orgs',
       );

@@ -119,6 +119,20 @@ describe('ListOrgSubscriptionsUseCase', () => {
     return new ListOrgSubscriptionsQuery(orgId);
   }
 
+  it('rejects an api key even when systemRole is super admin', async () => {
+    contextService.get.mockImplementation((key) => {
+      if (key === 'orgId') return orgId;
+      if (key === 'apiKeyId') return randomUUID();
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      return undefined;
+    });
+
+    await expect(useCase.execute(createQuery())).rejects.toThrow(
+      UnauthorizedSubscriptionAccessError,
+    );
+    expect(subscriptionRepository.findByOrgId).not.toHaveBeenCalled();
+  });
+
   it('throws when the requester is not a super admin', async () => {
     contextService.get.mockImplementation((key) => {
       if (key === 'systemRole') return SystemRole.CUSTOMER;
