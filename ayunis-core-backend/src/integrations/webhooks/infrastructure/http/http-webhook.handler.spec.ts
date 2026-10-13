@@ -10,6 +10,15 @@ class TestWebhookEvent extends WebhookEvent<{ hello: string }> {
   readonly timestamp = new Date('2026-04-07T12:00:00.000Z');
 }
 
+class CreditWebhookEvent extends WebhookEvent<{ creditsConsumed: number }> {
+  readonly data = { creditsConsumed: 10 };
+  readonly timestamp = new Date('2026-04-07T12:00:00.000Z');
+
+  constructor(readonly eventType: WebhookEventType) {
+    super();
+  }
+}
+
 interface CapturedRequest {
   url: string;
   init: RequestInit;
@@ -54,6 +63,7 @@ describe('HttpWebhookHandler signing', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     fetchMock.restore();
     jest.restoreAllMocks();
   });
@@ -148,5 +158,70 @@ describe('HttpWebhookHandler signing', () => {
     await handler.sendWebhook(new TestWebhookEvent());
 
     expect(fetchMock.captured).toHaveLength(0);
+  });
+
+  it.each([
+    WebhookEventType.USAGE_COLLECTED,
+    WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT,
+  ])('does not blindly retry non-idempotent %s delivery', async (eventType) => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('network uncertain'));
+    const handler = new HttpWebhookHandler(
+      makeConfigService({
+        'app.orgEventsWebhookUrl': webhookUrl,
+        'app.webhookSigningSecret': randomBytes(16).toString('hex'),
+      }),
+    );
+
+    await expect(
+      handler.sendWebhook(new CreditWebhookEvent(eventType)),
+    ).rejects.toThrow('network uncertain');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains three attempts for idempotent lifecycle webhooks', async () => {
+    jest.useFakeTimers();
+    global.fetch = jest.fn().mockRejectedValue(new Error('network down'));
+    const handler = new HttpWebhookHandler(
+      makeConfigService({ 'app.orgEventsWebhookUrl': webhookUrl }),
+    );
+
+    const delivery = handler.sendWebhook(new TestWebhookEvent());
+    const rejection = expect(delivery).rejects.toThrow('network down');
+    await jest.runAllTimersAsync();
+    await rejection;
+
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    jest.useRealTimers();
+  });
+
+  it('allows a monthly reconciliation scan up to sixty seconds', async () => {
+    jest.useFakeTimers().setSystemTime(0);
+    let signal: AbortSignal | null | undefined;
+    global.fetch = jest.fn().mockImplementation((_url, init: RequestInit) => {
+      signal = init.signal;
+      return new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => {
+          const error = new Error('aborted');
+          error.name = 'AbortError';
+          reject(error);
+        });
+      });
+    });
+    const handler = new HttpWebhookHandler(
+      makeConfigService({ 'app.orgEventsWebhookUrl': webhookUrl }),
+    );
+    const delivery = handler.sendWebhook(
+      new CreditWebhookEvent(WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT),
+    );
+    const rejection = expect(delivery).rejects.toThrow(
+      'timed out after 60000ms',
+    );
+
+    await jest.advanceTimersByTimeAsync(59999);
+    expect(signal?.aborted).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(signal?.aborted).toBe(true);
+    await rejection;
   });
 });

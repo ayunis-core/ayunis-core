@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { EVENT_LISTENER_METADATA } from '@nestjs/event-emitter';
 import { WebhookDispatchListener } from './webhook-dispatch.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
@@ -11,6 +12,7 @@ import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
 import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { MonthlyCreditsSnapshotEvent } from 'src/domain/usage/application/events/monthly-credits-snapshot.event';
 import { AddonActivatedEvent } from 'src/iam/addons/application/events/addon-activated.event';
 import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
@@ -94,6 +96,7 @@ describe('WebhookDispatchListener', () => {
   beforeEach(() => {
     sendWebhookUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
+      executeOrThrow: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<SendWebhookUseCase>;
     findUserByIdUseCase = {
       execute: jest.fn().mockResolvedValue(makeUser()),
@@ -550,6 +553,44 @@ describe('WebhookDispatchListener', () => {
     });
   });
 
+  describe('handleMonthlyCreditsSnapshot', () => {
+    it('configures delivery errors to escape the event emitter', () => {
+      const metadata = Reflect.getMetadata(
+        EVENT_LISTENER_METADATA,
+        WebhookDispatchListener.prototype.handleMonthlyCreditsSnapshot,
+      ) as unknown;
+
+      expect(metadata).toEqual([
+        {
+          event: MonthlyCreditsSnapshotEvent.EVENT_NAME,
+          options: { suppressErrors: false },
+        },
+      ]);
+    });
+
+    it('dispatches the organization total and closed UTC period', async () => {
+      await listener.handleMonthlyCreditsSnapshot(
+        new MonthlyCreditsSnapshotEvent({
+          organizationId: ORG_ID,
+          periodStart: new Date('2026-10-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-11-01T00:00:00.000Z'),
+          creditsConsumed: 1250,
+        }),
+      );
+
+      const command = sendWebhookUseCase.executeOrThrow.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT,
+      );
+      expect(command.event.data).toEqual({
+        organizationId: ORG_ID,
+        periodStart: '2026-10-01T00:00:00.000Z',
+        periodEnd: '2026-11-01T00:00:00.000Z',
+        creditsConsumed: 1250,
+      });
+    });
+  });
+
   describe('product usage events', () => {
     it('should dispatch skill usage with user identity', async () => {
       await listener.handleSkillUsed(
@@ -713,6 +754,23 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('error handling', () => {
+    it('propagates monthly snapshot delivery failures to the reconciliation monitor', async () => {
+      sendWebhookUseCase.executeOrThrow.mockRejectedValue(
+        new Error('Network failure'),
+      );
+
+      await expect(
+        listener.handleMonthlyCreditsSnapshot(
+          new MonthlyCreditsSnapshotEvent({
+            organizationId: ORG_ID,
+            periodStart: new Date('2026-09-01T00:00:00.000Z'),
+            periodEnd: new Date('2026-10-01T00:00:00.000Z'),
+            creditsConsumed: 100,
+          }),
+        ),
+      ).rejects.toThrow('Network failure');
+    });
+
     it('should not throw when SendWebhookUseCase fails', async () => {
       sendWebhookUseCase.execute.mockRejectedValue(
         new Error('Network failure'),
