@@ -32,6 +32,30 @@ const SIZE_ALIASES: Record<string, ImageSize> = {
 // misses the fidelity boost, while a wrongly sent param fails the request.
 const INPUT_FIDELITY_MODELS = new Set(['gpt-image-1', 'gpt-image-1.5']);
 
+// Exact match: a model that rejects `background` fails the whole request,
+// while an unlisted model simply keeps the API's default background.
+// Verified for these Azure deployments, which return a PNG alpha channel.
+const TRANSPARENT_BACKGROUND_MODELS = new Set([
+  'gpt-image-2',
+  'gpt-image-2.5-flare',
+]);
+
+function resolveTransparentBackground(
+  modelName: string,
+  background: string | undefined,
+): {
+  apiBackground?: 'transparent';
+  transparencyApplied?: boolean;
+} {
+  if (background !== 'transparent') {
+    return {};
+  }
+  if (TRANSPARENT_BACKGROUND_MODELS.has(modelName)) {
+    return { apiBackground: 'transparent', transparencyApplied: true };
+  }
+  return { transparencyApplied: false };
+}
+
 const VALID_QUALITIES = ['low', 'medium', 'high', 'auto'] as const;
 type ImageQuality = (typeof VALID_QUALITIES)[number];
 
@@ -113,19 +137,24 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
     );
 
     const { size, quality } = this.validateParams(input);
+    const { apiBackground, transparencyApplied } = resolveTransparentBackground(
+      input.model.name,
+      input.background,
+    );
     const client = this.getClient(input.model.name);
 
     try {
       const response = input.referenceImages?.length
-        ? await this.requestEdit(client, input, size, quality)
+        ? await this.requestEdit(client, input, size, quality, apiBackground)
         : await client.images.generate({
             model: input.model.name,
             prompt: input.prompt,
             size,
             quality,
             n: 1,
+            ...(apiBackground ? { background: apiBackground } : {}),
           });
-      return this.buildResult(response, input.model.name);
+      return this.buildResult(response, input.model.name, transparencyApplied);
     } catch (error) {
       this.handleGenerationError(error, input.model.name);
     }
@@ -136,6 +165,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
     input: ImageGenerationInput,
     size: ImageSize,
     quality: ImageQuality,
+    apiBackground?: 'transparent',
   ): Promise<ImagesResponse> {
     const image = await Promise.all(
       (input.referenceImages ?? []).map((reference, index) =>
@@ -153,6 +183,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       size,
       quality,
       n: 1,
+      ...(apiBackground ? { background: apiBackground } : {}),
     };
     // Without this, INPUT_FIDELITY_MODELS drop the fine detail (logos,
     // scans) the references exist to preserve.
@@ -165,6 +196,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
   private buildResult(
     response: ImagesResponse,
     modelName: string,
+    transparencyApplied?: boolean,
   ): ImageGenerationResult {
     const imageData = response.data?.[0];
     if (!imageData?.b64_json) {
@@ -199,6 +231,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       'image/png',
       imageData.revised_prompt,
       usage,
+      transparencyApplied,
     );
   }
 

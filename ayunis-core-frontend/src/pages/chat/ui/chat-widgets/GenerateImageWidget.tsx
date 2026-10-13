@@ -7,9 +7,10 @@ import {
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
 import { Button } from '@ayunis/ui/components/button';
-import { useResolveGeneratedImage } from '../../api/useResolveGeneratedImage';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import { useResolveGeneratedImage } from '@/pages/chat/api/useResolveGeneratedImage';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import ImageGenerationLoader from './ImageGenerationLoader';
+import { generatedImageBackdropStyle } from './generated-image-backdrop';
 
 async function downloadImage(url: string, fileName: string): Promise<void> {
   try {
@@ -111,7 +112,12 @@ export default function GenerateImageWidget({
         className="my-2 block max-w-md overflow-hidden rounded-lg hover:opacity-90 transition-opacity"
         aria-label={t('chat.tools.generate_image.openPreview')}
       >
-        <img src={url} alt={altText} className="w-full h-auto object-contain" />
+        <img
+          src={url}
+          alt={altText}
+          className="w-full h-auto object-contain"
+          style={generatedImageBackdropStyle}
+        />
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -124,6 +130,7 @@ export default function GenerateImageWidget({
             src={url}
             alt={altText}
             className="w-full h-full max-h-[90vh] object-contain rounded-lg"
+            style={generatedImageBackdropStyle}
           />
           <Button
             type="button"
