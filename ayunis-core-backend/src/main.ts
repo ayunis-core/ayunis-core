@@ -23,22 +23,38 @@ import { parsePositiveIntWithDefault } from './common/util/number.util';
 import { startBackendProcessHeartbeat } from './common/process/backend-process-heartbeat';
 import { installNestLogger } from './common/logger/install-nest-logger';
 
+// bufferLogs replays boot logs with the flush time, so durations are measured
+// here and logged once the app listens (AYC-1186: ~20s deploy boots).
+const modulesLoadedMs = performance.now();
+
 class Bootstrap {
   private static readonly PORT = process.env.PORT ?? 3000;
   private static readonly DEFAULT_BODY_LIMIT = '5mb';
 
   public static async start() {
+    const createStartedMs = performance.now();
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       bufferLogs: true,
     });
+    const createdMs = performance.now();
     installNestLogger(app);
 
     this.configureApp(app);
     this.configureHttpTimeouts(app);
     await app.listen(this.PORT);
+    const listeningMs = performance.now();
     startBackendProcessHeartbeat();
 
     Logger.log(`🚀 Application is running on http://localhost:${this.PORT}`);
+    new Logger(Bootstrap.name).log(
+      {
+        moduleLoadMs: Math.round(modulesLoadedMs),
+        nestCreateMs: Math.round(createdMs - createStartedMs),
+        initAndListenMs: Math.round(listeningMs - createdMs),
+        totalMs: Math.round(listeningMs),
+      },
+      'Startup timing',
+    );
   }
 
   /**
