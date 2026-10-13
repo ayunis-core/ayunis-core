@@ -1,5 +1,10 @@
 import type { UUID } from 'crypto';
-import { isAllowedImageContentType } from 'src/common/util/content-type.util';
+import { MessageContentInvalidError } from 'src/domain/messages/application/messages.errors';
+import { MAX_IMAGE_SIZE_BYTES } from 'src/domain/messages/application/utils/image-upload.policy';
+import {
+  sniffAllowedImageContentType,
+  isAllowedImageContentType,
+} from 'src/common/util/content-type.util';
 
 /**
  * Application-layer data structure for image uploads.
@@ -11,8 +16,7 @@ export interface ImageUploadData {
   readonly altText?: string;
 }
 
-const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
-const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB total
+const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
 
 export class CreateUserMessageCommand {
   constructor(
@@ -25,37 +29,46 @@ export class CreateUserMessageCommand {
   }
 
   private validate(): void {
-    // Validate that at least text, images, or skill instructions are provided
     if (
       !this.text?.trim() &&
       this.pendingImages.length === 0 &&
       !this.skillInstructions?.trim()
     ) {
-      throw new Error(
+      throw new MessageContentInvalidError(
         'Message must contain text, at least one image, or skill instructions',
       );
     }
 
-    // Validate each image
-    for (const img of this.pendingImages) {
-      if (img.buffer.length > MAX_IMAGE_SIZE_BYTES) {
-        throw new Error(
-          `Image exceeds maximum size of ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB`,
-        );
-      }
-      if (!isAllowedImageContentType(img.contentType)) {
-        throw new Error(`Unsupported image content type: ${img.contentType}`);
-      }
-    }
+    this.pendingImages.forEach((image) => this.validateImage(image));
 
-    // Validate total image size
     const totalSize = this.pendingImages.reduce(
       (sum, img) => sum + img.buffer.length,
       0,
     );
     if (totalSize > MAX_TOTAL_IMAGE_SIZE_BYTES) {
-      throw new Error(
+      throw new MessageContentInvalidError(
         `Total image size exceeds maximum of ${MAX_TOTAL_IMAGE_SIZE_BYTES / (1024 * 1024)}MB`,
+      );
+    }
+  }
+
+  private validateImage(image: ImageUploadData): void {
+    if (image.buffer.length > MAX_IMAGE_SIZE_BYTES) {
+      throw new MessageContentInvalidError(
+        `Image exceeds maximum size of ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)} MiB`,
+      );
+    }
+    if (!isAllowedImageContentType(image.contentType)) {
+      throw new MessageContentInvalidError(
+        `Unsupported image content type: ${image.contentType}`,
+      );
+    }
+    if (
+      sniffAllowedImageContentType(image.buffer) !==
+      image.contentType.toLowerCase()
+    ) {
+      throw new MessageContentInvalidError(
+        `Image bytes do not match the declared content type ${image.contentType}`,
       );
     }
   }

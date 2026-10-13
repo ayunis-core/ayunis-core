@@ -1,4 +1,8 @@
 import {
+  MAX_IMAGES,
+  MAX_IMAGE_SIZE_MIB,
+} from '@/widgets/chat-input/model/image-upload-policy';
+import {
   useState,
   useEffect,
   forwardRef,
@@ -19,7 +23,6 @@ import type {
 import {
   usePendingImages,
   type PendingImage,
-  MAX_IMAGES,
 } from '@/widgets/chat-input/hooks/usePendingImages';
 import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
 import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
@@ -183,8 +186,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const { pendingImages, addImages, removeImage, clearImages } =
       usePendingImages();
 
-    const handleImagesPasted = (files: File[]) => {
+    const attachImages = (files: File[]) => {
       const result = addImages(files);
+      if (result.oversizedRejected) {
+        showError(t('chatInput.imageTooLarge', { maxMiB: MAX_IMAGE_SIZE_MIB }));
+      }
       if (result.limitExceeded) {
         showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
       }
@@ -193,18 +199,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     useImagePaste({
       containerRef,
       isFocused: isFocused && isVisionEnabled,
-      onImagesPasted: handleImagesPasted,
+      onImagesPasted: attachImages,
     });
 
     const { isDragging } = useFileDrop({
       containerRef,
       onDocumentDrop: onFileUpload,
-      onImagesDrop: (files) => {
-        const result = addImages(files);
-        if (result.limitExceeded) {
-          showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
-        }
-      },
+      onImagesDrop: attachImages,
       isDocumentUploadEnabled: isEmbeddingModelEnabled && !inFlight,
       isImageUploadEnabled: isVisionEnabled,
       acceptedDocumentExtensions: ACCEPTED_DOCUMENT_EXTENSIONS,
@@ -269,12 +270,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       const imageFiles = Array.from(files).filter((file) =>
         file.type.startsWith('image/'),
       );
-      if (imageFiles.length > 0) {
-        const result = addImages(imageFiles);
-        if (result.limitExceeded) {
-          showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
-        }
-      }
+      if (imageFiles.length > 0) attachImages(imageFiles);
     };
 
     const canSend =

@@ -1,4 +1,5 @@
 import type { Message, ProviderMetadata } from './message';
+import type { TokenEstimator } from './token-estimator';
 import type { ToolSchema } from './tool-schema';
 
 export type ToolChoice = 'auto' | 'required' | { tool: string };
@@ -63,4 +64,6 @@ export interface ModelProvider {
   /** Identifying name, e.g. 'anthropic:claude-sonnet-4-5'. */
   readonly name: string;
   stream(request: ProviderRequest): AsyncIterable<ProviderChunk>;
+  /** How this provider counts a request; absent when it has no better answer than the host's estimate. */
+  readonly tokenEstimator?: TokenEstimator;
 }

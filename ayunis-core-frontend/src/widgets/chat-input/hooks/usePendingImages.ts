@@ -1,3 +1,7 @@
+import {
+  MAX_IMAGES,
+  MAX_IMAGE_SIZE_BYTES,
+} from '@/widgets/chat-input/model/image-upload-policy';
 import { useState, useCallback } from 'react';
 
 export interface PendingImage {
@@ -7,38 +11,29 @@ export interface PendingImage {
   objectName?: string;
 }
 
-export const MAX_IMAGES = 8;
+export interface AddImagesResult {
+  added: number;
+  limitExceeded: boolean;
+  oversizedRejected: boolean;
+}
 
 export function usePendingImages() {
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
 
-  const addImage = useCallback(
-    (file: File): PendingImage | null => {
-      if (pendingImages.length >= MAX_IMAGES) {
-        return null;
-      }
-
-      // eslint-disable-next-line sonarjs/pseudo-random -- Unique ID for UI tracking, not security-sensitive
-      const id = `${Date.now()}-${Math.random()}`;
-      const preview = URL.createObjectURL(file);
-      const image: PendingImage = { id, file, preview };
-      setPendingImages((prev) => [...prev, image]);
-
-      return image;
-    },
-    [pendingImages.length],
-  );
-
   const addImages = useCallback(
-    (files: File[]): { added: number; limitExceeded: boolean } => {
+    (files: File[]): AddImagesResult => {
+      const imagesWithinSizeLimit = files.filter(
+        (file) => file.size <= MAX_IMAGE_SIZE_BYTES,
+      );
+      const oversizedRejected = imagesWithinSizeLimit.length < files.length;
       const currentCount = pendingImages.length;
       const remainingSlots = MAX_IMAGES - currentCount;
 
       if (remainingSlots <= 0) {
-        return { added: 0, limitExceeded: true };
+        return { added: 0, limitExceeded: true, oversizedRejected };
       }
 
-      const filesToAdd = files.slice(0, remainingSlots);
+      const filesToAdd = imagesWithinSizeLimit.slice(0, remainingSlots);
       const newImages = filesToAdd.map((file) => {
         // eslint-disable-next-line sonarjs/pseudo-random -- Unique ID for UI tracking, not security-sensitive
         const id = `${Date.now()}-${Math.random()}`;
@@ -51,7 +46,8 @@ export function usePendingImages() {
 
       return {
         added: newImages.length,
-        limitExceeded: files.length > remainingSlots,
+        limitExceeded: imagesWithinSizeLimit.length > remainingSlots,
+        oversizedRejected,
       };
     },
     [pendingImages.length],
@@ -109,7 +105,6 @@ export function usePendingImages() {
 
   return {
     pendingImages,
-    addImage,
     addImages,
     removeImage,
     setImageObjectName,

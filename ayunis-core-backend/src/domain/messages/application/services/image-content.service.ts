@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ImageMessageContent } from '../../domain/message-contents/image-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
@@ -9,8 +9,8 @@ import {
 } from 'src/common/util/content-type.util';
 import { streamToBuffer } from 'src/common/util/stream-to-buffer.util';
 
-export interface ValidatedImageData {
-  base64: string;
+export interface StoredImage {
+  buffer: Buffer;
   contentType: AllowedImageContentType;
 }
 
@@ -22,40 +22,30 @@ export interface ImageContext {
 
 @Injectable()
 export class ImageContentService {
-  private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB - matches upload limit
+  // The upload limit before AYC-1256; images stored under it still load.
+  private readonly LEGACY_MAX_STORED_IMAGE_BYTES = 10 * 1024 * 1024;
 
   constructor(private readonly downloadObjectUseCase: DownloadObjectUseCase) {}
 
   /**
-   * Convert an image message content to base64 for inference APIs.
-   *
-   * @param content - The ImageMessageContent entity
-   * @param context - Context needed to compute the storage path (orgId, threadId, messageId)
+   * Stored images retain the legacy size limit so previously accepted uploads
+   * remain readable; new uploads use the stricter image-upload policy.
    */
-  async convertImageToBase64(
+  async loadImage(
     content: ImageMessageContent,
     context: ImageContext,
-  ): Promise<ValidatedImageData> {
-    // Compute storage path from context
+  ): Promise<StoredImage> {
+    const contentType = this.validateContentType(content.contentType);
     const storagePath = content.getStoragePath(
       context.orgId,
       context.threadId,
       context.messageId,
     );
 
-    // Use the content type stored in the entity (validated at upload time)
-    const contentType = content.contentType;
-    const validatedContentType = this.validateContentType(contentType);
-
     const buffer = await this.downloadImageBuffer(storagePath);
     this.validateImageSize(buffer);
 
-    const base64Data = buffer.toString('base64');
-
-    return {
-      base64: base64Data,
-      contentType: validatedContentType,
-    };
+    return { buffer, contentType };
   }
 
   normalizeContentType(contentType: string): string {
@@ -63,7 +53,6 @@ export class ImageContentService {
   }
 
   validateContentType(contentType: string): AllowedImageContentType {
-    // Normalize: remove charset/parameters and lowercase
     const normalized = this.normalizeContentType(contentType).toLowerCase();
 
     if (!isAllowedImageContentType(normalized)) {
@@ -83,9 +72,9 @@ export class ImageContentService {
   }
 
   private validateImageSize(buffer: Buffer): void {
-    const maxSizeMB = this.MAX_IMAGE_SIZE / (1024 * 1024);
+    const maxSizeMB = this.LEGACY_MAX_STORED_IMAGE_BYTES / (1024 * 1024);
 
-    if (buffer.length > this.MAX_IMAGE_SIZE) {
+    if (buffer.length > this.LEGACY_MAX_STORED_IMAGE_BYTES) {
       throw new InferenceFailedError(
         `Image size exceeds maximum allowed size of ${maxSizeMB} MB`,
       );

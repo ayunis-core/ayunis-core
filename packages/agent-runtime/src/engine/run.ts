@@ -249,7 +249,12 @@ const createChildRunner =
       hooks:
         child.hooks ??
         hooks.filter((hook) => hook.inheritToChildRuns !== false),
-      retry: resolveRetryConfig(child.retry, retry),
+      // A rejection retry only helps when a hook changes the request first, and
+      // not every hook inherits, so a child run opts into rejection retries itself.
+      retry: resolveRetryConfig(child.retry, {
+        ...retry,
+        retryableRejectionReasons: [],
+      }),
       modelCallIdleTimeoutMs:
         child.modelCallIdleTimeoutMs ??
         parent.modelCallIdleTimeoutMs ??

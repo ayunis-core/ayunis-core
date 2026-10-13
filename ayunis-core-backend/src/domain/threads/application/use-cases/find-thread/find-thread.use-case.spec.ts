@@ -11,8 +11,8 @@ import { FindThreadUseCase } from './find-thread.use-case';
 
 describe('FindThreadUseCase', () => {
   it.each([
-    { tokenCount: 630_000, expectedIsLongChat: false },
-    { tokenCount: 630_001, expectedIsLongChat: true },
+    { tokenCount: 560_000, expectedIsLongChat: false },
+    { tokenCount: 560_001, expectedIsLongChat: true },
   ])(
     'returns isLongChat=$expectedIsLongChat for a $tokenCount-token thread with a configured context window',
     async ({ tokenCount, expectedIsLongChat }) => {
@@ -46,8 +46,8 @@ describe('FindThreadUseCase', () => {
   );
 
   it.each([
-    { tokenCount: 180_000, expectedIsLongChat: false },
-    { tokenCount: 180_001, expectedIsLongChat: true },
+    { tokenCount: 160_000, expectedIsLongChat: false },
+    { tokenCount: 160_001, expectedIsLongChat: true },
   ])(
     'returns isLongChat=$expectedIsLongChat for a $tokenCount-token thread using the fallback budget',
     async ({ tokenCount, expectedIsLongChat }) => {

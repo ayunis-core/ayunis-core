@@ -1,10 +1,8 @@
 import type { UUID } from 'crypto';
-import {
-  DEFAULT_RETRY_CONFIG,
-  run,
-  RunContext,
-  type Hook,
-} from '@ayunis/agent-runtime';
+import type {
+  PreparedRun,
+  PreparedTools,
+} from 'src/domain/runs/application/services/run-assembly.types';
 import { Injectable, Logger } from '@nestjs/common';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
@@ -24,8 +22,6 @@ import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-ca
 import { CreateUserMessageCommand } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
-import { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
-import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
 import {
   RunUserInput,
   RunToolResultInput,
@@ -48,29 +44,13 @@ import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-l
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
 import { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
-import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
-import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
-import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
-import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/credit-gate-hook.factory';
-import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
-import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
-import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
 import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
-import { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
-import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
-import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
-import type {
-  PreparedRun,
-  PreparedToolResultInput,
-  PreparedTools,
-  SeededInput,
-} from './execute-run.types';
-import { getContextWindowTokens } from 'src/common/token-counter/application/context-budget.constants';
+import type { PreparedToolResultInput, SeededInput } from './execute-run.types';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
@@ -79,8 +59,7 @@ import { shouldPreserveTranscript } from './rejected-transcript-policy';
 import { toRunError } from './to-run-error';
 import { openThreadRun } from './open-thread-run';
 import { findPendingToolCall } from './pending-tool-call.helper';
-
-const MAX_ITERATIONS = 50;
+import { RunAssemblyService } from 'src/domain/runs/application/services/run-assembly.service';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -99,19 +78,10 @@ export class ExecuteRunUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
-    private readonly runtimeHistoryMaterializer: RuntimeHistoryMaterializer,
-    private readonly resolveModelProviderUseCase: ResolveModelProviderUseCase,
     private readonly messageCleanupService: MessageCleanupService,
-    private readonly persistenceHookFactory: PersistenceHookFactory,
-    private readonly creditGateHookFactory: CreditGateHookFactory,
-    private readonly usageHookFactory: UsageHookFactory,
-    private readonly modelCallObservabilityHookFactory: ModelCallObservabilityHookFactory,
-    private readonly skillActivationHookFactory: SkillActivationHookFactory,
     private readonly runTelemetryService: RunTelemetryService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
-    private readonly unmaskedTermsService: UnmaskedTermsService,
-    private readonly toolUsageHookFactory: ToolUsageHookFactory,
-    private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
+    private readonly runAssemblyService: RunAssemblyService,
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
     private readonly threadRunLock: ThreadRunLock,
   ) {}
@@ -255,7 +225,11 @@ export class ExecuteRunUseCase {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
       yield seeded.message;
-      const started = await this.startRun(prepared, ownedMessageIds, signal);
+      const started = await this.runAssemblyService.assemble(
+        prepared,
+        (messageId) => ownedMessageIds.add(messageId),
+        signal,
+      );
       const outcome = yield* adaptRunEventsToStream(
         started.events,
         prepared.thread.id,
@@ -289,91 +263,6 @@ export class ExecuteRunUseCase {
       return this.persistToolResultSeed(prepared, input);
     }
     throw new RunInvalidInputError('Invalid run input');
-  }
-
-  private async startRun(
-    prepared: PreparedRun,
-    ownedMessageIds: Set<UUID>,
-    signal?: AbortSignal,
-  ) {
-    const maxTokens = getContextWindowTokens(prepared.model.contextWindowSize);
-    const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
-      prepared.thread.messages,
-      prepared.thread.id,
-      prepared.isAnonymous,
-    );
-    const messages = await this.runtimeHistoryMaterializer.materialize({
-      messages: historyMessages,
-      orgId: prepared.orgId,
-      tools: prepared.backendTools,
-      maxTokens,
-    });
-    const provider = await this.resolveModelProviderUseCase.execute(
-      new ResolveModelProviderQuery(prepared.model),
-    );
-    const context = RunContext.create({
-      orgId: prepared.orgId,
-      userId: prepared.userId,
-      threadId: prepared.thread.id,
-      isAnonymous: prepared.isAnonymous,
-    });
-    const models = RuntimeModelRegistry.attach(context);
-    models.register(provider, prepared.model);
-    return {
-      events: run({
-        instructions: prepared.instructions,
-        model: provider,
-        messages,
-        tools: prepared.tools,
-        ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
-        hooks: this.buildHooks(prepared, models, maxTokens, ownedMessageIds),
-        context,
-        maxIterations: MAX_ITERATIONS,
-        retry: DEFAULT_RETRY_CONFIG,
-        ...(signal ? { signal } : {}),
-      }),
-      models,
-    };
-  }
-
-  private buildHooks(
-    prepared: PreparedRun,
-    models: RuntimeModelRegistry,
-    maxTokens: number,
-    ownedMessageIds: Set<UUID>,
-  ): Hook[] {
-    return [
-      this.creditGateHookFactory.create({
-        principal: { userId: prepared.userId, orgId: prepared.orgId },
-        resolveModel: models.resolve,
-      }),
-      this.usageHookFactory.create({ resolveModel: models.resolve }),
-      this.modelCallObservabilityHookFactory.create({
-        userId: prepared.userId,
-        orgId: prepared.orgId,
-        models,
-        toolIntegrations: prepared.toolIntegrations,
-      }),
-      this.persistenceHookFactory.create({
-        thread: prepared.thread,
-        integrations: prepared.toolIntegrations,
-        onMessagePersisted: (messageId) => ownedMessageIds.add(messageId),
-      }),
-      this.toolUsageHookFactory.create({
-        userId: prepared.userId,
-        orgId: prepared.orgId,
-        integrations: prepared.toolIntegrations,
-      }),
-      this.skillActivationHookFactory.create({
-        threadId: prepared.thread.id,
-        activeSkills: prepared.activeSkills,
-        canUseTools: prepared.model.canUseTools,
-        isAnonymous: prepared.isAnonymous,
-        integrations: prepared.toolIntegrations,
-        activatedSkillName: prepared.activatedSkillName,
-      }),
-      this.contextBudgetHookFactory.create({ maxTokens }),
-    ];
   }
 
   private async persistUserMessage(

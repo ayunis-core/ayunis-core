@@ -24,8 +24,8 @@ import {
 } from 'src/common/errors/provider.errors';
 import {
   InferenceFailedError,
-  InferenceImageTooLargeError,
   InferenceStreamStalledError,
+  InferenceImageTooLargeError,
 } from 'src/domain/models/application/models.errors';
 import {
   RunPiiMasksUpdate,
@@ -887,52 +887,50 @@ describe('adaptRunEventsToStream', () => {
     });
   });
 
-  it('maps an oversized-image runtime outcome recorded by observability', async () => {
-    const provider: ModelProvider = {
-      name: 'anthropic:claude-sonnet-4-5',
-      async *stream() {
-        yield await Promise.reject(
+  it.each([
+    ['image_too_large', InferenceImageTooLargeError],
+    ['context_length_exceeded', RunContextBudgetExceededError],
+  ] as const)(
+    'maps portable %s without stored observability errors',
+    async (rejectionReason, errorClass) => {
+      await expect(
+        collectProviderFailure(
           new ModelProviderError({
             kind: 'rejection',
             stage: 'stream_establishment',
             upstreamStatus: 400,
-            cause: new Error('image exceeds 5 MB maximum'),
+            rejectionReason,
+            cause: new Error('400 provider wording'),
           }),
-        );
-      },
-    };
-    const context = RunContext.create();
-    const models = RuntimeModelRegistry.attach(context);
-    models.register(provider, {
-      name: 'claude-sonnet-4-5',
-      provider: 'anthropic',
-    } as LanguageModel);
-    const observability = new ModelCallObservabilityHookFactory({
-      emitAsync: jest.fn().mockResolvedValue([]),
-    } as unknown as EventEmitter2).create({
-      userId: '223e4567-e89b-12d3-a456-426614174000',
-      orgId: '323e4567-e89b-12d3-a456-426614174000',
-      models,
-    });
-    const result = collect(
-      run({
-        instructions: 'Inspect the submitted image.',
-        model: provider,
-        messages: [
-          {
-            role: 'user',
-            content: [{ type: 'text', text: 'Inspect this image.' }],
-          },
-        ],
-        context,
-        hooks: [observability],
-        retry: { maxRetries: 0 },
-      }),
-      createLoggerMock(),
-      models,
-    );
+        ),
+      ).rejects.toBeInstanceOf(errorClass);
+    },
+  );
 
-    await expect(result).rejects.toBeInstanceOf(InferenceImageTooLargeError);
+  it('keeps context-length wording without a provider reason in the inference-failed family', async () => {
+    await expect(
+      collectProviderFailure(
+        new ModelProviderError({
+          kind: 'rejection',
+          stage: 'stream_establishment',
+          upstreamStatus: 400,
+          cause: new Error('This model maximum context length is 32768 tokens'),
+        }),
+      ),
+    ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('keeps a rate limit mentioning tokens in the rate-limit family', async () => {
+    await expect(
+      collectProviderFailure(
+        new ModelProviderError({
+          kind: 'rate_limit',
+          stage: 'stream_establishment',
+          upstreamStatus: 429,
+          cause: new Error('Too many tokens per minute'),
+        }),
+      ),
+    ).rejects.toBeInstanceOf(ProviderRequestRejectedError);
   });
 
   it('keeps an ordinary portable rejection in the inference-failed incident family', async () => {
@@ -1222,3 +1220,34 @@ describe('adaptRunEventsToStream', () => {
     ).rejects.toBeInstanceOf(RunContextBudgetExceededError);
   });
 });
+
+function collectProviderFailure(error: ModelProviderError) {
+  const provider: ModelProvider = {
+    name: 'anthropic:claude-sonnet-4-5',
+    async *stream() {
+      yield await Promise.reject(error);
+    },
+  };
+  const context = RunContext.create();
+  const models = RuntimeModelRegistry.attach(context);
+  models.register(provider, {
+    name: 'claude-sonnet-4-5',
+    provider: 'anthropic',
+  } as LanguageModel);
+  return collect(
+    run({
+      instructions: 'Assist a municipal clerk.',
+      model: provider,
+      messages: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Inspect this request.' }],
+        },
+      ],
+      context,
+      retry: { maxRetries: 0 },
+    }),
+    createLoggerMock(),
+    models,
+  );
+}

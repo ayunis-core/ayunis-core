@@ -102,6 +102,71 @@ describe('Anthropic provider error contract', () => {
     });
   });
 
+  it('marks a prompt over the context window as a context-length rejection', async () => {
+    const cause = Object.assign(
+      new Error(
+        '400 {"type":"error","error":{"type":"invalid_request_error","message":"prompt is too long: 210950 tokens > 200000 maximum"}}',
+      ),
+      {
+        status: 400,
+        error: {
+          type: 'error',
+          error: {
+            type: 'invalid_request_error',
+            message: 'prompt is too long: 210950 tokens > 200000 maximum',
+          },
+        },
+      },
+    );
+    createMock.mockRejectedValueOnce(cause);
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'context_length_exceeded',
+      contextOverflowTokens: 10_950,
+      upstreamStatus: 400,
+    });
+  });
+
+  it('marks an image over the size limit as an image-too-large rejection', async () => {
+    const message =
+      'messages.10.content.1.image.source.base64: image exceeds 5 MB maximum: 9052272 bytes > 5242880 bytes';
+    createMock.mockRejectedValueOnce(
+      Object.assign(new Error(`400 ${message}`), {
+        status: 400,
+        error: {
+          type: 'error',
+          error: { type: 'invalid_request_error', message },
+        },
+      }),
+    );
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'image_too_large',
+    });
+  });
+
+  it('leaves other invalid requests without a rejection reason', async () => {
+    createMock.mockRejectedValueOnce(
+      Object.assign(new Error('400 messages: roles must alternate'), {
+        status: 400,
+      }),
+    );
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+    const failure = await drain(provider.stream(request())).catch(
+      (error: unknown) => error,
+    );
+
+    expect(failure).toMatchObject({ kind: 'rejection' });
+    expect(failure).not.toHaveProperty('rejectionReason', expect.anything());
+  });
+
   it('marks SDK setup timeouts as response-start timeouts', async () => {
     const cause = Object.assign(new Error('timed out'), {
       name: 'APIConnectionTimeoutError',

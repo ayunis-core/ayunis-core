@@ -119,7 +119,10 @@ const convertUser = (
     } else if (c.type === 'image') {
       parts.push({
         type: 'image_url',
-        image_url: { url: `data:${c.mediaType};base64,${c.data}` },
+        image_url: {
+          url: `data:${c.mediaType};base64,${c.data}`,
+          detail: 'high',
+        },
       });
     }
   }

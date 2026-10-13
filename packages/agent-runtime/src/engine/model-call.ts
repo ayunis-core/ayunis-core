@@ -459,6 +459,10 @@ const factsFromProviderError = (
 ): ProviderFailureFacts => ({
   kind: error.kind,
   stage: error.stage,
+  ...(error.rejectionReason ? { rejectionReason: error.rejectionReason } : {}),
+  ...(error.contextOverflowTokens !== undefined
+    ? { contextOverflowTokens: error.contextOverflowTokens }
+    : {}),
   ...(error.upstreamStatus !== undefined
     ? { upstreamStatus: error.upstreamStatus }
     : {}),

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   TokenCounterHandler,
   TokenCounterType,
-} from '../../application/ports/token-counter.handler.port';
+} from 'src/common/token-counter/application/ports/token-counter.handler.port';
 
 @Injectable()
 export class SimpleHandler extends TokenCounterHandler {
