@@ -38,7 +38,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
       deps: { search, page = 1 },
       context: { queryClient },
     }) => {
-      await queryClient.fetchQuery(anonymousModeDefaultQueryOptions());
+      await queryClient.query(anonymousModeDefaultQueryOptions());
       const chatsParams = {
         workspaceId,
         search: search || undefined,
@@ -47,7 +47,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
       };
 
       const workspace = await queryClient
-        .fetchQuery({
+        .query({
           queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
           queryFn: () => workspacesControllerFindOne(workspaceId),
         })
@@ -55,17 +55,17 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
           throw redirect({ to: '/workspaces' });
         });
 
-      const chats = await queryClient.fetchQuery({
+      const chats = await queryClient.query({
         queryKey: getThreadsControllerFindAllQueryKey(chatsParams),
         queryFn: () => threadsControllerFindAll(chatsParams),
       });
 
       const [defaultModelResponse, embeddingModelResponse] = await Promise.all([
         queryClient
-          .fetchQuery(effectiveDefaultModelQueryOptions())
+          .query(effectiveDefaultModelQueryOptions())
           .catch(() => null),
         queryClient
-          .fetchQuery(queryIsEmbeddingModelEnabledOptions())
+          .query(queryIsEmbeddingModelEnabledOptions())
           .catch(() => null),
       ]);
 

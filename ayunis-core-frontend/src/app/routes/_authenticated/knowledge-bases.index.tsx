@@ -9,7 +9,7 @@ import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-sco
 export const Route = createFileRoute('/_authenticated/knowledge-bases/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const knowledgeBases = await queryClient.fetchQuery({
+    const knowledgeBases = await queryClient.query({
       queryKey: getKnowledgeBasesControllerFindAllQueryKey(
         personalKnowledgeBaseListParams,
       ),

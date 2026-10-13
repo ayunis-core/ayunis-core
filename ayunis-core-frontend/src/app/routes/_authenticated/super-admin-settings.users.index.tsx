@@ -24,7 +24,7 @@ export const Route = createFileRoute(
       limit: USERS_PER_PAGE,
       offset: (page - 1) * USERS_PER_PAGE,
     };
-    const response = await queryClient.fetchQuery({
+    const response = await queryClient.query({
       queryKey: getSuperAdminUserListControllerGetAllUsersQueryKey(params),
       queryFn: () => superAdminUserListControllerGetAllUsers(params),
     });

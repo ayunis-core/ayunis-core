@@ -10,7 +10,7 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
   loader: async ({ params: { id }, context: { queryClient } }) => {
-    const letterhead = await queryClient.fetchQuery({
+    const letterhead = await queryClient.query({
       queryKey: getLetterheadsControllerFindOneQueryKey(id),
       queryFn: () => letterheadsControllerFindOne(id),
     });

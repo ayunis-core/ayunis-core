@@ -33,7 +33,7 @@ export const Route = createFileRoute(
     context: { queryClient },
   }) => {
     const offset = (page - 1) * ORGS_PER_PAGE;
-    const response = await queryClient.fetchQuery({
+    const response = await queryClient.query({
       queryKey: getSuperAdminOrgsControllerGetAllOrgsQueryKey({
         search,
         status,

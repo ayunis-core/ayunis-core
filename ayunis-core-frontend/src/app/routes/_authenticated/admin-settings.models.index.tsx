@@ -14,13 +14,13 @@ export const Route = createFileRoute('/_authenticated/admin-settings/models/')({
   loader: async ({ context: { queryClient }, deps: { tab } }) => {
     if (tab === 'teams') return;
     await Promise.all([
-      queryClient.fetchQuery(
+      queryClient.query(
         getModelsControllerGetAvailableLanguageModelsQueryOptions(),
       ),
-      queryClient.fetchQuery(
+      queryClient.query(
         getModelsControllerGetAvailableEmbeddingModelsQueryOptions(),
       ),
-      queryClient.fetchQuery(
+      queryClient.query(
         getModelsControllerGetAvailableImageGenerationModelsQueryOptions(),
       ),
     ]);

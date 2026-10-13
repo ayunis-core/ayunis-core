@@ -30,7 +30,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings/users')({
     const invitesOffset = (invitesPage - 1) * INVITES_PER_PAGE;
 
     const [invitesResponse, usersResponse] = await Promise.all([
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getInvitesControllerGetInvitesQueryKey({
           search: invitesSearch,
           limit: INVITES_PER_PAGE,
@@ -43,7 +43,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings/users')({
             offset: invitesOffset,
           }),
       }),
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getUserControllerGetUsersInOrganizationQueryKey({
           search,
           limit: USERS_PER_PAGE,

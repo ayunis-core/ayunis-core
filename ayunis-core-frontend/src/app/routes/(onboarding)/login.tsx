@@ -15,7 +15,7 @@ export const Route = createFileRoute('/(onboarding)/login')({
     // revocation, logout in another tab) a warm cache would bounce the user
     // into an app whose every request 401s, with no way back to this form.
     const user = await queryClient
-      .fetchQuery({ ...meQueryOptions(), staleTime: 0 })
+      .query({ ...meQueryOptions(), staleTime: 0 })
       .catch(() => null);
     if (user) {
       throw redirect({ to: safeRedirectPath(search.redirect) });
