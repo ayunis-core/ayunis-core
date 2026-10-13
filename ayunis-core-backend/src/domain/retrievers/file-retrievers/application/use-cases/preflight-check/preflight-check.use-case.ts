@@ -21,9 +21,7 @@ export class PreflightCheckUseCase {
     if (fileType === 'pdf') {
       await this.checkPdfPageCount(command.fileData, command.fileName);
     }
-    // Other types are either cheap to process or converted to PDF later —
-    // the OCR page cap on direct PDF uploads is the only provider-imposed
-    // hard limit we can check upfront.
+    // Office documents are checked after conversion, when PDF metadata exists.
   }
 
   private async checkPdfPageCount(
@@ -35,7 +33,12 @@ export class PreflightCheckUseCase {
     let pageCount: number;
     try {
       // pdf-parse reads metadata including page count without full text extraction
-      const pdf = await PdfParse(fileData, {
+      const parse = PdfParse as (
+        data: Uint8Array,
+        options: PdfParse.Options,
+      ) => Promise<PdfParse.Result>;
+      // Pass a copy: PDF.js may detach the input buffer, and callers reuse fileData.
+      const pdf = await parse(new Uint8Array(fileData), {
         // Only read first page to get metadata quickly
         max: 1,
       });
