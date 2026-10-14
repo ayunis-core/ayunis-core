@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { SidebarProvider, SidebarInset } from '@ayunis/ui/components/sidebar';
-import AppSidebar from '@/widgets/app-sidebar';
+import { PrototypeSidebar } from '@/widgets/sharing-prototype';
 import AppAlertBanner from '@/widgets/app-alert-banner';
 import {
   CertificateExpiryBanner,
@@ -21,7 +21,7 @@ export default function AppLayout({
 
   return (
     <SidebarProvider pathname={location.pathname}>
-      {sidebar ?? <AppSidebar />}
+      {sidebar ?? <PrototypeSidebar />}
       <SidebarInset className="md:peer-data-[variant=inset]:[box-shadow:var(--shadow-sidebar-inset)]">
         <div className="flex flex-1 flex-col min-h-0">
           <AppAlertBanner />

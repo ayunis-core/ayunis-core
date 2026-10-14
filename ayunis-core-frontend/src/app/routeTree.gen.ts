@@ -53,6 +53,7 @@ import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
 import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSkillsIdRouteImport } from './routes/_authenticated/skills.$id'
+import { Route as AuthenticatedSkillsSoFunktioniertEsRouteImport } from './routes/_authenticated/skills.so-funktioniert-es'
 import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './routes/_authenticated/super-admin-settings.index'
 import { Route as AuthenticatedWorkspacesIndexRouteImport } from './routes/_authenticated/workspaces.index'
 import { Route as AuthenticatedWorkspacesWorkspaceIdRouteImport } from './routes/_authenticated/workspaces.$workspaceId'
@@ -324,6 +325,12 @@ const AuthenticatedSkillsIdRoute = AuthenticatedSkillsIdRouteImport.update({
   path: '/skills/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSkillsSoFunktioniertEsRoute =
+  AuthenticatedSkillsSoFunktioniertEsRouteImport.update({
+    id: '/skills/so-funktioniert-es',
+    path: '/skills/so-funktioniert-es',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsIndexRoute =
   AuthenticatedSuperAdminSettingsIndexRouteImport.update({
     id: '/',
@@ -507,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/skills/so-funktioniert-es': typeof AuthenticatedSkillsSoFunktioniertEsRoute
   '/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/academy/': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
@@ -574,6 +582,7 @@ export interface FileRoutesByTo {
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/skills/so-funktioniert-es': typeof AuthenticatedSkillsSoFunktioniertEsRoute
   '/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/academy': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
@@ -645,6 +654,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/_authenticated/skills/so-funktioniert-es': typeof AuthenticatedSkillsSoFunktioniertEsRoute
   '/_authenticated/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/_authenticated/academy/': typeof AuthenticatedAcademyIndexRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
@@ -716,6 +726,7 @@ export interface FileRouteTypes {
     | '/settings/general'
     | '/settings/integrations'
     | '/skills/$id'
+    | '/skills/so-funktioniert-es'
     | '/workspaces/$workspaceId'
     | '/academy/'
     | '/admin-settings/'
@@ -783,6 +794,7 @@ export interface FileRouteTypes {
     | '/settings/general'
     | '/settings/integrations'
     | '/skills/$id'
+    | '/skills/so-funktioniert-es'
     | '/workspaces/$workspaceId'
     | '/academy'
     | '/admin-settings'
@@ -853,6 +865,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/general'
     | '/_authenticated/settings/integrations'
     | '/_authenticated/skills/$id'
+    | '/_authenticated/skills/so-funktioniert-es'
     | '/_authenticated/workspaces/$workspaceId'
     | '/_authenticated/academy/'
     | '/_authenticated/admin-settings/'
@@ -1215,6 +1228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSkillsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/skills/so-funktioniert-es': {
+      id: '/_authenticated/skills/so-funktioniert-es'
+      path: '/skills/so-funktioniert-es'
+      fullPath: '/skills/so-funktioniert-es'
+      preLoaderRoute: typeof AuthenticatedSkillsSoFunktioniertEsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/super-admin-settings/': {
       id: '/_authenticated/super-admin-settings/'
       path: '/'
@@ -1505,6 +1525,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
   AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
   AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
+  AuthenticatedSkillsSoFunktioniertEsRoute: typeof AuthenticatedSkillsSoFunktioniertEsRoute
   AuthenticatedWorkspacesWorkspaceIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdRoute
   AuthenticatedAcademyIndexRoute: typeof AuthenticatedAcademyIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
@@ -1534,6 +1555,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsIntegrationsRoute:
     AuthenticatedSettingsIntegrationsRoute,
   AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
+  AuthenticatedSkillsSoFunktioniertEsRoute:
+    AuthenticatedSkillsSoFunktioniertEsRoute,
   AuthenticatedWorkspacesWorkspaceIdRoute:
     AuthenticatedWorkspacesWorkspaceIdRoute,
   AuthenticatedAcademyIndexRoute: AuthenticatedAcademyIndexRoute,

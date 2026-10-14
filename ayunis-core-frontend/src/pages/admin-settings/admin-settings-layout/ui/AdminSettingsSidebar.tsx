@@ -21,6 +21,7 @@ import {
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsAcademyAddonActive } from '@/features/academy';
 import { useHasCreditBudget } from '@/features/credit-limits';
+import { usePrototypeState } from '@/widgets/sharing-prototype/model/prototype-store';
 import { MeResponseDtoRole } from '@/shared/api';
 import {
   allowedSettingsSections,
@@ -35,8 +36,10 @@ export function AdminSettingsSidebar() {
     authorization.hasRole(MeResponseDtoRole.admin),
   );
   const allowedSections = allowedSettingsSections(authorization);
+  const { role } = usePrototypeState();
   const canSee = (to: string) =>
-    allowedSections.some((path) => to.startsWith(path));
+    allowedSections.some((path) => to.startsWith(path)) &&
+    (role !== 'teamAdmin' || to.startsWith('/admin-settings/teams'));
 
   const groups: SidebarMenuGroup[] = [
     {
