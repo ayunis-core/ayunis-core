@@ -23,6 +23,25 @@ export class ChapterProgressResponseDto {
     description: 'When the learner most recently confirmed the chapter',
   })
   confirmedAt: Date;
+
+  @ApiProperty({
+    type: 'boolean',
+    description:
+      'Whether confirming again now returns this confirmation unchanged instead of re-checking page time, so a lost response can be retried',
+  })
+  replayable: boolean;
+}
+
+export class CourseModuleProgressResponseDto {
+  @ApiProperty({ type: 'string', format: 'uuid' })
+  courseModuleId: UUID;
+
+  @ApiProperty({
+    type: 'number',
+    description:
+      'Seconds the video page was open and visible since the last certificate. This is page time, not watch time.',
+  })
+  visibleSeconds: number;
 }
 
 export class AcademyProgressResponseDto {
@@ -49,4 +68,18 @@ export class AcademyProgressResponseDto {
       'When the completion stops being valid, or null if never completed',
   })
   academyCompletionExpiresAt: Date | null;
+
+  @ApiProperty({
+    type: [CourseModuleProgressResponseDto],
+    description:
+      'Recorded page time per course module; modules never opened are omitted',
+  })
+  courseModules: CourseModuleProgressResponseDto[];
+
+  @ApiProperty({
+    type: 'integer',
+    description:
+      'Seconds every video page of a chapter must reach before the chapter can be confirmed',
+  })
+  minimumModuleSeconds: number;
 }

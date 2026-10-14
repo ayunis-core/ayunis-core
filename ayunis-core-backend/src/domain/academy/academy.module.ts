@@ -1,21 +1,25 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from 'src/iam/users/users.module';
+import { PlatformConfigModule } from 'src/iam/platform-config/platform-config.module';
 import { AcademyChapterRecord } from './infrastructure/persistence/local/schema/academy-chapter.record';
 import { AcademyChapterConfirmationRecord } from './infrastructure/persistence/local/schema/academy-chapter-confirmation.record';
 import { AcademyCompletionRecord } from './infrastructure/persistence/local/schema/academy-completion.record';
 import { AcademyCourseModuleRecord } from './infrastructure/persistence/local/schema/academy-course-module.record';
+import { AcademyModuleViewTimeRecord } from './infrastructure/persistence/local/schema/academy-module-view-time.record';
 import { AcademyMapper } from './infrastructure/persistence/local/mappers/academy.mapper';
 import { LocalAcademyChapterRepository } from './infrastructure/persistence/local/local-academy-chapter.repository';
 import { LocalAcademyChapterConfirmationRepository } from './infrastructure/persistence/local/local-academy-chapter-confirmation.repository';
 import { LocalAcademyCompletionRepository } from './infrastructure/persistence/local/local-academy-completion.repository';
 import { LocalAcademyCourseModuleRepository } from './infrastructure/persistence/local/local-academy-course-module.repository';
+import { LocalAcademyModuleViewTimeRepository } from './infrastructure/persistence/local/local-academy-module-view-time.repository';
 import { PuppeteerCertificateRendererService } from './infrastructure/certificate/puppeteer-certificate-renderer.service';
 import { CertificateRendererPort } from './application/ports/certificate-renderer.port';
 import { AcademyChapterRepository } from './application/ports/academy-chapter.repository';
 import { AcademyChapterConfirmationRepository } from './application/ports/academy-chapter-confirmation.repository';
 import { AcademyCompletionRepository } from './application/ports/academy-completion.repository';
 import { AcademyCourseModuleRepository } from './application/ports/academy-course-module.repository';
+import { AcademyModuleViewTimeRepository } from './application/ports/academy-module-view-time.repository';
 import { GetAcademyContentUseCase } from './application/use-cases/get-academy-content/get-academy-content.use-case';
 import { GetAcademyManagementContentUseCase } from './application/use-cases/get-academy-management-content/get-academy-management-content.use-case';
 import { CreateChapterUseCase } from './application/use-cases/create-chapter/create-chapter.use-case';
@@ -27,6 +31,7 @@ import { UpdateCourseModuleUseCase } from './application/use-cases/update-course
 import { DeleteCourseModuleUseCase } from './application/use-cases/delete-course-module/delete-course-module.use-case';
 import { ReorderCourseModulesUseCase } from './application/use-cases/reorder-course-modules/reorder-course-modules.use-case';
 import { ConfirmChapterUseCase } from './application/use-cases/confirm-chapter/confirm-chapter.use-case';
+import { RecordModuleHeartbeatUseCase } from './application/use-cases/record-module-heartbeat/record-module-heartbeat.use-case';
 import { GetAcademyProgressUseCase } from './application/use-cases/get-academy-progress/get-academy-progress.use-case';
 import { GetAcademyCompletionUseCase } from './application/use-cases/get-academy-completion/get-academy-completion.use-case';
 import { GetAcademyCompletionsUseCase } from './application/use-cases/get-academy-completions/get-academy-completions.use-case';
@@ -45,8 +50,10 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
       AcademyCourseModuleRecord,
       AcademyChapterConfirmationRecord,
       AcademyCompletionRecord,
+      AcademyModuleViewTimeRecord,
     ]),
     UsersModule,
+    PlatformConfigModule,
   ],
   controllers: [
     AcademyChaptersController,
@@ -62,6 +69,7 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     LocalAcademyCourseModuleRepository,
     LocalAcademyChapterConfirmationRepository,
     LocalAcademyCompletionRepository,
+    LocalAcademyModuleViewTimeRepository,
     {
       provide: AcademyChapterRepository,
       useExisting: LocalAcademyChapterRepository,
@@ -77,6 +85,10 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     {
       provide: AcademyCompletionRepository,
       useExisting: LocalAcademyCompletionRepository,
+    },
+    {
+      provide: AcademyModuleViewTimeRepository,
+      useExisting: LocalAcademyModuleViewTimeRepository,
     },
     PuppeteerCertificateRendererService,
     {
@@ -94,6 +106,7 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     DeleteCourseModuleUseCase,
     ReorderCourseModulesUseCase,
     ConfirmChapterUseCase,
+    RecordModuleHeartbeatUseCase,
     GetAcademyProgressUseCase,
     GetAcademyCompletionUseCase,
     GetAcademyCompletionsUseCase,

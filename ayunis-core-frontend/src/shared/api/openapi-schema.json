@@ -8076,6 +8076,64 @@
         "tags": ["Super Admin Platform Config"]
       }
     },
+    "/super-admin/platform-config/academy-minimum-module-seconds": {
+      "get": {
+        "description": "Seconds each academy video page must be open and visible before its chapter can be confirmed. Defaults to 60 when unset. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getAcademyMinimumModuleSeconds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the academy minimum time",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyMinimumModuleSecondsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the academy minimum time per video page",
+        "tags": ["Super Admin Platform Config"]
+      },
+      "put": {
+        "description": "Update the seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setAcademyMinimumModuleSeconds",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademyMinimumModuleSecondsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated the academy minimum time"
+          },
+          "400": {
+            "description": "Invalid value provided (must be a non-negative integer)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the academy minimum time per video page",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
     "/app-alert": {
       "get": {
         "description": "Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.",
@@ -10804,6 +10862,46 @@
           }
         },
         "summary": "Get academy progress",
+        "tags": ["Academy"]
+      }
+    },
+    "/academy/course-modules/{courseModuleId}/heartbeat": {
+      "post": {
+        "description": "Sent periodically while the video page is visible. The server credits the time since the previous heartbeat, capped at one heartbeat interval.",
+        "operationId": "AcademyProgressController_recordModuleHeartbeat",
+        "parameters": [
+          {
+            "name": "courseModuleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordModuleHeartbeatRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Heartbeat recorded"
+          },
+          "401": {
+            "description": "User not authenticated or academy add-on not active"
+          },
+          "404": {
+            "description": "Course module not found"
+          }
+        },
+        "summary": "Record time on a course module page",
         "tags": ["Academy"]
       }
     },
@@ -18827,6 +18925,18 @@
         },
         "required": ["enabled", "message"]
       },
+      "AcademyMinimumModuleSecondsDto": {
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "number",
+            "description": "Seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement.",
+            "example": 60,
+            "minimum": 0
+          }
+        },
+        "required": ["seconds"]
+      },
       "AppAlertResponseDto": {
         "type": "object",
         "properties": {
@@ -20900,14 +21010,33 @@
             "type": "string",
             "format": "date-time",
             "description": "When the learner most recently confirmed the chapter"
+          },
+          "replayable": {
+            "type": "boolean",
+            "description": "Whether confirming again now returns this confirmation unchanged instead of re-checking page time, so a lost response can be retried"
           }
         },
         "required": [
           "chapterId",
           "confirmed",
           "confirmationValid",
-          "confirmedAt"
+          "confirmedAt",
+          "replayable"
         ]
+      },
+      "CourseModuleProgressResponseDto": {
+        "type": "object",
+        "properties": {
+          "courseModuleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "visibleSeconds": {
+            "type": "number",
+            "description": "Seconds the video page was open and visible since the last certificate. This is page time, not watch time."
+          }
+        },
+        "required": ["courseModuleId", "visibleSeconds"]
       },
       "AcademyProgressResponseDto": {
         "type": "object",
@@ -20930,13 +21059,36 @@
             "format": "date-time",
             "nullable": true,
             "description": "When the completion stops being valid, or null if never completed"
+          },
+          "courseModules": {
+            "description": "Recorded page time per course module; modules never opened are omitted",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseModuleProgressResponseDto"
+            }
+          },
+          "minimumModuleSeconds": {
+            "type": "integer",
+            "description": "Seconds every video page of a chapter must reach before the chapter can be confirmed"
           }
         },
         "required": [
           "chapters",
           "academyCompletedAt",
-          "academyCompletionExpiresAt"
+          "academyCompletionExpiresAt",
+          "courseModules",
+          "minimumModuleSeconds"
         ]
+      },
+      "RecordModuleHeartbeatRequestDto": {
+        "type": "object",
+        "properties": {
+          "sessionStart": {
+            "type": "boolean",
+            "description": "True when the page just became visible; only starts the clock without crediting time since the previous heartbeat."
+          }
+        },
+        "required": ["sessionStart"]
       },
       "CreateChapterRequestDto": {
         "type": "object",

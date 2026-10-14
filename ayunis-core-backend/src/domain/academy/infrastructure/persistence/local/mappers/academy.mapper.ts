@@ -3,10 +3,12 @@ import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity
 import { AcademyChapterConfirmation } from 'src/domain/academy/domain/academy-chapter-confirmation.entity';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
+import { AcademyModuleViewTime } from 'src/domain/academy/domain/academy-module-view-time.entity';
 import { AcademyChapterRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-chapter.record';
 import { AcademyChapterConfirmationRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-chapter-confirmation.record';
 import { AcademyCompletionRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-completion.record';
 import { AcademyCourseModuleRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-course-module.record';
+import { AcademyModuleViewTimeRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-module-view-time.record';
 
 @Injectable()
 export class AcademyMapper {
@@ -95,5 +97,15 @@ export class AcademyMapper {
     record.userId = domain.userId;
     record.completedAt = domain.completedAt;
     return record;
+  }
+
+  moduleViewTimeToDomain(
+    record: AcademyModuleViewTimeRecord,
+  ): AcademyModuleViewTime {
+    return new AcademyModuleViewTime({
+      userId: record.userId,
+      courseModuleId: record.courseModuleId,
+      visibleSeconds: record.visibleSeconds,
+    });
   }
 }

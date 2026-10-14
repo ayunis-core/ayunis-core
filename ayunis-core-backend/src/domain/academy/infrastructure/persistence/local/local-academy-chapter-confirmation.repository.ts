@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
 import { AcademyChapterConfirmationRepository } from 'src/domain/academy/application/ports/academy-chapter-confirmation.repository';
 import { AcademyChapterConfirmation } from 'src/domain/academy/domain/academy-chapter-confirmation.entity';
+import { lockLearner } from './lock-learner';
 import { AcademyMapper } from './mappers/academy.mapper';
 import { AcademyChapterConfirmationRecord } from './schema/academy-chapter-confirmation.record';
 
@@ -14,11 +16,18 @@ export class LocalAcademyChapterConfirmationRepository extends AcademyChapterCon
   );
 
   constructor(
-    @InjectRepository(AcademyChapterConfirmationRecord)
-    private readonly repository: Repository<AcademyChapterConfirmationRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
     private readonly mapper: AcademyMapper,
   ) {
     super();
+  }
+
+  private get repository(): Repository<AcademyChapterConfirmationRecord> {
+    return this.txHost.tx.getRepository(AcademyChapterConfirmationRecord);
+  }
+
+  async lockForUser(userId: UUID): Promise<void> {
+    await lockLearner(this.txHost.tx, userId);
   }
 
   async findAllByUser(userId: UUID): Promise<AcademyChapterConfirmation[]> {

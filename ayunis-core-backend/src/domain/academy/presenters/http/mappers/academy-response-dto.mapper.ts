@@ -7,6 +7,7 @@ import { AcademyChapterResponseDto } from 'src/domain/academy/presenters/http/dt
 import {
   AcademyProgressResponseDto,
   ChapterProgressResponseDto,
+  CourseModuleProgressResponseDto,
 } from 'src/domain/academy/presenters/http/dto/academy-progress-response.dto';
 import { ChapterConfirmationResponseDto } from 'src/domain/academy/presenters/http/dto/chapter-confirmation-response.dto';
 import { CourseModuleResponseDto } from 'src/domain/academy/presenters/http/dto/course-module-response.dto';
@@ -49,10 +50,18 @@ export class AcademyResponseDtoMapper {
       chapterDto.confirmed = chapter.confirmed;
       chapterDto.confirmationValid = chapter.confirmationValid;
       chapterDto.confirmedAt = chapter.confirmedAt;
+      chapterDto.replayable = chapter.replayable;
       return chapterDto;
     });
     dto.academyCompletedAt = view.academyCompletedAt;
     dto.academyCompletionExpiresAt = view.academyCompletionExpiresAt;
+    dto.courseModules = view.courseModules.map((courseModule) => {
+      const courseModuleDto = new CourseModuleProgressResponseDto();
+      courseModuleDto.courseModuleId = courseModule.courseModuleId;
+      courseModuleDto.visibleSeconds = courseModule.visibleSeconds;
+      return courseModuleDto;
+    });
+    dto.minimumModuleSeconds = view.minimumModuleSeconds;
     return dto;
   }
 
