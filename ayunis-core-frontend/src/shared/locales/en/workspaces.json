@@ -131,7 +131,9 @@
     "placeholder": "Select workspace",
     "addToWorkspace": "Add to workspace",
     "removeFromWorkspace": "Remove from workspace",
-    "newWorkspace": "New workspace"
+    "newWorkspace": "New workspace",
+    "favorites": "Favorites",
+    "otherWorkspaces": "Other workspaces"
   },
   "validation": {
     "invalid": "Invalid value",
