@@ -51,6 +51,44 @@ function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
   return new GetInferenceUseCase(registry as never, contextService as never);
 }
 
+function useCaseWithAttempts(...attempts: (InferenceResponse | Error)[]): {
+  useCase: GetInferenceUseCase;
+  answer: jest.Mock;
+} {
+  const answer = jest.fn();
+  for (const attempt of attempts) {
+    answer.mockImplementationOnce(() =>
+      attempt instanceof Error
+        ? Promise.reject(attempt)
+        : Promise.resolve(attempt),
+    );
+  }
+  const registry = { getHandler: () => ({ answer }) };
+  const contextService = {
+    get: () => '123e4567-e89b-12d3-a456-426614174000',
+  };
+  return {
+    useCase: new GetInferenceUseCase(
+      registry as never,
+      contextService as never,
+    ),
+    answer,
+  };
+}
+
+function rateLimitError(retryAfterMs?: number): ModelProviderError {
+  return new ModelProviderError({
+    kind: 'rate_limit',
+    stage: 'stream_consumption',
+    upstreamStatus: 429,
+    ...(retryAfterMs !== undefined && { retryAfterMs }),
+    cause: Object.assign(new Error('sensitive provider response'), {
+      code: 'rate_limit_exceeded',
+      type: 'too_many_requests',
+    }),
+  });
+}
+
 function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
   const registry = {
     getHandler: () => ({ answer: () => Promise.resolve(response) }),
@@ -118,9 +156,15 @@ describe('GetInferenceUseCase error mapping', () => {
       }),
     });
 
+    jest.useFakeTimers();
     const result = useCaseWithFailingHandler(rateLimit).execute(makeCommand());
+    const settled = expect(result).rejects.toBeInstanceOf(
+      ProviderRequestRejectedError,
+    );
+    await jest.runAllTimersAsync();
+    jest.useRealTimers();
 
-    await expect(result).rejects.toBeInstanceOf(ProviderRequestRejectedError);
+    await settled;
     await expect(result).rejects.toMatchObject({
       code: 'PROVIDER_UNAVAILABLE_REJECTED_MISTRAL',
       context: expect.objectContaining({
@@ -396,5 +440,121 @@ describe('GetInferenceUseCase completed-response accounting', () => {
       useCaseWithFailingHandler(new Error('provider failed')).execute(command),
     ).rejects.toThrow(InferenceFailedError);
     expect(onUsage).not.toHaveBeenCalled();
+  });
+});
+
+describe('GetInferenceUseCase rate-limit retry', () => {
+  const response = new InferenceResponse(
+    [new TextMessageContent('Generated prompt')],
+    { inputTokens: 10, outputTokens: 5 },
+    'stop',
+  );
+
+  beforeEach(() => {
+    createLoggerMock();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('waits the advertised delay and returns the retried response', async () => {
+    const { useCase, answer } = useCaseWithAttempts(
+      rateLimitError(6_000),
+      response,
+    );
+    const command = makeCommand();
+    const onUsage = jest.fn();
+    command.onUsage = onUsage;
+
+    const result = useCase.execute(command);
+    await jest.advanceTimersByTimeAsync(5_999);
+    expect(answer).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1);
+
+    await expect(result).resolves.toBe(response);
+    expect(answer).toHaveBeenCalledTimes(2);
+    expect(onUsage).toHaveBeenCalledTimes(1);
+    expect(onUsage).toHaveBeenCalledWith(response.meta);
+  });
+
+  it('logs the retry without prompt contents', async () => {
+    const logger = createLoggerMock();
+    const { useCase } = useCaseWithAttempts(rateLimitError(6_000), response);
+
+    const result = useCase.execute(makeCommand());
+    await jest.advanceTimersByTimeAsync(6_000);
+    await result;
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        provider: 'mistral',
+        modelId: 'mistral-large-latest',
+        retryAfterMs: 6_000,
+      },
+      'Provider rate limited inference; retrying once',
+    );
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it('throws the rate-limit rejection when the retry is rate limited again', async () => {
+    const { useCase, answer } = useCaseWithAttempts(
+      rateLimitError(6_000),
+      rateLimitError(6_000),
+    );
+
+    const result = useCase.execute(makeCommand());
+    const settled = expect(result).rejects.toBeInstanceOf(
+      ProviderRequestRejectedError,
+    );
+    await jest.runAllTimersAsync();
+
+    await settled;
+    expect(answer).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ['above the wait cap', 15_001],
+    ['missing', undefined],
+  ])(
+    'does not retry when the advertised delay is %s',
+    async (_case, retryAfterMs) => {
+      const { useCase, answer } = useCaseWithAttempts(
+        rateLimitError(retryAfterMs),
+        response,
+      );
+
+      await expect(useCase.execute(makeCommand())).rejects.toBeInstanceOf(
+        ProviderRequestRejectedError,
+      );
+      expect(answer).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each([
+    [
+      'an upstream server error',
+      new ModelProviderError({
+        kind: 'server',
+        stage: 'stream_consumption',
+        upstreamStatus: 503,
+        retryAfterMs: 1_000,
+        cause: new Error('service unavailable'),
+      }),
+      ProviderServerError,
+    ],
+    [
+      'a request rejection',
+      Object.assign(new Error('invalid request'), { status: 400 }),
+      InferenceFailedError,
+    ],
+  ])('does not retry %s', async (_case, error, expectedError) => {
+    const { useCase, answer } = useCaseWithAttempts(error, response);
+
+    await expect(useCase.execute(makeCommand())).rejects.toBeInstanceOf(
+      expectedError,
+    );
+    expect(answer).toHaveBeenCalledTimes(1);
   });
 });
