@@ -9,8 +9,8 @@
     "emptyChatsTitle": "No chats yet",
     "emptyChats": "Chats you add to this workspace will appear here.",
     "noChatResults": "No chats found.",
-    "pin": "Pin",
-    "unpin": "Unpin",
+    "pin": "Add to favorites",
+    "unpin": "Remove from favorites",
     "settings": "Settings",
     "truncatedChats": "Showing the first {{count}} chats"
   },
