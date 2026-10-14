@@ -36,7 +36,11 @@ describe('MessageCleanupService', () => {
       orphanedAssistant,
     ];
 
-    await service.deleteMessagesUntilAssistant(threadId, messages);
+    await service.deleteMessagesUntilAssistant(
+      threadId,
+      messages,
+      new Set(messages.map((message) => message.id)),
+    );
 
     expect(deletedMessageIds(deleteMessageUseCase)).toEqual([
       orphanedAssistant.id,
@@ -66,13 +70,58 @@ describe('MessageCleanupService', () => {
       toolResultMessage,
     ];
 
-    await service.deleteMessagesUntilAssistant(threadId, messages);
+    await service.deleteMessagesUntilAssistant(
+      threadId,
+      messages,
+      new Set(messages.map((message) => message.id)),
+    );
 
     expect(deletedMessageIds(deleteMessageUseCase)).toEqual([
       toolResultMessage.id,
       toolCallMessage.id,
       userMessage.id,
     ]);
+  });
+
+  it('keeps the messages another run persisted in the same failed turn', async () => {
+    const deleteMessageUseCase = deletingUseCase();
+    const service = new MessageCleanupService(
+      {} as FindThreadUseCase,
+      deleteMessageUseCase as unknown as DeleteMessageUseCase,
+    );
+    const otherRunQuestion = userText('Summarise the attached permit.');
+    const otherRunToolCall = assistantToolCall('search-permit');
+    const ownQuestion = userText('Who owns permit B-2026-184?');
+    const messages = [
+      assistantText('How can I help with municipal records?'),
+      otherRunQuestion,
+      otherRunToolCall,
+      ownQuestion,
+    ];
+
+    await service.deleteMessagesUntilAssistant(
+      threadId,
+      messages,
+      new Set([ownQuestion.id]),
+    );
+
+    expect(deletedMessageIds(deleteMessageUseCase)).toEqual([ownQuestion.id]);
+  });
+
+  it('deletes nothing when the run persisted no message', async () => {
+    const deleteMessageUseCase = deletingUseCase();
+    const service = new MessageCleanupService(
+      {} as FindThreadUseCase,
+      deleteMessageUseCase as unknown as DeleteMessageUseCase,
+    );
+    const messages = [
+      assistantText('How can I help with municipal records?'),
+      userText('Find permit B-2026-184.'),
+    ];
+
+    await service.deleteMessagesUntilAssistant(threadId, messages, new Set());
+
+    expect(deleteMessageUseCase.execute).not.toHaveBeenCalled();
   });
 });
 

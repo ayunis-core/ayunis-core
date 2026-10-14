@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import {
   DEFAULT_RETRY_CONFIG,
   run,
@@ -5,7 +6,6 @@ import {
   type Hook,
 } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -38,11 +38,8 @@ import {
 } from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
-  RunExecutionFailedError,
   RunInvalidInputError,
-  RunMaxIterationsReachedError,
   RunNoModelFoundError,
-  RunToolRepeatedlyFailingError,
   UnexpectedRunError,
 } from 'src/domain/runs/application/runs.errors';
 import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
@@ -78,7 +75,8 @@ import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/applicati
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
-import { shouldPreserveRejectedTranscript } from './rejected-transcript-policy';
+import { shouldPreserveTranscript } from './rejected-transcript-policy';
+import { toRunError } from './to-run-error';
 
 const MAX_ITERATIONS = 50;
 
@@ -231,18 +229,22 @@ export class ExecuteRunUseCase {
     signal?: AbortSignal,
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
     let cleanupRequired = true;
+    const ownedMessageIds = new Set<UUID>();
     try {
       const seeded = await this.seedInput(prepared, input);
       if (seeded === null) {
         cleanupRequired = false;
         return 'aborted';
       }
+      ownedMessageIds.add(seeded.message.id);
+      // Removing a settled continuation would make its earlier calls replayable.
+      cleanupRequired = !(input instanceof RunToolResultInput);
       // Masks first, so the client can resolve {{pii:…}} tokens in the message.
       if (seeded.masks) {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
       yield seeded.message;
-      const started = await this.startRun(prepared, signal);
+      const started = await this.startRun(prepared, ownedMessageIds, signal);
       const outcome = yield* adaptRunEventsToStream(
         started.events,
         prepared.thread.id,
@@ -250,27 +252,16 @@ export class ExecuteRunUseCase {
         prepared.toolIntegrations,
         started.models,
       );
-      cleanupRequired = outcome === 'aborted';
+      cleanupRequired = cleanupRequired && outcome === 'aborted';
       return outcome;
     } catch (error) {
-      // Completed phases must remain because rollback would re-arm pending tool calls.
-      if (
-        error instanceof RunMaxIterationsReachedError ||
-        error instanceof RunToolRepeatedlyFailingError ||
-        shouldPreserveRejectedTranscript(error, input)
-      ) {
-        cleanupRequired = false;
-      }
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error({ err: error as Error }, 'Runtime run failed');
-      throw new RunExecutionFailedError(
-        error instanceof Error ? error.message : 'Unknown error',
-        { originalError: error as Error },
-      );
+      if (shouldPreserveTranscript(error, input)) cleanupRequired = false;
+      throw toRunError(error, this.logger);
     } finally {
       if (cleanupRequired) {
         await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
           prepared.thread.id,
+          ownedMessageIds,
         );
       }
     }
@@ -289,7 +280,11 @@ export class ExecuteRunUseCase {
     throw new RunInvalidInputError('Invalid run input');
   }
 
-  private async startRun(prepared: PreparedRun, signal?: AbortSignal) {
+  private async startRun(
+    prepared: PreparedRun,
+    ownedMessageIds: Set<UUID>,
+    signal?: AbortSignal,
+  ) {
     const maxTokens = getContextWindowTokens(prepared.model.contextWindowSize);
     const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
       prepared.thread.messages,
@@ -320,7 +315,7 @@ export class ExecuteRunUseCase {
         messages,
         tools: prepared.tools,
         ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
-        hooks: this.buildHooks(prepared, models, maxTokens),
+        hooks: this.buildHooks(prepared, models, maxTokens, ownedMessageIds),
         context,
         maxIterations: MAX_ITERATIONS,
         retry: DEFAULT_RETRY_CONFIG,
@@ -334,6 +329,7 @@ export class ExecuteRunUseCase {
     prepared: PreparedRun,
     models: RuntimeModelRegistry,
     maxTokens: number,
+    ownedMessageIds: Set<UUID>,
   ): Hook[] {
     return [
       this.creditGateHookFactory.create({
@@ -350,6 +346,7 @@ export class ExecuteRunUseCase {
       this.persistenceHookFactory.create({
         thread: prepared.thread,
         integrations: prepared.toolIntegrations,
+        onMessagePersisted: (messageId) => ownedMessageIds.add(messageId),
       }),
       this.toolUsageHookFactory.create({
         userId: prepared.userId,
