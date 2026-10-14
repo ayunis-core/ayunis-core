@@ -4,6 +4,7 @@ import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 import { reportProviderUnavailableMetric } from 'src/common/errors/report-provider-unavailable-metric.helper';
+import { isFinalAttempt, recordJobFailure } from './job-telemetry';
 
 /**
  * Standard retry/retention options shared by the source processing queues:
@@ -18,14 +19,6 @@ export const STANDARD_JOB_OPTIONS: JobsOptions = {
   removeOnComplete: 100,
   removeOnFail: 200,
 };
-
-/**
- * True when no BullMQ retry will follow this attempt. When opts.attempts is
- * unset, BullMQ runs the job exactly once, so the first attempt is final.
- */
-export function isFinalAttempt(job: Job): boolean {
-  return job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
-}
 
 /**
  * Failure of a job attempt that BullMQ will retry. The AppSignal agent is
@@ -136,8 +129,10 @@ export function classifyJobFailure(
   const expected = isExpectedFailure(error);
 
   if (shouldScheduleRetry(job, error, expected)) {
+    recordJobFailure(job, false);
     return { final: false, rethrow: new JobRetryScheduledError(error) };
   }
+  recordJobFailure(job, true);
   if (expected) {
     return { final: true, rethrow: null };
   }

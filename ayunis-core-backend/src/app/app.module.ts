@@ -58,6 +58,7 @@ import { ApplicationErrorFilter } from 'src/common/filters/application-error.fil
 import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from 'src/integrations/integrations.module';
 import { QueueInspectionModule } from 'src/integrations/queue-inspection/queue-inspection.module';
+import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-telemetry.module';
 import { LoggingModule } from 'src/common/logger/logging.module';
 
 @Module({
@@ -154,6 +155,7 @@ import { LoggingModule } from 'src/common/logger/logging.module';
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
     QueueInspectionModule,
+    QueueTelemetryModule,
   ],
   controllers: [AppController],
   providers: [

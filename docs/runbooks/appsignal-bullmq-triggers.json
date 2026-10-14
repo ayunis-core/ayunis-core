@@ -1,0 +1,519 @@
+{
+  "staging": [
+    {
+      "id": "6acf4d4d30aa32b5c10a3541",
+      "name": "url-crawl queue wait p95",
+      "metricName": "bullmq_queue_wait_seconds",
+      "field": "P95",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "url-crawl"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4cb673996cf30a357e",
+      "name": "url-crawl waiting upload age",
+      "metricName": "bullmq_oldest_waiting_age_seconds",
+      "field": "GAUGE",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "url-crawl"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4bb673996cf30a357c",
+      "name": "url-crawl backlog",
+      "metricName": "bullmq_jobs_waiting",
+      "field": "GAUGE",
+      "warmupDuration": 3,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 10.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "url-crawl"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4b5dea64ff4f3fb47d",
+      "name": "data-source-processing queue wait p95",
+      "metricName": "bullmq_queue_wait_seconds",
+      "field": "P95",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "data-source-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4a26987cf9673fb401",
+      "name": "data-source-processing waiting upload age",
+      "metricName": "bullmq_oldest_waiting_age_seconds",
+      "field": "GAUGE",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "data-source-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d49b673996cf30a3579",
+      "name": "data-source-processing backlog",
+      "metricName": "bullmq_jobs_waiting",
+      "field": "GAUGE",
+      "warmupDuration": 3,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 10.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "data-source-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d487d73ec1e533fb4b7",
+      "name": "document-processing queue wait p95",
+      "metricName": "bullmq_queue_wait_seconds",
+      "field": "P95",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "document-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d487d73ec1e533fb4b5",
+      "name": "document-processing waiting upload age",
+      "metricName": "bullmq_oldest_waiting_age_seconds",
+      "field": "GAUGE",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "document-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d470a11b6552e3fb427",
+      "name": "document-processing backlog",
+      "metricName": "bullmq_jobs_waiting",
+      "field": "GAUGE",
+      "warmupDuration": 3,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 10.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "document-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        }
+      ]
+    }
+  ],
+  "production": [
+    {
+      "id": "6acf4d537b20cf99f93fb43a",
+      "name": "url-crawl queue wait p95",
+      "metricName": "bullmq_queue_wait_seconds",
+      "field": "P95",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "url-crawl"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d5230aa32b5c10a3544",
+      "name": "url-crawl waiting upload age",
+      "metricName": "bullmq_oldest_waiting_age_seconds",
+      "field": "GAUGE",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "url-crawl"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d527b20cf99f93fb438",
+      "name": "url-crawl backlog",
+      "metricName": "bullmq_jobs_waiting",
+      "field": "GAUGE",
+      "warmupDuration": 3,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 10.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "url-crawl"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d514b00a2d3eb0a3550",
+      "name": "data-source-processing queue wait p95",
+      "metricName": "bullmq_queue_wait_seconds",
+      "field": "P95",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "data-source-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d500a11b6552e3fb42c",
+      "name": "data-source-processing waiting upload age",
+      "metricName": "bullmq_oldest_waiting_age_seconds",
+      "field": "GAUGE",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "data-source-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4f4b00a2d3eb0a354d",
+      "name": "data-source-processing backlog",
+      "metricName": "bullmq_jobs_waiting",
+      "field": "GAUGE",
+      "warmupDuration": 3,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 10.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "data-source-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4f4b00a2d3eb0a354b",
+      "name": "document-processing queue wait p95",
+      "metricName": "bullmq_queue_wait_seconds",
+      "field": "P95",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "document-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4e7b20cf99f93fb436",
+      "name": "document-processing waiting upload age",
+      "metricName": "bullmq_oldest_waiting_age_seconds",
+      "field": "GAUGE",
+      "warmupDuration": 1,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 600.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "document-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    },
+    {
+      "id": "6acf4d4d0a11b6552e3fb429",
+      "name": "document-processing backlog",
+      "metricName": "bullmq_jobs_waiting",
+      "field": "GAUGE",
+      "warmupDuration": 3,
+      "cooldownDuration": 3,
+      "noMatchIsZero": false,
+      "thresholdCondition": {
+        "value": 10.0,
+        "comparisonOperator": "GREATER_THAN"
+      },
+      "tags": [
+        {
+          "key": "queue",
+          "value": "document-processing"
+        }
+      ],
+      "notifiers": [
+        {
+          "id": "6a5e7e131e5651e1145ede02",
+          "name": "Default email notifier",
+          "icon": "i_email.svg"
+        },
+        {
+          "id": "6a6b1bacfde1a737707cba51",
+          "name": "Slack #ayunis-core-alerts",
+          "icon": "i_slack.png"
+        }
+      ]
+    }
+  ]
+}

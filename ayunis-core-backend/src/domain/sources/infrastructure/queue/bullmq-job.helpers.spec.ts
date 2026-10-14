@@ -1,7 +1,7 @@
 import { Appsignal } from '@appsignal/nodejs';
 import type { Job } from 'bullmq';
+import { isFinalAttempt } from './job-telemetry';
 import {
-  isFinalAttempt,
   isExpectedFailure,
   classifyJobFailure,
   JobRetryScheduledError,
@@ -231,7 +231,11 @@ describe('classifyJobFailure', () => {
 
       expect(final).toBe(false);
       expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
-      expect(incrementCounter).not.toHaveBeenCalled();
+      expect(incrementCounter).not.toHaveBeenCalledWith(
+        'provider_unavailable_count',
+        expect.anything(),
+        expect.anything(),
+      );
     });
 
     it('increments once with only the provider tag after worker retries are exhausted', () => {
@@ -240,7 +244,11 @@ describe('classifyJobFailure', () => {
       classifyJobFailure(jobWith(0, 3), timeout);
       classifyJobFailure(jobWith(2, 3), timeout);
 
-      expect(incrementCounter).toHaveBeenCalledTimes(1);
+      expect(
+        incrementCounter.mock.calls.filter(
+          ([name]) => name === 'provider_unavailable_count',
+        ),
+      ).toHaveLength(1);
       expect(incrementCounter).toHaveBeenCalledWith(
         'provider_unavailable_count',
         1,

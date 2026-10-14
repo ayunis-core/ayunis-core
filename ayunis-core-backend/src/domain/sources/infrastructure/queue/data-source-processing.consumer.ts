@@ -25,6 +25,7 @@ import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/ad
 import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
+import { observeJob, processingStage } from './job-telemetry';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
@@ -55,7 +56,9 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       },
       'Processing data source file',
     );
-    await this.contextService.run(() => this.processJob(job));
+    await observeJob(job, () =>
+      this.contextService.run(() => this.processJob(job)),
+    );
   }
 
   private async processJob(
@@ -83,8 +86,12 @@ export class DataSourceProcessingConsumer extends WorkerHost {
         return;
       }
 
-      const fileBuffer = await this.downloadFile(minioPath);
-      const sheets = await this.parseFile(fileBuffer, kind);
+      const fileBuffer = await processingStage('data_source.download', () =>
+        this.downloadFile(minioPath),
+      );
+      const sheets = await processingStage('data_source.extraction', () =>
+        this.parseFile(fileBuffer, kind),
+      );
       await this.fillSources(pending, sheets);
       await this.cleanupMinioFile(minioPath);
       this.logger.log(
