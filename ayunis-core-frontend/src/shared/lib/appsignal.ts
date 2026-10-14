@@ -30,6 +30,10 @@ export const ignoredErrorPatterns: RegExp[] = [
   /^Load failed$/i,
   // Spec-mandated benign warning, surfaces as a window error event.
   /ResizeObserver loop/i,
+  // Suspected injected wallet script in AYC-1207: the app has no wallet code,
+  // but the page-origin frame cannot be classified by the extension override.
+  // Match only the observed message so other window.ethereum errors stay visible.
+  /^undefined is not an object \(evaluating 'window\.ethereum\.selectedAddress = undefined'\)$/,
 ];
 
 /**
