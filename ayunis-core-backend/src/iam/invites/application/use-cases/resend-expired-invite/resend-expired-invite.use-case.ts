@@ -32,7 +32,10 @@ export class ResendExpiredInviteUseCase {
   async execute(
     command: ResendExpiredInviteCommand,
   ): Promise<ResendExpiredInviteResult> {
-    this.logger.log({ inviteId: command.inviteId }, 'execute');
+    this.logger.log(
+      { inviteId: command.inviteId, orgId: command.orgId },
+      'execute',
+    );
     return await this.resend(command);
   }
 
@@ -42,7 +45,7 @@ export class ResendExpiredInviteUseCase {
     const existingInvite = await this.invitesRepository.findOne(
       command.inviteId,
     );
-    this.validateExistingInvite(existingInvite, command.inviteId);
+    this.validateExistingInvite(existingInvite, command);
 
     await this.invitesRepository.delete(command.inviteId);
     const newInvite = this.createReplacementInvite(existingInvite);
@@ -67,9 +70,10 @@ export class ResendExpiredInviteUseCase {
 
   private validateExistingInvite(
     invite: Invite | null,
-    inviteId: string,
+    { inviteId, orgId }: ResendExpiredInviteCommand,
   ): asserts invite is Invite {
-    if (!invite) {
+    // Another organization's invite is reported as missing so its existence isn't leaked.
+    if (invite?.orgId !== orgId) {
       throw new InviteNotFoundError(inviteId);
     }
     if (invite.acceptedAt) {

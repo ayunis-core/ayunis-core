@@ -2875,7 +2875,7 @@ export const useInvitesControllerDeleteAllPending = <TError = void,
     }
 
 /**
- * Delete an invitation (only allowed by the user who created it)
+ * Delete an invitation of the caller's organization (Admin only)
  * @summary Delete an invite
  */
 export const invitesControllerDeleteInvite = (
