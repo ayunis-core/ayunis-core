@@ -23,6 +23,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
           provide: OrgsRepository,
           useValue: {
             findAllForSuperAdmin: jest.fn(),
+            findPayingOrgIds: jest.fn(),
           } satisfies Partial<OrgsRepository>,
         },
         {
@@ -40,6 +41,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+    orgsRepository.findPayingOrgIds.mockResolvedValue([]);
   });
 
   it('should return paginated orgs when requester is super admin', async () => {
@@ -67,9 +69,9 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
       { limit: 50, offset: 0 },
       { search: undefined },
     );
-    expect(result).toBe(paginatedOrgs);
-    expect(result.data).toEqual(orgs);
+    expect(result.data.map((item) => item.org)).toEqual(orgs);
     expect(result.total).toBe(2);
+    expect(result.limit).toBe(50);
   });
 
   it('should filter orgs by search term', async () => {
@@ -92,6 +94,29 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
       { search: 'Acme' },
     );
     expect(result.data).toHaveLength(1);
+  });
+
+  it('marks which listed orgs are paying', async () => {
+    const orgs = [
+      new Org({ id: 'org-paying' as UUID, name: 'Gemeinde Musterstadt' }),
+      new Org({ id: 'org-trial' as UUID, name: 'Gemeinde Beispielhausen' }),
+    ];
+    contextService.get.mockReturnValue(SystemRole.SUPER_ADMIN);
+    orgsRepository.findAllForSuperAdmin.mockResolvedValue(
+      new Paginated<Org>({ data: orgs, limit: 50, offset: 0, total: 2 }),
+    );
+    orgsRepository.findPayingOrgIds.mockResolvedValue(['org-paying' as UUID]);
+
+    const result = await useCase.execute(new SuperAdminGetAllOrgsQuery());
+
+    expect(orgsRepository.findPayingOrgIds).toHaveBeenCalledWith([
+      'org-paying',
+      'org-trial',
+    ]);
+    expect(result.data.map((item) => [item.org.name, item.paying])).toEqual([
+      ['Gemeinde Musterstadt', true],
+      ['Gemeinde Beispielhausen', false],
+    ]);
   });
 
   it('passes the subscription filter through to the repository', async () => {

@@ -1,7 +1,6 @@
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
-import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
@@ -11,6 +10,7 @@ import {
 import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SuperAdminOrgListItem } from 'src/iam/orgs/application/models/super-admin-org-list-item';
 
 @Injectable()
 export class SuperAdminGetAllOrgsUseCase {
@@ -22,7 +22,9 @@ export class SuperAdminGetAllOrgsUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedOrgError)
-  async execute(query: SuperAdminGetAllOrgsQuery): Promise<Paginated<Org>> {
+  async execute(
+    query: SuperAdminGetAllOrgsQuery,
+  ): Promise<Paginated<SuperAdminOrgListItem>> {
     this.logger.log(
       {
         limit: query.limit,
@@ -42,7 +44,7 @@ export class SuperAdminGetAllOrgsUseCase {
       throw new OrgUnauthorizedError('Super admin privileges required');
     }
 
-    return this.orgsRepository.findAllForSuperAdmin(
+    const page = await this.orgsRepository.findAllForSuperAdmin(
       {
         limit: query.limit,
         offset: query.offset,
@@ -53,5 +55,17 @@ export class SuperAdminGetAllOrgsUseCase {
         subscription: query.subscription,
       },
     );
+
+    const payingOrgIds = new Set(
+      await this.orgsRepository.findPayingOrgIds(
+        page.data.map((org) => org.id),
+      ),
+    );
+    return new Paginated<SuperAdminOrgListItem>({
+      data: page.data.map((org) => ({ org, paying: payingOrgIds.has(org.id) })),
+      limit: page.limit,
+      offset: page.offset,
+      total: page.total,
+    });
   }
 }

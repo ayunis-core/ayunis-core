@@ -579,9 +579,24 @@ export interface SuperAdminOrgResponseDto {
   createdAt: string;
 }
 
+export interface SuperAdminOrgListItemResponseDto {
+  /** Organization unique identifier */
+  id: string;
+  /** Organization display name */
+  name: string;
+  /** Whether the organisation is archived */
+  archived: boolean;
+  /** Whether individual usage is hidden from organisation admins */
+  hideIndividualUsage: boolean;
+  /** Date when the organization was created */
+  createdAt: string;
+  /** Whether the organization currently has an active subscription */
+  paying: boolean;
+}
+
 export interface SuperAdminOrgListResponseDto {
   /** Array of organizations for the current page */
-  data: SuperAdminOrgResponseDto[];
+  data: SuperAdminOrgListItemResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
 }

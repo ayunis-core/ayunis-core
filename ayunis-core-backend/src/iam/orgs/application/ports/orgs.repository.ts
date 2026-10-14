@@ -23,6 +23,7 @@ export abstract class OrgsRepository {
     pagination: OrgsPagination,
     filters?: OrgsFilters,
   ): Promise<Paginated<Org>>;
+  abstract findPayingOrgIds(orgIds: UUID[]): Promise<UUID[]>;
   abstract create(org: Org): Promise<Org>;
   abstract updateName(id: UUID, name: string): Promise<Org>;
   abstract updateUsageVisibility(
