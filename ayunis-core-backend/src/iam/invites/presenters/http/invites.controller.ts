@@ -404,12 +404,13 @@ export class InvitesController {
   @ApiResponse({ status: 404, description: 'Invite not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async resendExpiredInvite(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<CreateInviteResponseDto> {
-    this.logger.log({ inviteId }, 'resendExpiredInvite');
+    this.logger.log({ inviteId, orgId }, 'resendExpiredInvite');
 
     const { invite, token } = await this.resendExpiredInviteUseCase.execute(
-      new ResendExpiredInviteCommand(inviteId),
+      new ResendExpiredInviteCommand({ inviteId, orgId }),
     );
 
     return this.deliverInvite(invite, token);
@@ -445,10 +446,11 @@ export class InvitesController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Delete an invite',
     description:
-      'Delete an invitation (only allowed by the user who created it)',
+      "Delete an invitation of the caller's organization (Admin only)",
   })
   @ApiParam({
     name: 'id',
@@ -463,15 +465,18 @@ export class InvitesController {
   @ApiResponse({ status: 404, description: 'Invite not found' })
   @ApiResponse({
     status: 403,
-    description: 'Unauthorized to delete this invite',
+    description: 'Unauthorized - Admin role required',
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteInvite(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<void> {
-    this.logger.log({ inviteId }, 'deleteInvite');
+    this.logger.log({ inviteId, orgId }, 'deleteInvite');
 
-    await this.deleteInviteUseCase.execute(new DeleteInviteCommand(inviteId));
+    await this.deleteInviteUseCase.execute(
+      new DeleteInviteCommand({ inviteId, orgId }),
+    );
   }
 }

@@ -1282,7 +1282,7 @@
     },
     "/invites/{id}": {
       "delete": {
-        "description": "Delete an invitation (only allowed by the user who created it)",
+        "description": "Delete an invitation of the caller's organization (Admin only)",
         "operationId": "InvitesController_deleteInvite",
         "parameters": [
           {
@@ -1301,7 +1301,7 @@
             "description": "The invite has been successfully deleted"
           },
           "403": {
-            "description": "Unauthorized to delete this invite"
+            "description": "Unauthorized - Admin role required"
           },
           "404": {
             "description": "Invite not found"

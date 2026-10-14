@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { DeleteInviteCommand } from './delete-invite.command';
-import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
+import {
+  InviteNotFoundError,
+  UnexpectedInviteError,
+} from 'src/iam/invites/application/invites.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class DeleteInviteUseCase {
@@ -9,29 +13,19 @@ export class DeleteInviteUseCase {
 
   constructor(private readonly invitesRepository: InvitesRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(command: DeleteInviteCommand): Promise<void> {
     this.logger.log(
-      {
-        inviteId: command.inviteId,
-      },
+      { inviteId: command.inviteId, orgId: command.orgId },
       'execute',
     );
 
-    // Find the invite to verify it exists and check permissions
     const invite = await this.invitesRepository.findOne(command.inviteId);
-    if (!invite) {
-      this.logger.error({ inviteId: command.inviteId }, 'Invite not found');
+    // Another organization's invite is reported as missing so its existence isn't leaked.
+    if (invite?.orgId !== command.orgId) {
       throw new InviteNotFoundError(command.inviteId);
     }
 
-    // Delete the invite
     await this.invitesRepository.delete(command.inviteId);
-
-    this.logger.debug(
-      {
-        inviteId: command.inviteId,
-      },
-      'Invite deleted successfully',
-    );
   }
 }
