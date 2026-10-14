@@ -1,5 +1,53 @@
 # Changelog
 
+## [2.54.0](https://github.com/ayunis-core/ayunis-core/compare/v2.53.0...v2.54.0) (2026-10-14)
+
+
+### Features
+
+* **anonymization:** anonymize long inputs as parallel overlapping chunks (AYC-1254) ([#1948](https://github.com/ayunis-core/ayunis-core/issues/1948)) ([0e58a36](https://github.com/ayunis-core/ayunis-core/commit/0e58a36b13e2c232f921c70b87ea51dfb552dd0c))
+* **api-keys:** rename API keys and add a description (AYC-000) ([#1798](https://github.com/ayunis-core/ayunis-core/issues/1798)) ([1f082a3](https://github.com/ayunis-core/ayunis-core/commit/1f082a3b2f253ef973faec8b1ac7fa18d96a042f))
+* **invites:** allow super admins to manage organization invites (AYC-152) ([#1950](https://github.com/ayunis-core/ayunis-core/issues/1950)) ([0498b4d](https://github.com/ayunis-core/ayunis-core/commit/0498b4d77044f4ba05fd0d06104c3470ec0de330))
+* **observability:** add bullmq metrics and alerts (AYC-1038) ([#1946](https://github.com/ayunis-core/ayunis-core/issues/1946)) ([7bd2313](https://github.com/ayunis-core/ayunis-core/commit/7bd231325a14e9c82cd6b5818239dba94d62f7da))
+* **observability:** group super-admin and openai-compat traffic in appsignal namespaces (AYC-1271) ([#1943](https://github.com/ayunis-core/ayunis-core/issues/1943)) ([5cc76bf](https://github.com/ayunis-core/ayunis-core/commit/5cc76bfe24d653980413336fca103fdaa0a11b4e))
+* **orgs:** filter super-admin organizations by paying status (AYC-1141) ([#1940](https://github.com/ayunis-core/ayunis-core/issues/1940)) ([5ebe46d](https://github.com/ayunis-core/ayunis-core/commit/5ebe46d0bb4405a671526a0d3eb630bb6253a2f6))
+* **orgs:** mark paying organizations in the super-admin list (AYC-1141) ([#1941](https://github.com/ayunis-core/ayunis-core/issues/1941)) ([17f0930](https://github.com/ayunis-core/ayunis-core/commit/17f09303206ba905ca9dcfac92dec64d4cd2d42c))
+
+
+### Bug Fixes
+
+* **anonymization:** let token-exact detections win over name detections that cross them (AYC-1254) ([#1949](https://github.com/ayunis-core/ayunis-core/issues/1949)) ([21e9d15](https://github.com/ayunis-core/ayunis-core/commit/21e9d157b6995b7c31abb7753ff341cc3d9b04fa))
+* **api:** stop reporting malformed client JSON as server errors (AYC-1226) ([#1908](https://github.com/ayunis-core/ayunis-core/issues/1908)) ([5897a1e](https://github.com/ayunis-core/ayunis-core/commit/5897a1e314c1b67602f21a9274c7b724960d9483))
+* **chat:** explain oversized chat uploads before sending them (AYC-1034) ([#1952](https://github.com/ayunis-core/ayunis-core/issues/1952)) ([c615586](https://github.com/ayunis-core/ayunis-core/commit/c615586c0308216b6e67f27268ed271283afdf68))
+* **chat:** pin new-chat gradient blobs to a fixed height (AYC-1133) ([#1822](https://github.com/ayunis-core/ayunis-core/issues/1822)) ([57b3f8b](https://github.com/ayunis-core/ayunis-core/commit/57b3f8b5c669e67f8553d1d0ed4915ff9105248b))
+* **frontend:** ignore outlook safe links scanner rejections (AYC-1173) ([#1911](https://github.com/ayunis-core/ayunis-core/issues/1911)) ([a48855d](https://github.com/ayunis-core/ayunis-core/commit/a48855d6806b6da8b56df534ee164ea9d81e3caf))
+* **frontend:** ignore wallet-injected window.ethereum errors (AYC-1207) ([#1909](https://github.com/ayunis-core/ayunis-core/issues/1909)) ([61c3f3f](https://github.com/ayunis-core/ayunis-core/commit/61c3f3fe9ecb78f71a0626fb7e792cec287d704c))
+* **invites:** scope invite deletion and resend to the admin's organization (AYC-1245) ([#1944](https://github.com/ayunis-core/ayunis-core/issues/1944)) ([392ad43](https://github.com/ayunis-core/ayunis-core/commit/392ad43d686008b88b5b899a729dee2f5b91bdf5))
+* **mcp:** classify non-json oauth http error responses (AYC-1155) ([#1939](https://github.com/ayunis-core/ayunis-core/issues/1939)) ([168b4ea](https://github.com/ayunis-core/ayunis-core/commit/168b4ea913d7c5586ea75d4d46d5e4a7fa6cb074))
+* **models:** answer unpaired tool calls before history reaches a provider (AYC-1259) ([#1927](https://github.com/ayunis-core/ayunis-core/issues/1927)) ([e199f15](https://github.com/ayunis-core/ayunis-core/commit/e199f15da94e568ca8be45ed721534788f00ca03))
+* **models:** retry rate-limited inference once after retry-after (AYC-1208) ([#1907](https://github.com/ayunis-core/ayunis-core/issues/1907)) ([608b219](https://github.com/ayunis-core/ayunis-core/commit/608b219eafa768e1f092ff544808ca33042219fa))
+* **retrievers:** log upstream diagnostics for Mistral OCR failures (AYC-1115) ([#1918](https://github.com/ayunis-core/ayunis-core/issues/1918)) ([83cd787](https://github.com/ayunis-core/ayunis-core/commit/83cd787b97c31060650990063a1ced67547f5e1b))
+* **runs:** keep model requests within the provider's limits (AYC-1255) ([#1920](https://github.com/ayunis-core/ayunis-core/issues/1920)) ([fe56863](https://github.com/ayunis-core/ayunis-core/commit/fe568632b56819febe28c0d128673ed31f67e849))
+* **runs:** only roll back messages the failed run persisted (AYC-1259) ([#1926](https://github.com/ayunis-core/ayunis-core/issues/1926)) ([ca2523e](https://github.com/ayunis-core/ayunis-core/commit/ca2523e7eeb2b52d7d17587dd2e27c919317284d))
+* **runs:** run one message at a time per thread (AYC-1259) ([#1928](https://github.com/ayunis-core/ayunis-core/issues/1928)) ([d7f6661](https://github.com/ayunis-core/ayunis-core/commit/d7f6661b30cbb959f50cca69f93bd95199dd6f88))
+* **subscriptions:** clarify replacement action copy (AYC-1158) ([#1848](https://github.com/ayunis-core/ayunis-core/issues/1848)) ([2e2239e](https://github.com/ayunis-core/ayunis-core/commit/2e2239e081fcb9e6fece569965f943529902ef0e))
+
+
+### Tests
+
+* **agent-runtime:** pin the idle-stall retry budget for silent providers (AYC-1157) ([#1914](https://github.com/ayunis-core/ayunis-core/issues/1914)) ([cded851](https://github.com/ayunis-core/ayunis-core/commit/cded851a58e04b77ff601e584213e365f3d49ee3))
+
+
+### Miscellaneous
+
+* **deps:** migrate the frontend to vite 8 (AYC-000) ([#1951](https://github.com/ayunis-core/ayunis-core/issues/1951)) ([4509f1c](https://github.com/ayunis-core/ayunis-core/commit/4509f1c6dfb4e4fe79711011de2ba9e4a63d6ef6))
+
+
+### CI/CD
+
+* **codeowners:** request reviews only for entity and record files (AYC-000) ([#1934](https://github.com/ayunis-core/ayunis-core/issues/1934)) ([323f201](https://github.com/ayunis-core/ayunis-core/commit/323f201d29dc400fe8f8e724ce7aa9db560485cc))
+* **deps:** bump actions/cache to v5 for the node 24 runtime (AYC-000) ([#1954](https://github.com/ayunis-core/ayunis-core/issues/1954)) ([0ea8079](https://github.com/ayunis-core/ayunis-core/commit/0ea80793ad8e9ceb6636f8e95842e70e81ab48d6))
+
 ## [2.53.0](https://github.com/ayunis-core/ayunis-core/compare/v2.52.0...v2.53.0) (2026-10-13)
 
 
