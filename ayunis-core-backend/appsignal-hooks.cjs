@@ -305,6 +305,16 @@ const SUPPRESSIONS = [
     exceptionType: 'PayloadTooLargeError',
   },
   {
+    id: 'malformed-json-body',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-1226',
+    reason:
+      'Malformed client JSON is an expected HTTP 400. Only parser errors ' +
+      'tagged MALFORMED_JSON_BODY are ignored; unrelated SyntaxErrors ' +
+      'remain reportable.',
+    exceptionType: 'MALFORMED_JSON_BODY',
+  },
+  {
     id: 'nestjs-core-instrumentation',
     lever: 'disableInstrumentation',
     ticket: 'AYC-479',

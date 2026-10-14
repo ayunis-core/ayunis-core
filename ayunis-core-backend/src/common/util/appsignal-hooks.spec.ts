@@ -9,6 +9,7 @@ import {
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import { tagMalformedJsonBody } from 'src/common/middleware/json-body-parser.middleware';
 
 type UndiciRequest = {
   method?: string;
@@ -156,6 +157,15 @@ describe('exceptionTypeOf', () => {
   });
 });
 
+// Built the way body-parser's read.js fails a body JSON.parse rejected.
+function createMalformedJsonError(): Error {
+  return createHttpError(
+    400,
+    new SyntaxError('Unexpected non-whitespace character after JSON'),
+    { body: '{"a":1}}', type: 'entity.parse.failed' },
+  );
+}
+
 // A real instance of each error an `ignoreErrors` entry claims to suppress.
 // Keyed by suppression id so an entry cannot be added without one.
 const ERROR_SAMPLES: Record<string, () => Error> = {
@@ -175,6 +185,7 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     createHttpError(413, 'request entity too large', {
       type: 'entity.too.large',
     }),
+  'malformed-json-body': () => tagMalformedJsonBody(createMalformedJsonError()),
   'transport-headers-timeout': () => new undiciErrors.HeadersTimeoutError(),
   'transport-body-timeout': () => new undiciErrors.BodyTimeoutError(),
   'transport-connect-timeout': () => new undiciErrors.ConnectTimeoutError(),
@@ -324,6 +335,29 @@ describe('SUPPRESSIONS registry', () => {
       expect(ignoredErrorTypes).toContain(exceptionTypeOf(raw));
       expect(classified).toBeInstanceOf(ProviderConnectionError);
       expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
+    });
+
+    it('suppresses malformed client JSON', () => {
+      const clientBody = tagMalformedJsonBody(createMalformedJsonError());
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(clientBody));
+    });
+
+    it('keeps unrelated SyntaxErrors reportable', () => {
+      const upstream = tagMalformedJsonBody(
+        new SyntaxError('Unexpected token < in JSON at position 0'),
+      );
+
+      expect(exceptionTypeOf(upstream)).toBe('SyntaxError');
+      expect(ignoredErrorTypes).not.toContain('SyntaxError');
+    });
+
+    it('keeps aborted requests reportable', () => {
+      const abortedRequest = tagMalformedJsonBody(
+        createHttpError(400, 'request aborted', { type: 'request.aborted' }),
+      );
+
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(abortedRequest));
     });
 
     it('suppresses the runtime idle signal but leaves its classified timeout reporting', () => {
