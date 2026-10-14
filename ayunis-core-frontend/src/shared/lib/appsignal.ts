@@ -34,6 +34,10 @@ export const ignoredErrorPatterns: RegExp[] = [
   // but the page-origin frame cannot be classified by the extension override.
   // Match only the observed message so other window.ethereum errors stay visible.
   /^undefined is not an object \(evaluating 'window\.ethereum\.selectedAddress = undefined'\)$/,
+  // Microsoft Safe Links scanners pre-open emailed links in CefSharp, whose
+  // .NET JS bridge rejects with this plain string. A string rejection has
+  // no stack for the extension-frame override to classify (AYC-1173).
+  /^Object Not Found Matching Id:\d+, MethodName:\w+, ParamCount:\d+$/,
 ];
 
 /**
