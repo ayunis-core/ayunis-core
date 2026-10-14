@@ -103,6 +103,7 @@
     },
     "fileSourceDisabled": "To upload documents, an embedding model must be enabled.",
     "dropFilesHint": "Drop files here",
+    "fileTooLarge": "The file “{{name}}” is too large ({{size}} MB). The current maximum is {{limit}} MB.",
     "invalidDroppedFileType": "Some files were skipped because they are not supported.",
     "microphoneTooltip": "Dictate",
     "microphoneRecording": "Recording... Click to stop",

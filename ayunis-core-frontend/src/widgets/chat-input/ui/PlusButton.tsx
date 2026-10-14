@@ -25,6 +25,7 @@ import { useNavigate } from '@tanstack/react-router';
 import {
   separateFilesByType,
   createFileListFromFiles,
+  keepFilesWithinSizeLimit,
   ACCEPTED_FILE_PICKER_TYPES,
 } from '@/widgets/chat-input/utils/fileHandlers';
 import type {
@@ -78,7 +79,8 @@ export default function PlusButton({
       if (isFileSourceDisabled) {
         hasSkippedFiles = true;
       } else {
-        onFileUpload(regularFiles);
+        const validFiles = keepFilesWithinSizeLimit(regularFiles, t);
+        if (validFiles.length > 0) onFileUpload(validFiles);
       }
     }
 
