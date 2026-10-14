@@ -2,7 +2,7 @@ import type { PiiDetection } from './pii-detection';
 
 /**
  * Replaces each detected span with its `[ENTITY_TYPE]` placeholder.
- * Detections must be non-overlapping (see dropOverlappingResults in the
+ * Detections must be non-overlapping (see resolveSpanOverlaps in the
  * engine adapter); replacing from end to start preserves earlier offsets.
  */
 export function applyReplacements(
