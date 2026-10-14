@@ -38,6 +38,30 @@ describe('openai client construction', () => {
   });
 });
 
+describe('openai token estimator selection', () => {
+  it('counts exactly against api.openai.com', () => {
+    const provider = openai({ apiKey: 'sk-test', model: 'gpt-4o-mini' });
+
+    expect(provider.tokenEstimator).toMatchObject({
+      exact: true,
+      tokensPerImage: 48_169,
+    });
+  });
+
+  it('only estimates against a compatible endpoint', () => {
+    const provider = openai({
+      apiKey: 'key',
+      model: 'llama-3.3-70b-instruct',
+      baseUrl: 'https://api.scaleway.ai/v1',
+    });
+
+    expect(provider.tokenEstimator).toMatchObject({
+      exact: false,
+      tokensPerMessage: 0,
+    });
+  });
+});
+
 describe('azure client construction', () => {
   const insecureEndpoint = ['http:', '//my-resource.openai.azure.com'].join('');
   it('uses the standard client with the Azure v1 base URL', () => {
@@ -102,4 +126,33 @@ describe('azure client construction', () => {
       ).toThrow(/Azure OpenAI endpoint.*absolute HTTPS URL/);
     },
   );
+});
+
+it('uses OpenAI pricing for an explicitly configured official base URL', () => {
+  expect(
+    openai({
+      apiKey: 'key',
+      model: 'gpt-4o-mini',
+      baseUrl: 'https://api.openai.com/v1/',
+    }).tokenEstimator,
+  ).toMatchObject({ exact: true, tokensPerImage: 48169 });
+});
+it('estimates an Azure deployment alias conservatively', () => {
+  expect(
+    azure({
+      apiKey: 'key',
+      endpoint: 'https://municipality.openai.azure.com',
+      model: 'chat-prod',
+    }).tokenEstimator,
+  ).toMatchObject({ exact: false, tokensPerImage: 48169 });
+});
+it('prices an Azure alias with its explicitly supplied underlying model', () => {
+  expect(
+    azure({
+      apiKey: 'key',
+      endpoint: 'https://municipality.openai.azure.com',
+      model: 'chat-prod',
+      underlyingModel: 'gpt-4.1',
+    }).tokenEstimator,
+  ).toMatchObject({ exact: true, tokensPerImage: 1445 });
 });

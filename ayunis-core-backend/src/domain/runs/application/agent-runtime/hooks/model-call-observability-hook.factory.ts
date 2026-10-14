@@ -1,12 +1,19 @@
-import {
-  ModelProviderError,
-  type AfterModelCallContext,
-  type Hook,
-  type ModelCallOutcomeSnapshot,
-  type ProviderFailureKind,
-  type ProviderRequest,
+import type {
+  AfterModelCallContext,
+  Hook,
+  ModelCallOutcomeSnapshot,
+  ProviderFailureKind,
+  ProviderRequest,
+  BeforeModelCallContext,
 } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
+import {
+  budgetEstimator,
+  countFixedRequestTokens,
+  countMessageTokens,
+} from 'src/common/token-counter/application/util/context-budget.helper';
+import { toRuntimeBudgetParts } from 'src/domain/runs/application/agent-runtime/runtime-message-parts.helper';
+import { findPortableProviderError } from 'src/common/errors/find-portable-provider-error.helper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import {
@@ -30,6 +37,8 @@ interface ObservabilityHookParams {
 }
 
 interface RequestDiagnostics {
+  readonly estimatedInputTokens: number;
+  readonly exactTokenizer: boolean;
   readonly messageCount: number;
   readonly toolCount: number;
   readonly toolChoice?: ProviderRequest['toolChoice'];
@@ -53,6 +62,7 @@ export class ModelCallObservabilityHookFactory {
       beforeModelCall: (ctx) => {
         try {
           requests.set(ctx.modelCallId, {
+            ...requestTokenEstimate(ctx),
             messageCount: ctx.request.messages.length,
             toolCount: ctx.request.tools.length,
             ...(ctx.request.toolChoice
@@ -86,7 +96,40 @@ export class ModelCallObservabilityHookFactory {
     const model = params.models.resolve(ctx.model);
     this.logFailure(ctx.outcome, model, request);
     this.logRejection(ctx.outcome, model);
+    this.logCalibration(ctx.outcome, model, request);
     await this.emitCompletion(ctx, params, model);
+  }
+
+  private logCalibration(
+    outcome: ModelCallOutcomeSnapshot,
+    model: LanguageModel,
+    request: RequestDiagnostics | undefined,
+  ): void {
+    const usage = outcome.usage;
+    if (
+      !request ||
+      usage.inputTokens === undefined ||
+      request.estimatedInputTokens === 0
+    )
+      return;
+    const reportedInputTokens =
+      usage.inputTokens +
+      (usage.cacheReadInputTokens ?? 0) +
+      (usage.cacheWriteInputTokens ?? 0);
+    this.logger.log(
+      {
+        modelCallId: outcome.modelCallId,
+        provider: model.provider,
+        model: model.name,
+        exactTokenizer: request.exactTokenizer,
+        estimatedInputTokens: request.estimatedInputTokens,
+        reportedInputTokens,
+        reportedToEstimatedRatio: Number(
+          (reportedInputTokens / request.estimatedInputTokens).toFixed(3),
+        ),
+      },
+      'Context budget estimate compared with provider input tokens',
+    );
   }
 
   private logFailure(
@@ -261,18 +304,18 @@ function isProviderUnavailable(kind: string): boolean {
   return ['connection', 'timeout', 'server', 'rate_limit'].includes(kind);
 }
 
-function findPortableProviderError(
-  error: unknown,
-): ModelProviderError | undefined {
-  let current: unknown = error;
-  const seen = new Set<unknown>();
-  for (let depth = 0; depth < 8; depth++) {
-    if (current instanceof ModelProviderError) return current;
-    if (typeof current !== 'object' || current === null || seen.has(current)) {
-      return undefined;
-    }
-    seen.add(current);
-    current = (current as { cause?: unknown }).cause;
-  }
-  return undefined;
+function requestTokenEstimate(
+  ctx: BeforeModelCallContext,
+): Pick<RequestDiagnostics, 'estimatedInputTokens' | 'exactTokenizer'> {
+  const estimator = budgetEstimator(ctx.model.tokenEstimator);
+  return {
+    exactTokenizer: estimator.exact,
+    estimatedInputTokens:
+      countFixedRequestTokens(ctx.request, estimator) +
+      ctx.request.messages.reduce(
+        (total, message) =>
+          total + countMessageTokens(estimator, toRuntimeBudgetParts(message)),
+        0,
+      ),
+  };
 }

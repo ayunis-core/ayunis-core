@@ -6,7 +6,9 @@ import type {
   ModelProvider,
   ProviderChunk,
   ProviderRequest,
+  TokenEstimator,
 } from '@ayunis/inference';
+import { compatibleEndpointTokens, openAITokens } from './openai-tokens';
 import {
   normalizeProviderError,
   normalizeProviderStreamErrors,
@@ -53,6 +55,8 @@ export interface AzureProviderOptions {
   endpoint: string;
   /** Azure deployment name, passed through as the model id. */
   model: string;
+  /** Underlying OpenAI model id when the deployment name is an alias. */
+  underlyingModel?: string;
   reasoningEffort?: 'low' | 'medium' | 'high' | 'xhigh';
   /** SDK retries are for direct non-streaming calls only. Streaming hosts must pass 0. */
   maxRetries?: number;
@@ -74,7 +78,22 @@ export const openai = (options: OpenAIProviderOptions): ModelProvider => {
       ? { maxRetries: options.maxRetries }
       : {}),
   });
-  return createProvider(client, `openai:${options.model}`, options.model);
+  // A custom base URL serves other vendors' models (Scaleway, STACKIT, OTC),
+  // whose tokenizers are not OpenAI's.
+  const compatibleEndpoint =
+    options.baseUrl &&
+    !['https://api.openai.com/v1', 'https://api.openai.com/v1/'].includes(
+      options.baseUrl,
+    );
+  const tokenEstimator = compatibleEndpoint
+    ? compatibleEndpointTokens()
+    : openAITokens(options.model);
+  return createProvider(
+    client,
+    `openai:${options.model}`,
+    options.model,
+    tokenEstimator,
+  );
 };
 
 const buildAzureV1BaseUrl = (endpoint: string): string => {
@@ -126,6 +145,7 @@ const createResponsesProvider = (
   options: AzureProviderOptions,
 ): ModelProvider => ({
   name: `azure:${options.model}`,
+  tokenEstimator: openAITokens(options.underlyingModel ?? options.model),
   stream: (request) =>
     streamResponses(client, options.model, options.reasoningEffort, request),
 });
@@ -134,8 +154,10 @@ const createProvider = (
   client: OpenAI,
   name: string,
   model: string,
+  tokenEstimator: TokenEstimator,
 ): ModelProvider => ({
   name,
+  tokenEstimator,
   stream: (request) => streamChat(client, model, request),
 });
 

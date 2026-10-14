@@ -1,11 +1,13 @@
+import { turnContext } from 'src/domain/runs/testing/runtime-hook-context.fixture';
 import type { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
 import { WebsiteContentToolHandler } from './website-content-tool.handler';
-import type { Message } from '@ayunis/agent-runtime';
-import type { CountTokensCommand } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.command';
-import type { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
-import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
+import {
+  RunContext,
+  type Message,
+  type TokenEstimator,
+} from '@ayunis/agent-runtime';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
 
 const context = {
@@ -190,14 +192,27 @@ function researchTurn(results: string[]): Message[] {
 function contextTransform(
   maxTokens: number,
 ): (messages: readonly Message[]) => Message[] {
-  const countTokens = {
-    execute: (command: CountTokensCommand) =>
-      Math.ceil(command.text.length / 4),
-  } as unknown as CountTokensUseCase;
-  const hook = new ContextBudgetHookFactory(
-    new CompleteTurnSelector(countTokens),
-  ).create({ maxTokens });
+  const tokens: TokenEstimator = {
+    exact: false,
+    tokensPerMessage: 0,
+    tokensPerImage: 1_600,
+    countText: (text) => Math.ceil(text.length / 4),
+    countTools: () => 0,
+  };
+  const hook = new ContextBudgetHookFactory().create({
+    model: {
+      contextWindowSize: maxTokens,
+    },
+  });
   const transformMessages = jest.fn();
-  hook.beforeModelTurn!({ transformMessages } as never);
+  hook.beforeModelTurn!(
+    turnContext({
+      transformMessages,
+      context: RunContext.create(),
+      model: { name: 'mock', stream: jest.fn(), tokenEstimator: tokens },
+      instructions: '',
+      tools: [],
+    }),
+  );
   return transformMessages.mock.calls[0][0];
 }

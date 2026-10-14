@@ -230,8 +230,8 @@ export class InferenceAbortedError extends ModelError {
 
 /**
  * Error thrown when a provider rejects an image for exceeding its size limit
- * (Anthropic/Bedrock cap a single image at 5 MB base64). Distinct from the
- * generic InferenceFailedError so the UI can tell the user to shrink the image.
+ * Distinct from the generic
+ * InferenceFailedError so the UI can tell the user to shrink the image.
  */
 export class InferenceImageTooLargeError extends ModelError {
   constructor(metadata?: ErrorMetadata) {

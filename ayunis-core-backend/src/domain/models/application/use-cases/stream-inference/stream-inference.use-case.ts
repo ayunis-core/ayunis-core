@@ -18,6 +18,7 @@ import {
   extractProviderErrorDiagnostics,
   extractProviderExplanation,
   type ProviderErrorDiagnostics,
+  ProviderErrorReason,
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
@@ -77,13 +78,8 @@ export class StreamInferenceUseCase {
     }
     const diagnostics = extractProviderErrorDiagnostics(error);
     const status = diagnostics.upstreamStatus;
-    const cause = error instanceof ModelProviderError ? error.cause : error;
-    const message = cause instanceof Error ? cause.message : String(cause);
     this.logProviderInferenceFailed(error, input, diagnostics);
-    // Anthropic/Bedrock reject oversized images with "image exceeds N MB
-    // maximum" — surface a distinct code so the UI can tell the user to shrink
-    // it instead of showing a generic failure.
-    if (/image exceeds .* maximum/i.test(message)) {
+    if (diagnostics.upstreamReason === ProviderErrorReason.IMAGE_TOO_LARGE) {
       return new InferenceImageTooLargeError({ status });
     }
     return new InferenceFailedError('Provider inference failed', {

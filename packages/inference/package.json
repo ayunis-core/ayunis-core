@@ -1,7 +1,7 @@
 {
   "name": "@ayunis/inference",
   "version": "0.1.0",
-  "description": "Provider-agnostic inference contracts: message model, the ModelProvider port, and streaming chunk types",
+  "description": "Provider-agnostic inference contracts (message model, the ModelProvider port with its token estimator, streaming chunk types), provider error normalization, and the shared tiktoken-based token estimate",
   "private": true,
   "type": "module",
   "engines": {
@@ -29,6 +29,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "deps:check": "madge --circular --extensions ts src"
+  },
+  "dependencies": {
+    "tiktoken": "^1.0.22"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

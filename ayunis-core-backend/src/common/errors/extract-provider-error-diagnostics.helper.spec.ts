@@ -43,7 +43,7 @@ describe('extractProviderErrorDiagnostics', () => {
     expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamStatus: 400,
       upstreamRequestId: 'req_azure_response_123',
-      upstreamReason: ProviderErrorReason.UNSUPPORTED_PARAMETER,
+      upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
     });
   });
 
@@ -58,7 +58,7 @@ describe('extractProviderErrorDiagnostics', () => {
     expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamStatus: 400,
       upstreamRequestId: 'req_mistral_direct_456',
-      upstreamReason: ProviderErrorReason.INVALID_TOOL_SCHEMA,
+      upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
     });
   });
 
@@ -109,7 +109,7 @@ describe('extractProviderErrorDiagnostics', () => {
     expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamStatus: 400,
       upstreamRequestId: 'req_plain_object_789',
-      upstreamReason: ProviderErrorReason.CONTENT_FILTER,
+      upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
     });
   });
 
@@ -124,6 +124,60 @@ describe('extractProviderErrorDiagnostics', () => {
     expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamStatus: 400,
       upstreamRequestId: 'aws-bedrock-request-123',
+      upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
+    });
+  });
+
+  it('takes the context-length reason the provider package recognised', () => {
+    const error = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      rejectionReason: 'context_length_exceeded',
+      cause: Object.assign(
+        new Error('400 prompt is too long: 210950 tokens > 200000 maximum'),
+        { status: 400 },
+      ),
+    });
+
+    expect(extractProviderErrorDiagnostics(error)).toMatchObject({
+      upstreamStatus: 400,
+      upstreamReason: ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED,
+    });
+  });
+
+  it.each([
+    ['invalid_tool_schema', ProviderErrorReason.INVALID_TOOL_SCHEMA],
+    ['content_filter', ProviderErrorReason.CONTENT_FILTER],
+    ['unsupported_parameter', ProviderErrorReason.UNSUPPORTED_PARAMETER],
+    ['authentication_failed', ProviderErrorReason.AUTHENTICATION_FAILED],
+    ['image_too_large', ProviderErrorReason.IMAGE_TOO_LARGE],
+  ] as const)(
+    'takes the %s reason the provider package recognised',
+    (rejectionReason, upstreamReason) => {
+      const error = new ModelProviderError({
+        kind: 'rejection',
+        stage: 'stream_establishment',
+        upstreamStatus: 400,
+        rejectionReason,
+        cause: Object.assign(new Error('400 provider wording'), {
+          status: 400,
+        }),
+      });
+
+      expect(extractProviderErrorDiagnostics(error).upstreamReason).toBe(
+        upstreamReason,
+      );
+    },
+  );
+
+  it('does not guess a reason from the wording of an unclassified rejection', () => {
+    const error = Object.assign(
+      new Error("This model's maximum context length is 32768 tokens"),
+      { status: 400 },
+    );
+
+    expect(extractProviderErrorDiagnostics(error)).toMatchObject({
       upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
     });
   });
@@ -152,7 +206,29 @@ describe('extractProviderErrorDiagnostics', () => {
       upstreamType: 'invalid_request_error',
       upstreamParam: 'tools[4].function.parameters',
       upstreamRequestId: 'req_portable_456',
-      upstreamReason: ProviderErrorReason.INVALID_TOOL_SCHEMA,
+      upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
+    });
+  });
+
+  it('reads the rejection reason from a portable error nested in a cause chain', () => {
+    const rejection = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      rejectionReason: 'context_length_exceeded',
+      cause: Object.assign(new Error('400 provider wording'), {
+        status: 400,
+        type: 'invalid_request_error',
+      }),
+    });
+    const wrapped = new Error('model call failed', {
+      cause: new Error('provider failed', { cause: rejection }),
+    });
+
+    expect(extractProviderErrorDiagnostics(wrapped)).toEqual({
+      upstreamStatus: 400,
+      upstreamType: 'invalid_request_error',
+      upstreamReason: ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED,
     });
   });
 

@@ -21,9 +21,9 @@ import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usa
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
 import { ModelCallObservabilityHookFactory } from './application/agent-runtime/hooks/model-call-observability-hook.factory';
-import { CompleteTurnSelector } from './application/agent-runtime/complete-turn-selector';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
+import { RunAssemblyService } from './application/services/run-assembly.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
@@ -46,7 +46,6 @@ import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
-import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { GetThreadSourceCitationUseCase } from './application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
@@ -70,7 +69,6 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ChatSettingsModule,
     ArtifactsModule,
     LetterheadsModule,
-    TokenCounterModule,
     WorkspacesModule,
     KnowledgeBasesModule,
   ],
@@ -90,8 +88,8 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ToolUsageHookFactory,
     SkillActivationHookFactory,
     ContextBudgetHookFactory,
-    CompleteTurnSelector,
     RuntimeHistoryMaterializer,
+    RunAssemblyService,
     ModelCallObservabilityHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,

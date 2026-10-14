@@ -144,7 +144,7 @@ describe('convertResponseInput', () => {
         content: [
           {
             type: 'input_image',
-            detail: 'auto',
+            detail: 'high',
             image_url: 'data:image/png;base64,aGVsbG8=',
           },
           { type: 'input_text', text: 'Describe this image.' },

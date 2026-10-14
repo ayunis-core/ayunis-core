@@ -42,7 +42,9 @@ future @ayunis/agent-harness
 ```
 
 - [`@ayunis/inference`](packages/inference) defines provider-agnostic messages,
-  model requests, and streaming contracts.
+  model requests, and streaming contracts, including how a provider counts a
+  request (`TokenEstimator`), plus provider error normalization and the
+  shared tiktoken-based estimate.
 - [`@ayunis/agent-runtime`](packages/agent-runtime/README.md) is the bare agent
   loop. Hooks are its only extension mechanism; the package has no resource
   initialization or opinionated agent assembly.

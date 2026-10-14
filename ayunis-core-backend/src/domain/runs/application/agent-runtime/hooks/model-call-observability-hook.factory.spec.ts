@@ -3,6 +3,7 @@ import {
   run,
   type ModelProvider,
   type ProviderChunk,
+  type ProviderRequest,
   type RunEvent,
 } from '@ayunis/agent-runtime';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
@@ -542,4 +543,72 @@ describe('ModelCallObservabilityHookFactory', () => {
       'Failed to emit InferenceCompletedEvent',
     );
   });
+});
+
+it('calibrates each actual recovery request after its instructions and tools change', async () => {
+  const logger = createLoggerMock();
+  const requests: ProviderRequest[] = [];
+  const provider: ModelProvider = {
+    name: 'mock',
+    tokenEstimator: {
+      exact: false,
+      tokensPerImage: 1600,
+      tokensPerMessage: 0,
+      countText: (text) => text.length,
+      countTools: (tools) => tools.length * 10,
+    },
+    async *stream(request) {
+      requests.push(request);
+      yield {
+        ...(request.tools.length > 0
+          ? {
+              toolCallDeltas: [
+                {
+                  index: 0,
+                  id: 'call_bad',
+                  name: 'create_document',
+                  argumentsDelta: '{"title":',
+                },
+              ],
+            }
+          : { textDelta: 'Ready' }),
+        finishReason: request.tools.length > 0 ? 'tool_calls' : 'stop',
+        usage: { inputTokens: 100, outputTokens: 1 },
+      };
+    },
+  };
+  const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+  await collect(
+    run({
+      model: provider,
+      messages,
+      instructions: 'Assist a clerk.',
+      tools: [createDocumentTool],
+      hooks: [hook],
+      retry: { maxRetries: 1, backoff: { initialDelayMs: 0 } },
+    }),
+  );
+  const calibration = logger.log.mock.calls.filter(
+    (call) =>
+      call[1] === 'Context budget estimate compared with provider input tokens',
+  );
+  expect(calibration).toHaveLength(requests.length);
+  requests.forEach((request, index) => {
+    const messageTokens = request.messages.reduce(
+      (sum, message) =>
+        sum +
+        message.content.reduce(
+          (total, content) =>
+            total + (content.type === 'text' ? content.text.length : 0),
+          0,
+        ),
+      0,
+    );
+    expect(calibration[index][0]).toMatchObject({
+      estimatedInputTokens:
+        request.instructions.length + request.tools.length * 10 + messageTokens,
+    });
+  });
+  expect(requests.length).toBeGreaterThan(1);
+  expect(requests[1].instructions).not.toBe(requests[0].instructions);
 });

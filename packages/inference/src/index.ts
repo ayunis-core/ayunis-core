@@ -11,6 +11,19 @@ export type {
   ToolUseContent,
 } from './message';
 export type { JsonSchema, ToolSchema } from './tool-schema';
+export { rawBytesWithinBase64 } from './image-limits';
+export type { ImageLimits } from './image-limits';
+export {
+  createTiktokenEstimator,
+  DEFAULT_TOKENS_PER_IMAGE,
+  estimatedTokens,
+} from './token-estimator';
+export type {
+  TiktokenEstimatorOptions,
+  TokenEncoding,
+  TokenEstimator,
+  ToolDescription,
+} from './token-estimator';
 export {
   CombinatorFlattener,
   SchemaWalker,
@@ -50,3 +63,10 @@ export type {
   ProviderFailureStage,
   ProviderTimeoutSource,
 } from './provider-error';
+export type {
+  ProviderRejection,
+  ProviderRejectionClassifier,
+  ProviderRejectionReason,
+} from './provider-rejection';
+
+export { PROVIDER_REJECTION_REASONS } from './provider-rejection';

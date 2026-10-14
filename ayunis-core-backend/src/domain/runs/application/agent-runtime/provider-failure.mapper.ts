@@ -18,10 +18,11 @@ import {
 import {
   InferenceAbortedError,
   InferenceFailedError,
-  InferenceImageTooLargeError,
   InferenceStreamStalledError,
+  InferenceImageTooLargeError,
 } from 'src/domain/models/application/models.errors';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
 
 type RunErrorEvent = Extract<RunEvent, { type: 'error' }>;
@@ -63,7 +64,12 @@ function mapResolvedProviderError(
   modelCallId: string,
 ): ApplicationError {
   const callError = models.getCallError(modelCallId);
-  const diagnostics = collectProviderErrorDiagnostics(callError);
+  const diagnostics: ProviderErrorDiagnostics = {
+    ...collectProviderErrorDiagnostics(callError),
+    ...(providerFailure.kind === 'rejection' && providerFailure.rejectionReason
+      ? { upstreamReason: providerFailure.rejectionReason }
+      : {}),
+  };
   const failure = classifyKnownRateLimit(providerFailure, diagnostics);
   const context = providerErrorContext(
     model.provider,
@@ -77,15 +83,27 @@ function mapResolvedProviderError(
       providerFailureMetadata(failure, context),
     );
   }
-  if (isOversizedImageError(callError)) {
-    return new InferenceImageTooLargeError({
-      provider: context.provider,
-      modelId: context.modelId,
-      status: failure.upstreamStatus,
-      upstreamRequestId: failure.upstreamRequestId,
-    });
-  }
+  const rejectionError = mapActionableRejection(failure, context);
+  if (rejectionError) return rejectionError;
   return mapProviderFailure(failure, context, diagnostics);
+}
+
+function mapActionableRejection(
+  failure: ProviderFailureFacts,
+  context: ProviderErrorContext,
+): ApplicationError | undefined {
+  if (failure.kind !== 'rejection') return undefined;
+  const metadata = {
+    provider: context.provider,
+    modelId: context.modelId,
+    status: failure.upstreamStatus,
+    upstreamRequestId: failure.upstreamRequestId,
+  };
+  if (failure.rejectionReason === 'context_length_exceeded')
+    return new RunContextBudgetExceededError(metadata);
+  if (failure.rejectionReason === 'image_too_large')
+    return new InferenceImageTooLargeError(metadata);
+  return undefined;
 }
 
 function mapProviderFailure(
@@ -252,23 +270,4 @@ function readIdleMs(message: string): number {
   return Number(
     message.slice(RUNTIME_IDLE_PREFIX.length, -MILLISECONDS_SUFFIX.length),
   );
-}
-
-function isOversizedImageError(error: unknown): boolean {
-  let current: unknown = error;
-  const seen = new Set<unknown>();
-  for (let depth = 0; depth < 8; depth++) {
-    if (current instanceof Error) {
-      const message = current.message.toLowerCase();
-      if (message.includes('image exceeds ') && message.includes(' maximum')) {
-        return true;
-      }
-    }
-    if (typeof current !== 'object' || current === null || seen.has(current)) {
-      return false;
-    }
-    seen.add(current);
-    current = (current as { cause?: unknown }).cause;
-  }
-  return false;
 }

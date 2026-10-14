@@ -1,3 +1,9 @@
+import { asRecord, hasDiagnosticEvidence } from './provider-diagnostics';
+import {
+  resolveRejection,
+  type ProviderRejectionClassifier,
+  type ProviderRejectionReason,
+} from './provider-rejection';
 import { parseRetryAfterMs } from './retry-after';
 
 /** Provider failure fact; retryability remains a host policy decision. */
@@ -25,6 +31,8 @@ export type ProviderTimeoutSource =
 export interface ModelProviderErrorDetails {
   readonly kind: ProviderFailureKind;
   readonly stage: ProviderFailureStage;
+  readonly rejectionReason?: ProviderRejectionReason;
+  readonly contextOverflowTokens?: number;
   readonly upstreamStatus?: number;
   readonly upstreamRequestId?: string;
   readonly retryAfterMs?: number;
@@ -44,6 +52,10 @@ export class ModelProviderError extends Error {
   readonly kind: ProviderFailureKind;
   /** Distinguishes setup failures from failures after stream consumption began. */
   readonly stage: ProviderFailureStage;
+  /** Set only on a `rejection` the provider identified as actionable. */
+  readonly rejectionReason?: ProviderRejectionReason;
+  /** Tokens by which a `context_length_exceeded` request overshot the window. */
+  readonly contextOverflowTokens?: number;
   /** HTTP status received from the upstream provider, when available. */
   readonly upstreamStatus?: number;
   /** Sanitized provider request identifier suitable for correlation. */
@@ -64,6 +76,8 @@ export class ModelProviderError extends Error {
     this.name = new.target.name;
     this.kind = details.kind;
     this.stage = details.stage;
+    this.rejectionReason = details.rejectionReason;
+    this.contextOverflowTokens = details.contextOverflowTokens;
     this.upstreamStatus = details.upstreamStatus;
     this.upstreamRequestId = details.upstreamRequestId;
     this.retryAfterMs = details.retryAfterMs;
@@ -79,6 +93,8 @@ export interface NormalizeProviderErrorOptions {
   readonly signal?: AbortSignal;
   readonly timeoutSource?: ProviderTimeoutSource;
   readonly timeoutSignal?: AbortSignal;
+  /** Provider-specific recognition of an actionable rejection. */
+  readonly classifyRejection?: ProviderRejectionClassifier;
 }
 
 const CONNECTION_CODES = new Set([
@@ -170,10 +186,21 @@ export function normalizeProviderError(
   const chain = collectCauseChain(error);
   const upstreamStatus = extractUpstreamStatus(record);
   const classification = classifyFailure(error, upstreamStatus, chain, options);
+  const rejection =
+    classification.kind === 'rejection'
+      ? resolveRejection(
+          error,
+          chain,
+          upstreamStatus,
+          options.classifyRejection,
+        )
+      : undefined;
 
   return new ModelProviderError({
     ...classification,
     stage: options.stage,
+    rejectionReason: rejection?.reason,
+    contextOverflowTokens: rejection?.contextOverflowTokens,
     upstreamStatus,
     upstreamRequestId: extractRequestId(record),
     retryAfterMs: extractRetryAfterMs(record),
@@ -222,24 +249,6 @@ function classifyFailure(
 
 export function isProviderRateLimitDiagnostic(value: unknown): boolean {
   return typeof value === 'string' && RATE_LIMIT_DIAGNOSTICS.has(value);
-}
-
-function hasDiagnosticEvidence(
-  chain: readonly Record<string, unknown>[],
-  diagnostics: ReadonlySet<string>,
-): boolean {
-  return chain.some((record) => {
-    const body = asRecord(record.error);
-    const nestedBody = asRecord(body?.error);
-    return [
-      record.code,
-      record.type,
-      body?.code,
-      body?.type,
-      nestedBody?.code,
-      nestedBody?.type,
-    ].some((value) => typeof value === 'string' && diagnostics.has(value));
-  });
 }
 
 function signalCausedAbort(
@@ -485,10 +494,4 @@ function firstString(...values: unknown[]): string | undefined {
   return values.find(
     (value): value is string => typeof value === 'string' && value.length > 0,
   );
-}
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === 'object' && value !== null
-    ? (value as Record<string, unknown>)
-    : undefined;
 }

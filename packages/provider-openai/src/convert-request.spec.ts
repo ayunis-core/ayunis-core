@@ -409,7 +409,10 @@ describe('convertMessages', () => {
           { type: 'text', text: 'What is this?' },
           {
             type: 'image_url',
-            image_url: { url: 'data:image/png;base64,aGVsbG8=' },
+            image_url: {
+              url: 'data:image/png;base64,aGVsbG8=',
+              detail: 'high',
+            },
           },
         ],
       },
@@ -442,7 +445,10 @@ describe('convertMessages', () => {
         content: [
           {
             type: 'image_url',
-            image_url: { url: 'data:image/png;base64,aGVsbG8=' },
+            image_url: {
+              url: 'data:image/png;base64,aGVsbG8=',
+              detail: 'high',
+            },
           },
           { type: 'text', text: 'Describe this' },
         ],

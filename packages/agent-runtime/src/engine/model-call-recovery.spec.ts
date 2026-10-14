@@ -3,13 +3,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { ProviderError } from '../contracts/errors';
 import type { ModelCallOutcome, ModelCallTrigger } from '../contracts/hook';
 import type { ProviderFailureFacts } from '../contracts/provider';
-import { DEFAULT_RETRY_CONFIG } from '../contracts/run-input';
+import {
+  DEFAULT_RETRY_CONFIG,
+  type ResolvedRetryConfig,
+} from '../contracts/run-input';
 import {
   callModelWithRecovery,
   TerminalModelCallError,
   type ModelCallRecoveryOptions,
 } from './model-call-recovery';
-import { providerRetryDelay } from './retry-policy';
+import { providerRetryDelay, resolveRetryConfig } from './retry-policy';
 
 interface OutcomeOverrides {
   readonly visibleOutput?: boolean;
@@ -60,6 +63,28 @@ const midStreamRateLimit = (
   };
 };
 
+const contextLengthRejection = (
+  trigger: ModelCallTrigger,
+  callSequence: number,
+  rejectionReason:
+    'context_length_exceeded' | 'content_filter' = 'context_length_exceeded',
+): ModelCallOutcome => {
+  const facts: ProviderFailureFacts = {
+    kind: 'rejection',
+    stage: 'stream_establishment',
+    upstreamStatus: 400,
+    rejectionReason,
+    contextOverflowTokens: 950,
+  };
+  return {
+    ...base(trigger, callSequence),
+    type: 'provider_failure',
+    outputState: 'partial',
+    error: new ProviderError('prompt is too long', undefined, facts),
+    providerFailure: facts,
+  };
+};
+
 const accepted = (
   trigger: ModelCallTrigger,
   callSequence: number,
@@ -86,6 +111,7 @@ interface Harness {
 const harness = (
   script: readonly Scripted[],
   maxRetries = DEFAULT_RETRY_CONFIG.maxRetries,
+  retry: ResolvedRetryConfig = DEFAULT_RETRY_CONFIG,
 ): Harness => {
   const calls: ModelCallTrigger[] = [];
   const waits: number[] = [];
@@ -101,11 +127,7 @@ const harness = (
     },
     providerRetryDelay: (outcome, retryNumber) =>
       outcome.type === 'provider_failure'
-        ? providerRetryDelay(
-            DEFAULT_RETRY_CONFIG,
-            outcome.providerFailure,
-            retryNumber,
-          )
+        ? providerRetryDelay(retry, outcome.providerFailure, retryNumber)
         : undefined,
     waitForProviderRetry: async (delayMs) => {
       waits.push(delayMs);
@@ -133,6 +155,80 @@ const terminalFailure = async (
   }
   throw new Error('expected a terminal model call error');
 };
+
+const RETRY_CONTEXT_LENGTH = resolveRetryConfig({
+  retryableRejectionReasons: ['context_length_exceeded'],
+});
+
+describe('callModelWithRecovery for rejections the host retries', () => {
+  it('retries a listed rejection reason immediately and accepts the next attempt', async () => {
+    const harnessed = harness(
+      [contextLengthRejection, accepted],
+      DEFAULT_RETRY_CONFIG.maxRetries,
+      RETRY_CONTEXT_LENGTH,
+    );
+
+    const outcome = await harnessed.run();
+
+    expect(harnessed.calls).toEqual(['initial', 'provider_retry']);
+    expect(harnessed.waits).toEqual([]);
+    expect(outcome).toMatchObject({ type: 'accepted', callSequence: 2 });
+  });
+
+  it('stays terminal for a rejection by default', async () => {
+    const harnessed = harness([contextLengthRejection, accepted]);
+
+    const error = await terminalFailure(harnessed);
+
+    expect(harnessed.calls).toEqual(['initial']);
+    expect(error.call).toMatchObject({
+      providerFailure: {
+        rejectionReason: 'context_length_exceeded',
+        contextOverflowTokens: 950,
+      },
+    });
+  });
+
+  it('stays terminal for a rejection with an unlisted reason', async () => {
+    const harnessed = harness(
+      [
+        (trigger, sequence) =>
+          contextLengthRejection(trigger, sequence, 'content_filter'),
+        accepted,
+      ],
+      DEFAULT_RETRY_CONFIG.maxRetries,
+      RETRY_CONTEXT_LENGTH,
+    );
+
+    await terminalFailure(harnessed);
+
+    expect(harnessed.calls).toEqual(['initial']);
+  });
+
+  it('stops retrying a listed rejection once the budget is exhausted', async () => {
+    const harnessed = harness(
+      [contextLengthRejection, contextLengthRejection, accepted],
+      1,
+      RETRY_CONTEXT_LENGTH,
+    );
+
+    await terminalFailure(harnessed);
+
+    expect(harnessed.calls).toEqual(['initial', 'provider_retry']);
+  });
+});
+
+describe('resolveRetryConfig rejection reasons', () => {
+  it('defaults to retrying no rejection', () => {
+    expect(resolveRetryConfig().retryableRejectionReasons).toEqual([]);
+  });
+
+  it('rejects reasons that are not non-empty strings', () => {
+    expect(() =>
+      resolveRetryConfig({ retryableRejectionReasons: [''] as never }),
+    ).toThrow('retry.retryableRejectionReasons must contain rejection reasons');
+  });
+});
 
 describe('callModelWithRecovery for mid-stream rate limits', () => {
   it('retries a stream-consumption rate limit with retryAfterMs 0 before visible output and accepts the next attempt', async () => {
@@ -235,4 +331,30 @@ describe('callModelWithRecovery for mid-stream rate limits', () => {
     expect(harnessed.calls).toEqual(['initial']);
     expect(error.call).toMatchObject({ trigger: 'initial' });
   });
+});
+
+it.each(['context_lenght_exceeded', ' ', 'unknown_reason'])(
+  'rejects unsupported retry rejection reasons: %s',
+  (reason) => {
+    expect(() =>
+      resolveRetryConfig({ retryableRejectionReasons: [reason] as never }),
+    ).toThrow();
+  },
+);
+
+it('never retries a listed rejection after visible output', async () => {
+  const harnessed = harness(
+    [
+      (trigger, sequence) => ({
+        ...contextLengthRejection(trigger, sequence),
+        visibleOutput: true,
+        producedOutput: true,
+      }),
+      accepted,
+    ],
+    2,
+    RETRY_CONTEXT_LENGTH,
+  );
+  await terminalFailure(harnessed);
+  expect(harnessed.calls).toEqual(['initial']);
 });

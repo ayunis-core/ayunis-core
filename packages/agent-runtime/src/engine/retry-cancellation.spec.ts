@@ -750,6 +750,63 @@ describe('turn finalization and child runs', () => {
       status: 'completed',
     });
   });
+  it('does not inherit rejection retries into children unless the child lists them', async () => {
+    const calls = { inherited: 0, optedIn: 0 };
+    const rejectingChild = (key: keyof typeof calls): ModelProvider => ({
+      name: `too-long-${key}`,
+      stream() {
+        calls[key] += 1;
+        throw new ModelProviderError({
+          kind: 'rejection',
+          stage: 'stream_establishment',
+          upstreamStatus: 400,
+          rejectionReason: 'context_length_exceeded',
+          cause: new Error('prompt is too long'),
+        });
+      },
+    });
+    const inheritedChild = rejectingChild('inherited');
+    const optedInChild = rejectingChild('optedIn');
+    const childStatuses: string[] = [];
+    const spawn = echoTool({
+      name: 'spawn',
+      execute: async (input, ctx) => {
+        for await (const event of ctx.runChild({
+          instructions: 'Child',
+          model: input.optIn ? optedInChild : inheritedChild,
+          messages: [userMessage('Go')],
+          ...(input.optIn
+            ? {
+                retry: {
+                  retryableRejectionReasons: ['context_length_exceeded'],
+                },
+              }
+            : {}),
+        })) {
+          if (event.type === 'run_end') childStatuses.push(event.status);
+        }
+        return 'child done';
+      },
+    });
+    const parent = new MockProvider([
+      toolCallTurn({ id: 'one', name: 'spawn', input: { optIn: false } }),
+      toolCallTurn({ id: 'two', name: 'spawn', input: { optIn: true } }),
+      textTurn('parent done'),
+    ]);
+
+    await collectEvents(
+      baseInput(parent, {
+        tools: [spawn],
+        retry: {
+          maxRetries: 1,
+          retryableRejectionReasons: ['context_length_exceeded'],
+        },
+      }),
+    );
+
+    expect(childStatuses).toEqual(['error', 'error']);
+    expect(calls).toEqual({ inherited: 1, optedIn: 2 });
+  });
 });
 
 const chunks = (

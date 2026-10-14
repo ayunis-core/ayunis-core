@@ -90,7 +90,7 @@ const convertUserParts = (
       return [
         {
           type: 'input_image',
-          detail: 'auto',
+          detail: 'high',
           image_url: `data:${item.mediaType};base64,${item.data}`,
         },
       ];
