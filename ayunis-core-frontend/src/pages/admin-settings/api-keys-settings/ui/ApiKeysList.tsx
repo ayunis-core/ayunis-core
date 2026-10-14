@@ -180,7 +180,7 @@ function ApiKeyListItem({
         </div>
         {apiKey.description && (
           <p
-            className="text-sm text-foreground/80 whitespace-pre-line break-words"
+            className="text-sm text-foreground/80 whitespace-pre-line wrap-anywhere"
             data-testid="api-key-description"
           >
             {apiKey.description}
