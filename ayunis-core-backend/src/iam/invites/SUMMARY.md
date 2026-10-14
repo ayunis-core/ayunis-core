@@ -12,3 +12,5 @@ This module manages how new users join existing organizations in Ayunis. The cor
 Single invitations accept optional organization-scoped team IDs, validated before seat changes and persistence with the existing team-management privacy policy. Pending invitation lists hydrate current team id/name summaries; the separate public token-detail DTO never exposes teams. Deleted teams cascade out of invitation assignments, including before password or SSO acceptance.
 
 **Invite deletion and resend (AYC-1245).** Deleting or resending a single invite is admin-only and scoped to the caller's organization; an invite of another organization is reported as not found so its existence is not leaked.
+
+Super Admins can manually delete selected-organization pending invites individually or in bulk. Single deletion uses one conditional database delete matching invite ID, organization, and unaccepted status; missing, foreign, and accepted invites return 404. Both deletion endpoints require the super-admin system role.

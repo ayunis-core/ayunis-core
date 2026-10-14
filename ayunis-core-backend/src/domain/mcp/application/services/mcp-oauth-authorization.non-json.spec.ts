@@ -1,4 +1,8 @@
 import { Logger } from '@nestjs/common';
+import {
+  OAuthError,
+  RegistrationRejectedError,
+} from '@modelcontextprotocol/client';
 import { createHash, randomUUID } from 'crypto';
 import { McpOAuthAuthorizationService } from './mcp-oauth-authorization.service';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
@@ -42,9 +46,9 @@ const validResponses: Record<string, () => Response> = {
   [TOKEN]: () => Response.json({ access_token: 'at', token_type: 'Bearer' }),
 };
 
-const htmlPage = () =>
+const htmlPage = (status = 200) =>
   new Response('<!DOCTYPE html><html><body>Sign in</body></html>', {
-    status: 200,
+    status,
     headers: { 'content-type': 'text/html; charset=utf-8' },
   });
 
@@ -141,6 +145,7 @@ describe('McpOAuthAuthorizationService with non-JSON upstream responses', () => 
   async function expectInvalidResponse(
     act: Promise<unknown>,
     stage: string,
+    status = 200,
   ): Promise<void> {
     const error: unknown = await act.then(
       () => undefined,
@@ -157,10 +162,11 @@ describe('McpOAuthAuthorizationService with non-JSON upstream responses', () => 
     const diagnostics = {
       integrationId: integration.id,
       stage,
-      status: 200,
+      status,
       contentType: 'text/html',
     };
     expect(invalid.metadata).toEqual(diagnostics);
+    expect(invalid.cause).toBeUndefined();
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(diagnostics, expect.any(String));
     expect(JSON.stringify(warn.mock.calls)).not.toMatch(
@@ -201,7 +207,7 @@ describe('McpOAuthAuthorizationService with non-JSON upstream responses', () => 
     );
   });
 
-  it('reports an HTML page during token exchange', async () => {
+  function prepareCallback(): string {
     const state = 'opaque-state';
     clientInformation = { client_id: 'client-id', issuer: ISSUER };
     discoveryState = {
@@ -220,13 +226,105 @@ describe('McpOAuthAuthorizationService with non-JSON upstream responses', () => 
         expiresAt: new Date(Date.now() + 60_000),
       }),
     );
-    overrides[TOKEN] = htmlPage;
+    return state;
+  }
 
-    await expectInvalidResponse(
-      service.complete({ state, code: 'code-value', iss: ISSUER }),
-      'token exchange',
+  it.each([200, 400, 401, 500, 502])(
+    'reports HTTP %s HTML during token exchange',
+    async (status) => {
+      const state = prepareCallback();
+      overrides[TOKEN] = () => htmlPage(status);
+
+      await expectInvalidResponse(
+        service.complete({ state, code: 'code-value', iss: ISSUER }),
+        'token exchange',
+        status,
+      );
+      expect(cache.invalidate).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([400, 401, 500, 502])(
+    'reports HTTP %s HTML during client registration',
+    async (status) => {
+      overrides[REGISTRATION] = () => htmlPage(status);
+      await expectInvalidResponse(
+        service.authorize(integration.id),
+        'client registration',
+        status,
+      );
+    },
+  );
+
+  it.each([
+    ['resource discovery', RESOURCE_METADATA],
+    ['authorization-server discovery', AS_METADATA],
+  ])('reports HTTP 500 HTML during %s', async (stage, url) => {
+    overrides[url] = () => htmlPage(500);
+    await expectInvalidResponse(service.authorize(integration.id), stage, 500);
+  });
+
+  it('preserves protected-resource discovery fallback from an HTML 404', async () => {
+    overrides[RESOURCE_METADATA] = () => htmlPage(404);
+    overrides[`${SERVER}/.well-known/oauth-protected-resource`] =
+      validResponses[RESOURCE_METADATA];
+    await expect(service.authorize(integration.id)).resolves.toEqual({
+      authorizationUrl: expect.stringContaining(`${ISSUER}/authorize?`),
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('preserves authorization-server discovery fallback from an HTML 502', async () => {
+    overrides[AS_METADATA] = () => htmlPage(502);
+    overrides[`${ISSUER}/.well-known/openid-configuration`] = () =>
+      Response.json({
+        ...asMetadata,
+        jwks_uri: `${ISSUER}/jwks`,
+        subject_types_supported: ['public'],
+        id_token_signing_alg_values_supported: ['RS256'],
+      });
+    await expect(service.authorize(integration.id)).resolves.toEqual({
+      authorizationUrl: expect.stringContaining(`${ISSUER}/authorize?`),
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('preserves a final metadata 404 as a missing-metadata error', async () => {
+    overrides[RESOURCE_METADATA] = () => htmlPage(404);
+    await expect(service.authorize(integration.id)).rejects.not.toBeInstanceOf(
+      McpOAuthInvalidResponseError,
     );
-    expect(cache.invalidate).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('preserves a valid OAuth JSON error during token exchange', async () => {
+    const state = prepareCallback();
+    overrides[TOKEN] = () =>
+      Response.json({ error: 'access_denied' }, { status: 400 });
+    await expect(
+      service.complete({ state, code: 'code-value', iss: ISSUER }),
+    ).rejects.toBeInstanceOf(OAuthError);
+    expect(warn).not.toHaveBeenCalled();
+    expect(provider.saveTokens).not.toHaveBeenCalled();
+  });
+
+  it('preserves a valid JSON registration rejection', async () => {
+    overrides[REGISTRATION] = () =>
+      Response.json({ error: 'invalid_client_metadata' }, { status: 400 });
+    await expect(service.authorize(integration.id)).rejects.toBeInstanceOf(
+      RegistrationRejectedError,
+    );
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('does not misclassify a guarded-fetch rejection after an HTML fallback', async () => {
+    const blocked = new Error('Cross-origin OAuth redirects are not allowed');
+    overrides[AS_METADATA] = () => htmlPage(502);
+    overrides[`${ISSUER}/.well-known/openid-configuration`] = () => {
+      throw blocked;
+    };
+    await expect(service.authorize(integration.id)).rejects.toBe(blocked);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('propagates guarded-fetch rejections unchanged', async () => {

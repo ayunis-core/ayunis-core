@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import pLimit from 'p-limit';
 import { AnonymizationPort } from 'src/common/anonymization/application/ports/anonymization.port';
 import {
   AnonymizationFailedError,
@@ -14,7 +15,18 @@ import { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
 import { mapPresidioEntityToCategory } from './presidio-entity-category.mapper';
 import { getMSPresidioPIIDetectionAPI } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI';
 import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
-import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
+import {
+  ANONYMIZATION_CHUNK_CONCURRENCY,
+  ANONYMIZATION_CHUNK_LENGTH,
+  ANONYMIZATION_CHUNK_OVERLAP,
+  MAX_ANONYMIZATION_TEXT_LENGTH,
+} from 'src/common/anonymization/application/anonymization.constants';
+import {
+  mergeChunkSpans,
+  splitIntoChunks,
+  type TextChunk,
+} from './presidio-text-chunks';
+import { resolveDetectionOverlaps } from 'src/common/anonymization/domain/detection-precedence';
 
 const MAX_DETECTION_ATTEMPTS = 2;
 
@@ -63,14 +75,26 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
     this.logger.debug({ textLength, entities }, 'Detecting PII');
     const startedAt = performance.now();
 
+    const codePoints = Array.from(text);
+    const chunks = splitIntoChunks(
+      codePoints,
+      ANONYMIZATION_CHUNK_LENGTH,
+      ANONYMIZATION_CHUNK_OVERLAP,
+    );
+
     try {
-      const results = await this.detectWithRetry(text, entities, textLength);
-      const nonOverlappingResults = this.dropOverlappingResults(results);
-      const detections = nonOverlappingResults.map((result) =>
-        this.toDetection(text, result, utf16Offsets),
+      const results = await this.detectChunks(chunks, entities, codePoints);
+      const detections = resolveDetectionOverlaps(
+        results.map((result) => this.toDetection(text, result, utf16Offsets)),
+        text,
       );
 
-      this.logDetectionComplete(textLength, detections.length, startedAt);
+      this.logDetectionComplete(
+        textLength,
+        chunks.length,
+        detections.length,
+        startedAt,
+      );
 
       return detections;
     } catch (error: unknown) {
@@ -92,6 +116,22 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         { error: error as Error },
       );
     }
+  }
+
+  private async detectChunks(
+    chunks: readonly TextChunk[],
+    entities: string[] | undefined,
+    codePoints: readonly string[],
+  ): Promise<RecognizerResult[]> {
+    const limit = pLimit(ANONYMIZATION_CHUNK_CONCURRENCY);
+    const resultsPerChunk = await Promise.all(
+      chunks.map((chunk) =>
+        limit(() =>
+          this.detectWithRetry(chunk.text, entities, chunk.end - chunk.start),
+        ),
+      ),
+    );
+    return mergeChunkSpans(chunks, resultsPerChunk, codePoints);
   }
 
   private async detectWithRetry(
@@ -126,12 +166,14 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
 
   private logDetectionComplete(
     textLength: number,
+    chunkCount: number,
     detectionCount: number,
     startedAt: number,
   ): void {
     this.logger.log(
       {
         textLength,
+        chunkCount,
         detectionCount,
         durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
       },
@@ -170,31 +212,5 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       end,
       score: result.score,
     };
-  }
-
-  // GLiNER runs with flat_ner=False and can return nested/overlapping spans
-  // for the same text (e.g. "Dani" and "der Dani" both as PERSON). Applying
-  // them both with naive offset-based substitution corrupts the output
-  // (e.g. "[PERSON]SON]"), so keep only the outermost of each overlap chain.
-  private dropOverlappingResults(
-    results: RecognizerResult[],
-  ): RecognizerResult[] {
-    if (results.length < 2) {
-      return results;
-    }
-
-    const sorted = [...results].sort(
-      (a, b) => a.start - b.start || b.end - a.end,
-    );
-
-    const kept: RecognizerResult[] = [];
-    let lastEnd = -1;
-    for (const result of sorted) {
-      if (result.start >= lastEnd) {
-        kept.push(result);
-        lastEnd = result.end;
-      }
-    }
-    return kept;
   }
 }

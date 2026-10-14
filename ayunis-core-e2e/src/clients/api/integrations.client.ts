@@ -54,3 +54,23 @@ export function getUserIntegrationConfig(
     api,
   });
 }
+
+export function authorizeIntegration(
+  api: APIRequestContext,
+  integrationId: string,
+) {
+  return generatedApi.mcpIntegrationsControllerAuthorizeOAuth(integrationId, {
+    api,
+  });
+}
+
+export function completeIntegration(
+  api: APIRequestContext,
+  state: string,
+  issuer: string,
+) {
+  return generatedApi.mcpIntegrationsControllerCompleteOAuth(
+    { state, code: "e2e-authorization-code", iss: issuer },
+    { api },
+  );
+}

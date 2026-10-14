@@ -77,3 +77,15 @@ export function updateSuperAdminMonthlyCredits(
     { api },
   );
 }
+
+export function updateSuperAdminSeats(
+  api: APIRequestContext,
+  orgId: string,
+  noOfSeats: number,
+) {
+  return generatedApi.superAdminSubscriptionsControllerUpdateSeats(
+    orgId,
+    { noOfSeats },
+    { api },
+  );
+}

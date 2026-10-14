@@ -220,6 +220,16 @@ export class LocalInvitesRepository implements InvitesRepository {
     this.logger.debug({ id }, 'Invite deleted successfully');
   }
 
+  async deletePendingByIdAndOrg(id: UUID, orgId: UUID): Promise<boolean> {
+    this.logger.log({ id, orgId }, 'deletePendingByIdAndOrg');
+    const result = await this.invites.delete({
+      id,
+      orgId,
+      acceptedAt: IsNull(),
+    });
+    return (result.affected ?? 0) > 0;
+  }
+
   async deleteAllPendingByOrg(orgId: UUID): Promise<number> {
     this.logger.log({ orgId }, 'deleteAllPendingByOrg');
 

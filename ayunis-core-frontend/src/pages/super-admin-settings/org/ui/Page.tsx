@@ -146,6 +146,7 @@ export default function SuperAdminSettingsOrgPage({
         <TabsContent value="users" className="mt-4">
           <div className="space-y-4">
             <SuperAdminInvitesSection
+              orgId={org.id}
               invites={invites}
               total={invitesTotal}
               searchSlot={
