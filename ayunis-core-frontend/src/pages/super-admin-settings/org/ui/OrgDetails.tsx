@@ -7,15 +7,19 @@ import {
   CardTitle,
 } from '@ayunis/ui/components/card';
 import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemDescription,
   ItemGroup,
   ItemSeparator,
   ItemTitle,
 } from '@ayunis/ui/components/item';
+import { Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { showError, showSuccess } from '@/shared/lib/toast';
 import UsageVisibilitySection from './UsageVisibilitySection';
 import OrgLifecycleActions from './OrgLifecycleActions';
 import OrgNameItem from '@/pages/super-admin-settings/org/ui/OrgNameItem';
@@ -26,6 +30,15 @@ interface OrgDetailsProps {
 
 export default function OrgDetails({ org }: Readonly<OrgDetailsProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+
+  async function copyId() {
+    try {
+      await navigator.clipboard.writeText(org.id);
+      showSuccess(t('orgDetails.copyIdSuccess'));
+    } catch {
+      showError(t('orgDetails.copyIdError'));
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -49,9 +62,23 @@ export default function OrgDetails({ org }: Readonly<OrgDetailsProps>) {
               <ItemContent>
                 <ItemTitle>{t('orgDetails.id')}</ItemTitle>
                 <ItemDescription>
-                  <code className="break-all">{org.id}</code>
+                  <code className="rounded bg-muted px-1.5 py-0.5 break-all">
+                    {org.id}
+                  </code>
                 </ItemDescription>
               </ItemContent>
+              <ItemActions>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t('orgDetails.copyId')}
+                  title={t('orgDetails.copyId')}
+                  onClick={() => void copyId()}
+                  data-testid="org-id-copy"
+                >
+                  <Copy />
+                </Button>
+              </ItemActions>
             </Item>
           </ItemGroup>
         </CardContent>
