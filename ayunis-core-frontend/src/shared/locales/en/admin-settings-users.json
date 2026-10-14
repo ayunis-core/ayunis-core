@@ -86,7 +86,8 @@
     "deleteAllInvitesDescription": "Are you sure you want to delete all {{count}} pending invites? This action cannot be undone.",
     "resendInviteTitle": "Resend Invite",
     "resendInviteDescription": "Are you sure you want to resend the invite for {{email}}? The expired invite will be deleted and a new one will be created.",
-    "resendText": "Resend"
+    "resendText": "Resend",
+    "deleteAllOrgInvitesDescription": "Are you sure you want to delete all pending invites for this organization, including those outside the current search or page? This action cannot be undone."
   },
   "deleteAllInvites": {
     "success": "{{count}} pending invite(s) deleted successfully",
@@ -114,7 +115,9 @@
     "error": {
       "inviteNotFound": "Invite not found",
       "unexpectedError": "Failed to delete invite. Please try again."
-    }
+    },
+    "notFound": "Invite not found. It may have already been accepted or removed.",
+    "success": "Invite deleted successfully"
   },
   "userDelete": {
     "success": "User deleted successfully!",

@@ -12,14 +12,24 @@ describe(DeleteInviteUseCase.name, () => {
   const otherOrgId = '55555555-5555-4555-8555-555555555555' as UUID;
 
   function setup(invite: Invite | null) {
+    const remainingInvites = invite ? [invite] : [];
     const invitesRepository = {
-      findOne: jest.fn().mockResolvedValue(invite),
-      delete: jest.fn().mockResolvedValue(undefined),
+      deletePendingByIdAndOrg: async (id: UUID, selectedOrgId: UUID) => {
+        const index = remainingInvites.findIndex(
+          (candidate) =>
+            candidate.id === id &&
+            candidate.orgId === selectedOrgId &&
+            !candidate.acceptedAt,
+        );
+        if (index === -1) return false;
+        remainingInvites.splice(index, 1);
+        return true;
+      },
     };
     const useCase = new DeleteInviteUseCase(
       invitesRepository as unknown as InvitesRepository,
     );
-    return { useCase, invitesRepository };
+    return { useCase, remainingInvites };
   }
 
   function inviteOf(inviteOrgId: UUID): Invite {
@@ -33,28 +43,39 @@ describe(DeleteInviteUseCase.name, () => {
   }
 
   it('deletes an invite of the caller organization', async () => {
-    const { useCase, invitesRepository } = setup(inviteOf(orgId));
+    const { useCase, remainingInvites } = setup(inviteOf(orgId));
 
     await useCase.execute(new DeleteInviteCommand({ inviteId, orgId }));
 
-    expect(invitesRepository.delete).toHaveBeenCalledWith(inviteId);
+    expect(remainingInvites).toEqual([]);
   });
 
   it('reports an invite of another organization as not found and keeps it', async () => {
-    const { useCase, invitesRepository } = setup(inviteOf(otherOrgId));
+    const { useCase, remainingInvites } = setup(inviteOf(otherOrgId));
 
     await expect(
       useCase.execute(new DeleteInviteCommand({ inviteId, orgId })),
     ).rejects.toBeInstanceOf(InviteNotFoundError);
-    expect(invitesRepository.delete).not.toHaveBeenCalled();
+    expect(remainingInvites).toHaveLength(1);
+  });
+
+  it('preserves accepted invitations', async () => {
+    const invite = inviteOf(orgId);
+    invite.acceptedAt = new Date();
+    const { useCase, remainingInvites } = setup(invite);
+
+    await expect(
+      useCase.execute(new DeleteInviteCommand({ inviteId, orgId })),
+    ).rejects.toBeInstanceOf(InviteNotFoundError);
+    expect(remainingInvites).toHaveLength(1);
   });
 
   it('reports a missing invite as not found', async () => {
-    const { useCase, invitesRepository } = setup(null);
+    const { useCase, remainingInvites } = setup(null);
 
     await expect(
       useCase.execute(new DeleteInviteCommand({ inviteId, orgId })),
     ).rejects.toBeInstanceOf(InviteNotFoundError);
-    expect(invitesRepository.delete).not.toHaveBeenCalled();
+    expect(remainingInvites).toEqual([]);
   });
 });

@@ -1375,6 +1375,74 @@
         "tags": ["Super Admin Invites"]
       }
     },
+    "/super-admin/orgs/{orgId}/invites/all": {
+      "delete": {
+        "operationId": "SuperAdminInvitesController_deleteAllPending",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All pending invites in the selected organization were deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAllPendingInvitesResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Super admin required"
+          }
+        },
+        "summary": "Delete all pending invites in an organization",
+        "tags": ["Super Admin Invites"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/invites/{id}": {
+      "delete": {
+        "operationId": "SuperAdminInvitesController_deleteInvite",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Invite deleted"
+          },
+          "403": {
+            "description": "Super admin required"
+          },
+          "404": {
+            "description": "Pending invite not found in the selected organization"
+          }
+        },
+        "summary": "Delete a pending invite in an organization",
+        "tags": ["Super Admin Invites"]
+      }
+    },
     "/super-admin/orgs/{orgId}/invites/bulk": {
       "post": {
         "description": "Create invitations for a selected organization, including team assignments applied when each user joins.",

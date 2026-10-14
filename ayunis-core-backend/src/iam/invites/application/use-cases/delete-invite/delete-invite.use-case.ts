@@ -20,12 +20,12 @@ export class DeleteInviteUseCase {
       'execute',
     );
 
-    const invite = await this.invitesRepository.findOne(command.inviteId);
-    // Another organization's invite is reported as missing so its existence isn't leaked.
-    if (invite?.orgId !== command.orgId) {
+    const deleted = await this.invitesRepository.deletePendingByIdAndOrg(
+      command.inviteId,
+      command.orgId,
+    );
+    if (!deleted) {
       throw new InviteNotFoundError(command.inviteId);
     }
-
-    await this.invitesRepository.delete(command.inviteId);
   }
 }
