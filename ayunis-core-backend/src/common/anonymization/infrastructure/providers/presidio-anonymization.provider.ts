@@ -17,6 +17,11 @@ import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mS
 import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 
 const MAX_DETECTION_ATTEMPTS = 2;
+// A timed-out attempt on an input above this size means the anonymizer is
+// saturated, and a second 60 s attempt almost never finishes; retrying only
+// doubles the wait the user already paid for. Smaller inputs finish in a few
+// seconds once a burst passes, so their retry still recovers (AYC-1254).
+const RETRYABLE_TIMEOUT_MAX_TEXT_LENGTH = 10_000;
 
 function backoff(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -110,8 +115,7 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       } catch (error) {
         if (
           attempt >= MAX_DETECTION_ATTEMPTS ||
-          (!isRetryableProviderTimeoutFailure(error) &&
-            classifyTransportError(error)?.code !== 'ECONNREFUSED')
+          !this.isRetryable(error, textLength)
         ) {
           throw error;
         }
@@ -122,6 +126,14 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         await backoff(SETUP_RETRY_BACKOFF_MS);
       }
     }
+  }
+
+  private isRetryable(error: unknown, textLength: number): boolean {
+    if (classifyTransportError(error)?.code === 'ECONNREFUSED') return true;
+    return (
+      isRetryableProviderTimeoutFailure(error) &&
+      textLength <= RETRYABLE_TIMEOUT_MAX_TEXT_LENGTH
+    );
   }
 
   private logDetectionComplete(

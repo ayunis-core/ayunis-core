@@ -18,7 +18,7 @@ describe('useRunErrorHandler', () => {
     const { result } = renderHook(() => useRunErrorHandler('thread-1'));
     const error: RunErrorResponseDto = {
       type: 'error',
-      message: 'Text exceeds maximum anonymization length: 30001 > 30000',
+      message: 'Text exceeds maximum anonymization length: 15001 > 15000',
       threadId: 'thread-1',
       timestamp: '2026-08-10T18:00:00.000Z',
       code: 'ANONYMIZATION_INPUT_TOO_LONG',

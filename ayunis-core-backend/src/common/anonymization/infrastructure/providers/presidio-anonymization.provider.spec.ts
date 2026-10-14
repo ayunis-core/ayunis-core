@@ -133,14 +133,26 @@ describe('PresidioAnonymizationProvider', () => {
     expect(detections).toHaveLength(0);
   });
 
+  // Production finishes about 3 ms per character at p90 on the anonymizer,
+  // so 15k is the largest input that fits one 60 s attempt. Inputs the
+  // service cannot finish must fail here, in milliseconds, instead of after
+  // two timed-out attempts (AYC-1254).
   it('rejects text beyond the service limit without sending it', async () => {
-    const result = provider.detect('A'.repeat(30_001));
+    const result = provider.detect('A'.repeat(15_001));
 
     await expect(result).rejects.toMatchObject({
       code: 'ANONYMIZATION_INPUT_TOO_LONG',
       statusCode: 422,
     });
     expect(mockAnalyzeTextAnalyzePost).not.toHaveBeenCalled();
+  });
+
+  it('sends text at the service limit', async () => {
+    const text = 'A'.repeat(15_000);
+    mockResults([]);
+
+    await expect(provider.detect(text)).resolves.toEqual([]);
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(1);
   });
 
   // Presidio returns Python string indices, which count code points — an emoji
@@ -167,7 +179,7 @@ describe('PresidioAnonymizationProvider', () => {
   });
 
   it('counts Unicode code points like the anonymize service', async () => {
-    const text = '😀'.repeat(30_000);
+    const text = '😀'.repeat(15_000);
     mockResults([]);
 
     await expect(provider.detect(text)).resolves.toEqual([]);
@@ -226,6 +238,61 @@ describe('PresidioAnonymizationProvider', () => {
     await failure;
     expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(2);
     jest.useRealTimers();
+  });
+
+  // A timeout on a large input means the anonymizer is saturated; a second
+  // 60 s attempt on the same input almost never finishes and doubles the
+  // user-visible wait (AYC-1254).
+  it('does not retry a timed-out detection for a large input', async () => {
+    jest.useFakeTimers();
+    mockAnalyzeTextAnalyzePost.mockRejectedValue(
+      Object.assign(new Error('timeout of 60000ms exceeded'), {
+        code: 'ETIMEDOUT',
+      }),
+    );
+
+    const result = provider.detect('A'.repeat(10_001));
+    const failure = expect(result).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE',
+      statusCode: 504,
+    });
+    await jest.runAllTimersAsync();
+
+    await failure;
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  it('still retries a timed-out detection at the retryable size', async () => {
+    jest.useFakeTimers();
+    const text = 'A'.repeat(10_000);
+    mockAnalyzeTextAnalyzePost
+      .mockRejectedValueOnce(
+        Object.assign(new Error('timeout of 60000ms exceeded'), {
+          code: 'ETIMEDOUT',
+        }),
+      )
+      .mockResolvedValueOnce({ results: [] });
+
+    const result = provider.detect(text);
+    await jest.runAllTimersAsync();
+
+    await expect(result).resolves.toEqual([]);
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
+  it('still retries a refused connection for a large input', async () => {
+    mockAnalyzeTextAnalyzePost
+      .mockRejectedValueOnce(
+        Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:8002'), {
+          code: 'ECONNREFUSED',
+        }),
+      )
+      .mockResolvedValueOnce({ results: [] });
+
+    await expect(provider.detect('A'.repeat(14_000))).resolves.toEqual([]);
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(2);
   });
 
   it.each(['direct', 'cause', 'aggregate'])(

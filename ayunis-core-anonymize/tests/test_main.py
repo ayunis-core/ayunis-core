@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import anyio
 import httpx
 
-from app import main
+from app import main, models
 
 
 class AnalyzeSchedulingTests(unittest.TestCase):
@@ -203,6 +203,30 @@ class AnalyzeQueueDeadlineTests(unittest.TestCase):
             response.json()["detail"],
             "Analysis not started: analysis request expired after 61234ms in queue",
         )
+
+
+class AnalyzeInputLimitTests(unittest.TestCase):
+    # Production finishes about 3 ms per character at p90, so 15k is the
+    # largest input that fits the caller's 60 s timeout (AYC-1254).
+    def test_cap_matches_what_production_finishes_inside_the_callers_timeout(self):
+        self.assertEqual(models.MAX_TEXT_LENGTH, 15_000)
+
+    def test_text_above_the_cap_is_rejected_before_analysis(self):
+        async def exercise_endpoint():
+            transport = httpx.ASGITransport(app=main.app)
+            async with httpx.AsyncClient(
+                transport=transport,
+                base_url="http://anonymize.test",
+            ) as client:
+                return await client.post(
+                    "/analyze", json={"text": "a" * (models.MAX_TEXT_LENGTH + 1)}
+                )
+
+        with patch.object(main, "_analyze") as analyze:
+            response = asyncio.run(exercise_endpoint())
+
+        self.assertEqual(response.status_code, 422)
+        analyze.assert_not_called()
 
 
 if __name__ == "__main__":
