@@ -16,6 +16,7 @@ import { Checkbox } from '@ayunis/ui/components/checkbox';
 import { Label } from '@ayunis/ui/components/label';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CopyButton } from '@/shared/ui/copy-button';
 
 interface EnableSsoDialogProps {
   orgId: string;
@@ -75,17 +76,41 @@ export default function EnableSsoDialog({
           </div>
           <div>
             <dt className="text-muted-foreground">{t('sso.zitadelOrgId')}</dt>
-            <dd className="font-mono text-xs">{connection.zitadelOrgId}</dd>
+            <dd className="flex items-center gap-2">
+              <code className="rounded bg-muted px-1.5 py-0.5 break-all text-xs">
+                {connection.zitadelOrgId}
+              </code>
+              {connection.zitadelOrgId && (
+                <CopyButton
+                  value={connection.zitadelOrgId}
+                  label={t('sso.zitadelOrgId')}
+                  testId="sso-reviewed-zitadel-org-id-copy"
+                />
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">
               {t('sso.idp.zitadelIdpId')}
             </dt>
             <dd
-              className="font-mono text-xs"
+              className="flex items-center gap-2"
               data-testid="sso-reviewed-zitadel-idp-id"
             >
-              {connection.zitadelIdpId ?? t('sso.idp.notConfigured')}
+              {connection.zitadelIdpId ? (
+                <>
+                  <code className="rounded bg-muted px-1.5 py-0.5 break-all text-xs">
+                    {connection.zitadelIdpId}
+                  </code>
+                  <CopyButton
+                    value={connection.zitadelIdpId}
+                    label={t('sso.idp.zitadelIdpId')}
+                    testId="sso-reviewed-zitadel-idp-id-copy"
+                  />
+                </>
+              ) : (
+                <span className="text-xs">{t('sso.idp.notConfigured')}</span>
+              )}
             </dd>
           </div>
         </dl>

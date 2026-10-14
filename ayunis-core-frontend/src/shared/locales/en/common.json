@@ -133,7 +133,12 @@
       "previous": "Previous",
       "next": "Next"
     },
-    "hintTriggerLabel": "More information about {{label}}"
+    "hintTriggerLabel": "More information about {{label}}",
+    "copy": {
+      "label": "Copy {{label}}",
+      "success": "Copied to clipboard",
+      "error": "Could not copy to clipboard"
+    }
   },
   "error": {
     "title": "Something went wrong",

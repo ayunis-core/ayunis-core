@@ -18,7 +18,8 @@ import {
   SelectValue,
 } from '@ayunis/ui/components/select';
 import { useMcpOAuthClientMetadata } from '@/features/mcp-oauth';
-import type { CreateCustomIntegrationFormData } from '../model/types';
+import type { CreateCustomIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
+import { CopyButton } from '@/shared/ui/copy-button';
 
 export function CustomOAuthFields({
   form,
@@ -122,9 +123,16 @@ export function CustomOAuthFields({
 
           <FormItem>
             <FormLabel>{t('integrations.oauth.callbackUri')}</FormLabel>
-            <FormControl>
-              <Input value={callbackUri} readOnly />
-            </FormControl>
+            <div className="flex items-center gap-2">
+              <FormControl>
+                <Input value={callbackUri} readOnly />
+              </FormControl>
+              <CopyButton
+                value={callbackUri}
+                label={t('integrations.oauth.callbackUri')}
+                testId="integration-callback-uri-copy"
+              />
+            </div>
             <FormDescription>
               {t('integrations.oauth.callbackUriDescription')}
             </FormDescription>

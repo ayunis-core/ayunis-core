@@ -11,6 +11,7 @@ import {
 import { Input } from '@ayunis/ui/components/input';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import { useMcpOAuthClientMetadata } from '@/features/mcp-oauth';
+import { CopyButton } from '@/shared/ui/copy-button';
 
 interface OAuthClientFormValues {
   oauthClientId?: string;
@@ -29,9 +30,16 @@ export function EditOAuthClientFields({
     <div className="space-y-4">
       <FormItem>
         <FormLabel>{t('integrations.oauth.callbackUri')}</FormLabel>
-        <FormControl>
-          <Input value={callbackUri} readOnly />
-        </FormControl>
+        <div className="flex items-center gap-2">
+          <FormControl>
+            <Input value={callbackUri} readOnly />
+          </FormControl>
+          <CopyButton
+            value={callbackUri}
+            label={t('integrations.oauth.callbackUri')}
+            testId="integration-callback-uri-copy"
+          />
+        </div>
         <FormDescription>
           {t('integrations.oauth.callbackUriDescription')}
         </FormDescription>
