@@ -39,7 +39,7 @@ describe('UpdateApiKeyUseCase', () => {
       findByPrefix: jest.fn(),
       create: jest.fn(),
       revoke: jest.fn(),
-      updateMetadataIfActive: jest.fn().mockResolvedValue(true),
+      updateMetadataIfActive: jest.fn().mockResolvedValue(buildKey()),
     };
     const mockContextService = {
       get: jest.fn((key?: PropertyKey) =>
@@ -99,15 +99,16 @@ describe('UpdateApiKeyUseCase', () => {
     },
   );
 
-  it('returns the key as stored after the update', async () => {
+  it('returns the updated key without reloading it', async () => {
     const stored = buildKey({ name: 'Renamed' });
-    apiKeysRepository.findById.mockResolvedValue(stored);
+    apiKeysRepository.updateMetadataIfActive.mockResolvedValue(stored);
 
     const result = await useCase.execute(
       new UpdateApiKeyCommand(apiKeyId, { name: 'Renamed' }),
     );
 
     expect(result).toBe(stored);
+    expect(apiKeysRepository.findById).not.toHaveBeenCalled();
   });
 
   it('rejects a blank name without touching the key', async () => {
@@ -124,7 +125,7 @@ describe('UpdateApiKeyUseCase', () => {
   });
 
   it('reports a revoked or expired key of the own org as not editable', async () => {
-    apiKeysRepository.updateMetadataIfActive.mockResolvedValue(false);
+    apiKeysRepository.updateMetadataIfActive.mockResolvedValue(null);
 
     await expect(
       useCase.execute(new UpdateApiKeyCommand(apiKeyId, { name: 'X' })),
@@ -132,7 +133,7 @@ describe('UpdateApiKeyUseCase', () => {
   });
 
   it('reports a key of another org as not found', async () => {
-    apiKeysRepository.updateMetadataIfActive.mockResolvedValue(false);
+    apiKeysRepository.updateMetadataIfActive.mockResolvedValue(null);
     apiKeysRepository.findById.mockResolvedValue(
       buildKey({ orgId: otherOrgId }),
     );
@@ -143,7 +144,7 @@ describe('UpdateApiKeyUseCase', () => {
   });
 
   it('reports a missing key as not found', async () => {
-    apiKeysRepository.updateMetadataIfActive.mockResolvedValue(false);
+    apiKeysRepository.updateMetadataIfActive.mockResolvedValue(null);
     apiKeysRepository.findById.mockResolvedValue(null);
 
     await expect(

@@ -14,11 +14,11 @@ export abstract class ApiKeysRepository {
   abstract revoke(id: UUID): Promise<void>;
   /**
    * Applies the changes only while the key is active and belongs to the org.
-   * Returns false when no row matched.
+   * Returns the updated key, or null when no row matched.
    */
   abstract updateMetadataIfActive(
     id: UUID,
     orgId: UUID,
     changes: ApiKeyMetadataChanges,
-  ): Promise<boolean>;
+  ): Promise<ApiKey | null>;
 }

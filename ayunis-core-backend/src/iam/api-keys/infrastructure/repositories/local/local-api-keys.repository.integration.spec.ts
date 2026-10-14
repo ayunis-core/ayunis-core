@@ -6,6 +6,7 @@ import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { LocalApiKeysRepository } from 'src/iam/api-keys/infrastructure/repositories/local/local-api-keys.repository';
 import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
+import { ApiKeyMapper } from 'src/iam/api-keys/infrastructure/repositories/local/mappers/api-key.mapper';
 
 const apiKeySchema = new EntitySchema<ApiKeyRecord>({
   name: 'ApiKeyRecord',
@@ -101,11 +102,12 @@ describe('LocalApiKeysRepository.updateMetadataIfActive', () => {
       name: 'Citizen portal v2',
     });
 
-    expect(updated).toBe(true);
-    expect(await load(id)).toMatchObject({
+    const stored = await load(id);
+    expect(stored).toMatchObject({
       name: 'Citizen portal v2',
       description: 'Original',
     });
+    expect(updated).toEqual(ApiKeyMapper.toDomain(stored));
   });
 
   it('clears the description when null is given', async () => {
@@ -127,7 +129,7 @@ describe('LocalApiKeysRepository.updateMetadataIfActive', () => {
       name: 'Should not change',
     });
 
-    expect(updated).toBe(false);
+    expect(updated).toBeNull();
     expect((await load(id)).name).toBe('Citizen portal');
   });
 });

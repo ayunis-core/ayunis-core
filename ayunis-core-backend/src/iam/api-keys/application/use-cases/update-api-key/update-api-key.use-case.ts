@@ -43,6 +43,9 @@ export class UpdateApiKeyUseCase {
       orgId,
       changes,
     );
+    if (updated) {
+      return updated;
+    }
 
     const apiKey = await this.apiKeysRepository.findById(command.apiKeyId);
     // Missing and cross-org keys both surface as "not found" so callers cannot
@@ -50,10 +53,7 @@ export class UpdateApiKeyUseCase {
     if (apiKey?.orgId !== orgId) {
       throw new ApiKeyNotFoundError(command.apiKeyId);
     }
-    if (!updated) {
-      throw new ApiKeyNotEditableError(command.apiKeyId);
-    }
-    return apiKey;
+    throw new ApiKeyNotEditableError(command.apiKeyId);
   }
 }
 

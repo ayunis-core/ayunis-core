@@ -80,7 +80,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
     id: UUID,
     orgId: UUID,
     changes: ApiKeyMetadataChanges,
-  ): Promise<boolean> {
+  ): Promise<ApiKey | null> {
     this.logger.log({ id, orgId }, 'updateMetadataIfActive');
 
     const result = await this.apiKeyRepository
@@ -91,7 +91,14 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
       .andWhere('org_id = :orgId', { orgId })
       .andWhere('revoked_at IS NULL')
       .andWhere('(expires_at IS NULL OR expires_at > clock_timestamp())')
+      // RETURNING yields raw snake_case columns; alias them to record properties.
+      .returning(
+        this.apiKeyRepository.metadata.columns
+          .map((c) => `"${c.databaseName}" AS "${c.propertyName}"`)
+          .join(', '),
+      )
       .execute();
-    return (result.affected ?? 0) > 0;
+    const record = (result.raw as ApiKeyRecord[]).at(0);
+    return record ? ApiKeyMapper.toDomain(record) : null;
   }
 }
