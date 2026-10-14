@@ -2,7 +2,10 @@ import { useCallback, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useDragOver } from '@/shared/hooks/useDragOver';
-import { separateFilesByType } from '../utils/fileHandlers';
+import {
+  keepFilesWithinSizeLimit,
+  separateFilesByType,
+} from '@/widgets/chat-input/utils/fileHandlers';
 
 interface UseFileDropOptions {
   containerRef: RefObject<HTMLElement | null>;
@@ -47,12 +50,13 @@ export function useFileDrop({
       }
 
       if (isDocumentUploadEnabled && regularFiles.length > 0) {
-        const validDocuments = regularFiles.filter(isValidDocumentFile);
+        const supportedDocuments = regularFiles.filter(isValidDocumentFile);
+        if (supportedDocuments.length < regularFiles.length) {
+          hasSkippedFiles = true;
+        }
+        const validDocuments = keepFilesWithinSizeLimit(supportedDocuments, t);
         if (validDocuments.length > 0) {
           onDocumentDrop(validDocuments);
-        }
-        if (validDocuments.length < regularFiles.length) {
-          hasSkippedFiles = true;
         }
       } else if (!isDocumentUploadEnabled && regularFiles.length > 0) {
         hasSkippedFiles = true;

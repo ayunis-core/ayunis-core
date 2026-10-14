@@ -34,4 +34,12 @@ describe('handleSourceUploadError', () => {
       'sources.fileSourceServiceBusyError',
     );
   });
+
+  it('shows the too-large message for a 413 without an error code', () => {
+    extractErrorData.mockReturnValue({ code: 'UNKNOWN_ERROR', status: 413 });
+
+    handleSourceUploadError(new Error('upload failed'), t);
+
+    expect(showError).toHaveBeenCalledWith('sources.fileSourceTooLargeError');
+  });
 });

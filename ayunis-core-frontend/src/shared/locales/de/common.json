@@ -103,6 +103,7 @@
     },
     "fileSourceDisabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
     "dropFilesHint": "Dateien hier ablegen",
+    "fileTooLarge": "Die Datei „{{name}}“ ist zu groß ({{size}} MB). Maximal zulässig sind derzeit {{limit}} MB.",
     "invalidDroppedFileType": "Einige Dateien wurden übersprungen, da sie nicht unterstützt werden.",
     "microphoneTooltip": "Diktieren",
     "microphoneRecording": "Aufnahme... Klicken zum Stoppen",

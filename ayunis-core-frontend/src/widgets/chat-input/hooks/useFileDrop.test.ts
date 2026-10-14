@@ -9,14 +9,26 @@ import {
   type Mock,
 } from 'vitest';
 import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
-import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
+import {
+  ACCEPTED_DOCUMENT_EXTENSIONS,
+  MAX_SOURCE_FILE_SIZE_BYTES,
+} from '@/widgets/chat-input/utils/fileHandlers';
 
 const mocks = vi.hoisted(() => ({ showError: vi.fn() }));
 
 vi.mock('@/shared/lib/toast', () => ({ showError: mocks.showError }));
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) =>
+      options ? `${key} ${JSON.stringify(options)}` : key,
+  }),
 }));
+
+function fileOfSize(name: string, bytes: number): File {
+  const file = new File(['data'], name);
+  Object.defineProperty(file, 'size', { value: bytes });
+  return file;
+}
 
 function asFileList(files: File[]): FileList {
   return Object.assign({ length: files.length }, files) as unknown as FileList;
@@ -100,6 +112,31 @@ describe('useFileDrop', () => {
     expect(onDocumentDrop).toHaveBeenCalledWith([audio]);
     expect(mocks.showError).toHaveBeenCalledWith(
       'chatInput.invalidDroppedFileType',
+    );
+  });
+
+  it('rejects a document above the size limit and attaches the rest', () => {
+    renderFileDrop();
+    const small = fileOfSize('notes.pdf', MAX_SOURCE_FILE_SIZE_BYTES);
+    const large = fileOfSize('sitzung.m4a', 164 * 1024 * 1024);
+
+    dropFiles(small, large);
+
+    expect(onDocumentDrop).toHaveBeenCalledWith([small]);
+    expect(mocks.showError).toHaveBeenCalledTimes(1);
+    expect(mocks.showError).toHaveBeenCalledWith(
+      'chatInput.fileTooLarge {"name":"sitzung.m4a","size":164,"limit":25}',
+    );
+  });
+
+  it('does not attach anything when every document is too large', () => {
+    renderFileDrop();
+
+    dropFiles(fileOfSize('a.m4a', MAX_SOURCE_FILE_SIZE_BYTES + 1));
+
+    expect(onDocumentDrop).not.toHaveBeenCalled();
+    expect(mocks.showError).toHaveBeenCalledWith(
+      'chatInput.fileTooLarge {"name":"a.m4a","size":26,"limit":25}',
     );
   });
 });
