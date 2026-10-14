@@ -7,14 +7,14 @@ import OrgsTable from './OrgsTable';
 import OrgsPagination from './OrgsPagination';
 import OrgsSearch from './OrgsSearch';
 import type {
-  SuperAdminOrgResponseDto,
+  SuperAdminOrgListItemResponseDto,
   PaginationDto,
   SuperAdminOrgsControllerGetAllOrgsStatus,
   SuperAdminOrgsControllerGetAllOrgsSubscription,
 } from '@/shared/api';
 
 interface SuperAdminOrgsPageProps {
-  orgs: SuperAdminOrgResponseDto[];
+  orgs: SuperAdminOrgListItemResponseDto[];
   pagination?: PaginationDto;
   search?: string;
   status: SuperAdminOrgsControllerGetAllOrgsStatus;

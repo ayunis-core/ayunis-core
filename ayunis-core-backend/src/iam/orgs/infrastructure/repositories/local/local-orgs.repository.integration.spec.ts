@@ -328,6 +328,21 @@ describe('LocalOrgsRepository.findAllForSuperAdmin subscription filter', () => {
       'legacy yearly cancellation inside the paid year',
     ]);
   });
+
+  it('flags exactly the paying organizations among the given ids', async () => {
+    const page = await list({});
+    const nameById = new Map(page.data.map((org) => [org.id, org.name]));
+
+    const payingIds = await repository.findPayingOrgIds([...nameById.keys()]);
+
+    expect(byName(payingIds.map((id) => nameById.get(id) ?? id))).toEqual(
+      payingCaseNames(),
+    );
+  });
+
+  it('flags nothing for an empty page', async () => {
+    expect(await repository.findPayingOrgIds([])).toEqual([]);
+  });
 });
 
 const timersOtherThanDate = [

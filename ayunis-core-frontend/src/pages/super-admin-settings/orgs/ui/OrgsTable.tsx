@@ -15,13 +15,13 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgListItemResponseDto } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
 import { formatDate } from '@/shared/lib/format-date';
 import type { ReactNode } from 'react';
 
 interface OrgsTableProps {
-  orgs: SuperAdminOrgResponseDto[];
+  orgs: SuperAdminOrgListItemResponseDto[];
   searchSlot?: ReactNode;
 }
 
@@ -71,11 +71,20 @@ export default function OrgsTable({
                 >
                   <TableCell className="font-medium">{org.name}</TableCell>
                   <TableCell>
-                    <Badge variant={org.archived ? 'secondary' : 'outline'}>
-                      {t(
-                        org.archived ? 'statuses.archived' : 'statuses.active',
+                    <div className="flex flex-wrap gap-1">
+                      <Badge variant={org.archived ? 'secondary' : 'outline'}>
+                        {t(
+                          org.archived
+                            ? 'statuses.archived'
+                            : 'statuses.active',
+                        )}
+                      </Badge>
+                      {org.paying && (
+                        <Badge data-testid="org-paying-badge">
+                          {t('statuses.paying')}
+                        </Badge>
                       )}
-                    </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>{formatDate(org.createdAt)}</TableCell>
                 </TableRow>

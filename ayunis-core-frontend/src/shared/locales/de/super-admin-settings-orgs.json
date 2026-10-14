@@ -32,7 +32,8 @@
   "statuses": {
     "active": "Aktiv",
     "inactive": "Inaktiv",
-    "archived": "Archiviert"
+    "archived": "Archiviert",
+    "paying": "Zahlend"
   },
   "empty": {
     "title": "Noch keine Organisationen",

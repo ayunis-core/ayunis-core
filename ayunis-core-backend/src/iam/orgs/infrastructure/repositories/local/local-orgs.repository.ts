@@ -208,6 +208,19 @@ export class LocalOrgsRepository extends OrgsRepository {
     }
   }
 
+  async findPayingOrgIds(orgIds: UUID[]): Promise<UUID[]> {
+    if (orgIds.length === 0) return [];
+    const queryBuilder = this.orgRepository
+      .createQueryBuilder('org')
+      .select('org.id', 'id')
+      .where('org.id IN (:...orgIds)', { orgIds });
+    queryBuilder.andWhere(this.activeSubscriptionExists(queryBuilder), {
+      now: new Date(),
+    });
+    const rows = await queryBuilder.getRawMany<{ id: UUID }>();
+    return rows.map((row) => row.id);
+  }
+
   async create(org: Org): Promise<Org> {
     this.logger.log({ id: org.id, name: org.name }, 'create');
 

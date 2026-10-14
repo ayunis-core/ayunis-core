@@ -13366,6 +13366,49 @@
           "createdAt"
         ]
       },
+      "SuperAdminOrgListItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Organization unique identifier",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Organization display name",
+            "example": "Acme Corporation"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether the organisation is archived"
+          },
+          "hideIndividualUsage": {
+            "type": "boolean",
+            "description": "Whether individual usage is hidden from organisation admins",
+            "default": false
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the organization was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "paying": {
+            "type": "boolean",
+            "description": "Whether the organization currently has an active subscription"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "archived",
+          "hideIndividualUsage",
+          "createdAt",
+          "paying"
+        ]
+      },
       "SuperAdminOrgListResponseDto": {
         "type": "object",
         "properties": {
@@ -13373,7 +13416,7 @@
             "description": "Array of organizations for the current page",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+              "$ref": "#/components/schemas/SuperAdminOrgListItemResponseDto"
             }
           },
           "pagination": {

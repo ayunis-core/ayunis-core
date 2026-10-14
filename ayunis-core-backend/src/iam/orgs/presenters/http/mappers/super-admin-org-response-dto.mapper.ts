@@ -5,6 +5,7 @@ import {
   SuperAdminOrgResponseDto,
 } from 'src/iam/orgs/presenters/http/dtos/super-admin-org-response.dto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SuperAdminOrgListItem } from 'src/iam/orgs/application/models/super-admin-org-list-item';
 
 @Injectable()
 export class SuperAdminOrgResponseDtoMapper {
@@ -18,9 +19,14 @@ export class SuperAdminOrgResponseDtoMapper {
     };
   }
 
-  toPaginatedDto(paginated: Paginated<Org>): SuperAdminOrgListResponseDto {
+  toPaginatedDto(
+    paginated: Paginated<SuperAdminOrgListItem>,
+  ): SuperAdminOrgListResponseDto {
     return {
-      data: paginated.data.map((org) => this.toDto(org)),
+      data: paginated.data.map(({ org, paying }) => ({
+        ...this.toDto(org),
+        paying,
+      })),
       pagination: {
         limit: paginated.limit,
         offset: paginated.offset,

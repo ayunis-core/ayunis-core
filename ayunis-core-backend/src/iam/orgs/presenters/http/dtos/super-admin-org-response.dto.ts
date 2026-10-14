@@ -33,12 +33,20 @@ export class SuperAdminOrgResponseDto {
   createdAt: Date;
 }
 
+export class SuperAdminOrgListItemResponseDto extends SuperAdminOrgResponseDto {
+  @ApiProperty({
+    description:
+      'Whether the organization currently has an active subscription',
+  })
+  paying: boolean;
+}
+
 export class SuperAdminOrgListResponseDto {
   @ApiProperty({
     description: 'Array of organizations for the current page',
-    type: [SuperAdminOrgResponseDto],
+    type: [SuperAdminOrgListItemResponseDto],
   })
-  data: SuperAdminOrgResponseDto[];
+  data: SuperAdminOrgListItemResponseDto[];
 
   @ApiProperty({
     description: 'Pagination metadata',
