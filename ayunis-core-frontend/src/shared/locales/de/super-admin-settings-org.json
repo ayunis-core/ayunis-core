@@ -216,13 +216,13 @@
   },
   "changeSubscriptionDialog": {
     "title": "Abonnement ändern",
-    "description": "Ändern Sie den Abonnement-Typ oder die Daten. Dabei wird das aktuelle Abonnement beendet und ein neues erstellt — der Typ kann nicht direkt geändert werden.",
+    "description": "Ersetzen Sie das aktuelle Abonnement durch ein neues. Der Zugriff des aktuellen Abonnements endet, sobald das neue beginnt.",
     "changeButton": "Abonnement ändern",
     "continue": "Weiter",
     "changing": "Wird geändert...",
     "warningTitle": "Dieses Abonnement ändern?",
-    "warningDescription": "Dabei wird das aktuelle Abonnement beendet und ein neues mit den eingegebenen Daten erstellt. Wählen Sie, wie mit dem aktuellen Abonnement verfahren werden soll. Diese Aktion kann nicht rückgängig gemacht werden.",
-    "confirmCancel": "Aktuelles kündigen & neues erstellen",
+    "warningDescription": "Wählen Sie, ob das aktuelle Abonnement im Verlauf erhalten oder gelöscht werden soll. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmCancel": "Aktuellen Zugriff beenden & neues erstellen",
     "confirmDelete": "Aktuelles löschen & neues erstellen",
     "back": "Zurück"
   },
