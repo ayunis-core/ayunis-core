@@ -3043,6 +3043,139 @@ export function useSuperAdminInvitesControllerGetInvites<TData = Awaited<ReturnT
 
 
 /**
+ * @summary Delete all pending invites in an organization
+ */
+export const superAdminInvitesControllerDeleteAllPending = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DeleteAllPendingInvitesResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites/all`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminInvitesControllerDeleteAllPendingMutationKey = () => ['superAdminInvitesControllerDeleteAllPending'] as const;
+
+export const getSuperAdminInvitesControllerDeleteAllPendingMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteAllPending>>, TError,SuperAdminInvitesControllerDeleteAllPendingMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteAllPending>>, TError,SuperAdminInvitesControllerDeleteAllPendingMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminInvitesControllerDeleteAllPendingMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteAllPending>>, SuperAdminInvitesControllerDeleteAllPendingMutationVariables> = (props) => {
+          const {orgId} = props ?? {};
+
+          return  superAdminInvitesControllerDeleteAllPending(orgId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminInvitesControllerDeleteAllPendingMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteAllPending>>>
+
+    export type SuperAdminInvitesControllerDeleteAllPendingMutationError = void
+    export type SuperAdminInvitesControllerDeleteAllPendingMutationVariables = {orgId: string}
+
+    /**
+ * @summary Delete all pending invites in an organization
+ */
+export const useSuperAdminInvitesControllerDeleteAllPending = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteAllPending>>, TError,SuperAdminInvitesControllerDeleteAllPendingMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminInvitesControllerDeleteAllPending>>,
+        TError,
+        SuperAdminInvitesControllerDeleteAllPendingMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminInvitesControllerDeleteAllPendingMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Delete a pending invite in an organization
+ */
+export const superAdminInvitesControllerDeleteInvite = (
+    orgId: string,
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/orgs/${orgId}/invites/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminInvitesControllerDeleteInviteMutationKey = () => ['superAdminInvitesControllerDeleteInvite'] as const;
+
+export const getSuperAdminInvitesControllerDeleteInviteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteInvite>>, TError,SuperAdminInvitesControllerDeleteInviteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteInvite>>, TError,SuperAdminInvitesControllerDeleteInviteMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminInvitesControllerDeleteInviteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteInvite>>, SuperAdminInvitesControllerDeleteInviteMutationVariables> = (props) => {
+          const {orgId,id} = props ?? {};
+
+          return  superAdminInvitesControllerDeleteInvite(orgId,id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminInvitesControllerDeleteInviteMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteInvite>>>
+
+    export type SuperAdminInvitesControllerDeleteInviteMutationError = void
+    export type SuperAdminInvitesControllerDeleteInviteMutationVariables = {orgId: string;id: string}
+
+    /**
+ * @summary Delete a pending invite in an organization
+ */
+export const useSuperAdminInvitesControllerDeleteInvite = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminInvitesControllerDeleteInvite>>, TError,SuperAdminInvitesControllerDeleteInviteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminInvitesControllerDeleteInvite>>,
+        TError,
+        SuperAdminInvitesControllerDeleteInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminInvitesControllerDeleteInviteMutationOptions(options), queryClient);
+    }
+
+/**
  * Create invitations for a selected organization, including team assignments applied when each user joins.
  * @summary Create multiple invites in an organization
  */

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -20,6 +21,11 @@ import {
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { CreateBulkInvitesCommand } from 'src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.command';
 import { CreateBulkInvitesUseCase } from 'src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
+import { DeleteInviteUseCase } from 'src/iam/invites/application/use-cases/delete-invite/delete-invite.use-case';
+import { DeleteInviteCommand } from 'src/iam/invites/application/use-cases/delete-invite/delete-invite.command';
+import { DeleteAllPendingInvitesUseCase } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
+import { DeleteAllPendingInvitesCommand } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
+import { DeleteAllPendingInvitesResponseDto } from 'src/iam/invites/presenters/http/dtos/delete-all-pending-invites-response.dto';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { CreateBulkInvitesResponseDto } from 'src/iam/invites/presenters/http/dtos/create-bulk-invites-response.dto';
@@ -39,6 +45,8 @@ export class SuperAdminInvitesController {
     private readonly createBulkInvites: CreateBulkInvitesUseCase,
     private readonly getInvitesByOrg: GetInvitesByOrgUseCase,
     private readonly inviteResponseMapper: InviteResponseMapper,
+    private readonly deleteInviteUseCase: DeleteInviteUseCase,
+    private readonly deleteAllPendingInvitesUseCase: DeleteAllPendingInvitesUseCase,
   ) {}
 
   @Get()
@@ -63,6 +71,47 @@ export class SuperAdminInvitesController {
       }),
     );
     return this.inviteResponseMapper.toPaginatedDto(invites);
+  }
+
+  @Delete('all')
+  @ApiOperation({ summary: 'Delete all pending invites in an organization' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description:
+      'All pending invites in the selected organization were deleted',
+    type: DeleteAllPendingInvitesResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Super admin required',
+  })
+  async deleteAllPending(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+  ): Promise<DeleteAllPendingInvitesResponseDto> {
+    return this.deleteAllPendingInvitesUseCase.execute(
+      new DeleteAllPendingInvitesCommand(orgId),
+    );
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a pending invite in an organization' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Invite deleted' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Pending invite not found in the selected organization',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Super admin required',
+  })
+  async deleteInvite(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+    @Param('id', ParseUUIDPipe) inviteId: UUID,
+  ): Promise<void> {
+    await this.deleteInviteUseCase.execute(
+      new DeleteInviteCommand({ inviteId, orgId }),
+    );
   }
 
   @Post('bulk')

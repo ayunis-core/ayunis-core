@@ -35,6 +35,7 @@ export default function SuperAdminInvitesSearch({
 
   return (
     <UsersSearchWidget
+      inputTestId="super-admin-invites-search"
       search={search}
       onSearchChange={handleSearchChange}
       translationNamespace="admin-settings-users"

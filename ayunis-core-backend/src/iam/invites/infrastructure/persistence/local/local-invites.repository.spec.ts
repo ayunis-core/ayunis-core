@@ -21,7 +21,10 @@ function makeAcceptedInviteRecord(email: string): InviteRecord {
 
 describe('LocalInvitesRepository', () => {
   let inviteRepo: jest.Mocked<
-    Pick<Repository<InviteRecord>, 'findOne' | 'update' | 'createQueryBuilder'>
+    Pick<
+      Repository<InviteRecord>,
+      'findOne' | 'update' | 'delete' | 'createQueryBuilder'
+    >
   >;
   let txHost: {
     tx: { getRepository: jest.Mock };
@@ -32,6 +35,7 @@ describe('LocalInvitesRepository', () => {
   beforeEach(() => {
     inviteRepo = {
       findOne: jest.fn(),
+      delete: jest.fn(),
       update: jest.fn(),
       createQueryBuilder: jest.fn(),
     };
@@ -45,6 +49,29 @@ describe('LocalInvitesRepository', () => {
       new InviteMapper(),
       txHost as never,
     );
+  });
+
+  describe('deletePendingByIdAndOrg', () => {
+    it('deletes only a pending invite of the selected organization atomically', async () => {
+      const id = randomUUID();
+      const orgId = randomUUID();
+      inviteRepo.delete.mockResolvedValue({ affected: 1, raw: [] });
+      await expect(repository.deletePendingByIdAndOrg(id, orgId)).resolves.toBe(
+        true,
+      );
+      expect(inviteRepo.delete).toHaveBeenCalledWith({
+        id,
+        orgId,
+        acceptedAt: IsNull(),
+      });
+    });
+
+    it('reports an invite accepted or removed before deletion as missing', async () => {
+      inviteRepo.delete.mockResolvedValue({ affected: 0, raw: [] });
+      await expect(
+        repository.deletePendingByIdAndOrg(randomUUID(), randomUUID()),
+      ).resolves.toBe(false);
+    });
   });
 
   describe('accept', () => {

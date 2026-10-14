@@ -87,7 +87,8 @@
     "deleteAllInvitesDescription": "Sind Sie sicher, dass Sie alle {{count}} ausstehenden Einladungen löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "resendInviteTitle": "Einladung erneut senden",
     "resendInviteDescription": "Sind Sie sicher, dass Sie die Einladung für {{email}} erneut senden möchten? Die abgelaufene Einladung wird gelöscht und eine neue erstellt.",
-    "resendText": "Erneut senden"
+    "resendText": "Erneut senden",
+    "deleteAllOrgInvitesDescription": "Möchten Sie alle ausstehenden Einladungen dieser Organisation löschen, auch außerhalb der aktuellen Suche oder Seite? Diese Aktion kann nicht rückgängig gemacht werden."
   },
   "deleteAllInvites": {
     "success": "{{count}} ausstehende Einladung(en) erfolgreich gelöscht",
@@ -115,7 +116,9 @@
     "error": {
       "inviteNotFound": "Einladung nicht gefunden",
       "unexpectedError": "Fehler beim Löschen der Einladung. Bitte versuchen Sie es erneut."
-    }
+    },
+    "notFound": "Einladung nicht gefunden. Sie wurde möglicherweise bereits angenommen oder gelöscht.",
+    "success": "Einladung erfolgreich gelöscht"
   },
   "userDelete": {
     "success": "Benutzer erfolgreich gelöscht",
