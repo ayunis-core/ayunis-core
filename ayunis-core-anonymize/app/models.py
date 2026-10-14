@@ -5,14 +5,17 @@ from pydantic import BaseModel, Field
 # Analysis cost is linear in input length: Presidio splits the text into
 # overlapping 250-character chunks and GLiNER processes them in batches.
 #
-# In a local benchmark with the production container's resource limits, the cap
-# lets a four-request burst finish inside the caller's 60s timeout. Admitting
-# input that is certain to time out is worse than rejecting it because
-# synchronous inference continues after the caller gives up and leaves later
-# requests queued behind abandoned work.
+# This is what one request can do, measured, not a product limit: production
+# processes about 3 ms per character at p90, so this is the largest input one
+# request finishes inside the caller's 60s timeout. Admitting input that is
+# certain to time out is worse than rejecting it, because the analysis still
+# occupies a worker after the caller gave up (AYC-1254).
 #
-# 30k characters is ~7,500 words — far beyond any realistic message.
-MAX_TEXT_LENGTH = 30_000
+# The backend never sends this much. It splits long texts into chunks of at
+# most 5,000 code points (ANONYMIZATION_CHUNK_LENGTH) and analyzes them in
+# parallel, so its own user-facing limit of 30,000 is independent of this cap.
+# This cap guards the workers against any caller that does not chunk.
+MAX_TEXT_LENGTH = 15_000
 
 
 class AnalyzeRequest(BaseModel):
