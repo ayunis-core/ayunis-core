@@ -2,6 +2,7 @@ import { ModelProviderError } from '@ayunis/inference';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Hook } from '../contracts/hook';
+import { DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS } from '../contracts/run-input';
 import type { ModelProvider, ProviderChunk } from '../contracts/provider';
 import {
   MockProvider,
@@ -384,6 +385,60 @@ describe('per-call cancellation and idle timeout', () => {
       type: 'run_end',
       status: 'completed',
     });
+  });
+
+  it('bounds a provider that stays silent on every attempt to the default retry budget', async () => {
+    vi.useFakeTimers();
+    let closed = 0;
+    const attempts: string[] = [];
+    const model: ModelProvider = {
+      name: 'always-silent',
+      stream(request) {
+        return {
+          [Symbol.asyncIterator]: () => ({
+            next: () => rejectOnAbort(request.signal),
+            return: () => {
+              closed += 1;
+              return Promise.resolve({ done: true as const, value: undefined });
+            },
+          }),
+        };
+      },
+    };
+    const hook: Hook = {
+      name: 'attempt-observer',
+      afterModelCall: (ctx) => {
+        attempts.push(`${ctx.callSequence}:${ctx.trigger}:${ctx.outcome.type}`);
+      },
+    };
+    let settled = false;
+    const pending = collectEvents(baseInput(model, { hooks: [hook] })).finally(
+      () => {
+        settled = true;
+      },
+    );
+    const idleBudgetMs = 4 * DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS;
+    const backoffBudgetMs = 500 + 1_000 + 2_000;
+
+    await vi.advanceTimersByTimeAsync(idleBudgetMs + backoffBudgetMs - 1);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    const events = await pending;
+
+    expect(attempts).toEqual([
+      '1:initial:provider_failure',
+      '2:provider_retry:provider_failure',
+      '3:provider_retry:provider_failure',
+      '4:provider_retry:provider_failure',
+    ]);
+    expect(closed).toBe(4);
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_FAILED',
+      message: `Model provider stream was idle for ${DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS}ms`,
+      modelCall: { callSequence: 4, trigger: 'provider_retry' },
+      providerFailure: { kind: 'timeout', stage: 'stream_establishment' },
+    });
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
   });
 
   it('does not block terminal lifecycle on hostile iterator cleanup', async () => {
