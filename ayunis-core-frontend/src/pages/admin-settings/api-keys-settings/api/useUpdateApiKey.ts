@@ -5,6 +5,7 @@ import type { UseFormReturn } from 'react-hook-form';
 import {
   useApiKeysControllerUpdateApiKey,
   getApiKeysControllerListApiKeysQueryKey,
+  getApiKeyUsageControllerGetApiKeyUsageQueryKey,
   getCreditLimitsControllerGetApiKeyLimitsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -45,6 +46,9 @@ export function useUpdateApiKey(
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getApiKeysControllerListApiKeysQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getApiKeyUsageControllerGetApiKeyUsageQueryKey(),
         });
         void queryClient.invalidateQueries({
           queryKey: getCreditLimitsControllerGetApiKeyLimitsQueryKey(),
