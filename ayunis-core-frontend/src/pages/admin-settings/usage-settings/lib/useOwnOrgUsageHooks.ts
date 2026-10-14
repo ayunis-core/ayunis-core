@@ -3,10 +3,11 @@ import {
   useUsageControllerGetModelDistribution,
   useUsageControllerGetProviderUsageChart,
   useUsageControllerGetUserUsage,
+  useApiKeyUsageControllerGetApiKeyUsage,
   useModelsControllerGetPermittedLanguageModels,
 } from '@/shared/api';
 import type { UsageOverviewHooks } from '@/widgets/usage-overview';
-import { useCreditUsage } from '../api/useCreditUsage';
+import { useCreditUsage } from '@/pages/admin-settings/usage-settings/api/useCreditUsage';
 
 /**
  * UsageOverview data adapter for the org admin's own organization. Each hook
@@ -20,5 +21,6 @@ export const ownOrgUsageHooks: UsageOverviewHooks = {
   useProviderUsageChart: (params) =>
     useUsageControllerGetProviderUsageChart(params),
   useUserUsage: (params) => useUsageControllerGetUserUsage(params),
+  useApiKeyUsage: (params) => useApiKeyUsageControllerGetApiKeyUsage(params),
   usePermittedModels: () => useModelsControllerGetPermittedLanguageModels(),
 };

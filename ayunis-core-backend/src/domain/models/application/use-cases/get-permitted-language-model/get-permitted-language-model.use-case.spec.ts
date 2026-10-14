@@ -1,4 +1,5 @@
 import { createLoggerMock } from 'src/common/testing/logger.mock';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -66,12 +67,9 @@ describe('GetPermittedLanguageModelUseCase', () => {
         {
           provide: ContextService,
           useValue: {
-            get: jest.fn((key: string) => {
-              if (key === 'userId') return mockUserId;
-              if (key === 'orgId') return mockOrgId;
-              if (key === 'systemRole') return null;
-              return null;
-            }),
+            get: jest.fn(
+              getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+            ),
           },
         },
       ],

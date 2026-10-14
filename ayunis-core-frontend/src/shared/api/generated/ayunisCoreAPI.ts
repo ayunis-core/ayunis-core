@@ -41,6 +41,8 @@ import type {
   ApiKeyCreditLimitItemDto,
   ApiKeyCreditLimitResponseDto,
   ApiKeyResponseDto,
+  ApiKeyUsageControllerGetApiKeyUsageParams,
+  ApiKeyUsageResponseDto,
   AppAlertResponseDto,
   ArtifactListResponseDto,
   ArtifactResponseDto,
@@ -197,6 +199,7 @@ import type {
   SetOrgSsoEnabledRequestDto,
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
+  SetOrgUsageVisibilityRequestDto,
   SetSkillActivationDto,
   SetSkillPinDto,
   SetTeamDefaultModelDto,
@@ -221,10 +224,12 @@ import type {
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
+  SuperAdminTeamsControllerGetMembersParams,
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
   SuperAdminUsageControllerGetModelDistributionParams,
   SuperAdminUsageControllerGetUsageStatsParams,
+  SuperAdminUsageDataControllerGetApiKeyUsageParams,
   SuperAdminUsageDataControllerGetProviderUsageChartParams,
   SuperAdminUsageDataControllerGetProviderUsageParams,
   SuperAdminUsageDataControllerGetUserUsageParams,
@@ -233,6 +238,7 @@ import type {
   SuperAdminUsersControllerGetUsersByOrgIdParams,
   TeamCreditLimitItemDto,
   TeamCreditLimitResponseDto,
+  TeamManagementAccessDto,
   TeamMemberResponseDto,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
@@ -2870,7 +2876,7 @@ export const useInvitesControllerDeleteAllPending = <TError = void,
     }
 
 /**
- * Delete an invitation (only allowed by the user who created it)
+ * Delete an invitation of the caller's organization (Admin only)
  * @summary Delete an invite
  */
 export const invitesControllerDeleteInvite = (
@@ -3571,6 +3577,75 @@ export const useSuperAdminOrgLifecycleControllerSetOrgArchived = <TError = OrgEr
         TContext
       > => {
       return useMutation(getSuperAdminOrgLifecycleControllerSetOrgArchivedMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Set individual user usage visibility for an organisation
+ */
+export const superAdminOrgUsageVisibilityControllerSetUsageVisibility = (
+    id: string,
+    setOrgUsageVisibilityRequestDto: SetOrgUsageVisibilityRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminOrgResponseDto>(
+      {url: `/super-admin/orgs/${id}/usage-visibility`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgUsageVisibilityRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationKey = () => ['superAdminOrgUsageVisibilityControllerSetUsageVisibility'] as const;
+
+export const getSuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgUsageVisibilityControllerSetUsageVisibility>>, TError,SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgUsageVisibilityControllerSetUsageVisibility>>, TError,SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOrgUsageVisibilityControllerSetUsageVisibility>>, SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminOrgUsageVisibilityControllerSetUsageVisibility(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgUsageVisibilityControllerSetUsageVisibility>>>
+    export type SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationBody = SetOrgUsageVisibilityRequestDto
+    export type SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationError = void
+    export type SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationVariables = {id: string;data: SetOrgUsageVisibilityRequestDto}
+
+    /**
+ * @summary Set individual user usage visibility for an organisation
+ */
+export const useSuperAdminOrgUsageVisibilityControllerSetUsageVisibility = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgUsageVisibilityControllerSetUsageVisibility>>, TError,SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOrgUsageVisibilityControllerSetUsageVisibility>>,
+        TError,
+        SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminOrgUsageVisibilityControllerSetUsageVisibilityMutationOptions(options), queryClient);
     }
 
 /**
@@ -8049,6 +8124,93 @@ export const useSuperAdminImageGenerationCatalogModelsControllerUpdateImageGener
       return useMutation(getSuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelMutationOptions(options), queryClient);
     }
 
+export const teamManagementControllerGetTeamManagementAccess = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamManagementAccessDto>(
+      {url: `/teams/management-access`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getTeamManagementControllerGetTeamManagementAccessQueryKey = () => {
+    return [
+    `/teams/management-access`
+    ] as const;
+    }
+
+
+export const getTeamManagementControllerGetTeamManagementAccessQueryOptions = <TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTeamManagementControllerGetTeamManagementAccessQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>> = ({ signal }) => teamManagementControllerGetTeamManagementAccess(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TeamManagementControllerGetTeamManagementAccessQueryResult = NonNullable<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>>
+export type TeamManagementControllerGetTeamManagementAccessQueryError = unknown
+
+
+export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>,
+          TError,
+          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>,
+          TError,
+          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTeamManagementControllerGetTeamManagementAccessQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 /**
  * @summary List all teams for the current organization
  */
@@ -8836,6 +8998,382 @@ export const useTeamsControllerRemoveTeamMember = <TError = void,
         TContext
       > => {
       return useMutation(getTeamsControllerRemoveTeamMemberMutationOptions(options), queryClient);
+    }
+
+export const superAdminTeamsControllerGetTeams = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamResponseDto[]>(
+      {url: `/super-admin/orgs/${orgId}/teams`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamsControllerGetTeamsQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/orgs/${orgId}/teams`
+    ] as const;
+    }
+
+
+export const getSuperAdminTeamsControllerGetTeamsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError = unknown>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTeamsControllerGetTeamsQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>> = ({ signal }) => superAdminTeamsControllerGetTeams(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminTeamsControllerGetTeamsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>>
+export type SuperAdminTeamsControllerGetTeamsQueryError = unknown
+
+
+export function useSuperAdminTeamsControllerGetTeams<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError = unknown>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTeamsControllerGetTeams<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTeamsControllerGetTeams<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSuperAdminTeamsControllerGetTeams<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetTeams>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminTeamsControllerGetTeamsQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const superAdminTeamsControllerGetMembers = (
+    orgId: string,
+    teamId: string,
+    params?: SuperAdminTeamsControllerGetMembersParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<PaginatedTeamMembersResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}/members`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamsControllerGetMembersQueryKey = (orgId: string,
+    teamId: string,
+    params?: SuperAdminTeamsControllerGetMembersParams,) => {
+    return [
+    `/super-admin/orgs/${orgId}/teams/${teamId}/members`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminTeamsControllerGetMembersQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError = unknown>(orgId: string,
+    teamId: string,
+    params?: SuperAdminTeamsControllerGetMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTeamsControllerGetMembersQueryKey(orgId,teamId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>> = ({ signal }) => superAdminTeamsControllerGetMembers(orgId,teamId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined && teamId !== null && teamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminTeamsControllerGetMembersQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>>
+export type SuperAdminTeamsControllerGetMembersQueryError = unknown
+
+
+export function useSuperAdminTeamsControllerGetMembers<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError = unknown>(
+ orgId: string,
+    teamId: string,
+    params: undefined |  SuperAdminTeamsControllerGetMembersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTeamsControllerGetMembers<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError = unknown>(
+ orgId: string,
+    teamId: string,
+    params?: SuperAdminTeamsControllerGetMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTeamsControllerGetMembers<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError = unknown>(
+ orgId: string,
+    teamId: string,
+    params?: SuperAdminTeamsControllerGetMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSuperAdminTeamsControllerGetMembers<TData = Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError = unknown>(
+ orgId: string,
+    teamId: string,
+    params?: SuperAdminTeamsControllerGetMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamsControllerGetMembers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminTeamsControllerGetMembersQueryOptions(orgId,teamId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const superAdminTeamsControllerCreateMember = (
+    orgId: string,
+    teamId: string,
+    addTeamMemberDto: AddTeamMemberDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamMemberResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addTeamMemberDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamsControllerCreateMemberMutationKey = () => ['superAdminTeamsControllerCreateMember'] as const;
+
+export const getSuperAdminTeamsControllerCreateMemberMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerCreateMember>>, TError,SuperAdminTeamsControllerCreateMemberMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerCreateMember>>, TError,SuperAdminTeamsControllerCreateMemberMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTeamsControllerCreateMemberMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTeamsControllerCreateMember>>, SuperAdminTeamsControllerCreateMemberMutationVariables> = (props) => {
+          const {orgId,teamId,data} = props ?? {};
+
+          return  superAdminTeamsControllerCreateMember(orgId,teamId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTeamsControllerCreateMemberMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamsControllerCreateMember>>>
+    export type SuperAdminTeamsControllerCreateMemberMutationBody = AddTeamMemberDto
+    export type SuperAdminTeamsControllerCreateMemberMutationError = unknown
+    export type SuperAdminTeamsControllerCreateMemberMutationVariables = {orgId: string;teamId: string;data: AddTeamMemberDto}
+
+    export const useSuperAdminTeamsControllerCreateMember = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerCreateMember>>, TError,SuperAdminTeamsControllerCreateMemberMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTeamsControllerCreateMember>>,
+        TError,
+        SuperAdminTeamsControllerCreateMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTeamsControllerCreateMemberMutationOptions(options), queryClient);
+    }
+
+export const superAdminTeamsControllerDeleteMember = (
+    orgId: string,
+    teamId: string,
+    userId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}/members/${userId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamsControllerDeleteMemberMutationKey = () => ['superAdminTeamsControllerDeleteMember'] as const;
+
+export const getSuperAdminTeamsControllerDeleteMemberMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerDeleteMember>>, TError,SuperAdminTeamsControllerDeleteMemberMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerDeleteMember>>, TError,SuperAdminTeamsControllerDeleteMemberMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTeamsControllerDeleteMemberMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTeamsControllerDeleteMember>>, SuperAdminTeamsControllerDeleteMemberMutationVariables> = (props) => {
+          const {orgId,teamId,userId} = props ?? {};
+
+          return  superAdminTeamsControllerDeleteMember(orgId,teamId,userId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTeamsControllerDeleteMemberMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamsControllerDeleteMember>>>
+
+    export type SuperAdminTeamsControllerDeleteMemberMutationError = unknown
+    export type SuperAdminTeamsControllerDeleteMemberMutationVariables = {orgId: string;teamId: string;userId: string}
+
+    export const useSuperAdminTeamsControllerDeleteMember = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerDeleteMember>>, TError,SuperAdminTeamsControllerDeleteMemberMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTeamsControllerDeleteMember>>,
+        TError,
+        SuperAdminTeamsControllerDeleteMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTeamsControllerDeleteMemberMutationOptions(options), queryClient);
+    }
+
+export const superAdminTeamsControllerRemoveTeam = (
+    orgId: string,
+    teamId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/orgs/${orgId}/teams/${teamId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamsControllerRemoveTeamMutationKey = () => ['superAdminTeamsControllerRemoveTeam'] as const;
+
+export const getSuperAdminTeamsControllerRemoveTeamMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerRemoveTeam>>, TError,SuperAdminTeamsControllerRemoveTeamMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerRemoveTeam>>, TError,SuperAdminTeamsControllerRemoveTeamMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTeamsControllerRemoveTeamMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTeamsControllerRemoveTeam>>, SuperAdminTeamsControllerRemoveTeamMutationVariables> = (props) => {
+          const {orgId,teamId} = props ?? {};
+
+          return  superAdminTeamsControllerRemoveTeam(orgId,teamId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTeamsControllerRemoveTeamMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamsControllerRemoveTeam>>>
+
+    export type SuperAdminTeamsControllerRemoveTeamMutationError = unknown
+    export type SuperAdminTeamsControllerRemoveTeamMutationVariables = {orgId: string;teamId: string}
+
+    export const useSuperAdminTeamsControllerRemoveTeam = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamsControllerRemoveTeam>>, TError,SuperAdminTeamsControllerRemoveTeamMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTeamsControllerRemoveTeam>>,
+        TError,
+        SuperAdminTeamsControllerRemoveTeamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTeamsControllerRemoveTeamMutationOptions(options), queryClient);
     }
 
 /**
@@ -16426,7 +16964,7 @@ export const getUsageControllerGetUserUsageQueryKey = (params?: UsageControllerG
     }
 
 
-export const getUsageControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
+export const getUsageControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = void>(params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -16445,10 +16983,10 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type UsageControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUserUsage>>>
-export type UsageControllerGetUserUsageQueryError = unknown
+export type UsageControllerGetUserUsageQueryError = void
 
 
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = void>(
  params: undefined |  UsageControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
@@ -16458,7 +16996,7 @@ export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = void>(
  params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
@@ -16468,7 +17006,7 @@ export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = void>(
  params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -16476,7 +17014,7 @@ export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof
  * @summary Get usage statistics by user
  */
 
-export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = void>(
  params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -16777,10 +17315,105 @@ export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnTy
 
 
 /**
+ * Returns token, request and credit usage for every API key of the current organization, including revoked and expired keys. startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive. Without dates, all usage is returned.
+ * @summary Get usage statistics by API key
+ */
+export const apiKeyUsageControllerGetApiKeyUsage = (
+    params?: ApiKeyUsageControllerGetApiKeyUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyUsageResponseDto>(
+      {url: `/usage/api-keys`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getApiKeyUsageControllerGetApiKeyUsageQueryKey = (params?: ApiKeyUsageControllerGetApiKeyUsageParams,) => {
+    return [
+    `/usage/api-keys`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getApiKeyUsageControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApiKeyUsageControllerGetApiKeyUsageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>> = ({ signal }) => apiKeyUsageControllerGetApiKeyUsage(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApiKeyUsageControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>>
+export type ApiKeyUsageControllerGetApiKeyUsageQueryError = unknown
+
+
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params: undefined |  ApiKeyUsageControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by API key
+ */
+
+export function useApiKeyUsageControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError = unknown>(
+ params?: ApiKeyUsageControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeyUsageControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApiKeyUsageControllerGetApiKeyUsageQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Get usage dashboard configuration for an organization
  */
 export const superAdminUsageControllerGetUsageConfig = (
-    orgId: unknown,
+    orgId: string,
  signal?: AbortSignal
 ) => {
 
@@ -16794,14 +17427,14 @@ export const superAdminUsageControllerGetUsageConfig = (
 
 
 
-export const getSuperAdminUsageControllerGetUsageConfigQueryKey = (orgId: unknown,) => {
+export const getSuperAdminUsageControllerGetUsageConfigQueryKey = (orgId: string,) => {
     return [
     `/super-admin/usage/${orgId}/config`
     ] as const;
     }
 
 
-export const getSuperAdminUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+export const getSuperAdminUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -16824,7 +17457,7 @@ export type SuperAdminUsageControllerGetUsageConfigQueryError = unknown
 
 
 export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
           TError,
@@ -16834,7 +17467,7 @@ export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<Retur
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
           TError,
@@ -16844,7 +17477,7 @@ export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<Retur
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -16852,7 +17485,7 @@ export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<Retur
  */
 
 export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
- orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -17456,6 +18089,108 @@ export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<Ret
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSuperAdminUsageDataControllerGetUserUsageQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive.
+ * @summary Get usage statistics by API key for an organization
+ */
+export const superAdminUsageDataControllerGetApiKeyUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ApiKeyUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/api-keys`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams,) => {
+    return [
+    `/super-admin/usage/${orgId}/api-keys`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetApiKeyUsageQueryKey(orgId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>> = ({ signal }) => superAdminUsageDataControllerGetApiKeyUsage(orgId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetApiKeyUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>>
+export type SuperAdminUsageDataControllerGetApiKeyUsageQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetApiKeyUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by API key for an organization
+ */
+
+export function useSuperAdminUsageDataControllerGetApiKeyUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetApiKeyUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetApiKeyUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetApiKeyUsageQueryOptions(orgId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -18150,6 +18885,218 @@ export const useCreditLimitsControllerRemoveApiKeyLimit = <TError = unknown,
         TContext
       > => {
       return useMutation(getCreditLimitsControllerRemoveApiKeyLimitMutationOptions(options), queryClient);
+    }
+
+export const superAdminTeamCreditLimitsControllerGetTeamLimits = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamCreditLimitItemDto[]>(
+      {url: `/super-admin/orgs/${orgId}/credit-limits/teams`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamCreditLimitsControllerGetTeamLimitsQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/orgs/${orgId}/credit-limits/teams`
+    ] as const;
+    }
+
+
+export const getSuperAdminTeamCreditLimitsControllerGetTeamLimitsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError = unknown>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTeamCreditLimitsControllerGetTeamLimitsQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>> = ({ signal }) => superAdminTeamCreditLimitsControllerGetTeamLimits(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminTeamCreditLimitsControllerGetTeamLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>>
+export type SuperAdminTeamCreditLimitsControllerGetTeamLimitsQueryError = unknown
+
+
+export function useSuperAdminTeamCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError = unknown>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTeamCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTeamCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSuperAdminTeamCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError = unknown>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminTeamCreditLimitsControllerGetTeamLimitsQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const superAdminTeamCreditLimitsControllerSetTeamLimit = (
+    orgId: string,
+    teamId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamCreditLimitResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/credit-limits/teams/${teamId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamCreditLimitsControllerSetTeamLimitMutationKey = () => ['superAdminTeamCreditLimitsControllerSetTeamLimit'] as const;
+
+export const getSuperAdminTeamCreditLimitsControllerSetTeamLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerSetTeamLimit>>, TError,SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerSetTeamLimit>>, TError,SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTeamCreditLimitsControllerSetTeamLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerSetTeamLimit>>, SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationVariables> = (props) => {
+          const {orgId,teamId,data} = props ?? {};
+
+          return  superAdminTeamCreditLimitsControllerSetTeamLimit(orgId,teamId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerSetTeamLimit>>>
+    export type SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationBody = SetCreditLimitDto
+    export type SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationError = unknown
+    export type SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationVariables = {orgId: string;teamId: string;data: SetCreditLimitDto}
+
+    export const useSuperAdminTeamCreditLimitsControllerSetTeamLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerSetTeamLimit>>, TError,SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerSetTeamLimit>>,
+        TError,
+        SuperAdminTeamCreditLimitsControllerSetTeamLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTeamCreditLimitsControllerSetTeamLimitMutationOptions(options), queryClient);
+    }
+
+export const superAdminTeamCreditLimitsControllerRemoveTeamLimit = (
+    orgId: string,
+    teamId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/orgs/${orgId}/credit-limits/teams/${teamId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationKey = () => ['superAdminTeamCreditLimitsControllerRemoveTeamLimit'] as const;
+
+export const getSuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerRemoveTeamLimit>>, TError,SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerRemoveTeamLimit>>, TError,SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerRemoveTeamLimit>>, SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationVariables> = (props) => {
+          const {orgId,teamId} = props ?? {};
+
+          return  superAdminTeamCreditLimitsControllerRemoveTeamLimit(orgId,teamId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerRemoveTeamLimit>>>
+
+    export type SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationError = unknown
+    export type SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationVariables = {orgId: string;teamId: string}
+
+    export const useSuperAdminTeamCreditLimitsControllerRemoveTeamLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerRemoveTeamLimit>>, TError,SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTeamCreditLimitsControllerRemoveTeamLimit>>,
+        TError,
+        SuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminTeamCreditLimitsControllerRemoveTeamLimitMutationOptions(options), queryClient);
     }
 
 /**

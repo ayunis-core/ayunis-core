@@ -1,3 +1,6 @@
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -8,10 +11,13 @@ import {
   UserUnauthorizedError,
 } from 'src/iam/users/application/users.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { DeleteInviteByEmailCommand } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.command';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
@@ -24,12 +30,14 @@ export class DeleteUserUseCase {
   private readonly logger = new Logger(DeleteUserUseCase.name);
 
   constructor(
+    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly deleteInviteByEmailUseCase: DeleteInviteByEmailUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: DeleteUserCommand): Promise<void> {
     this.logger.log({ userId: command.userId }, 'deleteUser');
     const requestingUserId = this.contextService.get('userId');
@@ -43,6 +51,7 @@ export class DeleteUserUseCase {
       throw new UserNotFoundError(command.userId);
     }
     this.assertAllowedToDelete(command, userToDelete);
+    await this.teamManagementAccess.execute({ orgId: userToDelete.orgId });
 
     // Two-phase cleanup: listeners resolve dependent data that database
     // cascades cannot reach (MinIO assets, in-flight source processing) while
@@ -75,13 +84,13 @@ export class DeleteUserUseCase {
     // from their own org. The passed command.orgId must match both the
     // requester's org (from context) and the target user's org to prevent
     // cross-org deletion.
-    const isSuperAdmin =
-      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
+    const principal = getUserContext(this.contextService);
+    const callerIsSuperAdmin = isSuperAdmin(this.contextService);
     const isOrgAdmin =
-      this.contextService.get('role') === UserRole.ADMIN &&
+      principal?.role === UserRole.ADMIN &&
       requestUserOrgId === command.orgId &&
       command.orgId === userToDelete.orgId;
-    if (!isSuperAdmin && !isOrgAdmin) {
+    if (!callerIsSuperAdmin && !isOrgAdmin) {
       throw new UserUnauthorizedError(
         'You are not allowed to delete this user',
       );

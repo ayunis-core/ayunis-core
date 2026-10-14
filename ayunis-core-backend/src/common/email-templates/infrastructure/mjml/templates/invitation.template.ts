@@ -44,7 +44,7 @@ Bei Fragen: help@ayunis.com
 
 export function invitationHtml(
   template: InvitationTemplateContent,
-): MJMLParseResults {
+): Promise<MJMLParseResults> {
   const companyName = escapeText(template.invitingCompanyName);
   const inviterLine = template.adminName
     ? `<strong>${escapeText(template.adminName)}</strong> hat Sie zu <strong>${companyName}</strong> eingeladen.`

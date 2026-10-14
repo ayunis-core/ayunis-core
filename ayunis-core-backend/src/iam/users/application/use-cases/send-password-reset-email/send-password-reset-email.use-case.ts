@@ -46,7 +46,7 @@ export class SendPasswordResetEmailUseCase {
     command: SendPasswordResetEmailCommand,
   ): Promise<void> {
     const template = this.buildTemplate(command);
-    const emailContent = this.renderTemplateUseCase.execute(
+    const emailContent = await this.renderTemplateUseCase.execute(
       new RenderTemplateCommand(template),
     );
     this.logger.debug(

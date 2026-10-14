@@ -285,7 +285,12 @@ export class ProvisionOrgSsoUserUseCase {
   ): Promise<void> {
     if (!invite) return;
     await this.assignUserToTeams.execute(
-      new AssignUserToTeamsCommand(userId, invite.orgId, invite.teamIds),
+      new AssignUserToTeamsCommand(
+        userId,
+        invite.orgId,
+        invite.teamIds,
+        invite.inviterId,
+      ),
     );
   }
 

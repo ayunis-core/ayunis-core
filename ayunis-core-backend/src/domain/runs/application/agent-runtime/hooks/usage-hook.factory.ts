@@ -53,8 +53,12 @@ function requiresReportedUsage(
   if (outcome.providerConsumptionStarted || outcome.outputState === 'final') {
     return true;
   }
+  // Azure can report a token rate limit on an already-open stream. The request
+  // was refused before inference, so there is no usage to account for and the
+  // call stays retryable.
   return (
     outcome.type === 'provider_failure' &&
-    outcome.providerFailure.stage === 'stream_consumption'
+    outcome.providerFailure.stage === 'stream_consumption' &&
+    outcome.providerFailure.kind !== 'rate_limit'
   );
 }

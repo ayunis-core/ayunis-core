@@ -23,6 +23,7 @@ interface Props {
   isPending: boolean;
   isError: boolean;
   onRetry?: () => void;
+  canManageTeams?: boolean;
 }
 
 export function CreditLimitsTable({
@@ -31,12 +32,14 @@ export function CreditLimitsTable({
   isPending,
   isError,
   onRetry,
+  canManageTeams = true,
 }: Readonly<Props>) {
   const { t } = useTranslation('admin-settings-credit-limits');
   const [selected, setSelected] = useState<{
     row: CreditLimitRow;
     target: CreditLimitTarget;
   } | null>(null);
+  if (!canManageTeams && selected?.target === 'teams') setSelected(null);
   return (
     <CreditLimitState isPending={isPending} isError={isError} onRetry={onRetry}>
       <Table>
@@ -54,6 +57,7 @@ export function CreditLimitsTable({
             <CreditLimitTableRow
               key={row.id}
               row={row}
+              canConfigure={filters.tab === 'users' || canManageTeams}
               target={filters.tab}
               onConfigure={() => setSelected({ row, target: filters.tab })}
             />
@@ -65,7 +69,7 @@ export function CreditLimitsTable({
           )}
         </TableBody>
       </Table>
-      {selected && (
+      {selected && (selected.target === 'users' || canManageTeams) && (
         <CreditLimitDialog
           id={selected.row.id}
           name={selected.row.name}
@@ -82,17 +86,23 @@ function CreditLimitTableRow({
   row,
   target,
   onConfigure,
+  canConfigure,
 }: Readonly<{
   row: CreditLimitRow;
   target: CreditLimitTarget;
   onConfigure: () => void;
+  canConfigure: boolean;
 }>) {
   const { t, i18n } = useTranslation('admin-settings-credit-limits');
   const limit = row.limit;
+  const usagePrefix =
+    limit?.creditsUsed === undefined
+      ? ''
+      : `${limit.creditsUsed.toLocaleString(i18n.language)} / `;
   const limitLabel =
     limit === null
       ? t('form.noLimit')
-      : `${limit.creditsUsed.toLocaleString(i18n.language)} / ${limit.monthlyCredits.toLocaleString(i18n.language)}`;
+      : `${usagePrefix}${limit.monthlyCredits.toLocaleString(i18n.language)}`;
   return (
     <TableRow data-testid={`credit-limits-row-${row.id}`}>
       <TableCell>
@@ -113,6 +123,7 @@ function CreditLimitTableRow({
         <Button
           variant="outline"
           size="sm"
+          disabled={!canConfigure}
           onClick={onConfigure}
           data-testid={`credit-limits-${target === 'users' ? 'user' : 'team'}-${row.id}`}
         >

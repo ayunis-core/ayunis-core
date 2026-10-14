@@ -11,7 +11,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     return {
-      skillTemplates: await queryClient.fetchQuery({
+      skillTemplates: await queryClient.query({
         queryKey: getSuperAdminSkillTemplatesControllerFindAllQueryKey(),
         queryFn: () => superAdminSkillTemplatesControllerFindAll(),
       }),

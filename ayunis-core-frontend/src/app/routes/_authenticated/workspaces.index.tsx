@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/')({
       limit: WORKSPACES_PER_PAGE,
       offset: (page - 1) * WORKSPACES_PER_PAGE,
     };
-    const response = await queryClient.fetchQuery({
+    const response = await queryClient.query({
       queryKey: getWorkspacesControllerFindAllQueryKey(params),
       queryFn: () => workspacesControllerFindAll(params),
     });

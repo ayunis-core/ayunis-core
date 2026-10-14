@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { copyableMessageContent } from '@/pages/chat/lib/copyable-message-content';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
@@ -28,8 +29,9 @@ export default function CopyAssistantTextButton({
     const htmlParts: string[] = [];
     const textParts: string[] = [];
     copyableElements.forEach((element) => {
-      htmlParts.push(element.innerHTML);
-      textParts.push((element as HTMLElement).innerText || '');
+      const content = copyableMessageContent(element);
+      htmlParts.push(content.html);
+      textParts.push(content.text);
     });
 
     const html = htmlParts.join('<br><br>');

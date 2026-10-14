@@ -32,7 +32,8 @@
     "resend": "Einladung erneut senden",
     "sendPasswordReset": "Passwort-Reset senden",
     "noInvitesFound": "Keine Einladungen gefunden",
-    "total": "{{count}} gesamt"
+    "total": "{{count}} gesamt",
+    "teams": "Teams"
   },
   "inviteDialog": {
     "inviteUser": "Benutzer einladen",
@@ -64,7 +65,12 @@
     "clickToCopy": "Klicken Sie auf die Schaltfläche, um den Einladungslink zu kopieren",
     "close": "Schließen",
     "success": "Einladung erfolgreich erstellt",
-    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut."
+    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut.",
+    "teamsLabel": "Teams (optional)",
+    "teamsPlaceholder": "Teams auswählen",
+    "noTeamsFound": "Keine Teams gefunden",
+    "teamsLoadError": "Teams konnten nicht geladen werden.",
+    "teamsRestricted": "Die Teamzuweisung ist nicht verfügbar, solange die individuelle Nutzung ausgeblendet ist."
   },
   "confirmations": {
     "deleteInviteTitle": "Einladung löschen",
@@ -94,7 +100,8 @@
     "userAlreadyExists": "Diese E-Mail-Adresse ist bereits als Benutzer in Ihrer Organisation registriert.",
     "emailProviderBlacklisted": "Private E-Mail-Adressen (z. B. Gmail, GMX, Web.de, t-online) sind aus Sicherheitsgründen nicht erlaubt. Bitte verwenden Sie eine geschäftliche E-Mail-Adresse.",
     "rateLimitExceeded": "Sie haben in kurzer Zeit viele Einladungen erstellt. Bitte warten Sie einige Minuten, bevor Sie weitere erstellen.",
-    "multipleActiveSubscriptions": "Die Abonnements dieser Organisation überschneiden sich. Ein Superadmin muss die Überschneidung beheben, bevor Benutzer eingeladen werden können."
+    "multipleActiveSubscriptions": "Die Abonnements dieser Organisation überschneiden sich. Ein Superadmin muss die Überschneidung beheben, bevor Benutzer eingeladen werden können.",
+    "teamNotFound": "Ein ausgewähltes Team existiert nicht mehr. Bitte wählen Sie die Teams erneut aus."
   },
   "inviteResend": {
     "success": "Einladung erfolgreich erneut gesendet!",
@@ -206,5 +213,10 @@
     "confirmText": "Zurücksetzen",
     "success": "Zwei-Faktor-Authentifizierung wurde zurückgesetzt.",
     "error": "Zwei-Faktor-Authentifizierung konnte nicht zurückgesetzt werden."
+  },
+  "validation": {
+    "teamIds": {
+      "invalid": "Bitte wählen Sie gültige Teams aus."
+    }
   }
 }

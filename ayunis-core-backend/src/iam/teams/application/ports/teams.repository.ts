@@ -6,6 +6,10 @@ export abstract class TeamsRepository {
   abstract findByOrgId(orgId: UUID): Promise<Team[]>;
   abstract findByIdsAndOrgId(ids: UUID[], orgId: UUID): Promise<Team[]>;
   abstract findByUserId(userId: UUID): Promise<Team[]>;
+  abstract findByUserIdsAndOrgId(
+    userIds: UUID[],
+    orgId: UUID,
+  ): Promise<Map<UUID, Pick<Team, 'id' | 'name'>[]>>;
   abstract findByNameAndOrgId(name: string, orgId: UUID): Promise<Team | null>;
   abstract create(team: Team): Promise<Team>;
   abstract update(team: Team): Promise<Team>;

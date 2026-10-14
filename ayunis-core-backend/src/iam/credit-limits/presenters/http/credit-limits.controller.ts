@@ -16,8 +16,8 @@ import { Roles } from 'src/iam/authorization/application/decorators/roles.decora
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { RequireUsageBasedSubscription } from 'src/iam/authorization/application/decorators/usage-based-subscription.decorator';
 import { GetApiKeyCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/get-api-key-credit-limits-overview.use-case';
-import { GetTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.use-case';
-import { GetUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/get-user-credit-limits-overview.use-case';
+import { GetAdminTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-admin-team-credit-limits-overview/get-admin-team-credit-limits-overview.use-case';
+import { GetAdminUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-admin-user-credit-limits-overview/get-admin-user-credit-limits-overview.use-case';
 import { RemoveApiKeyCreditLimitCommand } from 'src/iam/credit-limits/application/use-cases/remove-api-key-credit-limit/remove-api-key-credit-limit.command';
 import { RemoveApiKeyCreditLimitUseCase } from 'src/iam/credit-limits/application/use-cases/remove-api-key-credit-limit/remove-api-key-credit-limit.use-case';
 import { RemoveTeamCreditLimitCommand } from 'src/iam/credit-limits/application/use-cases/remove-team-credit-limit/remove-team-credit-limit.command';
@@ -50,8 +50,8 @@ export class CreditLimitsController {
   private readonly logger = new Logger(CreditLimitsController.name);
 
   constructor(
-    private readonly getUserCreditLimitsOverviewUseCase: GetUserCreditLimitsOverviewUseCase,
-    private readonly getTeamCreditLimitsOverviewUseCase: GetTeamCreditLimitsOverviewUseCase,
+    private readonly getUserCreditLimitsOverviewUseCase: GetAdminUserCreditLimitsOverviewUseCase,
+    private readonly getTeamCreditLimitsOverviewUseCase: GetAdminTeamCreditLimitsOverviewUseCase,
     private readonly getApiKeyCreditLimitsOverviewUseCase: GetApiKeyCreditLimitsOverviewUseCase,
     private readonly setUserCreditLimitUseCase: SetUserCreditLimitUseCase,
     private readonly setTeamCreditLimitUseCase: SetTeamCreditLimitUseCase,

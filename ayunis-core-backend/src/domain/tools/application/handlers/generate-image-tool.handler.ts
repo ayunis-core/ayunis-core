@@ -104,6 +104,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         model: permittedModel.model,
         prompt: validatedInput.prompt,
         size: validatedInput.size,
+        background: validatedInput.background,
         referenceImages,
       }),
     );
@@ -250,7 +251,14 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         usage.outputTokens,
       );
     }
-    return id;
+    return this.formatToolResult(id, result.transparencyApplied);
+  }
+
+  private formatToolResult(id: string, transparencyApplied?: boolean): string {
+    if (transparencyApplied !== false) {
+      return id;
+    }
+    return `${id}\nTransparency was not applied because this image model does not support transparent backgrounds. The image was generated with the default background. Tell the user, and use only the image ID above when referring to this image.`;
   }
 
   private handleError(error: unknown, toolName: string): never {

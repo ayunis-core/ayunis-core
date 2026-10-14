@@ -45,7 +45,7 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient }, params: { id } }) => {
-    const knowledgeBase = await queryClient.fetchQuery(
+    const knowledgeBase = await queryClient.query(
       knowledgeBaseQueryOptions(id),
     );
     if (knowledgeBase.ownerType !== 'personal') {
@@ -61,10 +61,10 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
     }
     const shares = knowledgeBase.isShared
       ? []
-      : await queryClient.fetchQuery(sharesQueryOptions(id));
+      : await queryClient.query(sharesQueryOptions(id));
     const userTeams = knowledgeBase.isShared
       ? []
-      : await queryClient.fetchQuery(userTeamsQueryOptions());
+      : await queryClient.query(userTeamsQueryOptions());
     return { knowledgeBase, shares, userTeams };
   },
 });

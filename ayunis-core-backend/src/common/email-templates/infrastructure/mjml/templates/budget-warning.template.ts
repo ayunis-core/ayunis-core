@@ -76,7 +76,7 @@ export function budgetWarningText(
 
 export function budgetWarningHtml(
   template: BudgetWarningTemplateContent,
-): MJMLParseResults {
+): Promise<MJMLParseResults> {
   const message = messageFor(template);
   const greet = greeting(template.recipientName);
 

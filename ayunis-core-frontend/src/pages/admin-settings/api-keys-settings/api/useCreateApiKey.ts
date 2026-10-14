@@ -5,6 +5,7 @@ import type { UseFormReturn } from 'react-hook-form';
 import {
   useApiKeysControllerCreateApiKey,
   getApiKeysControllerListApiKeysQueryKey,
+  getApiKeyUsageControllerGetApiKeyUsageQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateApiKeyResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -45,6 +46,9 @@ export function useCreateApiKey(
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getApiKeysControllerListApiKeysQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getApiKeyUsageControllerGetApiKeyUsageQueryKey(),
         });
         void router.invalidate();
       },

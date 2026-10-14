@@ -1,13 +1,16 @@
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
-import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import {
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SuperAdminOrgListItem } from 'src/iam/orgs/application/models/super-admin-org-list-item';
 
 @Injectable()
 export class SuperAdminGetAllOrgsUseCase {
@@ -19,7 +22,9 @@ export class SuperAdminGetAllOrgsUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedOrgError)
-  async execute(query: SuperAdminGetAllOrgsQuery): Promise<Paginated<Org>> {
+  async execute(
+    query: SuperAdminGetAllOrgsQuery,
+  ): Promise<Paginated<SuperAdminOrgListItem>> {
     this.logger.log(
       {
         limit: query.limit,
@@ -29,18 +34,17 @@ export class SuperAdminGetAllOrgsUseCase {
       'superAdminGetAllOrgs',
     );
 
-    const systemRole = this.contextService.get('systemRole');
-    if (systemRole !== SystemRole.SUPER_ADMIN) {
+    if (!isSuperAdmin(this.contextService)) {
       this.logger.warn(
         {
-          systemRole,
+          systemRole: getUserContext(this.contextService)?.systemRole,
         },
         'Non-super admin attempted to list all orgs',
       );
       throw new OrgUnauthorizedError('Super admin privileges required');
     }
 
-    return this.orgsRepository.findAllForSuperAdmin(
+    const page = await this.orgsRepository.findAllForSuperAdmin(
       {
         limit: query.limit,
         offset: query.offset,
@@ -48,7 +52,20 @@ export class SuperAdminGetAllOrgsUseCase {
       {
         search: query.search,
         status: query.status,
+        subscription: query.subscription,
       },
     );
+
+    const payingOrgIds = new Set(
+      await this.orgsRepository.findPayingOrgIds(
+        page.data.map((org) => org.id),
+      ),
+    );
+    return new Paginated<SuperAdminOrgListItem>({
+      data: page.data.map((org) => ({ org, paying: payingOrgIds.has(org.id) })),
+      limit: page.limit,
+      offset: page.offset,
+      total: page.total,
+    });
   }
 }

@@ -12,7 +12,17 @@ export class SuperAdminGetAllOrgsQueryParamsDto {
   status?: 'active' | 'archived' | 'all';
 
   @ApiPropertyOptional({
-    description: 'Search organizations by name',
+    enum: ['all', 'paying', 'non-paying'],
+    default: 'all',
+    description:
+      'Filter by whether the organization currently has an active subscription',
+  })
+  @IsOptional()
+  @IsIn(['all', 'paying', 'non-paying'])
+  subscription?: 'all' | 'paying' | 'non-paying';
+
+  @ApiPropertyOptional({
+    description: 'Search organizations by name, or by exact organization ID',
     example: 'Acme',
   })
   @IsOptional()

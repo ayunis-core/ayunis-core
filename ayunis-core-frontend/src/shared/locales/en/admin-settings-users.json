@@ -32,7 +32,8 @@
     "resend": "Resend Invite",
     "sendPasswordReset": "Send Password Reset",
     "noInvitesFound": "No invites found",
-    "total": "{{count}} total"
+    "total": "{{count}} total",
+    "teams": "Teams"
   },
   "inviteDialog": {
     "inviteUser": "Invite User",
@@ -63,7 +64,12 @@
     "urlCopied": "Invitation URL copied to clipboard!",
     "copiedToClipboard": "Invitation link copied to clipboard!",
     "clickToCopy": "Click the copy button to copy the invitation link",
-    "close": "Close"
+    "close": "Close",
+    "teamsLabel": "Teams (optional)",
+    "teamsPlaceholder": "Select teams",
+    "noTeamsFound": "No teams found",
+    "teamsLoadError": "Teams could not be loaded.",
+    "teamsRestricted": "Team assignment is unavailable while individual usage is hidden."
   },
   "confirmations": {
     "deleteInviteTitle": "Delete Invite",
@@ -93,7 +99,8 @@
     "userAlreadyExists": "This email address is already registered as a user in your organization.",
     "emailProviderBlacklisted": "Private email addresses (e.g. Gmail, GMX, Web.de, t-online) are not allowed for security reasons. Please use a work email address.",
     "rateLimitExceeded": "You've created a lot of invitations in a short time. Please wait a few minutes before creating more.",
-    "multipleActiveSubscriptions": "This organization's subscriptions overlap. A super admin must resolve the overlap before users can be invited."
+    "multipleActiveSubscriptions": "This organization's subscriptions overlap. A super admin must resolve the overlap before users can be invited.",
+    "teamNotFound": "A selected team no longer exists. Please select the teams again."
   },
   "inviteResend": {
     "success": "Invite resent successfully!",
@@ -205,5 +212,10 @@
     "confirmText": "Reset",
     "success": "Two-factor authentication has been reset.",
     "error": "Could not reset two-factor authentication."
+  },
+  "validation": {
+    "teamIds": {
+      "invalid": "Select valid teams."
+    }
   }
 }

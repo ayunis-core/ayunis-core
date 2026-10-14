@@ -9,6 +9,6 @@ export type CreditLimitSearch = z.infer<typeof creditLimitSearchSchema>;
 export type CreditLimitTarget = 'teams' | 'users';
 export interface CreditLimitInfo {
   monthlyCredits: number;
-  creditsUsed: number;
+  creditsUsed?: number;
 }
 export const CREDIT_LIMIT_PAGE_SIZE = 25;

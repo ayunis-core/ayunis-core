@@ -65,6 +65,24 @@ describe('CreditLimitsTable', () => {
     },
   );
 
+  it('shows only the configured limit when consumed credits are omitted', () => {
+    render(
+      <CreditLimitsTable
+        rows={[
+          {
+            id: 'private-user',
+            name: 'Leverkusen Admin',
+            limit: { monthlyCredits: 5000 },
+          },
+        ]}
+        filters={filters}
+        isPending={false}
+        isError={false}
+      />,
+    );
+    expect(screen.getByText('5,000')).toBeTruthy();
+  });
+
   it('keeps the row compact with only the target, its limit and the action', () => {
     render(
       <CreditLimitsTable
@@ -126,4 +144,46 @@ describe('CreditLimitsTable', () => {
       ).toBeNull();
     },
   );
+});
+
+it('disables team configuration while preserving personal limit management', () => {
+  const { rerender } = render(
+    <CreditLimitsTable
+      rows={rows}
+      filters={{ ...filters, tab: 'teams' }}
+      isPending={false}
+      isError={false}
+      canManageTeams={false}
+    />,
+  );
+  expect(
+    screen.getByTestId('credit-limits-team-alice').hasAttribute('disabled'),
+  ).toBe(true);
+  rerender(
+    <CreditLimitsTable
+      rows={rows}
+      filters={filters}
+      isPending={false}
+      isError={false}
+      canManageTeams={false}
+    />,
+  );
+  expect(
+    screen.getByTestId('credit-limits-user-alice').hasAttribute('disabled'),
+  ).toBe(false);
+});
+
+it('does not restore an old team editor after management is revoked and restored', () => {
+  const props = {
+    rows,
+    filters: { ...filters, tab: 'teams' as const },
+    isPending: false,
+    isError: false,
+  };
+  const { rerender } = render(<CreditLimitsTable {...props} canManageTeams />);
+  fireEvent.click(screen.getByTestId('credit-limits-team-alice'));
+  expect(screen.getByRole('dialog')).toBeTruthy();
+  rerender(<CreditLimitsTable {...props} canManageTeams={false} />);
+  rerender(<CreditLimitsTable {...props} canManageTeams />);
+  expect(screen.queryByRole('dialog')).toBeNull();
 });

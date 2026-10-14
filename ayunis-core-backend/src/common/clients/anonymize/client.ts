@@ -1,3 +1,4 @@
+import { Agent } from 'node:http';
 import { Logger } from '@nestjs/common';
 import axios, { isAxiosError } from 'axios';
 import type { AxiosRequestConfig } from 'axios';
@@ -64,6 +65,12 @@ const anonymizeAxios = axios.create({
   // the transport classifier reads as a connection failure; clarified it
   // arrives as ETIMEDOUT and groups under the timeout taxonomy (AYC-654).
   transitional: { clarifyTimeoutError: true },
+  // uvicorn drops a connection after 5s idle without sending a Keep-Alive
+  // hint, and Node's default agent also keeps idle sockets for 5s. A request
+  // sent on a socket at that boundary fails with ECONNRESET before the service
+  // reads it (AYC-1171). Expiring idle sockets earlier on our side closes the
+  // race.
+  httpAgent: new Agent({ keepAlive: true, timeout: 4_000 }),
   headers: {
     'Content-Type': 'application/json',
   },

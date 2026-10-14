@@ -25,6 +25,10 @@ import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
+import { chunk } from 'src/common/util/chunk';
+
+// Keeps each candidate lookup far below Postgres' 65,535 bind-parameter cap.
+export const UNREFERENCED_LOOKUP_CHUNK_SIZE = 1000;
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -384,10 +388,22 @@ export class LocalSourceRepository extends SourceRepository {
       'findUnreferencedIds',
     );
 
-    if (candidateIds.length === 0) {
-      return [];
+    const unreferencedIds: UUID[] = [];
+    for (const candidates of chunk(
+      candidateIds,
+      UNREFERENCED_LOOKUP_CHUNK_SIZE,
+    )) {
+      unreferencedIds.push(
+        ...(await this.findUnreferencedIdsChunk(candidates, olderThan)),
+      );
     }
+    return unreferencedIds;
+  }
 
+  private async findUnreferencedIdsChunk(
+    candidateIds: UUID[],
+    olderThan: Date,
+  ): Promise<UUID[]> {
     const rows = await this.sourceRepository
       .createQueryBuilder('s')
       .select('s.id', 'id')
@@ -396,9 +412,6 @@ export class LocalSourceRepository extends SourceRepository {
       .andWhere('s."createdAt" < :olderThan', { olderThan })
       .andWhere(
         `NOT EXISTS (SELECT 1 FROM skill_sources ss WHERE ss."sourcesId" = s.id)`,
-      )
-      .andWhere(
-        `NOT EXISTS (SELECT 1 FROM agent_source_assignments asa WHERE asa."sourceId" = s.id)`,
       )
       .getRawMany<{ id: UUID }>();
 

@@ -1,3 +1,6 @@
+import type { UseFormReturn } from 'react-hook-form';
+import type { InviteFormData } from '@/pages/admin-settings/users-settings/model/types';
+import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerCreate,
@@ -12,6 +15,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useInviteCreate(
   onInviteCreated?: (response: CreateInviteResponseDto) => void,
+  form?: UseFormReturn<InviteFormData>,
 ) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -24,8 +28,18 @@ export function useInviteCreate(
       },
       onError: (error) => {
         try {
-          const { code } = extractErrorData(error);
+          const { code, errors } = extractErrorData(error);
+          if (code === 'VALIDATION_ERROR' && errors && form) {
+            setValidationErrors(form, errors, t, 'validation');
+            return;
+          }
           switch (code) {
+            case 'TEAM_NOT_FOUND':
+              showError(t('inviteCreate.teamNotFound'));
+              break;
+            case 'TEAM_MANAGEMENT_RESTRICTED':
+              showError(t('inviteDialog.teamsRestricted'));
+              break;
             case 'USER_ALREADY_EXISTS':
               showError(t('inviteCreate.userAlreadyExists'));
               break;
@@ -62,6 +76,7 @@ export function useInviteCreate(
     const inviteData: InviteCreateData = {
       email: data.email,
       role: data.role,
+      teamIds: data.teamIds,
     };
 
     createInviteMutation.mutate({ data: inviteData });

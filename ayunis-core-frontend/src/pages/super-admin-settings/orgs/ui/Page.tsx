@@ -1,4 +1,5 @@
 import OrgStatusFilter from './OrgStatusFilter';
+import OrgSubscriptionFilter from './OrgSubscriptionFilter';
 import { useTranslation } from 'react-i18next';
 import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import CreateOrgDialog from './CreateOrgDialog';
@@ -6,16 +7,18 @@ import OrgsTable from './OrgsTable';
 import OrgsPagination from './OrgsPagination';
 import OrgsSearch from './OrgsSearch';
 import type {
-  SuperAdminOrgResponseDto,
+  SuperAdminOrgListItemResponseDto,
   PaginationDto,
   SuperAdminOrgsControllerGetAllOrgsStatus,
+  SuperAdminOrgsControllerGetAllOrgsSubscription,
 } from '@/shared/api';
 
 interface SuperAdminOrgsPageProps {
-  orgs: SuperAdminOrgResponseDto[];
+  orgs: SuperAdminOrgListItemResponseDto[];
   pagination?: PaginationDto;
   search?: string;
   status: SuperAdminOrgsControllerGetAllOrgsStatus;
+  subscription: SuperAdminOrgsControllerGetAllOrgsSubscription;
   currentPage: number;
 }
 
@@ -24,6 +27,7 @@ export default function SuperAdminOrgsPage({
   pagination,
   search,
   status,
+  subscription,
   currentPage,
 }: Readonly<SuperAdminOrgsPageProps>) {
   const { t } = useTranslation('super-admin-settings-layout');
@@ -43,6 +47,7 @@ export default function SuperAdminOrgsPage({
             <div className="flex flex-wrap gap-2">
               <OrgsSearch search={search} />
               <OrgStatusFilter status={status} />
+              <OrgSubscriptionFilter subscription={subscription} />
             </div>
           }
         />
@@ -51,6 +56,7 @@ export default function SuperAdminOrgsPage({
           totalPages={totalPages}
           search={search}
           status={status}
+          subscription={subscription}
         />
       </div>
     </SuperAdminSettingsLayout>

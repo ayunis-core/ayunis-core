@@ -19,11 +19,11 @@ export const Route = createFileRoute(
   }) => {
     try {
       const [workspace, knowledgeBase] = await Promise.all([
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
           queryFn: () => workspacesControllerFindOne(workspaceId),
         }),
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getKnowledgeBasesControllerFindOneQueryKey(knowledgeBaseId),
           queryFn: () => knowledgeBasesControllerFindOne(knowledgeBaseId),
         }),
@@ -34,7 +34,7 @@ export const Route = createFileRoute(
       ) {
         throw new Error('Knowledge base is outside the route workspace scope');
       }
-      const documents = await queryClient.fetchQuery({
+      const documents = await queryClient.query({
         queryKey:
           getKnowledgeBasesControllerListDocumentsQueryKey(knowledgeBaseId),
         queryFn: () => knowledgeBasesControllerListDocuments(knowledgeBaseId),

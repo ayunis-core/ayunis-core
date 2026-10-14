@@ -6,6 +6,8 @@ import { SessionsModule } from 'src/iam/sessions/sessions.module';
 import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
 import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
 import { SetOrgArchivedUseCase } from 'src/iam/orgs/application/use-cases/set-org-archived/set-org-archived.use-case';
+import { SetOrgUsageVisibilityUseCase } from 'src/iam/orgs/application/use-cases/set-org-usage-visibility/set-org-usage-visibility.use-case';
+import { SuperAdminOrgUsageVisibilityController } from 'src/iam/orgs/presenters/http/super-admin-org-usage-visibility.controller';
 import { Module } from '@nestjs/common';
 import { OrgsRepository } from './application/ports/orgs.repository';
 import { LocalOrgsRepository } from './infrastructure/repositories/local/local-orgs.repository';
@@ -30,7 +32,11 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
     PermissionsModule,
     SessionsModule,
   ],
-  controllers: [SuperAdminOrgsController, SuperAdminOrgLifecycleController],
+  controllers: [
+    SuperAdminOrgsController,
+    SuperAdminOrgLifecycleController,
+    SuperAdminOrgUsageVisibilityController,
+  ],
   providers: [
     {
       provide: OrgsRepository,
@@ -45,6 +51,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
     AdmitOrgProcessingUseCase,
     AssertCachedOrgActiveUseCase,
     SetOrgArchivedUseCase,
+    SetOrgUsageVisibilityUseCase,
     SuperAdminDeleteOrgUseCase,
     FindOrgByIdUseCase,
     CreateOrgUseCase,
@@ -60,6 +67,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
     AdmitOrgProcessingUseCase,
     AssertCachedOrgActiveUseCase,
     SetOrgArchivedUseCase,
+    SetOrgUsageVisibilityUseCase,
     SuperAdminDeleteOrgUseCase,
     FindOrgByIdUseCase,
     CreateOrgUseCase,

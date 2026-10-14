@@ -27,9 +27,12 @@ import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/d
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  getRequiredUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class DeletePermittedModelUseCase {
@@ -55,12 +58,10 @@ export class DeletePermittedModelUseCase {
       'execute',
     );
     try {
-      const orgId = this.contextService.get('orgId');
-      const orgRole = this.contextService.get('role');
-      const systemRole = this.contextService.get('systemRole');
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      if (!isOrgAdmin && !isSuperAdmin) {
+      const principal = getRequiredUserContext(this.contextService);
+      const isOrgAdmin =
+        principal.role === UserRole.ADMIN && principal.orgId === command.orgId;
+      if (!isOrgAdmin && !isSuperAdmin(this.contextService)) {
         throw new UnauthorizedAccessError();
       }
       const model = await this.permittedModelsRepository.findOne({

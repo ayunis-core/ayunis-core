@@ -1,3 +1,4 @@
+import { FindTeamsByUserIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-ids-and-org-id/find-teams-by-user-ids-and-org-id.use-case';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindUsersByOrgIdUseCase } from './find-users-by-org-id.use-case';
@@ -14,7 +15,7 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
 describe('FindUsersByOrgIdUseCase', () => {
   let useCase: FindUsersByOrgIdUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
-  let mockContextService: any;
+  let mockContextService: { get: jest.Mock };
 
   beforeAll(async () => {
     mockUsersRepository = {
@@ -28,6 +29,10 @@ describe('FindUsersByOrgIdUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindUsersByOrgIdUseCase,
+        {
+          provide: FindTeamsByUserIdsAndOrgIdUseCase,
+          useValue: { execute: jest.fn() },
+        },
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: ContextService, useValue: mockContextService },
         {
@@ -41,6 +46,8 @@ describe('FindUsersByOrgIdUseCase', () => {
 
     // Configure ContextService mock to return ADMIN role
     mockContextService.get.mockImplementation((key: string): unknown => {
+      if (key === 'userId') return 'requesting-user-id';
+      if (key === 'orgId') return 'org-id';
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
       return null;

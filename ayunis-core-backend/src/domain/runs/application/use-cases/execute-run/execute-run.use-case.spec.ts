@@ -1,4 +1,5 @@
 import type { PersonalSkill as BackendSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import {
   MockProvider,
   ModelProviderError,
@@ -164,11 +165,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   } as unknown as Thread;
 
   const contextService = {
-    get: jest.fn((key?: string | symbol) => {
-      if (key === 'userId') return userId;
-      if (key === 'orgId') return orgId;
-      return undefined;
-    }),
+    get: jest.fn(getFromUserContext({ userId: userId, orgId: orgId })),
   } as unknown as ContextService;
   const eventEmitter = {
     emitAsync: jest.fn().mockResolvedValue([]),

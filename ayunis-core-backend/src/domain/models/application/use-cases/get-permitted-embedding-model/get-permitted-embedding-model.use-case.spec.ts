@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
@@ -25,6 +26,7 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
   const logger = createLoggerMock();
   const orgId = randomUUID();
   const otherOrgId = randomUUID();
+  const userId = randomUUID();
 
   let useCase: GetPermittedEmbeddingModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
@@ -95,7 +97,9 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
   it('allows super admins to query other organizations', async () => {
     const permittedModel = buildEmbeddingPermittedModel();
     (contextService.get as jest.Mock).mockImplementation((key?: string) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
+      if (key === 'role') return UserRole.USER;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       return undefined;
     });

@@ -32,7 +32,8 @@
   "statuses": {
     "active": "Aktiv",
     "inactive": "Inaktiv",
-    "archived": "Archiviert"
+    "archived": "Archiviert",
+    "paying": "Zahlend"
   },
   "empty": {
     "title": "Noch keine Organisationen",
@@ -43,12 +44,18 @@
     "error": "Organisation konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },
   "search": {
-    "placeholder": "Organisationen suchen..."
+    "placeholder": "Nach Name oder ID suchen..."
   },
   "filter": {
     "label": "Organisationsstatus",
     "active": "Aktiv",
     "archived": "Archiviert",
     "all": "Alle Organisationen"
+  },
+  "subscriptionFilter": {
+    "label": "Abonnement",
+    "all": "Alle Abonnements",
+    "paying": "Zahlend",
+    "non-paying": "Nicht zahlend"
   }
 }

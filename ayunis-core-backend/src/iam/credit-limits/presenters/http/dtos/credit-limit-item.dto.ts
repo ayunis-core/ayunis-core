@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 
 export class UserCreditLimitItemDto {
@@ -17,11 +17,12 @@ export class UserCreditLimitItemDto {
   })
   monthlyCredits: number;
 
-  @ApiProperty({
-    description: 'Credits consumed in the current calendar month',
+  @ApiPropertyOptional({
+    description:
+      'Credits consumed in the current calendar month; omitted when individual usage is hidden',
     example: 1240,
   })
-  creditsUsed: number;
+  creditsUsed?: number;
 }
 
 export class ApiKeyCreditLimitItemDto {
@@ -57,10 +58,10 @@ export class TeamCreditLimitItemDto {
   })
   monthlyCredits: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description:
-      'Credits consumed by all current team members in the current month',
+      'Credits consumed by all current team members in the current month; omitted when individual usage is hidden',
     example: 8300,
   })
-  creditsUsed: number;
+  creditsUsed?: number;
 }

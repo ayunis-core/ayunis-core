@@ -16,6 +16,7 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   extractProviderErrorDiagnostics,
+  extractProviderExplanation,
   type ProviderErrorDiagnostics,
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
@@ -106,6 +107,7 @@ export class StreamInferenceUseCase {
         errorName: error instanceof Error ? error.name : 'Unknown',
         status: diagnostics.upstreamStatus,
         ...diagnostics,
+        upstreamMessage: extractProviderExplanation(error),
       },
       'Provider stream inference failed',
     );

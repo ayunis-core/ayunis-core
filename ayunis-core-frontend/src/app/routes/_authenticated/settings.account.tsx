@@ -9,7 +9,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 export const Route = createFileRoute('/_authenticated/settings/account')({
   loader: async ({ context: { queryClient } }) => {
-    const data = await queryClient.fetchQuery(
+    const data = await queryClient.query(
       queryOptions({
         queryKey: getAuthenticationControllerMeQueryKey(),
         queryFn: () => authenticationControllerMe(),

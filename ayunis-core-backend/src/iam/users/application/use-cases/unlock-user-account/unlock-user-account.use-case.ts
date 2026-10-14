@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  UserContext,
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import {
@@ -10,7 +15,6 @@ import {
 import { UnlockUserAccountCommand } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.command';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class UnlockUserAccountUseCase {
@@ -24,16 +28,16 @@ export class UnlockUserAccountUseCase {
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: UnlockUserAccountCommand): Promise<void> {
     this.logger.log({ userId: command.userId }, 'unlockUserAccount');
-    const isSuperAdmin =
-      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
+    const principal = getUserContext(this.contextService);
+    const callerIsSuperAdmin = isSuperAdmin(this.contextService);
     const user = await this.usersRepository.findOneById(command.userId);
     if (
       !user ||
-      (!isSuperAdmin && user.orgId !== this.contextService.get('orgId'))
+      (!callerIsSuperAdmin && user.orgId !== this.contextService.get('orgId'))
     ) {
       throw new UserNotFoundError(command.userId);
     }
-    this.assertAuthorized(user, isSuperAdmin);
+    this.assertAuthorized(user, principal, callerIsSuperAdmin);
 
     if (!(await this.usersRepository.clearLoginLock(command.userId))) {
       throw new UserNotFoundError(command.userId);
@@ -41,9 +45,13 @@ export class UnlockUserAccountUseCase {
     this.logger.log({ userId: command.userId }, 'User account unlocked');
   }
 
-  private assertAuthorized(user: User, isSuperAdmin: boolean): void {
+  private assertAuthorized(
+    user: User,
+    principal: UserContext | undefined,
+    isSuperAdmin: boolean,
+  ): void {
     const isOrgAdmin =
-      this.contextService.get('role') === UserRole.ADMIN &&
+      principal?.role === UserRole.ADMIN &&
       this.contextService.get('orgId') === user.orgId;
     const isSelfUnlock = this.contextService.get('userId') === user.id;
     if ((!isSuperAdmin && !isOrgAdmin) || isSelfUnlock) {

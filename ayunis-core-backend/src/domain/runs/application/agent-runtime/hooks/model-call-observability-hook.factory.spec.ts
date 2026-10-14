@@ -26,6 +26,15 @@ const messages = [
   },
 ];
 
+const createDocumentTool = {
+  name: 'create_document',
+  description: 'Create a document',
+  parameters: {
+    type: 'object',
+    properties: { title: { type: 'string' } },
+  },
+};
+
 async function collect(events: AsyncIterable<RunEvent>): Promise<RunEvent[]> {
   const collected: RunEvent[] = [];
   for await (const event of events) collected.push(event);
@@ -214,14 +223,292 @@ describe('ModelCallObservabilityHookFactory', () => {
         provider: model.provider,
         upstreamStatus: 400,
         upstreamRequestId: 'req_anthropic_400',
+        callSequence: 1,
+        providerConsumptionStarted: false,
+        producedOutput: false,
+        visibleOutput: false,
         upstreamCode: 'invalid_function_parameters',
         upstreamParam: 'tools[0].function.parameters',
+        upstreamMessage: "Invalid schema echoed resident prompt '…",
         toolSchemaBytes: expect.any(Number),
         toolSetHash: expect.stringMatching(/^[a-f0-9]{64}$/),
       }),
       'Provider stream inference failed',
     );
-    expect(JSON.stringify(logger.error.mock.calls)).not.toContain('classified');
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
+      'Summarize the permit.',
+    );
+  });
+
+  it('logs the bounded upstream message when the provider is unavailable', async () => {
+    const logger = createLoggerMock();
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream() {
+        yield await Promise.reject(
+          new ModelProviderError({
+            kind: 'server',
+            stage: 'stream_establishment',
+            upstreamStatus: 503,
+            cause: new Error('503 Service  overloaded,\n  retry later'),
+          }),
+        );
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        hooks: [hook],
+        retry: { maxRetries: 0 },
+      }),
+    );
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureKind: 'server',
+        upstreamStatus: 503,
+        upstreamMessage: '503 Service overloaded, retry later',
+      }),
+      'Provider unavailable during runtime inference',
+    );
+  });
+
+  it('logs that a terminal mid-stream rate limit had already reached the user', async () => {
+    const logger = createLoggerMock();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-terra',
+      async *stream() {
+        calls += 1;
+        yield { thinkingDelta: 'Considering the permit' };
+        throw new ModelProviderError({
+          kind: 'rate_limit',
+          stage: 'stream_consumption',
+          upstreamStatus: 429,
+          retryAfterMs: 3_000,
+          cause: new Error('limited'),
+        });
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    const events = await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        hooks: [hook],
+        retry: { maxRetries: 3, backoff: { initialDelayMs: 0 } },
+      }),
+    );
+
+    expect(calls).toBe(1);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureKind: 'rate_limit',
+        failureStage: 'stream_consumption',
+        trigger: 'initial',
+        callSequence: 1,
+        providerConsumptionStarted: true,
+        producedOutput: true,
+        visibleOutput: true,
+        retryAfterMs: 3_000,
+      }),
+      'Provider unavailable during runtime inference',
+    );
+  });
+
+  it('logs a retried rate limit as not yet visible and with its attempt position', async () => {
+    const logger = createLoggerMock();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-sol',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          throw new ModelProviderError({
+            kind: 'rate_limit',
+            stage: 'stream_consumption',
+            upstreamStatus: 429,
+            retryAfterMs: 0,
+            cause: new Error('limited'),
+          });
+        }
+        yield { textDelta: 'Recovered.', finishReason: 'stop' };
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    const events = await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        hooks: [hook],
+        retry: { maxRetries: 1 },
+      }),
+    );
+
+    expect(calls).toBe(2);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureKind: 'rate_limit',
+        failureStage: 'stream_consumption',
+        trigger: 'initial',
+        callSequence: 1,
+        providerConsumptionStarted: false,
+        producedOutput: false,
+        visibleOutput: false,
+        retryAfterMs: 0,
+      }),
+      'Provider unavailable during runtime inference',
+    );
+  });
+
+  it('logs a terminal malformed tool call that followed visible output', async () => {
+    const logger = createLoggerMock();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-terra',
+      async *stream() {
+        calls += 1;
+        yield { textDelta: 'Ich lege das Dokument an.' };
+        yield {
+          toolCallDeltas: [
+            { index: 0, id: 'call_bad', name: 'create_document' },
+          ],
+        };
+        yield {
+          toolCallDeltas: [
+            { index: 0, argumentsDelta: '{"title":"Haushaltsplan Ent' },
+          ],
+        };
+        yield {
+          finishReason: 'tool_calls' as const,
+          usage: { inputTokens: 0, outputTokens: 0 },
+        };
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    const events = await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        tools: [createDocumentTool],
+        hooks: [hook],
+      }),
+    );
+
+    expect(calls).toBe(1);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        model: model.name,
+        provider: model.provider,
+        modelCallId: expect.any(String),
+        trigger: 'initial',
+        callSequence: 1,
+        providerConsumptionStarted: true,
+        producedOutput: true,
+        visibleOutput: true,
+        rejectionReason: 'malformed',
+        malformedReason: 'unparseable_arguments',
+        toolNames: ['create_document'],
+        contentTypes: ['text'],
+        finishReason: 'tool_calls',
+        inputTokens: 0,
+        outputTokens: 0,
+        durationMs: expect.any(Number),
+      },
+      'Model call rejected',
+    );
+    expect(JSON.stringify(logger.warn.mock.calls)).not.toContain(
+      'Haushaltsplan',
+    );
+  });
+
+  it('logs each rejected attempt through a failed tool-disabled fallback', async () => {
+    const logger = createLoggerMock();
+    const provider: ModelProvider = {
+      name: 'stackit:gpt-oss-120b',
+      async *stream(request) {
+        yield {
+          toolCallDeltas: [
+            { index: 0, id: 'call_bad', name: 'create_document' },
+          ],
+        };
+        yield {
+          toolCallDeltas: [
+            {
+              index: 0,
+              argumentsDelta:
+                request.tools.length > 0 ? '{"title":' : '{"title":"Plan"}',
+            },
+          ],
+        };
+        yield {
+          finishReason: 'tool_calls' as const,
+          usage: { inputTokens: 10, outputTokens: 5 },
+        };
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        tools: [createDocumentTool],
+        hooks: [hook],
+        retry: { maxRetries: 2 },
+      }),
+    );
+
+    expect(
+      logger.warn.mock.calls.map(([context]) => {
+        const { trigger, callSequence, visibleOutput, rejectionReason } =
+          context as Record<string, unknown>;
+        return { trigger, callSequence, visibleOutput, rejectionReason };
+      }),
+    ).toEqual([
+      {
+        trigger: 'initial',
+        callSequence: 1,
+        visibleOutput: false,
+        rejectionReason: 'malformed',
+      },
+      {
+        trigger: 'malformed_recovery',
+        callSequence: 2,
+        visibleOutput: false,
+        rejectionReason: 'malformed',
+      },
+      {
+        trigger: 'fallback',
+        callSequence: 3,
+        visibleOutput: false,
+        rejectionReason: 'invalid_fallback',
+      },
+    ]);
+    expect(logger.warn).toHaveBeenLastCalledWith(
+      expect.objectContaining({ malformedReason: 'tool_disabled_fallback' }),
+      'Model call rejected',
+    );
   });
 
   it('does not let completion-event listener failures affect execution', async () => {

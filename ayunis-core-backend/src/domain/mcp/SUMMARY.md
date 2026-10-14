@@ -31,7 +31,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes
 - `McpConfigService` — Validates schemas and merges, encrypts, and retains organization/user config values
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
-- `McpOAuthAuthorizationService` — Starts and completes per-user OAuth authorization and disconnects grants
+- `McpOAuthAuthorizationService` — Starts and completes per-user OAuth authorization and disconnects grants; transport failures during discovery, authorization, or token exchange surface as `McpOAuthServerUnreachableError` (502) with a privacy-safe `{ integrationId, stage, code }` log line; non-JSON responses (HTML login/error pages, malformed JSON) surface as `McpOAuthInvalidResponseError` (502) naming the failing request stage, with a `{ integrationId, stage, status, contentType }` log line
 - `McpOAuthClientConfigurationService` — Validates static client configuration and invalidates issuer-bound OAuth state when it changes
 - `McpOAuthProviderFactory` — Implements the SDK OAuth provider with durable discovery, registration, PKCE, tokens, and locked refresh
 - `McpOAuthFetchService` — Applies HTTPS, private-address, DNS-pinning, and same-origin redirect protections to every server-side OAuth request and all MCP transport requests on cloud deployments

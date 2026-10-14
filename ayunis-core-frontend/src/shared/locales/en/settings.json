@@ -27,6 +27,7 @@
       "reconnect": "Reconnect",
       "disconnect": "Disconnect",
       "connectError": "Could not start the secure connection. Please try again.",
+      "serverError": "The integration's server did not respond correctly. Please contact your administrator.",
       "disconnectSuccess": "OAuth connection removed.",
       "disconnectError": "Could not remove the OAuth connection. Please try again.",
       "notFound": "This integration is no longer available.",

@@ -1,4 +1,5 @@
 import { GeneratePersonalizedSystemPromptUseCase } from './generate-personalized-system-prompt.use-case';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { GeneratePersonalizedSystemPromptCommand } from './generate-personalized-system-prompt.command';
 import { PersonalizedSystemPromptGenerationError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
@@ -64,11 +65,7 @@ describe('GeneratePersonalizedSystemPromptUseCase', () => {
     };
 
     contextService = {
-      get: jest.fn().mockImplementation((key: string) => {
-        if (key === 'userId') return userId;
-        if (key === 'orgId') return orgId;
-        return undefined;
-      }),
+      get: jest.fn(getFromUserContext({ userId: userId, orgId: orgId })),
     };
 
     useCase = new GeneratePersonalizedSystemPromptUseCase(

@@ -11,7 +11,7 @@ import {
 export const Route = createFileRoute('/_authenticated/academy/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const addons = await queryClient.fetchQuery({
+    const addons = await queryClient.query({
       queryKey: getAddonsControllerListQueryKey(),
       queryFn: () => addonsControllerList(),
     });
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_authenticated/academy/')({
     if (!isAcademyAddonActive(addons)) {
       return { active: false as const };
     }
-    const chapters = await queryClient.fetchQuery({
+    const chapters = await queryClient.query({
       queryKey: getAcademyChaptersControllerGetChaptersQueryKey(),
       queryFn: () => academyChaptersControllerGetChapters(),
     });

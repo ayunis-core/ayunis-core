@@ -35,7 +35,7 @@ export class SendInvitationEmailUseCase {
         new FindOrgByIdQuery(command.invite.orgId),
       );
       const invitingUserName = await this.findInvitingUserName(command.invite);
-      const content = this.renderInvitation(
+      const content = await this.renderInvitation(
         command,
         org.name,
         invitingUserName,
@@ -66,7 +66,7 @@ export class SendInvitationEmailUseCase {
     command: SendInvitationEmailCommand,
     orgName: string,
     invitingUserName: string | null,
-  ): RenderedEmailContent {
+  ): Promise<RenderedEmailContent> {
     const baseUrl = this.configService.get<string>('app.frontend.baseUrl');
     const path = this.configService.get<string>('app.frontend.emailAssetsPath');
     const assetBase = `${baseUrl}${path}`;

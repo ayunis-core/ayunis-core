@@ -14,6 +14,11 @@ export interface IsCloudResponseDto {
 
 export interface FeatureTogglesResponseDto { [key: string]: unknown }
 
+export interface UserTeamResponseDto {
+  id: string;
+  name: string;
+}
+
 /**
  * User role
  */
@@ -27,6 +32,8 @@ export const UserResponseDtoRole = {
 } as const;
 
 export interface UserResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
   /** User unique identifier */
   id: string;
   /** User name */
@@ -190,6 +197,8 @@ export const SuperAdminUserListItemResponseDtoRole = {
 } as const;
 
 export interface SuperAdminUserListItemResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
   /** User unique identifier */
   id: string;
   /** User name */
@@ -244,6 +253,8 @@ export const SuperAdminUserResponseDtoSystemRole = {
 } as const;
 
 export interface SuperAdminUserResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
   /** User unique identifier */
   id: string;
   /** User name */
@@ -273,6 +284,47 @@ export interface PromoteToSuperAdminDto {
 }
 
 /**
+ * Role assigned to the invited user
+ */
+export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
+
+
+export const InviteResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
+
+
+export const InviteResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+}
+
+/**
  * Role to assign to the invited user
  */
 export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
@@ -289,6 +341,8 @@ export interface CreateInviteDto {
   email: string;
   /** Role to assign to the invited user */
   role: CreateInviteDtoRole;
+  /** Organization teams to assign on acceptance */
+  teamIds?: string[];
 }
 
 export interface CreateInviteResponseDto {
@@ -379,13 +433,18 @@ export interface CreateBulkInvitesResponseDto {
   results: BulkInviteResultDto[];
 }
 
+export interface InviteTeamResponseDto {
+  id: string;
+  name: string;
+}
+
 /**
  * Role assigned to the invited user
  */
-export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
+export type InviteListItemResponseDtoRole = typeof InviteListItemResponseDtoRole[keyof typeof InviteListItemResponseDtoRole];
 
 
-export const InviteResponseDtoRole = {
+export const InviteListItemResponseDtoRole = {
   admin: 'admin',
   manager: 'manager',
   user: 'user',
@@ -394,35 +453,36 @@ export const InviteResponseDtoRole = {
 /**
  * Current status of the invite
  */
-export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
+export type InviteListItemResponseDtoStatus = typeof InviteListItemResponseDtoStatus[keyof typeof InviteListItemResponseDtoStatus];
 
 
-export const InviteResponseDtoStatus = {
+export const InviteListItemResponseDtoStatus = {
   pending: 'pending',
   accepted: 'accepted',
   expired: 'expired',
 } as const;
 
-export interface InviteResponseDto {
+export interface InviteListItemResponseDto {
   /** Unique identifier of the invite */
   id: string;
   /** Email address of the invited user */
   email: string;
   /** Role assigned to the invited user */
-  role: InviteResponseDtoRole;
+  role: InviteListItemResponseDtoRole;
   /** Current status of the invite */
-  status: InviteResponseDtoStatus;
+  status: InviteListItemResponseDtoStatus;
   /** Date when the invite was sent */
   sentDate: string;
   /** Date when the invite expires */
   expiresAt: string;
   /** Date when the invite was accepted (if applicable) */
   acceptedAt?: string;
+  teams?: InviteTeamResponseDto[];
 }
 
 export interface PaginatedInvitesListResponseDto {
   /** Array of invites for the current page */
-  data: InviteResponseDto[];
+  data: InviteListItemResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
 }
@@ -513,13 +573,30 @@ export interface SuperAdminOrgResponseDto {
   name: string;
   /** Whether the organisation is archived */
   archived: boolean;
+  /** Whether individual usage is hidden from organisation admins */
+  hideIndividualUsage: boolean;
   /** Date when the organization was created */
   createdAt: string;
 }
 
+export interface SuperAdminOrgListItemResponseDto {
+  /** Organization unique identifier */
+  id: string;
+  /** Organization display name */
+  name: string;
+  /** Whether the organisation is archived */
+  archived: boolean;
+  /** Whether individual usage is hidden from organisation admins */
+  hideIndividualUsage: boolean;
+  /** Date when the organization was created */
+  createdAt: string;
+  /** Whether the organization currently has an active subscription */
+  paying: boolean;
+}
+
 export interface SuperAdminOrgListResponseDto {
   /** Array of organizations for the current page */
-  data: SuperAdminOrgResponseDto[];
+  data: SuperAdminOrgListItemResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
 }
@@ -561,6 +638,11 @@ export interface SetOrgArchivedRequestDto {
 export interface DeleteOrgRequestDto {
   /** Exact organisation name confirming irreversible deletion */
   confirmationName: string;
+}
+
+export interface SetOrgUsageVisibilityRequestDto {
+  /** Hide individual user usage from organisation admins */
+  hideIndividualUsage: boolean;
 }
 
 export type RolePermissionSetDtoRole = typeof RolePermissionSetDtoRole[keyof typeof RolePermissionSetDtoRole];
@@ -1893,6 +1975,11 @@ export interface UpdateImageGenerationModelRequestDto {
      * @minimum 0
      */
   outputTokenCost?: number;
+}
+
+export interface TeamManagementAccessDto {
+  /** Whether the current human principal satisfies the organisation usage-privacy restriction; mutation permissions are checked separately */
+  canManage: boolean;
 }
 
 export interface CreateTeamDto {
@@ -3965,6 +4052,8 @@ export interface AppAlertResponseDto {
 export interface UsageConfigResponseDto {
   /** Whether the deployment is self-hosted. Determines feature availability. */
   isSelfHosted: boolean;
+  /** Whether individual usage is hidden for this organisation */
+  hideIndividualUsage: boolean;
 }
 
 export interface CreditUsageResponseDto {
@@ -4094,6 +4183,48 @@ export interface ProviderUsageChartResponseDto {
   timeSeries: ProviderTimeSeriesRowDto[];
 }
 
+export interface ApiKeyUsageDto {
+  /** API key ID */
+  apiKeyId: string;
+  /** API key name */
+  name: string;
+  /**
+     * Revocation timestamp, or null if the key was not revoked
+     * @nullable
+     */
+  revokedAt: string | null;
+  /**
+     * Expiration date, or null if the key never expires
+     * @nullable
+     */
+  expiresAt: string | null;
+  /** Input tokens in the filtered period */
+  inputTokens: number;
+  /** Output tokens in the filtered period */
+  outputTokens: number;
+  /** Total tokens in the filtered period */
+  totalTokens: number;
+  /** Recorded inferences in the filtered period. Calls that produced no usage data are not counted. */
+  requests: number;
+  /**
+     * Credits of all priced requests in the filtered period. Null when the key has requests but none of them could be priced.
+     * @nullable
+     */
+  credits: number | null;
+  /** Requests without a credit value, for example because the model had no price configured */
+  unpricedRequests: number;
+  /**
+     * Last recorded use in the filtered period (null if none)
+     * @nullable
+     */
+  lastUsedAt: string | null;
+}
+
+export interface ApiKeyUsageResponseDto {
+  /** Usage per API key of the organization, including revoked and expired keys */
+  data: ApiKeyUsageDto[];
+}
+
 export interface TimeSeriesPointDto {
   /** Date of the data point */
   date: string;
@@ -4148,8 +4279,8 @@ export interface UserCreditLimitItemDto {
   email: string;
   /** Configured monthly credit limit */
   monthlyCredits: number;
-  /** Credits consumed in the current calendar month */
-  creditsUsed: number;
+  /** Credits consumed in the current calendar month; omitted when individual usage is hidden */
+  creditsUsed?: number;
 }
 
 export interface TeamCreditLimitItemDto {
@@ -4157,8 +4288,8 @@ export interface TeamCreditLimitItemDto {
   name: string;
   /** Configured monthly credit limit */
   monthlyCredits: number;
-  /** Credits consumed by all current team members in the current month */
-  creditsUsed: number;
+  /** Credits consumed by all current team members in the current month; omitted when individual usage is hidden */
+  creditsUsed?: number;
 }
 
 export interface ApiKeyCreditLimitItemDto {
@@ -5565,7 +5696,11 @@ offset?: number;
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 status?: SuperAdminOrgsControllerGetAllOrgsStatus;
 /**
- * Search organizations by name.
+ * Filter by whether the organization currently has an active subscription
+ */
+subscription?: SuperAdminOrgsControllerGetAllOrgsSubscription;
+/**
+ * Search organizations by name, or by exact organization ID.
  */
 search?: string;
 /**
@@ -5587,7 +5722,27 @@ export const SuperAdminOrgsControllerGetAllOrgsStatus = {
   all: 'all',
 } as const;
 
+export type SuperAdminOrgsControllerGetAllOrgsSubscription = typeof SuperAdminOrgsControllerGetAllOrgsSubscription[keyof typeof SuperAdminOrgsControllerGetAllOrgsSubscription];
+
+
+export const SuperAdminOrgsControllerGetAllOrgsSubscription = {
+  all: 'all',
+  paying: 'paying',
+  'non-paying': 'non-paying',
+} as const;
+
 export type TeamsControllerListTeamMembersParams = {
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Number of items to skip
+ */
+offset?: number;
+};
+
+export type SuperAdminTeamsControllerGetMembersParams = {
 /**
  * Maximum number of items per page
  */
@@ -5789,6 +5944,17 @@ provider?: string;
 modelId?: string;
 };
 
+export type ApiKeyUsageControllerGetApiKeyUsageParams = {
+/**
+ * Inclusive start of the range in ISO format. Requires endDate.
+ */
+startDate?: string;
+/**
+ * Exclusive end of the range in ISO format. Requires startDate.
+ */
+endDate?: string;
+};
+
 export type SuperAdminUsageControllerGetUsageStatsParams = {
 startDate?: string;
 endDate?: string;
@@ -5843,6 +6009,17 @@ export const SuperAdminUsageDataControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
+
+export type SuperAdminUsageDataControllerGetApiKeyUsageParams = {
+/**
+ * Inclusive start of the range in ISO format
+ */
+startDate?: string;
+/**
+ * Exclusive end of the range in ISO format
+ */
+endDate?: string;
+};
 
 export type ArtifactsControllerFindByWorkspaceParams = {
 /**

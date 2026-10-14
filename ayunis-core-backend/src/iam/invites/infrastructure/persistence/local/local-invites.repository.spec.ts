@@ -223,6 +223,7 @@ describe('LocalInvitesRepository', () => {
   describe('findByOrgIdPaginated', () => {
     it('uses invite id as a descending tie-breaker for stable pagination', async () => {
       const queryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         addOrderBy: jest.fn().mockReturnThis(),

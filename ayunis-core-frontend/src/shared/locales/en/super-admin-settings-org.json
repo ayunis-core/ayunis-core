@@ -216,13 +216,13 @@
   },
   "changeSubscriptionDialog": {
     "title": "Change Subscription",
-    "description": "Change the subscription type or its data. This ends the current subscription and creates a new one — the type cannot be changed in place.",
+    "description": "Replace the current subscription with a new one. The current subscription's access ends when the replacement starts.",
     "changeButton": "Change Subscription",
     "continue": "Continue",
     "changing": "Changing...",
     "warningTitle": "Change this subscription?",
-    "warningDescription": "This ends the current subscription and creates a new one with the data you entered. Choose how to handle the current subscription. This cannot be undone.",
-    "confirmCancel": "Cancel current & create new",
+    "warningDescription": "Choose whether to keep the current subscription in the history or delete it. This cannot be undone.",
+    "confirmCancel": "End current access & create new",
     "confirmDelete": "Delete current & create new",
     "back": "Back"
   },
@@ -673,5 +673,13 @@
     "processingActive": "Document processing is still running. The organisation was not deleted. Retry once processing finishes.",
     "managementTitle": "Organisation management",
     "deleteActionDescription": "Permanently remove this organisation, its members, data and stored files. This cannot be undone."
+  },
+  "usageVisibility": {
+    "title": "Usage data",
+    "label": "Hide usage for individual users",
+    "success": "Usage visibility updated",
+    "error": "Could not update usage visibility",
+    "notFound": "Organisation not found",
+    "description": "When enabled, only super admins can change team memberships or team limits, or delete teams and users."
   }
 }

@@ -24,7 +24,7 @@ export function emailConfirmationText(
 
 export function emailConfirmationHtml(
   template: EmailConfirmationTemplateContent,
-): MJMLParseResults {
+): Promise<MJMLParseResults> {
   const confirmationUrl = escapeAttribute(template.confirmationUrl);
   const userEmail = escapeText(template.userEmail);
   const currentYear = escapeText(template.currentYear);

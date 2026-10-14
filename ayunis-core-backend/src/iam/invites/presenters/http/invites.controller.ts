@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags,
+  ApiExtraModels,
   ApiOperation,
   ApiResponse,
   ApiParam,
@@ -31,6 +32,7 @@ import { CreateInviteDto } from './dtos/create-invite.dto';
 import { AcceptInviteDto } from './dtos/accept-invite.dto';
 import {
   InviteDetailResponseDto,
+  InviteResponseDto,
   AcceptInviteResponseDto,
   PaginatedInvitesListResponseDto,
 } from './dtos/invite-response.dto';
@@ -70,6 +72,7 @@ import { DeleteAllPendingInvitesResponseDto } from './dtos/delete-all-pending-in
 import { DeleteAllPendingInvitesUseCase } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 import { DeleteAllPendingInvitesCommand } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
 
+@ApiExtraModels(InviteResponseDto)
 @ApiTags('invites')
 @Controller('invites')
 export class InvitesController {
@@ -121,6 +124,7 @@ export class InvitesController {
         email: createInviteDto.email,
         orgId,
         role: createInviteDto.role,
+        teamIds: createInviteDto.teamIds,
       },
       'create',
     );
@@ -130,6 +134,7 @@ export class InvitesController {
         email: createInviteDto.email,
         orgId,
         role: createInviteDto.role,
+        teamIds: createInviteDto.teamIds,
         userId,
       }),
     );
@@ -231,7 +236,6 @@ export class InvitesController {
     return result;
   }
 
-  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   @Get()
   @ApiOperation({
     summary: "Get all invites for current user's organization",
@@ -266,16 +270,7 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query() queryParams: GetInvitesQueryParamsDto,
   ): Promise<PaginatedInvitesListResponseDto> {
-    this.logger.log(
-      {
-        userId,
-        orgId,
-        input: queryParams.search,
-        limit: queryParams.limit,
-        offset: queryParams.offset,
-      },
-      'getInvites',
-    );
+    this.logInvitesQuery(userId, orgId, queryParams);
 
     const invites = await this.getInvitesByOrgUseCase.execute(
       new GetInvitesByOrgQuery({
@@ -291,6 +286,23 @@ export class InvitesController {
     );
 
     return this.inviteResponseMapper.toPaginatedDto(invites);
+  }
+
+  private logInvitesQuery(
+    userId: UUID,
+    orgId: UUID,
+    queryParams: GetInvitesQueryParamsDto,
+  ): void {
+    this.logger.log(
+      {
+        userId,
+        orgId,
+        hasSearch: queryParams.search !== undefined,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      },
+      'getInvites',
+    );
   }
 
   @Public()
@@ -392,12 +404,13 @@ export class InvitesController {
   @ApiResponse({ status: 404, description: 'Invite not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async resendExpiredInvite(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<CreateInviteResponseDto> {
-    this.logger.log({ inviteId }, 'resendExpiredInvite');
+    this.logger.log({ inviteId, orgId }, 'resendExpiredInvite');
 
     const { invite, token } = await this.resendExpiredInviteUseCase.execute(
-      new ResendExpiredInviteCommand(inviteId),
+      new ResendExpiredInviteCommand({ inviteId, orgId }),
     );
 
     return this.deliverInvite(invite, token);
@@ -433,10 +446,11 @@ export class InvitesController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Delete an invite',
     description:
-      'Delete an invitation (only allowed by the user who created it)',
+      "Delete an invitation of the caller's organization (Admin only)",
   })
   @ApiParam({
     name: 'id',
@@ -451,15 +465,18 @@ export class InvitesController {
   @ApiResponse({ status: 404, description: 'Invite not found' })
   @ApiResponse({
     status: 403,
-    description: 'Unauthorized to delete this invite',
+    description: 'Unauthorized - Admin role required',
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteInvite(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<void> {
-    this.logger.log({ inviteId }, 'deleteInvite');
+    this.logger.log({ inviteId, orgId }, 'deleteInvite');
 
-    await this.deleteInviteUseCase.execute(new DeleteInviteCommand(inviteId));
+    await this.deleteInviteUseCase.execute(
+      new DeleteInviteCommand({ inviteId, orgId }),
+    );
   }
 }

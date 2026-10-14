@@ -20,3 +20,7 @@ Public forgot-password keeps its generic response and consults the organization 
 `HasUsersOutsideOrgWithEmailDomainsUseCase` checks whether existing accounts with any supplied exact email domain belong to another organization. SSO uses this boolean preflight before enforcing SSO-only or adding domains to an enforced connection; it does not expose account details or constrain future account creation.
 
 Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.
+
+**Team-management privacy (AYC-1195).** When individual usage is hidden, DeleteUserUseCase requires super-admin team-management access before emitting deletion events or removing rows, because deleting a user also changes team-pool membership. Super-admin user deletion remains available.
+
+Organization user lists optionally include current team id/name summaries for administrators only. `FindUsersByOrgIdUseCase` calls the exported teams `FindTeamsByUserIdsAndOrgIdUseCase` through the existing teams-module dependency. The teams-owned repository loads memberships for the requested user page in one organization-scoped query. Other user lookup callers and non-administrator responses omit team summaries.

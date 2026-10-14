@@ -1,10 +1,17 @@
+import { FindTeamsByUserIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-ids-and-org-id/find-teams-by-user-ids-and-org-id.use-case';
+import type { UserWithTeams } from 'src/iam/users/domain/user-team-summary';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
-import { User } from 'src/iam/users/domain/user.entity';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  getRequiredUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
@@ -18,9 +25,13 @@ export class FindUsersByOrgIdUseCase {
     private readonly usersRepository: UsersRepository,
     private readonly contextService: ContextService,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
+    private readonly findTeamsByUsers: FindTeamsByUserIdsAndOrgIdUseCase,
   ) {}
 
-  async execute(query: FindUsersByOrgIdQuery): Promise<Paginated<User>> {
+  @HandleUnexpectedErrors(UserUnexpectedError)
+  async execute(
+    query: FindUsersByOrgIdQuery,
+  ): Promise<Paginated<UserWithTeams>> {
     this.logger.log(
       {
         orgId: query.orgId,
@@ -30,25 +41,24 @@ export class FindUsersByOrgIdUseCase {
       },
       'findManyByOrgId',
     );
-    const systemRole = this.contextService.get('systemRole');
-    const orgRole = this.contextService.get('role');
+    const { role } = getRequiredUserContext(this.contextService);
+    const callerIsSuperAdmin = isSuperAdmin(this.contextService);
     // Listing org users is allowed for super-admins, org admins (admins hold
     // every permission), and members who can assign users to teams — the
     // add-team-member picker needs the list.
     const canListUsers =
-      systemRole === SystemRole.SUPER_ADMIN ||
-      (orgRole !== undefined &&
-        (await this.hasPermissionUseCase.execute(
-          new HasPermissionQuery(
-            query.orgId,
-            orgRole,
-            Permission.ASSIGN_USERS_TO_TEAMS,
-          ),
-        )));
+      callerIsSuperAdmin ||
+      (await this.hasPermissionUseCase.execute(
+        new HasPermissionQuery(
+          query.orgId,
+          role,
+          Permission.ASSIGN_USERS_TO_TEAMS,
+        ),
+      ));
     if (!canListUsers) {
       throw new UnauthorizedAccessError({ orgId: query.orgId });
     }
-    return this.usersRepository.findManyByOrgId(
+    const users = await this.usersRepository.findManyByOrgId(
       query.orgId,
       {
         limit: query.limit,
@@ -58,5 +68,27 @@ export class FindUsersByOrgIdUseCase {
         search: query.search,
       },
     );
+    if (!query.includeTeams || (role !== UserRole.ADMIN && !callerIsSuperAdmin))
+      return users;
+    return this.includeTeams(users, query.orgId);
+  }
+
+  private async includeTeams(
+    users: Paginated<UserWithTeams>,
+    orgId: FindUsersByOrgIdQuery['orgId'],
+  ): Promise<Paginated<UserWithTeams>> {
+    const teams = await this.findTeamsByUsers.execute({
+      userIds: users.data.map((user) => user.id),
+      orgId,
+    });
+    return new Paginated({
+      data: users.data.map((user) => ({
+        ...user,
+        teams: teams.get(user.id) ?? [],
+      })),
+      limit: users.limit,
+      offset: users.offset,
+      total: users.total,
+    });
   }
 }

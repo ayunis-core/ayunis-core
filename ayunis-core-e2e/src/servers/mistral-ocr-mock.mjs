@@ -1,36 +1,23 @@
 import { Buffer } from "node:buffer";
 import { createServer } from "node:http";
-import { randomUUID } from "node:crypto";
 import process from "node:process";
 
 const port = Number(process.env.E2E_MISTRAL_OCR_PORT ?? 3199);
-const fileId = "e2e-screenshot-pdf";
-const rejectedFiles = new Set();
 
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     return sendJson(response, 200, { status: "ok" });
   }
 
-  if (request.method === "POST" && request.url === "/v1/files") {
-    const body = await readBody(request);
-    const id = body.includes("AYC-1059-OCR-REJECT") ? randomUUID() : fileId;
-    if (id !== fileId) rejectedFiles.add(id);
-    return sendJson(response, 200, {
-      id,
-      object: "file",
-      bytes: 1024,
-      created_at: 0,
-      filename: "screenshot-record.pdf",
-      purpose: "ocr",
-      sample_type: "instruct",
-      source: "upload",
-    });
-  }
-
   if (request.method === "POST" && request.url === "/v1/ocr") {
     const body = JSON.parse(await readBody(request));
-    if (rejectedFiles.has(body.document?.file_id)) {
+    if (body.document?.type !== "document_url") {
+      return sendJson(response, 400, {
+        message: "Expected the document inline as a document_url",
+      });
+    }
+    const document = decodeDocument(body.document.document_url);
+    if (document.includes("AYC-1059-OCR-REJECT")) {
       return sendJson(response, 400, {
         object: "error",
         type: "document_parser_invalid_file",
@@ -46,38 +33,15 @@ const server = createServer(async (request, response) => {
     return sendJson(response, 200, ocrResponse());
   }
 
-  const id = request.url?.startsWith("/v1/files/")
-    ? request.url.slice("/v1/files/".length)
-    : undefined;
-  if (request.method === "GET" && rejectedFiles.has(id)) {
-    return sendJson(response, 200, {
-      id,
-      object: "file",
-      bytes: 1024,
-      created_at: 0,
-      filename: "ocr-rejected.pdf",
-      purpose: "ocr",
-      sample_type: "instruct",
-      source: "upload",
-    });
-  }
-  if (request.method === "DELETE" && (id === fileId || rejectedFiles.has(id))) {
-    rejectedFiles.delete(id);
-    sendJson(response, 200, {
-      id,
-      object: "file",
-      deleted: true,
-    });
-    if (process.env.E2E_MISTRAL_OCR_EXIT_AFTER_DELETE === "true") {
-      server.close();
-    }
-    return;
-  }
-
   return sendJson(response, 404, { message: "Not found" });
 });
 
 server.listen(port, "127.0.0.1");
+
+function decodeDocument(documentUrl) {
+  const base64 = String(documentUrl ?? "").split(";base64,")[1] ?? "";
+  return Buffer.from(base64, "base64").toString("latin1");
+}
 
 function requestsImageTextAnnotations(body) {
   return (

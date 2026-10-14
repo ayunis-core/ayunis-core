@@ -3,10 +3,18 @@ import {
   OrgsRepository,
   OrgsPagination,
   OrgsFilters,
+  OrgSubscriptionFilter,
 } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { EntityManager, Repository } from 'typeorm';
+import {
+  Brackets,
+  EntityManager,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
+import { isUUID } from 'class-validator';
 import { OrgRecord } from './schema/org.record';
+import { SubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
 import {
@@ -89,6 +97,70 @@ export class LocalOrgsRepository extends OrgsRepository {
     return orgs.map((org) => org.id);
   }
 
+  private nameOrIdMatches(search: string): Brackets {
+    return new Brackets((where) => {
+      where.where('org.name ILIKE :search', { search: `%${search}%` });
+      // org.id is varchar holding lower-case randomUUID() values, so normalize the
+      // input instead of lower(org.id), which would bypass the primary-key index.
+      if (isUUID(search)) {
+        where.orWhere('org.id = :searchId', { searchId: search.toLowerCase() });
+      }
+    });
+  }
+
+  // Mirrors isActive() from the subscriptions module, which orgs cannot import
+  // (the module graph would cycle through users). Legacy cancellations without
+  // accessEndsAt keep access until the next renewal: usage-based ends at
+  // cancellation, seat-based at the next anchor step after cancelledAt.
+  // generate_series adds the interval to the previous value, so month-end
+  // anchors clamp and stick exactly like getNextDate (Jan 31 -> Feb 28 -> Mar 28).
+  private activeSubscriptionExists(
+    queryBuilder: SelectQueryBuilder<OrgRecord>,
+  ): string {
+    const cycle = `(CASE s."renewalCycle" WHEN 'yearly' THEN interval '1 year' ELSE interval '1 month' END)`;
+    const nextRenewalAfterCancellation = `(SELECT min(renewal) FROM generate_series(s."renewalCycleAnchor", s."cancelledAt" + ${cycle}, ${cycle}) AS renewal WHERE renewal > s."cancelledAt")`;
+    const subQuery = queryBuilder
+      .subQuery()
+      .select('1')
+      .from(SubscriptionRecord, 's')
+      .where('s."orgId" = org.id')
+      .andWhere('s."startsAt" <= :now')
+      .andWhere(
+        `(s."accessEndsAt" > :now OR (s."accessEndsAt" IS NULL AND (s."cancelledAt" IS NULL OR (s."cancelledAt" >= s."startsAt" AND CASE s.type WHEN 'SEAT_BASED' THEN ${nextRenewalAfterCancellation} > :now ELSE s."cancelledAt" > :now END))))`,
+      );
+    return `EXISTS ${subQuery.getQuery()}`;
+  }
+
+  private applySubscriptionFilter(
+    queryBuilder: SelectQueryBuilder<OrgRecord>,
+    subscription: OrgSubscriptionFilter = 'all',
+  ): void {
+    if (subscription === 'all') return;
+    const exists = this.activeSubscriptionExists(queryBuilder);
+    queryBuilder.andWhere(
+      subscription === 'paying' ? exists : `NOT ${exists}`,
+      { now: new Date() },
+    );
+  }
+
+  private applySuperAdminFilters(
+    queryBuilder: SelectQueryBuilder<OrgRecord>,
+    filters?: OrgsFilters,
+  ): void {
+    if (filters?.status !== 'all') {
+      queryBuilder.andWhere('org.archived = :archived', {
+        archived: filters?.status === 'archived',
+      });
+    }
+
+    const search = filters?.search?.trim();
+    if (search) {
+      queryBuilder.andWhere(this.nameOrIdMatches(search));
+    }
+
+    this.applySubscriptionFilter(queryBuilder, filters?.subscription);
+  }
+
   async findAllForSuperAdmin(
     pagination: OrgsPagination,
     filters?: OrgsFilters,
@@ -107,19 +179,7 @@ export class LocalOrgsRepository extends OrgsRepository {
         .createQueryBuilder('org')
         .leftJoinAndSelect('org.users', 'users')
         .orderBy('org.createdAt', 'DESC');
-
-      if (filters?.status !== 'all') {
-        queryBuilder.andWhere('org.archived = :archived', {
-          archived: filters?.status === 'archived',
-        });
-      }
-
-      // Apply search filter (case-insensitive)
-      if (filters?.search) {
-        queryBuilder.andWhere('org.name ILIKE :search', {
-          search: `%${filters.search}%`,
-        });
-      }
+      this.applySuperAdminFilters(queryBuilder, filters);
 
       // Apply pagination and get data with count in one call
       // getManyAndCount() automatically uses COUNT(DISTINCT org.id) for correct totals with joins
@@ -146,6 +206,19 @@ export class LocalOrgsRepository extends OrgsRepository {
       );
       throw new OrgRetrievalFailedError(err.message);
     }
+  }
+
+  async findPayingOrgIds(orgIds: UUID[]): Promise<UUID[]> {
+    if (orgIds.length === 0) return [];
+    const queryBuilder = this.orgRepository
+      .createQueryBuilder('org')
+      .select('org.id', 'id')
+      .where('org.id IN (:...orgIds)', { orgIds });
+    queryBuilder.andWhere(this.activeSubscriptionExists(queryBuilder), {
+      now: new Date(),
+    });
+    const rows = await queryBuilder.getRawMany<{ id: UUID }>();
+    return rows.map((row) => row.id);
   }
 
   async create(org: Org): Promise<Org> {
@@ -232,6 +305,22 @@ export class LocalOrgsRepository extends OrgsRepository {
 
       throw new OrgUpdateFailedError(id, err.message);
     }
+  }
+
+  async updateUsageVisibility(
+    id: UUID,
+    hideIndividualUsage: boolean,
+  ): Promise<Org> {
+    const result = await this.orgRepository
+      .createQueryBuilder()
+      .update(OrgRecord)
+      .set({ hideIndividualUsage })
+      .where('id = :id', { id })
+      .returning('*')
+      .execute();
+    const record = (result.raw as OrgRecord[]).at(0);
+    if (!record) throw new OrgNotFoundError(id);
+    return OrgMapper.toDomain(record);
   }
 
   async updateArchived(id: UUID, archived: boolean): Promise<Org> {

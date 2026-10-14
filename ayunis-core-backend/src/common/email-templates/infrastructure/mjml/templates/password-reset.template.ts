@@ -37,7 +37,7 @@ Bei Fragen: help@ayunis.com
 
 export function passwordResetHtml(
   template: PasswordResetTemplateContent,
-): MJMLParseResults {
+): Promise<MJMLParseResults> {
   const greeting = template.userName
     ? `Hallo ${escapeText(template.userName)},`
     : 'Hallo,';

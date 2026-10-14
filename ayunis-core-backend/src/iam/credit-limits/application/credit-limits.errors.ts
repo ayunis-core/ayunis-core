@@ -1,4 +1,7 @@
-import type { ErrorMetadata } from 'src/common/errors/base.error';
+import type {
+  ClientErrorResponse,
+  ErrorMetadata,
+} from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum CreditLimitErrorCode {
@@ -70,6 +73,17 @@ export class TeamCreditLimitExceededError extends CreditLimitError {
       429,
       metadata,
     );
+  }
+
+  // Admin-controlled team membership makes consumption an individual-usage side channel.
+  override toClientResponse(): ClientErrorResponse {
+    return {
+      code: this.code,
+      message: this.message,
+      ...(this.metadata && {
+        metadata: { teamId: this.metadata.teamId, limit: this.metadata.limit },
+      }),
+    };
   }
 }
 

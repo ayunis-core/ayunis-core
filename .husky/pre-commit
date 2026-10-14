@@ -51,6 +51,9 @@ ALL_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '\.(ts|tsx)$' || true)
 # Markdown: staged .md files
 MD_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '\.md$' || true)
 
+# Lockfile: same `pnpm dedupe --check` gate as the CI "Lockfile Dedupe" workflow
+LOCKFILE_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^pnpm-lock\.yaml$' || true)
+
 # Args depending on FIX mode (auto-fix enabled by default)
 if [ "$PRECOMMIT_NO_FIX" = "1" ]; then
   FE_PRETTIER_ARGS="--check --log-level warn"
@@ -80,6 +83,7 @@ FE_DUPLICATION_STATUS_FILE="$STATUS_DIR/fe_duplication.status"
 FILE_SIZE_STATUS_FILE="$STATUS_DIR/file_size.status"
 MARKDOWNLINT_STATUS_FILE="$STATUS_DIR/markdownlint.status"
 E2E_STATUS_FILE="$STATUS_DIR/e2e.status"
+LOCKFILE_DEDUPE_STATUS_FILE="$STATUS_DIR/lockfile_dedupe.status"
 
 # Jobs
 run_fe_prettier() {
@@ -365,6 +369,23 @@ run_markdownlint() {
   printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
+run_lockfile_dedupe() {
+  STATUS_FILE="$1"
+  print_section "Lockfile • pnpm dedupe --check"
+  set +e
+  # pnpm reads the lockfile and manifests from the working tree, but the
+  # commit records the index, so the check only proves anything when they match.
+  if git diff --quiet -- pnpm-lock.yaml pnpm-workspace.yaml '*package.json'; then
+    pnpm dedupe --check
+  else
+    printf "%b\n" "${RED}Unstaged changes to pnpm-lock.yaml, pnpm-workspace.yaml or a package.json; stage or stash them so the checked files are the committed ones${NC}"
+    false
+  fi
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
 # Launch jobs in parallel where possible
 if [ -n "$FE_STAGED" ]; then
   run_fe_prettier "$FE_PRETTIER_STATUS_FILE" &
@@ -418,6 +439,10 @@ if [ -n "$MD_STAGED" ]; then
   run_markdownlint "$MARKDOWNLINT_STATUS_FILE" &
 fi
 
+if [ -n "$LOCKFILE_STAGED" ]; then
+  run_lockfile_dedupe "$LOCKFILE_DEDUPE_STATUS_FILE" &
+fi
+
 wait
 
 # Read statuses (default 0 when not run)
@@ -435,6 +460,7 @@ FE_DUPLICATION_STATUS=$(cat "$FE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf 
 FILE_SIZE_STATUS=$(cat "$FILE_SIZE_STATUS_FILE" 2>/dev/null || printf "0")
 MARKDOWNLINT_STATUS=$(cat "$MARKDOWNLINT_STATUS_FILE" 2>/dev/null || printf "0")
 E2E_STATUS=$(cat "$E2E_STATUS_FILE" 2>/dev/null || printf "0")
+LOCKFILE_DEDUPE_STATUS=$(cat "$LOCKFILE_DEDUPE_STATUS_FILE" 2>/dev/null || printf "0")
 
 # Summary and exit code
 FAILED=0
@@ -556,6 +582,14 @@ if [ -n "$MD_STAGED" ]; then
     FAILED=1
   else
     printf "%b\n" "${GREEN}✅ Markdown lint passed${NC}"
+  fi
+fi
+if [ -n "$LOCKFILE_STAGED" ]; then
+  if [ "$LOCKFILE_DEDUPE_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Lockfile check failed (see the Lockfile section above)${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Lockfile dedupe check passed${NC}"
   fi
 fi
 

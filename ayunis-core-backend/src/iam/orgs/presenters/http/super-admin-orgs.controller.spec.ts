@@ -50,6 +50,7 @@ describe(SuperAdminOrgsController.name, () => {
       name: 'Acme Corporation',
       createdAt,
       archived: false,
+      hideIndividualUsage: false,
     });
     expect(createOrg.execute).toHaveBeenCalledWith(
       new CreateOrgCommand('Acme Corporation'),
@@ -70,6 +71,7 @@ describe(SuperAdminOrgsController.name, () => {
       name: 'Renamed Corporation',
       createdAt,
       archived: false,
+      hideIndividualUsage: false,
     });
     expect(updateOrg.execute).toHaveBeenCalledWith(
       new UpdateOrgCommand(ORG_ID, 'Renamed Corporation'),

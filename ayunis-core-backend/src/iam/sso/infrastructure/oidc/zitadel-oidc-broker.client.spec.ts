@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import * as oidc from 'openid-client';
 import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
 import { SsoBrokerNotConfiguredError } from 'src/iam/sso/application/sso.errors';
@@ -391,6 +392,95 @@ describe('ZitadelOidcBrokerClient', () => {
         zitadelIdpId: null,
       }),
     ).rejects.toBeInstanceOf(ProviderConnectionError);
+  });
+
+  it.each([
+    ['token_exchange', oidc.authorizationCodeGrant],
+    ['userinfo', oidc.fetchUserInfo],
+  ] as const)(
+    'logs which callback request failed in transport (%s)',
+    async (operation, failingRequest) => {
+      const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      jest.mocked(oidc.authorizationCodeGrant).mockResolvedValue({
+        access_token: 'server-side-access-token',
+        claims: () => ({ sub: 'zitadel-user' }),
+      } as never);
+      jest.mocked(failingRequest).mockRejectedValue(
+        Object.assign(new TypeError('fetch failed'), {
+          cause: Object.assign(new Error('getaddrinfo EAI_AGAIN'), {
+            code: 'EAI_AGAIN',
+            hostname: 'sso.ayunis.de',
+          }),
+        }),
+      );
+
+      await expect(
+        buildClient(config).validateCallback({
+          callbackParameters: new URLSearchParams({
+            code: 'authorization-code',
+            state: 'oauth-state',
+          }),
+          codeVerifier: 'pkce-verifier',
+          expectedState: 'oauth-state',
+          expectedNonce: 'oidc-nonce',
+        }),
+      ).rejects.toBeInstanceOf(ProviderConnectionError);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operation,
+          code: 'PROVIDER_UNAVAILABLE_CONNECTION_ZITADEL',
+          underlyingCode: 'EAI_AGAIN',
+          host: 'sso.ayunis.de',
+        }),
+        'Zitadel broker request failed',
+      );
+      const logged = JSON.stringify(warn.mock.calls);
+      expect(logged).not.toContain('authorization-code');
+      expect(logged).not.toContain('server-side-access-token');
+      expect(logged).not.toContain('pkce-verifier');
+    },
+  );
+
+  it('logs broker discovery transport failures', async () => {
+    const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    jest.mocked(oidc.discovery).mockRejectedValue(
+      Object.assign(new Error('connect failed'), {
+        code: 'ECONNREFUSED',
+        hostname: 'sso.ayunis.de',
+      }),
+    );
+
+    await expect(
+      buildClient(config).createAuthorizationRequest({
+        zitadelOrgId: '385820595704561666',
+        zitadelIdpId: null,
+      }),
+    ).rejects.toBeInstanceOf(ProviderConnectionError);
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: 'discovery',
+        underlyingCode: 'ECONNREFUSED',
+      }),
+      'Zitadel broker request failed',
+    );
+  });
+
+  it('does not log OIDC protocol rejections as broker request failures', async () => {
+    const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    jest
+      .mocked(oidc.authorizationCodeGrant)
+      .mockRejectedValue(new oidc.ClientError('unexpected nonce'));
+
+    await expect(
+      buildClient(config).validateCallback({
+        callbackParameters: new URLSearchParams({ code: 'c', state: 's' }),
+        codeVerifier: 'pkce-verifier',
+        expectedState: 's',
+        expectedNonce: 'oidc-nonce',
+      }),
+    ).rejects.toMatchObject({ code: 'SSO_BROKER_RESPONSE_INVALID' });
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('preserves provider failures while validating a logout token', async () => {

@@ -59,3 +59,17 @@ export async function bulkInviteUserAsSuperAdmin(
     { api },
   );
 }
+
+export function requestDeleteInvite(
+  api: APIRequestContext,
+  inviteId: string,
+): Promise<APIResponse> {
+  return api.delete(`${config.apiURL}/api/invites/${inviteId}`);
+}
+
+export function requestResendInvite(
+  api: APIRequestContext,
+  inviteId: string,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/invites/${inviteId}/resend`);
+}

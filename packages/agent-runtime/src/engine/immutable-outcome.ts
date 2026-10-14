@@ -71,14 +71,11 @@ const cloneError = (error: Error, seen: WeakMap<object, object>): Error => {
   const result = new Error(error.message);
   Object.setPrototypeOf(result, Reflect.getPrototypeOf(error));
   seen.set(error, result);
-  result.name = error.name;
-  result.stack = error.stack;
+  defineOwn(result, 'name', error.name);
+  defineOwn(result, 'stack', error.stack);
+  if (error instanceof DOMException) defineOwn(result, 'code', error.code);
   if ('cause' in error) {
-    Object.defineProperty(result, 'cause', {
-      configurable: true,
-      value: cloneUnknown(error.cause, seen),
-      writable: true,
-    });
+    defineOwn(result, 'cause', cloneUnknown(error.cause, seen));
   }
   for (const [key, nested] of Object.entries(error)) {
     Object.defineProperty(result, key, {
@@ -89,6 +86,20 @@ const cloneError = (error: Error, seen: WeakMap<object, object>): Error => {
     });
   }
   return result;
+};
+
+/**
+ * DOMException (AbortError, TimeoutError) exposes name, message and code as
+ * getter-only prototype accessors bound to the original instance; a plain
+ * assignment on the clone throws in strict mode, so every copied field is
+ * defined as an own data property instead.
+ */
+const defineOwn = (target: Error, key: string, value: unknown): void => {
+  Object.defineProperty(target, key, {
+    configurable: true,
+    value,
+    writable: true,
+  });
 };
 
 const deepFreeze = (value: unknown, seen = new WeakSet<object>()): void => {

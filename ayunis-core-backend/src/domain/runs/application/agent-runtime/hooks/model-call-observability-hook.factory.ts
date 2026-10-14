@@ -9,7 +9,10 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { extractProviderErrorDiagnostics } from 'src/common/errors/extract-provider-error-diagnostics.helper';
+import {
+  extractProviderErrorDiagnostics,
+  extractProviderExplanation,
+} from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { buildProviderRequestDiagnostics } from 'src/domain/runs/application/agent-runtime/provider-request-diagnostics.helper';
 import type { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
@@ -82,6 +85,7 @@ export class ModelCallObservabilityHookFactory {
     }
     const model = params.models.resolve(ctx.model);
     this.logFailure(ctx.outcome, model, request);
+    this.logRejection(ctx.outcome, model);
     await this.emitCompletion(ctx, params, model);
   }
 
@@ -91,12 +95,19 @@ export class ModelCallObservabilityHookFactory {
     request: RequestDiagnostics | undefined,
   ): void {
     if (outcome.type !== 'provider_failure') return;
+    const source = findPortableProviderError(outcome.error) ?? outcome.error;
+    const diagnostics = extractProviderErrorDiagnostics(source);
     const context = {
       model: model.name,
       provider: model.provider,
       modelCallId: outcome.modelCallId,
       trigger: outcome.trigger,
+      callSequence: outcome.callSequence,
+      providerConsumptionStarted: outcome.providerConsumptionStarted,
+      producedOutput: outcome.producedOutput,
+      visibleOutput: outcome.visibleOutput,
       ...providerFailureContext(outcome.providerFailure),
+      upstreamMessage: extractProviderExplanation(source),
       ...request,
     };
     if (isProviderUnavailable(outcome.providerFailure.kind)) {
@@ -106,13 +117,36 @@ export class ModelCallObservabilityHookFactory {
       );
       return;
     }
-    const portableError = findPortableProviderError(outcome.error);
     this.logger.error(
-      {
-        ...context,
-        ...extractProviderErrorDiagnostics(portableError ?? outcome.error),
-      },
+      { ...context, ...diagnostics },
       'Provider stream inference failed',
+    );
+  }
+
+  private logRejection(
+    outcome: ModelCallOutcomeSnapshot,
+    model: LanguageModel,
+  ): void {
+    if (outcome.type !== 'rejected') return;
+    this.logger.warn(
+      {
+        model: model.name,
+        provider: model.provider,
+        modelCallId: outcome.modelCallId,
+        trigger: outcome.trigger,
+        callSequence: outcome.callSequence,
+        providerConsumptionStarted: outcome.providerConsumptionStarted,
+        producedOutput: outcome.producedOutput,
+        visibleOutput: outcome.visibleOutput,
+        rejectionReason: outcome.reason,
+        ...malformedDetails(outcome.error.details),
+        contentTypes: outcome.message.content.map((content) => content.type),
+        finishReason: outcome.finishReason,
+        inputTokens: outcome.usage.inputTokens,
+        outputTokens: outcome.usage.outputTokens,
+        durationMs: outcome.durationMs,
+      },
+      'Model call rejected',
     );
   }
 
@@ -170,6 +204,16 @@ function inferenceErrorInfo(
     return { message: 'Inference aborted by client' };
   }
   return { message: outcome.error.message };
+}
+
+function malformedDetails(
+  details: Readonly<Record<string, unknown>> | undefined,
+): Record<string, unknown> {
+  if (typeof details?.reason !== 'string') return {};
+  return {
+    malformedReason: details.reason,
+    toolNames: Array.isArray(details.toolNames) ? details.toolNames : [],
+  };
 }
 
 function providerFailureMessage(kind: ProviderFailureKind): string {

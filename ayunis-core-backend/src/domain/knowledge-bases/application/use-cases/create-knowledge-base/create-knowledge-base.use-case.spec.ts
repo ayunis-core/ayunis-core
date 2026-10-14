@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
@@ -38,11 +39,7 @@ async function setup() {
     activateForWorkspace: jest.fn(),
   } as unknown as jest.Mocked<KnowledgeBaseRepository>;
   const context = {
-    get: jest.fn((key: string) => {
-      if (key === 'userId') return USER_ID;
-      if (key === 'orgId') return ORG_ID;
-      return undefined;
-    }),
+    get: jest.fn(getFromUserContext({ userId: USER_ID, orgId: ORG_ID })),
   } as unknown as jest.Mocked<ContextService>;
   const workspaceWriteAccess = {
     execute: jest.fn(),

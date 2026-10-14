@@ -1,3 +1,5 @@
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -144,5 +146,32 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
     context.get.mockReturnValue(undefined);
 
     await expect(useCase.execute()).rejects.toThrow(UnauthorizedAccessError);
+  });
+  it('rejects explicit target-org reads by an organisation admin', async () => {
+    const store: Record<string, string> = {
+      orgId,
+      userId: orgId,
+      role: UserRole.ADMIN,
+      systemRole: SystemRole.CUSTOMER,
+    };
+    context.get.mockImplementation((key: string) => store[key]);
+    await expect(
+      useCase.execute(new GetTeamCreditLimitsOverviewQuery(undefined, orgId)),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+  });
+
+  it('returns numeric team consumption to a super admin for the requested organisation', async () => {
+    const store: Record<string, string> = {
+      orgId,
+      userId: orgId,
+      role: UserRole.ADMIN,
+      systemRole: SystemRole.SUPER_ADMIN,
+    };
+    context.get.mockImplementation((key: string) => store[key]);
+    await expect(
+      useCase.execute(new GetTeamCreditLimitsOverviewQuery(undefined, orgId)),
+    ).resolves.toContainEqual(
+      expect.objectContaining({ teamId, creditsUsed: 8300 }),
+    );
   });
 });

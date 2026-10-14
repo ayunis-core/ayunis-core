@@ -69,6 +69,23 @@ describe('GenerateImageUseCase', () => {
       );
     });
 
+    it('forwards an optional transparent background to the handler', async () => {
+      const command = new GenerateImageCommand({
+        model: mockModel,
+        prompt: 'navy lettering on a transparent background',
+        background: 'transparent',
+      });
+      handler.generate.mockResolvedValue(
+        new ImageGenerationResult(Buffer.from('fake-image'), 'image/png'),
+      );
+
+      await useCase.execute(command);
+
+      expect(handler.generate).toHaveBeenCalledWith(
+        expect.objectContaining({ background: 'transparent' }),
+      );
+    });
+
     it('should return the handler result', async () => {
       const command = new GenerateImageCommand({
         model: mockModel,

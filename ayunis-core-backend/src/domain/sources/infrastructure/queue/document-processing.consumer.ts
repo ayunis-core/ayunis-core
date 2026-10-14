@@ -28,6 +28,7 @@ import {
 import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
+import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
@@ -47,6 +48,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly helper: SourceProcessingHelper,
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
+    private readonly heartbeat: SourceProcessingHeartbeatService,
   ) {
     super();
   }
@@ -69,14 +71,16 @@ export class DocumentProcessingConsumer extends WorkerHost {
       if (!(await this.isAdmitted(job))) return;
 
       try {
-        const source = await this.loadSourceOrSkip(sourceId, minioPath);
-        if (!source) return;
+        if (!(await this.loadSourceOrSkip(sourceId, minioPath))) return;
 
-        const { text, chunks } = await this.downloadAndExtractText(job.data);
+        const { text, chunks } = await this.heartbeat.run(sourceId, () =>
+          this.downloadAndExtractText(job.data),
+        );
 
         // Guard: re-check the source still exists and is PROCESSING
         // before writing content. Prevents resurrection of deleted sources.
-        if (!(await this.isSourceStillProcessing(sourceId, minioPath))) return;
+        const source = await this.reloadIfStillProcessing(sourceId, minioPath);
+        if (!source) return;
 
         await this.updateSourceWithContent(source, text, chunks);
         await this.helper.index(sourceId, orgId, chunks);
@@ -228,10 +232,10 @@ export class DocumentProcessingConsumer extends WorkerHost {
     return text;
   }
 
-  private async isSourceStillProcessing(
+  private async reloadIfStillProcessing(
     sourceId: UUID,
     minioPath: string,
-  ): Promise<boolean> {
+  ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
       this.logger.warn(
@@ -242,9 +246,12 @@ export class DocumentProcessingConsumer extends WorkerHost {
         'Source deleted or status changed mid-processing',
       );
       await this.cleanupMinioFile(minioPath);
-      return false;
+      return null;
     }
-    return true;
+    if (!(source instanceof TextSource)) {
+      throw new Error(`Source ${sourceId} is not a TextSource`);
+    }
+    return source;
   }
 
   private async updateSourceWithContent(

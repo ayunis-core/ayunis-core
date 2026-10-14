@@ -4,5 +4,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export abstract class TemplateRendererPort {
-  abstract renderTemplate(template: EmailTemplate): RenderedEmailContent;
+  abstract renderTemplate(
+    template: EmailTemplate,
+  ): Promise<RenderedEmailContent>;
 }

@@ -11,7 +11,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     return {
-      chapters: await queryClient.fetchQuery({
+      chapters: await queryClient.query({
         queryKey: getSuperAdminAcademyChaptersControllerGetChaptersQueryKey(),
         queryFn: () => superAdminAcademyChaptersControllerGetChapters(),
       }),

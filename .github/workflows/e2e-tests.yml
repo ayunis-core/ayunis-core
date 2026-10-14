@@ -88,7 +88,7 @@ jobs:
           pnpm exec nest build
 
       - name: Upload backend build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-backend-build
           path: |
@@ -123,7 +123,7 @@ jobs:
         run: pnpm run build
 
       - name: Upload frontend build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-frontend-dist
           path: ayunis-core-frontend/dist
@@ -188,7 +188,7 @@ jobs:
         uses: ./.github/actions/start-minio
 
       - name: Download backend build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: e2e-backend-build
           path: .
@@ -196,7 +196,7 @@ jobs:
       # Same layout as the production image: the backend serves the SPA from
       # dist/frontend (ServeStaticModule), so browser and API share one origin.
       - name: Download frontend build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: e2e-frontend-dist
           path: ayunis-core-backend/dist/frontend
@@ -379,7 +379,7 @@ jobs:
 
       - name: Upload PR media artifact
         if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-media-${{ github.event.pull_request.number }}
           path: pr-media-artifact
@@ -389,7 +389,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
@@ -399,7 +399,7 @@ jobs:
 
       - name: Upload backend log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-log
           path: |
@@ -418,7 +418,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Download PR media artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: pr-media-${{ github.event.pull_request.number }}
           path: pr-media-artifact

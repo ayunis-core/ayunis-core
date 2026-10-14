@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
   UnauthorizedSubscriptionAccessError,
@@ -53,13 +56,12 @@ export class ListOrgSubscriptionsUseCase {
   }
 
   private assertSuperAdmin(orgId: UUID): void {
-    const systemRole = this.contextService.get('systemRole');
-    if (systemRole === SystemRole.SUPER_ADMIN) {
+    if (isSuperAdmin(this.contextService)) {
       return;
     }
 
     this.logger.warn(
-      { systemRole, orgId },
+      { systemRole: getUserContext(this.contextService)?.systemRole, orgId },
       'Non-super admin attempted to list org subscriptions',
     );
     throw new UnauthorizedSubscriptionAccessError(

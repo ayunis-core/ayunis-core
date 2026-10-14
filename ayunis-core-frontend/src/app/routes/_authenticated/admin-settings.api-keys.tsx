@@ -15,11 +15,11 @@ export const Route = createFileRoute('/_authenticated/admin-settings/api-keys')(
     component: RouteComponent,
     loader: async ({ context: { queryClient } }) => {
       const [apiKeys, subscription] = await Promise.all([
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getApiKeysControllerListApiKeysQueryKey(),
           queryFn: () => apiKeysControllerListApiKeys(),
         }),
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getSubscriptionsControllerHasActiveSubscriptionQueryKey(),
           queryFn: () => subscriptionsControllerHasActiveSubscription(),
         }),
@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings/api-keys')(
       const creditLimits =
         subscription.subscriptionType ===
         ActiveSubscriptionResponseDtoSubscriptionType.USAGE_BASED
-          ? await queryClient.fetchQuery({
+          ? await queryClient.query({
               queryKey: getCreditLimitsControllerGetApiKeyLimitsQueryKey(),
               queryFn: () => creditLimitsControllerGetApiKeyLimits(),
             })

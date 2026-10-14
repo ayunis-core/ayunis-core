@@ -9,6 +9,7 @@ import InstallMarketplaceSkillWidget from '@/pages/chat/ui/chat-widgets/InstallM
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
 import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
 import { renderArtifactToolWidget } from '@/pages/chat/ui/chat-widgets/renderArtifactToolWidget';
+import { generatedImageIdFromToolResult } from './generated-image-id';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -81,7 +82,7 @@ export function renderRichToolCard({
       return (
         <GenerateImageWidget
           content={toolUse}
-          imageId={result}
+          imageId={generatedImageIdFromToolResult(result)}
           threadId={threadId}
           isStreaming={isStreaming}
         />

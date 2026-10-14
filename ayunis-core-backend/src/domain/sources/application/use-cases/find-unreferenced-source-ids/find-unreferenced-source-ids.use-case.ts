@@ -7,8 +7,8 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 // Centralises cross-module reachability in the sources domain: callers pass
 // candidate IDs (e.g. from a threads-side stale query) and get back the subset
-// that are not attached to any skill, agent, or knowledge base. Keeps skill /
-// agent schema knowledge out of other modules' adapters.
+// that are not attached to any skill or knowledge base. Keeps skill schema
+// knowledge out of other modules' adapters.
 @Injectable()
 export class FindUnreferencedSourceIdsUseCase {
   private readonly logger = new Logger(FindUnreferencedSourceIdsUseCase.name);

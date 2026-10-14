@@ -240,7 +240,9 @@ test("configures SSO and enforces organization-only login independently", async 
   const inviteSsoStart = page.waitForRequest(
     (request) => new URL(request.url()).pathname === inviteSsoPath,
   );
-  await page.getByTestId("invite-accept-sso").click();
+  // The stubbed 204 never commits the navigation the click starts, so do not
+  // wait for it; the request assertion below proves the redirect happened.
+  await page.getByTestId("invite-accept-sso").click({ noWaitAfter: true });
   expect(new URL((await inviteSsoStart).url()).pathname).toBe(inviteSsoPath);
   await page.unroute(`**${inviteSsoPath}`);
 

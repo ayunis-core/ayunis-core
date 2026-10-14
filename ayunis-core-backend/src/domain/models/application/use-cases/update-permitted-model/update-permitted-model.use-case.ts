@@ -9,9 +9,12 @@ import {
 } from 'src/domain/models/domain/permitted-model.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  getRequiredUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { PermittedModelNotFoundError } from 'src/domain/models/application/models.errors';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
@@ -52,12 +55,12 @@ export class UpdatePermittedModelUseCase {
   }
 
   private assertAuthorized(command: UpdatePermittedModelCommand): void {
+    const principal = getRequiredUserContext(this.contextService);
     const isOrgAdmin =
-      this.contextService.get('role') === UserRole.ADMIN &&
-      this.contextService.get('orgId') === command.orgId;
-    const isSuperAdmin =
-      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
-    if (!isOrgAdmin && !isSuperAdmin) throw new UnauthorizedAccessError();
+      principal.role === UserRole.ADMIN && principal.orgId === command.orgId;
+    if (!isOrgAdmin && !isSuperAdmin(this.contextService)) {
+      throw new UnauthorizedAccessError();
+    }
   }
 
   private async findExisting(

@@ -12,7 +12,7 @@ export const Route = createFileRoute(
     search: z.string().default('').catch(''),
   }),
   loader: async ({ context: { queryClient }, params: { id } }) => {
-    const team = await queryClient.fetchQuery(
+    const team = await queryClient.query(
       getTeamsControllerGetTeamQueryOptions(id),
     );
     return { team };

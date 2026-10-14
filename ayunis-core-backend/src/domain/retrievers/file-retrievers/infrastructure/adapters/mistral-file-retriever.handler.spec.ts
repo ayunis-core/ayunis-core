@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -20,12 +21,6 @@ import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 // Mock the Mistral SDK
 jest.mock('@mistralai/mistralai', () => ({
   Mistral: jest.fn().mockImplementation(() => ({
-    files: {
-      upload: jest.fn(),
-      getSignedUrl: jest.fn(),
-      delete: jest.fn(),
-      retrieve: jest.fn(),
-    },
     ocr: {
       process: jest.fn(),
     },
@@ -72,12 +67,6 @@ function createMistralError(statusCode: number, body: string): MistralError {
 describe('MistralFileRetrieverHandler', () => {
   let handler: MistralFileRetrieverHandler;
   let mockClient: {
-    files: {
-      upload: jest.Mock;
-      getSignedUrl: jest.Mock;
-      delete: jest.Mock;
-      retrieve: jest.Mock;
-    };
     ocr: { process: jest.Mock };
   };
 
@@ -107,8 +96,12 @@ describe('MistralFileRetrieverHandler', () => {
     mockClient = (handler as unknown as { client: typeof mockClient }).client;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('client construction', () => {
-    it('bounds each file-API attempt with a 120s timeout instead of 5 minutes', () => {
+    it('bounds each OCR attempt with a 120s timeout instead of 5 minutes', () => {
       const { Mistral } = jest.requireMock<{ Mistral: jest.Mock }>(
         '@mistralai/mistralai',
       );
@@ -116,15 +109,19 @@ describe('MistralFileRetrieverHandler', () => {
         expect.objectContaining({ timeoutMs: 120_000 }),
       );
     });
+
+    it('targets the EU server', () => {
+      const { Mistral } = jest.requireMock<{ Mistral: jest.Mock }>(
+        '@mistralai/mistralai',
+      );
+      expect(Mistral).toHaveBeenLastCalledWith(
+        expect.objectContaining({ server: 'eu' }),
+      );
+    });
   });
 
   describe('OCR flow', () => {
-    beforeEach(() => {
-      mockClient.files.upload.mockResolvedValue({ id: 'file-123' });
-      mockClient.files.delete.mockResolvedValue(undefined);
-    });
-
-    it('should run OCR by file id without requesting a signed URL', async () => {
+    it('sends the document inline as a base64 data URL', async () => {
       mockClient.ocr.process.mockResolvedValue({
         pages: [{ markdown: '# Content', index: 0 }],
       });
@@ -133,10 +130,12 @@ describe('MistralFileRetrieverHandler', () => {
 
       expect(mockClient.ocr.process).toHaveBeenCalledWith(
         expect.objectContaining({
-          document: { type: 'file', fileId: 'file-123' },
+          document: {
+            type: 'document_url',
+            documentUrl: `data:application/pdf;base64,${Buffer.from('fake pdf content').toString('base64')}`,
+          },
         }),
       );
-      expect(mockClient.files.getSignedUrl).not.toHaveBeenCalled();
       expect(result.pages).toHaveLength(1);
     });
 
@@ -227,21 +226,17 @@ describe('MistralFileRetrieverHandler', () => {
       );
     });
 
-    it('should retry when OCR cannot see the just-uploaded file yet', async () => {
-      const notVisibleYet = createMistralError(
-        404,
-        '{"detail":"File not found"}',
+    it('does not retry a 404, which no longer means a not-yet-visible upload', async () => {
+      mockClient.ocr.process.mockRejectedValue(
+        createMistralError(404, '{"message":"no Route matched"}'),
       );
-      mockClient.ocr.process
-        .mockRejectedValueOnce(notVisibleYet)
-        .mockResolvedValueOnce({
-          pages: [{ markdown: '# Content', index: 0 }],
-        });
 
-      const result = await handler.processFile(testFile);
-
-      expect(mockClient.ocr.process).toHaveBeenCalledTimes(2);
-      expect(result.pages).toHaveLength(1);
+      const result = handler.processFile(testFile);
+      await expect(result).rejects.toBeInstanceOf(ProviderRequestRejectedError);
+      await expect(result).rejects.toMatchObject({
+        context: { upstreamStatus: 404 },
+      });
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(1);
     });
 
     it('should not retry client errors like too many pages', async () => {
@@ -259,12 +254,6 @@ describe('MistralFileRetrieverHandler', () => {
   });
 
   describe('transient upstream error handling', () => {
-    beforeEach(() => {
-      // Setup upload to succeed — error on OCR process
-      mockClient.files.upload.mockResolvedValue({ id: 'file-123' });
-      mockClient.files.delete.mockResolvedValue(undefined);
-    });
-
     it('throws ProviderRequestRejectedError when Mistral rate limiting persists past retries', async () => {
       const mistralError = createMistralError(
         429,
@@ -334,24 +323,19 @@ describe('MistralFileRetrieverHandler', () => {
       );
     });
 
-    // Uses a still-reachable 3310 message: "could not be fetched from url"
-    // belongs to the pre-#1136 signed-URL era and can no longer occur now that
-    // OCR is always addressed by file id.
     it('should throw UnprocessableDocumentError for other Mistral 400 responses', async () => {
       const mistralError = createMistralError(
         400,
         '{"object":"error","message":"File is corrupted and cannot be parsed.","type":"invalid_request_file","code":"3310"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
-      // The file is still there, so this is not the vanished-file case.
-      mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
 
       const result = handler.processFile(testFile);
       await expect(result).rejects.toBeInstanceOf(UnprocessableDocumentError);
       // 422 is what keeps a corrupt upload out of AppSignal and stops the queue
       // from re-sending it to Mistral — see classifyJobFailure.
       await expect(result).rejects.toMatchObject({ statusCode: 422 });
-      expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(1);
     });
 
     it('classifies a PDF rejected by Mistral parsing as an unprocessable document', async () => {
@@ -360,7 +344,6 @@ describe('MistralFileRetrieverHandler', () => {
         '{"object":"error","message":"Document is not a valid PDF.","type":"document_parser_invalid_file","code":"3740"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
-      mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
 
       await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
         UnprocessableDocumentError,
@@ -412,28 +395,10 @@ describe('MistralFileRetrieverHandler', () => {
         '{"message":"Unexpected document_parser_invalid_file value","type":"invalid_request"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
-      mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
 
       await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
         ProviderRequestRejectedError,
       );
-    });
-
-    // The file id we uploaded is gone for reasons on Mistral's side, so unlike
-    // a corrupt document this is worth retrying — it belongs with the provider
-    // failures, not with the document errors above.
-    it('throws ProviderRequestRejectedError when the file stays invisible to OCR after retries', async () => {
-      const mistralError = createMistralError(
-        404,
-        '{"detail":"File not found"}',
-      );
-      mockClient.ocr.process.mockRejectedValue(mistralError);
-
-      const result = handler.processFile(testFile);
-      await expect(result).rejects.toBeInstanceOf(ProviderRequestRejectedError);
-      await expect(result).rejects.toMatchObject({
-        context: { upstreamStatus: 404 },
-      });
     });
 
     it('throws ProviderRequestRejectedError for Mistral OCR 400s — provider failures per AYC-538', async () => {
@@ -476,6 +441,55 @@ describe('MistralFileRetrieverHandler', () => {
       });
     });
 
+    it('logs the upstream status, type, code and a redacted explanation of an OCR rejection once', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+      mockClient.ocr.process.mockRejectedValue(
+        createMistralError(
+          400,
+          '{"object":"error","message":"Unsupported document \'Gutachten Meier.pdf\'","type":"invalid_request_ocr","param":null,"code":"3210"}',
+        ),
+      );
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        ProviderRequestRejectedError,
+      );
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          upstreamStatus: 400,
+          upstreamType: 'invalid_request_ocr',
+          upstreamCode: '3210',
+          upstreamMessage: "Unsupported document '…",
+        }),
+        'Mistral OCR processing failed',
+      );
+      // `err` is censored by the production logger's redaction paths.
+      const [context] = errorSpy.mock.calls[0] as [Record<string, unknown>];
+      const diagnostics = Object.entries(context).filter(
+        ([key]) => key !== 'err',
+      );
+      expect(JSON.stringify(diagnostics)).not.toContain('Meier');
+    });
+
+    it('logs no upstream diagnostics for failures that are not provider responses', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+      mockClient.ocr.process.mockRejectedValue(
+        new Error('cannot read properties of undefined'),
+      );
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        FileRetrieverUnexpectedError,
+      );
+
+      const [context] = errorSpy.mock.calls[0] as [Record<string, unknown>];
+      expect(Object.keys(context)).toEqual(['err']);
+    });
+
     it('throws FileRetrieverUnexpectedError for non-Mistral errors', async () => {
       mockClient.ocr.process.mockRejectedValue(
         new Error('cannot read properties of undefined'),
@@ -484,147 +498,6 @@ describe('MistralFileRetrieverHandler', () => {
       await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
         FileRetrieverUnexpectedError,
       );
-    });
-
-    it('throws ProviderServerError when file upload returns 502', async () => {
-      const mistralError = createMistralError(502, '{"message":"Bad gateway"}');
-      mockClient.files.upload.mockRejectedValue(mistralError);
-
-      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
-        ProviderServerError,
-      );
-    });
-  });
-
-  // Mistral deduplicates uploads by content signature, so a job processing
-  // bytes identical to another job's is handed the same file id and can have
-  // it deleted mid-flight. Recovery is decided by asking the files API whether
-  // the file still exists — not by matching the OCR error text (AYC-556).
-  describe('recovery when the uploaded file is deleted mid-flight', () => {
-    const missingFileBody = JSON.stringify({
-      object: 'error',
-      message: "File 'file-123' could not be found or may have expired.",
-      type: 'invalid_request_file',
-      code: '3310',
-    });
-
-    function fileGone(): void {
-      mockClient.files.retrieve.mockRejectedValue(
-        createMistralError(
-          404,
-          '{"detail":"No file matches the given query."}',
-        ),
-      );
-    }
-
-    beforeEach(() => {
-      mockClient.files.delete.mockResolvedValue(undefined);
-      mockClient.files.upload
-        .mockResolvedValueOnce({ id: 'file-123' })
-        .mockResolvedValueOnce({ id: 'file-456' });
-    });
-
-    it('re-uploads and succeeds when the file is gone', async () => {
-      mockClient.ocr.process
-        .mockRejectedValueOnce(createMistralError(400, missingFileBody))
-        .mockResolvedValueOnce({
-          pages: [{ markdown: '# Recovered', index: 0 }],
-        });
-      fileGone();
-
-      const result = await handler.processFile(testFile);
-
-      expect(mockClient.files.upload).toHaveBeenCalledTimes(2);
-      expect(mockClient.ocr.process).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          document: { type: 'file', fileId: 'file-456' },
-        }),
-      );
-      expect(result.pages[0].text).toBe('# Recovered');
-    });
-
-    // The probe must run before any cleanup, or our own delete would make
-    // every failure look like the vanished-file case.
-    it('probes the files API before deleting the failed upload', async () => {
-      mockClient.ocr.process
-        .mockRejectedValueOnce(createMistralError(400, missingFileBody))
-        .mockResolvedValueOnce({ pages: [{ markdown: '#', index: 0 }] });
-      fileGone();
-
-      await handler.processFile(testFile);
-
-      expect(mockClient.files.retrieve).toHaveBeenCalledWith({
-        fileId: 'file-123',
-      });
-      expect(mockClient.files.delete).not.toHaveBeenCalledWith({
-        fileId: 'file-123',
-      });
-      expect(mockClient.files.delete).toHaveBeenCalledWith({
-        fileId: 'file-456',
-      });
-    });
-
-    // Recovery is keyed on file existence, so an error whose text looks like
-    // the vanished-file case must NOT trigger a re-upload while the file lives.
-    it('does not re-upload when the file still exists', async () => {
-      mockClient.ocr.process.mockRejectedValue(
-        createMistralError(400, missingFileBody),
-      );
-      mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
-
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        UnprocessableDocumentError,
-      );
-      expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
-      expect(mockClient.files.delete).toHaveBeenCalledWith({
-        fileId: 'file-123',
-      });
-    });
-
-    // Conversely, the trigger is the file being gone — whatever OCR reported.
-    it('recovers a non-3310 failure when the file turns out to be gone', async () => {
-      mockClient.ocr.process
-        .mockRejectedValueOnce(
-          createMistralError(400, '{"message":"bad request"}'),
-        )
-        .mockResolvedValueOnce({
-          pages: [{ markdown: '# Recovered', index: 0 }],
-        });
-      fileGone();
-
-      const result = await handler.processFile(testFile);
-
-      expect(mockClient.files.upload).toHaveBeenCalledTimes(2);
-      expect(result.pages[0].text).toBe('# Recovered');
-    });
-
-    it('treats an inconclusive probe as "still there" and does not re-upload', async () => {
-      mockClient.ocr.process.mockRejectedValue(
-        createMistralError(400, missingFileBody),
-      );
-      mockClient.files.retrieve.mockRejectedValue(
-        createMistralError(503, '{"message":"Service unavailable"}'),
-      );
-
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        UnprocessableDocumentError,
-      );
-      expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
-    });
-
-    it('surfaces the failure when the retry also fails', async () => {
-      mockClient.ocr.process.mockRejectedValue(
-        createMistralError(400, missingFileBody),
-      );
-      fileGone();
-
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        UnprocessableDocumentError,
-      );
-      expect(mockClient.files.upload).toHaveBeenCalledTimes(2);
-      expect(mockClient.files.delete).toHaveBeenCalledWith({
-        fileId: 'file-456',
-      });
     });
   });
 });

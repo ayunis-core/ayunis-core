@@ -10,16 +10,21 @@ import {
   ItemTitle,
   ItemDescription,
 } from '@ayunis/ui/components/item';
-import { useDeleteTeam } from '../api/useDeleteTeam';
-import type { Team } from '../model/types';
+import { useDeleteTeam } from '@/pages/admin-settings/teams-settings/api/useDeleteTeam';
+import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 import { PermissionGate } from '@/features/permissions';
 
 interface TeamsListProps {
   teams: Team[];
+  canManage?: boolean;
   onEditTeam: (team: Team) => void;
 }
 
-export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
+export function TeamsList({
+  teams,
+  onEditTeam,
+  canManage = true,
+}: Readonly<TeamsListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
 
@@ -71,7 +76,7 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
                   e.stopPropagation();
                   deleteTeam(team.id);
                 }}
-                disabled={isDeleting}
+                disabled={!canManage || isDeleting}
               >
                 <Trash2 />
               </Button>

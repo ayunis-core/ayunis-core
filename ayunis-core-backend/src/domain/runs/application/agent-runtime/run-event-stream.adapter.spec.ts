@@ -36,6 +36,7 @@ import {
   RunContextBudgetExceededError,
   RunMaxIterationsReachedError,
   RunToolRepeatedlyFailingError,
+  RunUsageAccountingFailedError,
   type RunExecutionFailedError,
 } from 'src/domain/runs/application/runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
@@ -400,16 +401,20 @@ describe('adaptRunEventsToStream', () => {
   });
 
   it('maps the usage hook through the specialized accounting error', async () => {
+    const logger = createLoggerMock();
     const result = collect(
       eventsFrom([
         {
           type: 'error',
           code: 'HOOK_FAILED',
-          message: 'usage persistence failed',
+          message:
+            "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
           details: {
             hookName: 'ayunis-usage',
             phase: 'afterModelCall',
+            underlyingError: { code: 'PROVIDER_FAILED' },
           },
+          providerFailure: { kind: 'server', stage: 'stream_consumption' },
           modelCall: {
             modelCallId: 'call-2',
             runId: 'run-1',
@@ -421,14 +426,37 @@ describe('adaptRunEventsToStream', () => {
         },
         { type: 'run_end', status: 'error', usage: {} },
       ]),
+      logger,
     );
 
+    const diagnostics = {
+      hookName: 'ayunis-usage',
+      phase: 'afterModelCall',
+      underlyingErrorCode: 'PROVIDER_FAILED',
+      modelCallId: 'call-2',
+      modelTurn: 2,
+      callSequence: 1,
+      trigger: 'initial',
+      provider: 'anthropic:claude-sonnet-4-5',
+      providerFailureKind: 'server',
+      providerFailureStage: 'stream_consumption',
+    };
     await expect(result).rejects.toMatchObject<
       Partial<RunExecutionFailedError>
     >({
       message: 'Run execution failed: Agent runtime failed',
-      metadata: { modelTurn: 2 },
+      metadata: diagnostics,
     });
+    await expect(result).rejects.toBeInstanceOf(RunUsageAccountingFailedError);
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        execution_path: 'agent_runtime',
+        ...diagnostics,
+        message:
+          "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+      },
+      'Run usage accounting failed',
+    );
   });
 
   it('surfaces a critical hook failure with its execution path', async () => {
@@ -751,11 +779,46 @@ describe('adaptRunEventsToStream', () => {
         upstreamType: 'upstream_error',
       }),
     });
+    expect(error).not.toHaveProperty('metadata.upstreamMessage');
     expect((error as InferenceFailedError).toClientResponse()).toEqual({
       code: 'INFERENCE_FAILED',
       message: 'Internal server error',
     });
-    expect(JSON.stringify(error)).not.toContain('sensitive provider response');
+  });
+
+  it('keeps the upstream message out of the incident metadata of a portable rejection', async () => {
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-sol',
+      stream() {
+        throw new ModelProviderError({
+          kind: 'rejection',
+          stage: 'stream_establishment',
+          upstreamStatus: 400,
+          cause: Object.assign(
+            new Error("400 Invalid value for 'input[3]':\n  unsupported item"),
+            { status: 400, type: 'invalid_request_error', param: 'input' },
+          ),
+        });
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'gpt-5.6-sol',
+      provider: 'azure',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceFailedError);
+    expect(error).toMatchObject({
+      metadata: expect.objectContaining({
+        status: 400,
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'input',
+      }),
+    });
+    expect(error).not.toHaveProperty('metadata.upstreamMessage');
+    expect(
+      JSON.stringify((error as InferenceFailedError).toClientResponse()),
+    ).not.toContain('input[3]');
   });
 
   it('maps a full runtime idle stream timeout to INFERENCE_TIMEOUT', async () => {

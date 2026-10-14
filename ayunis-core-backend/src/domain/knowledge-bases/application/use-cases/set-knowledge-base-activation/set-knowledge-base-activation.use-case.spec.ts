@@ -12,6 +12,7 @@ import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/worksp
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SetKnowledgeBaseActivationCommand } from './set-knowledge-base-activation.command';
 import { SetKnowledgeBaseActivationUseCase } from './set-knowledge-base-activation.use-case';
 
@@ -46,6 +47,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
       if (key === 'userId') return USER_ID;
       if (key === 'orgId') return ORG_ID;
       if (key === 'role') return UserRole.MANAGER;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
       return undefined;
     }),
   };

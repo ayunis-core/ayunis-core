@@ -44,6 +44,13 @@ MAX_CONCURRENT_ANALYSES = int(os.getenv("MAX_CONCURRENT_ANALYSES", "2"))
 # `async def` handler serialises inline on the event loop and never competes.
 _analysis_limiter = anyio.CapacityLimiter(MAX_CONCURRENT_ANALYSES)
 
+# The backend abandons an analysis after 60s. Work that waited longer than that
+# in the queue has no consumer any more, yet it would still occupy one of the
+# analysis slots and push live requests behind it, so it is dropped at dequeue
+# time instead. Kept below the caller's timeout to absorb clock and transport
+# skew.
+ANALYSIS_QUEUE_DEADLINE_MS = int(os.getenv("ANALYSIS_QUEUE_DEADLINE_MS", "55000"))
+
 # Separate again for /health, so a saturated analysis queue can never delay the
 # container healthcheck past its timeout and get the service declared unhealthy.
 _health_limiter = anyio.CapacityLimiter(1)
@@ -64,10 +71,47 @@ class AnalysisRun:
     metrics: AnalysisMetrics
 
 
+class AnalysisQueueExpiredError(Exception):
+    def __init__(self, queue_duration_ms: float):
+        super().__init__(
+            f"analysis request expired after {queue_duration_ms:.0f}ms in queue"
+        )
+        self.queue_duration_ms = queue_duration_ms
+
+
+def _log_analysis(outcome: str, text_length: int, metrics: AnalysisMetrics) -> None:
+    _analysis_logger.info(
+        json.dumps(
+            {
+                "event": "anonymize_analysis",
+                "outcome": outcome,
+                "text_length": text_length,
+                "queue_duration_ms": round(metrics.queue_duration_ms, 2),
+                "model_load_duration_ms": round(metrics.model_load_duration_ms, 2),
+                "processing_duration_ms": round(metrics.processing_duration_ms, 2),
+                "cold_start": metrics.cold_start,
+            }
+        )
+    )
+
+
 def _analyze(text: str, entities, enqueued_at: float) -> AnalysisRun:
     """Runs on a worker thread, outside the event loop."""
     worker_started_at = time.perf_counter()
     cold_start = not is_presidio_service_loaded()
+    queue_duration_ms = (worker_started_at - enqueued_at) * 1000
+    if queue_duration_ms > ANALYSIS_QUEUE_DEADLINE_MS:
+        _log_analysis(
+            "expired",
+            len(text),
+            AnalysisMetrics(
+                queue_duration_ms=queue_duration_ms,
+                model_load_duration_ms=0,
+                processing_duration_ms=0,
+                cold_start=cold_start,
+            ),
+        )
+        raise AnalysisQueueExpiredError(queue_duration_ms)
     model_load_started_at = time.perf_counter()
     service = get_presidio_service()
     processing_started_at = time.perf_counter()
@@ -81,26 +125,14 @@ def _analyze(text: str, entities, enqueued_at: float) -> AnalysisRun:
     finally:
         processing_finished_at = time.perf_counter()
         metrics = AnalysisMetrics(
-            queue_duration_ms=(worker_started_at - enqueued_at) * 1000,
+            queue_duration_ms=queue_duration_ms,
             model_load_duration_ms=(processing_started_at - model_load_started_at)
             * 1000,
             processing_duration_ms=(processing_finished_at - processing_started_at)
             * 1000,
             cold_start=cold_start,
         )
-        _analysis_logger.info(
-            json.dumps(
-                {
-                    "event": "anonymize_analysis",
-                    "outcome": outcome,
-                    "text_length": len(text),
-                    "queue_duration_ms": round(metrics.queue_duration_ms, 2),
-                    "model_load_duration_ms": round(metrics.model_load_duration_ms, 2),
-                    "processing_duration_ms": round(metrics.processing_duration_ms, 2),
-                    "cold_start": cold_start,
-                }
-            )
-        )
+        _log_analysis(outcome, len(text), metrics)
 
     return AnalysisRun(results=results, metrics=metrics)
 
@@ -174,6 +206,12 @@ async def analyze_text(request: AnalyzeRequest, response: Response):
 
         return AnalyzeResponse(results=recognizer_results)
 
+    except AnalysisQueueExpiredError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Analysis not started: {e!s}",
+            headers={"Retry-After": "5"},
+        )
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e!s}")
 

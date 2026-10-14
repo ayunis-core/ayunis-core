@@ -22,3 +22,16 @@ export function requestUpdateApiKey(
 ): Promise<APIResponse> {
   return api.patch(`${config.apiURL}/api/api-keys/${apiKeyId}`, { data });
 }
+
+export function requestApiKeyUsage(
+  api: APIRequestContext,
+): Promise<APIResponse> {
+  return api.get(`${config.apiURL}/api/usage/api-keys`);
+}
+
+export function requestSuperAdminApiKeyUsage(
+  api: APIRequestContext,
+  orgId: string,
+): Promise<APIResponse> {
+  return api.get(`${config.apiURL}/api/super-admin/usage/${orgId}/api-keys`);
+}

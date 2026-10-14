@@ -1,3 +1,4 @@
+import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Transactional } from '@nestjs-cls/transactional';
@@ -38,6 +39,7 @@ export class CreateBulkInvitesUseCase {
   private readonly logger = new Logger(CreateBulkInvitesUseCase.name);
 
   constructor(
+    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly invitesRepository: InvitesRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
@@ -62,6 +64,9 @@ export class CreateBulkInvitesUseCase {
       'execute',
     );
 
+    if (command.invites.some((invite) => invite.teamNames?.length)) {
+      await this.teamManagementAccess.execute({ orgId: command.orgId });
+    }
     const invites = await this.reserveInvites(command);
     const results = await this.delivery.deliver(command, invites);
     this.publishSuccessfulInvites(invites, results);

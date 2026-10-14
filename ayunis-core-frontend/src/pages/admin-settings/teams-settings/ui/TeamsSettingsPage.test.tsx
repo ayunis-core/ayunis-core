@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { getMyPermissionsControllerGetMineQueryKey } from '@/shared/api';
 import { TeamsSettingsPage } from './TeamsSettingsPage';
-import type { Team } from '../model/types';
+import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -127,3 +127,7 @@ describe('TeamsSettingsPage', () => {
     expect(screen.queryByText('City Services')).toBeNull();
   });
 });
+
+vi.mock('@/features/permissions/api/useTeamManagementAccess', () => ({
+  useTeamManagementAccess: () => ({ canManageTeams: true, isLoading: false }),
+}));

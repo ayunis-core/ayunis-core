@@ -13,14 +13,14 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
   loader: async ({ context: { queryClient }, params: { chapterId } }) => {
-    const addons = await queryClient.fetchQuery({
+    const addons = await queryClient.query({
       queryKey: getAddonsControllerListQueryKey(),
       queryFn: () => addonsControllerList(),
     });
     if (!isAcademyAddonActive(addons)) {
       throw redirect({ to: '/academy' });
     }
-    const chapters = await queryClient.fetchQuery({
+    const chapters = await queryClient.query({
       queryKey: getAcademyChaptersControllerGetChaptersQueryKey(),
       queryFn: () => academyChaptersControllerGetChapters(),
     });

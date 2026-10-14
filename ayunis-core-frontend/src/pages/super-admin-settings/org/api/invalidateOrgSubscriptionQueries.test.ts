@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  getSuperAdminOrgsControllerGetAllOrgsQueryKey,
   getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey,
   getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
 } from '@/shared/api';
@@ -29,5 +30,27 @@ describe(invalidateOrgSubscriptionQueries.name, () => {
     expect(queryClient.getQueryState(latestKey)?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(historyKey)?.isInvalidated).toBe(true);
     expect(router.invalidate).toHaveBeenCalledOnce();
+  });
+
+  it('marks every cached organizations list stale so paying filters refetch', () => {
+    const queryClient = new QueryClient();
+    const nonPayingKey = getSuperAdminOrgsControllerGetAllOrgsQueryKey({
+      status: 'active',
+      subscription: 'non-paying',
+      limit: 25,
+      offset: 0,
+    });
+    const allKey = getSuperAdminOrgsControllerGetAllOrgsQueryKey();
+    queryClient.setQueryData(nonPayingKey, { data: [], pagination: {} });
+    queryClient.setQueryData(allKey, { data: [], pagination: {} });
+
+    invalidateOrgSubscriptionQueries(
+      queryClient,
+      { invalidate: vi.fn() } as never,
+      ORG_ID,
+    );
+
+    expect(queryClient.getQueryState(nonPayingKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(allKey)?.isInvalidated).toBe(true);
   });
 });

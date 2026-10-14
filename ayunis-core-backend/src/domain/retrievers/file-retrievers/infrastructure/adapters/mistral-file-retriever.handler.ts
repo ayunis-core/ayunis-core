@@ -16,6 +16,10 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import {
+  extractProviderErrorDiagnostics,
+  extractProviderExplanation,
+} from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
@@ -24,37 +28,23 @@ import { isTransientMistralError } from 'src/common/util/mistral-transient-error
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { ConfigService } from '@nestjs/config';
 
-// A 404 from OCR right after a successful upload is files-API eventual
-// consistency, not a missing file — retry it alongside the shared transient
-// set. Other 4xx (e.g. too many pages) stay fatal.
-function isTransientOcrError(error: Error): boolean {
-  return (
-    isTransientMistralError(error) ||
-    (error instanceof MistralError && error.statusCode === 404)
-  );
-}
-
-function isFileNotFound(error: unknown): boolean {
-  return error instanceof MistralError && error.statusCode === 404;
-}
-
 @Injectable()
 export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   private readonly logger = new Logger(MistralFileRetrieverHandler.name);
 
   private readonly client: Mistral;
   private readonly MODEL_NAME = 'mistral-ocr-latest';
-  // Per-attempt timeout for the Mistral file APIs (upload, signed URL, OCR,
-  // delete). Healthy OCR p95 is ~27s; the slowest successful calls observed
-  // in production were ~115s, so 120s leaves headroom for large documents
-  // while a stalled connection fails fast and retries instead of eating a
-  // 5-minute slice per attempt (AYC-422).
+  // Per-attempt OCR timeout. Healthy OCR p95 is ~27s; the slowest successful
+  // calls observed in production were ~115s, so 120s leaves headroom for
+  // large documents while a stalled connection fails fast and retries instead
+  // of eating a 5-minute slice per attempt (AYC-422).
   private readonly TIMEOUT_MS = 120 * 1000;
 
   constructor(private readonly configService: ConfigService) {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('retrieval.mistral.apiKey'),
+      server: 'eu',
       serverURL: this.configService.get('retrieval.mistral.serverUrl'),
       timeoutMs: this.TIMEOUT_MS,
     });
@@ -70,19 +60,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         'Processing file with Mistral OCR',
       );
 
-      // Convert Buffer to Blob for Mistral API with the correct MIME type
-      const blobPart: BlobPart = file.fileData as unknown as BlobPart;
-      const fileBlob = new Blob([blobPart], { type: file.fileType });
-
-      const ocrResponse = await this.ocrWithReuploadRecovery(
-        fileBlob,
-        options?.pageLimit,
-      );
+      const ocrResponse = await this.runOcr(file, options?.pageLimit);
 
       return this.parseResponse(ocrResponse);
     } catch (error) {
       this.logger.error(
-        { err: error as Error },
+        { err: error as Error, ...ocrFailureDiagnostics(error) },
         'Mistral OCR processing failed',
       );
 
@@ -123,11 +106,9 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     if (rejectsDocument(error, 'document_parser_too_many_pages')) {
       return new TooManyPagesError(metadata);
     }
-    // Reached only after `ocrWithReuploadRecovery` has probed the file and, if
-    // it had vanished, re-uploaded once — so a surviving 3310 is the document,
-    // not the AYC-556 dedup race that shares this error type. Mistral's 3740
-    // response and all semantic 422 responses likewise mean OCR rejected the
-    // uploaded document; their body shapes are not a stable API contract.
+    // Mistral's 3310 and 3740 responses and all semantic 422 responses mean
+    // OCR rejected the document; their body shapes are not a stable API
+    // contract.
     if (
       rejectsDocument(error, 'invalid_request_file') ||
       rejectsDocument(error, 'document_parser_invalid_file') ||
@@ -153,103 +134,14 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     return new FileRetrieverUnexpectedError(error, metadata);
   }
 
-  private async uploadFile(fileBlob: Blob): Promise<string> {
-    const uploaded = await retryWithBackoff({
-      fn: () =>
-        this.client.files.upload({
-          file: fileBlob,
-          purpose: 'ocr',
-        }),
-      maxRetries: 3,
-      delay: 1000,
-      retryIfError: isTransientMistralError,
-    }).catch((error) => {
-      this.logger.debug(
-        { err: error as Error },
-        'File upload to Mistral failed',
-      );
-      this.logger.error('File upload to Mistral failed');
-      throw error;
-    });
-    return uploaded.id;
-  }
-
-  /**
-   * Uploads, runs OCR, and cleans up.
-   *
-   * Mistral deduplicates uploads by content signature, so two jobs processing
-   * byte-identical documents are handed the same file id; whichever finishes
-   * first deletes it, and the other's OCR call fails even though its own
-   * upload succeeded (AYC-556). Re-uploading recovers, because once the id is
-   * gone an upload of the same bytes yields a fresh, live one.
-   *
-   * The recoverable case is decided by asking the files API whether the file
-   * still exists, not by matching the OCR error's text: `invalid_request_file`
-   * / code 3310 also covers unrelated failures that re-uploading cannot fix,
-   * and error wording is not a stable contract.
-   */
-  private async ocrWithReuploadRecovery(
-    fileBlob: Blob,
-    pageLimit?: number,
-  ): Promise<OCRResponse> {
-    const fileId = await this.uploadFile(fileBlob);
-    try {
-      const response = await this.runOcr(fileId, pageLimit);
-      await this.deleteFileBestEffort(fileId);
-      return response;
-    } catch (error) {
-      // Probe before any cleanup — deleting first would make every failure
-      // look like the vanished-file case.
-      if (!(await this.uploadedFileIsGone(fileId))) {
-        await this.deleteFileBestEffort(fileId);
-        throw error;
-      }
-      this.logger.warn(
-        { fileId },
-        'Uploaded file was removed before OCR ran; re-uploading once',
-      );
-    }
-
-    const freshFileId = await this.uploadFile(fileBlob);
-    try {
-      return await this.runOcr(freshFileId, pageLimit);
-    } finally {
-      await this.deleteFileBestEffort(freshFileId);
-    }
-  }
-
-  /**
-   * Distinguishes "the file we uploaded is gone" from any other OCR failure.
-   * A retrieve of a deleted or never-existing id returns 404; a live one
-   * returns 200. Treats an inconclusive answer as "still there" so an
-   * unrelated failure is never retried as if the file had vanished.
-   */
-  private async uploadedFileIsGone(fileId: string): Promise<boolean> {
-    try {
-      await this.client.files.retrieve({ fileId });
-      return false;
-    } catch (error) {
-      return isFileNotFound(error);
-    }
-  }
-
-  /**
-   * Runs OCR on the uploaded file by id. Cleanup is the caller's job — it must
-   * not delete before `ocrWithReuploadRecovery` has probed whether the file
-   * still exists.
-   */
-  private async runOcr(
-    fileId: string,
-    pageLimit?: number,
-  ): Promise<OCRResponse> {
+  // The EU endpoint has no Files API, so the document travels inline.
+  private async runOcr(file: File, pageLimit?: number): Promise<OCRResponse> {
+    const documentUrl = `data:${file.fileType};base64,${file.fileData.toString('base64')}`;
     return retryWithBackoff({
       fn: () =>
         this.client.ocr.process({
           model: this.MODEL_NAME,
-          document: {
-            type: 'file',
-            fileId,
-          },
+          document: { type: 'document_url', documentUrl },
           // Text annotations do not require the image bytes; returning those
           // bytes pushed large documents into the 120s body-read deadline
           // (AYC-655).
@@ -259,30 +151,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         }),
       maxRetries: 3,
       delay: 1000,
-      retryIfError: isTransientOcrError,
-    }).catch((error) => {
-      this.logger.error(
-        { err: error as Error },
-        'Mistral OCR processing failed',
-      );
-      throw error;
-    });
-  }
-
-  // Best-effort cleanup — don't fail the operation if the file was already
-  // auto-deleted by Mistral (404) or is temporarily unreachable (5xx). The
-  // OCR result is already obtained.
-  private async deleteFileBestEffort(fileId: string): Promise<void> {
-    await retryWithBackoff({
-      fn: () => this.client.files.delete({ fileId }),
-      maxRetries: 3,
-      delay: 1000,
       retryIfError: isTransientMistralError,
-    }).catch((error) => {
-      this.logger.warn(
-        { fileId, err: error as Error },
-        'Failed to delete file from Mistral (best-effort)',
-      );
     });
   }
 
@@ -357,6 +226,32 @@ function parseImageTextAnnotation(
   } catch {
     return undefined;
   }
+}
+
+const SAFE_BODY_SCALAR = /^[\w.-]{1,64}$/;
+
+// The error body's `type` and `code` tell OCR rejections apart; the file
+// itself never travels in them, unlike the free-text message, which is
+// redacted before it is logged.
+function ocrFailureDiagnostics(error: unknown): Record<string, unknown> {
+  if (!(error instanceof MistralError)) return {};
+  const body = parseErrorBody(error);
+  const diagnostics: Record<string, unknown> = {
+    ...extractProviderErrorDiagnostics(error),
+    upstreamType: safeBodyScalar(body?.type),
+    upstreamCode: safeBodyScalar(body?.code),
+    upstreamMessage: extractProviderExplanation(error),
+  };
+  return Object.fromEntries(
+    Object.entries(diagnostics).filter(([, value]) => value !== undefined),
+  );
+}
+
+function safeBodyScalar(value: unknown): string | undefined {
+  const text = typeof value === 'number' ? String(value) : value;
+  return typeof text === 'string' && SAFE_BODY_SCALAR.test(text)
+    ? text
+    : undefined;
 }
 
 function rejectsDocument(error: MistralError, errorType: string): boolean {

@@ -5,8 +5,11 @@ import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { UnauthorizedInviteAccessError } from 'src/iam/invites/application/invites.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
@@ -31,12 +34,11 @@ export class GetInvitesByOrgUseCase {
         'execute',
       );
 
-      const orgId = this.contextService.get('orgId');
-      const orgRole = this.contextService.get('role');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === query.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
+      const principal = getUserContext(this.contextService);
+      const callerIsSuperAdmin = isSuperAdmin(this.contextService);
+      const isOrgAdmin =
+        principal?.role === UserRole.ADMIN && principal.orgId === query.orgId;
+      if (!callerIsSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedInviteAccessError();
       }
 

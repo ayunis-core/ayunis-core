@@ -13,9 +13,9 @@ export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
   beforeLoad: async ({ context: { queryClient } }) => {
     try {
-      const user = await queryClient.fetchQuery(meQueryOptions());
+      const user = await queryClient.query(meQueryOptions());
       setAppsignalTags({ userId: user.id, orgId: user.orgId });
-      await queryClient.fetchQuery({
+      await queryClient.query({
         queryKey: getAppControllerIsCloudQueryKey(),
         queryFn: () => appControllerIsCloud(),
       });

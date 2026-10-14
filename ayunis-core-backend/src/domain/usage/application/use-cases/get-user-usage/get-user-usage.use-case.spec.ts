@@ -1,3 +1,13 @@
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import {
+  getFromUserContext,
+  getFromStore,
+} from 'src/common/context/testing/context.fixtures';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import { ContextService } from 'src/common/context/services/context.service';
+import { Org } from 'src/iam/orgs/domain/org.entity';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserUsageUseCase } from './get-user-usage.use-case';
@@ -24,6 +34,8 @@ describe('GetUserUsageUseCase', () => {
   let useCase: GetUserUsageUseCase;
   let mockUsageRepository: Partial<UsageRepository>;
 
+  const findOrg = { execute: jest.fn() };
+  const context = { get: jest.fn() };
   const orgId = 'org-id' as UUID;
 
   beforeAll(async () => {
@@ -34,6 +46,8 @@ describe('GetUserUsageUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetUserUsageUseCase,
+        { provide: FindOrgByIdUseCase, useValue: findOrg },
+        { provide: ContextService, useValue: context },
         { provide: UsageRepository, useValue: mockUsageRepository },
       ],
     }).compile();
@@ -42,6 +56,52 @@ describe('GetUserUsageUseCase', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+    findOrg.execute.mockResolvedValue(
+      new Org({ id: orgId, name: 'Stadt Leverkusen' }),
+    );
+    context.get.mockImplementation(
+      getFromUserContext({ orgId, role: UserRole.ADMIN }),
+    );
+  });
+
+  it('denies organisation admins individual usage when hidden', async () => {
+    findOrg.execute.mockResolvedValue({ hideIndividualUsage: true });
+    await expect(
+      useCase.execute(new GetUserUsageQuery({ organizationId: orgId })),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('allows super admins to read a hidden organisation report', async () => {
+    findOrg.execute.mockResolvedValue({ hideIndividualUsage: true });
+    context.get.mockImplementation(
+      getFromUserContext({
+        orgId,
+        role: UserRole.ADMIN,
+        systemRole: SystemRole.SUPER_ADMIN,
+      }),
+    );
+    mockUsageRepository.getUserUsage = jest
+      .fn()
+      .mockResolvedValue({ users: { data: [] }, totalCredits: 25 });
+    await expect(
+      useCase.execute(new GetUserUsageQuery({ organizationId: orgId })),
+    ).resolves.toMatchObject({ totalCredits: 25 });
+  });
+
+  it('rejects another organisation even when individual usage is visible', async () => {
+    context.get.mockImplementation(
+      getFromUserContext({ orgId: 'other-org' as UUID, role: UserRole.ADMIN }),
+    );
+    await expect(
+      useCase.execute(new GetUserUsageQuery({ organizationId: orgId })),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('rejects a non-user principal even with an organisation in context', async () => {
+    context.get.mockImplementation(getFromStore({ orgId }));
+    await expect(
+      useCase.execute(new GetUserUsageQuery({ organizationId: orgId })),
+    ).rejects.toThrow(UnauthorizedAccessError);
   });
 
   it('should be defined', () => {
@@ -254,7 +314,7 @@ describe('GetUserUsageUseCase', () => {
     it('should throw InvalidPaginationError for invalid sort field', async () => {
       const query = new GetUserUsageQuery({
         organizationId: orgId,
-        sortBy: 'invalid' as any,
+        sortBy: 'invalid' as never,
       });
 
       await expect(useCase.execute(query)).rejects.toThrow(
@@ -266,7 +326,7 @@ describe('GetUserUsageUseCase', () => {
       const query = new GetUserUsageQuery({
         organizationId: orgId,
         sortBy: 'credits',
-        sortOrder: 'invalid' as any,
+        sortOrder: 'invalid' as never,
       });
 
       await expect(useCase.execute(query)).rejects.toThrow(

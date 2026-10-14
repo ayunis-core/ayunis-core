@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
@@ -34,7 +35,7 @@ function setup() {
     execute: jest.fn().mockResolvedValue(undefined),
   };
   const context = {
-    get: jest.fn((key: string) => ({ userId, orgId })[key]),
+    get: jest.fn(getFromUserContext({ userId, orgId })),
   };
   return {
     userId,
