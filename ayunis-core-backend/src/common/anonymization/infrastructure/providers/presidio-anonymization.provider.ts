@@ -26,6 +26,7 @@ import {
   splitIntoChunks,
   type TextChunk,
 } from './presidio-text-chunks';
+import { resolveDetectionOverlaps } from 'src/common/anonymization/domain/detection-precedence';
 
 const MAX_DETECTION_ATTEMPTS = 2;
 
@@ -83,9 +84,9 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
 
     try {
       const results = await this.detectChunks(chunks, entities, codePoints);
-      const nonOverlappingResults = this.dropOverlappingResults(results);
-      const detections = nonOverlappingResults.map((result) =>
-        this.toDetection(text, result, utf16Offsets),
+      const detections = resolveDetectionOverlaps(
+        results.map((result) => this.toDetection(text, result, utf16Offsets)),
+        text,
       );
 
       this.logDetectionComplete(
@@ -211,36 +212,5 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       end,
       score: result.score,
     };
-  }
-
-  // GLiNER runs with flat_ner=False and can return nested/overlapping spans
-  // for the same text (e.g. "Dani" and "der Dani" both as PERSON). Applying
-  // them both with naive offset-based substitution corrupts the output
-  // (e.g. "[PERSON]SON]"), so keep only the outermost of each overlap chain.
-  // A span that crosses the kept one (a PERSON over the local part of an
-  // EMAIL_ADDRESS) keeps its remainder under its own type, so the part only
-  // it covers is still masked.
-  private dropOverlappingResults(
-    results: RecognizerResult[],
-  ): RecognizerResult[] {
-    if (results.length < 2) {
-      return results;
-    }
-
-    const sorted = [...results].sort(
-      (a, b) => a.start - b.start || b.end - a.end,
-    );
-
-    const kept: RecognizerResult[] = [];
-    let lastEnd = -1;
-    for (const result of sorted) {
-      if (result.end <= lastEnd) {
-        continue;
-      }
-      const start = Math.max(result.start, lastEnd);
-      kept.push(start === result.start ? result : { ...result, start });
-      lastEnd = result.end;
-    }
-    return kept;
   }
 }

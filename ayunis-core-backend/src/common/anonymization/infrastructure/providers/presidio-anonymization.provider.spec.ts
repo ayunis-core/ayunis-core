@@ -113,8 +113,9 @@ describe('PresidioAnonymizationProvider', () => {
   });
 
   // A name span over the local part of an email must not swallow the email:
-  // the part only the email span covers is still masked, under its own type.
-  it('masks the remainder of a span that crosses an earlier one', async () => {
+  // the email keeps its exact range, so its mask de-anonymises to the whole
+  // address, and the name is trimmed to what lies before it.
+  it('keeps the exact email range when a name span crosses it', async () => {
     const text = 'Max Mueller max.mueller@example.org schreibt';
     mockResults([
       { entity_type: 'PERSON', start: 0, end: 23, score: 0.7 },
@@ -124,11 +125,16 @@ describe('PresidioAnonymizationProvider', () => {
     const detections = await provider.detect(text);
 
     expect(detections).toEqual([
-      expect.objectContaining({ entityType: 'PERSON', start: 0, end: 23 }),
+      expect.objectContaining({
+        entityType: 'PERSON',
+        text: 'Max Mueller',
+        start: 0,
+        end: 11,
+      }),
       expect.objectContaining({
         entityType: 'EMAIL_ADDRESS',
-        text: '@example.org',
-        start: 23,
+        text: 'max.mueller@example.org',
+        start: 12,
         end: 35,
       }),
     ]);
