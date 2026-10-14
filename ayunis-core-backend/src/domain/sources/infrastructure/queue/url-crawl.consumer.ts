@@ -19,6 +19,7 @@ import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/ad
 import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
+import { observeJob, processingStage } from './job-telemetry';
 
 const PAGE_SEPARATOR = '\n\n';
 
@@ -46,7 +47,9 @@ export class UrlCrawlConsumer extends WorkerHost {
       },
       'Crawling URL source',
     );
-    await this.contextService.run(() => this.processCrawl(job));
+    await observeJob(job, () =>
+      this.contextService.run(() => this.processCrawl(job)),
+    );
   }
 
   private async processCrawl(job: Job<UrlCrawlJobData>): Promise<void> {
@@ -77,7 +80,9 @@ export class UrlCrawlConsumer extends WorkerHost {
 
       if (title) source.name = title;
       await this.sourceRepository.saveTextSource(source, { text, chunks });
-      await this.helper.index(sourceId, orgId, chunks);
+      await processingStage('url_crawl.indexing', () =>
+        this.helper.index(sourceId, orgId, chunks),
+      );
       await this.markSourceReady(sourceId);
       this.logger.log(
         { chunks: chunks.length, pages: pageCount, sourceId },
@@ -139,8 +144,12 @@ export class UrlCrawlConsumer extends WorkerHost {
     title: string;
     pageCount: number;
   }> {
-    const crawl: UrlCrawlResult = await this.crawlUrlUseCase.execute(
-      new CrawlUrlCommand(rootUrl, orgId, maxDepth),
+    const crawl: UrlCrawlResult = await processingStage(
+      'url_crawl.download_extraction',
+      () =>
+        this.crawlUrlUseCase.execute(
+          new CrawlUrlCommand(rootUrl, orgId, maxDepth),
+        ),
     );
 
     const chunks: TextSourceContentChunk[] = [];
@@ -174,11 +183,13 @@ export class UrlCrawlConsumer extends WorkerHost {
     lineOffset: number,
     charOffset: number,
   ): TextSourceContentChunk[] {
-    const split = this.splitTextUseCase.execute(
-      new SplitTextCommand(content, SplitterType.RECURSIVE, {
-        chunkSize: 2000,
-        chunkOverlap: 200,
-      }),
+    const split = processingStage('url_crawl.splitting', () =>
+      this.splitTextUseCase.execute(
+        new SplitTextCommand(content, SplitterType.RECURSIVE, {
+          chunkSize: 2000,
+          chunkOverlap: 200,
+        }),
+      ),
     );
     return split.chunks.map(
       (chunk) =>

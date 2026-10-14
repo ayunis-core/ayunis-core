@@ -29,6 +29,7 @@ import { EmptyFileDataError } from 'src/domain/sources/application/sources.error
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { observeJob, processingStage } from './job-telemetry';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
@@ -54,8 +55,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
   }
 
   async process(job: Job<DocumentProcessingJobData>): Promise<void> {
-    const { sourceId, orgId, userId, minioPath, fileName } = job.data;
-
+    const { sourceId, fileName } = job.data;
     this.logger.log(
       {
         sourceId,
@@ -64,6 +64,13 @@ export class DocumentProcessingConsumer extends WorkerHost {
       },
       'Processing document',
     );
+    return observeJob(job, () => this.processDocument(job));
+  }
+
+  private async processDocument(
+    job: Job<DocumentProcessingJobData>,
+  ): Promise<void> {
+    const { sourceId, orgId, userId, minioPath } = job.data;
 
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
@@ -83,7 +90,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
         if (!source) return;
 
         await this.updateSourceWithContent(source, text, chunks);
-        await this.helper.index(sourceId, orgId, chunks);
+        await processingStage('document.indexing', () =>
+          this.helper.index(sourceId, orgId, chunks),
+        );
         await this.markSourceReady(sourceId, minioPath);
 
         this.logger.log(
@@ -178,14 +187,20 @@ export class DocumentProcessingConsumer extends WorkerHost {
   ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
     const { minioPath, fileName, fileType } = jobData;
 
-    const fileBuffer = await this.downloadFile(minioPath);
-    const text = await this.extractText(fileBuffer, fileName, fileType);
+    const fileBuffer = await processingStage('document.download', () =>
+      this.downloadFile(minioPath),
+    );
+    const text = await processingStage('document.extraction', () =>
+      this.extractText(fileBuffer, fileName, fileType),
+    );
 
-    const splitResult = this.splitTextUseCase.execute(
-      new SplitTextCommand(text, SplitterType.RECURSIVE, {
-        chunkSize: 2000,
-        chunkOverlap: 200,
-      }),
+    const splitResult = processingStage('document.splitting', () =>
+      this.splitTextUseCase.execute(
+        new SplitTextCommand(text, SplitterType.RECURSIVE, {
+          chunkSize: 2000,
+          chunkOverlap: 200,
+        }),
+      ),
     );
     const chunks = splitResult.chunks.map(
       (chunk) =>

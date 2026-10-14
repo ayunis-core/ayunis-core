@@ -1,0 +1,99 @@
+{
+  "charts": [
+    {
+      "title": "Job inventory by queue and state",
+      "description": "Current retained Redis job inventory; completed and failed are not lifetime totals.",
+      "lineLabel": "%name% - %queue%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "bullmq_jobs_waiting",
+          "fields": [{ "field": "GAUGE" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        },
+        {
+          "name": "bullmq_jobs_active",
+          "fields": [{ "field": "GAUGE" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        },
+        {
+          "name": "bullmq_jobs_delayed",
+          "fields": [{ "field": "GAUGE" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        },
+        {
+          "name": "bullmq_jobs_completed",
+          "fields": [{ "field": "GAUGE" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        },
+        {
+          "name": "bullmq_jobs_failed",
+          "fields": [{ "field": "GAUGE" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        }
+      ]
+    },
+    {
+      "title": "Oldest waiting upload age (seconds)",
+      "description": "Age since original enqueue of the oldest waiting upload, including prior attempts and backoff.",
+      "lineLabel": "%queue%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "bullmq_oldest_waiting_age_seconds",
+          "fields": [{ "field": "GAUGE" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        }
+      ]
+    },
+    {
+      "title": "Registered workers",
+      "description": "BullMQ registered Redis worker connections; busy and paused workers may be included. This is not idle capacity.",
+      "lineLabel": "%queue%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "bullmq_workers_registered",
+          "fields": [{ "field": "GAUGE" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        }
+      ]
+    },
+    {
+      "title": "Queue wait and processing duration (seconds)",
+      "description": "Original enqueue to attempt start, and elapsed time per consumer attempt. All values are seconds.",
+      "lineLabel": "%name% - %queue% - %field%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "bullmq_queue_wait_seconds",
+          "fields": [{ "field": "MEAN" }, { "field": "P95" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        },
+        {
+          "name": "bullmq_processing_seconds",
+          "fields": [{ "field": "MEAN" }, { "field": "P95" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        }
+      ]
+    },
+    {
+      "title": "Retries and terminal failures",
+      "description": "Classified attempt outcomes, including expected failures that settle as BullMQ completed jobs.",
+      "lineLabel": "%name% - %queue%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "bullmq_retry_count",
+          "fields": [{ "field": "COUNTER" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        },
+        {
+          "name": "bullmq_terminal_failure_count",
+          "fields": [{ "field": "COUNTER" }],
+          "tags": [{ "key": "queue", "value": "*" }]
+        }
+      ]
+    }
+  ]
+}

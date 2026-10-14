@@ -73,6 +73,15 @@ jobs:
 
     # Service containers to run with this job
     services:
+      redis:
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
       postgres:
         image: pgvector/pgvector:pg16
         env:
@@ -156,3 +165,4 @@ jobs:
         env:
           NODE_ENV: test
           NODE_OPTIONS: --experimental-vm-modules
+          QUEUE_TELEMETRY_REDIS_PORT: 6379
