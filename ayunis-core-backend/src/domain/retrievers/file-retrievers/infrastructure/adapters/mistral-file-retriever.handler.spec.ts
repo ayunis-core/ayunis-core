@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -93,6 +94,10 @@ describe('MistralFileRetrieverHandler', () => {
     handler = module.get(MistralFileRetrieverHandler);
     // Access the mocked client created by the constructor
     mockClient = (handler as unknown as { client: typeof mockClient }).client;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('client construction', () => {
@@ -434,6 +439,55 @@ describe('MistralFileRetrieverHandler', () => {
       await expect(result).rejects.toMatchObject({
         context: { underlyingCode: 'ECONNRESET' },
       });
+    });
+
+    it('logs the upstream status, type, code and a redacted explanation of an OCR rejection once', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+      mockClient.ocr.process.mockRejectedValue(
+        createMistralError(
+          400,
+          '{"object":"error","message":"Unsupported document \'Gutachten Meier.pdf\'","type":"invalid_request_ocr","param":null,"code":"3210"}',
+        ),
+      );
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        ProviderRequestRejectedError,
+      );
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          upstreamStatus: 400,
+          upstreamType: 'invalid_request_ocr',
+          upstreamCode: '3210',
+          upstreamMessage: "Unsupported document '…",
+        }),
+        'Mistral OCR processing failed',
+      );
+      // `err` is censored by the production logger's redaction paths.
+      const [context] = errorSpy.mock.calls[0] as [Record<string, unknown>];
+      const diagnostics = Object.entries(context).filter(
+        ([key]) => key !== 'err',
+      );
+      expect(JSON.stringify(diagnostics)).not.toContain('Meier');
+    });
+
+    it('logs no upstream diagnostics for failures that are not provider responses', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+      mockClient.ocr.process.mockRejectedValue(
+        new Error('cannot read properties of undefined'),
+      );
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        FileRetrieverUnexpectedError,
+      );
+
+      const [context] = errorSpy.mock.calls[0] as [Record<string, unknown>];
+      expect(Object.keys(context)).toEqual(['err']);
     });
 
     it('throws FileRetrieverUnexpectedError for non-Mistral errors', async () => {

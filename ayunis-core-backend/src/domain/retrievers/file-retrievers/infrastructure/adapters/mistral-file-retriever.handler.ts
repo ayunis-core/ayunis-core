@@ -16,6 +16,10 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import {
+  extractProviderErrorDiagnostics,
+  extractProviderExplanation,
+} from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
@@ -61,7 +65,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       return this.parseResponse(ocrResponse);
     } catch (error) {
       this.logger.error(
-        { err: error as Error },
+        { err: error as Error, ...ocrFailureDiagnostics(error) },
         'Mistral OCR processing failed',
       );
 
@@ -148,12 +152,6 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       maxRetries: 3,
       delay: 1000,
       retryIfError: isTransientMistralError,
-    }).catch((error) => {
-      this.logger.error(
-        { err: error as Error },
-        'Mistral OCR processing failed',
-      );
-      throw error;
     });
   }
 
@@ -228,6 +226,32 @@ function parseImageTextAnnotation(
   } catch {
     return undefined;
   }
+}
+
+const SAFE_BODY_SCALAR = /^[\w.-]{1,64}$/;
+
+// The error body's `type` and `code` tell OCR rejections apart; the file
+// itself never travels in them, unlike the free-text message, which is
+// redacted before it is logged.
+function ocrFailureDiagnostics(error: unknown): Record<string, unknown> {
+  if (!(error instanceof MistralError)) return {};
+  const body = parseErrorBody(error);
+  const diagnostics: Record<string, unknown> = {
+    ...extractProviderErrorDiagnostics(error),
+    upstreamType: safeBodyScalar(body?.type),
+    upstreamCode: safeBodyScalar(body?.code),
+    upstreamMessage: extractProviderExplanation(error),
+  };
+  return Object.fromEntries(
+    Object.entries(diagnostics).filter(([, value]) => value !== undefined),
+  );
+}
+
+function safeBodyScalar(value: unknown): string | undefined {
+  const text = typeof value === 'number' ? String(value) : value;
+  return typeof text === 'string' && SAFE_BODY_SCALAR.test(text)
+    ? text
+    : undefined;
 }
 
 function rejectsDocument(error: MistralError, errorType: string): boolean {
