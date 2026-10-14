@@ -9,6 +9,9 @@ export class ApiKeyRecord extends BaseRecord {
   @Column({ length: 100 })
   name: string;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  description: string | null;
+
   @Index({ unique: true })
   @Column()
   prefix: string;

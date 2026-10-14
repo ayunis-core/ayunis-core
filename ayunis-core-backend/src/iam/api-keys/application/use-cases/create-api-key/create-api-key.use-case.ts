@@ -49,6 +49,7 @@ export class CreateApiKeyUseCase {
     try {
       return await this.persistWithCollisionRetry({
         name: trimmedName,
+        description: command.description?.trim() || null,
         expiresAt: command.expiresAt,
         orgId,
         userId,
@@ -64,6 +65,7 @@ export class CreateApiKeyUseCase {
 
   private async persistWithCollisionRetry(params: {
     name: string;
+    description: string | null;
     expiresAt: Date | null;
     orgId: UUID;
     userId: UUID;
@@ -72,6 +74,7 @@ export class CreateApiKeyUseCase {
       const { secret, prefix, hash } = await this.generateSecretAndHash();
       const apiKey = new ApiKey({
         name: params.name,
+        description: params.description,
         prefix,
         hash,
         expiresAt: params.expiresAt,

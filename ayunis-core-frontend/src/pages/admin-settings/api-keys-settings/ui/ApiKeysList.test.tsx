@@ -28,6 +28,11 @@ vi.mock('../api/useRevokeApiKey', () => ({
   }),
 }));
 
+vi.mock('./EditApiKeyDialog', () => ({
+  EditApiKeyDialog: ({ apiKey }: { apiKey: { name: string } | null }) =>
+    apiKey ? <div data-testid="api-key-edit-dialog">{apiKey.name}</div> : null,
+}));
+
 vi.mock('./SetApiKeyCreditLimitDialog', () => ({
   SetApiKeyCreditLimitDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="api-key-credit-limit-dialog" /> : null,
@@ -36,6 +41,7 @@ vi.mock('./SetApiKeyCreditLimitDialog', () => ({
 const apiKey = {
   id: '11111111-1111-1111-1111-111111111111',
   name: 'Finance export',
+  description: null,
   prefixPreview: 'ayk_live_abc...',
   expiresAt: null,
   revokedAt: null,
@@ -170,6 +176,49 @@ describe('ApiKeysList', () => {
 
       expect(screen.queryByTestId('api-key-archive-toggle')).toBeNull();
       expect(screen.queryByTestId('api-key-no-active')).toBeNull();
+    });
+  });
+
+  describe('editing', () => {
+    it('opens the edit dialog for an active key', () => {
+      render(<ApiKeysList apiKeys={[apiKey]} creditLimits={[]} />);
+
+      fireEvent.pointerDown(screen.getByTestId('api-key-actions-menu'), {
+        button: 0,
+        ctrlKey: false,
+      });
+      fireEvent.click(screen.getByTestId('api-key-edit'));
+
+      expect(screen.getByTestId('api-key-edit-dialog').textContent).toBe(
+        apiKey.name,
+      );
+    });
+
+    it('shows the description under the key name', () => {
+      render(
+        <ApiKeysList
+          apiKeys={[{ ...apiKey, description: 'OptiGov connector' }]}
+          creditLimits={[]}
+        />,
+      );
+
+      expect(screen.getByTestId('api-key-description').textContent).toBe(
+        'OptiGov connector',
+      );
+    });
+
+    it('offers no edit action for archived keys', () => {
+      const revokedKey = {
+        ...apiKey,
+        id: '55555555-5555-5555-5555-555555555555',
+        revokedAt: '2026-09-01T10:00:00.000Z',
+      };
+      render(<ApiKeysList apiKeys={[revokedKey]} creditLimits={[]} />);
+
+      fireEvent.click(screen.getByTestId('api-key-archive-toggle'));
+
+      expect(screen.queryByTestId('api-key-edit')).toBeNull();
+      expect(screen.queryByTestId('api-key-actions-menu')).toBeNull();
     });
   });
 });

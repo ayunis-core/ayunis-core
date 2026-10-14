@@ -55,10 +55,17 @@ export function useCreateApiKey(
     },
   });
 
-  function createApiKey(data: { name: string; expiresAt?: string }) {
+  function createApiKey(data: {
+    name: string;
+    description?: string;
+    expiresAt?: string;
+  }) {
     mutation.mutate({
       data: {
         name: data.name.trim(),
+        ...(data.description?.trim()
+          ? { description: data.description.trim() }
+          : {}),
         ...(data.expiresAt ? { expiresAt: data.expiresAt } : {}),
       },
     });

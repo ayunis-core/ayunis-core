@@ -22,6 +22,16 @@ export class CreateApiKeyDto {
   name: string;
 
   @ApiPropertyOptional({
+    description: 'Optional plain-text description of what the key is used for',
+    example: 'OptiGov connector, server portal-01',
+    maxLength: 500,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional({
     description:
       'Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.',
     example: '2026-12-31T23:59:59.000Z',

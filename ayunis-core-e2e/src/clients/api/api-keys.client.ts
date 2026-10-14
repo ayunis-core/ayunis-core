@@ -15,6 +15,14 @@ export function requestChatCompletionWithApiKey(
   });
 }
 
+export function requestUpdateApiKey(
+  api: APIRequestContext,
+  apiKeyId: string,
+  data: { name?: string; description?: string | null },
+): Promise<APIResponse> {
+  return api.patch(`${config.apiURL}/api/api-keys/${apiKeyId}`, { data });
+}
+
 export function requestApiKeyUsage(
   api: APIRequestContext,
 ): Promise<APIResponse> {
