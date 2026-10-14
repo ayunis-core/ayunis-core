@@ -41,6 +41,7 @@ import { validateEnv } from 'src/config/env.validation';
 import { CookieParserMiddleware } from 'src/common/middleware/cookie-parser.middleware';
 import dataSource from 'src/db/datasource';
 import { SecurityHeadersMiddleware } from 'src/common/middleware/security-headers.middleware';
+import { AppsignalNamespaceMiddleware } from 'src/common/middleware/appsignal-namespace.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { serveFrontendOptions } from './presenters/http/serve-frontend.options';
@@ -171,6 +172,7 @@ import { LoggingModule } from 'src/common/logger/logging.module';
     },
     CookieParserMiddleware,
     SecurityHeadersMiddleware,
+    AppsignalNamespaceMiddleware,
     IsCloudUseCase,
     IsRegistrationDisabledUseCase,
     GetFrontendRuntimeConfigUseCase,
@@ -179,7 +181,11 @@ import { LoggingModule } from 'src/common/logger/logging.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(CookieParserMiddleware, SecurityHeadersMiddleware)
+      .apply(
+        AppsignalNamespaceMiddleware,
+        CookieParserMiddleware,
+        SecurityHeadersMiddleware,
+      )
       .forRoutes('*');
   }
 }
