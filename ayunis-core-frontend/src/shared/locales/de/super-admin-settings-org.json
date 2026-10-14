@@ -499,6 +499,9 @@
   "orgDetails": {
     "name": "Name",
     "id": "ID",
+    "copyId": "ID kopieren",
+    "copyIdSuccess": "ID in die Zwischenablage kopiert",
+    "copyIdError": "ID konnte nicht kopiert werden",
     "rename": {
       "edit": "Umbenennen",
       "save": "Speichern",
