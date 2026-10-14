@@ -24,6 +24,10 @@ describe('PresidioAnonymizationProvider', () => {
     mockAnalyzeTextAnalyzePost.mockReset();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   const mockResults = (results: RecognizerResult[]) => {
     mockAnalyzeTextAnalyzePost.mockResolvedValue({ results });
   };
@@ -108,6 +112,28 @@ describe('PresidioAnonymizationProvider', () => {
     });
   });
 
+  // A name span over the local part of an email must not swallow the email:
+  // the part only the email span covers is still masked, under its own type.
+  it('masks the remainder of a span that crosses an earlier one', async () => {
+    const text = 'Max Mueller max.mueller@example.org schreibt';
+    mockResults([
+      { entity_type: 'PERSON', start: 0, end: 23, score: 0.7 },
+      { entity_type: 'EMAIL_ADDRESS', start: 12, end: 35, score: 1 },
+    ]);
+
+    const detections = await provider.detect(text);
+
+    expect(detections).toEqual([
+      expect.objectContaining({ entityType: 'PERSON', start: 0, end: 23 }),
+      expect.objectContaining({
+        entityType: 'EMAIL_ADDRESS',
+        text: '@example.org',
+        start: 23,
+        end: 35,
+      }),
+    ]);
+  });
+
   it('logs payload size and total client duration after detection', async () => {
     jest
       .spyOn(performance, 'now')
@@ -118,7 +144,7 @@ describe('PresidioAnonymizationProvider', () => {
     await provider.detect('Der Wetterbericht sagt Regen voraus');
 
     expect(logger.log).toHaveBeenCalledWith(
-      { textLength: 35, detectionCount: 0, durationMs: 356.78 },
+      { textLength: 35, chunkCount: 1, detectionCount: 0, durationMs: 356.78 },
       'PII detection complete',
     );
   });
@@ -133,7 +159,7 @@ describe('PresidioAnonymizationProvider', () => {
     expect(detections).toHaveLength(0);
   });
 
-  it('rejects text beyond the service limit without sending it', async () => {
+  it('rejects text beyond the input limit without sending it', async () => {
     const result = provider.detect('A'.repeat(30_001));
 
     await expect(result).rejects.toMatchObject({
@@ -141,6 +167,176 @@ describe('PresidioAnonymizationProvider', () => {
       statusCode: 422,
     });
     expect(mockAnalyzeTextAnalyzePost).not.toHaveBeenCalled();
+  });
+
+  // The anonymizer processes about 3 ms per character, so one request can
+  // only finish about 15k characters inside the 60 s timeout. Longer texts are
+  // sent as overlapping 5k chunks in parallel, which the service spreads over
+  // its workers (AYC-1254).
+  it('sends a text at the input limit as overlapping chunks in parallel', async () => {
+    const text = 'A'.repeat(30_000);
+    mockResults([]);
+
+    await expect(provider.detect(text)).resolves.toEqual([]);
+
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(7);
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenNthCalledWith(1, {
+      text: 'A'.repeat(5_000),
+      entities: null,
+    });
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenNthCalledWith(7, {
+      text: 'A'.repeat(3_000),
+      entities: null,
+    });
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.objectContaining({ textLength: 30_000, chunkCount: 7 }),
+      'PII detection complete',
+    );
+  });
+
+  it('keeps at most three chunk requests in flight', async () => {
+    const text = 'A'.repeat(30_000);
+    let started = 0;
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const release: Array<() => void> = [];
+    mockAnalyzeTextAnalyzePost.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          started += 1;
+          inFlight += 1;
+          maxInFlight = Math.max(maxInFlight, inFlight);
+          release.push(() => {
+            inFlight -= 1;
+            resolve({ results: [] });
+          });
+        }),
+    );
+
+    const result = provider.detect(text);
+    while (started < 7 || release.length > 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+      release.shift()?.();
+    }
+
+    await expect(result).resolves.toEqual([]);
+    expect(maxInFlight).toBe(3);
+  });
+
+  it('shifts chunk spans to full-text offsets', async () => {
+    const text = 'a'.repeat(9_500) + 'Dani' + 'a'.repeat(2_496);
+    mockAnalyzeTextAnalyzePost
+      .mockResolvedValueOnce({ results: [] })
+      .mockResolvedValueOnce({ results: [] })
+      .mockResolvedValueOnce({
+        results: [{ entity_type: 'PERSON', start: 500, end: 504, score: 0.9 }],
+      });
+
+    const detections = await provider.detect(text);
+
+    expect(detections).toEqual([
+      expect.objectContaining({ text: 'Dani', start: 9_500, end: 9_504 }),
+    ]);
+  });
+
+  it('reports an entity straddling a chunk boundary once, with the span the chunk that saw it whole reported', async () => {
+    const text = 'a'.repeat(4_995) + 'Hans Müller' + 'a'.repeat(6_994);
+    mockAnalyzeTextAnalyzePost
+      .mockResolvedValueOnce({
+        results: [
+          { entity_type: 'PERSON', start: 4_995, end: 5_000, score: 0.8 },
+        ],
+      })
+      .mockResolvedValueOnce({
+        results: [{ entity_type: 'PERSON', start: 495, end: 506, score: 0.9 }],
+      })
+      .mockResolvedValueOnce({ results: [] });
+
+    const detections = await provider.detect(text);
+
+    expect(detections).toEqual([
+      expect.objectContaining({
+        text: 'Hans Müller',
+        start: 4_995,
+        end: 5_006,
+        score: 0.9,
+      }),
+    ]);
+  });
+
+  // Presidio's URL recognizer matches through the next whitespace, so a long
+  // URL can be longer than the overlap and get cut by both chunks: the first
+  // chunk reports the prefix up to its cut, the second starts at the
+  // whitespace before the URL and reports it whole. The merge unions both.
+  it('masks an entity longer than the overlap from the union of both chunks', async () => {
+    const url = 'https://example.org/' + 'q'.repeat(680);
+    const text = 'a'.repeat(4_399) + ' ' + url + ' ' + 'a'.repeat(6_899);
+    mockAnalyzeTextAnalyzePost
+      .mockResolvedValueOnce({
+        results: [{ entity_type: 'URL', start: 4_400, end: 5_000, score: 0.5 }],
+      })
+      .mockResolvedValueOnce({
+        results: [{ entity_type: 'URL', start: 0, end: 700, score: 0.5 }],
+      })
+      .mockResolvedValue({ results: [] });
+
+    const detections = await provider.detect(text);
+
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ text: expect.stringMatching(/^https:/) }),
+    );
+    expect(detections).toEqual([
+      expect.objectContaining({ text: url, start: 4_400, end: 5_100 }),
+    ]);
+  });
+
+  // A URL longer than two overlaps starts before the window the next chunk
+  // can begin in, so that chunk starts inside the URL and never sees the
+  // scheme; it reports nothing. The prefix from the first chunk must still
+  // cover the whole token, where presigned-query credentials sit.
+  it('masks the tail of a whitespace-free token the next chunk cannot recognise', async () => {
+    const url = 'https://example.org/' + 'q'.repeat(1_180);
+    const text = 'a'.repeat(3_999) + ' ' + url + ' ' + 'a'.repeat(6_000);
+    mockAnalyzeTextAnalyzePost
+      .mockResolvedValueOnce({
+        results: [{ entity_type: 'URL', start: 4_000, end: 5_000, score: 0.5 }],
+      })
+      .mockResolvedValue({ results: [] });
+
+    const detections = await provider.detect(text);
+
+    expect(detections).toEqual([
+      expect.objectContaining({ text: url, start: 4_000, end: 5_200 }),
+    ]);
+  });
+
+  it('fails closed when one chunk fails', async () => {
+    jest.useFakeTimers();
+    const text = 'A'.repeat(4_500) + 'B'.repeat(4_500) + 'C'.repeat(3_000);
+    mockAnalyzeTextAnalyzePost.mockImplementation(
+      ({ text: chunk }: { text: string }) =>
+        chunk.startsWith('B')
+          ? Promise.reject(
+              Object.assign(new Error('timeout of 60000ms exceeded'), {
+                code: 'ETIMEDOUT',
+              }),
+            )
+          : Promise.resolve({ results: [] }),
+    );
+
+    const result = provider.detect(text);
+    const failure = expect(result).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE',
+    });
+    await jest.runAllTimersAsync();
+
+    await failure;
+    const chunkTexts = mockAnalyzeTextAnalyzePost.mock.calls.map(
+      ([request]: [{ text: string }]) => request.text[0],
+    );
+    expect(chunkTexts.filter((c) => c === 'B')).toHaveLength(2);
+    jest.useRealTimers();
   });
 
   // Presidio returns Python string indices, which count code points — an emoji
@@ -171,10 +367,13 @@ describe('PresidioAnonymizationProvider', () => {
     mockResults([]);
 
     await expect(provider.detect(text)).resolves.toEqual([]);
-    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledWith({
-      text,
-      entities: null,
-    });
+
+    const chunkLengths = mockAnalyzeTextAnalyzePost.mock.calls.map(
+      ([request]: [{ text: string }]) => Array.from(request.text).length,
+    );
+    expect(chunkLengths).toHaveLength(7);
+    expect(chunkLengths[0]).toBe(5_000);
+    expect(Math.max(...chunkLengths)).toBe(5_000);
   });
 
   it('throws AnonymizationFailedError when the service call fails', async () => {

@@ -20,6 +20,7 @@ import type { RunExecutionPath } from 'src/domain/runs/application/run-execution
 import { ToolResultCollectorService } from './tool-result-collector.service';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 
 const orgId = randomUUID();
 const userId = randomUUID();
@@ -279,7 +280,7 @@ describe('ToolResultCollectorService', () => {
   });
 
   it('limits PII tool output before anonymization', async () => {
-    const retainedResult = 'x'.repeat(30_000);
+    const retainedResult = 'x'.repeat(MAX_ANONYMIZATION_TEXT_LENGTH);
     const backendTool = new BackendTestTool('resident_lookup', true);
     executeTool.mockResolvedValue(`${retainedResult}discarded`);
     anonymize.mockResolvedValue({
