@@ -43,6 +43,9 @@ export function useRunErrorHandler(_threadId: string) {
         case 'RUN_CONTEXT_BUDGET_EXCEEDED':
           showError(t('chat.errorContextBudgetExceeded'));
           break;
+        case 'RUN_THREAD_BUSY':
+          showError(t('chat.errorThreadBusy'));
+          break;
         case 'QUOTA_EXCEEDED': {
           const retryMinutes = error.details?.retryAfterSeconds
             ? Math.ceil(Number(error.details.retryAfterSeconds) / 60)

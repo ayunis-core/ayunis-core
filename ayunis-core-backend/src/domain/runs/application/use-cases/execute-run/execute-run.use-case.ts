@@ -11,7 +11,6 @@ import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -45,6 +44,7 @@ import {
 import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
 import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
 import { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
@@ -77,6 +77,8 @@ import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { shouldPreserveTranscript } from './rejected-transcript-policy';
 import { toRunError } from './to-run-error';
+import { openThreadRun } from './open-thread-run';
+import { findPendingToolCall } from './pending-tool-call.helper';
 
 const MAX_ITERATIONS = 50;
 
@@ -111,6 +113,7 @@ export class ExecuteRunUseCase {
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
+    private readonly threadRunLock: ThreadRunLock,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
@@ -128,8 +131,15 @@ export class ExecuteRunUseCase {
   private async createRunStream(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>> {
-    const prepared = await this.prepareRun(command);
-    return this.streamRun(prepared, command.input, command.signal);
+    // History is read inside the lock: a run still finishing on this thread
+    // must not leave half of its turn in the next run's snapshot.
+    return openThreadRun(this.threadRunLock, command, async () =>
+      this.streamRun(
+        await this.prepareRun(command),
+        command.input,
+        command.signal,
+      ),
+    );
   }
 
   private async prepareRun(command: ExecuteRunCommand): Promise<PreparedRun> {
@@ -230,6 +240,7 @@ export class ExecuteRunUseCase {
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
     let cleanupRequired = true;
     const ownedMessageIds = new Set<UUID>();
+    if (signal?.aborted) return 'aborted';
     try {
       const seeded = await this.seedInput(prepared, input);
       if (seeded === null) {
@@ -466,18 +477,7 @@ export class ExecuteRunUseCase {
     prepared: PreparedRun,
     input: RunToolResultInput,
   ): Promise<PreparedToolResultInput> {
-    const pending = prepared.thread
-      .getLastMessage()
-      ?.content.find(
-        (content): content is ToolUseMessageContent =>
-          content instanceof ToolUseMessageContent &&
-          content.id === input.toolId,
-      );
-    if (!pending) {
-      throw new RunInvalidInputError(
-        'No pending tool call to attach this result to',
-      );
-    }
+    const pending = findPendingToolCall(prepared.thread, input.toolId);
     if (!prepared.isAnonymous) {
       return {
         input: new RunToolResultInput(pending.id, pending.name, input.result),

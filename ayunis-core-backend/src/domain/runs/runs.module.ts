@@ -29,6 +29,7 @@ import { ArtifactToolAssemblerService } from './application/services/artifact-to
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
+import { ThreadRunLock } from './application/services/thread-run-lock.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
 import { EffectiveRunModelResolverService } from './application/services/effective-run-model-resolver.service';
 import { UnmaskedTermsService } from './application/services/unmasked-terms.service';
@@ -104,6 +105,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     McpToolAssemblerService,
     ToolResultCollectorService,
     MessageCleanupService,
+    ThreadRunLock,
     RunTelemetryService,
     EffectiveRunModelResolverService,
     UnmaskedTermsService,

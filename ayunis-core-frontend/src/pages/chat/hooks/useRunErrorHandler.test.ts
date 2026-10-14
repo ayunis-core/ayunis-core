@@ -54,6 +54,21 @@ describe('useRunErrorHandler', () => {
     );
   });
 
+  it('asks the user to retry while the previous answer is still stopping', () => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message: 'The previous answer in this chat is still being stopped.',
+      threadId: 'thread-1',
+      timestamp: '2026-10-13T08:32:22.000Z',
+      code: 'RUN_THREAD_BUSY',
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith('chat.errorThreadBusy');
+  });
+
   it('shows the context-budget explanation for an oversized latest turn', () => {
     const { result } = renderHook(() => useRunErrorHandler('thread-1'));
     const error: RunErrorResponseDto = {
