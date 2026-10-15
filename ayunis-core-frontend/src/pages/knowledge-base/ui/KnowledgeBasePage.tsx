@@ -7,7 +7,11 @@ import type {
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SharesTab } from '@/widgets/shares-tab';
-import { useMyPermissions } from '@/features/permissions';
+import {
+  ResourceOwnershipCard,
+  showsOwnershipCard,
+} from '@/widgets/resource-ownership-card';
+import { ReadOnlyBadge } from '@/features/resource-ownership';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import {
   Tabs,
@@ -39,40 +43,16 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
-export function KnowledgeBasePage({
+function KnowledgeBaseDeleteButton({
   knowledgeBase,
-  shares,
-  userTeams,
-  initialTab = 'config',
-}: Readonly<{
-  knowledgeBase: KnowledgeBaseResponseDto;
-  shares: ShareResponseDto[];
-  userTeams: TeamResponseDto[];
-  initialTab?: 'config' | 'share';
-}>) {
+}: Readonly<{ knowledgeBase: KnowledgeBaseResponseDto }>) {
   const { t } = useTranslation('knowledge-bases');
   const navigate = useNavigate();
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const { id } = useParams({
-    from: '/_authenticated/knowledge-bases/$id',
-  });
   const navigateToList = useCallback(() => {
     void navigate({ to: '/knowledge-bases' });
   }, [navigate]);
   const deleteKnowledgeBase = useDeleteKnowledgeBase(navigateToList);
   const { confirm } = useConfirmation();
-
-  const handleTabChange = useCallback(
-    (value: string) => {
-      void navigate({
-        to: '/knowledge-bases/$id',
-        params: { id },
-        search: value === 'config' ? {} : { tab: value as 'share' },
-      });
-    },
-    [navigate, id],
-  );
 
   function handleDelete() {
     confirm({
@@ -89,40 +69,141 @@ export function KnowledgeBasePage({
     });
   }
 
-  const isReadOnly = knowledgeBase.isShared;
-  const { can } = useMyPermissions();
-  const canManageKb = can('manage_own_knowledge');
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive"
+          onClick={handleDelete}
+          disabled={deleteKnowledgeBase.isPending}
+          aria-label={t('detail.deleteLabel')}
+          data-testid="knowledge-base-detail-delete"
+        >
+          <Trash2 />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>
+    </Tooltip>
+  );
+}
 
-  const configContent = (
+function KnowledgeBaseHeaderBadge({
+  knowledgeBase,
+}: Readonly<{ knowledgeBase: KnowledgeBaseResponseDto }>) {
+  const { t } = useTranslation('knowledge-bases');
+  if (knowledgeBase.isShared) {
+    return <Badge variant="secondary">{t('shared.badge')}</Badge>;
+  }
+  return knowledgeBase.viewer?.canEdit ? null : <ReadOnlyBadge />;
+}
+
+function KnowledgeBaseConfiguration({
+  knowledgeBase,
+}: Readonly<{ knowledgeBase: KnowledgeBaseResponseDto }>) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const canEdit = knowledgeBase.viewer?.canEdit ?? false;
+
+  return (
     <div className="grid gap-4">
-      <KnowledgeBasePropertiesCard
-        key={knowledgeBase.id}
-        knowledgeBase={{
-          name: knowledgeBase.name,
-          description: knowledgeBase.description,
-        }}
-        disabled={isReadOnly || !canManageKb}
-        onUpdate={async (data) => {
-          await knowledgeBasesControllerUpdate(knowledgeBase.id, data);
-          await Promise.all(
-            [
-              getKnowledgeBasesControllerFindAllQueryKey(
-                personalKnowledgeBaseListParams,
-              ),
-              getKnowledgeBasesControllerFindOneQueryKey(knowledgeBase.id),
-            ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-          );
-          await router.invalidate();
-        }}
-      />
+      {showsOwnershipCard(knowledgeBase) && (
+        <ResourceOwnershipCard kind="knowledge_base" resource={knowledgeBase} />
+      )}
+      {canEdit && (
+        <KnowledgeBasePropertiesCard
+          key={knowledgeBase.id}
+          knowledgeBase={{
+            name: knowledgeBase.name,
+            description: knowledgeBase.description,
+          }}
+          onUpdate={async (data) => {
+            await knowledgeBasesControllerUpdate(knowledgeBase.id, data);
+            await Promise.all(
+              [
+                getKnowledgeBasesControllerFindAllQueryKey(
+                  personalKnowledgeBaseListParams,
+                ),
+                getKnowledgeBasesControllerFindOneQueryKey(knowledgeBase.id),
+              ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+            );
+            await router.invalidate();
+          }}
+        />
+      )}
       <OnboardingTourTarget name={TOUR_TARGET.addDocuments}>
         <KnowledgeBaseDocumentsCard
           knowledgeBaseId={knowledgeBase.id}
-          disabled={isReadOnly || !canManageKb}
+          disabled={!canEdit}
         />
       </OnboardingTourTarget>
     </div>
   );
+}
+
+function OwnKnowledgeBaseTabs({
+  knowledgeBase,
+  shares,
+  userTeams,
+  initialTab,
+}: Readonly<{
+  knowledgeBase: KnowledgeBaseResponseDto;
+  shares: ShareResponseDto[];
+  userTeams: TeamResponseDto[];
+  initialTab: 'config' | 'share';
+}>) {
+  const { t } = useTranslation('knowledge-bases');
+  const navigate = useNavigate();
+  const { id } = useParams({ from: '/_authenticated/knowledge-bases/$id' });
+  const handleTabChange = useCallback(
+    (value: string) => {
+      void navigate({
+        to: '/knowledge-bases/$id',
+        params: { id },
+        search: value === 'config' ? {} : { tab: value as 'share' },
+      });
+    },
+    [navigate, id],
+  );
+
+  return (
+    <Tabs value={initialTab} onValueChange={handleTabChange} className="w-full">
+      <TabsList>
+        <TabsTrigger value="config">{t('tabs.configuration')}</TabsTrigger>
+        <TabsTrigger value="share">{t('tabs.shares')}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="config" className="mt-4">
+        <KnowledgeBaseConfiguration knowledgeBase={knowledgeBase} />
+      </TabsContent>
+      <TabsContent value="share" className="mt-4">
+        <SharesTab
+          entityType="knowledge_base"
+          entityId={knowledgeBase.id}
+          shares={shares}
+          userTeams={userTeams}
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+export function KnowledgeBasePage({
+  knowledgeBase,
+  shares,
+  userTeams,
+  initialTab = 'config',
+}: Readonly<{
+  knowledgeBase: KnowledgeBaseResponseDto;
+  shares: ShareResponseDto[];
+  userTeams: TeamResponseDto[];
+  initialTab?: 'config' | 'share';
+}>) {
+  const { t } = useTranslation('knowledge-bases');
+  const isOwnPersonal =
+    knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared;
+  const canUse = knowledgeBase.viewer?.canUse ?? true;
+  const canDelete = knowledgeBase.viewer?.canDelete ?? false;
 
   return (
     <AppLayout>
@@ -133,66 +214,33 @@ export function KnowledgeBasePage({
               { label: t('page.title'), href: '/knowledge-bases' },
               { label: knowledgeBase.name },
             ]}
-            badge={
-              isReadOnly ? (
-                <Badge variant="secondary">{t('shared.badge')}</Badge>
-              ) : undefined
-            }
+            badge={<KnowledgeBaseHeaderBadge knowledgeBase={knowledgeBase} />}
             action={
               <>
-                <KnowledgeBaseActivationToggle
-                  knowledgeBaseId={knowledgeBase.id}
-                  isActive={knowledgeBase.isActive}
-                  testId="knowledge-base-detail-active-toggle"
-                />
-                {!isReadOnly && canManageKb && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={handleDelete}
-                        disabled={deleteKnowledgeBase.isPending}
-                        aria-label={t('detail.deleteLabel')}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>
-                  </Tooltip>
+                {canUse && (
+                  <KnowledgeBaseActivationToggle
+                    knowledgeBaseId={knowledgeBase.id}
+                    isActive={knowledgeBase.isActive}
+                    testId="knowledge-base-detail-active-toggle"
+                  />
+                )}
+                {canDelete && (
+                  <KnowledgeBaseDeleteButton knowledgeBase={knowledgeBase} />
                 )}
               </>
             }
           />
         }
         contentArea={
-          isReadOnly ? (
-            configContent
+          isOwnPersonal ? (
+            <OwnKnowledgeBaseTabs
+              knowledgeBase={knowledgeBase}
+              shares={shares}
+              userTeams={userTeams}
+              initialTab={initialTab}
+            />
           ) : (
-            <Tabs
-              value={initialTab}
-              onValueChange={handleTabChange}
-              className="w-full"
-            >
-              <TabsList>
-                <TabsTrigger value="config">
-                  {t('tabs.configuration')}
-                </TabsTrigger>
-                <TabsTrigger value="share">{t('tabs.shares')}</TabsTrigger>
-              </TabsList>
-              <TabsContent value="config" className="mt-4">
-                {configContent}
-              </TabsContent>
-              <TabsContent value="share" className="mt-4">
-                <SharesTab
-                  entityType="knowledge_base"
-                  entityId={knowledgeBase.id}
-                  shares={shares}
-                  userTeams={userTeams}
-                />
-              </TabsContent>
-            </Tabs>
+            <KnowledgeBaseConfiguration knowledgeBase={knowledgeBase} />
           )
         }
       />

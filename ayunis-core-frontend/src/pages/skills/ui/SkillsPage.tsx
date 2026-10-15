@@ -18,22 +18,40 @@ import {
 } from '@ayunis/ui/components/tabs';
 import { EmptyState } from '@/widgets/empty-state';
 import { useMyPermissions } from '@/features/permissions';
+import { useOwnerOptions } from '@/features/resource-ownership';
+
+function isOwnPersonalSkill(skill: Skill): boolean {
+  return skill.ownerType === 'personal' && !skill.isShared;
+}
+
+export type SkillsTab = 'personal' | 'shared';
 
 interface SkillsPageProps {
   skills: Skill[];
+  tab: SkillsTab;
+  onTabChange: (tab: SkillsTab) => void;
 }
 
-export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
+export default function SkillsPage({
+  skills,
+  tab,
+  onTabChange,
+}: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const canCreate = isLoadingPermissions || can('manage_own_skills');
+  const { options, isLoading: isLoadingOwners } = useOwnerOptions('skill');
+  const canCreate =
+    isLoadingPermissions ||
+    isLoadingOwners ||
+    can('manage_own_skills') ||
+    options.length > 0;
 
   const personalSkills = skills
-    .filter((skill) => !skill.isShared)
+    .filter(isOwnPersonalSkill)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const sharedSkills = skills
-    .filter((skill) => skill.isShared)
+    .filter((skill) => !isOwnPersonalSkill(skill))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   // The "pin a skill" tour step anchors on the first active personal skill.
@@ -89,7 +107,11 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
           />
         }
         contentArea={
-          <Tabs defaultValue="personal" className="w-full">
+          <Tabs
+            value={tab}
+            onValueChange={(next) => onTabChange(next as SkillsTab)}
+            className="w-full"
+          >
             <TabsList>
               <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
               <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>

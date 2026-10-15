@@ -11,6 +11,7 @@ import {
 } from '@ayunis/ui/components/dropdown-menu';
 import { useMyPermissions } from '@/features/permissions';
 import { useSkillMarketplaceUrl } from '@/features/marketplace';
+import { useOwnerOptions } from '@/features/resource-ownership';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 import CreateSkillDialog from './CreateSkillDialog';
 
@@ -27,11 +28,14 @@ export default function CreateSkillMenu({
   const navigate = useNavigate();
   const marketplaceUrl = useSkillMarketplaceUrl();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
+  const { options, isLoading: isLoadingOwners } = useOwnerOptions('skill');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
+  const canCreateOwn = isLoadingPermissions || can('manage_own_skills');
+  const canUseEditor = isLoadingOwners || options.length > 0;
 
-  if (!isLoadingPermissions && !can('manage_own_skills')) return null;
+  if (!canCreateOwn && !canUseEditor && !marketplaceUrl) return null;
 
   return (
     <>
@@ -47,25 +51,29 @@ export default function CreateSkillMenu({
           align="end"
           onCloseAutoFocus={handleCloseAutoFocus}
         >
-          <DropdownMenuItem
-            data-testid="create-skill-editor"
-            onClick={() => requestDialogOpen(() => setIsEditorOpen(true))}
-          >
-            <PenLine />
-            <span>{t('createMenu.editor')}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            data-testid="create-skill-guided"
-            onClick={() =>
-              void navigate({
-                to: '/chat',
-                search: { prompt: t('createMenu.guidedPrompt') },
-              })
-            }
-          >
-            <Sparkles />
-            <span>{t('createMenu.guided')}</span>
-          </DropdownMenuItem>
+          {canUseEditor && (
+            <DropdownMenuItem
+              data-testid="create-skill-editor"
+              onClick={() => requestDialogOpen(() => setIsEditorOpen(true))}
+            >
+              <PenLine />
+              <span>{t('createMenu.editor')}</span>
+            </DropdownMenuItem>
+          )}
+          {canCreateOwn && (
+            <DropdownMenuItem
+              data-testid="create-skill-guided"
+              onClick={() =>
+                void navigate({
+                  to: '/chat',
+                  search: { prompt: t('createMenu.guidedPrompt') },
+                })
+              }
+            >
+              <Sparkles />
+              <span>{t('createMenu.guided')}</span>
+            </DropdownMenuItem>
+          )}
           {marketplaceUrl && (
             <DropdownMenuItem
               data-testid="create-skill-marketplace"

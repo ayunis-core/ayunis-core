@@ -1,6 +1,11 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMyPermissions } from '@/features/permissions';
 import { useSkillMarketplaceUrl } from '@/features/marketplace';
+import {
+  OwnerField,
+  useOwnerSelection,
+  useOwnershipCopy,
+} from '@/features/resource-ownership';
 import { SkillCreateDialog } from '@/widgets/resource-create-dialog';
 import { useCreateSkill } from '@/pages/skills/api/useCreateSkill';
 
@@ -21,10 +26,18 @@ export default function CreateSkillDialog({
 }: Readonly<CreateSkillDialogProps>) {
   const { t } = useTranslation('skills');
   const { createSkill } = useCreateSkill();
-  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const marketplaceUrl = useSkillMarketplaceUrl();
+  const owner = useOwnerSelection('skill');
+  const copy = useOwnershipCopy('skill');
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) owner.reset();
+  }
 
-  if (!isLoadingPermissions && !can('manage_own_skills')) return null;
+  if (!owner.isLoading && owner.options.length === 0) return null;
+
+  const onlyOption = owner.options.length === 1 ? owner.options[0] : undefined;
 
   return (
     <SkillCreateDialog
@@ -34,9 +47,28 @@ export default function CreateSkillDialog({
       footerHint={
         marketplaceUrl ? t('createDialog.marketplaceHint') : undefined
       }
-      onCreate={createSkill}
+      description={
+        onlyOption && onlyOption.type !== 'personal'
+          ? copy.optionHint(onlyOption, owner.orgEditorsIncludeNonAdmins)
+          : undefined
+      }
+      ownerField={
+        owner.options.length > 1 && owner.selected ? (
+          <OwnerField
+            kind="skill"
+            options={owner.options}
+            value={owner.selected}
+            orgEditorsIncludeNonAdmins={owner.orgEditorsIncludeNonAdmins}
+            onChange={owner.select}
+          />
+        ) : undefined
+      }
+      onCreate={(data) => createSkill({ ...data, owner: owner.selected })}
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(next) => {
+        if (next) owner.reset();
+        onOpenChange?.(next);
+      }}
     />
   );
 }

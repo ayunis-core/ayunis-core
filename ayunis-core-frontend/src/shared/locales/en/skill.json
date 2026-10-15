@@ -155,5 +155,11 @@
     "confirmDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
     "confirmText": "Delete",
     "cancelText": "Cancel"
+  },
+  "readOnly": {
+    "title": "Content",
+    "description": "You can use this skill but not change it.",
+    "trigger": "Trigger",
+    "instructions": "Instructions"
   }
 }

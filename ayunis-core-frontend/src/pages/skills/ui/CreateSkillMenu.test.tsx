@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   marketplaceUrl: null as string | null,
   can: vi.fn(() => true),
+  ownerOptions: [{ type: 'personal' }] as { type: string; teamId?: string }[],
+  ownersLoading: false,
 }));
 
 vi.mock('@tanstack/react-router', () => ({
@@ -21,6 +23,13 @@ vi.mock('@/features/marketplace', () => ({
 
 vi.mock('@/features/permissions', () => ({
   useMyPermissions: () => ({ can: mocks.can, isLoading: false }),
+}));
+
+vi.mock('@/features/resource-ownership', () => ({
+  useOwnerOptions: () => ({
+    options: mocks.ownerOptions,
+    isLoading: mocks.ownersLoading,
+  }),
 }));
 
 vi.mock('@/shared/hooks/useDropdownDialogTransition', () => ({
@@ -53,6 +62,8 @@ describe('CreateSkillMenu', () => {
     vi.clearAllMocks();
     mocks.marketplaceUrl = MARKETPLACE_URL;
     mocks.can = vi.fn(() => true);
+    mocks.ownerOptions = [{ type: 'personal' }];
+    mocks.ownersLoading = false;
   });
 
   afterEach(cleanup);
@@ -99,12 +110,36 @@ describe('CreateSkillMenu', () => {
     expect(screen.getByTestId('create-skill-guided')).toBeTruthy();
   });
 
-  it('renders nothing without the permission to manage skills', () => {
+  it('renders nothing without any way to create a skill', () => {
     mocks.can = vi.fn(() => false);
+    mocks.ownerOptions = [];
+    mocks.marketplaceUrl = null;
 
     render(<CreateSkillMenu />);
 
     expect(screen.queryByTestId('create-skill-menu')).toBeNull();
+  });
+
+  it('offers only the editor to a team admin without the own-skills right', () => {
+    mocks.can = vi.fn(() => false);
+    mocks.ownerOptions = [{ type: 'team', teamId: 'team-1' }];
+    mocks.marketplaceUrl = null;
+
+    openMenu();
+
+    expect(screen.getByTestId('create-skill-editor')).toBeTruthy();
+    expect(screen.queryByTestId('create-skill-guided')).toBeNull();
+  });
+
+  it('keeps the guided route hidden without the own-skills right while owner options load', () => {
+    mocks.can = vi.fn(() => false);
+    mocks.ownerOptions = [];
+    mocks.ownersLoading = true;
+    mocks.marketplaceUrl = null;
+
+    openMenu();
+
+    expect(screen.queryByTestId('create-skill-guided')).toBeNull();
   });
 
   it('is the first-skill action on the empty skills page', () => {

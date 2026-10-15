@@ -59,7 +59,8 @@
       "cancelText": "Abbrechen",
       "success": "Team erfolgreich gelöscht",
       "error": "Team konnte nicht gelöscht werden",
-      "notFound": "Team nicht gefunden"
+      "notFound": "Team nicht gefunden",
+      "ownsResources": "Das Team besitzt noch Fähigkeiten oder Wissenssammlungen. Löschen Sie diese zuerst."
     }
   },
   "teamDetail": {
