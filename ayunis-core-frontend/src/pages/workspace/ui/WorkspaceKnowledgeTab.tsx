@@ -65,7 +65,8 @@ function KnowledgeAddMenu({
 
 function CreatedKnowledgeBases({
   workspace,
-}: Readonly<{ workspace: WorkspaceRef }>) {
+  canEdit,
+}: Readonly<{ workspace: WorkspaceRef; canEdit: boolean }>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -84,7 +85,9 @@ function CreatedKnowledgeBases({
       <ListSection
         title={t('links.sections.created')}
         count={isLoading ? undefined : pageTotal(pagination)}
-        action={<KnowledgeAddMenu workspace={workspace} />}
+        action={
+          canEdit ? <KnowledgeAddMenu workspace={workspace} /> : undefined
+        }
         testId="workspace-created-knowledgeBase"
       >
         {isLoading && (
@@ -113,37 +116,39 @@ function CreatedKnowledgeBases({
               })
             }
             actions={
-              <>
-                <KnowledgeBaseActivationToggle
-                  knowledgeBaseId={knowledgeBase.id}
-                  isActive={knowledgeBase.isActive}
-                  isPending={isChangingKnowledgeBaseState}
-                  testId={`workspace-knowledge-base-active-${knowledgeBase.id}`}
-                  tooltip={t('context.knowledge.activeTooltip')}
-                  onToggle={(isActive) =>
-                    setKnowledgeBaseActive({
-                      knowledgeBaseId: knowledgeBase.id,
-                      isActive,
-                    })
-                  }
-                />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      aria-label={t('context.knowledge.detach')}
-                      onClick={() => deleteKnowledgeBase(knowledgeBase.id)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {t('context.knowledge.detach')}
-                  </TooltipContent>
-                </Tooltip>
-              </>
+              canEdit && (
+                <>
+                  <KnowledgeBaseActivationToggle
+                    knowledgeBaseId={knowledgeBase.id}
+                    isActive={knowledgeBase.isActive}
+                    isPending={isChangingKnowledgeBaseState}
+                    testId={`workspace-knowledge-base-active-${knowledgeBase.id}`}
+                    tooltip={t('context.knowledge.activeTooltip')}
+                    onToggle={(isActive) =>
+                      setKnowledgeBaseActive({
+                        knowledgeBaseId: knowledgeBase.id,
+                        isActive,
+                      })
+                    }
+                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        aria-label={t('context.knowledge.detach')}
+                        onClick={() => deleteKnowledgeBase(knowledgeBase.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t('context.knowledge.detach')}
+                    </TooltipContent>
+                  </Tooltip>
+                </>
+              )
             }
           />
         ))}
@@ -160,11 +165,16 @@ function CreatedKnowledgeBases({
 
 export function WorkspaceKnowledgeTab({
   workspace,
-}: Readonly<{ workspace: WorkspaceRef }>) {
+  canEdit,
+}: Readonly<{ workspace: WorkspaceRef; canEdit: boolean }>) {
   return (
     <div className="space-y-6">
-      <CreatedKnowledgeBases workspace={workspace} />
-      <WorkspaceLinkedSection kind="knowledgeBase" workspace={workspace} />
+      <CreatedKnowledgeBases workspace={workspace} canEdit={canEdit} />
+      <WorkspaceLinkedSection
+        kind="knowledgeBase"
+        workspace={workspace}
+        canEdit={canEdit}
+      />
     </div>
   );
 }

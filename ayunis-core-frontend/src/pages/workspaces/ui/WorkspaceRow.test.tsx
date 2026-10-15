@@ -29,6 +29,7 @@ function aWorkspace(overrides: Partial<Workspace> = {}): Workspace {
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     accessLevel: 'owner',
+    memberCount: 1,
     skillCount: 0,
     knowledgeBaseCount: 0,
     ...overrides,
@@ -36,25 +37,25 @@ function aWorkspace(overrides: Partial<Workspace> = {}): Workspace {
 }
 
 describe('WorkspaceRow', () => {
-  it('lists skills and knowledge bases without chats or the description', () => {
+  it('lists skills and members without chats or the description', () => {
     render(
       <WorkspaceRow
-        workspace={aWorkspace({ skillCount: 1, knowledgeBaseCount: 3 })}
+        workspace={aWorkspace({ skillCount: 1, memberCount: 4 })}
       />,
     );
 
     expect(
-      screen.getByText('page.skillCount:1 · page.knowledgeBaseCount:3'),
+      screen.getByText('page.skillCount:1 · page.memberCount:4'),
     ).toBeTruthy();
     expect(screen.queryByText(/Chat/)).toBeNull();
     expect(screen.queryByText(/Test/)).toBeNull();
   });
 
-  it('keeps empty counts visible as a prompt to add resources', () => {
-    render(<WorkspaceRow workspace={aWorkspace()} />);
+  it('says what the viewer may do in the workspace', () => {
+    render(<WorkspaceRow workspace={aWorkspace({ accessLevel: 'edit' })} />);
 
     expect(
-      screen.getByText('page.skillCount:0 · page.knowledgeBaseCount:0'),
-    ).toBeTruthy();
+      screen.getByTestId('workspace-access-workspace-id').textContent,
+    ).toBe('viewer.edit');
   });
 });

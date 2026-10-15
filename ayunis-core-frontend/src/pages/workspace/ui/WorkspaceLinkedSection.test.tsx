@@ -31,7 +31,9 @@ afterEach(() => {
 describe('WorkspaceLinkedSection', () => {
   it('shows a loading state instead of an empty list while links load', () => {
     mocks.linked = { items: [], isLoading: true };
-    render(<WorkspaceLinkedSection kind="skill" workspace={workspace} />);
+    render(
+      <WorkspaceLinkedSection kind="skill" workspace={workspace} canEdit />,
+    );
 
     expect(screen.getByTestId('workspace-linked-skill-loading')).toBeTruthy();
     expect(screen.queryByText('links.skills.emptyLinkedTitle')).toBeNull();
@@ -42,7 +44,9 @@ describe('WorkspaceLinkedSection', () => {
   });
 
   it('shows the empty hint and the count once nothing is linked', () => {
-    render(<WorkspaceLinkedSection kind="skill" workspace={workspace} />);
+    render(
+      <WorkspaceLinkedSection kind="skill" workspace={workspace} canEdit />,
+    );
 
     expect(screen.queryByTestId('workspace-linked-skill-loading')).toBeNull();
     expect(screen.getByText('links.skills.emptyLinkedTitle')).toBeTruthy();

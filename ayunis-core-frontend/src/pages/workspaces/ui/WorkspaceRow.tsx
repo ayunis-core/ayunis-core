@@ -23,9 +23,10 @@ export function WorkspaceRow({
   pinTourTarget = false,
 }: Readonly<WorkspaceRowProps>) {
   const { t } = useTranslation('workspaces');
+  const { t: tSharing } = useTranslation('workspace-sharing');
   const counts = [
     t('page.skillCount', { count: workspace.skillCount ?? 0 }),
-    t('page.knowledgeBaseCount', { count: workspace.knowledgeBaseCount ?? 0 }),
+    t('page.memberCount', { count: workspace.memberCount ?? 1 }),
   ].join(' · ');
 
   return (
@@ -56,6 +57,12 @@ export function WorkspaceRow({
         <ItemDescription className="line-clamp-1">{counts}</ItemDescription>
       </ItemContent>
       <ItemActions className="relative">
+        <span
+          className="text-sm text-muted-foreground max-sm:hidden"
+          data-testid={`workspace-access-${workspace.id}`}
+        >
+          {tSharing(`viewer.${workspace.accessLevel}`)}
+        </span>
         <WorkspacePinButton
           workspaceId={workspace.id}
           tourTarget={pinTourTarget ? TOUR_TARGET.favoriteWorkspace : undefined}
