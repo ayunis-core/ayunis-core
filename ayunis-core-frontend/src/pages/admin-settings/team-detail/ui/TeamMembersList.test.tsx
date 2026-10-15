@@ -100,4 +100,10 @@ describe('TeamMembersList', () => {
     expect(screen.getByTestId('team-member-role-lena').tagName).toBe('SPAN');
     expect(screen.queryByTestId('team-member-remove-lena')).toBeNull();
   });
+
+  it('keeps other team admins in the team without the appoint right', () => {
+    renderList(['jonas', 'lena'], { ...teamAdminRights, canAppoint: false });
+
+    expect(screen.queryByTestId('team-member-remove-jonas')).toBeNull();
+  });
 });

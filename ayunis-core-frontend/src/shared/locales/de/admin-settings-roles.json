@@ -2,11 +2,19 @@
   "overview": {
     "title": "Rollen",
     "description": "Für wen welche Rolle gedacht ist.",
+    "names": {
+      "user": "Benutzer",
+      "manager": "Manager",
+      "admin": "Admin",
+      "teamAdmin": "Team-Admin"
+    },
     "scopeOrganisation": "Organisation",
+    "scopeTeam": "Team",
     "roles": {
       "user": "Für die meisten Mitarbeitenden.",
-      "manager": "Für einzelne Personen, die mehr dürfen sollen als Benutzer, aber nicht alles. Gilt in der ganzen Organisation.",
-      "admin": "Für die Personen, die Ayunis Core in der Verwaltung betreuen. Darf alles und lässt sich nicht einschränken."
+      "manager": "Für einzelne Personen, die mehr dürfen sollen als Benutzer, aber nicht alles. Gilt in der ganzen Organisation, anders als Team-Admin.",
+      "admin": "Für die Personen, die Ayunis Core in der Verwaltung betreuen. Darf alles und lässt sich nicht einschränken.",
+      "teamAdmin": "Wird pro Team ernannt und behält dazu die Rechte seiner Rolle. Was Team-Admins im eigenen Team dürfen, legen Sie unten fest."
     }
   },
   "matrix": {
@@ -26,7 +34,7 @@
     "workspaces": "Arbeitsbereiche"
   },
   "permissionHints": {
-    "manage_teams": "Teams erstellen, umbenennen und löschen.",
+    "manage_teams": "Teams erstellen, umbenennen und löschen und in jedem Team Team-Admins ernennen.",
     "assign_users_to_teams": "Mitglieder zu jedem Team hinzufügen und wieder entfernen. Erlaubt nicht, Teams zu erstellen oder zu löschen.",
     "manage_own_skills": "Eigene Fähigkeiten erstellen, bearbeiten und löschen.",
     "install_marketplace_skills": "Fähigkeiten aus dem Ayunis Core Marketplace installieren. Ohne dieses Recht sind Marketplace-Hinweise und der Menüpunkt ausgeblendet.",
@@ -48,6 +56,20 @@
     "request_knowledge_transfer": "Mit eigenen Teams teilen",
     "request_knowledge_transfer_org": "Mit der Organisation teilen",
     "create_workspaces": "Arbeitsbereiche erstellen"
+  },
+  "teamAdmins": {
+    "title": "Team-Admins",
+    "description": "Legen Sie fest, was Team-Admins in ihrem eigenen Team tun dürfen.",
+    "column": "Team-Admin",
+    "note": "Den letzten Team-Admin eines Teams können nur Admins ändern oder entfernen.",
+    "permissions": {
+      "team_manage_members": "Mitglieder hinzufügen und entfernen",
+      "team_appoint_admins": "Team-Admins ernennen"
+    },
+    "permissionHints": {
+      "team_manage_members": "Personen ins eigene Team aufnehmen und wieder entfernen.",
+      "team_appoint_admins": "Andere Mitglieder des eigenen Teams zum Team-Admin machen oder die Rolle wieder entziehen."
+    }
   },
   "save": "Änderungen speichern",
   "saving": "Speichern…",
