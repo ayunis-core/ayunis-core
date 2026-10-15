@@ -1,54 +1,28 @@
-import { request } from '@playwright/test';
 import type { APIRequestContext } from '@playwright/test';
-import { config } from '../config';
-import { getAuthenticatedPrincipalId, login } from '../clients/api/auth.client';
-import { skipChatPersonalization } from '../clients/api/chat-settings.client';
 import { generatedApi } from '../clients/api/generated-api';
 import {
   getConfiguredImageCandidates,
   getConfiguredLanguageCandidates,
   getEffectiveLanguageModels,
 } from '../clients/api/models.client';
-import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
 import { addTeamMember, createTeam, deleteTeam } from '../clients/api/teams.client';
 import type { MailcatcherClient } from '../clients/mailcatcher.client';
-import { createUser } from './user.factory';
+import { createSignedInMember } from './user.factory';
+import type { SignedInMember } from './user.factory';
 import type {
   ModelWithConfigResponseDto,
   PermittedLanguageModelResponseDto,
   TeamResponseDto,
 } from '../clients/generated/ayunisCoreAPI.schemas';
 
-type StorageState = Awaited<ReturnType<APIRequestContext['storageState']>>;
-
-interface Principal {
-  id: string;
-  api: APIRequestContext;
-  storageState: StorageState;
-}
-
 export interface TeamModelAccessFixture {
   team: TeamResponseDto;
-  member: Principal;
-  nonMember: Principal;
+  member: SignedInMember;
+  nonMember: SignedInMember;
   orgModel: PermittedLanguageModelResponseDto;
   teamOnlyModel: ModelWithConfigResponseDto;
   imageModel: ModelWithConfigResponseDto;
   cleanup: () => Promise<void>;
-}
-
-async function createPrincipal(
-  adminApi: APIRequestContext,
-  mail: MailcatcherClient,
-  suffix: string,
-): Promise<Principal> {
-  const user = await createUser(adminApi, mail, suffix);
-  const api = await request.newContext({ baseURL: config.apiURL });
-  await login(api, user.email, user.password);
-  await dismissWelcomeVideo(api);
-  await skipChatPersonalization(api);
-  const id = await getAuthenticatedPrincipalId(api);
-  return { id, api, storageState: await api.storageState() };
 }
 
 async function findTeamOnlyCandidate(
@@ -85,8 +59,8 @@ export async function createTeamModelAccessFixture(
 
   const teamOnlyModel = await findTeamOnlyCandidate(adminApi);
   const imageModel = await findImageCandidate(adminApi);
-  const member = await createPrincipal(adminApi, mail, `${suffix}-member`);
-  const nonMember = await createPrincipal(
+  const member = await createSignedInMember(adminApi, mail, `${suffix}-member`);
+  const nonMember = await createSignedInMember(
     adminApi,
     mail,
     `${suffix}-non-member`,

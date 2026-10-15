@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import { useMyPermissions } from '@/features/permissions';
-import { useMarketplaceConfig } from '@/features/marketplace';
+import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 import CreateSkillDialog from './CreateSkillDialog';
 
@@ -25,7 +25,7 @@ export default function CreateSkillMenu({
 }: Readonly<CreateSkillMenuProps>) {
   const { t } = useTranslation('skills');
   const navigate = useNavigate();
-  const marketplace = useMarketplaceConfig();
+  const marketplaceUrl = useSkillMarketplaceUrl();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
@@ -66,15 +66,11 @@ export default function CreateSkillMenu({
             <Sparkles />
             <span>{t('createMenu.guided')}</span>
           </DropdownMenuItem>
-          {marketplace.enabled && marketplace.url && (
+          {marketplaceUrl && (
             <DropdownMenuItem
               data-testid="create-skill-marketplace"
               onClick={() =>
-                window.open(
-                  marketplace.url ?? undefined,
-                  '_blank',
-                  'noopener,noreferrer',
-                )
+                window.open(marketplaceUrl, '_blank', 'noopener,noreferrer')
               }
             >
               <Store />

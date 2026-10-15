@@ -22,6 +22,10 @@
       "title": "Unable to Load Skill",
       "description": "Could not load skill details from the marketplace. Please try again later."
     },
+    "noPermission": {
+      "title": "Installation not available",
+      "description": "You are not allowed to install skills from the Marketplace. Please contact your administration."
+    },
     "unavailable": "The marketplace is currently unavailable. Please try again later.",
     "generic": "Something went wrong while installing the skill. Please try again."
   }

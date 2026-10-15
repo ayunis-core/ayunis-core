@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WorkspacePicker } from './WorkspacePicker';
@@ -14,6 +15,9 @@ vi.mock('@/features/workspaces', () => ({
 }));
 vi.mock('@/widgets/create-workspace-dialog', () => ({
   CreateWorkspaceDialog: () => null,
+}));
+vi.mock('@/features/permissions', () => ({
+  PermissionGate: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 afterEach(cleanup);

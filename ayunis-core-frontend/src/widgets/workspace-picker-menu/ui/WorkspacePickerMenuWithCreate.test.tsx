@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -10,10 +11,59 @@ import {
 } from '@ayunis/ui/components/dropdown-menu';
 import { WorkspacePickerMenuWithCreate } from './WorkspacePickerMenuWithCreate';
 
+const permissions = vi.hoisted(() => ({ granted: ['create_workspaces'] }));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-afterEach(cleanup);
+vi.mock('@/features/permissions', () => ({
+  PermissionGate: ({
+    permission,
+    children,
+  }: {
+    permission: string;
+    children: ReactNode;
+  }) => (permissions.granted.includes(permission) ? <>{children}</> : null),
+}));
+afterEach(() => {
+  cleanup();
+  permissions.granted = ['create_workspaces'];
+});
+
+function renderOpenMenu(onCreateNew = vi.fn()) {
+  render(
+    <DropdownMenu open>
+      <DropdownMenuTrigger>Workspaces</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <WorkspacePickerMenuWithCreate
+          workspaces={[]}
+          onSelect={vi.fn()}
+          onClear={vi.fn()}
+          onCreateNew={onCreateNew}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>,
+  );
+}
+
+describe('WorkspacePickerMenuWithCreate creation entry', () => {
+  it('offers a new workspace to members who may create workspaces', () => {
+    const onCreateNew = vi.fn();
+    renderOpenMenu(onCreateNew);
+
+    fireEvent.click(screen.getByTestId('workspace-picker-create'));
+
+    expect(onCreateNew).toHaveBeenCalledOnce();
+  });
+
+  it('hides the entry from members without create_workspaces', () => {
+    permissions.granted = [];
+    renderOpenMenu();
+
+    expect(screen.queryByTestId('workspace-picker-create')).toBeNull();
+    expect(screen.getByTestId('workspace-picker-none')).toBeTruthy();
+  });
+});
 
 describe('WorkspacePickerMenuWithCreate in a chat submenu', () => {
   it.each(['workspace-a', null])(
