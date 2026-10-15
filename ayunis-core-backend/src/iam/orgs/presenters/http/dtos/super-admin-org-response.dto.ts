@@ -37,7 +37,7 @@ export class SuperAdminOrgResponseDto {
   createdAt: Date;
 }
 
-export class SuperAdminOrgListItemResponseDto extends SuperAdminOrgResponseDto {
+export class SuperAdminOrgOverviewResponseDto extends SuperAdminOrgResponseDto {
   @ApiProperty({
     enum: ORG_LIFECYCLE_STATUSES,
     enumName: 'OrgLifecycleStatus',
@@ -50,9 +50,9 @@ export class SuperAdminOrgListItemResponseDto extends SuperAdminOrgResponseDto {
 export class SuperAdminOrgListResponseDto {
   @ApiProperty({
     description: 'Array of organizations for the current page',
-    type: [SuperAdminOrgListItemResponseDto],
+    type: [SuperAdminOrgOverviewResponseDto],
   })
-  data: SuperAdminOrgListItemResponseDto[];
+  data: SuperAdminOrgOverviewResponseDto[];
 
   @ApiProperty({
     description: 'Pagination metadata',

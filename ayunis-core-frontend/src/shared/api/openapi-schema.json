@@ -1606,7 +1606,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                  "$ref": "#/components/schemas/SuperAdminOrgOverviewResponseDto"
                 }
               }
             }
@@ -13464,7 +13464,7 @@
         "enum": ["archived", "paying", "expired", "trial", "no-plan"],
         "description": "Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan"
       },
-      "SuperAdminOrgListItemResponseDto": {
+      "SuperAdminOrgOverviewResponseDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -13518,7 +13518,7 @@
             "description": "Array of organizations for the current page",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SuperAdminOrgListItemResponseDto"
+              "$ref": "#/components/schemas/SuperAdminOrgOverviewResponseDto"
             }
           },
           "pagination": {

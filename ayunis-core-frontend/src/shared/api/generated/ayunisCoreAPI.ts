@@ -222,6 +222,7 @@ import type {
   SuccessResponseDto,
   SuperAdminInvitesControllerGetInvitesParams,
   SuperAdminOrgListResponseDto,
+  SuperAdminOrgOverviewResponseDto,
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
   SuperAdminTeamsControllerGetMembersParams,
@@ -3419,7 +3420,7 @@ export const superAdminOrgsControllerGetOrgById = (
 ) => {
 
 
-      return customAxiosInstance<SuperAdminOrgResponseDto>(
+      return customAxiosInstance<SuperAdminOrgOverviewResponseDto>(
       {url: `/super-admin/orgs/${id}`, method: 'GET', signal
     },
       );

@@ -652,8 +652,6 @@
     "archive": "Archive organisation",
     "restore": "Restore organisation",
     "delete": "Delete organisation",
-    "active": "Active",
-    "archived": "Archived",
     "archiveTitle": "Archive organisation?",
     "restoreTitle": "Restore organisation?",
     "archiveDescription": "All data stays. Members will be signed out and cannot sign in until the organisation is restored.",

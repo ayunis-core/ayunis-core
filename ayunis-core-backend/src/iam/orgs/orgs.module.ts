@@ -20,6 +20,7 @@ import { UpdateOrgUseCase } from './application/use-cases/update-org/update-org.
 import { DeleteOrgUseCase } from './application/use-cases/delete-org/delete-org.use-case';
 import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
 import { SuperAdminGetAllOrgsUseCase } from './application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.use-case';
+import { SuperAdminGetOrgUseCase } from './application/use-cases/super-admin-get-org/super-admin-get-org.use-case';
 import { SuperAdminOrgsController } from './presenters/http/super-admin-orgs.controller';
 import { SuperAdminOrgResponseDtoMapper } from './presenters/http/mappers/super-admin-org-response-dto.mapper';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
@@ -59,6 +60,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
     DeleteOrgUseCase,
     FindAllOrgIdsUseCase,
     SuperAdminGetAllOrgsUseCase,
+    SuperAdminGetOrgUseCase,
     // Mappers
     SuperAdminOrgResponseDtoMapper,
   ],

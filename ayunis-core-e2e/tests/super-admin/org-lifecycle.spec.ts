@@ -118,11 +118,19 @@ test("organisation lifecycle: archive, restore and delete with independent princ
     await page.getByTestId("org-lifecycle-filter").click();
     await page.getByTestId("org-lifecycle-filter-archived").click();
     await archivedRow.click();
+    await expect(page.getByTestId("org-status")).toHaveAttribute(
+      "data-status",
+      "archived",
+    );
     await page.getByTestId("org-archive-toggle").click();
     await page.getByTestId("confirmation-confirm").click();
     await expect
       .poll(() => getSuperAdminOrg(publicApi, customer.orgId))
-      .toMatchObject({ archived: false });
+      .toMatchObject({ archived: false, lifecycleStatus: "trial" });
+    await expect(page.getByTestId("org-status")).toHaveAttribute(
+      "data-status",
+      "trial",
+    );
     await oldContext.clearCookies();
     await oldContext.addCookies(oldState.cookies);
     expect((await requestCurrentUser(oldContext.request)).status()).toBe(401);
