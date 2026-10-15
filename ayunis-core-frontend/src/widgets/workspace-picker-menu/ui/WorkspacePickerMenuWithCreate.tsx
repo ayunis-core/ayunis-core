@@ -5,6 +5,7 @@ import {
   DropdownMenuSeparator,
 } from '@ayunis/ui/components/dropdown-menu';
 import type { Workspace } from '@/features/workspaces';
+import { PermissionGate } from '@/features/permissions';
 import { WorkspacePickerMenu } from './WorkspacePickerMenu';
 
 interface WorkspacePickerMenuWithCreateProps {
@@ -42,11 +43,16 @@ export function WorkspacePickerMenuWithCreate({
         selectedWorkspaceId={selectedWorkspaceId}
         onSelect={onSelect}
       />
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={onCreateNew}>
-        <Plus />
-        <span>{t('picker.newWorkspace')}</span>
-      </DropdownMenuItem>
+      <PermissionGate permission="create_workspaces">
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          data-testid="workspace-picker-create"
+          onClick={onCreateNew}
+        >
+          <Plus />
+          <span>{t('picker.newWorkspace')}</span>
+        </DropdownMenuItem>
+      </PermissionGate>
     </>
   );
 }

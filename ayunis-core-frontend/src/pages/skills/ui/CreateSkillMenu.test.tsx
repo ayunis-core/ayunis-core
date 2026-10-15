@@ -3,20 +3,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateSkillMenu from './CreateSkillMenu';
 import SkillsEmptyState from './SkillsEmptyState';
 
-const mocks = vi.hoisted(() => {
-  const marketplace: { enabled: boolean; url: string | null } = {
-    enabled: true,
-    url: 'https://marketplace.ayunis.com/',
-  };
-  return { navigate: vi.fn(), marketplace, can: vi.fn(() => true) };
-});
+const MARKETPLACE_URL = 'https://marketplace.ayunis.com/';
+
+const mocks = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  marketplaceUrl: null as string | null,
+  can: vi.fn(() => true),
+}));
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mocks.navigate,
 }));
 
 vi.mock('@/features/marketplace', () => ({
-  useMarketplaceConfig: () => mocks.marketplace,
+  useSkillMarketplaceUrl: () => mocks.marketplaceUrl,
 }));
 
 vi.mock('@/features/permissions', () => ({
@@ -51,10 +51,7 @@ function openMenu() {
 describe('CreateSkillMenu', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.marketplace = {
-      enabled: true,
-      url: 'https://marketplace.ayunis.com/',
-    };
+    mocks.marketplaceUrl = MARKETPLACE_URL;
     mocks.can = vi.fn(() => true);
   });
 
@@ -79,8 +76,22 @@ describe('CreateSkillMenu', () => {
     expect(screen.getByTestId('skill-editor-dialog')).toBeTruthy();
   });
 
-  it('hides the marketplace entry when no marketplace is configured', () => {
-    mocks.marketplace = { enabled: false, url: null };
+  it('opens the marketplace from the menu when it is available', () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    openMenu();
+
+    fireEvent.click(screen.getByTestId('create-skill-marketplace'));
+
+    expect(open).toHaveBeenCalledWith(
+      MARKETPLACE_URL,
+      '_blank',
+      'noopener,noreferrer',
+    );
+    open.mockRestore();
+  });
+
+  it('hides the marketplace entry when the marketplace is unavailable to the member', () => {
+    mocks.marketplaceUrl = null;
 
     openMenu();
 

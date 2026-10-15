@@ -29,4 +29,14 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
       'request_knowledge_transfer_org',
     ],
   },
+  { group: 'workspaces', permissions: ['create_workspaces'] },
 ];
+
+export const NEW_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
+  'install_marketplace_skills',
+  'request_skill_transfer',
+  'request_skill_transfer_org',
+  'request_knowledge_transfer',
+  'request_knowledge_transfer_org',
+  'create_workspaces',
+]);

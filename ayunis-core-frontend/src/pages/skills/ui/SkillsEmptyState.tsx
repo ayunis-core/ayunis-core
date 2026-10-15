@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { ExternalLink, Store } from 'lucide-react';
 import { EmptyState } from '@/widgets/empty-state';
 import { Button } from '@ayunis/ui/components/button';
-import { useMarketplaceConfig } from '@/features/marketplace';
+import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import { useMyPermissions } from '@/features/permissions';
 
 export default function SkillsEmptyState() {
   const { t } = useTranslation('skills');
-  const marketplace = useMarketplaceConfig();
+  const marketplaceUrl = useSkillMarketplaceUrl();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   // Assume can-create while permissions load, matching CreateSkillMenu, so the
   // prompt doesn't flicker; drop the create copy/action only once we know the
@@ -30,10 +30,10 @@ export default function SkillsEmptyState() {
               buttonText={t('createDialog.buttonTextFirst')}
               showIcon={true}
             />
-            {marketplace.enabled && marketplace.url && (
+            {marketplaceUrl && (
               <Button variant="ghost" size="sm" className="text-brand" asChild>
                 <a
-                  href={marketplace.url}
+                  href={marketplaceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

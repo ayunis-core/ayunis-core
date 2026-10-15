@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+import { Badge } from '@ayunis/ui/components/badge';
 import { Checkbox } from '@ayunis/ui/components/checkbox';
 import { TableCell, TableRow } from '@ayunis/ui/components/table';
 import type {
@@ -10,6 +12,7 @@ interface PermissionMatrixRowProps {
   permission: Permission;
   label: string;
   hint: string;
+  isNew: boolean;
   userChecked: boolean;
   managerChecked: boolean;
   disabled: boolean;
@@ -20,19 +23,25 @@ export function PermissionMatrixRow({
   permission,
   label,
   hint,
+  isNew,
   userChecked,
   managerChecked,
   disabled,
   onToggle,
 }: Readonly<PermissionMatrixRowProps>) {
+  const { t } = useTranslation('admin-settings-roles');
+
   return (
-    <TableRow>
+    <TableRow data-testid={`permission-row-${permission}`}>
       <TableCell className="font-medium">
-        <InfoHint
-          label={label}
-          hint={hint}
-          testId={`permission-hint-${permission}`}
-        />
+        <span className="inline-flex items-center gap-2">
+          <InfoHint
+            label={label}
+            hint={hint}
+            testId={`permission-hint-${permission}`}
+          />
+          {isNew && <Badge variant="secondary">{t('newBadge')}</Badge>}
+        </span>
       </TableCell>
       <TableCell className="text-center">
         <Checkbox
