@@ -47,7 +47,10 @@ function SkillAddMenu({ workspace }: Readonly<{ workspace: WorkspaceRef }>) {
   );
 }
 
-function CreatedSkills({ workspace }: Readonly<{ workspace: WorkspaceRef }>) {
+function CreatedSkills({
+  workspace,
+  canEdit,
+}: Readonly<{ workspace: WorkspaceRef; canEdit: boolean }>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -63,7 +66,7 @@ function CreatedSkills({ workspace }: Readonly<{ workspace: WorkspaceRef }>) {
       <ListSection
         title={t('links.sections.created')}
         count={isLoading ? undefined : pageTotal(pagination)}
-        action={<SkillAddMenu workspace={workspace} />}
+        action={canEdit ? <SkillAddMenu workspace={workspace} /> : undefined}
         testId="workspace-created-skill"
       >
         {isLoading && (
@@ -89,17 +92,19 @@ function CreatedSkills({ workspace }: Readonly<{ workspace: WorkspaceRef }>) {
               })
             }
             actions={
-              <WorkspaceSkillRowActions
-                skill={skill}
-                isChangingState={isChangingSkillState}
-                onSetActive={(isActive) =>
-                  setSkillActive({ skillId: skill.id, isActive })
-                }
-                onSetPinned={(isPinned) =>
-                  setSkillPinned({ skillId: skill.id, isPinned })
-                }
-                onDelete={() => deleteSkill(skill.id)}
-              />
+              canEdit && (
+                <WorkspaceSkillRowActions
+                  skill={skill}
+                  isChangingState={isChangingSkillState}
+                  onSetActive={(isActive) =>
+                    setSkillActive({ skillId: skill.id, isActive })
+                  }
+                  onSetPinned={(isPinned) =>
+                    setSkillPinned({ skillId: skill.id, isPinned })
+                  }
+                  onDelete={() => deleteSkill(skill.id)}
+                />
+              )
             }
           />
         ))}
@@ -116,11 +121,16 @@ function CreatedSkills({ workspace }: Readonly<{ workspace: WorkspaceRef }>) {
 
 export function WorkspaceSkillsTab({
   workspace,
-}: Readonly<{ workspace: WorkspaceRef }>) {
+  canEdit,
+}: Readonly<{ workspace: WorkspaceRef; canEdit: boolean }>) {
   return (
     <div className="space-y-6">
-      <CreatedSkills workspace={workspace} />
-      <WorkspaceLinkedSection kind="skill" workspace={workspace} />
+      <CreatedSkills workspace={workspace} canEdit={canEdit} />
+      <WorkspaceLinkedSection
+        kind="skill"
+        workspace={workspace}
+        canEdit={canEdit}
+      />
     </div>
   );
 }

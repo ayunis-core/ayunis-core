@@ -13,7 +13,8 @@ import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 export function WorkspaceInstructionsTab({
   workspaceId,
-}: Readonly<{ workspaceId: string }>) {
+  canEdit,
+}: Readonly<{ workspaceId: string; canEdit: boolean }>) {
   const { t } = useTranslation('workspace');
   const { updateInstruction, isSavingInstruction } =
     useWorkspaceContextActions(workspaceId);
@@ -41,6 +42,7 @@ export function WorkspaceInstructionsTab({
           value={value}
           data-testid="workspace-instruction-input"
           disabled={isLoading}
+          readOnly={!canEdit}
           onChange={(event) => {
             setValue(event.target.value);
             setIsDirty(true);
@@ -53,20 +55,26 @@ export function WorkspaceInstructionsTab({
           rows={8}
         />
       </OnboardingTourTarget>
-      <div className="flex justify-end">
-        <Button
-          data-testid="workspace-instruction-save"
-          disabled={isLoading || isSavingInstruction || !isDirty}
-          onClick={() => {
-            const instruction = value.trim() || null;
-            void updateInstruction(instruction).then(() => {
-              setIsDirty(false);
-            });
-          }}
-        >
-          {t('context.instructions.save')}
-        </Button>
-      </div>
+      {canEdit ? (
+        <div className="flex justify-end">
+          <Button
+            data-testid="workspace-instruction-save"
+            disabled={isLoading || isSavingInstruction || !isDirty}
+            onClick={() => {
+              const instruction = value.trim() || null;
+              void updateInstruction(instruction).then(() => {
+                setIsDirty(false);
+              });
+            }}
+          >
+            {t('context.instructions.save')}
+          </Button>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {t('context.instructions.readOnlyHint')}
+        </p>
+      )}
     </section>
   );
 }

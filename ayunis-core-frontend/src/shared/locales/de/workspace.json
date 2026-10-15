@@ -94,7 +94,8 @@
       "placeholder": "Geben Sie Anweisungen ein, die für alle Chats in diesem Arbeitsbereich gelten.",
       "save": "Speichern",
       "saveSuccess": "Anweisungen wurden gespeichert.",
-      "saveError": "Anweisungen konnten nicht gespeichert werden."
+      "saveError": "Anweisungen konnten nicht gespeichert werden.",
+      "readOnlyHint": "Gilt für jeden Chat im Arbeitsbereich."
     }
   },
   "links": {

@@ -44,6 +44,8 @@ import enResourceOwnership from './shared/locales/en/resource-ownership.json';
 import deResourceOwnership from './shared/locales/de/resource-ownership.json';
 import enResourceHandover from './shared/locales/en/resource-handover.json';
 import deResourceHandover from './shared/locales/de/resource-handover.json';
+import enWorkspaceSharing from './shared/locales/en/workspace-sharing.json';
+import deWorkspaceSharing from './shared/locales/de/workspace-sharing.json';
 import enWorkspace from './shared/locales/en/workspace.json';
 import deWorkspace from './shared/locales/de/workspace.json';
 import enSkills from './shared/locales/en/skills.json';
@@ -116,6 +118,7 @@ const resources = {
     workspaces: enWorkspaces,
     'resource-ownership': enResourceOwnership,
     'resource-handover': enResourceHandover,
+    'workspace-sharing': enWorkspaceSharing,
     workspace: enWorkspace,
     skill: enSkill,
     'knowledge-bases': enKnowledgeBases,
@@ -162,6 +165,7 @@ const resources = {
     workspaces: deWorkspaces,
     'resource-ownership': deResourceOwnership,
     'resource-handover': deResourceHandover,
+    'workspace-sharing': deWorkspaceSharing,
     workspace: deWorkspace,
     skill: deSkill,
     'knowledge-bases': deKnowledgeBases,

@@ -94,7 +94,8 @@
       "placeholder": "Enter instructions that apply to every chat in this workspace.",
       "save": "Save",
       "saveSuccess": "Instructions were saved.",
-      "saveError": "Instructions could not be saved."
+      "saveError": "Instructions could not be saved.",
+      "readOnlyHint": "Applies to every chat in the workspace."
     }
   },
   "links": {

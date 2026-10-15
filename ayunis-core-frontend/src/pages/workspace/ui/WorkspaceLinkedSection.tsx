@@ -68,7 +68,8 @@ function UnlinkButton({
 export function WorkspaceLinkedSection({
   kind,
   workspace,
-}: Readonly<{ kind: LinkKind; workspace: WorkspaceRef }>) {
+  canEdit,
+}: Readonly<{ kind: LinkKind; workspace: WorkspaceRef; canEdit: boolean }>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const { items, isLoading } = useLinkedItems(kind, workspace.id);
@@ -107,7 +108,9 @@ export function WorkspaceLinkedSection({
           actions={
             <>
               <OwnerMeta item={item} />
-              <UnlinkButton kind={kind} workspace={workspace} item={item} />
+              {canEdit && (
+                <UnlinkButton kind={kind} workspace={workspace} item={item} />
+              )}
             </>
           }
         />

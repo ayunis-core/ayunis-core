@@ -8,7 +8,7 @@
     "org": "Organisation"
   },
   "hints": {
-    "personal": "Nur Sie können sie nutzen und ändern.",
+    "personal": "Nur Sie können sie ändern.",
     "team": "Alle im Team {{team}} können sie nutzen. {{editors}}",
     "org": "Alle {{total}} Personen in der Organisation können sie nutzen. {{editors}}"
   },
@@ -28,7 +28,7 @@
       "review": "Gehört {{name}}"
     },
     "audience": {
-      "personal": "Nur Sie können die {{noun}} nutzen und ändern.",
+      "personal": "Nur Sie können die {{noun}} ändern.",
       "team": "Alle {{total}} Mitglieder können die {{noun}} nutzen.",
       "org": "Alle {{total}} Personen in der Organisation können die {{noun}} nutzen.",
       "review": "Sie prüfen diese Anfrage und können die {{noun}} ansehen, aber nicht nutzen oder ändern."

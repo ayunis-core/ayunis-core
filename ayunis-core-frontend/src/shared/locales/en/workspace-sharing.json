@@ -1,0 +1,99 @@
+{
+  "levels": {
+    "owner": "Owner",
+    "full": "Full access",
+    "edit": "Can edit",
+    "use": "Can use"
+  },
+  "levelDescriptions": {
+    "full": "Adjust skills, knowledge and instructions, invite people and set rights.",
+    "edit": "Adjust skills, knowledge and instructions.",
+    "use": "Chat in the workspace and create content."
+  },
+  "viewer": {
+    "owner": "Your workspace",
+    "full": "You have full access",
+    "edit": "You can edit",
+    "use": "You can use"
+  },
+  "members_one": "{{count}} member",
+  "members_other": "{{count}} members",
+  "dialog": {
+    "title": "Members of “{{workspace}}”",
+    "description": "All members get access to skills, knowledge and created content in the workspace. Chats stay private.",
+    "noFullAccess": "People with full access here can invite people and change rights.",
+    "noRight": "In your organisation, only {{list}} may invite.",
+    "noRightPeople": "In your organisation, only {{list}} may invite individual people and teams.",
+    "inviters": {
+      "admins": "admins",
+      "managers": "managers",
+      "teamAdmins": "team admins for their own team"
+    },
+    "and": "and",
+    "loadError": "The members could not be loaded.",
+    "retry": "Try again"
+  },
+  "picker": {
+    "label": "Invite people and teams",
+    "placeholder": "Search for a person or team",
+    "groups": {
+      "organization": "Organisation",
+      "teams": "Teams",
+      "noTeam": "No team"
+    },
+    "organization": "Entire organisation",
+    "team": "Team {{name}}",
+    "people_one": "{{count}} person",
+    "people_other": "{{count}} people",
+    "noMatch": "Nobody found",
+    "everyoneInvited": "Everyone in your organisation is already invited.",
+    "levelLabel": "Rights for the invited",
+    "invite": "Invite",
+    "loadError": "The people and teams to invite could not be loaded."
+  },
+  "list": {
+    "people": "People",
+    "team_one": "Team {{name}} · {{count}} person",
+    "team_other": "Team {{name}} · {{count}} people",
+    "organization_one": "Organisation · {{count}} person",
+    "organization_other": "Organisation · {{count}} people",
+    "you": "(you)",
+    "noTeam": "No team",
+    "levelLabel": "Rights of {{name}}",
+    "remove": "Remove",
+    "teamFootnote": "People who join the team later get “{{level}}”.",
+    "organizationFootnote": "People who join the organisation later get “Can use”.",
+    "endSharing": "End sharing"
+  },
+  "toasts": {
+    "invitedOne": "Invited. “{{workspace}}” is now shared.",
+    "invitedMany": "{{count}} people and teams now have access to “{{workspace}}”.",
+    "organizationShared": "“{{workspace}}” is now shared with the entire organisation.",
+    "unlinkedPerson": "The own skills and knowledge collections of {{name}} are no longer linked here.",
+    "unlinkedOrganization": "Own skills and knowledge collections of people without access are no longer linked here.",
+    "error": "The change could not be saved. Please try again."
+  },
+  "confirmOrganization": {
+    "title": "Share with the entire organisation?",
+    "description": "Everyone in your organisation can then use “{{workspace}}” and everything linked there. This also applies to everyone who joins later. You can then give individual people more rights or take access away again.",
+    "confirm": "Share",
+    "cancel": "Cancel"
+  },
+  "confirmEnd": {
+    "title": "End sharing with the organisation?",
+    "description": "Only invited people and teams will then have access to “{{workspace}}”.",
+    "confirm": "End sharing",
+    "cancel": "Cancel"
+  },
+  "confirmEndTeam": {
+    "title": "End the share with team {{team}}?",
+    "description": "Everyone who only has access to “{{workspace}}” through this team loses it. People who join the team later get no access.",
+    "confirm": "End share",
+    "cancel": "Cancel"
+  },
+  "noAccess": {
+    "title": "No access to this workspace",
+    "description": "Ask the person who manages it for an invitation.",
+    "back": "To the workspaces"
+  }
+}

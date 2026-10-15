@@ -49,7 +49,9 @@
     "review_all_knowledge_requests": "Anfragen an die Organisation und an jedes Team freigeben oder ablehnen, auch ohne dort Team-Admin zu sein.",
     "create_workspaces": "Eigene Arbeitsbereiche anlegen und darin Fähigkeiten und Wissen verknüpfen.",
     "manage_org_skills": "Fähigkeiten für alle in der Organisation erstellen, bearbeiten, löschen und für alle verpflichtend machen.",
-    "manage_org_knowledge": "Wissenssammlungen für alle in der Organisation erstellen, bearbeiten und löschen."
+    "manage_org_knowledge": "Wissenssammlungen für alle in der Organisation erstellen, bearbeiten und löschen.",
+    "share_workspaces": "Personen und Teams in Arbeitsbereiche einladen, in denen man Vollzugriff hat. Eingeladene nutzen alles, was dort verknüpft ist.",
+    "share_workspaces_org": "Einen Arbeitsbereich für alle in der Organisation öffnen. Alle nutzen dann, was dort verknüpft ist."
   },
   "permissions": {
     "manage_teams": "Teams verwalten",
@@ -67,7 +69,9 @@
     "review_all_knowledge_requests": "Alle Anfragen beantworten",
     "create_workspaces": "Arbeitsbereiche erstellen",
     "manage_org_skills": "Fähigkeiten der Organisation verwalten",
-    "manage_org_knowledge": "Wissenssammlungen der Organisation verwalten"
+    "manage_org_knowledge": "Wissenssammlungen der Organisation verwalten",
+    "share_workspaces": "Arbeitsbereiche verwalten",
+    "share_workspaces_org": "Für die ganze Organisation freigeben"
   },
   "teamAdmins": {
     "title": "Team-Admins",
@@ -79,14 +83,16 @@
       "team_appoint_admins": "Team-Admins ernennen",
       "team_manage_skills": "Fähigkeiten für das Team verwalten",
       "team_manage_knowledge": "Wissenssammlungen für das Team verwalten",
-      "team_review_requests": "Anfragen an das Team beantworten"
+      "team_review_requests": "Anfragen an das Team beantworten",
+      "team_share_workspaces": "Arbeitsbereiche für das Team verwalten"
     },
     "permissionHints": {
       "team_manage_members": "Personen ins eigene Team aufnehmen und wieder entfernen.",
       "team_appoint_admins": "Andere Mitglieder des eigenen Teams zum Team-Admin machen oder die Rolle wieder entziehen.",
       "team_manage_skills": "Fähigkeiten des Teams erstellen, bearbeiten und löschen.",
       "team_manage_knowledge": "Wissenssammlungen des Teams erstellen, bearbeiten und löschen.",
-      "team_review_requests": "Übergaben an das eigene Team freigeben oder ablehnen."
+      "team_review_requests": "Übergaben an das eigene Team freigeben oder ablehnen.",
+      "team_share_workspaces": "Das eigene Team oder einzelne Mitglieder daraus in Arbeitsbereiche einladen, in denen sie Vollzugriff haben. Gilt auch, wenn Benutzer und Manager Arbeitsbereiche nicht verwalten dürfen."
     }
   },
   "save": "Änderungen speichern",
