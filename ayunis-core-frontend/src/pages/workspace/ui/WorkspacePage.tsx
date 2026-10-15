@@ -14,6 +14,7 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import {
   WorkspaceDeleteDialog,
   WorkspaceSettingsDialog,
+  WorkspaceTransferDialog,
 } from '@/widgets/workspace-settings-dialog';
 import { canEditWorkspace, type Workspace } from '@/features/workspaces';
 import { WorkspaceAccessBadge } from './WorkspaceAccessBadge';
@@ -63,6 +64,7 @@ export default function WorkspacePage({
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { deleteChat } = useDeleteChat();
   const countParams = { limit: 1, offset: 0 };
@@ -103,6 +105,7 @@ export default function WorkspacePage({
               <WorkspaceHeaderActions
                 workspace={workspace}
                 onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenTransfer={() => setIsTransferOpen(true)}
                 onOpenDelete={() => setIsDeleteOpen(true)}
               />
             }
@@ -197,6 +200,11 @@ export default function WorkspacePage({
         workspace={workspace}
         open={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
+      />
+      <WorkspaceTransferDialog
+        workspace={workspace}
+        open={isTransferOpen}
+        onOpenChange={setIsTransferOpen}
       />
       <WorkspaceDeleteDialog
         workspace={workspace}

@@ -30,7 +30,12 @@ import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
 import { useToggleFavorite, type Favorite } from '@/features/favorites';
-import { useWorkspaces, type Workspace } from '@/features/workspaces';
+import {
+  canManageWorkspace,
+  isWorkspaceOwner,
+  useWorkspaces,
+  type Workspace,
+} from '@/features/workspaces';
 import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 
@@ -65,6 +70,11 @@ export function FavoriteSidebarItem({
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
   const isWorkspace = item.referenceType === 'workspace';
+  const canEditDetails =
+    workspace !== undefined && canManageWorkspace(workspace.accessLevel);
+  const canDelete =
+    !isWorkspace ||
+    (workspace !== undefined && isWorkspaceOwner(workspace.accessLevel));
   const threadWorkspaceId =
     item.referenceType === 'thread' ? item.workspaceId : undefined;
   const title = item.name ?? t('sidebar.untitled');
@@ -117,29 +127,34 @@ export function FavoriteSidebarItem({
             collisionPadding={8}
             onCloseAutoFocus={handleCloseAutoFocus}
           >
-            {isWorkspace ? (
-              <DropdownMenuItem
-                disabled={!workspace}
-                onClick={() => {
-                  if (workspace) {
-                    requestDialogOpen(() => onOpenWorkspaceSettings(workspace));
+            {isWorkspace && workspace && canEditDetails && (
+              <>
+                <DropdownMenuItem
+                  onClick={() =>
+                    requestDialogOpen(() => onOpenWorkspaceSettings(workspace))
                   }
-                }}
-              >
-                <Pencil />
-                <span>{tWorkspaces('actions.edit')}</span>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                onClick={() =>
-                  requestDialogOpen(() => onRename(item.referenceId, item.name))
-                }
-              >
-                <Pencil />
-                <span>{t('sidebar.renameChat')}</span>
-              </DropdownMenuItem>
+                >
+                  <Pencil />
+                  <span>{tWorkspaces('actions.edit')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
             )}
-            <DropdownMenuSeparator />
+            {!isWorkspace && (
+              <>
+                <DropdownMenuItem
+                  onClick={() =>
+                    requestDialogOpen(() =>
+                      onRename(item.referenceId, item.name),
+                    )
+                  }
+                >
+                  <Pencil />
+                  <span>{t('sidebar.renameChat')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem
               disabled={!canMoveUp}
               onClick={() => onMove(item.id, 'up')}
@@ -196,17 +211,19 @@ export function FavoriteSidebarItem({
                 </DropdownMenuSub>
               </>
             )}
-            <DropdownMenuItem
-              onClick={() => requestDialogOpen(() => onDelete(item))}
-              variant="destructive"
-            >
-              <Trash />
-              <span>
-                {isWorkspace
-                  ? tWorkspaces('actions.delete')
-                  : t('sidebar.deleteChat')}
-              </span>
-            </DropdownMenuItem>
+            {canDelete && (
+              <DropdownMenuItem
+                onClick={() => requestDialogOpen(() => onDelete(item))}
+                variant="destructive"
+              >
+                <Trash />
+                <span>
+                  {isWorkspace
+                    ? tWorkspaces('actions.delete')
+                    : t('sidebar.deleteChat')}
+                </span>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
