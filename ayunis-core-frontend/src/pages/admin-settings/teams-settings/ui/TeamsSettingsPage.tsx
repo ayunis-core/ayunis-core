@@ -7,6 +7,7 @@ import { TeamsList } from './TeamsList';
 import TeamsFilters from './TeamsFilters';
 import {
   CreateFirstTeamEmptyState,
+  NoManageableTeamsEmptyState,
   NoTeamsFoundEmptyState,
 } from './TeamsEmptyState';
 import { CreateTeamDialog } from './CreateTeamDialog';
@@ -18,9 +19,13 @@ import { PermissionGate } from '@/features/permissions';
 
 interface TeamsSettingsPageProps {
   teams: Team[];
+  forbidden?: boolean;
 }
 
-export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
+export function TeamsSettingsPage({
+  teams,
+  forbidden = false,
+}: Readonly<TeamsSettingsPageProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { canManageTeams } = useTeamManagementAccess();
   const { t: tLayout } = useTranslation('admin-settings-layout');
@@ -35,7 +40,7 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   );
   const hasSearch = normalizedSearch.length > 0;
   const hasVisibleTeams = filteredTeams.length > 0;
-  const showCreateFirstTeamEmptyState = !hasTeams;
+  const showCreateFirstTeamEmptyState = !hasTeams && !forbidden;
   const showNoTeamsFoundEmptyState = hasTeams && hasSearch && !hasVisibleTeams;
   const showTeamsList = hasTeams && hasVisibleTeams;
 
@@ -56,6 +61,7 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
     <SettingsLayout action={headerActions} title={tLayout('layout.teams')}>
       <div className="space-y-4">
         {hasTeams && <TeamsFilters value={search} onChange={setSearch} />}
+        {forbidden && <NoManageableTeamsEmptyState />}
         {showCreateFirstTeamEmptyState && <CreateFirstTeamEmptyState />}
         {showNoTeamsFoundEmptyState && <NoTeamsFoundEmptyState />}
         {showTeamsList && (

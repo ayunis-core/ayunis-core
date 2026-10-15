@@ -14,6 +14,18 @@ import { useDeleteTeam } from '@/pages/admin-settings/teams-settings/api/useDele
 import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 import { PermissionGate } from '@/features/permissions';
 
+function useAdminLine() {
+  const { t } = useTranslation('admin-settings-teams');
+  return (team: Team) => {
+    const names = (team.teamAdmins ?? []).map((admin) => admin.name);
+    if (names.length === 0) return t('teams.list.noAdmins');
+    return t('teams.list.admins', {
+      count: names.length,
+      names: names.join(', '),
+    });
+  };
+}
+
 interface TeamsListProps {
   teams: Team[];
   canManage?: boolean;
@@ -27,6 +39,7 @@ export function TeamsList({
 }: Readonly<TeamsListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
+  const adminLine = useAdminLine();
 
   return (
     <div className="space-y-3">
@@ -49,10 +62,8 @@ export function TeamsList({
                   </Badge>
                 )}
               </ItemTitle>
-              <ItemDescription>
-                {t('teams.list.createdAt', {
-                  date: new Date(team.createdAt).toLocaleDateString(),
-                })}
+              <ItemDescription data-testid={`team-admins-${team.id}`}>
+                {adminLine(team)}
               </ItemDescription>
             </ItemContent>
           </Link>

@@ -8,7 +8,8 @@ import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: { names?: string }) =>
+      options?.names ? `${key}:${options.names}` : key,
   }),
 }));
 
@@ -111,6 +112,37 @@ describe('TeamsSettingsPage', () => {
       screen.getByPlaceholderText('teams.filters.searchPlaceholder'),
     ).toBeTruthy();
     expect(screen.getByText('City Services')).toBeTruthy();
+  });
+
+  it('names the team admins below each team', () => {
+    renderTeamsSettingsPage([
+      createTeam({
+        teamAdmins: [
+          { userId: 'user-1', name: 'Jonas Weber' },
+          { userId: 'user-2', name: 'Lena Hoffmann' },
+        ],
+      }),
+      createTeam({ id: 'team-2', name: 'Bauamt', teamAdmins: [] }),
+    ]);
+
+    expect(screen.getByTestId('team-admins-team-1').textContent).toBe(
+      'teams.list.admins:Jonas Weber, Lena Hoffmann',
+    );
+    expect(screen.getByTestId('team-admins-team-2').textContent).toBe(
+      'teams.list.noAdmins',
+    );
+  });
+
+  it('explains that only admins and team admins manage teams when access is gone', () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TeamsSettingsPage teams={[]} forbidden />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText('teams.list.forbiddenTitle')).toBeTruthy();
+    expect(screen.queryByText('teams.list.emptyTitle')).toBeNull();
   });
 
   it('shows the no-matches empty state when a search has no team matches', () => {

@@ -11,9 +11,13 @@
       "emptyDescription": "Create your first team to organize your users.",
       "noMatchesTitle": "No teams found",
       "noMatchesDescription": "No teams match your search.",
-      "createdAt": "Created {{date}}",
       "memberCount_one": "{{count}} member",
-      "memberCount_other": "{{count}} members"
+      "memberCount_other": "{{count}} members",
+      "admins_one": "Team admin: {{names}}",
+      "admins_other": "Team admins: {{names}}",
+      "noAdmins": "No team admin yet",
+      "forbiddenTitle": "Only for admins and team admins",
+      "forbiddenDescription": "Teams are managed by the organisation's admins and by each team's team admins."
     },
     "createDialog": {
       "title": "Create Team",
@@ -67,12 +71,20 @@
     },
     "members": {
       "title": "Members",
+      "description": "Team admins manage this team's members and can appoint further team admins.",
       "name": "Name",
       "email": "Email",
       "role": "Role",
       "joinedAt": "Joined",
       "emptyTitle": "No members yet",
-      "emptyDescription": "Add members to this team to get started."
+      "emptyDescription": "Add members to this team to get started.",
+      "roles": {
+        "member": "Member",
+        "teamAdmin": "Team admin"
+      },
+      "roleLabel": "Role of {{name}}",
+      "remove": "Remove from the team",
+      "removeLabel": "Remove {{name}} from the team"
     },
     "addMember": {
       "button": "Add Members",
@@ -126,9 +138,21 @@
       "confirmDescription": "Are you sure you want to remove this member from the team?",
       "confirmButton": "Remove",
       "cancelButton": "Cancel",
-      "success": "Member removed successfully",
+      "success": "{{name}} is no longer in {{team}}.",
       "error": "Failed to remove member",
-      "notFound": "Member not found"
+      "notFound": "Member not found",
+      "lastTeamAdmin": "Only admins can change or remove the last team admin of a team."
+    },
+    "forbidden": {
+      "title": "You cannot manage this team",
+      "description": "Open a team from the list."
+    },
+    "setTeamAdmin": {
+      "promoted": "{{name}} is now a team admin of {{team}}.",
+      "demoted": "{{name}} is now a member of {{team}}.",
+      "lastTeamAdmin": "Only admins can change or remove the last team admin of a team.",
+      "notFound": "Member not found",
+      "error": "Could not change the role"
     }
   },
   "models": {
