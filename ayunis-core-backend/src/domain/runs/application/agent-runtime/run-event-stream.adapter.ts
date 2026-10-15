@@ -32,7 +32,10 @@ import {
 } from './runtime-model-error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
-import { mapPortableProviderError } from './provider-failure.mapper';
+import {
+  mapPortableProviderError,
+  mapProviderFailureBehindHook,
+} from './provider-failure.mapper';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import { mapRuntimeHookError } from './runtime-hook-error';
 import { mapCreditPolicyError } from 'src/domain/runs/application/credit-policy-error';
@@ -305,9 +308,17 @@ function mapRunError(
       reconstructRuntimeAnonymizationError(event.details),
     );
   }
-  const policyError =
-    mapCreditPolicyError(event) ?? mapUsageAccountingError(event, logger);
+  const policyError = mapCreditPolicyError(event);
   if (policyError) return policyError;
+  const accountingError = mapUsageAccountingError(event, logger);
+  if (accountingError) {
+    const providerError = mapProviderFailureBehindHook(event, models);
+    if (!providerError) return accountingError;
+    // The accounting failure is what made the call terminal; the transcript
+    // policy reads it from here.
+    providerError.cause = accountingError;
+    return providerError;
+  }
   const hookFailure = mapRuntimeHookError(event, logger);
   if (hookFailure) return hookFailure;
   const runtimeModelError = reconstructRuntimeModelError(event.details);

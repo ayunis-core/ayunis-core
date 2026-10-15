@@ -1,11 +1,16 @@
-import type { Hook } from '@ayunis/agent-runtime';
-import { Injectable } from '@nestjs/common';
+import type { AfterModelCallContext, Hook } from '@ayunis/agent-runtime';
+import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { RuntimeLanguageModelResolver } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 
+type ModelCallOutcome = AfterModelCallContext['outcome'];
+
 @Injectable()
 export class UsageHookFactory {
+  private readonly logger = new Logger(UsageHookFactory.name);
+
   constructor(
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
   ) {}
@@ -18,18 +23,8 @@ export class UsageHookFactory {
       afterModelCall: async (ctx) => {
         const model = params.resolveModel(ctx.model);
         const usage = ctx.outcome.usage;
-        const hasReportedUsage = [
-          usage.inputTokens,
-          usage.outputTokens,
-          usage.cacheReadInputTokens,
-          usage.cacheWriteInputTokens,
-        ].some((value) => value !== undefined);
-        if (!hasReportedUsage) {
-          if (model.consumesCredits && requiresReportedUsage(ctx.outcome)) {
-            throw new Error(
-              'Paid model call completed without reporting usage',
-            );
-          }
+        if (!hasReportedUsage(usage)) {
+          this.handleMissingUsage(ctx, model);
           return;
         }
 
@@ -45,11 +40,50 @@ export class UsageHookFactory {
       },
     };
   }
+
+  private handleMissingUsage(
+    ctx: AfterModelCallContext,
+    model: LanguageModel,
+  ): void {
+    if (!model.consumesCredits || !requiresReportedUsage(ctx.outcome)) {
+      return;
+    }
+    if (!endedByConsumer(ctx.outcome)) {
+      throw new Error('Paid model call completed without reporting usage');
+    }
+    // The run is already over for the user, so failing the hook would only
+    // turn a closed tab into an incident without recovering the usage.
+    this.logger.warn(
+      {
+        execution_path: 'agent_runtime',
+        modelCallId: ctx.modelCallId,
+        provider: model.provider,
+        model: model.name,
+        trigger: ctx.trigger,
+        callSequence: ctx.callSequence,
+        outcome: ctx.outcome.type,
+        providerConsumptionStarted: ctx.outcome.providerConsumptionStarted,
+        producedOutput: ctx.outcome.producedOutput,
+      },
+      'Usage unknown for a model call the consumer ended',
+    );
+  }
 }
 
-function requiresReportedUsage(
-  outcome: Parameters<NonNullable<Hook['afterModelCall']>>[0]['outcome'],
-): boolean {
+function hasReportedUsage(usage: ModelCallOutcome['usage']): boolean {
+  return [
+    usage.inputTokens,
+    usage.outputTokens,
+    usage.cacheReadInputTokens,
+    usage.cacheWriteInputTokens,
+  ].some((value) => value !== undefined);
+}
+
+function endedByConsumer(outcome: ModelCallOutcome): boolean {
+  return outcome.type === 'consumer_abandoned' || outcome.type === 'aborted';
+}
+
+function requiresReportedUsage(outcome: ModelCallOutcome): boolean {
   if (outcome.providerConsumptionStarted || outcome.outputState === 'final') {
     return true;
   }
