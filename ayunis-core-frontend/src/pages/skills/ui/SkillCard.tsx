@@ -7,7 +7,7 @@ import {
 } from '@ayunis/ui/components/tooltip';
 import { Trash2, Pin } from 'lucide-react';
 import { useDeleteSkill } from '@/pages/skills/api/useDeleteSkill';
-import { OwnerBadge } from '@/features/resource-ownership';
+import { OwnerBadge, SubmittedByLabel } from '@/features/resource-ownership';
 import {
   useSetSkillActivation,
   useSetSkillPin,
@@ -98,6 +98,11 @@ export default function SkillCard({
         <>
           <span>{skill.name}</span>
           <OwnerBadge resource={skill} testId={`skill-owner-${skill.id}`} />
+          <SubmittedByLabel
+            kind="skill"
+            resource={skill}
+            testId={`skill-submitted-by-${skill.id}`}
+          />
         </>
       }
       description={skill.shortDescription}

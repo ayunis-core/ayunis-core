@@ -7,6 +7,12 @@ import {
   showsOwnershipCard,
 } from '@/widgets/resource-ownership-card';
 import { ReadOnlyBadge } from '@/features/resource-ownership';
+import {
+  HandoverButton,
+  HandoverRequestArea,
+  useHandoverState,
+  type HandoverState,
+} from '@/features/resource-handover';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -77,18 +83,58 @@ function KnowledgeBaseDeleteButton({
   );
 }
 
+function KnowledgeBaseOwnershipSection({
+  knowledgeBase,
+  handover,
+  onDecided,
+}: Readonly<{
+  knowledgeBase: KnowledgeBaseResponseDto;
+  handover: HandoverState;
+  onDecided: () => Promise<void>;
+}>) {
+  const reviewedFor = handover.isReviewing
+    ? handover.pending?.requestedBy.name
+    : undefined;
+  return (
+    <>
+      {(handover.isReviewing
+        ? reviewedFor !== undefined
+        : showsOwnershipCard(knowledgeBase)) && (
+        <ResourceOwnershipCard
+          kind="knowledge_base"
+          resource={knowledgeBase}
+          reviewedFor={reviewedFor}
+        />
+      )}
+      <HandoverRequestArea
+        kind="knowledge_base"
+        pending={handover.pending}
+        onDecided={onDecided}
+      />
+    </>
+  );
+}
+
 function KnowledgeBaseConfiguration({
   knowledgeBase,
-}: Readonly<{ knowledgeBase: KnowledgeBaseResponseDto }>) {
+  handover,
+  onDecided,
+}: Readonly<{
+  knowledgeBase: KnowledgeBaseResponseDto;
+  handover: HandoverState;
+  onDecided: () => Promise<void>;
+}>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const canEdit = knowledgeBase.viewer?.canEdit ?? false;
 
   return (
     <div className="grid gap-4">
-      {showsOwnershipCard(knowledgeBase) && (
-        <ResourceOwnershipCard kind="knowledge_base" resource={knowledgeBase} />
-      )}
+      <KnowledgeBaseOwnershipSection
+        knowledgeBase={knowledgeBase}
+        handover={handover}
+        onDecided={onDecided}
+      />
       {canEdit && (
         <KnowledgeBasePropertiesCard
           key={knowledgeBase.id}
@@ -127,6 +173,10 @@ export function KnowledgeBasePage({
   const canEdit = knowledgeBase.viewer?.canEdit ?? false;
   const canUse = knowledgeBase.viewer?.canUse ?? true;
   const canDelete = knowledgeBase.viewer?.canDelete ?? false;
+  const handover = useHandoverState('knowledge_base', knowledgeBase);
+  const navigate = useNavigate();
+  const leaveAfterDecision = () =>
+    navigate({ to: '/knowledge-bases', search: { tab: 'requests' } });
 
   return (
     <AppLayout>
@@ -147,6 +197,12 @@ export function KnowledgeBasePage({
                     testId="knowledge-base-detail-active-toggle"
                   />
                 )}
+                {handover.mayHandOver && (
+                  <HandoverButton
+                    kind="knowledge_base"
+                    item={{ id: knowledgeBase.id, name: knowledgeBase.name }}
+                  />
+                )}
                 {canDelete && (
                   <KnowledgeBaseDeleteButton knowledgeBase={knowledgeBase} />
                 )}
@@ -155,7 +211,11 @@ export function KnowledgeBasePage({
           />
         }
         contentArea={
-          <KnowledgeBaseConfiguration knowledgeBase={knowledgeBase} />
+          <KnowledgeBaseConfiguration
+            knowledgeBase={knowledgeBase}
+            handover={handover}
+            onDecided={leaveAfterDecision}
+          />
         }
       />
     </AppLayout>

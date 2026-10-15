@@ -8,7 +8,7 @@
     "org": "Organisation"
   },
   "hints": {
-    "personal": "Nur Sie können sie ändern.",
+    "personal": "Nur Sie können sie nutzen und ändern.",
     "team": "Alle im Team {{team}} können sie nutzen. {{editors}}",
     "org": "Alle {{total}} Personen in der Organisation können sie nutzen. {{editors}}"
   },
@@ -24,12 +24,14 @@
     "title": {
       "personal": "Gehört Ihnen",
       "team": "Gehört dem Team {{team}}",
-      "org": "Gehört der Organisation"
+      "org": "Gehört der Organisation",
+      "review": "Gehört {{name}}"
     },
     "audience": {
-      "personal": "Nur Sie können die {{noun}} ändern.",
+      "personal": "Nur Sie können die {{noun}} nutzen und ändern.",
       "team": "Alle {{total}} Mitglieder können die {{noun}} nutzen.",
-      "org": "Alle {{total}} Personen in der Organisation können die {{noun}} nutzen."
+      "org": "Alle {{total}} Personen in der Organisation können die {{noun}} nutzen.",
+      "review": "Sie prüfen diese Anfrage und können die {{noun}} ansehen, aber nicht nutzen oder ändern."
     }
   },
   "nouns": {
@@ -40,5 +42,9 @@
   "created": {
     "team": "„{{name}}“ gehört jetzt Team {{team}}.",
     "org": "„{{name}}“ gehört jetzt der Organisation. Alle können sie nutzen."
+  },
+  "submittedBy": {
+    "you": "Eingereicht von Ihnen",
+    "other": "Eingereicht von {{name}}"
   }
 }

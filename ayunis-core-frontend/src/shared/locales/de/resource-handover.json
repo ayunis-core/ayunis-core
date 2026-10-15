@@ -1,0 +1,97 @@
+{
+  "nouns": {
+    "skill": "Fähigkeit",
+    "knowledge_base": "Wissenssammlung"
+  },
+  "action": "Übergeben",
+  "dialog": {
+    "title": {
+      "skill": "Fähigkeit übergeben",
+      "knowledge_base": "Wissenssammlung übergeben"
+    },
+    "description": {
+      "direct": "Sie dürfen das freigeben, die Übergabe gilt sofort.",
+      "admin": "Ein Admin prüft Ihre Anfrage.",
+      "oneReviewer": "{{name}} als Team-Admin oder ein Admin prüft Ihre Anfrage.",
+      "teamAdmins": "Ein Team-Admin oder ein Admin prüft Ihre Anfrage."
+    },
+    "targetLabel": "An",
+    "groups": {
+      "own": "Ihre Teams",
+      "other": "Andere Teams"
+    },
+    "hint": {
+      "directTeam": "Danach gehört die {{noun}} dem Team {{team}}.",
+      "directOrg": "Danach gehört die {{noun}} der Organisation.",
+      "requestTeam": "Danach können Sie die {{noun}} nicht mehr bearbeiten, nur noch die Team-Admins.",
+      "requestOrg": "Danach können Sie die {{noun}} nicht mehr bearbeiten, nur noch Admins.",
+      "requestOrgWithRight": "Danach können Sie die {{noun}} nicht mehr bearbeiten, nur noch Admins und alle mit dem Recht dazu.",
+      "audienceTeam": "Alle {{count}} Mitglieder im Team können die {{noun}} nutzen.",
+      "audienceOrg": "Alle {{count}} Personen in der Organisation können die {{noun}} nutzen.",
+      "severalTeams": "Sollen mehrere Teams sie nutzen, übergeben Sie sie an die Organisation.",
+      "unlinks": "Verknüpfte Wissenssammlungen und Integrationen werden dabei von der Fähigkeit gelöst."
+    },
+    "cancel": "Abbrechen",
+    "submitDirect": "Übergeben",
+    "submitRequest": "Anfrage stellen"
+  },
+  "target": {
+    "option": {
+      "team": "Team {{team}}",
+      "org": "Organisation"
+    },
+    "to": {
+      "team": "Team {{team}}",
+      "org": "die Organisation"
+    },
+    "owner": {
+      "team": "dem Team {{team}}",
+      "org": "der Organisation"
+    }
+  },
+  "status": {
+    "text": "Anfrage an {{target}} offen ({{date}}). {{reviewer}} prüft sie.",
+    "admin": "Ein Admin",
+    "teamAdmin": "Ein Team-Admin",
+    "person": "{{name}}",
+    "withdraw": "Zurückziehen"
+  },
+  "review": {
+    "title": "{{name}} möchte diese {{noun}} an {{target}} übergeben",
+    "text": "Angefragt: {{date}}. Nach der Freigabe gehört sie {{owner}}. {{name}} kann sie dann nicht mehr ändern.",
+    "reject": "Ablehnen",
+    "approve": "Freigeben"
+  },
+  "toast": {
+    "direct": "„{{name}}“ gehört jetzt {{owner}}.",
+    "requested": "Anfrage gestellt.",
+    "withdrawn": "Anfrage zurückgezogen.",
+    "approved": "Freigegeben. „{{name}}“ gehört jetzt {{owner}}.",
+    "rejected": "Abgelehnt. „{{name}}“ bleibt bei {{requester}}."
+  },
+  "errors": {
+    "nameTaken": "Dort gibt es bereits eine {{noun}} mit diesem Namen. Bitten Sie um eine Umbenennung.",
+    "notPending": "Über diese Anfrage wurde schon entschieden.",
+    "alreadyPending": "Für diese {{noun}} gibt es schon eine offene Anfrage.",
+    "generic": "Das hat nicht geklappt. Bitte versuchen Sie es noch einmal."
+  },
+  "requests": {
+    "tab": "Anfragen",
+    "count_one": "{{count}} offene Anfrage",
+    "count_other": "{{count}} offene Anfragen",
+    "groupOrg": "Organisation",
+    "groupTeam": "Team {{team}}",
+    "row": "Von {{name}} · {{date}}",
+    "emptyTitle": "Keine offenen Anfragen",
+    "emptyDescription": {
+      "skill": "Hier erscheinen Fähigkeiten, die Mitarbeitende an ein Team oder die Organisation übergeben möchten.",
+      "knowledge_base": "Hier erscheinen Wissenssammlungen, die Mitarbeitende an ein Team oder die Organisation übergeben möchten."
+    }
+  },
+  "date": {
+    "justNow": "Gerade eben",
+    "today": "Heute, {{time}}",
+    "yesterday": "Gestern, {{time}}",
+    "plain": "{{date}}"
+  }
+}

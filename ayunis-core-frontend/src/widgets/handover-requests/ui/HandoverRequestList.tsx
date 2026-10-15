@@ -1,0 +1,117 @@
+import { useNavigate } from '@tanstack/react-router';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from '@ayunis/ui/components/item';
+import {
+  HandoverDecisionButtons,
+  useHandoverCopy,
+  useReviewableHandovers,
+  type HandoverKind,
+  type HandoverRequest,
+} from '@/features/resource-handover';
+import { EmptyState } from '@/widgets/empty-state';
+import {
+  requestSections,
+  type RequestSection,
+} from '@/widgets/handover-requests/lib/request-sections';
+
+function RequestRow({
+  kind,
+  request,
+}: Readonly<{ kind: HandoverKind; request: HandoverRequest }>) {
+  const { t, date } = useHandoverCopy(kind);
+  const navigate = useNavigate();
+  const openItem = () =>
+    void navigate(
+      kind === 'skill'
+        ? { to: '/skills/$id', params: { id: request.resource.id } }
+        : { to: '/knowledge-bases/$id', params: { id: request.resource.id } },
+    );
+
+  return (
+    <Item
+      variant="outline"
+      className="cursor-pointer hover:bg-accent/50"
+      onClick={openItem}
+      data-testid={`handover-request-${request.id}`}
+    >
+      <ItemContent>
+        <ItemTitle>{request.resource.name}</ItemTitle>
+        <ItemDescription className="line-clamp-1">
+          {t('requests.row', {
+            name: request.requestedBy.name,
+            date: date(request.requestedAt),
+          })}
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions onClick={(event) => event.stopPropagation()}>
+        <HandoverDecisionButtons kind={kind} request={request} />
+      </ItemActions>
+    </Item>
+  );
+}
+
+function RequestRows({
+  kind,
+  requests,
+}: Readonly<{ kind: HandoverKind; requests: HandoverRequest[] }>) {
+  return (
+    <ItemGroup className="gap-2">
+      {requests.map((request) => (
+        <RequestRow key={request.id} kind={kind} request={request} />
+      ))}
+    </ItemGroup>
+  );
+}
+
+function GroupedRequests({
+  kind,
+  sections,
+}: Readonly<{ kind: HandoverKind; sections: RequestSection[] }>) {
+  const { t } = useHandoverCopy(kind);
+  return (
+    <div className="space-y-6">
+      {sections.map((section) => (
+        <section key={section.key} className="space-y-2">
+          <h2 className="text-sm font-medium">
+            {section.teamName === null
+              ? t('requests.groupOrg')
+              : t('requests.groupTeam', { team: section.teamName })}
+            <span className="ml-2 font-normal tabular-nums text-muted-foreground">
+              {section.requests.length}
+            </span>
+          </h2>
+          <RequestRows kind={kind} requests={section.requests} />
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export function HandoverRequestList({
+  kind,
+}: Readonly<{ kind: HandoverKind }>) {
+  const { t } = useHandoverCopy(kind);
+  const { requests, isLoading } = useReviewableHandovers(kind, true);
+  if (isLoading) return null;
+  if (requests.length === 0) {
+    return (
+      <EmptyState
+        title={t('requests.emptyTitle')}
+        description={t(`requests.emptyDescription.${kind}`)}
+        testId="handover-requests-empty"
+      />
+    );
+  }
+  const sections = requestSections(requests);
+  return sections.length > 1 ? (
+    <GroupedRequests kind={kind} sections={sections} />
+  ) : (
+    <RequestRows kind={kind} requests={requests} />
+  );
+}

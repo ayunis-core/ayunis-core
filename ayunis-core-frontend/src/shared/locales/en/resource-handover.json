@@ -1,0 +1,97 @@
+{
+  "nouns": {
+    "skill": "skill",
+    "knowledge_base": "knowledge base"
+  },
+  "action": "Hand over",
+  "dialog": {
+    "title": {
+      "skill": "Hand over skill",
+      "knowledge_base": "Hand over knowledge base"
+    },
+    "description": {
+      "direct": "You may approve this yourself, so the handover applies at once.",
+      "admin": "An admin reviews your request.",
+      "oneReviewer": "{{name}} as team admin or an admin reviews your request.",
+      "teamAdmins": "A team admin or an admin reviews your request."
+    },
+    "targetLabel": "To",
+    "groups": {
+      "own": "Your teams",
+      "other": "Other teams"
+    },
+    "hint": {
+      "directTeam": "Afterwards the {{noun}} belongs to team {{team}}.",
+      "directOrg": "Afterwards the {{noun}} belongs to the organisation.",
+      "requestTeam": "Afterwards you can no longer edit the {{noun}}, only the team admins can.",
+      "requestOrg": "Afterwards you can no longer edit the {{noun}}, only admins can.",
+      "requestOrgWithRight": "Afterwards you can no longer edit the {{noun}}, only admins and everyone with the right to do so can.",
+      "audienceTeam": "All {{count}} members of the team can use the {{noun}}.",
+      "audienceOrg": "All {{count}} people in the organisation can use the {{noun}}.",
+      "severalTeams": "If several teams should use it, hand it over to the organisation.",
+      "unlinks": "Linked knowledge bases and integrations are removed from the skill."
+    },
+    "cancel": "Cancel",
+    "submitDirect": "Hand over",
+    "submitRequest": "Send request"
+  },
+  "target": {
+    "option": {
+      "team": "Team {{team}}",
+      "org": "Organisation"
+    },
+    "to": {
+      "team": "team {{team}}",
+      "org": "the organisation"
+    },
+    "owner": {
+      "team": "team {{team}}",
+      "org": "the organisation"
+    }
+  },
+  "status": {
+    "text": "Request to {{target}} open ({{date}}). {{reviewer}} reviews it.",
+    "admin": "An admin",
+    "teamAdmin": "A team admin",
+    "person": "{{name}}",
+    "withdraw": "Withdraw"
+  },
+  "review": {
+    "title": "{{name}} wants to hand this {{noun}} over to {{target}}",
+    "text": "Requested: {{date}}. Once approved it belongs to {{owner}}. {{name}} can then no longer change it.",
+    "reject": "Reject",
+    "approve": "Approve"
+  },
+  "toast": {
+    "direct": "“{{name}}” now belongs to {{owner}}.",
+    "requested": "Request sent.",
+    "withdrawn": "Request withdrawn.",
+    "approved": "Approved. “{{name}}” now belongs to {{owner}}.",
+    "rejected": "Rejected. “{{name}}” stays with {{requester}}."
+  },
+  "errors": {
+    "nameTaken": "A {{noun}} with this name already exists there. Ask for it to be renamed.",
+    "notPending": "This request has already been decided.",
+    "alreadyPending": "There is already an open request for this {{noun}}.",
+    "generic": "That did not work. Please try again."
+  },
+  "requests": {
+    "tab": "Requests",
+    "count_one": "{{count}} open request",
+    "count_other": "{{count}} open requests",
+    "groupOrg": "Organisation",
+    "groupTeam": "Team {{team}}",
+    "row": "From {{name}} · {{date}}",
+    "emptyTitle": "No open requests",
+    "emptyDescription": {
+      "skill": "Skills that people want to hand over to a team or the organisation appear here.",
+      "knowledge_base": "Knowledge bases that people want to hand over to a team or the organisation appear here."
+    }
+  },
+  "date": {
+    "justNow": "Just now",
+    "today": "Today, {{time}}",
+    "yesterday": "Yesterday, {{time}}",
+    "plain": "{{date}}"
+  }
+}
