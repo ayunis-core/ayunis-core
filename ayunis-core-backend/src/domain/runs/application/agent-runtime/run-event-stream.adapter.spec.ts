@@ -4,6 +4,7 @@ import {
   ModelProviderError,
   RunContext,
   run,
+  type Hook,
   type ModelProvider,
   type ProviderFailureFacts,
   type RunEvent,
@@ -43,6 +44,8 @@ import { adaptRunEventsToStream } from './run-event-stream.adapter';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { RuntimeModelRegistry } from './runtime-model.registry';
 import { ModelCallObservabilityHookFactory } from './hooks/model-call-observability-hook.factory';
+import { UsageHookFactory } from './hooks/usage-hook.factory';
+import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
 import {
   ApiKeyCreditLimitExceededError,
@@ -90,6 +93,7 @@ async function collect(
 
 function runtimeModels(
   runtimeProviderName = 'anthropic:claude-sonnet-4-5',
+  model = { name: 'claude-sonnet-4-5', provider: 'anthropic' } as LanguageModel,
 ): RuntimeModelRegistry {
   const registry = new RuntimeModelRegistry();
   registry.register(
@@ -99,10 +103,7 @@ function runtimeModels(
         throw new Error('Runtime provider is not called by adapter tests');
       },
     },
-    {
-      name: 'claude-sonnet-4-5',
-      provider: 'anthropic',
-    } as LanguageModel,
+    model,
   );
   return registry;
 }
@@ -125,6 +126,7 @@ function collectRuntime(
   provider: ModelProvider,
   model: LanguageModel,
   modelCallIdleTimeoutMs?: number,
+  hookFactories: Array<(models: RuntimeModelRegistry) => Hook> = [],
 ): Promise<RunStreamItem[]> {
   const context = RunContext.create();
   const models = RuntimeModelRegistry.attach(context);
@@ -142,7 +144,7 @@ function collectRuntime(
       model: provider,
       messages: [{ role: 'user', content: [{ type: 'text', text: 'Hello.' }] }],
       context,
-      hooks: [observability],
+      hooks: [observability, ...hookFactories.map((create) => create(models))],
       retry: { maxRetries: 0 },
       ...(modelCallIdleTimeoutMs !== undefined && {
         modelCallIdleTimeoutMs,
@@ -151,6 +153,14 @@ function collectRuntime(
     createLoggerMock(),
     models,
   );
+}
+
+function usageHook(models: RuntimeModelRegistry): Hook {
+  return new UsageHookFactory({
+    collectCritical: jest.fn().mockResolvedValue(undefined),
+  } as unknown as CollectUsageAsyncService).create({
+    resolveModel: models.resolve,
+  });
 }
 
 describe('adaptRunEventsToStream', () => {
@@ -457,6 +467,216 @@ describe('adaptRunEventsToStream', () => {
       },
       'Run usage accounting failed',
     );
+  });
+
+  it('keeps the provider classification when usage accounting fails on top of a provider failure', async () => {
+    const logger = createLoggerMock();
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message:
+            "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+          details: {
+            hookName: 'ayunis-usage',
+            phase: 'afterModelCall',
+            underlyingError: {
+              code: 'PROVIDER_FAILED',
+              message: `Model provider stream was idle for ${DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS}ms`,
+              details: {
+                providerFailure: {
+                  kind: 'timeout',
+                  stage: 'stream_consumption',
+                },
+              },
+            },
+          },
+          providerFailure: { kind: 'timeout', stage: 'stream_consumption' },
+          modelCall: {
+            modelCallId: 'call-3',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'mistral:mistral-large-4',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      logger,
+      runtimeModels('mistral:mistral-large-4', {
+        name: 'mistral-large-4',
+        provider: 'mistral',
+      } as LanguageModel),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+      metadata: expect.objectContaining({
+        provider: 'mistral',
+        modelId: 'mistral-large-4',
+        failureStage: 'stream_consumption',
+      }),
+      constructor: InferenceStreamStalledError,
+      cause: expect.objectContaining({
+        constructor: RunUsageAccountingFailedError,
+        metadata: expect.objectContaining({
+          modelTurn: 1,
+          modelCallId: 'call-3',
+        }),
+      }),
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        execution_path: 'agent_runtime',
+        hookName: 'ayunis-usage',
+        modelCallId: 'call-3',
+        providerFailureKind: 'timeout',
+        providerFailureStage: 'stream_consumption',
+      }),
+      'Run usage accounting failed',
+    );
+  });
+
+  it('reports a paid stream that stalled after visible output as INFERENCE_TIMEOUT through the real usage hook', async () => {
+    const provider: ModelProvider = {
+      name: 'mistral:mistral-large-4',
+      async *stream(request) {
+        yield { textDelta: 'Der Antrag' };
+        await new Promise<void>((resolve) => {
+          request.signal?.addEventListener('abort', () => resolve(), {
+            once: true,
+          });
+        });
+      },
+    };
+
+    const result = collectRuntime(
+      provider,
+      {
+        name: 'mistral-large-4',
+        provider: 'mistral',
+        consumesCredits: true,
+      } as LanguageModel,
+      10,
+      [usageHook],
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+      metadata: expect.objectContaining({
+        provider: 'mistral',
+        modelId: 'mistral-large-4',
+        failureStage: 'stream_consumption',
+      }),
+    });
+  });
+
+  it('keeps the accounting error when the provider failure cannot be classified without a model registry', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message:
+            "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+          details: { hookName: 'ayunis-usage', phase: 'afterModelCall' },
+          providerFailure: { kind: 'timeout', stage: 'stream_consumption' },
+          modelCall: {
+            modelCallId: 'call-3',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'mistral:mistral-large-4',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+    );
+
+    await expect(result).rejects.toBeInstanceOf(RunUsageAccountingFailedError);
+  });
+
+  it.each([
+    [
+      'Model provider returned an empty response',
+      'model returned an empty response',
+    ],
+    ['Model provider returned no answer', 'model returned no answer'],
+  ])(
+    'maps a terminal "%s" to a classified inference failure with model metadata',
+    async (runtimeMessage, reason) => {
+      const logger = createLoggerMock();
+      const result = collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'PROVIDER_FAILED',
+            message: runtimeMessage,
+            modelCall: {
+              modelCallId: 'call-4',
+              runId: 'run-1',
+              turn: 1,
+              callSequence: 4,
+              trigger: 'empty_recovery',
+              provider: 'bedrock:eu.anthropic.claude-opus-5-5',
+            },
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        logger,
+        runtimeModels('bedrock:eu.anthropic.claude-opus-5-5', {
+          name: 'claude-opus-5-5',
+          provider: 'bedrock',
+        } as LanguageModel),
+      );
+
+      await expect(result).rejects.toMatchObject({
+        code: 'INFERENCE_FAILED',
+        message: `Inference failed: ${reason}`,
+        metadata: {
+          provider: 'bedrock',
+          modelId: 'claude-opus-5-5',
+          modelCallId: 'call-4',
+          trigger: 'empty_recovery',
+          callSequence: 4,
+        },
+        constructor: InferenceFailedError,
+      });
+      expect(logger.error).not.toHaveBeenCalledWith(
+        expect.anything(),
+        'Agent runtime failed',
+      );
+    },
+  );
+
+  it('classifies an empty terminal response from the real runtime', async () => {
+    const provider: ModelProvider = {
+      name: 'bedrock:eu.anthropic.claude-opus-5-5',
+      async *stream() {
+        yield { usage: { inputTokens: 900, outputTokens: 6_000 } };
+        yield { finishReason: null };
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'claude-opus-5-5',
+      provider: 'bedrock',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceFailedError);
+    expect(error).toMatchObject({
+      message: 'Inference failed: model returned an empty response',
+      metadata: expect.objectContaining({
+        provider: 'bedrock',
+        modelId: 'claude-opus-5-5',
+        trigger: 'initial',
+      }),
+    });
   });
 
   it('surfaces a critical hook failure with its execution path', async () => {

@@ -856,6 +856,49 @@ describe('ExecuteRunUseCase', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
+  it('preserves completed tool phases when a later paid stream fails without usage', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    let calls = 0;
+    const { useCase, save, createToolResult, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      providerStream: async function* () {
+        calls += 1;
+        if (calls === 1) {
+          yield* toolCallTurn({
+            id: 'permit-1',
+            name: lookupTool.name,
+            input: {},
+          });
+          return;
+        }
+        yield {};
+        throw new ModelProviderError({
+          kind: 'timeout',
+          stage: 'stream_consumption',
+          timeoutSource: 'whole_stream',
+          cause: new Error('stream deadline exceeded'),
+        });
+      },
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC' });
+
+    expect(calls).toBe(2);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
   it('does not execute tools after paid output arrives without usage', async () => {
     const execute = jest.fn().mockResolvedValue('permit found');
     const lookupTool = {
@@ -1070,8 +1113,8 @@ describe('ExecuteRunUseCase', () => {
     await expect(
       drain(await useCase.execute(userCommand())),
     ).rejects.toMatchObject({
-      code: 'RUN_EXECUTION_FAILED',
-      message: 'Run execution failed: Agent runtime failed',
+      code: 'INFERENCE_FAILED',
+      message: 'Inference failed: model returned an empty response',
     });
     expect(save).not.toHaveBeenCalled();
     expect(collectUsage).toHaveBeenCalledTimes(1);
