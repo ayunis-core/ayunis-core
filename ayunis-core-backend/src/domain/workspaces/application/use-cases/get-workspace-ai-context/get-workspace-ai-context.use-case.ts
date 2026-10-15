@@ -1,23 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
 import { CountKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/count-knowledge-base-documents/count-knowledge-base-documents.use-case';
 import { GetWorkspaceSkillsUseCase } from 'src/domain/skills/application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
 import { GetLinkedWorkspaceSkillsUseCase } from 'src/domain/skills/application/use-cases/get-linked-workspace-skills/get-linked-workspace-skills.use-case';
 import { GetLinkedWorkspaceKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-linked-workspace-knowledge-bases/get-linked-workspace-knowledge-bases.use-case';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from 'src/domain/workspaces/application/workspaces.errors';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import type {
   WorkspaceAiContext,
   WorkspaceKnowledgeBaseContext,
   WorkspaceSkillContext,
 } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { GetWorkspaceAiContextQuery } from './get-workspace-ai-context.query';
-import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class GetWorkspaceAiContextUseCase {
@@ -27,7 +23,7 @@ export class GetWorkspaceAiContextUseCase {
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly getWorkspaceSkills: GetWorkspaceSkillsUseCase,
     private readonly countKnowledgeBaseDocuments: CountKnowledgeBaseDocumentsUseCase,
-    private readonly contextService: ContextService,
+    private readonly access: WorkspaceAccessService,
     private readonly getLinkedSkills: GetLinkedWorkspaceSkillsUseCase,
     private readonly getLinkedKnowledgeBases: GetLinkedWorkspaceKnowledgeBasesUseCase,
   ) {}
@@ -40,13 +36,7 @@ export class GetWorkspaceAiContextUseCase {
       { workspaceId: query.workspaceId },
       'getWorkspaceAiContext',
     );
-    const { userId } = getRequiredUserContext(this.contextService);
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
-      query.workspaceId,
-    );
-    if (!workspace) throw new WorkspaceNotFoundError(query.workspaceId);
+    const { workspace } = await this.access.require(query.workspaceId, 'use');
 
     const refs = await this.workspacesRepository.getContextRefs(
       query.workspaceId,

@@ -6,6 +6,8 @@ import {
 } from 'src/common/context/testing/context.fixtures';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import type { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import type { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/workspace-access-level';
 
 export const TEST_USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
 export const TEST_ORG_ID = '22222222-2222-4222-8222-222222222222' as UUID;
@@ -40,8 +42,11 @@ export function createMockContextService(
 
 export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesRepository> {
   return {
-    findAllByUserId: jest.fn().mockResolvedValue([]),
-    findAllByIds: jest.fn().mockResolvedValue([]),
+    findAllAccessible: jest.fn(),
+    findAllAccessibleByIds: jest.fn().mockResolvedValue([]),
+    findAccessibleIds: jest.fn().mockResolvedValue([]),
+    findOne: jest.fn().mockResolvedValue(null),
+    findManyByIds: jest.fn().mockResolvedValue([]),
     getListStats: jest.fn().mockResolvedValue(new Map()),
     findById: jest.fn().mockResolvedValue(null),
     getContextRefs: jest.fn().mockResolvedValue({
@@ -52,5 +57,15 @@ export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesReposito
       .fn()
       .mockImplementation((workspace: Workspace) => Promise.resolve(workspace)),
     delete: jest.fn().mockResolvedValue([]),
+  };
+}
+
+export function createMockWorkspaceAccessService(
+  workspace: Workspace = aWorkspace(),
+  level: WorkspaceAccessLevel = 'owner',
+): jest.Mocked<Pick<WorkspaceAccessService, 'require' | 'levelsOf'>> {
+  return {
+    require: jest.fn().mockResolvedValue({ workspace, level }),
+    levelsOf: jest.fn().mockResolvedValue(new Map([[workspace.id, level]])),
   };
 }

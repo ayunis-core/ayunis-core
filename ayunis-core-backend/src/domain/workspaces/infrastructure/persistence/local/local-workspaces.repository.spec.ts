@@ -3,7 +3,8 @@ import type { TransactionHost } from '@nestjs-cls/transactional';
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import { LocalWorkspacesRepository } from './local-workspaces.repository';
-import type { WorkspaceMapper } from './mappers/workspace.mapper';
+import { WorkspaceMapper } from './mappers/workspace.mapper';
+import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import type { WorkspaceRecord } from './schema/workspace.record';
 import type { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
 import type { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
@@ -48,11 +49,14 @@ describe('LocalWorkspacesRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    await repository.findAllByUserId(randomUUID(), {
-      sort: 'updatedAt',
-      limit: 20,
-      offset: 0,
-    });
+    await repository.findAllAccessible(
+      { userId: randomUUID(), orgId: randomUUID() },
+      {
+        sort: 'updatedAt',
+        limit: 20,
+        offset: 0,
+      },
+    );
 
     expect(listQuery.addSelect).toHaveBeenCalledWith(
       expect.any(String),
@@ -61,6 +65,11 @@ describe('LocalWorkspacesRepository', () => {
     expect(listQuery.orderBy).toHaveBeenCalledWith(
       'effective_activity_at',
       'DESC',
+    );
+    expect(listQuery.leftJoin).toHaveBeenCalledWith(
+      'threads',
+      'thread',
+      expect.stringContaining('thread."userId" = :userId'),
     );
   });
 
@@ -138,7 +147,10 @@ describe('LocalWorkspacesRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    await expect(repository.getListStats([workspaceId])).resolves.toEqual(
+    const userId = randomUUID();
+    await expect(
+      repository.getListStats([workspaceId], userId),
+    ).resolves.toEqual(
       new Map([
         [
           workspaceId,
@@ -154,8 +166,9 @@ describe('LocalWorkspacesRepository', () => {
     expect(query).toHaveBeenCalledTimes(1);
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('FROM workspaces w'),
-      [[workspaceId]],
+      [[workspaceId], userId],
     );
+    expect(query.mock.calls[0][0]).toContain('t."userId" = $2');
   });
 
   it('skips the stats query for an empty page', async () => {
@@ -171,7 +184,51 @@ describe('LocalWorkspacesRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    await expect(repository.getListStats([])).resolves.toEqual(new Map());
+    await expect(repository.getListStats([], randomUUID())).resolves.toEqual(
+      new Map(),
+    );
     expect(query).not.toHaveBeenCalled();
+  });
+
+  it('never writes the organisation share when saving workspace details', async () => {
+    const workspace = new Workspace({
+      id: randomUUID(),
+      userId: randomUUID(),
+      orgId: randomUUID(),
+      name: 'Bauamt',
+      description: null,
+      icon: 'folder',
+      color: 'violet',
+      isSharedWithOrganization: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    const stored = {
+      ...new WorkspaceMapper().toRecord(workspace),
+      isSharedWithOrganization: true,
+    };
+    const workspaceRepository = {
+      save: jest.fn().mockResolvedValue(stored),
+      findOneByOrFail: jest.fn().mockResolvedValue(stored),
+    };
+    const repository = new LocalWorkspacesRepository(
+      workspaceRepository as unknown as Repository<WorkspaceRecord>,
+      {} as Repository<SkillRecord>,
+      {} as Repository<KnowledgeBaseRecord>,
+      {} as Repository<KnowledgeBaseActivationRecord>,
+      new WorkspaceMapper(),
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+
+    const saved = await repository.save(workspace);
+
+    expect(workspaceRepository.save).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        isSharedWithOrganization: expect.anything(),
+      }),
+    );
+    expect(saved.isSharedWithOrganization).toBe(true);
   });
 });

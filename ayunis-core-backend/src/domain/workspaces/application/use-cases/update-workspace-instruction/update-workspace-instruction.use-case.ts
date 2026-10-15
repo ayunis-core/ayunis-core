@@ -1,14 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
 import { UpdateWorkspaceInstructionCommand } from './update-workspace-instruction.command';
-import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpdateWorkspaceInstructionUseCase {
@@ -16,7 +12,7 @@ export class UpdateWorkspaceInstructionUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
-    private readonly contextService: ContextService,
+    private readonly access: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -29,14 +25,10 @@ export class UpdateWorkspaceInstructionUseCase {
       },
       'updateWorkspaceInstruction',
     );
-    const { userId } = getRequiredUserContext(this.contextService);
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
+    const { workspace } = await this.access.require(
       command.workspaceId,
+      'edit',
     );
-    if (!workspace) throw new WorkspaceNotFoundError(command.workspaceId);
-
     workspace.instruct(command.instruction?.trim() || null);
     return this.workspacesRepository.save(workspace);
   }

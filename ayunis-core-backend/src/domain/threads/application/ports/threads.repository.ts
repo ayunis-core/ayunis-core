@@ -14,6 +14,7 @@ export interface ThreadsFindAllOptions {
 export interface ThreadsFindAllFilters {
   search?: string;
   workspaceId?: UUID;
+  visibleWorkspaceIds?: UUID[];
 }
 
 export interface ThreadsPagination {

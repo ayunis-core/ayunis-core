@@ -226,6 +226,11 @@ import type {
   SetTeamDefaultModelDto,
   SetUserConfigDto,
   SetUserDefaultModelDto,
+  SetWorkspaceMemberAccessDto,
+  SetWorkspaceOrganizationSharingDto,
+  ShareCandidatesResponseDto,
+  ShareWorkspaceDto,
+  SharingChangeResponseDto,
   SkillLinksControllerLinkableParams,
   SkillLinksControllerLinkedParams,
   SkillListResponseDto,
@@ -332,6 +337,8 @@ import type {
   WorkspaceFavoriteResponseDto,
   WorkspaceListResponseDto,
   WorkspaceResponseDto,
+  WorkspaceSharingControllerRemoveParams,
+  WorkspaceSharingResponseDto,
   WorkspacesControllerFindAllParams
 } from './ayunisCoreAPI.schemas.ts';
 
@@ -16222,7 +16229,7 @@ export const useWorkspacesControllerCreate = <TError = unknown,
     }
 
 /**
- * @summary List the current user’s workspaces
+ * @summary List every workspace the current user can open
  */
 export const workspacesControllerFindAll = (
     params?: WorkspacesControllerFindAllParams,
@@ -16294,7 +16301,7 @@ export function useWorkspacesControllerFindAll<TData = Awaited<ReturnType<typeof
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List the current user’s workspaces
+ * @summary List every workspace the current user can open
  */
 
 export function useWorkspacesControllerFindAll<TData = Awaited<ReturnType<typeof workspacesControllerFindAll>>, TError = unknown>(
@@ -16697,6 +16704,536 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getWorkspaceContextControllerUpdateInstructionMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Who has access to a workspace, and what the caller may change
+ */
+export const workspaceSharingControllerSharing = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<WorkspaceSharingResponseDto>(
+      {url: `/workspaces/${id}/sharing`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceSharingControllerSharingQueryKey = (id: string,) => {
+    return [
+    `/workspaces/${id}/sharing`
+    ] as const;
+    }
+
+
+export const getWorkspaceSharingControllerSharingQueryOptions = <TData = Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceSharingControllerSharingQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>> = ({ signal }) => workspaceSharingControllerSharing(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceSharingControllerSharingQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>>
+export type WorkspaceSharingControllerSharingQueryError = unknown
+
+
+export function useWorkspaceSharingControllerSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerSharing>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerSharing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerSharing>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerSharing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Who has access to a workspace, and what the caller may change
+ */
+
+export function useWorkspaceSharingControllerSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerSharing>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceSharingControllerSharingQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary People, teams and the organisation the caller may invite
+ */
+export const workspaceSharingControllerCandidates = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ShareCandidatesResponseDto>(
+      {url: `/workspaces/${id}/share-candidates`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceSharingControllerCandidatesQueryKey = (id: string,) => {
+    return [
+    `/workspaces/${id}/share-candidates`
+    ] as const;
+    }
+
+
+export const getWorkspaceSharingControllerCandidatesQueryOptions = <TData = Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceSharingControllerCandidatesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>> = ({ signal }) => workspaceSharingControllerCandidates(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceSharingControllerCandidatesQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>>
+export type WorkspaceSharingControllerCandidatesQueryError = unknown
+
+
+export function useWorkspaceSharingControllerCandidates<TData = Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerCandidates<TData = Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerCandidates<TData = Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary People, teams and the organisation the caller may invite
+ */
+
+export function useWorkspaceSharingControllerCandidates<TData = Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceSharingControllerCandidatesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Give people and teams access; they get it at once
+ */
+export const workspaceSharingControllerInvite = (
+    id: string,
+    shareWorkspaceDto: ShareWorkspaceDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SharingChangeResponseDto>(
+      {url: `/workspaces/${id}/shares`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: shareWorkspaceDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceSharingControllerInviteMutationKey = () => ['workspaceSharingControllerInvite'] as const;
+
+export const getWorkspaceSharingControllerInviteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerInvite>>, TError,WorkspaceSharingControllerInviteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerInvite>>, TError,WorkspaceSharingControllerInviteMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceSharingControllerInviteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceSharingControllerInvite>>, WorkspaceSharingControllerInviteMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workspaceSharingControllerInvite(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceSharingControllerInviteMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerInvite>>>
+    export type WorkspaceSharingControllerInviteMutationBody = ShareWorkspaceDto
+    export type WorkspaceSharingControllerInviteMutationError = unknown
+    export type WorkspaceSharingControllerInviteMutationVariables = {id: string;data: ShareWorkspaceDto}
+
+    /**
+ * @summary Give people and teams access; they get it at once
+ */
+export const useWorkspaceSharingControllerInvite = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerInvite>>, TError,WorkspaceSharingControllerInviteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceSharingControllerInvite>>,
+        TError,
+        WorkspaceSharingControllerInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceSharingControllerInviteMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Change what a member may do
+ */
+export const workspaceSharingControllerSetAccess = (
+    id: string,
+    userId: string,
+    setWorkspaceMemberAccessDto: SetWorkspaceMemberAccessDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SharingChangeResponseDto>(
+      {url: `/workspaces/${id}/members/${userId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setWorkspaceMemberAccessDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceSharingControllerSetAccessMutationKey = () => ['workspaceSharingControllerSetAccess'] as const;
+
+export const getWorkspaceSharingControllerSetAccessMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerSetAccess>>, TError,WorkspaceSharingControllerSetAccessMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerSetAccess>>, TError,WorkspaceSharingControllerSetAccessMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceSharingControllerSetAccessMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceSharingControllerSetAccess>>, WorkspaceSharingControllerSetAccessMutationVariables> = (props) => {
+          const {id,userId,data} = props ?? {};
+
+          return  workspaceSharingControllerSetAccess(id,userId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceSharingControllerSetAccessMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerSetAccess>>>
+    export type WorkspaceSharingControllerSetAccessMutationBody = SetWorkspaceMemberAccessDto
+    export type WorkspaceSharingControllerSetAccessMutationError = unknown
+    export type WorkspaceSharingControllerSetAccessMutationVariables = {id: string;userId: string;data: SetWorkspaceMemberAccessDto}
+
+    /**
+ * @summary Change what a member may do
+ */
+export const useWorkspaceSharingControllerSetAccess = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerSetAccess>>, TError,WorkspaceSharingControllerSetAccessMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceSharingControllerSetAccess>>,
+        TError,
+        WorkspaceSharingControllerSetAccessMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceSharingControllerSetAccessMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Take a member out of where they are shown (direct grant, team or organisation)
+ */
+export const workspaceSharingControllerRemove = (
+    id: string,
+    userId: string,
+    params?: WorkspaceSharingControllerRemoveParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SharingChangeResponseDto>(
+      {url: `/workspaces/${id}/members/${userId}`, method: 'DELETE',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceSharingControllerRemoveMutationKey = () => ['workspaceSharingControllerRemove'] as const;
+
+export const getWorkspaceSharingControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerRemove>>, TError,WorkspaceSharingControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerRemove>>, TError,WorkspaceSharingControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceSharingControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceSharingControllerRemove>>, WorkspaceSharingControllerRemoveMutationVariables> = (props) => {
+          const {id,userId,params} = props ?? {};
+
+          return  workspaceSharingControllerRemove(id,userId,params,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceSharingControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerRemove>>>
+
+    export type WorkspaceSharingControllerRemoveMutationError = unknown
+    export type WorkspaceSharingControllerRemoveMutationVariables = {id: string;userId: string;params?: WorkspaceSharingControllerRemoveParams}
+
+    /**
+ * @summary Take a member out of where they are shown (direct grant, team or organisation)
+ */
+export const useWorkspaceSharingControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerRemove>>, TError,WorkspaceSharingControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceSharingControllerRemove>>,
+        TError,
+        WorkspaceSharingControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceSharingControllerRemoveMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary End a team share: everyone who only has access through this team loses it, later team members get none
+ */
+export const workspaceSharingControllerEndTeam = (
+    id: string,
+    teamId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SharingChangeResponseDto>(
+      {url: `/workspaces/${id}/teams/${teamId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceSharingControllerEndTeamMutationKey = () => ['workspaceSharingControllerEndTeam'] as const;
+
+export const getWorkspaceSharingControllerEndTeamMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerEndTeam>>, TError,WorkspaceSharingControllerEndTeamMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerEndTeam>>, TError,WorkspaceSharingControllerEndTeamMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceSharingControllerEndTeamMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceSharingControllerEndTeam>>, WorkspaceSharingControllerEndTeamMutationVariables> = (props) => {
+          const {id,teamId} = props ?? {};
+
+          return  workspaceSharingControllerEndTeam(id,teamId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceSharingControllerEndTeamMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerEndTeam>>>
+
+    export type WorkspaceSharingControllerEndTeamMutationError = void
+    export type WorkspaceSharingControllerEndTeamMutationVariables = {id: string;teamId: string}
+
+    /**
+ * @summary End a team share: everyone who only has access through this team loses it, later team members get none
+ */
+export const useWorkspaceSharingControllerEndTeam = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerEndTeam>>, TError,WorkspaceSharingControllerEndTeamMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceSharingControllerEndTeam>>,
+        TError,
+        WorkspaceSharingControllerEndTeamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceSharingControllerEndTeamMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Share the workspace with the whole organisation, or stop
+ */
+export const workspaceSharingControllerOrganization = (
+    id: string,
+    setWorkspaceOrganizationSharingDto: SetWorkspaceOrganizationSharingDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SharingChangeResponseDto>(
+      {url: `/workspaces/${id}/sharing/organization`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setWorkspaceOrganizationSharingDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceSharingControllerOrganizationMutationKey = () => ['workspaceSharingControllerOrganization'] as const;
+
+export const getWorkspaceSharingControllerOrganizationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerOrganization>>, TError,WorkspaceSharingControllerOrganizationMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerOrganization>>, TError,WorkspaceSharingControllerOrganizationMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceSharingControllerOrganizationMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceSharingControllerOrganization>>, WorkspaceSharingControllerOrganizationMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workspaceSharingControllerOrganization(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceSharingControllerOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerOrganization>>>
+    export type WorkspaceSharingControllerOrganizationMutationBody = SetWorkspaceOrganizationSharingDto
+    export type WorkspaceSharingControllerOrganizationMutationError = unknown
+    export type WorkspaceSharingControllerOrganizationMutationVariables = {id: string;data: SetWorkspaceOrganizationSharingDto}
+
+    /**
+ * @summary Share the workspace with the whole organisation, or stop
+ */
+export const useWorkspaceSharingControllerOrganization = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerOrganization>>, TError,WorkspaceSharingControllerOrganizationMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceSharingControllerOrganization>>,
+        TError,
+        WorkspaceSharingControllerOrganizationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceSharingControllerOrganizationMutationOptions(options), queryClient);
     }
 
 /**

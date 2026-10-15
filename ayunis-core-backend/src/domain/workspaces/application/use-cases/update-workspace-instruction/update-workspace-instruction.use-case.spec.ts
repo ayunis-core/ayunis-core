@@ -1,5 +1,6 @@
+import type { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
-  createMockContextService,
+  createMockWorkspaceAccessService,
   createMockWorkspacesRepository,
   TEST_WORKSPACE_ID,
   aWorkspace,
@@ -10,10 +11,10 @@ import { UpdateWorkspaceInstructionUseCase } from './update-workspace-instructio
 describe('UpdateWorkspaceInstructionUseCase', () => {
   it('stores trimmed project instructions', async () => {
     const repository = createMockWorkspacesRepository();
-    repository.findById.mockResolvedValue(aWorkspace());
+    const access = createMockWorkspaceAccessService(aWorkspace(), 'edit');
     const useCase = new UpdateWorkspaceInstructionUseCase(
       repository,
-      createMockContextService(),
+      access as unknown as WorkspaceAccessService,
     );
 
     const result = await useCase.execute(
@@ -24,6 +25,7 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
     );
 
     expect(result.instruction).toBe('Use building department wording.');
+    expect(access.require).toHaveBeenCalledWith(TEST_WORKSPACE_ID, 'edit');
     expect(repository.save).toHaveBeenCalledWith(
       expect.objectContaining({
         instruction: 'Use building department wording.',
@@ -33,12 +35,13 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
 
   it('clears blank project instructions', async () => {
     const repository = createMockWorkspacesRepository();
-    repository.findById.mockResolvedValue(
+    const access = createMockWorkspaceAccessService(
       aWorkspace({ instruction: 'Use building department wording.' }),
+      'edit',
     );
     const useCase = new UpdateWorkspaceInstructionUseCase(
       repository,
-      createMockContextService(),
+      access as unknown as WorkspaceAccessService,
     );
 
     const result = await useCase.execute(

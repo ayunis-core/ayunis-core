@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ContextService } from 'src/common/context/services/context.service';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -9,7 +11,10 @@ import type { FindWorkspacesByIdsQuery } from './find-workspaces-by-ids.query';
 export class FindWorkspacesByIdsUseCase {
   private readonly logger = new Logger(FindWorkspacesByIdsUseCase.name);
 
-  constructor(private readonly workspacesRepository: WorkspacesRepository) {}
+  constructor(
+    private readonly workspacesRepository: WorkspacesRepository,
+    private readonly context: ContextService,
+  ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(query: FindWorkspacesByIdsQuery): Promise<Workspace[]> {
@@ -20,6 +25,10 @@ export class FindWorkspacesByIdsUseCase {
       },
       'Finding workspaces by ids',
     );
-    return this.workspacesRepository.findAllByIds(query.userId, query.ids);
+    const { orgId } = getRequiredUserContext(this.context);
+    return this.workspacesRepository.findAllAccessibleByIds(
+      { userId: query.userId, orgId },
+      query.ids,
+    );
   }
 }

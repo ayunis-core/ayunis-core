@@ -53,6 +53,19 @@ export class WorkspaceResponseDto {
   })
   updatedAt: string;
 
+  @ApiProperty({
+    enum: ['owner', 'full', 'edit', 'use'],
+    description: 'What the caller may do in the workspace',
+  })
+  accessLevel: 'owner' | 'full' | 'edit' | 'use';
+
+  @ApiPropertyOptional({
+    description:
+      'Everyone with access, the owner included (list and detail responses)',
+    example: 5,
+  })
+  memberCount?: number;
+
   @ApiPropertyOptional({
     description:
       'Number of chats filed under the workspace (list responses only)',
@@ -62,14 +75,14 @@ export class WorkspaceResponseDto {
 
   @ApiPropertyOptional({
     description:
-      'Number of skills owned by the workspace (list responses only)',
+      'Number of skills owned by or linked into the workspace (list responses only)',
     example: 2,
   })
   skillCount?: number;
 
   @ApiPropertyOptional({
     description:
-      'Number of knowledge bases owned by the workspace (list responses only)',
+      'Number of knowledge bases owned by or linked into the workspace (list responses only)',
     example: 4,
   })
   knowledgeBaseCount?: number;

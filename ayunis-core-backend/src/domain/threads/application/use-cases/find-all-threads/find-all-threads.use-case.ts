@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { FindAccessibleWorkspaceIdsUseCase } from 'src/domain/workspaces/application/use-cases/find-accessible-workspace-ids/find-accessible-workspace-ids.use-case';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { FindAllThreadsQuery } from './find-all-threads.query';
@@ -8,7 +9,11 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 export class FindAllThreadsUseCase {
   private readonly logger = new Logger(FindAllThreadsUseCase.name);
 
-  constructor(private readonly threadsRepository: ThreadsRepository) {}
+  constructor(
+    private readonly threadsRepository: ThreadsRepository,
+    @Inject(forwardRef(() => FindAccessibleWorkspaceIdsUseCase))
+    private readonly findAccessibleWorkspaceIds: FindAccessibleWorkspaceIdsUseCase,
+  ) {}
 
   async execute(query: FindAllThreadsQuery): Promise<Paginated<Thread>> {
     const { search: text, ...safeFilters } = query.filters ?? {};
@@ -26,7 +31,10 @@ export class FindAllThreadsUseCase {
       return await this.threadsRepository.findAll(
         query.userId,
         query.options,
-        query.filters,
+        {
+          ...query.filters,
+          visibleWorkspaceIds: await this.findAccessibleWorkspaceIds.execute(),
+        },
         {
           limit: query.limit,
           offset: query.offset,

@@ -15,6 +15,6 @@ export class AssertWorkspaceWriteAccessUseCase {
       { workspaceId: query.workspaceId },
       'Checking workspace write access',
     );
-    await this.access.requireOwned(query.workspaceId);
+    await this.access.require(query.workspaceId, 'edit');
   }
 }
