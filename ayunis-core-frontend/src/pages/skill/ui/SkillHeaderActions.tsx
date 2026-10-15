@@ -94,6 +94,7 @@ export function SkillHeaderActions({
         <SkillActiveSwitch
           skillId={skill.id}
           isActive={skill.isActive}
+          isMandatory={skill.isMandatory}
           testId="skill-detail-active"
         />
       )}

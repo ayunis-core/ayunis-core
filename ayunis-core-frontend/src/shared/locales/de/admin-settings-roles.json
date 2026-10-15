@@ -48,7 +48,7 @@
     "request_knowledge_transfer_org": "Eine eigene Wissenssammlung der ganzen Organisation anbieten. Nach der Freigabe gehört sie der Organisation.",
     "review_all_knowledge_requests": "Anfragen an die Organisation und an jedes Team freigeben oder ablehnen, auch ohne dort Team-Admin zu sein.",
     "create_workspaces": "Eigene Arbeitsbereiche anlegen.",
-    "manage_org_skills": "Fähigkeiten für alle in der Organisation erstellen, bearbeiten und löschen.",
+    "manage_org_skills": "Fähigkeiten für alle in der Organisation erstellen, bearbeiten, löschen und für alle verpflichtend machen.",
     "manage_org_knowledge": "Wissenssammlungen für alle in der Organisation erstellen, bearbeiten und löschen."
   },
   "permissions": {

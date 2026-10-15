@@ -32,6 +32,7 @@ export function SkillRow({
             <SkillActiveSwitch
               skillId={skill.id}
               isActive={skill.isActive}
+              isMandatory={skill.isMandatory}
               testId={`skill-active-${skill.id}`}
             />
           )}

@@ -104,5 +104,12 @@
     "trigger": "Auslöser",
     "instructions": "Anweisungen"
   },
-  "knowledgeTip": "Soll die Fähigkeit eine Wissenssammlung nutzen? Nennen Sie sie in der Anweisung, zum Beispiel „Nutze die Wissenssammlung Haushaltssatzung 2026“."
+  "knowledgeTip": "Soll die Fähigkeit eine Wissenssammlung nutzen? Nennen Sie sie in der Anweisung, zum Beispiel „Nutze die Wissenssammlung Haushaltssatzung 2026“.",
+  "mandatory": {
+    "title": "Für alle verpflichtend",
+    "description": "Die Fähigkeit ist dann für alle in allen Chats außerhalb von Arbeitsbereichen aktiv und lässt sich nicht ausschalten.",
+    "toastOn": "„{{name}}“ ist jetzt für alle immer aktiv.",
+    "toastOff": "„{{name}}“ lässt sich wieder ausschalten.",
+    "error": "Das hat nicht geklappt. Bitte versuchen Sie es noch einmal."
+  }
 }
