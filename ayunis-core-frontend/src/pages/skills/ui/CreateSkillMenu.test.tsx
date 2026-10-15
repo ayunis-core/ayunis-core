@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateSkillMenu from './CreateSkillMenu';
-import SkillsEmptyState from './SkillsEmptyState';
 
 const MARKETPLACE_URL = 'https://marketplace.ayunis.com/';
 
@@ -140,11 +139,5 @@ describe('CreateSkillMenu', () => {
     openMenu();
 
     expect(screen.queryByTestId('create-skill-guided')).toBeNull();
-  });
-
-  it('is the first-skill action on the empty skills page', () => {
-    render(<SkillsEmptyState />);
-
-    expect(screen.getByTestId('create-skill-menu')).toBeTruthy();
   });
 });

@@ -1,40 +1,83 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { CountTabTrigger } from '@/shared/ui/count-tab-trigger/CountTabTrigger';
+import { Tabs, TabsContent, TabsList } from '@ayunis/ui/components/tabs';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { ListToolbar, ListToolbarSearch } from '@/widgets/list-toolbar';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import CreateSkillMenu from './CreateSkillMenu';
-import MarketplacePromoCard from './MarketplacePromoCard';
-import SkillCard from './SkillCard';
-import type { Skill } from '@/pages/skills/model/openapi';
-import SkillsEmptyState from './SkillsEmptyState';
-import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import { useTranslation } from 'react-i18next';
+import { HandoverRequestList } from '@/widgets/handover-requests';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@ayunis/ui/components/tabs';
-import { EmptyState } from '@/widgets/empty-state';
+import { matchesSearch } from '@/shared/lib/matches-search';
 import { useMyPermissions } from '@/features/permissions';
-import { useOwnerOptions } from '@/features/resource-ownership';
 import {
   RequestsTabTrigger,
   useHandoverSummary,
 } from '@/features/resource-handover';
-import { HandoverRequestList } from '@/widgets/handover-requests';
+import type { Skill } from '@/pages/skills/model/openapi';
+import CreateSkillMenu from './CreateSkillMenu';
+import { MarketplaceBanner } from './MarketplaceBanner';
+import { OwnSkillList, SharedSkillList } from './SkillLists';
 
-function isOwnPersonalSkill(skill: Skill): boolean {
-  return skill.ownerType === 'personal';
-}
-
-export type SkillsTab = 'personal' | 'shared' | 'requests';
+export type SkillsTab = 'own' | 'shared' | 'requests';
 
 interface SkillsPageProps {
   skills: Skill[];
   tab: SkillsTab;
   onTabChange: (tab: SkillsTab) => void;
+}
+
+function useVisibleSkills(skills: Skill[], query: string) {
+  const visible = skills
+    .filter((skill) =>
+      matchesSearch(query, [skill.name, skill.shortDescription]),
+    )
+    .sort((left, right) => left.name.localeCompare(right.name));
+  return {
+    own: visible.filter((skill) => skill.ownerType === 'personal'),
+    shared: visible.filter((skill) => skill.ownerType !== 'personal'),
+  };
+}
+
+function SkillsHeader({
+  query,
+  onQueryChange,
+  hasPinnableSkill,
+}: Readonly<{
+  query: string;
+  onQueryChange: (query: string) => void;
+  hasPinnableSkill: boolean;
+}>) {
+  const createMenu = (
+    <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
+      <CreateSkillMenu />
+    </OnboardingTourTarget>
+  );
+  const { t } = useTranslation('skills');
+  return (
+    <ContentAreaHeader
+      breadcrumbs={[{ label: t('page.title') }]}
+      action={
+        <ListToolbar>
+          <ListToolbarSearch
+            placeholder={t('search.placeholder')}
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            data-testid="skills-search"
+          />
+          <HelpLink path="skills/" />
+          {hasPinnableSkill ? (
+            createMenu
+          ) : (
+            <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
+              {createMenu}
+            </OnboardingTourTarget>
+          )}
+        </ListToolbar>
+      }
+    />
+  );
 }
 
 export default function SkillsPage({
@@ -44,74 +87,22 @@ export default function SkillsPage({
 }: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const { options, isLoading: isLoadingOwners } = useOwnerOptions('skill');
   const reviews = useHandoverSummary().skill;
+  const [query, setQuery] = useState('');
+  const { own, shared } = useVisibleSkills(skills, query);
+  const isSearching = query.trim().length > 0;
+  const pinTargetId = own.find((skill) => skill.isActive)?.id;
   const mayReview = reviews.canReview || reviews.isLoading;
-  const activeTab = tab === 'requests' && !mayReview ? 'personal' : tab;
-  const canCreate =
-    isLoadingPermissions ||
-    isLoadingOwners ||
-    can('manage_own_skills') ||
-    options.length > 0;
-
-  const personalSkills = skills
-    .filter(isOwnPersonalSkill)
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const sharedSkills = skills
-    .filter((skill) => !isOwnPersonalSkill(skill))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  // The "pin a skill" tour step anchors on the first active personal skill.
-  // With nothing pinnable (no skills yet, or none active) it falls back to the
-  // create-skill action so the step always has a visible target.
-  const pinTargetSkillId = personalSkills.find((skill) => skill.isActive)?.id;
-  const hasPinnableSkill = pinTargetSkillId !== undefined;
-
-  const createSkillAction = (
-    <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
-      <CreateSkillMenu />
-    </OnboardingTourTarget>
-  );
-
-  const headerAction = (
-    <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
-      <HelpLink path="skills/" />
-      {hasPinnableSkill ? (
-        createSkillAction
-      ) : (
-        <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-          {createSkillAction}
-        </OnboardingTourTarget>
-      )}
-    </div>
-  );
-
-  // If no skills at all, show full-screen empty state
-  if (skills.length === 0 && !mayReview) {
-    return (
-      <AppLayout>
-        <FullScreenMessageLayout
-          header={
-            <ContentAreaHeader
-              breadcrumbs={[{ label: t('page.title') }]}
-              action={headerAction}
-            />
-          }
-        >
-          <SkillsEmptyState />
-        </FullScreenMessageLayout>
-      </AppLayout>
-    );
-  }
+  const activeTab = tab === 'requests' && !mayReview ? 'own' : tab;
 
   return (
     <AppLayout>
       <ContentAreaLayout
         contentHeader={
-          <ContentAreaHeader
-            breadcrumbs={[{ label: t('page.title') }]}
-            action={headerAction}
+          <SkillsHeader
+            query={query}
+            onQueryChange={setQuery}
+            hasPinnableSkill={pinTargetId !== undefined}
           />
         }
         contentArea={
@@ -121,8 +112,18 @@ export default function SkillsPage({
             className="w-full"
           >
             <TabsList>
-              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
-              <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+              <CountTabTrigger
+                testIdPrefix="skills-tab"
+                value="own"
+                label={t('tabs.own')}
+                count={own.length}
+              />
+              <CountTabTrigger
+                testIdPrefix="skills-tab"
+                value="shared"
+                label={t('tabs.shared')}
+                count={shared.length}
+              />
               {reviews.canReview && (
                 <RequestsTabTrigger
                   count={reviews.openRequests}
@@ -130,50 +131,17 @@ export default function SkillsPage({
                 />
               )}
             </TabsList>
-            {activeTab !== 'requests' && <MarketplacePromoCard />}
-            <TabsContent value="personal" className="mt-4">
-              {personalSkills.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.personal.title')}
-                  description={
-                    canCreate
-                      ? t('emptyState.personal.description')
-                      : t('emptyState.noAccessDescription')
-                  }
-                  action={
-                    canCreate ? (
-                      <CreateSkillMenu
-                        buttonText={t('createDialog.buttonTextFirst')}
-                        showIcon
-                      />
-                    ) : undefined
-                  }
-                />
-              ) : (
-                <div className="space-y-3">
-                  {personalSkills.map((skill) => (
-                    <SkillCard
-                      key={skill.id}
-                      skill={skill}
-                      pinTourTarget={skill.id === pinTargetSkillId}
-                    />
-                  ))}
-                </div>
-              )}
+            {activeTab !== 'requests' && !isSearching && <MarketplaceBanner />}
+            <TabsContent value="own" className="mt-4">
+              <OwnSkillList
+                skills={own}
+                isSearching={isSearching}
+                canCreateOwn={isLoadingPermissions || can('manage_own_skills')}
+                pinTargetId={pinTargetId}
+              />
             </TabsContent>
             <TabsContent value="shared" className="mt-4">
-              {sharedSkills.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.shared.title')}
-                  description={t('emptyState.shared.description')}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {sharedSkills.map((skill) => (
-                    <SkillCard key={skill.id} skill={skill} />
-                  ))}
-                </div>
-              )}
+              <SharedSkillList skills={shared} isSearching={isSearching} />
             </TabsContent>
             {mayReview && (
               <TabsContent value="requests" className="mt-4">

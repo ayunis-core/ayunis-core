@@ -3,26 +3,25 @@
     "title": "Skills"
   },
   "tabs": {
-    "personal": "Own Skills",
+    "own": "Own Skills",
     "shared": "Team and organisation"
   },
   "marketplaceBanner": {
-    "title": "Discover more skills in the Ayunis Core Marketplace",
-    "description": "Browse curated skills and install new ones directly from the Ayunis Core Marketplace."
+    "title": "Discover skills in the Ayunis Core Marketplace",
+    "description": "Find ready-made skills for your everyday administrative work.",
+    "button": "Open Marketplace"
   },
   "emptyState": {
-    "title": "No skills yet",
-    "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations.",
     "noAccessDescription": "Ask an admin to give you permission to create your own. Skills of your teams and the organisation are under “Team and organisation”.",
     "personal": {
       "title": "No own skills yet",
       "description": "Create your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations."
     },
     "shared": {
-      "title": "No team or organisation skills yet",
-      "description": "Skills of your teams and the organisation appear here."
+      "title": "Nothing from your team or the organisation yet",
+      "description": "Skills that belong to your team or the organisation appear here."
     },
-    "browseMarketplace": "Or browse the Ayunis Core Marketplace"
+    "search": "No skill found"
   },
   "badge": {
     "active": "Active",
@@ -31,7 +30,6 @@
   "card": {
     "activeLabel": "Active",
     "inactiveLabel": "Inactive",
-    "activeTooltip": "Active skills are available to Ayunis Core in chats. Inactive skills are not used until they are activated again.",
     "pinLabel": "Pin to new chat",
     "unpinLabel": "Unpin from new chat",
     "deleteLabel": "Delete",
@@ -41,25 +39,26 @@
       "confirmText": "Delete",
       "cancelText": "Cancel"
     },
-    "activeSwitchLabel": "Skill active"
+    "activeSwitchLabel": "Skill active",
+    "activeOn": "Active: Ayunis Core can use the skill in chats.",
+    "activeOff": "Inactive: Ayunis Core does not use the skill in chats."
   },
   "createDialog": {
     "buttonText": "Add Skill",
-    "buttonTextFirst": "Create your first skill",
     "title": "Create new skill",
     "description": "Create a new skill with specific knowledge and capabilities. Fill in the details below.",
     "form": {
       "nameLabel": "Name",
-      "namePlaceholder": "Enter skill name...",
+      "namePlaceholder": "For example: budget meeting proposal",
       "shortDescriptionLabel": "Trigger",
-      "shortDescriptionPlaceholder": "Describe when Ayunis Core should activate this skill...",
+      "shortDescriptionPlaceholder": "Describe when Ayunis Core should use this skill.",
       "shortDescriptionHint": "A good trigger helps Ayunis Core understand when to use this skill.",
-      "instructionsLabel": "Detailed Instructions",
-      "instructionsPlaceholder": "Enter detailed instructions for this skill..."
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Should a knowledge base be used? Name it here."
     },
     "buttons": {
       "cancel": "Cancel",
-      "create": "Create Skill",
+      "create": "Create",
       "creating": "Creating..."
     },
     "marketplaceHint": "Skills are not automatically published to the marketplace.",
@@ -77,7 +76,6 @@
     "duplicateNameShared": "The team or organisation already has a skill with this name. Please choose another name."
   },
   "toggleActive": {
-    "success": "Skill status updated successfully!",
     "error": "Failed to update skill status. Please try again.",
     "notFound": "Skill not found. It may have been deleted."
   },
@@ -114,5 +112,20 @@
   "fieldHints": {
     "trigger": "The trigger decides when this skill switches itself on. Describe the situation as concretely as you can: which topics are involved, which words come up, which questions get asked. Example: \"When a building application deadline comes up or someone asks for a cut-off date.\"",
     "instructions": "The instructions describe how to work once the skill is active: the approach, the tone, how the answer is structured and what to leave out. Example: \"Answer factually in full sentences, always name the legal basis, and ask back when the file number is missing.\""
+  },
+  "search": {
+    "placeholder": "Search skills"
+  },
+  "starter": {
+    "title": "What do you do again and again?",
+    "description": "Describe it in one sentence. Ayunis Core asks a few questions and creates the skill for you.",
+    "placeholder": "For example: answering enquiries about building permits",
+    "submit": "Get started",
+    "examples": [
+      "Answer citizen enquiries",
+      "Summarise minutes",
+      "Write memos"
+    ],
+    "topicSuffix": "The skill should help me with this: {{topic}}"
   }
 }

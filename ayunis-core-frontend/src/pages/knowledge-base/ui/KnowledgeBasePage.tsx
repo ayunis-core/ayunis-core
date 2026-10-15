@@ -28,7 +28,8 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { KnowledgeBasePropertiesCard } from '@/widgets/resource-properties-card';
 import KnowledgeBaseDocumentsCard from './KnowledgeBaseDocumentsCard';
-import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
+import { KnowledgeBaseActiveSwitch } from '@/widgets/knowledge-base-activation-toggle';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   knowledgeBasesControllerUpdate,
@@ -45,7 +46,10 @@ function KnowledgeBaseDeleteButton({
   const navigateToList = useCallback(() => {
     void navigate({ to: '/knowledge-bases' });
   }, [navigate]);
-  const deleteKnowledgeBase = useDeleteKnowledgeBase(navigateToList);
+  const deleteKnowledgeBase = useDeleteKnowledgeBase(
+    knowledgeBase.name,
+    navigateToList,
+  );
   const { confirm } = useConfirmation();
 
   function handleDelete() {
@@ -190,8 +194,9 @@ export function KnowledgeBasePage({
             badge={canEdit ? null : <ReadOnlyBadge />}
             action={
               <>
+                <HelpLink path="knowledge-collections/" />
                 {canUse && (
-                  <KnowledgeBaseActivationToggle
+                  <KnowledgeBaseActiveSwitch
                     knowledgeBaseId={knowledgeBase.id}
                     isActive={knowledgeBase.isActive}
                     testId="knowledge-base-detail-active-toggle"

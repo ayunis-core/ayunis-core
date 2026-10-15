@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pin, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
-import { Switch } from '@ayunis/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
@@ -11,46 +10,9 @@ import {
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import {
-  useSetSkillActivation,
-  useSetSkillPin,
-} from '@/features/skill-actions';
+import { SkillActiveSwitch, useSetSkillPin } from '@/features/skill-actions';
 import { useDeleteSkill } from '@/pages/skill/api';
 import type { SkillAccess } from '@/pages/skill/model/skill-access';
-
-function ActiveSwitch({ skill }: Readonly<{ skill: SkillResponseDto }>) {
-  const { t } = useTranslation('skills');
-  const setActivation = useSetSkillActivation();
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm text-muted-foreground">
-        {skill.isActive ? t('card.activeLabel') : t('card.inactiveLabel')}
-      </span>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="inline-flex">
-            <Switch
-              checked={skill.isActive}
-              onCheckedChange={() =>
-                setActivation.mutate({
-                  id: skill.id,
-                  isActive: !skill.isActive,
-                })
-              }
-              disabled={setActivation.isPending}
-              aria-label={t('card.activeSwitchLabel')}
-              data-testid="skill-detail-active"
-            />
-          </span>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs">
-          {t('card.activeTooltip')}
-        </TooltipContent>
-      </Tooltip>
-    </div>
-  );
-}
 
 function PinToggle({ skill }: Readonly<{ skill: SkillResponseDto }>) {
   const { t } = useTranslation('skills');
@@ -80,7 +42,7 @@ function PinToggle({ skill }: Readonly<{ skill: SkillResponseDto }>) {
 function DeleteButton({ skill }: Readonly<{ skill: SkillResponseDto }>) {
   const { t } = useTranslation('skill');
   const { t: tSkills } = useTranslation('skills');
-  const deleteSkill = useDeleteSkill();
+  const deleteSkill = useDeleteSkill(skill.name);
   const { confirm } = useConfirmation();
 
   function handleDelete() {
@@ -128,7 +90,13 @@ export function SkillHeaderActions({
   return (
     <>
       <HelpLink path="skills/" />
-      {access.canUse && <ActiveSwitch skill={skill} />}
+      {access.canUse && (
+        <SkillActiveSwitch
+          skillId={skill.id}
+          isActive={skill.isActive}
+          testId="skill-detail-active"
+        />
+      )}
       {access.canUse && skill.isActive && <PinToggle skill={skill} />}
       {handoverAction}
       {access.canDelete && <DeleteButton skill={skill} />}

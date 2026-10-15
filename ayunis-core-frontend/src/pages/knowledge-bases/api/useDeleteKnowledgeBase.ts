@@ -13,7 +13,7 @@ interface DeleteKnowledgeBaseParams {
   id: string;
 }
 
-export function useDeleteKnowledgeBase(onSuccess?: () => void) {
+export function useDeleteKnowledgeBase(name: string, onSuccess?: () => void) {
   const { t } = useTranslation('knowledge-bases');
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -29,7 +29,7 @@ export function useDeleteKnowledgeBase(onSuccess?: () => void) {
         ),
       });
       void router.invalidate();
-      showSuccess(t('delete.success'));
+      showSuccess(t('delete.success', { name }));
       onSuccess?.();
     },
     onError: (error) => {

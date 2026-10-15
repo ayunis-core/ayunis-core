@@ -85,7 +85,7 @@ test('members see a team skill read-only and people outside the team do not see 
 
     await openTeamAndOrganisationTab(memberPage);
     await expect(
-      memberPage.getByTestId(`skill-owner-${skillId}`),
+      memberPage.getByTestId(`skills-section-team:${team.id}`),
     ).toContainText(team.name);
     await memberPage.getByTestId(`skill-card-${skillId}`).click();
     await expect(memberPage.getByTestId('read-only-badge')).toBeVisible();

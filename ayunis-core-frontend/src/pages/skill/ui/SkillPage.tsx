@@ -26,6 +26,7 @@ import { SkillHeaderActions } from './SkillHeaderActions';
 import { SkillReadOnlyContent } from './SkillReadOnlyContent';
 import { SkillHandoverButton } from './SkillHandoverButton';
 import { SkillOwnershipSection } from './SkillOwnershipSection';
+import { SkillKnowledgeTip } from './SkillKnowledgeTip';
 
 function useUpdateSkillProperties(skillId: string) {
   const queryClient = useQueryClient();
@@ -82,6 +83,7 @@ function SkillConfiguration({
           onUpdate={updateProperties}
         />
       )}
+      {access.isCollective && access.canEdit && <SkillKnowledgeTip />}
       {linksResources && isEmbeddingModelEnabled && (
         <SkillKnowledgeBasesCard disabled={!access.canEdit} />
       )}
