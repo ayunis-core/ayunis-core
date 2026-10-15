@@ -314,9 +314,69 @@ describe('tool-call argument integrity', () => {
 
     const error = events.find((event) => event.type === 'error');
     expect(error?.code).toBe('MALFORMED_TOOL_CALL');
+    expect(error?.details).toEqual({
+      toolNames: ['create_document'],
+      reason: 'token_limit_reached',
+    });
     expect(provider.requests).toHaveLength(4);
     expect(provider.requests[3].tools).toEqual([]);
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('labels a tool call cut off at the output token limit as token_limit_reached even when its arguments did not parse', async () => {
+    // Bedrock claude-opus-5-5 at the 32 000 output-token cap: the arguments
+    // JSON is incomplete because the stream stopped, not because the model
+    // emitted garbage (AYC-1315).
+    const execute = vi.fn(() => 'created');
+    const provider = new MockProvider([
+      malformedDocumentTurn({
+        prefix: [{ textDelta: 'Ich erstelle jetzt das Dokument.' }],
+        id: 'call_1',
+        argumentsDelta: '{"title":"Bericht","content":"<h1>Kurz</h1><p>Sehr',
+        finishReason: 'length',
+        usage: { inputTokens: 7598, outputTokens: 32_000 },
+      }),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool(execute)] }),
+    );
+
+    const error = events.find((event) => event.type === 'error');
+    expect(error?.code).toBe('MALFORMED_TOOL_CALL');
+    expect(error?.details).toEqual({
+      toolNames: ['create_document'],
+      reason: 'token_limit_reached',
+    });
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'tool_call_snapshot',
+        toolCall: expect.objectContaining({ status: 'invalid' }),
+      }),
+    );
+    expect(provider.requests).toHaveLength(1);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps unparseable_arguments for a tool call that finished without truncation', async () => {
+    const provider = new MockProvider([
+      malformedDocumentTurn({
+        prefix: [{ textDelta: 'Ich erstelle jetzt das Dokument.' }],
+        id: 'call_1',
+        argumentsDelta: '{"title":"Bericht","content":"<h1>',
+        finishReason: 'tool_calls',
+      }),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool()] }),
+    );
+
+    const error = events.find((event) => event.type === 'error');
+    expect(error?.details).toEqual({
+      toolNames: ['create_document'],
+      reason: 'unparseable_arguments',
+    });
   });
 
   it('exposes intact text from a terminal malformed call to afterModelCall', async () => {

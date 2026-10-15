@@ -62,6 +62,8 @@
     "errorExecutionError": "Fehler beim Abruf der Antwort",
     "errorImageTooLarge": "Das Bild ist zu groß für das gewählte Modell. Bitte verkleinern Sie es (z. B. Auflösung reduzieren) und versuchen Sie es erneut.",
     "errorInferenceTimeout": "Das Modell hat zu lange nicht geantwortet. Die Verbindung wurde getrennt — bitte versuchen Sie es erneut.",
+    "errorMalformedToolCallTokenLimit": "Die Antwort des Modells wurde abgeschnitten, weil sie zu lang war. Bitte stellen Sie eine kleinere Anfrage oder teilen Sie die Aufgabe auf.",
+    "errorMalformedToolCall": "Das Modell hat einen ungültigen Werkzeugaufruf erzeugt. Bitte versuchen Sie es erneut.",
     "errorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
     "errorNoModelFound": "Kein Modell gefunden",
     "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",

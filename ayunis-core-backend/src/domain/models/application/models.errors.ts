@@ -52,7 +52,6 @@ export abstract class ModelError extends ApplicationError {
     super(message, code, statusCode, metadata);
   }
 }
-
 export class UnexpectedModelError extends ModelError {
   constructor(error: Error, metadata?: ErrorMetadata) {
     super(error.message, ModelErrorCode.UNEXPECTED_MODEL_ERROR, 500, {
@@ -61,7 +60,6 @@ export class UnexpectedModelError extends ModelError {
     });
   }
 }
-
 export class ModelProviderNotSupportedError extends ModelError {
   constructor(provider: string, metadata?: ErrorMetadata) {
     super(
@@ -72,7 +70,6 @@ export class ModelProviderNotSupportedError extends ModelError {
     );
   }
 }
-
 export class ModelNotFoundError extends ModelError {
   constructor(modelId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -83,7 +80,6 @@ export class ModelNotFoundError extends ModelError {
     );
   }
 }
-
 export class DefaultModelNotFoundError extends ModelError {
   constructor(orgId: string, metadata?: ErrorMetadata) {
     super(
@@ -94,7 +90,6 @@ export class DefaultModelNotFoundError extends ModelError {
     );
   }
 }
-
 export class OnlyAnonymousModelsAvailableError extends ModelError {
   constructor(orgId: string) {
     super(
@@ -193,13 +188,23 @@ export class InferenceFailedError extends ModelError {
   }
 }
 
+const MALFORMED_TOOL_CALL_CAUSES: Readonly<Record<string, string>> = {
+  token_limit_reached:
+    "model's tool call was cut off at the output token limit",
+  tool_disabled_fallback: 'model called a tool although tools were disabled',
+};
+
+/** Expected model output failures stay out of AppSignal error incidents. */
 export class InferenceMalformedToolCallError extends ModelError {
-  constructor(metadata?: ErrorMetadata) {
+  constructor(malformedReason: string, metadata?: ErrorMetadata) {
     super(
-      'Inference failed: model emitted unparseable tool call arguments',
+      `Inference failed: ${
+        MALFORMED_TOOL_CALL_CAUSES[malformedReason] ??
+        'model emitted unparseable tool call arguments'
+      }`,
       ModelErrorCode.INFERENCE_MALFORMED_TOOL_CALL,
-      500,
-      metadata,
+      400,
+      { ...metadata, malformedReason },
     );
   }
 }
@@ -228,11 +233,6 @@ export class InferenceAbortedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a provider rejects an image for exceeding its size limit
- * Distinct from the generic
- * InferenceFailedError so the UI can tell the user to shrink the image.
- */
 export class InferenceImageTooLargeError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
