@@ -1,3 +1,4 @@
+import { DEFAULT_RETRY_CONFIG } from '@ayunis/agent-runtime';
 import { ModelProviderError } from '@ayunis/inference';
 import {
   classifyTransportError,
@@ -5,7 +6,6 @@ import {
   isRetryableProviderServerFailure,
   isRetryableProviderTimeoutFailure,
   isRetryableSetupFailure,
-  RATE_LIMIT_MAX_WAIT_MS,
   rateLimitRetryDelayMs,
 } from './provider-transport-error.classifier';
 import { ProviderFailureClass } from './provider.errors';
@@ -263,7 +263,9 @@ describe('classifyTransportError', () => {
     });
 
     it('gives up when the provider asks to wait longer than the budget', () => {
-      const tooLong = String(RATE_LIMIT_MAX_WAIT_MS / 1000 + 1);
+      const tooLong = String(
+        DEFAULT_RETRY_CONFIG.retryAfter.maxWaitMs / 1000 + 1,
+      );
       expect(
         rateLimitRetryDelayMs(rateLimited({ 'retry-after': tooLong }), 1),
       ).toBeUndefined();
