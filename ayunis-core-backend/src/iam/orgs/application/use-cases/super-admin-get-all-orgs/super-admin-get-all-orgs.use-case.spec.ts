@@ -23,7 +23,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
           provide: OrgsRepository,
           useValue: {
             findAllForSuperAdmin: jest.fn(),
-            findPayingOrgIds: jest.fn(),
+            findLifecycleStatuses: jest.fn(),
           } satisfies Partial<OrgsRepository>,
         },
         {
@@ -41,7 +41,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
-    orgsRepository.findPayingOrgIds.mockResolvedValue([]);
+    orgsRepository.findLifecycleStatuses.mockResolvedValue(new Map());
   });
 
   it('should return paginated orgs when requester is super admin', async () => {
@@ -96,41 +96,49 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     expect(result.data).toHaveLength(1);
   });
 
-  it('marks which listed orgs are paying', async () => {
+  it("reports each listed org's lifecycle status", async () => {
     const orgs = [
       new Org({ id: 'org-paying' as UUID, name: 'Gemeinde Musterstadt' }),
-      new Org({ id: 'org-trial' as UUID, name: 'Gemeinde Beispielhausen' }),
+      new Org({ id: 'org-expired' as UUID, name: 'Gemeinde Beispielhausen' }),
     ];
     contextService.get.mockReturnValue(SystemRole.SUPER_ADMIN);
     orgsRepository.findAllForSuperAdmin.mockResolvedValue(
       new Paginated<Org>({ data: orgs, limit: 50, offset: 0, total: 2 }),
     );
-    orgsRepository.findPayingOrgIds.mockResolvedValue(['org-paying' as UUID]);
+    orgsRepository.findLifecycleStatuses.mockResolvedValue(
+      new Map([
+        ['org-paying' as UUID, 'paying'],
+        ['org-expired' as UUID, 'expired'],
+      ]),
+    );
 
     const result = await useCase.execute(new SuperAdminGetAllOrgsQuery());
 
-    expect(orgsRepository.findPayingOrgIds).toHaveBeenCalledWith([
+    expect(orgsRepository.findLifecycleStatuses).toHaveBeenCalledWith([
       'org-paying',
-      'org-trial',
+      'org-expired',
     ]);
-    expect(result.data.map((item) => [item.org.name, item.paying])).toEqual([
-      ['Gemeinde Musterstadt', true],
-      ['Gemeinde Beispielhausen', false],
+    expect(
+      result.data.map((item) => [item.org.name, item.lifecycleStatus]),
+    ).toEqual([
+      ['Gemeinde Musterstadt', 'paying'],
+      ['Gemeinde Beispielhausen', 'expired'],
     ]);
   });
 
-  it('passes the subscription filter through to the repository', async () => {
+  it('passes the lifecycle filter through to the repository', async () => {
+    contextService.get.mockReturnValue(SystemRole.SUPER_ADMIN);
     orgsRepository.findAllForSuperAdmin.mockResolvedValue(
       new Paginated<Org>({ data: [], limit: 50, offset: 0, total: 0 }),
     );
 
     await useCase.execute(
-      new SuperAdminGetAllOrgsQuery({ status: 'all', subscription: 'paying' }),
+      new SuperAdminGetAllOrgsQuery({ lifecycle: 'expired' }),
     );
 
     expect(orgsRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
       { limit: 50, offset: 0 },
-      { status: 'all', subscription: 'paying' },
+      { lifecycle: 'expired' },
     );
   });
 

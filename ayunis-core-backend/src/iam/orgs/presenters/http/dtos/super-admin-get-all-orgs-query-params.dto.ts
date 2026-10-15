@@ -1,25 +1,24 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  ORG_LIFECYCLE_STATUSES,
+  type OrgLifecycleStatus,
+} from 'src/iam/orgs/application/models/org-lifecycle-status';
+
+const LIFECYCLE_FILTER_VALUES = ['all', ...ORG_LIFECYCLE_STATUSES];
 
 export class SuperAdminGetAllOrgsQueryParamsDto {
   @ApiPropertyOptional({
-    enum: ['active', 'archived', 'all'],
-    default: 'active',
-  })
-  @IsOptional()
-  @IsIn(['active', 'archived', 'all'])
-  status?: 'active' | 'archived' | 'all';
-
-  @ApiPropertyOptional({
-    enum: ['all', 'paying', 'non-paying'],
+    enum: LIFECYCLE_FILTER_VALUES,
+    enumName: 'OrgLifecycleFilter',
     default: 'all',
     description:
-      'Filter by whether the organization currently has an active subscription',
+      'Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan',
   })
   @IsOptional()
-  @IsIn(['all', 'paying', 'non-paying'])
-  subscription?: 'all' | 'paying' | 'non-paying';
+  @IsIn(LIFECYCLE_FILTER_VALUES)
+  lifecycle?: OrgLifecycleStatus | 'all';
 
   @ApiPropertyOptional({
     description: 'Search organizations by name, or by exact organization ID',

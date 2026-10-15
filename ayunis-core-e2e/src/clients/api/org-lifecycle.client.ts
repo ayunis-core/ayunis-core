@@ -1,5 +1,6 @@
 import type { APIRequestContext } from "@playwright/test";
 import { config } from "../../config";
+import type { OrgLifecycleFilter } from "../generated/ayunisCoreAPI.schemas";
 import { generatedApi } from "./generated-api";
 
 export function requestOrgArchive(
@@ -29,10 +30,10 @@ export function requestRefresh(api: APIRequestContext) {
 export function listOrgs(
   api: APIRequestContext,
   search: string,
-  status: "active" | "archived" | "all" = "active",
+  lifecycle: OrgLifecycleFilter = "all",
 ) {
   return generatedApi.superAdminOrgsControllerGetAllOrgs(
-    { search, status },
+    { search, lifecycle },
     { api },
   );
 }

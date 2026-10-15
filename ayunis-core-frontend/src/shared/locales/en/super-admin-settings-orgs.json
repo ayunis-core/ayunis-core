@@ -29,12 +29,6 @@
     "updatedAt": "Updated",
     "actions": "Actions"
   },
-  "statuses": {
-    "active": "Active",
-    "inactive": "Inactive",
-    "archived": "Archived",
-    "paying": "Paying"
-  },
   "empty": {
     "title": "No organizations yet",
     "description": "Organizations you create will show up here."
@@ -46,16 +40,13 @@
   "search": {
     "placeholder": "Search by name or ID..."
   },
-  "filter": {
-    "label": "Organisation status",
-    "active": "Active",
-    "archived": "Archived",
-    "all": "All organisations"
-  },
-  "subscriptionFilter": {
-    "label": "Subscription",
-    "all": "All subscriptions",
+  "lifecycle": {
+    "label": "Lifecycle status",
+    "all": "All organisations",
     "paying": "Paying",
-    "non-paying": "Not paying"
+    "expired": "Expired",
+    "trial": "Trial",
+    "no-plan": "No plan",
+    "archived": "Archived"
   }
 }

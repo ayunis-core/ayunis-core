@@ -3,7 +3,6 @@ import {
   OrgsRepository,
   OrgsPagination,
   OrgsFilters,
-  OrgSubscriptionFilter,
 } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import {
@@ -14,7 +13,8 @@ import {
 } from 'typeorm';
 import { isUUID } from 'class-validator';
 import { OrgRecord } from './schema/org.record';
-import { SubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
+import type { OrgLifecycleStatus } from 'src/iam/orgs/application/models/org-lifecycle-status';
+import { orgLifecycleStatusSql } from './org-lifecycle-sql';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
 import {
@@ -108,57 +108,25 @@ export class LocalOrgsRepository extends OrgsRepository {
     });
   }
 
-  // Mirrors isActive() from the subscriptions module, which orgs cannot import
-  // (the module graph would cycle through users). Legacy cancellations without
-  // accessEndsAt keep access until the next renewal: usage-based ends at
-  // cancellation, seat-based at the next anchor step after cancelledAt.
-  // generate_series adds the interval to the previous value, so month-end
-  // anchors clamp and stick exactly like getNextDate (Jan 31 -> Feb 28 -> Mar 28).
-  private activeSubscriptionExists(
-    queryBuilder: SelectQueryBuilder<OrgRecord>,
-  ): string {
-    const cycle = `(CASE s."renewalCycle" WHEN 'yearly' THEN interval '1 year' ELSE interval '1 month' END)`;
-    const nextRenewalAfterCancellation = `(SELECT min(renewal) FROM generate_series(s."renewalCycleAnchor", s."cancelledAt" + ${cycle}, ${cycle}) AS renewal WHERE renewal > s."cancelledAt")`;
-    const subQuery = queryBuilder
-      .subQuery()
-      .select('1')
-      .from(SubscriptionRecord, 's')
-      .where('s."orgId" = org.id')
-      .andWhere('s."startsAt" <= :now')
-      .andWhere(
-        `(s."accessEndsAt" > :now OR (s."accessEndsAt" IS NULL AND (s."cancelledAt" IS NULL OR (s."cancelledAt" >= s."startsAt" AND CASE s.type WHEN 'SEAT_BASED' THEN ${nextRenewalAfterCancellation} > :now ELSE s."cancelledAt" > :now END))))`,
-      );
-    return `EXISTS ${subQuery.getQuery()}`;
-  }
-
-  private applySubscriptionFilter(
-    queryBuilder: SelectQueryBuilder<OrgRecord>,
-    subscription: OrgSubscriptionFilter = 'all',
-  ): void {
-    if (subscription === 'all') return;
-    const exists = this.activeSubscriptionExists(queryBuilder);
-    queryBuilder.andWhere(
-      subscription === 'paying' ? exists : `NOT ${exists}`,
-      { now: new Date() },
-    );
-  }
-
   private applySuperAdminFilters(
     queryBuilder: SelectQueryBuilder<OrgRecord>,
     filters?: OrgsFilters,
   ): void {
-    if (filters?.status !== 'all') {
-      queryBuilder.andWhere('org.archived = :archived', {
-        archived: filters?.status === 'archived',
-      });
-    }
-
     const search = filters?.search?.trim();
     if (search) {
       queryBuilder.andWhere(this.nameOrIdMatches(search));
     }
 
-    this.applySubscriptionFilter(queryBuilder, filters?.subscription);
+    const lifecycle = filters?.lifecycle ?? 'all';
+    if (lifecycle !== 'all') {
+      queryBuilder.andWhere(
+        `${orgLifecycleStatusSql(queryBuilder)} = :lifecycle`,
+        {
+          lifecycle,
+          now: new Date(),
+        },
+      );
+    }
   }
 
   async findAllForSuperAdmin(
@@ -208,17 +176,21 @@ export class LocalOrgsRepository extends OrgsRepository {
     }
   }
 
-  async findPayingOrgIds(orgIds: UUID[]): Promise<UUID[]> {
-    if (orgIds.length === 0) return [];
+  async findLifecycleStatuses(
+    orgIds: UUID[],
+  ): Promise<Map<UUID, OrgLifecycleStatus>> {
+    if (orgIds.length === 0) return new Map();
     const queryBuilder = this.orgRepository
       .createQueryBuilder('org')
       .select('org.id', 'id')
-      .where('org.id IN (:...orgIds)', { orgIds });
-    queryBuilder.andWhere(this.activeSubscriptionExists(queryBuilder), {
-      now: new Date(),
-    });
-    const rows = await queryBuilder.getRawMany<{ id: UUID }>();
-    return rows.map((row) => row.id);
+      .where('org.id IN (:...orgIds)', { orgIds })
+      .setParameter('now', new Date());
+    queryBuilder.addSelect(orgLifecycleStatusSql(queryBuilder), 'status');
+    const rows = await queryBuilder.getRawMany<{
+      id: UUID;
+      status: OrgLifecycleStatus;
+    }>();
+    return new Map(rows.map((row) => [row.id, row.status]));
   }
 
   async create(org: Org): Promise<Org> {

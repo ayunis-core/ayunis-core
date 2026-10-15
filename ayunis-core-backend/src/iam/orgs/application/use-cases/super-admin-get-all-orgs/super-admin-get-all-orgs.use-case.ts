@@ -51,18 +51,18 @@ export class SuperAdminGetAllOrgsUseCase {
       },
       {
         search: query.search,
-        status: query.status,
-        subscription: query.subscription,
+        lifecycle: query.lifecycle,
       },
     );
 
-    const payingOrgIds = new Set(
-      await this.orgsRepository.findPayingOrgIds(
-        page.data.map((org) => org.id),
-      ),
+    const statuses = await this.orgsRepository.findLifecycleStatuses(
+      page.data.map((org) => org.id),
     );
     return new Paginated<SuperAdminOrgListItem>({
-      data: page.data.map((org) => ({ org, paying: payingOrgIds.has(org.id) })),
+      data: page.data.map((org) => ({
+        org,
+        lifecycleStatus: statuses.get(org.id) ?? 'no-plan',
+      })),
       limit: page.limit,
       offset: page.offset,
       total: page.total,
