@@ -94,7 +94,7 @@
     "error": "Fähigkeit konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht.",
     "confirmTitle": "Fähigkeit löschen",
-    "confirmDescription": "Sind Sie sicher, dass Sie „{{name}}“ löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmDescription": "Sind Sie sicher, dass Sie „{{name}}“ löschen möchten?{{hint}} Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
   },

@@ -94,7 +94,7 @@
     "error": "Failed to delete skill. Please try again.",
     "notFound": "Skill not found. It may have been deleted.",
     "confirmTitle": "Delete Skill",
-    "confirmDescription": "Are you sure you want to delete “{{name}}”? This action cannot be undone.",
+    "confirmDescription": "Are you sure you want to delete “{{name}}”?{{hint}} This action cannot be undone.",
     "confirmText": "Delete",
     "cancelText": "Cancel"
   },

@@ -161,6 +161,8 @@ export function KnowledgeBaseCreateDialog({
   ownerField,
   description,
   onOpen,
+  open,
+  onOpenChange,
 }: Readonly<{
   onCreate: (data: CreateKnowledgeBaseFormData) => Promise<unknown>;
   buttonText?: string;
@@ -170,6 +172,8 @@ export function KnowledgeBaseCreateDialog({
   ownerField?: ReactNode;
   description?: string;
   onOpen?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const defaultTranslations = useCreateDialogTranslations('knowledge-bases');
@@ -177,7 +181,13 @@ export function KnowledgeBaseCreateDialog({
     ...defaultTranslations,
     description: description ?? defaultTranslations.description,
   };
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const [isOwnOpen, setIsOwnOpen] = useState(false);
+  const isOpen = isControlled ? open : isOwnOpen;
+  const setIsOpen = (next: boolean) => {
+    if (isControlled) onOpenChange?.(next);
+    else setIsOwnOpen(next);
+  };
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<CreateKnowledgeBaseFormData>({
     resolver: zodResolver(
@@ -224,6 +234,7 @@ export function KnowledgeBaseCreateDialog({
       showIcon={showIcon}
       buttonClassName={buttonClassName}
       buttonTestId={buttonTestId}
+      hideTrigger={isControlled}
     >
       <Form {...form}>
         <div className="space-y-6">

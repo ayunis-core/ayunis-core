@@ -93,7 +93,8 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
 
   await page.getByTestId("workspace-tab-skills").click();
   await expect(page.getByTestId("workspace-skills-search")).toHaveCount(0);
-  await page.getByTestId("workspace-skill-create").first().click();
+  await page.getByTestId("workspace-skill-add-menu").click();
+  await page.getByTestId("workspace-skill-create").click();
   const createSkillDialog = page.getByRole("dialog");
   await expect(createSkillDialog).toBeVisible();
   await expect(
@@ -185,7 +186,8 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
 
   await page.getByTestId("workspace-tab-knowledge").click();
   await expect(page.getByTestId("workspace-knowledge-search")).toHaveCount(0);
-  await page.getByTestId("workspace-knowledge-create").first().click();
+  await page.getByTestId("workspace-knowledge-add-menu").click();
+  await page.getByTestId("workspace-knowledge-create").click();
   const createKnowledgeBaseDialog = page.getByRole("dialog");
   await expect(createKnowledgeBaseDialog).toBeVisible();
   await expect(

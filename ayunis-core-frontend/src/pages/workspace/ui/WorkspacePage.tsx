@@ -21,6 +21,7 @@ import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ay
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
 import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
+import { useLinkedItems } from '@/features/workspace-links';
 import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
 import { WorkspaceChatStarter } from './WorkspaceChatStarter';
@@ -76,8 +77,14 @@ export default function WorkspacePage({
     workspace.id,
     countParams,
   );
-  const knowledgeCount = knowledgeBasesPagination?.total ?? 0;
-  const skillsCount = skillsPagination?.total ?? 0;
+  const { items: linkedSkills } = useLinkedItems('skill', workspace.id);
+  const { items: linkedKnowledgeBases } = useLinkedItems(
+    'knowledgeBase',
+    workspace.id,
+  );
+  const knowledgeCount =
+    (knowledgeBasesPagination?.total ?? 0) + linkedKnowledgeBases.length;
+  const skillsCount = (skillsPagination?.total ?? 0) + linkedSkills.length;
   const artifactCount = artifactCountPage?.pagination.total ?? 0;
 
   return (
@@ -164,10 +171,10 @@ export default function WorkspacePage({
                 <WorkspaceArtifactsTab workspaceId={workspace.id} />
               </TabsContent>
               <TabsContent value="skills" className="pt-4">
-                <WorkspaceSkillsTab workspaceId={workspace.id} />
+                <WorkspaceSkillsTab workspace={workspace} />
               </TabsContent>
               <TabsContent value="knowledge" className="pt-4">
-                <WorkspaceKnowledgeTab workspaceId={workspace.id} />
+                <WorkspaceKnowledgeTab workspace={workspace} />
               </TabsContent>
               <TabsContent value="instructions" className="pt-4">
                 <WorkspaceInstructionsTab workspaceId={workspace.id} />
