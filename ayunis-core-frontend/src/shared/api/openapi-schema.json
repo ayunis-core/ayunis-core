@@ -4028,6 +4028,7 @@
     },
     "/teams": {
       "get": {
+        "description": "Holders of manage_teams or assign_users_to_teams get every team of the organization; team admins get the teams they administer.",
         "operationId": "TeamsController_listTeams",
         "parameters": [],
         "responses": {
@@ -4054,7 +4055,7 @@
             "description": "Internal server error"
           }
         },
-        "summary": "List all teams for the current organization",
+        "summary": "List the teams the current user may manage",
         "tags": ["teams"]
       },
       "post": {
@@ -4257,7 +4258,7 @@
     },
     "/teams/{id}/members": {
       "get": {
-        "operationId": "TeamsController_listTeamMembers",
+        "operationId": "TeamMembersController_listTeamMembers",
         "parameters": [
           {
             "name": "id",
@@ -4315,7 +4316,7 @@
         "tags": ["teams"]
       },
       "post": {
-        "operationId": "TeamsController_addTeamMember",
+        "operationId": "TeamMembersController_addTeamMember",
         "parameters": [
           {
             "name": "id",
@@ -4370,7 +4371,7 @@
     "/teams/{id}/members/bulk": {
       "post": {
         "description": "Adds every listed user. Users already in the team, not found, or not in the org are skipped; the response holds only the members added.",
-        "operationId": "TeamsController_bulkAddTeamMembers",
+        "operationId": "TeamMembersController_bulkAddTeamMembers",
         "parameters": [
           {
             "name": "id",
@@ -4411,8 +4412,59 @@
       }
     },
     "/teams/{id}/members/{userId}": {
+      "patch": {
+        "operationId": "TeamMembersController_updateTeamMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated team member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamMemberResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed to appoint team admins, or the member is the last team admin (LAST_TEAM_ADMIN)"
+          },
+          "404": {
+            "description": "Team not found or user is not a member of the team"
+          }
+        },
+        "summary": "Make a team member a team admin or a plain member again",
+        "tags": ["teams"]
+      },
       "delete": {
-        "operationId": "TeamsController_removeTeamMember",
+        "operationId": "TeamMembersController_removeTeamMember",
         "parameters": [
           {
             "name": "id",
@@ -15586,6 +15638,22 @@
         },
         "required": ["name"]
       },
+      "TeamAdminSummaryDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The user ID of the team admin",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team admin",
+            "example": "Jonas Weber"
+          }
+        },
+        "required": ["userId", "name"]
+      },
       "TeamResponseDto": {
         "type": "object",
         "properties": {
@@ -15625,6 +15693,18 @@
             "type": "number",
             "description": "The number of members in the team. Only populated by the admin list endpoint (GET /teams).",
             "example": 5
+          },
+          "teamAdmins": {
+            "description": "The team admins, sorted by name. Only populated by GET /teams and GET /teams/:id.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamAdminSummaryDto"
+            }
+          },
+          "isTeamAdmin": {
+            "type": "boolean",
+            "description": "Whether the current user is a team admin of this team. Only populated by GET /teams/me.",
+            "example": false
           }
         },
         "required": [
@@ -15665,6 +15745,11 @@
             "enum": ["admin", "manager", "user"],
             "example": "user"
           },
+          "isTeamAdmin": {
+            "type": "boolean",
+            "description": "Whether the member is a team admin of this team",
+            "example": false
+          },
           "joinedAt": {
             "format": "date-time",
             "type": "string",
@@ -15678,6 +15763,7 @@
           "userName",
           "userEmail",
           "userRole",
+          "isTeamAdmin",
           "joinedAt"
         ]
       },
@@ -15712,6 +15798,17 @@
           }
         },
         "required": ["userId"]
+      },
+      "UpdateTeamMemberDto": {
+        "type": "object",
+        "properties": {
+          "isTeamAdmin": {
+            "type": "boolean",
+            "description": "Whether the member is a team admin of this team",
+            "example": true
+          }
+        },
+        "required": ["isTeamAdmin"]
       },
       "ListTeamMembersQueryDto": {
         "type": "object",

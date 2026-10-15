@@ -4,6 +4,7 @@ import { BulkAddTeamMembersUseCase } from './bulk-add-team-members.use-case';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
 import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
 import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
@@ -39,6 +40,10 @@ describe('BulkAddTeamMembersUseCase', () => {
           useValue: { execute: jest.fn().mockResolvedValue(undefined) },
         },
         { provide: TeamMemberCreationService, useValue: mockCreateMember },
+        {
+          provide: TeamAccessService,
+          useValue: { assertCanManageMembers: jest.fn() },
+        },
       ],
     }).compile();
 

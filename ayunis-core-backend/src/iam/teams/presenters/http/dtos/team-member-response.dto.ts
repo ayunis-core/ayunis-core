@@ -36,6 +36,12 @@ export class TeamMemberResponseDto {
   userRole: UserRole;
 
   @ApiProperty({
+    description: 'Whether the member is a team admin of this team',
+    example: false,
+  })
+  isTeamAdmin: boolean;
+
+  @ApiProperty({
     description: 'The date when the user joined the team',
     example: '2024-01-15T10:30:00.000Z',
   })

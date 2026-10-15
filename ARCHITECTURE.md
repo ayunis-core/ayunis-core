@@ -204,6 +204,10 @@ load-bearing):
   live in the per-org `role_permissions` table; new orgs are seeded and existing
   orgs were migrated onto the current keys without losing access. See
   [permissions/SUMMARY.md](ayunis-core-backend/src/iam/permissions/SUMMARY.md).
+- **Team admin** — a flag on a team membership (`team_members.is_team_admin`),
+  independent of the org role. Team-scoped checks depend on the team id, so
+  they live in the teams module's `TeamAccessService` instead of route
+  decorators. See [teams/SUMMARY.md](ayunis-core-backend/src/iam/teams/SUMMARY.md).
 
 **Reads stay open** — only manage/share (write) endpoints are permission-gated;
 per-entity visibility (ownership + shares) is enforced separately inside the use

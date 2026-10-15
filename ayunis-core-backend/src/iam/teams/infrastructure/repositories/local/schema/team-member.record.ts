@@ -1,7 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 import { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
-import { TeamRecord } from './team.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'team_members' })
@@ -21,5 +21,8 @@ export class TeamMemberRecord extends BaseRecord {
 
   @ManyToOne(() => UserRecord, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: UserRecord;
+  user?: UserRecord;
+
+  @Column({ name: 'is_team_admin', default: false })
+  isTeamAdmin: boolean;
 }

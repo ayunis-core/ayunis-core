@@ -11,11 +11,14 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { FindAdministeredTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-administered-team-ids/find-administered-team-ids.use-case';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('FindUsersByOrgIdUseCase', () => {
   let useCase: FindUsersByOrgIdUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
   let mockContextService: { get: jest.Mock };
+  const mockFindAdministeredTeamIds = { execute: jest.fn() };
 
   beforeAll(async () => {
     mockUsersRepository = {
@@ -38,6 +41,10 @@ describe('FindUsersByOrgIdUseCase', () => {
         {
           provide: HasPermissionUseCase,
           useValue: { execute: jest.fn().mockResolvedValue(false) },
+        },
+        {
+          provide: FindAdministeredTeamIdsUseCase,
+          useValue: mockFindAdministeredTeamIds,
         },
       ],
     }).compile();
@@ -135,5 +142,40 @@ describe('FindUsersByOrgIdUseCase', () => {
       { limit: 25, offset: 0 },
       { search: undefined },
     );
+  });
+
+  describe('member picker access for non-admins', () => {
+    const orgId = 'org-id' as UUID;
+
+    beforeEach(() => {
+      mockContextService.get.mockImplementation((key: string): unknown => {
+        if (key === 'userId') return 'requesting-user-id';
+        if (key === 'orgId') return orgId;
+        if (key === 'systemRole') return SystemRole.CUSTOMER;
+        if (key === 'role') return UserRole.USER;
+        return null;
+      });
+      jest
+        .spyOn(mockUsersRepository, 'findManyByOrgId')
+        .mockResolvedValue(
+          new Paginated<User>({ data: [], limit: 25, offset: 0, total: 0 }),
+        );
+    });
+
+    it('lets a team admin list org users', async () => {
+      mockFindAdministeredTeamIds.execute.mockResolvedValue(['team-1']);
+
+      await expect(
+        useCase.execute(new FindUsersByOrgIdQuery({ orgId })),
+      ).resolves.toHaveProperty('total', 0);
+    });
+
+    it('rejects a member who neither assigns users nor administers a team', async () => {
+      mockFindAdministeredTeamIds.execute.mockResolvedValue([]);
+
+      await expect(
+        useCase.execute(new FindUsersByOrgIdQuery({ orgId })),
+      ).rejects.toThrow(UnauthorizedAccessError);
+    });
   });
 });

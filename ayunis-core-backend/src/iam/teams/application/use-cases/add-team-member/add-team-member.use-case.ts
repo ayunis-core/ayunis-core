@@ -5,6 +5,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { UnexpectedTeamMemberError } from 'src/iam/teams/application/team-members.errors';
 import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { AddTeamMemberCommand } from './add-team-member.command';
 
@@ -14,6 +15,7 @@ export class AddTeamMemberUseCase {
   constructor(
     private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly createMember: TeamMemberCreationService,
+    private readonly teamAccess: TeamAccessService,
     private readonly context: ContextService,
   ) {}
   @HandleUnexpectedErrors(UnexpectedTeamMemberError)
@@ -24,6 +26,10 @@ export class AddTeamMemberUseCase {
       'Adding team member',
     );
     await this.teamManagementAccess.execute({ orgId });
+    await this.teamAccess.assertCanManageMembers({
+      teamId: command.teamId,
+      targetOrgId: command.orgId,
+    });
     return this.createMember.add(command, orgId);
   }
 }

@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
@@ -26,44 +25,21 @@ import { UpdateTeamUseCase } from 'src/iam/teams/application/use-cases/update-te
 import { UpdateTeamCommand } from 'src/iam/teams/application/use-cases/update-team/update-team.command';
 import { DeleteTeamUseCase } from 'src/iam/teams/application/use-cases/delete-team/delete-team.use-case';
 import { DeleteTeamCommand } from 'src/iam/teams/application/use-cases/delete-team/delete-team.command';
-import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
+import { ListManageableTeamsUseCase } from 'src/iam/teams/application/use-cases/list-manageable-teams/list-manageable-teams.use-case';
+import { GetManageableTeamUseCase } from 'src/iam/teams/application/use-cases/get-manageable-team/get-manageable-team.use-case';
+import { FindAdministeredTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-administered-team-ids/find-administered-team-ids.use-case';
 import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
-import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
-import { ListTeamMembersUseCase } from 'src/iam/teams/application/use-cases/list-team-members/list-team-members.use-case';
-import { ListTeamMembersQuery } from 'src/iam/teams/application/use-cases/list-team-members/list-team-members.query';
-import { AddTeamMemberUseCase } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.use-case';
-import { AddTeamMemberCommand } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.command';
-import { BulkAddTeamMembersUseCase } from 'src/iam/teams/application/use-cases/bulk-add-team-members/bulk-add-team-members.use-case';
-import { BulkAddTeamMembersCommand } from 'src/iam/teams/application/use-cases/bulk-add-team-members/bulk-add-team-members.command';
-import { RemoveTeamMemberUseCase } from 'src/iam/teams/application/use-cases/remove-team-member/remove-team-member.use-case';
-import { RemoveTeamMemberCommand } from 'src/iam/teams/application/use-cases/remove-team-member/remove-team-member.command';
 import { CreateTeamDto } from './dtos/create-team.dto';
 import { UpdateTeamDto } from './dtos/update-team.dto';
 import { TeamResponseDto } from './dtos/team-response.dto';
-import {
-  TeamMemberResponseDto,
-  PaginatedTeamMembersResponseDto,
-} from './dtos/team-member-response.dto';
-import { AddTeamMemberDto } from './dtos/add-team-member.dto';
-import { BulkAddTeamMembersDto } from './dtos/bulk-add-team-members.dto';
-import { ListTeamMembersQueryDto } from './dtos/list-team-members-query.dto';
 import { TeamDtoMapper } from './mappers/team-dto.mapper';
-import { TeamMemberDtoMapper } from './mappers/team-member-dto.mapper';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('teams')
 @Controller('teams')
-@ApiExtraModels(
-  CreateTeamDto,
-  UpdateTeamDto,
-  TeamResponseDto,
-  TeamMemberResponseDto,
-  PaginatedTeamMembersResponseDto,
-  AddTeamMemberDto,
-  ListTeamMembersQueryDto,
-)
+@ApiExtraModels(CreateTeamDto, UpdateTeamDto, TeamResponseDto)
 export class TeamsController {
   private readonly logger = new Logger(TeamsController.name);
 
@@ -71,23 +47,18 @@ export class TeamsController {
     private readonly createTeamUseCase: CreateTeamUseCase,
     private readonly updateTeamUseCase: UpdateTeamUseCase,
     private readonly deleteTeamUseCase: DeleteTeamUseCase,
-    private readonly listTeamsUseCase: ListTeamsUseCase,
+    private readonly listManageableTeamsUseCase: ListManageableTeamsUseCase,
     private readonly listMyTeamsUseCase: ListMyTeamsUseCase,
-    private readonly getTeamUseCase: GetTeamUseCase,
-    private readonly listTeamMembersUseCase: ListTeamMembersUseCase,
-    private readonly addTeamMemberUseCase: AddTeamMemberUseCase,
-    private readonly bulkAddTeamMembersUseCase: BulkAddTeamMembersUseCase,
-    private readonly removeTeamMemberUseCase: RemoveTeamMemberUseCase,
+    private readonly findAdministeredTeamIdsUseCase: FindAdministeredTeamIdsUseCase,
+    private readonly getManageableTeamUseCase: GetManageableTeamUseCase,
     private readonly teamDtoMapper: TeamDtoMapper,
-    private readonly teamMemberDtoMapper: TeamMemberDtoMapper,
   ) {}
 
-  // Reads are open to assigners too: assigning a user to a team is only
-  // reachable by first listing teams and their members.
-  @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
   @Get()
   @ApiOperation({
-    summary: 'List all teams for the current organization',
+    summary: 'List the teams the current user may manage',
+    description:
+      'Holders of manage_teams or assign_users_to_teams get every team of the organization; team admins get the teams they administer.',
   })
   @ApiResponse({
     status: 200,
@@ -109,13 +80,13 @@ export class TeamsController {
   async listTeams(): Promise<TeamResponseDto[]> {
     this.logger.log('Listing teams for organization');
 
-    const teams = await this.listTeamsUseCase.execute();
+    const teams = await this.listManageableTeamsUseCase.execute();
 
     this.logger.log(
       { teamCount: teams.length },
       'Successfully retrieved teams',
     );
-    return this.teamDtoMapper.toDtoListWithMemberCount(teams);
+    return this.teamDtoMapper.toManageableDtoList(teams);
   }
 
   @Get('me')
@@ -138,16 +109,18 @@ export class TeamsController {
   async listMyTeams(): Promise<TeamResponseDto[]> {
     this.logger.log('Listing teams for current user');
 
-    const teams = await this.listMyTeamsUseCase.execute();
+    const [teams, adminTeamIds] = await Promise.all([
+      this.listMyTeamsUseCase.execute(),
+      this.findAdministeredTeamIdsUseCase.execute(),
+    ]);
 
     this.logger.log(
       { teamCount: teams.length },
       'Successfully retrieved teams for user',
     );
-    return this.teamDtoMapper.toDtoList(teams);
+    return this.teamDtoMapper.toMyTeamDtoList(teams, adminTeamIds);
   }
 
-  @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
   @Get(':id')
   @ApiOperation({
     summary: 'Get a team by ID',
@@ -181,10 +154,10 @@ export class TeamsController {
     this.logger.log({ teamId: id }, 'Getting team');
 
     const query = new GetTeamQuery(id);
-    const response = await this.getTeamUseCase.execute(query);
+    const response = await this.getManageableTeamUseCase.execute(query);
 
     this.logger.log({ teamId: id }, 'Successfully retrieved team');
-    return this.teamDtoMapper.toDto(response);
+    return this.teamDtoMapper.toDtoWithAdmins(response);
   }
 
   @RequirePermission(Permission.MANAGE_TEAMS)
@@ -313,184 +286,5 @@ export class TeamsController {
     await this.deleteTeamUseCase.execute(command);
 
     this.logger.log({ teamId: id }, 'Successfully deleted team');
-  }
-
-  @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
-  @Get(':id/members')
-  @ApiOperation({
-    summary: 'List members of a team',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully retrieved team members',
-    schema: {
-      $ref: getSchemaPath(PaginatedTeamMembersResponseDto),
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'User is not authenticated',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'User is not authorized to view team members',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Team not found',
-  })
-  async listTeamMembers(
-    @Param('id', ParseUUIDPipe) id: UUID,
-    @Query() queryDto: ListTeamMembersQueryDto,
-  ): Promise<PaginatedTeamMembersResponseDto> {
-    this.logger.log({ teamId: id }, 'Listing members for team');
-
-    const query = new ListTeamMembersQuery({
-      teamId: id,
-      limit: queryDto.limit ?? 50,
-      offset: queryDto.offset ?? 0,
-    });
-    const result = await this.listTeamMembersUseCase.execute(query);
-
-    this.logger.log(
-      { teamId: id, memberCount: result.data.length },
-      'Successfully retrieved members for team',
-    );
-    return {
-      data: this.teamMemberDtoMapper.toDtoList(result.data),
-      pagination: {
-        limit: result.limit,
-        offset: result.offset,
-        total: result.total,
-      },
-    };
-  }
-
-  @RequirePermission(Permission.ASSIGN_USERS_TO_TEAMS)
-  @Post(':id/members')
-  @ApiOperation({
-    summary: 'Add a user to a team',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Successfully added user to team',
-    schema: {
-      $ref: getSchemaPath(TeamMemberResponseDto),
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid data provided or user not in same organization',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'User is not authenticated',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'User is not authorized to add team members',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Team or user not found',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'User is already a member of the team',
-  })
-  async addTeamMember(
-    @Param('id', ParseUUIDPipe) id: UUID,
-    @Body() addTeamMemberDto: AddTeamMemberDto,
-  ): Promise<TeamMemberResponseDto> {
-    const { userId } = addTeamMemberDto;
-    this.logger.log({ teamId: id, userId }, 'Adding user to team');
-
-    const command = new AddTeamMemberCommand({ teamId: id, userId });
-    const teamMember = await this.addTeamMemberUseCase.execute(command);
-
-    this.logger.log({ teamId: id, userId }, 'Successfully added user to team');
-    return this.teamMemberDtoMapper.toDto(teamMember);
-  }
-
-  @RequirePermission(Permission.ASSIGN_USERS_TO_TEAMS)
-  @Post(':id/members/bulk')
-  @ApiOperation({
-    summary: 'Add multiple users to a team at once',
-    description:
-      'Adds every listed user. Users already in the team, not found, or not ' +
-      'in the org are skipped; the response holds only the members added.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Users successfully added to team',
-    schema: {
-      type: 'array',
-      items: { $ref: getSchemaPath(TeamMemberResponseDto) },
-    },
-  })
-  async bulkAddTeamMembers(
-    @Param('id', ParseUUIDPipe) id: UUID,
-    @Body() bulkAddTeamMembersDto: BulkAddTeamMembersDto,
-  ): Promise<TeamMemberResponseDto[]> {
-    this.logger.log(
-      { teamId: id, userCount: bulkAddTeamMembersDto.userIds.length },
-      'Adding users to team',
-    );
-
-    const command = new BulkAddTeamMembersCommand({
-      teamId: id,
-      userIds: bulkAddTeamMembersDto.userIds,
-    });
-    const teamMembers = await this.bulkAddTeamMembersUseCase.execute(command);
-
-    this.logger.log(
-      { teamId: id, userCount: teamMembers.length },
-      'Successfully added users to team',
-    );
-    return this.teamMemberDtoMapper.toDtoList(teamMembers);
-  }
-
-  @RequirePermission(Permission.ASSIGN_USERS_TO_TEAMS)
-  @Delete(':id/members/:userId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary: 'Remove a user from a team',
-  })
-  @ApiResponse({
-    status: 204,
-    description: 'User successfully removed from team',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'User is not authenticated',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'User is not authorized to remove team members',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Team not found or user is not a member of the team',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
-  async removeTeamMember(
-    @Param('id', ParseUUIDPipe) id: UUID,
-    @Param('userId', ParseUUIDPipe) userId: UUID,
-  ): Promise<void> {
-    this.logger.log({ teamId: id, userId }, 'Removing user from team');
-
-    const command = new RemoveTeamMemberCommand({
-      teamId: id,
-      userId,
-    });
-    await this.removeTeamMemberUseCase.execute(command);
-
-    this.logger.log(
-      { teamId: id, userId },
-      'Successfully removed user from team',
-    );
   }
 }

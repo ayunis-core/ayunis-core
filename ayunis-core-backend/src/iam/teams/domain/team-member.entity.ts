@@ -6,6 +6,7 @@ export class TeamMember {
   public id: UUID;
   public teamId: UUID;
   public userId: UUID;
+  public isTeamAdmin: boolean;
   public user?: User;
   public createdAt: Date;
   public updatedAt: Date;
@@ -14,6 +15,7 @@ export class TeamMember {
     id?: UUID;
     teamId: UUID;
     userId: UUID;
+    isTeamAdmin?: boolean;
     user?: User;
     createdAt?: Date;
     updatedAt?: Date;
@@ -21,6 +23,7 @@ export class TeamMember {
     this.id = params.id ?? randomUUID();
     this.teamId = params.teamId;
     this.userId = params.userId;
+    this.isTeamAdmin = params.isTeamAdmin ?? false;
     this.user = params.user;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

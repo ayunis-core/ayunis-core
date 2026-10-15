@@ -19,14 +19,14 @@ export async function addTeamMember(
   teamId: string,
   userId: string,
 ): Promise<void> {
-  await generatedApi.teamsControllerAddTeamMember(teamId, { userId }, { api });
+  await generatedApi.teamMembersControllerAddTeamMember(teamId, { userId }, { api });
 }
 
 export function listTeamMembers(
   api: APIRequestContext,
   teamId: string,
 ): Promise<PaginatedTeamMembersResponseDto> {
-  return generatedApi.teamsControllerListTeamMembers(
+  return generatedApi.teamMembersControllerListTeamMembers(
     teamId,
     { limit: 100, offset: 0 },
     { api },
