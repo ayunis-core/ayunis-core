@@ -8,6 +8,7 @@ import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/loca
 import { TeamMemberMapper } from 'src/iam/teams/infrastructure/repositories/local/mappers/team-member.mapper';
 import { UUID } from 'crypto';
 import { Paginated, PaginatedQueryParams } from 'src/common/pagination';
+import type { TeamAdminSummary } from 'src/iam/teams/domain/team-admin-summary';
 
 @Injectable()
 export class LocalTeamMembersRepository extends TeamMembersRepository {
@@ -208,5 +209,62 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     }
 
     return counts;
+  }
+
+  async setTeamAdmin(
+    teamId: UUID,
+    userId: UUID,
+    isTeamAdmin: boolean,
+  ): Promise<void> {
+    this.logger.log({ teamId, userId, isTeamAdmin }, 'setTeamAdmin');
+    await this.teamMembers.update({ teamId, userId }, { isTeamAdmin });
+  }
+
+  async lockTeamAdminUserIds(teamId: UUID): Promise<UUID[]> {
+    const rows = await this.teamMembers
+      .createQueryBuilder('tm')
+      .select('tm.user_id', 'userId')
+      .where('tm.team_id = :teamId', { teamId })
+      .andWhere('tm.is_team_admin = true')
+      .setLock('pessimistic_write')
+      .getRawMany<{ userId: UUID }>();
+    return rows.map((row) => row.userId);
+  }
+
+  async findAdminTeamIdsByUserId(userId: UUID): Promise<UUID[]> {
+    const records = await this.teamMembers.find({
+      where: { userId, isTeamAdmin: true },
+      select: ['teamId'],
+    });
+    return records.map((record) => record.teamId);
+  }
+
+  async findTeamAdminsByTeamIds(
+    teamIds: UUID[],
+  ): Promise<Map<UUID, TeamAdminSummary[]>> {
+    if (teamIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.teamMembers
+      .createQueryBuilder('tm')
+      .innerJoin('tm.user', 'user')
+      .select('tm.team_id', 'teamId')
+      .addSelect('tm.user_id', 'userId')
+      .addSelect('user.name', 'name')
+      .where('tm.team_id IN (:...teamIds)', { teamIds })
+      .andWhere('tm.is_team_admin = true')
+      .orderBy('user.name', 'ASC')
+      .getRawMany<{ teamId: UUID; userId: UUID; name: string }>();
+
+    const adminsByTeam = new Map<UUID, TeamAdminSummary[]>();
+    for (const { teamId, userId, name } of rows) {
+      adminsByTeam.set(teamId, [
+        ...(adminsByTeam.get(teamId) ?? []),
+        { userId, name },
+      ]);
+    }
+
+    return adminsByTeam;
   }
 }

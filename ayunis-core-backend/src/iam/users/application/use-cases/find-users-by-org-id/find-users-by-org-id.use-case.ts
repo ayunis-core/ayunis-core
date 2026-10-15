@@ -16,6 +16,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { FindAdministeredTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-administered-team-ids/find-administered-team-ids.use-case';
 
 @Injectable()
 export class FindUsersByOrgIdUseCase {
@@ -26,6 +27,7 @@ export class FindUsersByOrgIdUseCase {
     private readonly contextService: ContextService,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
     private readonly findTeamsByUsers: FindTeamsByUserIdsAndOrgIdUseCase,
+    private readonly findAdministeredTeamIds: FindAdministeredTeamIdsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
@@ -43,19 +45,7 @@ export class FindUsersByOrgIdUseCase {
     );
     const { role } = getRequiredUserContext(this.contextService);
     const callerIsSuperAdmin = isSuperAdmin(this.contextService);
-    // Listing org users is allowed for super-admins, org admins (admins hold
-    // every permission), and members who can assign users to teams — the
-    // add-team-member picker needs the list.
-    const canListUsers =
-      callerIsSuperAdmin ||
-      (await this.hasPermissionUseCase.execute(
-        new HasPermissionQuery(
-          query.orgId,
-          role,
-          Permission.ASSIGN_USERS_TO_TEAMS,
-        ),
-      ));
-    if (!canListUsers) {
+    if (!callerIsSuperAdmin && !(await this.canPickUsers(query.orgId))) {
       throw new UnauthorizedAccessError({ orgId: query.orgId });
     }
     const users = await this.usersRepository.findManyByOrgId(
@@ -71,6 +61,18 @@ export class FindUsersByOrgIdUseCase {
     if (!query.includeTeams || (role !== UserRole.ADMIN && !callerIsSuperAdmin))
       return users;
     return this.includeTeams(users, query.orgId);
+  }
+
+  // Org admins (who hold every permission), members who can assign users to
+  // teams and team admins may list org users: the add-team-member picker
+  // needs the list.
+  private async canPickUsers(orgId: FindUsersByOrgIdQuery['orgId']) {
+    const { role } = getRequiredUserContext(this.contextService);
+    const canAssign = await this.hasPermissionUseCase.execute(
+      new HasPermissionQuery(orgId, role, Permission.ASSIGN_USERS_TO_TEAMS),
+    );
+    if (canAssign) return true;
+    return (await this.findAdministeredTeamIds.execute()).length > 0;
   }
 
   private async includeTeams(

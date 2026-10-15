@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredOrgId } from 'src/common/context/required-context';
 import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
@@ -22,6 +23,7 @@ export class BulkAddTeamMembersUseCase {
   constructor(
     private readonly createMember: TeamMemberCreationService,
     private readonly access: AssertTeamManagementAllowedUseCase,
+    private readonly teamAccess: TeamAccessService,
     private readonly context: ContextService,
   ) {}
 
@@ -29,6 +31,10 @@ export class BulkAddTeamMembersUseCase {
   async execute(command: BulkAddTeamMembersCommand): Promise<TeamMember[]> {
     const orgId = getRequiredOrgId(this.context, command.orgId);
     await this.access.execute({ orgId });
+    await this.teamAccess.assertCanManageMembers({
+      teamId: command.teamId,
+      targetOrgId: command.orgId,
+    });
     const uniqueUserIds = [...new Set(command.userIds)];
     this.logger.log(
       { teamId: command.teamId, count: uniqueUserIds.length },
