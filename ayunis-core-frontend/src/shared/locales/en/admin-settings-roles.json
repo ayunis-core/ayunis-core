@@ -49,7 +49,7 @@
     "request_knowledge_transfer_org": "Offer an own knowledge base to the whole organisation. Once approved it belongs to the organisation.",
     "review_all_knowledge_requests": "Approve or reject requests to the organisation and to every team, even without being team admin there.",
     "create_workspaces": "Create your own workspaces.",
-    "manage_org_skills": "Create, edit and delete skills for everyone in the organisation.",
+    "manage_org_skills": "Create, edit and delete skills for everyone in the organisation and make them mandatory for everyone.",
     "manage_org_knowledge": "Create, edit and delete knowledge bases for everyone in the organisation."
   },
   "permissions": {

@@ -41,7 +41,9 @@
     },
     "activeSwitchLabel": "Fähigkeit aktiv",
     "activeOn": "Aktiv: Ayunis Core kann die Fähigkeit in Chats nutzen.",
-    "activeOff": "Inaktiv: Ayunis Core nutzt die Fähigkeit nicht in Chats."
+    "activeOff": "Inaktiv: Ayunis Core nutzt die Fähigkeit nicht in Chats.",
+    "alwaysActive": "Immer aktiv",
+    "alwaysActiveTooltip": "Ihre Verwaltung hat diese Fähigkeit für alle verpflichtend aktiviert."
   },
   "createDialog": {
     "buttonText": "Fähigkeit hinzufügen",
