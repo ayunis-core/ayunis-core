@@ -26,7 +26,7 @@ interface SkillsPageProps {
 export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const canCreate = isLoadingPermissions || can('manage_skills');
+  const canCreate = isLoadingPermissions || can('manage_own_skills');
 
   const personalSkills = skills
     .filter((skill) => !skill.isShared)

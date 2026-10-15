@@ -122,7 +122,7 @@ function InstallActions({
 
   return (
     <PermissionGate
-      permission="manage_skills"
+      permission="install_marketplace_skills"
       fallback={
         <ItemDescription data-testid="marketplace-install-no-permission">
           {t('chat.tools.install_marketplace_skill.noPermission')}

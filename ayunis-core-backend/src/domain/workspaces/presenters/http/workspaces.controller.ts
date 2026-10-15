@@ -36,6 +36,8 @@ import { WorkspaceDtoMapper } from './mappers/workspace-dto.mapper';
 import { FindAllWorkspacesQuery } from 'src/domain/workspaces/application/use-cases/find-all-workspaces/find-all-workspaces.query';
 import { FindAllWorkspacesQueryParamsDto } from './dtos/find-all-workspaces-query-params.dto';
 import { WorkspaceListResponseDto } from './dtos/workspace-list-response.dto';
+import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('workspaces')
 @Controller('workspaces')
@@ -51,6 +53,7 @@ export class WorkspacesController {
     private readonly workspaceDtoMapper: WorkspaceDtoMapper,
   ) {}
 
+  @RequirePermission(Permission.CREATE_WORKSPACES)
   @Post()
   @ApiOperation({ summary: 'Create a workspace' })
   @ApiResponse({

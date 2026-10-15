@@ -22,7 +22,7 @@ describe('allowedSettingsSections', () => {
 
   it('denies a user without a settings permission', () => {
     const authorization = createAuthorization(MeResponseDtoRole.user, [
-      'manage_skills',
+      'manage_own_skills',
     ]);
 
     expect(allowedSettingsSections(authorization)).toEqual([]);

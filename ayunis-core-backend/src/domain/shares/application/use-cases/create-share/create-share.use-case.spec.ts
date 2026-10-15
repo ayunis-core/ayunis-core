@@ -4,9 +4,9 @@ import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { CreateShareUseCase } from './create-share.use-case';
 import { CreateOrgSkillShareCommand } from './create-share.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SharesRepository } from '../../ports/shares-repository.port';
-import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
-import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { ShareAuthorizationFactory } from 'src/domain/shares/application/factories/share-authorization.factory';
+import type { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import {
   SkillShare,
@@ -20,6 +20,11 @@ import {
   CreateTeamKnowledgeBaseShareCommand,
 } from './create-share.command';
 import { TeamShareScope } from 'src/domain/shares/domain/share-scope.entity';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { CreateTeamSkillShareCommand } from './create-share.command';
 
 describe('CreateShareUseCase', () => {
   let useCase: CreateShareUseCase;
@@ -28,6 +33,7 @@ describe('CreateShareUseCase', () => {
   let authorizationFactory: ShareAuthorizationFactory;
   let authorizationStrategy: ShareAuthorizationStrategy;
   let checkUserTeamMembershipUseCase: CheckUserTeamMembershipUseCase;
+  let hasPermissionUseCase: HasPermissionUseCase;
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
@@ -62,6 +68,12 @@ describe('CreateShareUseCase', () => {
             execute: jest.fn(),
           },
         },
+        {
+          provide: HasPermissionUseCase,
+          useValue: {
+            execute: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -75,6 +87,8 @@ describe('CreateShareUseCase', () => {
     checkUserTeamMembershipUseCase = module.get<CheckUserTeamMembershipUseCase>(
       CheckUserTeamMembershipUseCase,
     );
+    hasPermissionUseCase =
+      module.get<HasPermissionUseCase>(HasPermissionUseCase);
 
     // Create mock authorization strategy
     authorizationStrategy = {
@@ -85,6 +99,98 @@ describe('CreateShareUseCase', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+    (hasPermissionUseCase.execute as jest.Mock).mockResolvedValue(true);
+  });
+
+  const mockUserContext = () => {
+    (contextService.get as jest.Mock).mockImplementation((key: string) => {
+      if (key === 'userId') return mockUserId;
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'role') return UserRole.USER;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
+      return null;
+    });
+  };
+
+  const grantOnly = (granted: Permission[]) => {
+    (hasPermissionUseCase.execute as jest.Mock).mockImplementation(
+      ({ permission }: { permission: Permission }) =>
+        Promise.resolve(granted.includes(permission)),
+    );
+  };
+
+  const allowShareCreation = () => {
+    (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
+      authorizationStrategy,
+    );
+    (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(true);
+    (checkUserTeamMembershipUseCase.execute as jest.Mock).mockResolvedValue(
+      true,
+    );
+    (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
+    (repository.create as jest.Mock).mockResolvedValue(undefined);
+  };
+
+  describe('scope permissions', () => {
+    const teamId = randomUUID();
+    const knowledgeBaseId = randomUUID();
+
+    beforeEach(() => {
+      mockUserContext();
+      allowShareCreation();
+    });
+
+    it('rejects a team skill share without request_skill_transfer', async () => {
+      grantOnly([Permission.REQUEST_SKILL_TRANSFER_ORG]);
+
+      await expect(
+        useCase.execute(new CreateTeamSkillShareCommand(mockSkillId, teamId)),
+      ).rejects.toThrow(ForbiddenException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates an org skill share with only request_skill_transfer_org', async () => {
+      grantOnly([Permission.REQUEST_SKILL_TRANSFER_ORG]);
+
+      await expect(
+        useCase.execute(new CreateOrgSkillShareCommand(mockSkillId)),
+      ).resolves.toBeInstanceOf(SkillShare);
+    });
+
+    it('rejects an org skill share without request_skill_transfer_org', async () => {
+      grantOnly([Permission.REQUEST_SKILL_TRANSFER]);
+
+      await expect(
+        useCase.execute(new CreateOrgSkillShareCommand(mockSkillId)),
+      ).rejects.toThrow(ForbiddenException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates a team skill share with only request_skill_transfer', async () => {
+      grantOnly([Permission.REQUEST_SKILL_TRANSFER]);
+
+      await expect(
+        useCase.execute(new CreateTeamSkillShareCommand(mockSkillId, teamId)),
+      ).resolves.toBeInstanceOf(SkillShare);
+    });
+
+    it('checks the knowledge permissions for knowledge base shares', async () => {
+      grantOnly([Permission.REQUEST_SKILL_TRANSFER_ORG]);
+
+      await expect(
+        useCase.execute(
+          new CreateOrgKnowledgeBaseShareCommand(knowledgeBaseId),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+
+      grantOnly([Permission.REQUEST_KNOWLEDGE_TRANSFER]);
+
+      await expect(
+        useCase.execute(
+          new CreateTeamKnowledgeBaseShareCommand(knowledgeBaseId, teamId),
+        ),
+      ).resolves.toBeInstanceOf(KnowledgeBaseShare);
+    });
   });
 
   describe('execute', () => {
@@ -92,11 +198,7 @@ describe('CreateShareUseCase', () => {
       // Arrange
       const command = new CreateOrgSkillShareCommand(mockSkillId);
 
-      (contextService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return null;
-      });
+      mockUserContext();
 
       (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
         authorizationStrategy,
@@ -169,11 +271,7 @@ describe('CreateShareUseCase', () => {
       // Arrange
       const command = new CreateOrgSkillShareCommand(mockSkillId);
 
-      (contextService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return null;
-      });
+      mockUserContext();
 
       (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
         authorizationStrategy,
@@ -195,11 +293,7 @@ describe('CreateShareUseCase', () => {
       // Arrange
       const unsupportedCommand = {} as any;
 
-      (contextService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return null;
-      });
+      mockUserContext();
 
       // Act & Assert
       await expect(useCase.execute(unsupportedCommand)).rejects.toThrow(
@@ -212,11 +306,7 @@ describe('CreateShareUseCase', () => {
       const command = new CreateOrgSkillShareCommand(mockSkillId);
       const repositoryError = new Error('Database connection failed');
 
-      (contextService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return null;
-      });
+      mockUserContext();
 
       (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
         authorizationStrategy,
@@ -240,11 +330,7 @@ describe('CreateShareUseCase', () => {
         ownerId: mockUserId,
       });
 
-      (contextService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return null;
-      });
+      mockUserContext();
 
       (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
         authorizationStrategy,
@@ -270,11 +356,7 @@ describe('CreateShareUseCase', () => {
         mockKnowledgeBaseId,
       );
 
-      (contextService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return null;
-      });
+      mockUserContext();
 
       (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
         authorizationStrategy,
@@ -321,11 +403,7 @@ describe('CreateShareUseCase', () => {
         mockTeamId,
       );
 
-      (contextService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return null;
-      });
+      mockUserContext();
 
       (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
         authorizationStrategy,

@@ -13,7 +13,7 @@ export default function SkillsEmptyState() {
   // Assume can-create while permissions load, matching CreateSkillMenu, so the
   // prompt doesn't flicker; drop the create copy/action only once we know the
   // member lacks the permission (they can still read skills shared with them).
-  const canCreate = isLoadingPermissions || can('manage_skills');
+  const canCreate = isLoadingPermissions || can('manage_own_skills');
 
   return (
     <EmptyState

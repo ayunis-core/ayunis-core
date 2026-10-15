@@ -31,7 +31,7 @@ export default function CreateSkillMenu({
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
 
-  if (!isLoadingPermissions && !can('manage_skills')) return null;
+  if (!isLoadingPermissions && !can('manage_own_skills')) return null;
 
   return (
     <>

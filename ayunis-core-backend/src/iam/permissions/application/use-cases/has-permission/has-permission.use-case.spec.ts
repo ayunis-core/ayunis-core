@@ -1,8 +1,8 @@
 import { HasPermissionUseCase } from './has-permission.use-case';
 import { HasPermissionQuery } from './has-permission.query';
-import type { RolePermissionsRepository } from '../../ports/role-permissions.repository';
+import type { RolePermissionsRepository } from 'src/iam/permissions/application/ports/role-permissions.repository';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { Permission } from '../../../domain/value-objects/permission.enum';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import type { UUID } from 'crypto';
 
 describe('HasPermissionUseCase', () => {
@@ -32,14 +32,14 @@ describe('HasPermissionUseCase', () => {
       repository.existsForRole.mockResolvedValue(true);
 
       const result = await useCase.execute(
-        new HasPermissionQuery(orgId, role, Permission.MANAGE_SKILLS),
+        new HasPermissionQuery(orgId, role, Permission.MANAGE_OWN_SKILLS),
       );
 
       expect(result).toBe(true);
       expect(repository.existsForRole).toHaveBeenCalledWith(
         orgId,
         role,
-        Permission.MANAGE_SKILLS,
+        Permission.MANAGE_OWN_SKILLS,
       );
     },
   );

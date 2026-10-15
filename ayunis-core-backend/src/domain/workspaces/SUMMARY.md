@@ -31,15 +31,15 @@ Workspace-owned resource lifecycle is exposed by the canonical `/skills` and `/k
 
 ## HTTP API
 
-| Method | Route                                 | Purpose                        |
-| ------ | ------------------------------------- | ------------------------------ |
-| POST   | `/workspaces`                         | Create a workspace             |
-| GET    | `/workspaces`                         | List accessible workspaces     |
-| GET    | `/workspaces/:id`                     | Read one workspace             |
-| PATCH  | `/workspaces/:id`                     | Update metadata and appearance |
-| DELETE | `/workspaces/:id`                     | Delete a workspace             |
-| GET    | `/workspaces/:id/context`             | Read the full runtime context  |
-| PATCH  | `/workspaces/:id/context/instruction` | Update project instruction     |
+| Method | Route                                 | Purpose                                  |
+| ------ | ------------------------------------- | ---------------------------------------- |
+| POST   | `/workspaces`                         | Create a workspace (`create_workspaces`) |
+| GET    | `/workspaces`                         | List accessible workspaces               |
+| GET    | `/workspaces/:id`                     | Read one workspace                       |
+| PATCH  | `/workspaces/:id`                     | Update metadata and appearance           |
+| DELETE | `/workspaces/:id`                     | Delete a workspace                       |
+| GET    | `/workspaces/:id/context`             | Read the full runtime context            |
+| PATCH  | `/workspaces/:id/context/instruction` | Update project instruction               |
 
 ## Structure
 

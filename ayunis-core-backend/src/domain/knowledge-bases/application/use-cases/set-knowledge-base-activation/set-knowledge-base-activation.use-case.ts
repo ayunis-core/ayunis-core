@@ -79,7 +79,7 @@ export class SetKnowledgeBaseActivationUseCase {
   private async requireWorkspaceManagementPermission(): Promise<void> {
     const { orgId, role } = getRequiredUserContext(this.context);
     const allowed = await this.hasPermission.execute(
-      new HasPermissionQuery(orgId, role, Permission.MANAGE_KNOWLEDGE_BASES),
+      new HasPermissionQuery(orgId, role, Permission.MANAGE_OWN_KNOWLEDGE),
     );
     if (!allowed) throw new UnauthorizedAccessError();
   }

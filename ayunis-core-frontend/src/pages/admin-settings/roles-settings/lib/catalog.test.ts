@@ -9,8 +9,12 @@ const ALL_PERMISSIONS = PERMISSION_SECTIONS.flatMap(
 );
 
 describe.each(Object.entries(LOCALES))('%s translations', (_lang, locale) => {
-  it.each(ALL_PERMISSIONS)('explains %s', (permission) => {
-    expect(locale.permissionHints[permission]).toBeTruthy();
+  it.each(ALL_PERMISSIONS)('names and explains %s', (permission) => {
+    const labels: Record<string, string> = locale.permissions;
+    const hints: Record<string, string> = locale.permissionHints;
+
+    expect(labels[permission]).toBeTruthy();
+    expect(hints[permission]).toBeTruthy();
   });
 
   it.each(Object.keys(locale.columns).filter((c) => c !== 'permission'))(

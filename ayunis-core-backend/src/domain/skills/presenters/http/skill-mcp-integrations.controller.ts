@@ -43,7 +43,7 @@ export class SkillMcpIntegrationsController {
     private readonly findOneSkill: FindOneSkillUseCase,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Post(':skillId/mcp-integrations/:integrationId')
   @ApiOperation({ summary: 'Assign MCP integration to skill' })
   @ApiParam({
@@ -78,7 +78,7 @@ export class SkillMcpIntegrationsController {
     return this.findSkillDto(skillId);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Delete(':skillId/mcp-integrations/:integrationId')
   @ApiOperation({ summary: 'Unassign MCP integration from skill' })
   @ApiParam({

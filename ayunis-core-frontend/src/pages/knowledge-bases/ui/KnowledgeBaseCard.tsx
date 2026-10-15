@@ -71,7 +71,7 @@ export default function KnowledgeBaseCard({
             testId={`knowledge-base-active-toggle-${knowledgeBase.id}`}
           />
           {!isShared && (
-            <PermissionGate permission="manage_knowledge_bases">
+            <PermissionGate permission="manage_own_knowledge">
               <Button
                 variant="ghost"
                 size="icon"

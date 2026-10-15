@@ -12,7 +12,7 @@ import {
   CreateTeamKnowledgeBaseShareCommand,
   CreateShareCommand,
 } from './create-share.command';
-import { SharesRepository } from '../../ports/shares-repository.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import {
   SkillShare,
   KnowledgeBaseShare,
@@ -22,17 +22,23 @@ import {
   OrgShareScope,
   TeamShareScope,
 } from 'src/domain/shares/domain/share-scope.entity';
-import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
+import { ShareAuthorizationFactory } from 'src/domain/shares/application/factories/share-authorization.factory';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 import { CheckUserTeamMembershipQuery } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.query';
-import { ShareAlreadyExistsError } from '../../shares.errors';
+import { ShareAlreadyExistsError } from 'src/domain/shares/application/shares.errors';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 interface ShareCommandConfig {
   entityType: SharedEntityType;
   entityId: UUID;
   teamId?: UUID;
+  teamPermission: Permission;
+  orgPermission: Permission;
   factory: (ownerId: UUID, scope: OrgShareScope | TeamShareScope) => Share;
 }
 
@@ -43,11 +49,16 @@ export class CreateShareUseCase {
     private readonly repository: SharesRepository,
     private readonly authorizationFactory: ShareAuthorizationFactory,
     private readonly checkUserTeamMembershipUseCase: CheckUserTeamMembershipUseCase,
+    private readonly hasPermissionUseCase: HasPermissionUseCase,
   ) {}
 
   async execute(command: CreateShareCommand): Promise<Share> {
     const { userId, orgId } = this.getAuthenticatedContext();
     const config = this.resolveCommandConfig(command);
+    await this.requireScopePermission(
+      orgId,
+      config.teamId ? config.teamPermission : config.orgPermission,
+    );
 
     if (config.teamId) {
       return this.createTeamShare(
@@ -90,6 +101,8 @@ export class CreateShareUseCase {
     return {
       entityType: SharedEntityType.SKILL,
       entityId: skillId,
+      teamPermission: Permission.REQUEST_SKILL_TRANSFER,
+      orgPermission: Permission.REQUEST_SKILL_TRANSFER_ORG,
       factory: (ownerId, scope) => new SkillShare({ skillId, scope, ownerId }),
     };
   }
@@ -98,6 +111,8 @@ export class CreateShareUseCase {
     return {
       entityType: SharedEntityType.KNOWLEDGE_BASE,
       entityId: knowledgeBaseId,
+      teamPermission: Permission.REQUEST_KNOWLEDGE_TRANSFER,
+      orgPermission: Permission.REQUEST_KNOWLEDGE_TRANSFER_ORG,
       factory: (ownerId, scope) =>
         new KnowledgeBaseShare({ knowledgeBaseId, scope, ownerId }),
     };
@@ -115,6 +130,20 @@ export class CreateShareUseCase {
     }
 
     return { userId, orgId };
+  }
+
+  private async requireScopePermission(
+    orgId: UUID,
+    permission: Permission,
+  ): Promise<void> {
+    const { role } = getRequiredUserContext(this.contextService);
+    const allowed = await this.hasPermissionUseCase.execute(
+      new HasPermissionQuery(orgId, role, permission),
+    );
+
+    if (!allowed) {
+      throw new ForbiddenException(`Missing permission ${permission}`);
+    }
   }
 
   private async createOrgShare(

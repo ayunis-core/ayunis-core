@@ -6,9 +6,10 @@ import type {
   TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useCreateShare } from '../api/useCreateShare';
-import { useDeleteShare } from '../api/useDeleteShare';
+import { useCreateShare } from '@/widgets/shares-tab/api/useCreateShare';
+import { useDeleteShare } from '@/widgets/shares-tab/api/useDeleteShare';
 import { useMyPermissions } from '@/features/permissions';
+import type { AppPermission } from '@/features/permissions';
 import {
   Item,
   ItemContent,
@@ -18,6 +19,17 @@ import {
 } from '@ayunis/ui/components/item';
 
 type EntityType = 'skill' | 'knowledge_base';
+
+const SHARE_PERMISSIONS: Record<
+  EntityType,
+  { team: AppPermission; org: AppPermission }
+> = {
+  skill: { team: 'request_skill_transfer', org: 'request_skill_transfer_org' },
+  knowledge_base: {
+    team: 'request_knowledge_transfer',
+    org: 'request_knowledge_transfer_org',
+  },
+};
 
 interface SharesTabProps {
   entityType: EntityType;
@@ -42,11 +54,10 @@ export default function SharesTab({
   const { createShare, isCreating } = useCreateShare(entityType, entityId);
   const { deleteShare, isDeleting } = useDeleteShare(entityType, entityId);
   const { can } = useMyPermissions();
-  // Members without the entity's share permission cannot toggle shares (the
+  // Members without the scope's share permission cannot toggle shares (the
   // backend 403s the create anyway); disable the switches so it's clear.
-  const canShare = can(
-    entityType === 'skill' ? 'share_skills' : 'share_knowledge_bases',
-  );
+  const canShareWithOrg = can(SHARE_PERMISSIONS[entityType].org);
+  const canShareWithTeams = can(SHARE_PERMISSIONS[entityType].team);
 
   // Check if organization share exists
   const organizationShare = shares.find(
@@ -132,7 +143,7 @@ export default function SharesTab({
           <Switch
             checked={!!organizationShare}
             onCheckedChange={handleOrgToggleChange}
-            disabled={isCreating || isDeleting || !canShare}
+            disabled={isCreating || isDeleting || !canShareWithOrg}
           />
         </ItemActions>
       </Item>
@@ -156,7 +167,7 @@ export default function SharesTab({
                     onCheckedChange={(checked) =>
                       handleTeamToggleChange(team.id, team.name, checked)
                     }
-                    disabled={isCreating || isDeleting || !canShare}
+                    disabled={isCreating || isDeleting || !canShareWithTeams}
                   />
                 </ItemActions>
               </Item>

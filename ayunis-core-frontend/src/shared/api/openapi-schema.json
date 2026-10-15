@@ -13640,10 +13640,22 @@
               "enum": [
                 "manage_teams",
                 "assign_users_to_teams",
-                "manage_skills",
-                "share_skills",
-                "manage_knowledge_bases",
-                "share_knowledge_bases"
+                "manage_own_skills",
+                "install_marketplace_skills",
+                "request_skill_transfer",
+                "request_skill_transfer_other_teams",
+                "request_skill_transfer_org",
+                "manage_org_skills",
+                "review_all_skill_requests",
+                "manage_own_knowledge",
+                "request_knowledge_transfer",
+                "request_knowledge_transfer_other_teams",
+                "request_knowledge_transfer_org",
+                "manage_org_knowledge",
+                "review_all_knowledge_requests",
+                "create_workspaces",
+                "share_workspaces",
+                "share_workspaces_org"
               ]
             }
           }
@@ -13674,10 +13686,22 @@
               "enum": [
                 "manage_teams",
                 "assign_users_to_teams",
-                "manage_skills",
-                "share_skills",
-                "manage_knowledge_bases",
-                "share_knowledge_bases"
+                "manage_own_skills",
+                "install_marketplace_skills",
+                "request_skill_transfer",
+                "request_skill_transfer_other_teams",
+                "request_skill_transfer_org",
+                "manage_org_skills",
+                "review_all_skill_requests",
+                "manage_own_knowledge",
+                "request_knowledge_transfer",
+                "request_knowledge_transfer_other_teams",
+                "request_knowledge_transfer_org",
+                "manage_org_knowledge",
+                "review_all_knowledge_requests",
+                "create_workspaces",
+                "share_workspaces",
+                "share_workspaces_org"
               ]
             }
           }
@@ -13695,10 +13719,22 @@
               "enum": [
                 "manage_teams",
                 "assign_users_to_teams",
-                "manage_skills",
-                "share_skills",
-                "manage_knowledge_bases",
-                "share_knowledge_bases"
+                "manage_own_skills",
+                "install_marketplace_skills",
+                "request_skill_transfer",
+                "request_skill_transfer_other_teams",
+                "request_skill_transfer_org",
+                "manage_org_skills",
+                "review_all_skill_requests",
+                "manage_own_knowledge",
+                "request_knowledge_transfer",
+                "request_knowledge_transfer_other_teams",
+                "request_knowledge_transfer_org",
+                "manage_org_knowledge",
+                "review_all_knowledge_requests",
+                "create_workspaces",
+                "share_workspaces",
+                "share_workspaces_org"
               ]
             }
           }
