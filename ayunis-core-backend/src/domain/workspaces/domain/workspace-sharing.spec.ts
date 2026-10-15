@@ -239,6 +239,81 @@ describe(WorkspaceSharing.name, () => {
     expect(subject.teams.map(({ teamId }) => teamId)).toEqual([emptyTeam]);
   });
 
+  it('hands ownership to a direct member and keeps the previous owner with full access', () => {
+    const subject = sharing();
+    subject.invite(
+      { userIds: [sabine], teamIds: [], level: 'edit', at: new Date() },
+      teams,
+    );
+
+    subject.transferOwnershipTo(sabine, teams);
+
+    expect(subject.ownerId).toBe(sabine);
+    expect(subject.levelOf(sabine, [hauptamt])).toBe('owner');
+    expect(subject.people.has(sabine)).toBe(false);
+    expect(subject.levelOf(owner, [])).toBe('full');
+    expect(subject.people.get(owner)).toBe('full');
+  });
+
+  it('hands ownership to someone who only has access through a team or the organisation', () => {
+    const viaTeam = sharing();
+    viaTeam.invite(
+      { userIds: [], teamIds: [bauamt], level: 'use', at: new Date() },
+      teams,
+    );
+    viaTeam.transferOwnershipTo(lena, teams);
+    expect(viaTeam.levelOf(lena, [bauamt])).toBe('owner');
+    expect(viaTeam.levelOf(jonas, [bauamt])).toBe('use');
+    expect(viaTeam.levelOf(owner, [])).toBe('full');
+
+    const viaOrganization = sharing();
+    viaOrganization.setSharedWithOrganization(true);
+    viaOrganization.transferOwnershipTo(sabine, teams);
+    expect(viaOrganization.levelOf(sabine, [hauptamt])).toBe('owner');
+    expect(viaOrganization.levelOf(owner, [])).toBe('full');
+  });
+
+  it('lifts an organisation exclusion of the previous owner', () => {
+    const subject = sharing();
+    subject.setSharedWithOrganization(true);
+    subject.organizationExclusions.add(owner);
+
+    subject.transferOwnershipTo(sabine, teams);
+
+    expect(subject.organizationExclusions.has(owner)).toBe(false);
+    expect(subject.levelOf(owner, [])).toBe('full');
+  });
+
+  it('places a previous owner who belongs to an invited team in that team', () => {
+    const subject = new WorkspaceSharing({
+      workspaceId: randomUUID(),
+      ownerId: jonas,
+    });
+    subject.invite(
+      { userIds: [], teamIds: [bauamt], level: 'use', at: new Date() },
+      teams,
+    );
+
+    subject.transferOwnershipTo(lena, teams);
+
+    expect(subject.people.has(jonas)).toBe(false);
+    expect(subject.teamLevelFor(bauamt, jonas)).toBe('full');
+    expect(subject.levelOf(jonas, [bauamt])).toBe('full');
+  });
+
+  it('tells who has access', () => {
+    const subject = sharing();
+    subject.invite(
+      { userIds: [], teamIds: [bauamt], level: 'use', at: new Date() },
+      teams,
+    );
+    subject.remove(jonas, { type: 'team', teamId: bauamt }, teams);
+
+    expect(subject.hasAccess(lena, teams)).toBe(true);
+    expect(subject.hasAccess(jonas, teams)).toBe(false);
+    expect(subject.hasAccess(sabine, teams)).toBe(false);
+  });
+
   it('keeps a team exclusion when the person is raised in the organisation section', () => {
     const subject = sharing();
     subject.invite(

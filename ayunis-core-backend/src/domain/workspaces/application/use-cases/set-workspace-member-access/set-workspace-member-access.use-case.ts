@@ -18,7 +18,7 @@ export class SetWorkspaceMemberAccessUseCase {
     command: SetWorkspaceMemberAccessCommand,
   ): Promise<{ unlinkedCount: number }> {
     this.logger.log(command, 'Setting workspace member access');
-    const context = await this.sharing.load(command.workspaceId);
+    const context = await this.sharing.loadForChange(command.workspaceId);
     const placement = requireChangeableMember(
       context,
       command.userId,

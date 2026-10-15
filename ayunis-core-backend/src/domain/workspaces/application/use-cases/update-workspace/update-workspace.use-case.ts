@@ -1,16 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
+import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from 'src/domain/workspaces/application/workspaces.errors';
+  WorkspaceSummaryService,
+  type WorkspaceDetail,
+} from 'src/domain/workspaces/application/services/workspace-summary.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
 import { assertValidWorkspaceFields } from 'src/domain/workspaces/application/util/workspace-fields';
 import { UpdateWorkspaceCommand } from './update-workspace.command';
-import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpdateWorkspaceUseCase {
@@ -18,20 +17,17 @@ export class UpdateWorkspaceUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
-    private readonly contextService: ContextService,
+    private readonly access: WorkspaceAccessService,
+    private readonly summaries: WorkspaceSummaryService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
-  async execute(command: UpdateWorkspaceCommand): Promise<Workspace> {
+  @Transactional()
+  async execute(command: UpdateWorkspaceCommand): Promise<WorkspaceDetail> {
     this.logger.log({ workspaceId: command.id }, 'Updating workspace');
 
-    const workspace = await this.workspacesRepository.findById(
-      this.resolveUserId(),
-      command.id,
-    );
-    if (!workspace) {
-      throw new WorkspaceNotFoundError(command.id);
-    }
+    await this.workspacesRepository.lockForUpdate(command.id);
+    const { workspace, level } = await this.access.require(command.id, 'full');
 
     assertValidWorkspaceFields(command);
 
@@ -45,11 +41,7 @@ export class UpdateWorkspaceUseCase {
       workspace.restyle({ icon: command.icon, color: command.color });
     }
 
-    return await this.workspacesRepository.save(workspace);
-  }
-
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
+    const saved = await this.workspacesRepository.save(workspace);
+    return this.summaries.detail({ workspace: saved, level });
   }
 }

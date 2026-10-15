@@ -10,10 +10,12 @@ import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/d
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 
 /**
- * Snapshots sources owned through a user's personal and workspace knowledge
- * bases before the database cascade removes them. Processing cleanup and index
- * deletion are deferred until the user row has been deleted successfully.
- * Failures are logged and never block user deletion.
+ * Snapshots sources of a user's personal knowledge bases before the database
+ * cascade removes them. Knowledge bases in workspaces follow their workspace:
+ * the workspaces module hands shared workspaces over and announces the deletion
+ * of the others, so their sources must not be touched here. Processing cleanup
+ * and index deletion are deferred until the user row has been deleted
+ * successfully. Failures are logged and never block user deletion.
  */
 @Injectable()
 export class KnowledgeBasesUserDeletionRequestedListener {
@@ -32,8 +34,9 @@ export class KnowledgeBasesUserDeletionRequestedListener {
     event: UserDeletionRequestedEvent,
   ): Promise<void> {
     try {
-      const knowledgeBases =
-        await this.knowledgeBaseRepository.findAllOwnedByUserId(event.userId);
+      const knowledgeBases = await this.knowledgeBaseRepository.findAllByUserId(
+        event.userId,
+      );
 
       if (knowledgeBases.length === 0) {
         return;

@@ -137,18 +137,6 @@ export class LocalKnowledgeBaseRepository
     return records.map((record) => this.mapper.toPersonal(record));
   }
 
-  async findAllOwnedByUserId(userId: UUID): Promise<KnowledgeBase[]> {
-    this.logger.debug({ userId }, 'findAllOwnedByUserId');
-    const records = await this.knowledgeBaseRepository
-      .createQueryBuilder('knowledgeBase')
-      .leftJoin('knowledgeBase.workspace', 'workspace')
-      .where('knowledgeBase.userId = :userId', { userId })
-      .orWhere('workspace.userId = :userId', { userId })
-      .orderBy('knowledgeBase.createdAt', 'DESC')
-      .getMany();
-    return records.map((record) => this.mapper.toDomain(record));
-  }
-
   async findAllByWorkspaceId(
     workspaceId: UUID,
   ): Promise<WorkspaceKnowledgeBase[]> {

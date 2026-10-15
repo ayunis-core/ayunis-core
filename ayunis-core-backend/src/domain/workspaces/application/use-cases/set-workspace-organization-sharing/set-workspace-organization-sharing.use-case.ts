@@ -23,7 +23,7 @@ export class SetWorkspaceOrganizationSharingUseCase {
     shared: boolean;
   }): Promise<{ unlinkedCount: number }> {
     this.logger.log(command, 'Setting organisation sharing');
-    const context = await this.sharing.load(command.workspaceId);
+    const context = await this.sharing.loadForChange(command.workspaceId);
     if (!context.rights.canShareWithOrganization) {
       throw new WorkspaceInsufficientAccessError(command.workspaceId);
     }

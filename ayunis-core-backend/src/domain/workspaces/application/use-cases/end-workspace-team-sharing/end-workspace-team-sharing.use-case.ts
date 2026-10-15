@@ -18,7 +18,7 @@ export class EndWorkspaceTeamSharingUseCase {
     command: EndWorkspaceTeamSharingCommand,
   ): Promise<{ unlinkedCount: number }> {
     this.logger.log(command, 'Ending workspace team sharing');
-    const context = await this.sharing.load(command.workspaceId);
+    const context = await this.sharing.loadForChange(command.workspaceId);
     requireEndableTeamGrant(context, command.teamId);
     context.sharing.endTeamGrant(command.teamId);
     return this.sharing.save(context);
