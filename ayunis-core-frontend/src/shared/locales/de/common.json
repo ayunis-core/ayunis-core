@@ -88,7 +88,6 @@
     "integrationsEmptyState": "Keine Integrationen verfügbar",
     "integrationsAllAttached": "Alle Integrationen bereits angehängt",
     "integrationNotAuthorized": "Autorisieren Sie diese Integration zuerst unter Einstellungen → Integrationen",
-    "shared": "Freigegeben",
     "createKnowledgeBase": "Wissenssammlung erstellen",
     "noEmbeddingModelEnabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
     "cancelTooltip": "Abbrechen",

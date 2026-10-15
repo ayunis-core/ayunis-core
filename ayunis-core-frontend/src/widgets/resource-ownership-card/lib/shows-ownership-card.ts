@@ -1,5 +1,9 @@
 import type { OwnedResource } from '@/features/resource-ownership';
 
 export function showsOwnershipCard(resource: OwnedResource): boolean {
-  return resource.ownerType !== 'workspace' && !resource.isShared;
+  if (resource.ownerType === 'workspace') return false;
+  if (resource.ownerType === 'personal') {
+    return resource.viewer?.canEdit !== false;
+  }
+  return true;
 }

@@ -49,3 +49,18 @@ export function requestWithdrawHandover(
 ): Promise<APIResponse> {
   return api.delete(`${config.apiURL}/api/handover-requests/${requestId}`);
 }
+
+export async function handOverAtOnce(
+  api: APIRequestContext,
+  kind: HandoverKind,
+  resourceId: string,
+  target: { teamId: string } | "org",
+): Promise<void> {
+  const response = await requestCreateHandover(api, kind, resourceId, target);
+  const body = (await response.json()) as { status?: string };
+  if (response.status() !== 201 || body.status !== "approved") {
+    throw new Error(
+      `Handover of ${kind} ${resourceId} was not applied (${response.status()})`,
+    );
+  }
+}

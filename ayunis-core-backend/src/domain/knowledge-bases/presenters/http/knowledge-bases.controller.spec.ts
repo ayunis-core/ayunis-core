@@ -49,7 +49,6 @@ describe(KnowledgeBasesController.name, () => {
     create.execute.mockResolvedValue(knowledgeBase);
     useCase(FindKnowledgeBaseUseCase).execute.mockResolvedValue({
       knowledgeBase,
-      isShared: false,
       isActive: true,
       documentCount: 0,
     });
@@ -90,7 +89,6 @@ describe(KnowledgeBasesController.name, () => {
         data: [
           {
             knowledgeBase,
-            isShared: false,
             isActive: true,
             documentCount: 2,
           },
@@ -118,7 +116,6 @@ describe(KnowledgeBasesController.name, () => {
           id: knowledgeBase.id,
           ownerType: 'personal',
           documentCount: 2,
-          isShared: false,
           isActive: true,
         },
       ],
@@ -136,7 +133,6 @@ describe(KnowledgeBasesController.name, () => {
     });
     find.execute.mockResolvedValue({
       knowledgeBase,
-      isShared: false,
       isActive: false,
       documentCount: 4,
     });

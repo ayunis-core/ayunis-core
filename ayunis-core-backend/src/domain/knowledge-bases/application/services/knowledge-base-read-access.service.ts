@@ -17,11 +17,6 @@ import { IsHandoverReviewerQuery } from 'src/domain/handovers/application/use-ca
 import { HandoverResourceType } from 'src/domain/handovers/domain/handover-resource-type.enum';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
-import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
-import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { CheckKnowledgeBaseSkillShareAccessQuery } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.query';
-import { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
 import { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -30,8 +25,6 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 @Injectable()
 export class KnowledgeBaseReadAccessService {
   constructor(
-    private readonly findShare: FindShareByEntityUseCase,
-    private readonly checkSkillShareAccess: CheckKnowledgeBaseSkillShareAccessUseCase,
     @Inject(forwardRef(() => AssertWorkspaceReadAccessUseCase))
     private readonly workspaceRead: AssertWorkspaceReadAccessUseCase,
     @Inject(forwardRef(() => AssertWorkspaceExecutionAccessUseCase))
@@ -54,7 +47,7 @@ export class KnowledgeBaseReadAccessService {
       return;
     }
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
-      await this.requirePersonalRead(knowledgeBase, userId);
+      this.requirePersonalRead(knowledgeBase, userId);
       return;
     }
     if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) {
@@ -96,7 +89,7 @@ export class KnowledgeBaseReadAccessService {
       return;
     }
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
-      await this.requirePersonalRead(knowledgeBase, userId);
+      this.requirePersonalRead(knowledgeBase, userId);
       return;
     }
     if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) {
@@ -129,25 +122,13 @@ export class KnowledgeBaseReadAccessService {
     return userId;
   }
 
-  private async requirePersonalRead(
+  private requirePersonalRead(
     knowledgeBase: PersonalKnowledgeBase,
     userId: UUID,
-  ): Promise<void> {
-    if (knowledgeBase.userId === userId) return;
-    const directShare = await this.findShare.execute(
-      new FindShareByEntityQuery(
-        SharedEntityType.KNOWLEDGE_BASE,
-        knowledgeBase.id,
-      ),
-    );
-    if (directShare) return;
-    const hasSkillShare = await this.checkSkillShareAccess.execute(
-      new CheckKnowledgeBaseSkillShareAccessQuery(
-        knowledgeBase.id,
-        knowledgeBase.userId,
-      ),
-    );
-    if (!hasSkillShare) throw new KnowledgeBaseNotFoundError(knowledgeBase.id);
+  ): void {
+    if (knowledgeBase.userId !== userId) {
+      throw new KnowledgeBaseNotFoundError(knowledgeBase.id);
+    }
   }
 
   private async authorizeWorkspace(

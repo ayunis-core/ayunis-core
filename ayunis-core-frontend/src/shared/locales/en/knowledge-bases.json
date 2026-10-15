@@ -2,59 +2,9 @@
   "page": {
     "title": "Knowledge"
   },
-  "shared": {
-    "badge": "Shared"
-  },
   "tabs": {
-    "configuration": "Configuration",
-    "shares": "Share",
     "personal": "Own Knowledge Bases",
     "shared": "Team and organisation"
-  },
-  "shares": {
-    "org": {
-      "title": "Share with organisation",
-      "descriptionOn": "This knowledge base is shared with all users of your organisation",
-      "descriptionOff": "This knowledge base is not shared with all users of your organisation"
-    },
-    "teams": {
-      "title": "Teams",
-      "description": "Share with team members",
-      "create": {
-        "title": "Share Knowledge Base with Team",
-        "description": "This will make the knowledge base available to all members of {{teamName}}",
-        "confirm": "Share",
-        "cancel": "Cancel"
-      },
-      "delete": {
-        "title": "Remove Team Share",
-        "description": "This will remove access to the knowledge base for all members of {{teamName}}",
-        "confirm": "Remove",
-        "cancel": "Cancel"
-      }
-    },
-    "create": {
-      "button": "Share Knowledge Base",
-      "title": "Share Knowledge Base with Organization",
-      "description": "This will make the knowledge base available to all members of your organization",
-      "confirm": "Share",
-      "cancel": "Cancel"
-    },
-    "delete": {
-      "tooltip": "Remove share",
-      "title": "Remove Share",
-      "description": "This will remove access to the knowledge base for all members of your organization",
-      "confirm": "Remove",
-      "cancel": "Cancel"
-    },
-    "success": {
-      "created": "Knowledge base shared successfully",
-      "deleted": "Share removed successfully"
-    },
-    "error": {
-      "create": "Failed to share knowledge base",
-      "delete": "Failed to remove share"
-    }
   },
   "emptyState": {
     "title": "No knowledge bases yet",

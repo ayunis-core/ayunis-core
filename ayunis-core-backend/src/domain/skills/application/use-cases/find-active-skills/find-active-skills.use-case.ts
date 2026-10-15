@@ -8,11 +8,6 @@ import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/c
 import type { CollectiveSkill } from 'src/domain/skills/domain/skill';
 import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
-import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { SkillShare } from 'src/domain/shares/domain/share.entity';
-import { UUID } from 'crypto';
 
 @Injectable()
 export class FindActiveSkillsUseCase {
@@ -20,7 +15,6 @@ export class FindActiveSkillsUseCase {
 
   constructor(
     private readonly skillRepository: SkillRepository,
-    private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly collectiveRepository: CollectiveSkillRepository,
     private readonly getViewer: GetOwnershipViewerUseCase,
   ) {}
@@ -32,7 +26,7 @@ export class FindActiveSkillsUseCase {
     this.logger.log(query, 'Finding active skills');
     const viewer = await this.getViewer.execute();
     const [personal, collective] = await Promise.all([
-      this.findActivePersonal(viewer.userId),
+      this.skillRepository.findActiveByOwner(viewer.userId),
       this.collectiveRepository.findActiveUsable({
         userId: viewer.userId,
         orgId: viewer.orgId,
@@ -40,51 +34,5 @@ export class FindActiveSkillsUseCase {
       }),
     ]);
     return [...personal, ...collective];
-  }
-
-  private async findActivePersonal(userId: UUID): Promise<PersonalSkill[]> {
-    // 1. Fetch owned active skills
-    const ownedActiveSkills =
-      await this.skillRepository.findActiveByOwner(userId);
-    const ownedSkillIds = new Set(ownedActiveSkills.map((s) => s.id));
-
-    // 2. Get all active skill IDs for this user
-    const activeSkillIds = await this.skillRepository.getActiveSkillIds(userId);
-
-    // 3. Find active skill IDs that are not owned (must be shared)
-    const potentialSharedActiveIds: UUID[] = [];
-    for (const activeId of activeSkillIds) {
-      if (!ownedSkillIds.has(activeId)) {
-        potentialSharedActiveIds.push(activeId);
-      }
-    }
-
-    if (potentialSharedActiveIds.length === 0) {
-      return ownedActiveSkills;
-    }
-
-    // 4. Verify these are actually shared with the user
-    const shares = await this.findSharesByScopeUseCase.execute(
-      new FindSharesByScopeQuery(SharedEntityType.SKILL),
-    );
-    const sharedSkillIds = new Set(
-      shares.map((s) => (s as SkillShare).skillId),
-    );
-
-    const confirmedSharedActiveIds = potentialSharedActiveIds.filter((id) =>
-      sharedSkillIds.has(id),
-    );
-
-    if (confirmedSharedActiveIds.length === 0) {
-      return ownedActiveSkills;
-    }
-
-    // 5. Fetch the shared active skills
-    const sharedActiveSkills = await this.skillRepository.findByIds(
-      confirmedSharedActiveIds,
-      null,
-    );
-
-    return [...ownedActiveSkills, ...sharedActiveSkills];
   }
 }

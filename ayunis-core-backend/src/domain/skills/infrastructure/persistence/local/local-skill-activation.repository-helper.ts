@@ -24,36 +24,6 @@ export async function deactivateSkill(
   await repository.delete({ skillId, userId });
 }
 
-export async function deactivateAllExceptOwner(
-  repository: Repository<SkillActivationRecord>,
-  skillId: UUID,
-  ownerId: UUID,
-): Promise<void> {
-  await repository
-    .createQueryBuilder()
-    .delete()
-    .from(SkillActivationRecord)
-    .where('skillId = :skillId', { skillId })
-    .andWhere('userId != :ownerId', { ownerId })
-    .execute();
-}
-
-export async function deactivateUsersNotInSet(
-  repository: Repository<SkillActivationRecord>,
-  skillId: UUID,
-  ownerId: UUID,
-  retainUserIds: Set<UUID>,
-): Promise<void> {
-  const keepIds = [ownerId, ...retainUserIds];
-  await repository
-    .createQueryBuilder()
-    .delete()
-    .from(SkillActivationRecord)
-    .where('skillId = :skillId', { skillId })
-    .andWhere('userId NOT IN (:...keepIds)', { keepIds })
-    .execute();
-}
-
 export async function isSkillActive(
   repository: Repository<SkillActivationRecord>,
   skillId: UUID,

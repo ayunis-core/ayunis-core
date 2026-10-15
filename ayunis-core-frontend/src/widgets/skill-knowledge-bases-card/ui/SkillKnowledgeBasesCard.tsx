@@ -14,7 +14,6 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Separator } from '@ayunis/ui/components/separator';
 import { Switch } from '@ayunis/ui/components/switch';
 import { cn } from '@ayunis/ui/lib/cn';
@@ -24,7 +23,6 @@ export interface SkillKnowledgeBaseItem {
   id: string;
   name: string;
   description?: string | null;
-  isShared?: boolean;
 }
 
 export function SkillKnowledgeBasesCard({
@@ -68,14 +66,7 @@ export function SkillKnowledgeBasesCard({
                   )}
                 >
                   <ItemContent>
-                    <ItemTitle>
-                      {knowledgeBase.name}
-                      {knowledgeBase.isShared ? (
-                        <Badge variant="secondary" className="ml-2 text-xs">
-                          {t('knowledgeBases.sharedBadge')}
-                        </Badge>
-                      ) : null}
-                    </ItemTitle>
+                    <ItemTitle>{knowledgeBase.name}</ItemTitle>
                     {knowledgeBase.description ? (
                       <ItemDescription>
                         {knowledgeBase.description}

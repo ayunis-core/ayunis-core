@@ -28,7 +28,7 @@ interface KnowledgeBasesPageProps {
 }
 
 function isOwnPersonal(knowledgeBase: KnowledgeBase): boolean {
-  return knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared;
+  return knowledgeBase.ownerType === 'personal';
 }
 
 export default function KnowledgeBasesPage({
