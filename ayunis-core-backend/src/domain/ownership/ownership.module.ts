@@ -6,6 +6,7 @@ import { GetOwnershipViewerUseCase } from './application/use-cases/get-ownership
 import { DescribeCollectiveOwnersUseCase } from './application/use-cases/describe-collective-owners/describe-collective-owners.use-case';
 import { ListOwnerOptionsUseCase } from './application/use-cases/list-owner-options/list-owner-options.use-case';
 import { BuildOwnershipLookupUseCase } from './application/use-cases/build-ownership-lookup/build-ownership-lookup.use-case';
+import { NameOwnersUseCase } from './application/use-cases/name-owners/name-owners.use-case';
 
 @Module({
   imports: [PermissionsModule, TeamsModule, UsersModule],
@@ -14,9 +15,11 @@ import { BuildOwnershipLookupUseCase } from './application/use-cases/build-owner
     DescribeCollectiveOwnersUseCase,
     ListOwnerOptionsUseCase,
     BuildOwnershipLookupUseCase,
+    NameOwnersUseCase,
   ],
   exports: [
     BuildOwnershipLookupUseCase,
+    NameOwnersUseCase,
     GetOwnershipViewerUseCase,
     DescribeCollectiveOwnersUseCase,
     ListOwnerOptionsUseCase,

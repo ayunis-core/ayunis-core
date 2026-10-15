@@ -10,12 +10,16 @@ import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activatio
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
 import { LocalCollectiveKnowledgeBaseRepository } from './local-collective-knowledge-base.repository';
+import { WorkspaceKnowledgeBaseLinkRecord } from './schema/workspace-knowledge-base-link.record';
+import { LocalWorkspaceKnowledgeBaseLinkRepository } from './local-workspace-knowledge-base-link.repository';
+import { WorkspaceKnowledgeBaseLinkRepository } from 'src/domain/knowledge-bases/application/ports/workspace-knowledge-base-link.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       KnowledgeBaseRecord,
       KnowledgeBaseActivationRecord,
+      WorkspaceKnowledgeBaseLinkRecord,
       SourceRecord,
     ]),
     LocalSourceRepositoryModule,
@@ -35,11 +39,16 @@ import { LocalCollectiveKnowledgeBaseRepository } from './local-collective-knowl
       provide: CollectiveKnowledgeBaseRepository,
       useClass: LocalCollectiveKnowledgeBaseRepository,
     },
+    {
+      provide: WorkspaceKnowledgeBaseLinkRepository,
+      useClass: LocalWorkspaceKnowledgeBaseLinkRepository,
+    },
   ],
   exports: [
     KnowledgeBaseRepository,
     AccessibleKnowledgeBasesByIdsRepository,
     CollectiveKnowledgeBaseRepository,
+    WorkspaceKnowledgeBaseLinkRepository,
   ],
 })
 export class LocalKnowledgeBaseRepositoryModule {}

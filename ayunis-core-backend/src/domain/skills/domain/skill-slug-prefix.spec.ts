@@ -37,4 +37,25 @@ describe('skillSlugName', () => {
     expect(skillSlugName(personal)).toBe('Protokoll erstellen');
     expect(skillSlugName(org)).toBe('Protokoll erstellen');
   });
+
+  it("names another person's personal skill after its owner, but not the viewer's own", () => {
+    const viewer = randomUUID();
+    const lena = randomUUID();
+    const own = new PersonalSkill({
+      ...base,
+      name: 'Zusammenfassen',
+      userId: viewer,
+    });
+    const ofLena = new PersonalSkill({
+      ...base,
+      name: 'Zusammenfassen',
+      userId: lena,
+    });
+
+    expect(skillSlugName(own, viewer)).toBe('Zusammenfassen');
+    expect(skillSlugName(ofLena, viewer)).toBe(
+      `Zusammenfassen ${lena.slice(0, 8)}`,
+    );
+    expect(skillSlugName(ofLena)).toBe('Zusammenfassen');
+  });
 });

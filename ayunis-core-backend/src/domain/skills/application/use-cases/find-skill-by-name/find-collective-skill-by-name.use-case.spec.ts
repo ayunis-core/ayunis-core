@@ -3,6 +3,7 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import type { WorkspaceSkillLinkRepository } from 'src/domain/skills/application/ports/workspace-skill-link.repository';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { skillSlugName } from 'src/domain/skills/domain/skill-slug-prefix';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
@@ -39,6 +40,9 @@ describe('FindSkillByNameUseCase for team skills', () => {
         teamIds: [bauamt, hauptamt],
       }),
     } as unknown as GetOwnershipViewerUseCase,
+    {
+      findByWorkspace: jest.fn().mockResolvedValue([]),
+    } as unknown as WorkspaceSkillLinkRepository,
   );
 
   it('finds the skill of the team the slug names', async () => {

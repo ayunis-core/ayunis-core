@@ -151,7 +151,9 @@ describe('GetThreadSourceCitationUseCase', () => {
     return {
       instruction: null,
       skills: [],
+      linkedSkills: [],
       knowledgeBases: [],
+      linkedKnowledgeBases: [],
       runtimeKnowledgeBases: (params.knowledgeBaseIds ?? []).map((id) => ({
         id,
         name: 'Workspace policies',

@@ -34,7 +34,7 @@ export class FindKnowledgeBaseForThreadUseCase {
     if (knowledgeBase?.orgId !== orgId) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
     }
-    if (knowledgeBase instanceof PersonalKnowledgeBase) {
+    if (knowledgeBase instanceof PersonalKnowledgeBase && !query.threadId) {
       await this.access.requireRead(knowledgeBase);
       return knowledgeBase;
     }

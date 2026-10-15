@@ -2962,6 +2962,81 @@ export interface GeneratedImageUrlResponseDto {
   expiresAt: string;
 }
 
+export type LinkOwnerDtoType = typeof LinkOwnerDtoType[keyof typeof LinkOwnerDtoType];
+
+
+export const LinkOwnerDtoType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface LinkOwnerDto {
+  type: LinkOwnerDtoType;
+  id: string;
+  /**
+     * Person or team name; null for the organisation
+     * @nullable
+     */
+  name: string | null;
+}
+
+export interface KnowledgeBaseLinkSummaryDto {
+  id: string;
+  name: string;
+  description: string;
+  owner: LinkOwnerDto;
+}
+
+export interface LinkPersonDto {
+  id: string;
+  name: string;
+}
+
+export interface LinkedKnowledgeBaseResponseDto {
+  knowledgeBase: KnowledgeBaseLinkSummaryDto;
+  /**
+     * Null when the person who linked it no longer exists
+     * @nullable
+     */
+  linkedBy: LinkPersonDto | null;
+  linkedAt: string;
+}
+
+export interface LinkedKnowledgeBaseListResponseDto {
+  data: LinkedKnowledgeBaseResponseDto[];
+}
+
+export interface LinkableKnowledgeBasesResponseDto {
+  own: KnowledgeBaseLinkSummaryDto[];
+  team: KnowledgeBaseLinkSummaryDto[];
+  org: KnowledgeBaseLinkSummaryDto[];
+}
+
+export interface LinkKnowledgeBasesDto {
+  /** @minItems 1 */
+  knowledgeBaseIds: string[];
+}
+
+export interface LinkedWorkspaceDto {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  /**
+     * Null when the person who linked it no longer exists
+     * @nullable
+     */
+  linkedBy: LinkPersonDto | null;
+}
+
+export interface LinkedWorkspacesResponseDto {
+  /** All workspaces the item is linked into, including ones the caller cannot open */
+  total: number;
+  /** Only the workspaces the caller can open */
+  workspaces: LinkedWorkspaceDto[];
+}
+
 export type CreateKnowledgeBaseDtoOwnerType = typeof CreateKnowledgeBaseDtoOwnerType[keyof typeof CreateKnowledgeBaseDtoOwnerType];
 
 
@@ -3226,6 +3301,38 @@ export interface SkillResponseDto {
   isPinned: boolean;
   /** Organisation skill that is always active for everyone; isActive is then always true */
   isMandatory: boolean;
+}
+
+export interface SkillLinkSummaryDto {
+  id: string;
+  name: string;
+  shortDescription: string;
+  owner: LinkOwnerDto;
+}
+
+export interface LinkedSkillResponseDto {
+  skill: SkillLinkSummaryDto;
+  /**
+     * Null when the person who linked it no longer exists
+     * @nullable
+     */
+  linkedBy: LinkPersonDto | null;
+  linkedAt: string;
+}
+
+export interface LinkedSkillListResponseDto {
+  data: LinkedSkillResponseDto[];
+}
+
+export interface LinkableSkillsResponseDto {
+  own: SkillLinkSummaryDto[];
+  team: SkillLinkSummaryDto[];
+  org: SkillLinkSummaryDto[];
+}
+
+export interface LinkSkillsDto {
+  /** @minItems 1 */
+  skillIds: string[];
 }
 
 export interface InstallSkillFromMarketplaceDto {
@@ -6051,6 +6158,14 @@ export type ThreadSourcesControllerAddFileSourceBody = {
   file: Blob | File;
 };
 
+export type KnowledgeBaseLinksControllerLinkedParams = {
+search?: string;
+};
+
+export type KnowledgeBaseLinksControllerLinkableParams = {
+search?: string;
+};
+
 export type KnowledgeBasesControllerFindAllParams = {
 ownerType: KnowledgeBasesControllerFindAllOwnerType;
 workspaceId?: string;
@@ -6077,6 +6192,14 @@ export const KnowledgeBasesControllerFindAllOwnerType = {
 export type KnowledgeBasesControllerAddDocumentBody = {
   /** The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB) */
   file: Blob | File;
+};
+
+export type SkillLinksControllerLinkedParams = {
+search?: string;
+};
+
+export type SkillLinksControllerLinkableParams = {
+search?: string;
 };
 
 export type SkillsControllerFindAllParams = {

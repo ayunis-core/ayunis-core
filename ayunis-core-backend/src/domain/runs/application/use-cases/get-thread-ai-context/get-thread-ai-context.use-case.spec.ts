@@ -170,6 +170,8 @@ describe(GetThreadAiContextUseCase.name, () => {
       '77777777-7777-4777-8777-777777777777' as UUID;
     buildWorkspaceRunContext.execute.mockResolvedValue({
       instruction: null,
+      linkedSkills: [],
+      linkedKnowledgeBases: [],
       skills: [
         { skill: workspaceSkill, isActive: true, isPinned: false },
         {
@@ -218,6 +220,41 @@ describe(GetThreadAiContextUseCase.name, () => {
     expect(result.knowledgeBases).not.toContainEqual(
       expect.objectContaining({ id: inactiveWorkspaceKnowledgeBaseId }),
     );
+  });
+
+  it('lists an own item that is also linked into the workspace once', async () => {
+    const {
+      useCase,
+      threadRefs,
+      activeSkill,
+      activeKnowledgeBase,
+      buildWorkspaceRunContext,
+    } = setup();
+    threadRefs.workspaceId = WORKSPACE_ID;
+    buildWorkspaceRunContext.execute.mockResolvedValue({
+      instruction: null,
+      skills: [],
+      knowledgeBases: [],
+      linkedSkills: [activeSkill],
+      linkedKnowledgeBases: [
+        {
+          id: activeKnowledgeBase.id,
+          name: activeKnowledgeBase.name,
+          description: null,
+          documentCount: 4,
+          isActive: true,
+        },
+      ],
+    });
+
+    const result = await useCase.execute({ threadId: THREAD_ID });
+
+    expect(result.skills.filter(({ id }) => id === activeSkill.id)).toEqual([
+      expect.objectContaining({ workspaceId: WORKSPACE_ID }),
+    ]);
+    expect(
+      result.knowledgeBases.filter(({ id }) => id === activeKnowledgeBase.id),
+    ).toEqual([expect.objectContaining({ workspaceId: WORKSPACE_ID })]);
   });
 
   it('rejects a non-owner before resolving any resources', async () => {

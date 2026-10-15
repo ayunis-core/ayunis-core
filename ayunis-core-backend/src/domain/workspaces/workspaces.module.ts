@@ -13,6 +13,8 @@ import { CreateWorkspaceUseCase } from './application/use-cases/create-workspace
 import { DeleteWorkspaceUseCase } from './application/use-cases/delete-workspace/delete-workspace.use-case';
 import { FindAllWorkspacesUseCase } from './application/use-cases/find-all-workspaces/find-all-workspaces.use-case';
 import { FindWorkspaceUseCase } from './application/use-cases/find-workspace/find-workspace.use-case';
+import { DescribeLinkedWorkspacesUseCase } from './application/use-cases/describe-linked-workspaces/describe-linked-workspaces.use-case';
+import { OwnershipModule } from 'src/domain/ownership/ownership.module';
 import { FindWorkspacesByIdsUseCase } from './application/use-cases/find-workspaces-by-ids/find-workspaces-by-ids.use-case';
 import { GetWorkspaceAiContextUseCase } from './application/use-cases/get-workspace-ai-context/get-workspace-ai-context.use-case';
 import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/update-workspace-instruction/update-workspace-instruction.use-case';
@@ -27,6 +29,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
 @Module({
   imports: [
     LocalWorkspacesRepositoryModule,
+    OwnershipModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
@@ -42,6 +45,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
     FindWorkspacesByIdsUseCase,
+    DescribeLinkedWorkspacesUseCase,
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
     UpdateWorkspaceInstructionUseCase,
@@ -62,6 +66,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
     FindWorkspacesByIdsUseCase,
+    DescribeLinkedWorkspacesUseCase,
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
     GetWorkspaceAiContextUseCase,

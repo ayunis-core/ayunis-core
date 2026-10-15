@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import {
   ORG_PREFIX,
   TEAM_PREFIX,
@@ -6,6 +7,7 @@ import {
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import { OrgSkill } from './org-skill.entity';
+import { PersonalSkill } from './personal-skill.entity';
 import type { Skill } from './skill';
 import { TeamSkill } from './team-skill.entity';
 import { WorkspaceSkill } from './workspace-skill.entity';
@@ -17,9 +19,12 @@ export function skillSlugPrefix(skill: Skill): SkillPrefix {
   return USER_PREFIX;
 }
 
-export function skillSlugName(skill: Skill): string {
+export function skillSlugName(skill: Skill, viewerId?: UUID): string {
   if (skill instanceof TeamSkill) {
     return `${skill.name} ${skill.teamId.slice(0, 8)}`;
+  }
+  if (skill instanceof PersonalSkill && viewerId && skill.userId !== viewerId) {
+    return `${skill.name} ${skill.userId.slice(0, 8)}`;
   }
   return skill.name;
 }

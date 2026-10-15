@@ -8,6 +8,7 @@ export enum KnowledgeBaseErrorCode {
   MISSING_FILE = 'MISSING_FILE',
   SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
   KNOWLEDGE_BASE_OWNER_CHANGED = 'KNOWLEDGE_BASE_OWNER_CHANGED',
+  KNOWLEDGE_BASE_NOT_LINKABLE = 'KNOWLEDGE_BASE_NOT_LINKABLE',
 }
 
 export abstract class KnowledgeBaseError extends ApplicationError {
@@ -28,6 +29,16 @@ export class KnowledgeBaseNotFoundError extends KnowledgeBaseError {
       KnowledgeBaseErrorCode.KNOWLEDGE_BASE_NOT_FOUND,
       404,
       metadata,
+    );
+  }
+}
+
+export class KnowledgeBaseNotLinkableError extends KnowledgeBaseError {
+  constructor(knowledgeBaseId: string) {
+    super(
+      `Knowledge base '${knowledgeBaseId}' belongs to a workspace and cannot be linked`,
+      KnowledgeBaseErrorCode.KNOWLEDGE_BASE_NOT_LINKABLE,
+      400,
     );
   }
 }

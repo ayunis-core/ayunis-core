@@ -28,7 +28,10 @@ export class BuildWorkspaceRunContextUseCase {
 
     return {
       ...context,
-      runtimeKnowledgeBases: context.knowledgeBases,
+      runtimeKnowledgeBases: [
+        ...context.knowledgeBases,
+        ...context.linkedKnowledgeBases,
+      ],
     };
   }
 }
