@@ -7,6 +7,8 @@ import {
 } from 'src/iam/permissions/domain/default-role-permissions.constants';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
+import type { TeamAdminPermissionsRepository } from 'src/iam/permissions/application/ports/team-admin-permissions.repository';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 describe('SeedDefaultRolePermissionsUseCase', () => {
@@ -14,12 +16,24 @@ describe('SeedDefaultRolePermissionsUseCase', () => {
   let repository: jest.Mocked<
     Pick<RolePermissionsRepository, 'setForRole' | 'setForRoles'>
   >;
+  let teamAdminRepository: { setForOrg: jest.Mock };
   let useCase: SeedDefaultRolePermissionsUseCase;
 
   beforeEach(() => {
     repository = { setForRole: jest.fn(), setForRoles: jest.fn() };
+    teamAdminRepository = { setForOrg: jest.fn() };
     useCase = new SeedDefaultRolePermissionsUseCase(
       repository as unknown as RolePermissionsRepository,
+      teamAdminRepository as unknown as TeamAdminPermissionsRepository,
+    );
+  });
+
+  it('grants team admins every team right by default', async () => {
+    await useCase.execute(new SeedDefaultRolePermissionsCommand(orgId));
+
+    expect(teamAdminRepository.setForOrg).toHaveBeenCalledWith(
+      orgId,
+      Object.values(TeamAdminPermission),
     );
   });
 

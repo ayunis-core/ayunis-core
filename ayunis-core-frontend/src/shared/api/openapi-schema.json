@@ -1934,6 +1934,47 @@
         "tags": ["Permissions"]
       }
     },
+    "/team-admin-permissions": {
+      "get": {
+        "operationId": "TeamAdminPermissionsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamAdminPermissionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get what team admins may do in their teams",
+        "tags": ["Role Permissions"]
+      },
+      "put": {
+        "operationId": "TeamAdminPermissionsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamAdminPermissionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Replace what team admins may do in their teams",
+        "tags": ["Role Permissions"]
+      }
+    },
     "/subscriptions/active": {
       "get": {
         "operationId": "SubscriptionsController_hasActiveSubscription",
@@ -13787,6 +13828,63 @@
                 "create_workspaces",
                 "share_workspaces",
                 "share_workspaces_org"
+              ]
+            }
+          },
+          "teamAdminPermissions": {
+            "type": "array",
+            "description": "The org's team admin rights. They apply only inside the teams a team admin administers (see GET /teams/me).",
+            "items": {
+              "type": "string",
+              "enum": [
+                "team_manage_members",
+                "team_appoint_admins",
+                "team_manage_skills",
+                "team_manage_knowledge",
+                "team_review_requests",
+                "team_share_workspaces"
+              ]
+            }
+          }
+        },
+        "required": ["permissions", "teamAdminPermissions"]
+      },
+      "TeamAdminPermissionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "description": "What team admins may do inside the teams they administer, org-wide",
+            "items": {
+              "type": "string",
+              "enum": [
+                "team_manage_members",
+                "team_appoint_admins",
+                "team_manage_skills",
+                "team_manage_knowledge",
+                "team_review_requests",
+                "team_share_workspaces"
+              ]
+            }
+          }
+        },
+        "required": ["permissions"]
+      },
+      "UpdateTeamAdminPermissionsDto": {
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "description": "Rights granted to team admins. May be empty.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "team_manage_members",
+                "team_appoint_admins",
+                "team_manage_skills",
+                "team_manage_knowledge",
+                "team_review_requests",
+                "team_share_workspaces"
               ]
             }
           }

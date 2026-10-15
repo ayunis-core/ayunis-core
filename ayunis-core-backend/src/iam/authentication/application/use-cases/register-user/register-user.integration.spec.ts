@@ -24,6 +24,9 @@ import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema
 import type { RolePermissionsRepository } from 'src/iam/permissions/application/ports/role-permissions.repository';
 import { LocalRolePermissionsRepository } from 'src/iam/permissions/infrastructure/persistence/local/local-role-permissions.repository';
 import { RolePermissionRecord } from 'src/iam/permissions/infrastructure/persistence/local/schema/role-permission.record';
+import { TeamAdminPermissionRecord } from 'src/iam/permissions/infrastructure/persistence/local/schema/team-admin-permission.record';
+import { LocalTeamAdminPermissionsRepository } from 'src/iam/permissions/infrastructure/persistence/local/local-team-admin-permissions.repository';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
 import { SeedDefaultRolePermissionsUseCase } from 'src/iam/permissions/application/use-cases/seed-default-role-permissions/seed-default-role-permissions.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
@@ -56,6 +59,20 @@ const rolePermissionRecordSchema = new EntitySchema<RolePermissionRecord>({
   },
 });
 
+const teamAdminPermissionRecordSchema =
+  new EntitySchema<TeamAdminPermissionRecord>({
+    name: 'TeamAdminPermissionRecord',
+    target: TeamAdminPermissionRecord,
+    tableName: 'team_admin_permissions',
+    columns: {
+      id: { type: 'uuid', primary: true },
+      createdAt: { type: 'timestamp', createDate: true },
+      updatedAt: { type: 'timestamp', updateDate: true },
+      orgId: { type: 'uuid' },
+      permission: { type: 'enum', enum: TeamAdminPermission },
+    },
+  });
+
 describe('RegisterUserUseCase transaction', () => {
   let dataSource: DataSource;
   let schemaName: string;
@@ -79,7 +96,11 @@ describe('RegisterUserUseCase transaction', () => {
     dataSource = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema: schemaName,
-      entities: [orgRecordSchema, rolePermissionRecordSchema],
+      entities: [
+        orgRecordSchema,
+        rolePermissionRecordSchema,
+        teamAdminPermissionRecordSchema,
+      ],
       migrations: [],
       migrationsRun: false,
     });
@@ -103,7 +124,10 @@ describe('RegisterUserUseCase transaction', () => {
     const rolePermissionsRepository: RolePermissionsRepository =
       new LocalRolePermissionsRepository(dataSource, txHost);
     const seedDefaultRolePermissionsUseCase =
-      new SeedDefaultRolePermissionsUseCase(rolePermissionsRepository);
+      new SeedDefaultRolePermissionsUseCase(
+        rolePermissionsRepository,
+        new LocalTeamAdminPermissionsRepository(dataSource, txHost),
+      );
     const createOrgUseCase = new CreateOrgUseCase(
       orgsRepository,
       {
