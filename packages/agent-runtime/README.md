@@ -56,7 +56,8 @@ run({
     },
     retryAfter: {
       precedence: 'retry_after', // or 'backoff'
-      maxWaitMs: 15_000,
+      maxWaitMs: 30_000,
+      jitterMs: 2_000,
     },
   },
 });
@@ -70,9 +71,13 @@ than keeping an interactive stream open beyond the accepted wait. With
 backoff. Child runs inherit their parent's resolved policy and may override any
 part of it. The 500 ms initial delay avoids an immediate repeat request, the
 factor of two gives transient failures progressively more recovery time, and
-the 8 second cap keeps an interactive retry bounded. Jitter is disabled by
-default so retry timing remains deterministic and preserves prior host
-behavior; deployments that need request spreading can opt in explicitly.
+the 8 second cap keeps an interactive retry bounded. Backoff jitter is disabled
+by default so retry timing remains deterministic and preserves prior host
+behavior; deployments that need request spreading can opt in explicitly. An
+honoured Retry-After is different: runs rate-limited together are told the same
+wait, so up to `jitterMs` of random delay is added on top of the provider's
+value (never subtracted, and not counted toward `maxWaitMs`) to keep them from
+re-firing in the same second. Set `jitterMs: 0` for exact Retry-After timing.
 
 `retryableRejectionReasons` lists the `ModelProviderError.rejectionReason`
 values a host wants retried. A rejection is deterministic, so the runtime

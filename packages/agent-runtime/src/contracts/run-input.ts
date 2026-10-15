@@ -26,6 +26,13 @@ export interface RetryAfterConfig {
   readonly precedence: RetryAfterPrecedence;
   /** Retry-After values above this limit make the failure terminal. */
   readonly maxWaitMs: number;
+  /**
+   * Upper bound of the random wait added on top of an honoured Retry-After,
+   * so that calls rate-limited together do not all re-fire in the same
+   * second. The spread is never subtracted and does not count toward
+   * `maxWaitMs`.
+   */
+  readonly jitterMs: number;
 }
 
 export interface RetryConfig {
@@ -67,9 +74,14 @@ export const DEFAULT_RETRY_CONFIG: ResolvedRetryConfig = Object.freeze({
     maxDelayMs: 8_000,
     jitterRatio: 0,
   }),
+  // Honouring a provider's Retry-After and spreading it is standard practice:
+  // failed requests still count against the provider's quota. maxWaitMs bounds
+  // how long an interactive run will sit on a Retry-After; hosts override both
+  // values per run.
   retryAfter: Object.freeze({
     precedence: 'retry_after',
-    maxWaitMs: 15_000,
+    maxWaitMs: 30_000,
+    jitterMs: 2_000,
   }),
 });
 
