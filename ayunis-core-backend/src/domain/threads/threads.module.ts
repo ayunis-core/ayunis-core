@@ -38,16 +38,12 @@ import { AddMcpIntegrationToThreadUseCase } from './application/use-cases/add-mc
 import { RemoveMcpIntegrationFromThreadUseCase } from './application/use-cases/remove-mcp-integration-from-thread/remove-mcp-integration-from-thread.use-case';
 import { AddKnowledgeBaseToThreadUseCase } from './application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
 import { RemoveKnowledgeBaseFromThreadUseCase } from './application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
-import { RemoveSkillSourcesFromThreadsUseCase } from './application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
-import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from './application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
-import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from './application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
 import { SaveGeneratedImageUseCase } from './application/use-cases/save-generated-image/save-generated-image.use-case';
 import { ResolveGeneratedImageUseCase } from './application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
 import { GeneratedImagesController } from './presenters/http/generated-images.controller';
 import { DownloadMessageImageUseCase } from './application/use-cases/download-message-image/download-message-image.use-case';
 import { DownloadReferenceImagesUseCase } from './application/use-cases/download-reference-images/download-reference-images.use-case';
 import { MessageImagesController } from './presenters/http/message-images.controller';
-import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
 import { ThreadsUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 import { ThreadsWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
@@ -60,7 +56,6 @@ import { StorageModule } from 'src/domain/storage/storage.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { FavoritesModule } from 'src/domain/favorites/favorites.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
-import { SharesModule } from 'src/domain/shares/shares.module';
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 @Module({
@@ -76,7 +71,6 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     // note in favorites.module.ts.
     forwardRef(() => WorkspacesModule),
     forwardRef(() => FavoritesModule),
-    SharesModule,
     ThreadPiiMasksModule,
     McpModule,
   ],
@@ -119,9 +113,6 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     RemoveMcpIntegrationFromThreadUseCase,
     AddKnowledgeBaseToThreadUseCase,
     RemoveKnowledgeBaseFromThreadUseCase,
-    RemoveSkillSourcesFromThreadsUseCase,
-    RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
-    RemoveDirectKnowledgeBaseFromThreadsUseCase,
     SaveGeneratedImageUseCase,
     ResolveGeneratedImageUseCase,
     DownloadMessageImageUseCase,
@@ -130,7 +121,6 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     RecordThreadActivityUseCase,
     FindExpiredThreadRefsByOrgUseCase,
     // Listeners
-    ShareDeletedListener,
     ThreadActivityListener,
     ThreadsUserDeletionRequestedListener,
     ThreadsWorkspaceDeletionRequestedListener,
@@ -163,9 +153,6 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     RemoveMcpIntegrationFromThreadUseCase,
     AddKnowledgeBaseToThreadUseCase,
     RemoveKnowledgeBaseFromThreadUseCase,
-    RemoveSkillSourcesFromThreadsUseCase,
-    RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
-    RemoveDirectKnowledgeBaseFromThreadsUseCase,
     SaveGeneratedImageUseCase,
     DownloadReferenceImagesUseCase,
     FindExpiredThreadRefsByOrgUseCase,

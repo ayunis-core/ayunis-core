@@ -21,13 +21,12 @@ export class KnowledgeBaseDtoMapper {
     entity: KnowledgeBase,
     context: {
       isActive: boolean;
-      isShared?: boolean;
       documentCount: number;
       viewer?: ResourceViewerRights;
       ownerDescription?: OwnerDescription;
     },
   ): KnowledgeBaseResponseDto {
-    const dto: KnowledgeBaseResponseDto = {
+    return {
       id: entity.id,
       ...this.ownerFields(entity),
       ...(context.viewer && {
@@ -43,10 +42,6 @@ export class KnowledgeBaseDtoMapper {
       isActive: context.isActive,
       documentCount: context.documentCount,
     };
-    if (context.isShared !== undefined) {
-      dto.isShared = context.isShared;
-    }
-    return dto;
   }
 
   private ownerFields(

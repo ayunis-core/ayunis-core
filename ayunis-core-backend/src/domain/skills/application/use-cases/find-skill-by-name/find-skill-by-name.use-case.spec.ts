@@ -1,123 +1,88 @@
-import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
-import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
-import { FindSkillByNameQuery } from './find-skill-by-name.query';
-import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-
-import { SkillShare } from 'src/domain/shares/domain/share.entity';
-import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
-import type { UUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import { anOwnershipViewer } from 'src/domain/ownership/application/testing/ownership.fixtures';
+import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { FindSkillByNameQuery } from './find-skill-by-name.query';
+import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
+import { skillSlugName } from 'src/domain/skills/domain/skill-slug-prefix';
 
-describe('FindSkillByNameUseCase', () => {
-  let useCase: FindSkillByNameUseCase;
-  let skillRepository: jest.Mocked<SkillRepository>;
-  let findSharesByScopeUseCase: jest.Mocked<FindSharesByScopeUseCase>;
-  let contextService: jest.Mocked<ContextService>;
+const userId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
+const orgId = randomUUID();
+const skillParams = { shortDescription: 'desc', instructions: 'instructions' };
 
-  const userId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
-  const orgId = 'org-00000-0000-0000-000000000001' as UUID;
+function setup() {
+  const skillRepository = { findByNameAndOwner: jest.fn() };
+  const collectiveRepository = { findUsable: jest.fn().mockResolvedValue([]) };
+  const contextService = { get: jest.fn().mockReturnValue(userId) };
+  const useCase = new FindSkillByNameUseCase(
+    skillRepository as unknown as SkillRepository,
+    contextService as unknown as ContextService,
+    collectiveRepository as unknown as CollectiveSkillRepository,
+    {
+      execute: jest
+        .fn()
+        .mockResolvedValue(anOwnershipViewer({ userId, orgId })),
+    } as unknown as GetOwnershipViewerUseCase,
+  );
+  return { useCase, skillRepository, collectiveRepository, contextService };
+}
 
-  const makeSkill = (name: string, owner: UUID = userId) =>
-    new PersonalSkill({
-      name,
-      shortDescription: 'desc',
-      instructions: 'instructions',
-      userId: owner,
-    });
-
-  const makeSkillShare = (skillId: UUID) =>
-    new SkillShare({
-      skillId,
-      scope: new OrgShareScope({ orgId }),
-      ownerId: 'other-user' as UUID,
-    });
-
-  beforeEach(() => {
-    skillRepository = {
-      findByNameAndOwner: jest.fn(),
-      findByIds: jest.fn(),
-      toggleSkillPinned: jest.fn(),
-      isSkillPinned: jest.fn(),
-      getPinnedSkillIds: jest.fn(),
-    } as unknown as jest.Mocked<SkillRepository>;
-
-    findSharesByScopeUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<FindSharesByScopeUseCase>;
-
-    contextService = {
-      get: jest.fn().mockReturnValue(userId),
-    } as unknown as jest.Mocked<ContextService>;
-
-    useCase = new FindSkillByNameUseCase(
-      skillRepository,
-      findSharesByScopeUseCase,
-      contextService,
-      {} as CollectiveSkillRepository,
-      {} as GetOwnershipViewerUseCase,
-    );
-  });
-
-  it('should return the owned skill when found by name', async () => {
-    const skill = makeSkill('ayunis-core-backend-dev');
+describe(FindSkillByNameUseCase.name, () => {
+  it('returns the owned skill with that name', async () => {
+    const { useCase, skillRepository } = setup();
+    const skill = new PersonalSkill({ ...skillParams, name: 'Notiz', userId });
     skillRepository.findByNameAndOwner.mockResolvedValue(skill);
 
-    const result = await useCase.execute(
-      new FindSkillByNameQuery('ayunis-core-backend-dev'),
-    );
-
-    expect(result).toBe(skill);
+    await expect(
+      useCase.execute(new FindSkillByNameQuery('Notiz')),
+    ).resolves.toBe(skill);
     expect(skillRepository.findByNameAndOwner).toHaveBeenCalledWith(
-      'ayunis-core-backend-dev',
+      'Notiz',
       userId,
     );
-    expect(findSharesByScopeUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('should find owned skill first on name collision with shared skill', async () => {
-    const ownedSkill = makeSkill('my-skill');
-    skillRepository.findByNameAndOwner.mockResolvedValue(ownedSkill);
-
-    const result = await useCase.execute(new FindSkillByNameQuery('my-skill'));
-
-    expect(result).toBe(ownedSkill);
-    expect(findSharesByScopeUseCase.execute).not.toHaveBeenCalled();
-  });
-
-  it('should find shared skill when no owned match', async () => {
-    const sharedSkill = makeSkill('shared-skill', 'other-user' as UUID);
+  it('throws when the caller owns no skill with that name', async () => {
+    const { useCase, skillRepository } = setup();
     skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    findSharesByScopeUseCase.execute.mockResolvedValue([
-      makeSkillShare(sharedSkill.id),
-    ]);
-    skillRepository.findByIds.mockResolvedValue([sharedSkill]);
-
-    const result = await useCase.execute(
-      new FindSkillByNameQuery('shared-skill'),
-    );
-
-    expect(result).toBe(sharedSkill);
-  });
-
-  it('should throw SkillNotFoundError when neither owned nor shared exists', async () => {
-    skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    findSharesByScopeUseCase.execute.mockResolvedValue([]);
 
     await expect(
-      useCase.execute(new FindSkillByNameQuery('nonexistent-skill')),
+      useCase.execute(new FindSkillByNameQuery('Unbekannt')),
     ).rejects.toThrow(SkillNotFoundError);
   });
 
-  it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
+  it('finds a usable team or organisation skill by its scope', async () => {
+    const { useCase, collectiveRepository } = setup();
+    const team = new TeamSkill({
+      ...skillParams,
+      name: 'Bauantrag',
+      teamId: randomUUID(),
+      orgId,
+    });
+    const org = new OrgSkill({ ...skillParams, name: 'Bauantrag', orgId });
+    collectiveRepository.findUsable.mockResolvedValue([team, org]);
+
+    await expect(
+      useCase.execute(new FindSkillByNameQuery('Bauantrag', 'org')),
+    ).resolves.toBe(org);
+    await expect(
+      useCase.execute(new FindSkillByNameQuery(skillSlugName(team), 'team')),
+    ).resolves.toBe(team);
+  });
+
+  it('rejects unauthenticated callers', async () => {
+    const { useCase, contextService } = setup();
     contextService.get.mockReturnValue(undefined);
 
     await expect(
-      useCase.execute(new FindSkillByNameQuery('some-skill')),
+      useCase.execute(new FindSkillByNameQuery('Notiz')),
     ).rejects.toThrow(UnauthorizedAccessError);
   });
 });

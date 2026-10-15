@@ -55,7 +55,6 @@ export function useRemoveTeamMember(teamId: string, teamName: string) {
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerListTeamsQueryKey(),
         });
-        // Invalidate my teams cache since membership changes affect shares tab
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerListMyTeamsQueryKey(),
         });

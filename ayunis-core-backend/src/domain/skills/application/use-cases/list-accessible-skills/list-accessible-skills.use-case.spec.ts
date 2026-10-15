@@ -3,9 +3,7 @@ import type { SkillOwnershipContextService } from 'src/domain/skills/application
 import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import type { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { ListAccessibleSkillsQuery } from './list-accessible-skills.query';
@@ -33,8 +31,6 @@ describe(ListAccessibleSkillsUseCase.name, () => {
     const workspaceRead = { execute: jest.fn() };
     const useCase = new ListAccessibleSkillsUseCase(
       repository as unknown as SkillRepository,
-      { execute: jest.fn() } as unknown as FindSharesByScopeUseCase,
-      { resolveMany: jest.fn() } as unknown as SkillCreatorNameService,
       {} as CollectiveSkillRepository,
       {} as SkillOwnershipContextService,
       {} as GetOwnershipViewerUseCase,
@@ -54,8 +50,6 @@ describe(ListAccessibleSkillsUseCase.name, () => {
         skill,
         isActive: true,
         isPinned: true,
-        isShared: false,
-        creatorName: null,
       },
     ]);
   });

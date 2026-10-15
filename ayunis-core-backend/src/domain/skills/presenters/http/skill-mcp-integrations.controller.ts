@@ -118,11 +118,7 @@ export class SkillMcpIntegrationsController {
     const context = await this.findOneSkill.execute(
       new FindOneSkillQuery(skillId),
     );
-    return this.skillDtoMapper.toDto(
-      context.skill,
-      context,
-      context.creatorName,
-    );
+    return this.skillDtoMapper.toDto(context.skill, context);
   }
 
   @Get(':skillId/mcp-integrations')

@@ -3,9 +3,6 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
-import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
@@ -23,7 +20,6 @@ export class FindActivatableSkillUseCase {
 
   constructor(
     private readonly repository: SkillRepository,
-    private readonly findShare: FindShareByEntityUseCase,
     private readonly context: ContextService,
     private readonly authorization: SkillAuthorizationService,
   ) {}
@@ -68,15 +64,8 @@ export class FindActivatableSkillUseCase {
     const owned = await this.repository.findOne(skillId, userId);
     if (owned) return owned;
     const collective = await this.findUsableCollectiveSkill(skillId);
-    if (collective) return collective;
-    const share = await this.findShare.execute(
-      new FindShareByEntityQuery(SharedEntityType.SKILL, skillId),
-    );
-    const shared = share
-      ? (await this.repository.findByIds([skillId], null)).at(0)
-      : undefined;
-    if (!shared) throw new SkillNotFoundError(skillId);
-    return shared;
+    if (!collective) throw new SkillNotFoundError(skillId);
+    return collective;
   }
 
   private async findUsableCollectiveSkill(

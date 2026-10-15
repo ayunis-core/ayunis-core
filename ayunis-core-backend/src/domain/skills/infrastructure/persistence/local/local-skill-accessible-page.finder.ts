@@ -25,7 +25,6 @@ export class LocalSkillAccessiblePageFinder {
   buildQuery(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
   ): SelectQueryBuilder<SkillRecord> {
     const queryBuilder = this.skillRepository.createQueryBuilder('skill');
@@ -37,11 +36,6 @@ export class LocalSkillAccessiblePageFinder {
         .where(
           new Brackets((accessQuery) => {
             accessQuery.where('skill.userId = :userId', { userId });
-            if (sharedSkillIds.length > 0) {
-              accessQuery.orWhere('skill.id IN (:...sharedSkillIds)', {
-                sharedSkillIds,
-              });
-            }
             if (options.collective) {
               accessQuery.orWhere(usableCollectiveSkills(options.collective));
             }

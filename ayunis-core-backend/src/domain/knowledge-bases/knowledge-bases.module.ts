@@ -10,10 +10,6 @@ import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
 import { ContextModule } from 'src/common/context/context.module';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
-import { SharesModule } from 'src/domain/shares/shares.module';
-import { getShareAuthStrategyToken } from 'src/domain/shares/application/factories/share-authorization.factory';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
 import { FindAccessibleKnowledgeBaseUseCase } from './application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
 import { FindAccessibleKnowledgeBasesByIdsUseCase } from './application/use-cases/find-accessible-knowledge-bases-by-ids/find-accessible-knowledge-bases-by-ids.use-case';
 import { GetAccessibleKnowledgeBaseContextsUseCase } from './application/use-cases/get-accessible-knowledge-base-contexts/get-accessible-knowledge-base-contexts.use-case';
@@ -21,7 +17,6 @@ import { KnowledgeBaseWriteAccessService } from './application/services/knowledg
 import { KnowledgeBaseReadAccessService } from './application/services/knowledge-base-read-access.service';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { CountKnowledgeBaseDocumentsUseCase } from './application/use-cases/count-knowledge-base-documents/count-knowledge-base-documents.use-case';
-import { KnowledgeBaseShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { KnowledgeBasesUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 import { KnowledgeBasesWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
 import { SkillsModule } from 'src/domain/skills/skills.module';
@@ -54,7 +49,6 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     ContextModule,
     PermissionsModule,
     StorageModule,
-    forwardRef(() => SharesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => ThreadsModule),
     forwardRef(() => WorkspacesModule),
@@ -88,15 +82,8 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     // Presenters
     KnowledgeBaseDtoMapper,
     // Listeners
-    KnowledgeBaseShareDeletedListener,
     KnowledgeBasesUserDeletionRequestedListener,
     KnowledgeBasesWorkspaceDeletionRequestedListener,
-    // Strategies
-    KnowledgeBaseShareAuthorizationStrategy,
-    {
-      provide: getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
-      useExisting: KnowledgeBaseShareAuthorizationStrategy,
-    },
   ],
   controllers: [KnowledgeBasesController],
   exports: [
@@ -106,8 +93,6 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     FindAccessibleKnowledgeBasesByIdsUseCase,
     GetAccessibleKnowledgeBaseContextsUseCase,
     CountKnowledgeBaseDocumentsUseCase,
-    KnowledgeBaseShareAuthorizationStrategy,
-    getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
     CreateKnowledgeBaseUseCase,
     UpdateKnowledgeBaseUseCase,
     DeleteKnowledgeBaseUseCase,

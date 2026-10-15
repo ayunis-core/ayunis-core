@@ -9,10 +9,6 @@ import {
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
 import type { CollectiveSkill } from 'src/domain/skills/domain/skill';
@@ -27,7 +23,6 @@ export class FindSkillByNameUseCase {
 
   constructor(
     private readonly skillRepository: SkillRepository,
-    private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
     private readonly collectiveRepository: CollectiveSkillRepository,
     private readonly getViewer: GetOwnershipViewerUseCase,
@@ -69,35 +64,11 @@ export class FindSkillByNameUseCase {
 
   private async findPersonal(name: string): Promise<PersonalSkill> {
     const { userId } = getRequiredUserContext(this.contextService);
-
-    // Owned skills take priority
     const ownedSkill = await this.skillRepository.findByNameAndOwner(
       name,
       userId,
     );
-
-    if (ownedSkill) {
-      return ownedSkill;
-    }
-
-    // Check shared skills
-    const shares = await this.findSharesByScopeUseCase.execute(
-      new FindSharesByScopeQuery(SharedEntityType.SKILL),
-    );
-
-    if (shares.length > 0) {
-      const sharedSkillIds = shares.map((s) => (s as SkillShare).skillId);
-      const sharedSkills = await this.skillRepository.findByIds(
-        sharedSkillIds,
-        null,
-      );
-      const matchingSkill = sharedSkills.find((s) => s.name === name);
-
-      if (matchingSkill) {
-        return matchingSkill;
-      }
-    }
-
-    throw new SkillNotFoundError(name);
+    if (!ownedSkill) throw new SkillNotFoundError(name);
+    return ownedSkill;
   }
 }

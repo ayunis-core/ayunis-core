@@ -83,9 +83,6 @@ export class GetAccessibleKnowledgeBaseContextsUseCase {
     };
     return knowledgeBases.map((knowledgeBase) => ({
       knowledgeBase,
-      isShared:
-        knowledgeBase instanceof PersonalKnowledgeBase &&
-        knowledgeBase.userId !== userId,
       isActive: isActive(knowledgeBase),
       documentCount: counts.get(knowledgeBase.id) ?? 0,
     }));

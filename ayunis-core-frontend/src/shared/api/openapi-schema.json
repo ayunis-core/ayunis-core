@@ -6026,172 +6026,6 @@
         "tags": ["knowledge-bases"]
       }
     },
-    "/shares/skills": {
-      "post": {
-        "operationId": "SharesController_createSkillShare",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Skill share creation data",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSkillShareDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Share created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShareResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request data"
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "403": {
-            "description": "User cannot create share for this skill"
-          }
-        },
-        "summary": "Create a share for a skill",
-        "tags": ["shares"]
-      }
-    },
-    "/shares/knowledge-bases": {
-      "post": {
-        "operationId": "SharesController_createKnowledgeBaseShare",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Knowledge base share creation data",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateKnowledgeBaseShareDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Share created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShareResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request data"
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "403": {
-            "description": "User cannot create share for this knowledge base"
-          }
-        },
-        "summary": "Create a share for a knowledge base",
-        "tags": ["shares"]
-      }
-    },
-    "/shares": {
-      "get": {
-        "operationId": "SharesController_getShares",
-        "parameters": [
-          {
-            "name": "entityId",
-            "required": true,
-            "in": "query",
-            "description": "ID of the entity to get shares for",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "entityType",
-            "required": true,
-            "in": "query",
-            "description": "Type of the entity",
-            "schema": {
-              "enum": ["prompt", "skill", "knowledge_base"],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns shares for the specified entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ShareResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "403": {
-            "description": "User cannot view shares for this entity"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get shares for an entity",
-        "tags": ["shares"]
-      }
-    },
-    "/shares/{id}": {
-      "delete": {
-        "operationId": "SharesController_deleteShare",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the share to delete",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The share has been successfully deleted"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Share not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a share",
-        "tags": ["shares"]
-      }
-    },
     "/skills/install-from-marketplace": {
       "post": {
         "operationId": "SkillsController_installFromMarketplace",
@@ -17459,11 +17293,6 @@
             "type": "boolean",
             "description": "Whether the knowledge base is active for the current user",
             "example": true
-          },
-          "isShared": {
-            "type": "boolean",
-            "description": "Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases).",
-            "example": false
           }
         },
         "required": [
@@ -17674,106 +17503,6 @@
         },
         "required": ["url"]
       },
-      "CreateSkillShareDto": {
-        "type": "object",
-        "properties": {
-          "entityType": {
-            "type": "string",
-            "description": "Type of entity being shared",
-            "enum": ["prompt", "skill", "knowledge_base"]
-          },
-          "skillId": {
-            "type": "string",
-            "description": "ID of the skill to share",
-            "format": "uuid"
-          },
-          "teamId": {
-            "type": "string",
-            "description": "ID of the team to share with (if not provided, shares with entire organization)",
-            "format": "uuid"
-          }
-        },
-        "required": ["entityType", "skillId"]
-      },
-      "ShareResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the share",
-            "format": "uuid"
-          },
-          "entityType": {
-            "type": "string",
-            "description": "Type of entity being shared",
-            "enum": ["prompt", "skill", "knowledge_base"]
-          },
-          "entityId": {
-            "type": "string",
-            "description": "ID of the entity being shared",
-            "format": "uuid"
-          },
-          "scopeType": {
-            "type": "string",
-            "description": "Type of share scope (organization, user, or team)",
-            "enum": ["org", "team"]
-          },
-          "ownerId": {
-            "type": "string",
-            "description": "ID of the user who created the share",
-            "format": "uuid"
-          },
-          "teamId": {
-            "type": "string",
-            "description": "ID of the team (only present for team-scoped shares)",
-            "format": "uuid"
-          },
-          "teamName": {
-            "type": "string",
-            "description": "Name of the team (only present for team-scoped shares)"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "When the share was created"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "When the share was last updated"
-          }
-        },
-        "required": [
-          "id",
-          "entityType",
-          "entityId",
-          "scopeType",
-          "ownerId",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "CreateKnowledgeBaseShareDto": {
-        "type": "object",
-        "properties": {
-          "entityType": {
-            "type": "string",
-            "description": "Type of entity being shared",
-            "enum": ["prompt", "skill", "knowledge_base"]
-          },
-          "knowledgeBaseId": {
-            "type": "string",
-            "description": "ID of the knowledge base to share",
-            "format": "uuid"
-          },
-          "teamId": {
-            "type": "string",
-            "description": "ID of the team to share with (if not provided, shares with entire organization)",
-            "format": "uuid"
-          }
-        },
-        "required": ["entityType", "knowledgeBaseId"]
-      },
       "InstallSkillFromMarketplaceDto": {
         "type": "object",
         "properties": {
@@ -17848,15 +17577,8 @@
             "type": "string",
             "format": "date-time"
           },
-          "isShared": {
-            "type": "boolean"
-          },
           "isPinned": {
             "type": "boolean"
-          },
-          "creatorName": {
-            "type": "string",
-            "nullable": true
           }
         },
         "required": [
@@ -17869,9 +17591,7 @@
           "isActive",
           "createdAt",
           "updatedAt",
-          "isShared",
-          "isPinned",
-          "creatorName"
+          "isPinned"
         ]
       },
       "ImproveSkillTextDto": {

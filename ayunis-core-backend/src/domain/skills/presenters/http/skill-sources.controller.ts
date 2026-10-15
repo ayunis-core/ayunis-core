@@ -110,10 +110,10 @@ export class SkillSourcesController {
   private async toSkillDtoWithCreator(
     skillId: UUID,
   ): Promise<SkillResponseDto> {
-    const { skill, creatorName, ...context } = await this.findSkill.execute(
+    const { skill, ...context } = await this.findSkill.execute(
       new FindOneSkillQuery(skillId),
     );
-    return this.skillDtoMapper.toDto(skill, context, creatorName);
+    return this.skillDtoMapper.toDto(skill, context);
   }
 
   @Delete(':id/sources/:sourceId')

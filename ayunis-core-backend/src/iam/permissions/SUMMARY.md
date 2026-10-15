@@ -19,9 +19,9 @@ hold whatever an org admin grants them.
 
   This is the source of truth for what a role can be granted. Enforced today:
   teams, `manage_own_*` (personal and workspace-owned items),
-  `install_marketplace_skills`, `create_workspaces`, and the four
-  `request_*_transfer` / `request_*_transfer_org` keys, which gate team and org
-  shares until handovers replace shares. The other keys are stored and
+  `install_marketplace_skills`, `create_workspaces`, the `request_*_transfer*`
+  keys (who may hand own items over to which team or the organisation) and the
+  `review_all_*_requests` keys (handovers module). The other keys are stored and
   configurable but only read by the features that introduce them.
   How the settings UI labels, groups and orders these is purely a display
   concern and lives in the frontend, keyed on the enum — the API returns grants

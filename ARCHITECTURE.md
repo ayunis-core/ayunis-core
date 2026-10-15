@@ -86,7 +86,6 @@ none of these packages implements the Agent Plugins standard.
 | [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |
 | [storage](ayunis-core-backend/src/domain/storage/SUMMARY.md)                    | Files          | MinIO-based file storage                                                                                       |
 | [mcp](ayunis-core-backend/src/domain/mcp/SUMMARY.md)                            | Integrations   | Model Context Protocol server connections                                                                      |
-| [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md)                      | Sharing        | Organization-wide resource sharing                                                                             |
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md)      | Voice          | Audio transcription service                                                                                    |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md)                        | Metering       | Token and credit usage tracking                                                                                |
 | [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md)    | Blueprints     | Admin-managed skill templates with distribution modes                                                          |
@@ -211,15 +210,15 @@ load-bearing):
   they live in the teams module's `TeamAccessService` instead of route
   decorators. See [teams/SUMMARY.md](ayunis-core-backend/src/iam/teams/SUMMARY.md).
 
-**Reads stay open** — only manage/share (write) endpoints are permission-gated;
-per-entity visibility (ownership + shares) is enforced separately inside the use
-cases, so a member without `manage_*` can still read what's shared with them.
+**Reads stay open** — only manage/hand-over (write) endpoints are permission-gated;
+per-entity visibility (ownership) is enforced separately inside the use cases,
+so a member without `manage_*` can still read what their teams and organisation own.
 
 **Frontend enforcement mirrors, never replaces, the backend.** Any authenticated
 user reads their effective permissions from `GET /permissions/me`; the
 [`permissions` feature](ayunis-core-frontend/src/features/permissions) exposes
 `useMyPermissions()` and `<PermissionGate>` to hide controls a member can't use
-(create/edit/delete/share buttons, empty-state CTAs) and to permission-filter
+(create/edit/delete buttons, empty-state CTAs) and to permission-filter
 the admin-settings sidebar + route guard. The backend still 403s regardless.
 
 **Adding a new permission:**

@@ -1,9 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
-import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
@@ -29,7 +26,6 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 @Injectable()
 export class SkillAuthorizationService {
   constructor(
-    private readonly findShare: FindShareByEntityUseCase,
     @Inject(forwardRef(() => AssertWorkspaceReadAccessUseCase))
     private readonly workspaceRead: AssertWorkspaceReadAccessUseCase,
     @Inject(forwardRef(() => AssertWorkspaceWriteAccessUseCase))
@@ -55,10 +51,6 @@ export class SkillAuthorizationService {
     }
     if (skill instanceof PersonalSkill) {
       if (skill.userId === userId) return;
-      const share = await this.findShare.execute(
-        new FindShareByEntityQuery(SharedEntityType.SKILL, skill.id),
-      );
-      if (share) return;
       throw new SkillNotFoundError(skill.id);
     }
     if (!(skill instanceof WorkspaceSkill)) {

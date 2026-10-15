@@ -3,8 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   findKnowledgeBase: vi.fn(),
-  getShares: vi.fn(),
-  listTeams: vi.fn(),
 }));
 
 vi.mock('@/pages/knowledge-base', () => ({
@@ -14,16 +12,7 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   getKnowledgeBasesControllerFindOneQueryKey: (id: string) => [
     `/knowledge-bases/${id}`,
   ],
-  getSharesControllerGetSharesQueryKey: () => ['shares'],
-  getTeamsControllerListMyTeamsQueryKey: () => ['teams'],
   knowledgeBasesControllerFindOne: mocks.findKnowledgeBase,
-  sharesControllerGetShares: mocks.getShares,
-  teamsControllerListMyTeams: mocks.listTeams,
-}));
-vi.mock('@/shared/api/generated/ayunisCoreAPI.schemas', () => ({
-  CreateKnowledgeBaseShareDtoEntityType: {
-    knowledge_base: 'knowledge_base',
-  },
 }));
 
 const { Route } = await import('./knowledge-bases.$id');
@@ -45,32 +34,27 @@ describe('personal knowledge-base detail route', () => {
     mocks.findKnowledgeBase.mockResolvedValue({
       id: 'knowledge-base',
       ownerType: 'personal',
-      isShared: false,
     });
-    mocks.getShares.mockResolvedValue([]);
-    mocks.listTeams.mockResolvedValue([]);
   });
 
-  it('loads sharing context for a personal knowledge base', async () => {
-    await expect(runLoader()).resolves.toMatchObject({
-      knowledgeBase: { ownerType: 'personal' },
-      shares: [],
-      userTeams: [],
+  it('loads a personal knowledge base', async () => {
+    await expect(runLoader()).resolves.toEqual({
+      knowledgeBase: { id: 'knowledge-base', ownerType: 'personal' },
     });
-    expect(mocks.getShares).toHaveBeenCalled();
-    expect(mocks.listTeams).toHaveBeenCalled();
   });
 
-  it('redirects workspace knowledge bases before loading personal sharing context', async () => {
+  it('redirects workspace knowledge bases to their workspace', async () => {
     mocks.findKnowledgeBase.mockResolvedValue({
       id: 'knowledge-base',
       ownerType: 'workspace',
       workspaceId: 'workspace',
-      isShared: false,
     });
 
-    await expect(runLoader()).rejects.toBeDefined();
-    expect(mocks.getShares).not.toHaveBeenCalled();
-    expect(mocks.listTeams).not.toHaveBeenCalled();
+    await expect(runLoader()).rejects.toMatchObject({
+      options: {
+        to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
+        params: { workspaceId: 'workspace', knowledgeBaseId: 'knowledge-base' },
+      },
+    });
   });
 });

@@ -88,7 +88,6 @@
     "integrationsEmptyState": "No integrations available",
     "integrationsAllAttached": "All integrations already attached",
     "integrationNotAuthorized": "Authorize this integration in Settings → Integrations first",
-    "shared": "Shared",
     "createKnowledgeBase": "Create knowledge base",
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
     "cancelTooltip": "Cancel",

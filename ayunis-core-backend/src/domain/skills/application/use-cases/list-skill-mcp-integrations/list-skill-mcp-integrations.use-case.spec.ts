@@ -7,8 +7,6 @@ import { ListSkillMcpIntegrationsQuery } from './list-skill-mcp-integrations.que
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 
 import {
   SkillNotFoundError,
@@ -24,7 +22,6 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
   let skillRepository: jest.Mocked<SkillRepository>;
   let getMcpIntegrationsByIdsUseCase: jest.Mocked<GetMcpIntegrationsByIdsUseCase>;
   let contextService: jest.Mocked<ContextService>;
-  let findShareByEntityUseCase: jest.Mocked<FindShareByEntityUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockSkillId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -75,10 +72,6 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
-    const mockFindShareByEntityUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<FindShareByEntityUseCase>;
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListSkillMcpIntegrationsUseCase,
@@ -88,10 +81,6 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
           useValue: mockGetMcpIntegrationsByIdsUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
-        {
-          provide: FindShareByEntityUseCase,
-          useValue: mockFindShareByEntityUseCase,
-        },
       ],
     }).compile();
 
@@ -99,7 +88,6 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
     skillRepository = module.get(SkillRepository);
     getMcpIntegrationsByIdsUseCase = module.get(GetMcpIntegrationsByIdsUseCase);
     contextService = module.get(ContextService);
-    findShareByEntityUseCase = module.get(FindShareByEntityUseCase);
   });
 
   afterEach(() => {
@@ -162,44 +150,9 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
         mockSkillId,
         mockUserId,
       );
-      expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
       expect(result).toHaveLength(2);
       expect(result[0]).toBe(mockIntegration1);
       expect(result[1]).toBe(mockIntegration2);
-    });
-
-    it('should return MCP integrations for a shared skill when user does not own it', async () => {
-      const query = new ListSkillMcpIntegrationsQuery(mockSkillId);
-      const otherUserId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
-      const mockSkill = createMockSkill([mockIntegrationId1]);
-      Object.defineProperty(mockSkill, 'userId', { value: otherUserId });
-      const mockIntegration1 = createMockIntegration(
-        mockIntegrationId1,
-        'Shared Integration',
-      );
-
-      skillRepository.findOne.mockResolvedValue(null);
-      findShareByEntityUseCase.execute.mockResolvedValue({} as any);
-      skillRepository.findByIds.mockResolvedValue([mockSkill]);
-      getMcpIntegrationsByIdsUseCase.execute.mockResolvedValue([
-        mockIntegration1,
-      ]);
-
-      const result = await useCase.execute(query);
-
-      expect(skillRepository.findOne).toHaveBeenCalledWith(
-        mockSkillId,
-        mockUserId,
-      );
-      expect(findShareByEntityUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          entityType: SharedEntityType.SKILL,
-          entityId: mockSkillId,
-        }),
-      );
-      expect(skillRepository.findByIds).toHaveBeenCalledWith([mockSkillId]);
-      expect(result).toHaveLength(1);
-      expect(result[0]).toBe(mockIntegration1);
     });
 
     it('should return empty array when skill has no MCP integrations', async () => {
@@ -224,20 +177,9 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
       expect(skillRepository.findOne).not.toHaveBeenCalled();
     });
 
-    it('should throw SkillNotFoundError when skill is not owned and not shared', async () => {
+    it('should throw SkillNotFoundError when the caller does not own the skill', async () => {
       const query = new ListSkillMcpIntegrationsQuery(mockSkillId);
       skillRepository.findOne.mockResolvedValue(null);
-      findShareByEntityUseCase.execute.mockResolvedValue(null);
-
-      await expect(useCase.execute(query)).rejects.toThrow(SkillNotFoundError);
-      expect(findShareByEntityUseCase.execute).toHaveBeenCalled();
-    });
-
-    it('should throw SkillNotFoundError when share exists but skill cannot be fetched by ID', async () => {
-      const query = new ListSkillMcpIntegrationsQuery(mockSkillId);
-      skillRepository.findOne.mockResolvedValue(null);
-      findShareByEntityUseCase.execute.mockResolvedValue({} as any);
-      skillRepository.findByIds.mockResolvedValue([]);
 
       await expect(useCase.execute(query)).rejects.toThrow(SkillNotFoundError);
     });

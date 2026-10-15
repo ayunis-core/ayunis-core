@@ -15,7 +15,6 @@ export type OwnerChoice =
 export interface OwnedResource {
   ownerType: 'personal' | 'workspace' | 'team' | 'org';
   userId?: string;
-  isShared?: boolean;
   viewer?: ResourceViewerDto;
   ownerDescription?: OwnerDescriptionDto;
 }

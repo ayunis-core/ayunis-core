@@ -69,8 +69,6 @@ Deliberately **not** gated:
   `userId`; a machine principal has no certificate holder. The guard skips
   api-key principals for the same reason. **Known gap:** an org that enables the
   gate _and_ issues API keys retains an ungated inference path.
-- `shares` — org-sharing admin surface; gating it would stop a lapsed user from
-  *un*sharing.
 
 ## HTTP
 
