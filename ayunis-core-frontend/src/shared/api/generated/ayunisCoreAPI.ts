@@ -241,6 +241,7 @@ import type {
   SuperAdminUserListControllerGetAllUsersParams,
   SuperAdminUserResponseDto,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
+  TeamAdminPermissionsResponseDto,
   TeamCreditLimitItemDto,
   TeamCreditLimitResponseDto,
   TeamMemberResponseDto,
@@ -279,6 +280,7 @@ import type {
   UpdateSkillDto,
   UpdateSkillTemplateDto,
   UpdateStartDateDto,
+  UpdateTeamAdminPermissionsDto,
   UpdateTeamDto,
   UpdateTeamMemberDto,
   UpdateThreadTitleDto,
@@ -4041,6 +4043,167 @@ export function useMyPermissionsControllerGetMine<TData = Awaited<ReturnType<typ
 
 
 
+
+/**
+ * @summary Get what team admins may do in their teams
+ */
+export const teamAdminPermissionsControllerGet = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamAdminPermissionsResponseDto>(
+      {url: `/team-admin-permissions`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getTeamAdminPermissionsControllerGetQueryKey = () => {
+    return [
+    `/team-admin-permissions`
+    ] as const;
+    }
+
+
+export const getTeamAdminPermissionsControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTeamAdminPermissionsControllerGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>> = ({ signal }) => teamAdminPermissionsControllerGet(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TeamAdminPermissionsControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>>
+export type TeamAdminPermissionsControllerGetQueryError = unknown
+
+
+export function useTeamAdminPermissionsControllerGet<TData = Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamAdminPermissionsControllerGet<TData = Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamAdminPermissionsControllerGet<TData = Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get what team admins may do in their teams
+ */
+
+export function useTeamAdminPermissionsControllerGet<TData = Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTeamAdminPermissionsControllerGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Replace what team admins may do in their teams
+ */
+export const teamAdminPermissionsControllerUpdate = (
+    updateTeamAdminPermissionsDto: UpdateTeamAdminPermissionsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/team-admin-permissions`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTeamAdminPermissionsDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getTeamAdminPermissionsControllerUpdateMutationKey = () => ['teamAdminPermissionsControllerUpdate'] as const;
+
+export const getTeamAdminPermissionsControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerUpdate>>, TError,TeamAdminPermissionsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerUpdate>>, TError,TeamAdminPermissionsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getTeamAdminPermissionsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamAdminPermissionsControllerUpdate>>, TeamAdminPermissionsControllerUpdateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  teamAdminPermissionsControllerUpdate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamAdminPermissionsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof teamAdminPermissionsControllerUpdate>>>
+    export type TeamAdminPermissionsControllerUpdateMutationBody = UpdateTeamAdminPermissionsDto
+    export type TeamAdminPermissionsControllerUpdateMutationError = unknown
+    export type TeamAdminPermissionsControllerUpdateMutationVariables = {data: UpdateTeamAdminPermissionsDto}
+
+    /**
+ * @summary Replace what team admins may do in their teams
+ */
+export const useTeamAdminPermissionsControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamAdminPermissionsControllerUpdate>>, TError,TeamAdminPermissionsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamAdminPermissionsControllerUpdate>>,
+        TError,
+        TeamAdminPermissionsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTeamAdminPermissionsControllerUpdateMutationOptions(options), queryClient);
+    }
 
 /**
  * @summary Check if the current organization has an active subscription

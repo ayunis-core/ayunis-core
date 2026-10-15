@@ -8,6 +8,8 @@ import {
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
+import { GetTeamAdminPermissionsUseCase } from 'src/iam/permissions/application/use-cases/get-team-admin-permissions/get-team-admin-permissions.use-case';
 import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { TeamAccessDeniedError } from 'src/iam/teams/application/team-members.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -19,6 +21,12 @@ interface TeamAccessRequest {
   targetOrgId?: UUID;
 }
 
+interface AccessRule {
+  permissions: Permission[];
+  teamAdminRight?: TeamAdminPermission;
+  action: string;
+}
+
 @Injectable()
 export class TeamAccessService {
   private readonly logger = new Logger(TeamAccessService.name);
@@ -26,6 +34,7 @@ export class TeamAccessService {
   constructor(
     private readonly hasPermission: HasPermissionUseCase,
     private readonly teamMembers: TeamMembersRepository,
+    private readonly getTeamAdminPermissions: GetTeamAdminPermissionsUseCase,
     private readonly context: ContextService,
   ) {}
 
@@ -36,19 +45,32 @@ export class TeamAccessService {
   }
 
   assertCanView(request: TeamAccessRequest): Promise<void> {
-    return this.assert(request, this.viewPermissions(), 'view');
+    return this.assert(request, {
+      permissions: this.viewPermissions(),
+      action: 'view',
+    });
   }
 
   assertCanManageMembers(request: TeamAccessRequest): Promise<void> {
-    return this.assert(
-      request,
-      [Permission.ASSIGN_USERS_TO_TEAMS],
-      'manage members',
-    );
+    return this.assert(request, {
+      permissions: [Permission.ASSIGN_USERS_TO_TEAMS],
+      teamAdminRight: TeamAdminPermission.TEAM_MANAGE_MEMBERS,
+      action: 'manage members',
+    });
   }
 
   assertCanAppointAdmins(request: TeamAccessRequest): Promise<void> {
-    return this.assert(request, [Permission.MANAGE_TEAMS], 'appoint admins');
+    return this.assert(request, {
+      permissions: [Permission.MANAGE_TEAMS],
+      teamAdminRight: TeamAdminPermission.TEAM_APPOINT_ADMINS,
+      action: 'appoint admins',
+    });
+  }
+
+  async teamAdminHasRight(right: TeamAdminPermission): Promise<boolean> {
+    const { orgId } = getRequiredUserContext(this.context);
+    const granted = await this.getTeamAdminPermissions.execute(orgId);
+    return granted.includes(right);
   }
 
   mayChangeLastTeamAdmin(targetOrgId?: UUID): boolean {
@@ -62,22 +84,28 @@ export class TeamAccessService {
 
   private async assert(
     { teamId, targetOrgId }: TeamAccessRequest,
-    permissions: Permission[],
-    action: string,
+    rule: AccessRule,
   ): Promise<void> {
     if (targetOrgId) return;
     const user = getRequiredUserContext(this.context);
-    if (await this.holdsAny(user, permissions)) return;
-    const member = await this.teamMembers.findByTeamIdAndUserId(
-      teamId,
-      user.userId,
-    );
-    if (member?.isTeamAdmin) return;
+    if (await this.holdsAny(user, rule.permissions)) return;
+    if (await this.isTeamAdminWithRight(teamId, user.userId, rule)) return;
     this.logger.warn(
-      { userId: user.userId, orgId: user.orgId, teamId, action },
+      { userId: user.userId, orgId: user.orgId, teamId, action: rule.action },
       'Access denied: not allowed to manage team',
     );
     throw new TeamAccessDeniedError(teamId);
+  }
+
+  private async isTeamAdminWithRight(
+    teamId: UUID,
+    userId: UUID,
+    rule: AccessRule,
+  ): Promise<boolean> {
+    const member = await this.teamMembers.findByTeamIdAndUserId(teamId, userId);
+    if (!member?.isTeamAdmin) return false;
+    if (!rule.teamAdminRight) return true;
+    return this.teamAdminHasRight(rule.teamAdminRight);
   }
 
   private async holdsAny(

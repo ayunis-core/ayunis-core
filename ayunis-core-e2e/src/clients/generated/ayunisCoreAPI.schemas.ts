@@ -779,9 +779,57 @@ export const MyPermissionsResponseDtoPermissionsItem = {
   share_workspaces_org: 'share_workspaces_org',
 } as const;
 
+export type MyPermissionsResponseDtoTeamAdminPermissionsItem = typeof MyPermissionsResponseDtoTeamAdminPermissionsItem[keyof typeof MyPermissionsResponseDtoTeamAdminPermissionsItem];
+
+
+export const MyPermissionsResponseDtoTeamAdminPermissionsItem = {
+  team_manage_members: 'team_manage_members',
+  team_appoint_admins: 'team_appoint_admins',
+  team_manage_skills: 'team_manage_skills',
+  team_manage_knowledge: 'team_manage_knowledge',
+  team_review_requests: 'team_review_requests',
+  team_share_workspaces: 'team_share_workspaces',
+} as const;
+
 export interface MyPermissionsResponseDto {
   /** The current user's effective permissions (admins hold all of them) */
   permissions: MyPermissionsResponseDtoPermissionsItem[];
+  /** The org's team admin rights. They apply only inside the teams a team admin administers (see GET /teams/me). */
+  teamAdminPermissions: MyPermissionsResponseDtoTeamAdminPermissionsItem[];
+}
+
+export type TeamAdminPermissionsResponseDtoPermissionsItem = typeof TeamAdminPermissionsResponseDtoPermissionsItem[keyof typeof TeamAdminPermissionsResponseDtoPermissionsItem];
+
+
+export const TeamAdminPermissionsResponseDtoPermissionsItem = {
+  team_manage_members: 'team_manage_members',
+  team_appoint_admins: 'team_appoint_admins',
+  team_manage_skills: 'team_manage_skills',
+  team_manage_knowledge: 'team_manage_knowledge',
+  team_review_requests: 'team_review_requests',
+  team_share_workspaces: 'team_share_workspaces',
+} as const;
+
+export interface TeamAdminPermissionsResponseDto {
+  /** What team admins may do inside the teams they administer, org-wide */
+  permissions: TeamAdminPermissionsResponseDtoPermissionsItem[];
+}
+
+export type UpdateTeamAdminPermissionsDtoPermissionsItem = typeof UpdateTeamAdminPermissionsDtoPermissionsItem[keyof typeof UpdateTeamAdminPermissionsDtoPermissionsItem];
+
+
+export const UpdateTeamAdminPermissionsDtoPermissionsItem = {
+  team_manage_members: 'team_manage_members',
+  team_appoint_admins: 'team_appoint_admins',
+  team_manage_skills: 'team_manage_skills',
+  team_manage_knowledge: 'team_manage_knowledge',
+  team_review_requests: 'team_review_requests',
+  team_share_workspaces: 'team_share_workspaces',
+} as const;
+
+export interface UpdateTeamAdminPermissionsDto {
+  /** Rights granted to team admins. May be empty. */
+  permissions: UpdateTeamAdminPermissionsDtoPermissionsItem[];
 }
 
 /**

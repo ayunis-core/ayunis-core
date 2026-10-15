@@ -9,6 +9,7 @@ import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { TeamMemberNotFoundError } from 'src/iam/teams/application/team-members.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
+import type { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { getRequiredOrgId } from 'src/common/context/required-context';
 import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 import { LastTeamAdminPolicy } from 'src/iam/teams/application/services/last-team-admin-policy.service';
@@ -51,8 +52,14 @@ export class RemoveTeamMemberUseCase {
     orgId: UUID,
   ): Promise<void> {
     await this.assertTeamBelongsToOrg(command.teamId, orgId);
-    await this.assertMemberExists(command.teamId, command.userId);
-    await this.lastTeamAdmin.assertMayLoseAdmin(command);
+    const member = await this.findMember(command.teamId, command.userId);
+    if (member.isTeamAdmin) {
+      await this.teamAccess.assertCanAppointAdmins({
+        teamId: command.teamId,
+        targetOrgId: command.orgId,
+      });
+      await this.lastTeamAdmin.assertMayLoseAdmin(command);
+    }
     // Shared-agent thread history is retained; access is denied after removal.
     await this.teamMembersRepository.deleteByTeamIdAndUserId(
       command.teamId,
@@ -82,12 +89,12 @@ export class RemoveTeamMemberUseCase {
     }
   }
 
-  private async assertMemberExists(teamId: UUID, userId: UUID): Promise<void> {
+  private async findMember(teamId: UUID, userId: UUID): Promise<TeamMember> {
     const member = await this.teamMembersRepository.findByTeamIdAndUserId(
       teamId,
       userId,
     );
-    if (member) return;
+    if (member) return member;
     this.logger.error({ teamId, userId }, 'User is not a team member');
     throw new TeamMemberNotFoundError(teamId, userId);
   }

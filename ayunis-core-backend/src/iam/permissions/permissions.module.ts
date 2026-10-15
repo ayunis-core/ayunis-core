@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { RolePermissionRecord } from './infrastructure/persistence/local/schema/role-permission.record';
+import { TeamAdminPermissionRecord } from './infrastructure/persistence/local/schema/team-admin-permission.record';
+import { TeamAdminPermissionsRepository } from './application/ports/team-admin-permissions.repository';
+import { LocalTeamAdminPermissionsRepository } from './infrastructure/persistence/local/local-team-admin-permissions.repository';
+import { GetTeamAdminPermissionsUseCase } from './application/use-cases/get-team-admin-permissions/get-team-admin-permissions.use-case';
+import { UpdateTeamAdminPermissionsUseCase } from './application/use-cases/update-team-admin-permissions/update-team-admin-permissions.use-case';
+import { TeamAdminPermissionsController } from './presenters/http/team-admin-permissions.controller';
 import { RolePermissionsRepository } from './application/ports/role-permissions.repository';
 import { LocalRolePermissionsRepository } from './infrastructure/persistence/local/local-role-permissions.repository';
 
@@ -15,13 +21,25 @@ import { RolePermissionsController } from './presenters/http/role-permissions.co
 import { MyPermissionsController } from './presenters/http/my-permissions.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RolePermissionRecord])],
-  controllers: [RolePermissionsController, MyPermissionsController],
+  imports: [
+    TypeOrmModule.forFeature([RolePermissionRecord, TeamAdminPermissionRecord]),
+  ],
+  controllers: [
+    RolePermissionsController,
+    MyPermissionsController,
+    TeamAdminPermissionsController,
+  ],
   providers: [
     {
       provide: RolePermissionsRepository,
       useClass: LocalRolePermissionsRepository,
     },
+    {
+      provide: TeamAdminPermissionsRepository,
+      useClass: LocalTeamAdminPermissionsRepository,
+    },
+    GetTeamAdminPermissionsUseCase,
+    UpdateTeamAdminPermissionsUseCase,
     HasPermissionUseCase,
     GetRolePermissionsUseCase,
     UpdateRolePermissionsUseCase,
@@ -30,7 +48,13 @@ import { MyPermissionsController } from './presenters/http/my-permissions.contro
   ],
   // HasPermissionUseCase is exported so the PermissionsGuard (bound globally by
   // IamModule) can gate routes on stored per-role permissions;
-  // SeedDefaultRolePermissionsUseCase so org creation can grant the defaults.
-  exports: [HasPermissionUseCase, SeedDefaultRolePermissionsUseCase],
+  // SeedDefaultRolePermissionsUseCase so org creation can grant the defaults;
+  // GetTeamAdminPermissionsUseCase so the teams module can check team admin
+  // rights without this module importing teams.
+  exports: [
+    HasPermissionUseCase,
+    SeedDefaultRolePermissionsUseCase,
+    GetTeamAdminPermissionsUseCase,
+  ],
 })
 export class PermissionsModule {}
