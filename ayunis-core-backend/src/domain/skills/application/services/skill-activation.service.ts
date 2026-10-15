@@ -1,4 +1,5 @@
 import type { Skill } from 'src/domain/skills/domain/skill';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { FindActivatableSkillUseCase } from 'src/domain/skills/application/use-cases/find-activatable-skill/find-activatable-skill.use-case';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
@@ -134,6 +135,9 @@ export class SkillActivationService {
     skill: Skill,
     thread: Thread,
   ): Promise<void> {
+    if (skill instanceof PersonalSkill && skill.userId !== thread.userId) {
+      return;
+    }
     for (const mcpIntegrationId of skill.mcpIntegrationIds) {
       try {
         await this.addMcpIntegrationToThreadUseCase.execute(

@@ -4,6 +4,8 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ContextService } from 'src/common/context/services/context.service';
 import { CountKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/count-knowledge-base-documents/count-knowledge-base-documents.use-case';
 import { GetWorkspaceSkillsUseCase } from 'src/domain/skills/application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
+import { GetLinkedWorkspaceSkillsUseCase } from 'src/domain/skills/application/use-cases/get-linked-workspace-skills/get-linked-workspace-skills.use-case';
+import { GetLinkedWorkspaceKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-linked-workspace-knowledge-bases/get-linked-workspace-knowledge-bases.use-case';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {
   UnexpectedWorkspaceError,
@@ -26,6 +28,8 @@ export class GetWorkspaceAiContextUseCase {
     private readonly getWorkspaceSkills: GetWorkspaceSkillsUseCase,
     private readonly countKnowledgeBaseDocuments: CountKnowledgeBaseDocumentsUseCase,
     private readonly contextService: ContextService,
+    private readonly getLinkedSkills: GetLinkedWorkspaceSkillsUseCase,
+    private readonly getLinkedKnowledgeBases: GetLinkedWorkspaceKnowledgeBasesUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -47,11 +51,35 @@ export class GetWorkspaceAiContextUseCase {
     const refs = await this.workspacesRepository.getContextRefs(
       query.workspaceId,
     );
-    const [skills, knowledgeBases] = await Promise.all([
-      this.getActiveSkills(query.workspaceId, refs.skillIds),
-      this.withDocumentCounts(refs.knowledgeBases),
-    ]);
-    return { instruction: workspace.instruction, skills, knowledgeBases };
+    const [skills, linkedSkills, knowledgeBases, linkedKnowledgeBases] =
+      await Promise.all([
+        this.getActiveSkills(query.workspaceId, refs.skillIds),
+        this.getLinkedSkills.execute({ workspaceId: query.workspaceId }),
+        this.withDocumentCounts(refs.knowledgeBases),
+        this.getLinkedKnowledgeBaseContexts(query.workspaceId),
+      ]);
+    return {
+      instruction: workspace.instruction,
+      skills,
+      linkedSkills,
+      knowledgeBases,
+      linkedKnowledgeBases,
+    };
+  }
+
+  private async getLinkedKnowledgeBaseContexts(
+    workspaceId: UUID,
+  ): Promise<WorkspaceKnowledgeBaseContext[]> {
+    const linked = await this.getLinkedKnowledgeBases.execute({ workspaceId });
+    return this.withDocumentCounts(
+      linked.map(({ id, name, description }) => ({
+        id,
+        name,
+        description,
+        documentCount: 0,
+        isActive: true,
+      })),
+    );
   }
 
   private async getActiveSkills(

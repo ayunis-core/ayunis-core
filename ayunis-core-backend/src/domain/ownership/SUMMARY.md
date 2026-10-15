@@ -21,6 +21,7 @@ Read is use or change: an admin who is not in the team can open and change a tea
 - `ListOwnerOptionsUseCase`: owners the caller may create a skill or knowledge base for, in the order personal, teams by name, organisation, with member counts and whether a non-admin role holds the organisation right. Backs `GET /skills/owner-options` and `GET /knowledge-bases/owner-options`.
 - `DescribeCollectiveOwnersUseCase`: team names, member counts, team editors (team admins while the team right is on) and the organisation audience for a set of owners, using set-based team queries.
 - `BuildOwnershipLookupUseCase`: combines the viewer and owner descriptions into an `OwnershipLookup` that resource modules use to fill `viewer` and `ownerDescription` on their responses. For handed-over team and organisation items it also names the person who submitted them (`ownerDescription.submittedBy`, loaded in one batch through `FindUsersByIdsUseCase`).
+- `NameOwnersUseCase`: names of personal and team owners and of people (for example who linked an item into a workspace) in one call.
 
 ## Dependencies
 

@@ -345,6 +345,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
   });
 
   it('advertises workspace skills without injecting their instructions or resources', async () => {
+    const userId = randomUUID();
     const projectSkill = new WorkspaceSkill({
       id: randomUUID(),
       name: 'Project Skill',
@@ -357,11 +358,15 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       name: 'User Skill',
       shortDescription: 'Activated by the user',
       instructions: 'Use user context',
-      userId: randomUUID(),
+      userId,
     });
     const systemPromptBuild = jest.fn().mockReturnValue('prompt');
     const { service, assembleToolsUseCase } = await buildService({
-      contextServiceGet: jest.fn().mockReturnValue(undefined),
+      contextServiceGet: jest
+        .fn()
+        .mockImplementation((key: string) =>
+          key === 'userId' ? userId : undefined,
+        ),
       systemPromptBuild,
     });
 
@@ -450,6 +455,86 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(editSkillCall?.[0].context).toEqual(
       new Map([['workspace__budget-review', firstSkill.id]]),
     );
+  });
+
+  it('offers edit_skill for own skills, not for another person’s linked skill', async () => {
+    const userId = randomUUID();
+    const ownSkill = new PersonalSkill({
+      name: 'Budget Review',
+      shortDescription: 'Own skill',
+      instructions: 'Use the own skill',
+      userId,
+    });
+    const linkedForeignSkill = new PersonalSkill({
+      name: 'Permit Review',
+      shortDescription: 'Linked by a colleague',
+      instructions: 'Use the colleague skill',
+      userId: randomUUID(),
+    });
+    const { service, assembleToolsUseCase } = await buildService({
+      contextServiceGet: jest
+        .fn()
+        .mockImplementation((key: string) =>
+          key === 'userId' ? userId : undefined,
+        ),
+    });
+
+    await service.buildRunContext(createMockThread(), [ownSkill], true, false, {
+      instruction: null,
+      skills: [],
+      knowledgeBases: [],
+      linkedSkills: [linkedForeignSkill],
+      linkedKnowledgeBases: [],
+      runtimeKnowledgeBases: [],
+    });
+
+    const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
+    );
+    expect(editSkillCall?.[0].context).toEqual(
+      new Map([['user__budget-review', ownSkill.id]]),
+    );
+  });
+
+  it("offers two people's linked skills with the same name under different slugs", async () => {
+    const userId = randomUUID();
+    const lena = randomUUID();
+    const jonas = randomUUID();
+    const linked = [lena, jonas].map(
+      (owner) =>
+        new PersonalSkill({
+          name: 'Summarize',
+          shortDescription: 'Linked by a colleague',
+          instructions: 'Summarize it',
+          userId: owner,
+        }),
+    );
+    const { service, assembleToolsUseCase } = await buildService({
+      contextServiceGet: jest
+        .fn()
+        .mockImplementation((key: string) =>
+          key === 'userId' ? userId : undefined,
+        ),
+    });
+
+    await service.buildRunContext(createMockThread(), [], true, false, {
+      instruction: null,
+      skills: [],
+      knowledgeBases: [],
+      linkedSkills: linked,
+      linkedKnowledgeBases: [],
+      runtimeKnowledgeBases: [],
+    });
+
+    const activateCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) =>
+        command.type === ToolType.ACTIVATE_SKILL,
+    );
+    const slugs = [
+      ...(activateCall?.[0].context as Map<string, string>).keys(),
+    ];
+    expect(slugs).toHaveLength(2);
+    expect(new Set(slugs).size).toBe(2);
   });
 
   it('makes active knowledge bases available without attaching them to the thread', async () => {

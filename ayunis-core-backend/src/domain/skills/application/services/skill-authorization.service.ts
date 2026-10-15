@@ -1,7 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
+import {
+  SkillNotFoundError,
+  SkillNotLinkableError,
+} from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
 import {
@@ -22,6 +25,7 @@ import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/applicat
 import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { WorkspaceSkillLinkRepository } from 'src/domain/skills/application/ports/workspace-skill-link.repository';
 
 @Injectable()
 export class SkillAuthorizationService {
@@ -37,6 +41,7 @@ export class SkillAuthorizationService {
     private readonly hasPermission: HasPermissionUseCase,
     @Inject(forwardRef(() => IsHandoverReviewerUseCase))
     private readonly isHandoverReviewer: IsHandoverReviewerUseCase,
+    private readonly links: WorkspaceSkillLinkRepository,
   ) {}
 
   async requireRead(skill: Skill): Promise<void> {
@@ -62,20 +67,11 @@ export class SkillAuthorizationService {
   }
 
   async requireView(skill: Skill): Promise<void> {
-    try {
-      await this.requireRead(skill);
-    } catch (error) {
-      if (
-        error instanceof SkillNotFoundError &&
-        skill instanceof PersonalSkill &&
-        (await this.isHandoverReviewer.execute(
-          new IsHandoverReviewerQuery(HandoverResourceType.SKILL, skill.id),
-        ))
-      ) {
-        return;
-      }
-      throw error;
-    }
+    await this.withLinkFallback(
+      skill.id,
+      () => this.requireReadOrReview(skill),
+      (workspaceId) => this.workspaceRead.execute({ workspaceId }),
+    );
   }
 
   async requireWrite(skill: Skill): Promise<void> {
@@ -116,24 +112,99 @@ export class SkillAuthorizationService {
   }
 
   async requireExecution(skill: Skill, threadId: UUID): Promise<void> {
-    const skillId = skill.id;
     this.requirePrincipal();
+    if (skill instanceof WorkspaceSkill) {
+      await this.authorizeWorkspace(skill, () =>
+        this.workspaceExecution.execute({
+          workspaceId: skill.workspaceId,
+          threadId,
+        }),
+      );
+      return;
+    }
+    await this.withLinkFallback(
+      skill.id,
+      () => this.requireOwnUse(skill),
+      (workspaceId) =>
+        this.workspaceExecution.execute({ workspaceId, threadId }),
+    );
+  }
+
+  async requireLinkable(skill: Skill): Promise<void> {
+    if (skill instanceof WorkspaceSkill) {
+      throw new SkillNotLinkableError(skill.id);
+    }
+    await this.requireOwnUse(skill);
+  }
+
+  private async requireOwnUse(skill: PersonalSkill | CollectiveSkill) {
     if (isCollectiveSkill(skill)) {
       await this.requireUse(skill);
       return;
     }
-    if (skill instanceof PersonalSkill) {
+    if (skill.userId !== this.requirePrincipal()) {
+      throw new SkillNotFoundError(skill.id);
+    }
+  }
+
+  private async requireReadOrReview(skill: Skill): Promise<void> {
+    try {
       await this.requireRead(skill);
-      return;
+    } catch (error) {
+      if (
+        error instanceof SkillNotFoundError &&
+        skill instanceof PersonalSkill &&
+        (await this.isHandoverReviewer.execute(
+          new IsHandoverReviewerQuery(HandoverResourceType.SKILL, skill.id),
+        ))
+      ) {
+        return;
+      }
+      throw error;
     }
-    if (!(skill instanceof WorkspaceSkill)) {
-      throw new SkillNotFoundError(skillId);
+  }
+
+  private async withLinkFallback(
+    skillId: UUID,
+    authorize: () => Promise<void>,
+    authorizeWorkspace: (workspaceId: UUID) => Promise<void>,
+  ): Promise<void> {
+    try {
+      await authorize();
+    } catch (error) {
+      if (
+        !this.isAccessDenial(error) ||
+        !(await this.isReachableThroughLink(skillId, authorizeWorkspace))
+      ) {
+        throw error;
+      }
     }
-    await this.authorizeWorkspace(skill, () =>
-      this.workspaceExecution.execute({
-        workspaceId: skill.workspaceId,
-        threadId,
-      }),
+  }
+
+  private async isReachableThroughLink(
+    skillId: UUID,
+    authorizeWorkspace: (workspaceId: UUID) => Promise<void>,
+  ): Promise<boolean> {
+    for (const { workspaceId } of await this.links.findBySkill(skillId)) {
+      try {
+        await authorizeWorkspace(workspaceId);
+        return true;
+      } catch (error) {
+        if (
+          !(error instanceof WorkspaceNotFoundError) &&
+          !(error instanceof UnauthorizedAccessError)
+        ) {
+          throw error;
+        }
+      }
+    }
+    return false;
+  }
+
+  private isAccessDenial(error: unknown): boolean {
+    return (
+      error instanceof SkillNotFoundError ||
+      error instanceof UnauthorizedAccessError
     );
   }
 

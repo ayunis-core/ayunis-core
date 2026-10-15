@@ -6,7 +6,7 @@ import { BuildWorkspaceRunContextQuery } from './build-workspace-run-context.que
 import { BuildWorkspaceRunContextUseCase } from './build-workspace-run-context.use-case';
 
 describe(BuildWorkspaceRunContextUseCase.name, () => {
-  it('uses the shared AI context for runtime context', async () => {
+  it('uses the shared AI context, created and linked knowledge, for runtime context', async () => {
     const skill = new WorkspaceSkill({
       name: 'Permit Check',
       shortDescription: 'Checks permit applications',
@@ -25,6 +25,16 @@ describe(BuildWorkspaceRunContextUseCase.name, () => {
           isActive: true,
         },
       ],
+      linkedSkills: [],
+      linkedKnowledgeBases: [
+        {
+          id: randomUUID(),
+          name: 'Satzungen',
+          description: '',
+          documentCount: 5,
+          isActive: true,
+        },
+      ],
     };
     const getWorkspaceAiContext = {
       execute: jest.fn().mockResolvedValue(workspaceAiContext),
@@ -40,7 +50,10 @@ describe(BuildWorkspaceRunContextUseCase.name, () => {
     );
     expect(result).toEqual({
       ...workspaceAiContext,
-      runtimeKnowledgeBases: workspaceAiContext.knowledgeBases,
+      runtimeKnowledgeBases: [
+        ...workspaceAiContext.knowledgeBases,
+        ...workspaceAiContext.linkedKnowledgeBases,
+      ],
     });
     expect(result).not.toHaveProperty('runtimeSources');
     expect(result).not.toHaveProperty('mcpIntegrationIds');

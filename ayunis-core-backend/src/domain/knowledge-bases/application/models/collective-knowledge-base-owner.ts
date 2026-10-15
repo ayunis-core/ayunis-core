@@ -1,4 +1,6 @@
 import type { CollectiveOwner } from 'src/domain/ownership/application/models/collective-owner';
+import type { LookupOwner } from 'src/domain/ownership/application/models/ownership-lookup';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type {
   CollectiveKnowledgeBase,
   KnowledgeBase,
@@ -25,4 +27,16 @@ export function collectiveOwnerOfKnowledgeBase(
         orgId: knowledgeBase.orgId,
       }
     : { type: 'org', orgId: knowledgeBase.orgId };
+}
+
+export function lookupOwnerOfKnowledgeBase(
+  knowledgeBase: KnowledgeBase,
+): LookupOwner | null {
+  if (isCollectiveKnowledgeBase(knowledgeBase)) {
+    return collectiveOwnerOfKnowledgeBase(knowledgeBase);
+  }
+  if (knowledgeBase instanceof PersonalKnowledgeBase) {
+    return { type: 'personal', userId: knowledgeBase.userId };
+  }
+  return null;
 }

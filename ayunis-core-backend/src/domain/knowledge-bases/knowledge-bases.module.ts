@@ -41,6 +41,14 @@ import { FindActiveKnowledgeBasesUseCase } from './application/use-cases/find-ac
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
 import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base-dto.mapper';
 
+import { KnowledgeBaseLinksController } from './presenters/http/knowledge-base-links.controller';
+import { ListLinkedWorkspaceKnowledgeBasesUseCase } from './application/use-cases/list-linked-workspace-knowledge-bases/list-linked-workspace-knowledge-bases.use-case';
+import { ListLinkableWorkspaceKnowledgeBasesUseCase } from './application/use-cases/list-linkable-workspace-knowledge-bases/list-linkable-workspace-knowledge-bases.use-case';
+import { LinkKnowledgeBasesToWorkspaceUseCase } from './application/use-cases/link-knowledge-bases-to-workspace/link-knowledge-bases-to-workspace.use-case';
+import { UnlinkKnowledgeBaseFromWorkspaceUseCase } from './application/use-cases/unlink-knowledge-base-from-workspace/unlink-knowledge-base-from-workspace.use-case';
+import { GetLinkedWorkspaceKnowledgeBasesUseCase } from './application/use-cases/get-linked-workspace-knowledge-bases/get-linked-workspace-knowledge-bases.use-case';
+import { ListKnowledgeBaseLinkedWorkspacesUseCase } from './application/use-cases/list-knowledge-base-linked-workspaces/list-knowledge-base-linked-workspaces.use-case';
+
 @Module({
   imports: [
     LocalKnowledgeBaseRepositoryModule,
@@ -57,6 +65,12 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
   ],
   providers: [
     KnowledgeBaseOwnershipContextService,
+    ListLinkedWorkspaceKnowledgeBasesUseCase,
+    ListLinkableWorkspaceKnowledgeBasesUseCase,
+    LinkKnowledgeBasesToWorkspaceUseCase,
+    UnlinkKnowledgeBaseFromWorkspaceUseCase,
+    GetLinkedWorkspaceKnowledgeBasesUseCase,
+    ListKnowledgeBaseLinkedWorkspacesUseCase,
     TransferKnowledgeBaseOwnershipUseCase,
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
@@ -85,9 +99,10 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     KnowledgeBasesUserDeletionRequestedListener,
     KnowledgeBasesWorkspaceDeletionRequestedListener,
   ],
-  controllers: [KnowledgeBasesController],
+  controllers: [KnowledgeBaseLinksController, KnowledgeBasesController],
   exports: [
     TransferKnowledgeBaseOwnershipUseCase,
+    GetLinkedWorkspaceKnowledgeBasesUseCase,
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
     FindAccessibleKnowledgeBasesByIdsUseCase,
