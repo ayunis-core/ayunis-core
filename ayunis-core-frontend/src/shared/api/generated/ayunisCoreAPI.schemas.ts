@@ -4279,6 +4279,26 @@ export interface SetWorkspaceOrganizationSharingDto {
   shared: boolean;
 }
 
+export interface OwnershipCandidateDto {
+  id: string;
+  name: string;
+  /**
+     * Primary team of the person; null without a team
+     * @nullable
+     */
+  affiliation: string | null;
+}
+
+export interface OwnershipCandidatesResponseDto {
+  /** Everyone with access except the owner, sorted by name */
+  people: OwnershipCandidateDto[];
+}
+
+export interface TransferWorkspaceOwnershipDto {
+  /** Someone who has access to the workspace today */
+  userId: string;
+}
+
 export type WorkspaceFavoriteResponseDtoReferenceType = typeof WorkspaceFavoriteResponseDtoReferenceType[keyof typeof WorkspaceFavoriteResponseDtoReferenceType];
 
 

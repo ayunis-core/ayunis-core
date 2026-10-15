@@ -259,9 +259,22 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     );
   }
 
-  async findById(userId: UUID, id: UUID): Promise<Workspace | null> {
-    const record = await this.repo.findOne({ where: { userId, id } });
-    return record ? this.mapper.toDomain(record) : null;
+  async findAllOwnedBy(userId: UUID): Promise<Workspace[]> {
+    const records = await this.repo.find({ where: { userId } });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async changeOwner(id: UUID, userId: UUID): Promise<void> {
+    await this.repo.update({ id }, { userId });
+  }
+
+  async lockForUpdate(id: UUID): Promise<void> {
+    await this.repo
+      .createQueryBuilder('workspace')
+      .select('workspace.id')
+      .where('workspace.id = :id', { id })
+      .setLock('pessimistic_write')
+      .getOne();
   }
 
   async save(workspace: Workspace): Promise<Workspace> {

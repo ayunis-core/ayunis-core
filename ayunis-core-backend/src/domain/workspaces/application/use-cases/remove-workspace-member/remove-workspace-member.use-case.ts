@@ -18,7 +18,7 @@ export class RemoveWorkspaceMemberUseCase {
     command: RemoveWorkspaceMemberCommand,
   ): Promise<{ unlinkedCount: number }> {
     this.logger.log(command, 'Removing workspace member');
-    const context = await this.sharing.load(command.workspaceId);
+    const context = await this.sharing.loadForChange(command.workspaceId);
     const placement = requireChangeableMember(
       context,
       command.userId,

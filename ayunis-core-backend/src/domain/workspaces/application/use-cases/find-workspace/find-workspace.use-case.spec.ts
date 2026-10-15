@@ -13,10 +13,10 @@ function setup() {
   const workspace = aWorkspace();
   const access = createMockWorkspaceAccessService(workspace, 'edit');
   const summaries = {
-    summarize: jest
+    detail: jest
       .fn()
-      .mockResolvedValue(
-        new Map([[workspace.id, { accessLevel: 'edit', memberCount: 3 }]]),
+      .mockImplementation(({ level }) =>
+        Promise.resolve({ workspace, accessLevel: level, memberCount: 3 }),
       ),
   };
   return {

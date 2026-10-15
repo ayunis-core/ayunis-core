@@ -36,7 +36,7 @@ function inGrantOrder(a: TeamGrant, b: TeamGrant): number {
 
 export class WorkspaceSharing {
   readonly workspaceId: UUID;
-  readonly ownerId: UUID;
+  ownerId: UUID;
   isSharedWithOrganization: boolean;
   readonly people: Map<UUID, WorkspaceGrantLevel>;
   teams: TeamGrant[];
@@ -217,6 +217,19 @@ export class WorkspaceSharing {
   setSharedWithOrganization(shared: boolean): void {
     this.isSharedWithOrganization = shared;
     this.organizationExclusions.clear();
+  }
+
+  hasAccess(userId: UUID, membership: TeamMembership): boolean {
+    return this.levelOf(userId, membership.teamsOf(userId)) !== null;
+  }
+
+  transferOwnershipTo(userId: UUID, membership: TeamMembership): void {
+    const previousOwnerId = this.ownerId;
+    this.ownerId = userId;
+    this.people.delete(userId);
+    this.people.set(previousOwnerId, 'full');
+    this.organizationExclusions.delete(previousOwnerId);
+    this.placePeopleInTeams(membership);
   }
 
   private placePeopleInTeams(membership: TeamMembership): void {

@@ -38,7 +38,7 @@ export class ShareWorkspaceUseCase {
     if (userIds.length + teamIds.length === 0) {
       throw new InvalidWorkspaceShareTargetError('nobody to invite');
     }
-    const context = await this.sharing.load(command.workspaceId);
+    const context = await this.sharing.loadForChange(command.workspaceId);
     requireInviteRight(context);
     this.requireReachable(context, userIds, teamIds);
     context.sharing.invite(
