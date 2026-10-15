@@ -6,6 +6,7 @@ export enum ToolType {
   INTERNET_SEARCH = 'internet_search',
   WEBSITE_CONTENT = 'website_content',
   SEND_EMAIL = 'send_email',
+  CREATE_FILE = 'create_file',
   CREATE_CALENDAR_EVENT = 'create_calendar_event',
   CODE_EXECUTION = 'code_execution',
   BAR_CHART = 'bar_chart',

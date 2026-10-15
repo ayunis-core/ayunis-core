@@ -1,3 +1,4 @@
+import { mockCreateFileResponse } from './mock-create-file-response';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -85,6 +86,8 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
       name: defaultResponseText,
       stream: (request) => {
         const lastUserText = lastProviderUserText(request);
+        const fileResponse = mockCreateFileResponse(request, lastUserText);
+        if (fileResponse) return fileResponse;
         const researchInput = parseResearchInput(lastUserText);
         if (researchInput) {
           const hasToolResults = request.messages.some(

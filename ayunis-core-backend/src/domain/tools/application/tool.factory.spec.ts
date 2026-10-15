@@ -1,3 +1,4 @@
+import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { ToolFactory } from './tool.factory';
 import {
   HttpToolConfig,
@@ -156,6 +157,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.WEBSITE_CONTENT);
       expect(types).toContain(ToolType.SEND_EMAIL);
       expect(types).toContain(ToolType.CREATE_CALENDAR_EVENT);
+      expect(types).toContain(ToolType.CREATE_FILE);
       expect(types).toContain(ToolType.CODE_EXECUTION);
       expect(types).toContain(ToolType.MCP_TOOL);
       expect(types).toContain(ToolType.MCP_RESOURCE);
@@ -182,7 +184,14 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
       expect(types).toContain(ToolType.INSTALL_MARKETPLACE_SKILL);
 
-      expect(types).toHaveLength(31);
+      expect(types).toHaveLength(32);
     });
+  });
+});
+
+describe('create_file factory registration', () => {
+  it('creates a file tool without configuration', () => {
+    const tool = new ToolFactory().createTool({ type: ToolType.CREATE_FILE });
+    expect(tool).toBeInstanceOf(CreateFileTool);
   });
 });

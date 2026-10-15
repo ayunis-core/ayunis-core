@@ -1,3 +1,4 @@
+import CreateFileWidget from '@/pages/chat/ui/chat-widgets/CreateFileWidget';
 import type { ReactNode } from 'react';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 
@@ -35,6 +36,8 @@ export function renderRichToolCard({
   index,
 }: RenderRichToolCardOptions): ReactNode {
   switch (toolUse.name) {
+    case 'create_file':
+      return <CreateFileWidget content={toolUse} isStreaming={isStreaming} />;
     case 'send_email':
       return <SendEmailWidget content={toolUse} isStreaming={isStreaming} />;
     case 'create_calendar_event':

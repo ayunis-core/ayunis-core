@@ -123,7 +123,8 @@
         "knowledge_query": "Searched knowledge base",
         "code_execution": "Calculated",
         "http": "Made HTTP request",
-        "use_tool": "Used {{tool}}"
+        "use_tool": "Used {{tool}}",
+        "create_file": "Created file"
       }
     },
     "map": {
@@ -272,6 +273,11 @@
         "altFallback": "Generated image",
         "openPreview": "Open image preview",
         "download": "Download image"
+      },
+      "create_file": {
+        "preparing": "Preparing file…",
+        "description": "XML, JSON or text file",
+        "download": "Download"
       }
     },
     "charts": {

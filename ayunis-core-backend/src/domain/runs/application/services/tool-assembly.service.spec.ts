@@ -241,6 +241,19 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     );
   });
 
+  it('should include the file tool among the always-available tools', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      imageModelExecute: jest.fn().mockResolvedValue({}),
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    expect(tools.map((tool: { type: ToolType }) => tool.type)).toContain(
+      ToolType.CREATE_FILE,
+    );
+  });
+
   it('should include generate_image tool when org has a permitted image model', async () => {
     const { service } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(mockOrgId),

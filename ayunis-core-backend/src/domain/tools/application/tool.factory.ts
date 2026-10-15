@@ -1,3 +1,4 @@
+import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { Injectable } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolConfig } from 'src/domain/tools/domain/tool-config.entity';
@@ -45,6 +46,7 @@ import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/insta
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
 const SIMPLE_TOOLS: Record<string, () => Tool> = {
+  [ToolType.CREATE_FILE]: () => new CreateFileTool(),
   [ToolType.INTERNET_SEARCH]: () => new InternetSearchTool(),
   [ToolType.WEBSITE_CONTENT]: () => new WebsiteContentTool(),
   [ToolType.SEND_EMAIL]: () => new SendEmailTool(),

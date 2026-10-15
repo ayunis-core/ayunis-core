@@ -415,3 +415,52 @@ describe('MockStreamInferenceHandler runtime provider', () => {
     });
   });
 });
+
+it.each(['xml', 'json', 'txt'])(
+  'streams a downloadable %s file and continues after acknowledgement',
+  async (format) => {
+    const provider = new MockStreamInferenceHandler().resolveProvider(model);
+    const fileRequest: ProviderRequest = {
+      ...request,
+      messages: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: `E2E create file ${format}` }],
+        },
+      ],
+    };
+    const chunks = await collect(provider.stream(fileRequest));
+    const args = chunks
+      .flatMap((chunk) => chunk.toolCallDeltas ?? [])
+      .map((delta) => delta.argumentsDelta)
+      .join('');
+    expect(chunks[0].toolCallDeltas?.[0].name).toBe('create_file');
+    expect(JSON.parse(args)).toEqual({
+      filename: `Bürgerbericht.${format}`,
+      format,
+      content: 'Grüße aus Köln\n',
+    });
+    const next: ProviderRequest = {
+      ...fileRequest,
+      messages: [
+        ...fileRequest.messages,
+        {
+          role: 'tool_result',
+          content: [
+            {
+              type: 'tool_result',
+              toolCallId: 'mock-create-file',
+              toolName: 'create_file',
+              result: 'Tool has been displayed successfully',
+              isError: false,
+            },
+          ],
+        },
+      ],
+    };
+    const reply = await collect(provider.stream(next));
+    expect(reply.map((chunk) => chunk.textDelta).join('')).toContain(
+      'file-created::',
+    );
+  },
+);

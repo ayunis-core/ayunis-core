@@ -1,3 +1,4 @@
+import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { RunAbortedError, RunContext } from '@ayunis/agent-runtime';
 import type { ToolExecutionContext } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
@@ -74,6 +75,7 @@ describe('BackendToolAdapter', () => {
   });
 
   it.each([
+    new CreateFileTool(),
     new BarChartTool(),
     new LineChartTool(),
     new PieChartTool(),

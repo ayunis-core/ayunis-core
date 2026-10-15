@@ -299,6 +299,7 @@ export class ToolAssemblyService {
       ...(await this.assembleSimpleTools([
         ToolType.SEND_EMAIL,
         ToolType.CREATE_CALENDAR_EVENT,
+        ToolType.CREATE_FILE,
         ToolType.BAR_CHART,
         ToolType.LINE_CHART,
         ToolType.PIE_CHART,

@@ -123,7 +123,8 @@
         "knowledge_query": "Wissenssammlung durchsucht",
         "code_execution": "Berechnung ausgeführt",
         "http": "HTTP-Anfrage ausgeführt",
-        "use_tool": "{{tool}} verwendet"
+        "use_tool": "{{tool}} verwendet",
+        "create_file": "Datei erstellt"
       }
     },
     "map": {
@@ -272,6 +273,11 @@
         "altFallback": "Generiertes Bild",
         "openPreview": "Bildvorschau öffnen",
         "download": "Bild herunterladen"
+      },
+      "create_file": {
+        "preparing": "Datei wird erstellt …",
+        "description": "XML-, JSON- oder Textdatei",
+        "download": "Herunterladen"
       }
     },
     "charts": {
