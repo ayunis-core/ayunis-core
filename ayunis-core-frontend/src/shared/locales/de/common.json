@@ -12,15 +12,15 @@
     "hideGettingStarted": "Erste Schritte ausblenden",
     "hideGettingStartedConfirm": {
       "title": "Erste Schritte ausblenden?",
-      "description": "Sie können diese Seite jederzeit unter Konto-Einstellungen → Erste Schritte aufrufen.",
+      "description": "Sie können diese Seite jederzeit unter Konto → Erste Schritte aufrufen.",
       "confirmText": "Ausblenden",
       "cancelText": "Abbrechen"
     },
-    "accountSettings": "Konto-Einstellungen",
+    "accountSettings": "Konto",
     "logout": {
       "error": "Die Abmeldung konnte vom Server nicht bestätigt werden. Melden Sie sich erneut ab, falls Ihre Sitzung noch aktiv ist."
     },
-    "adminSettings": "Admin-Einstellungen",
+    "adminSettings": "Organisation",
     "superAdminSettings": "Super Admin-Einstellungen",
     "signOut": "Abmelden",
     "updates": "Updates",

@@ -1,5 +1,8 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
-import { getMyPermissionsControllerGetMineQueryOptions } from '@/shared/api';
+import {
+  getMyPermissionsControllerGetMineQueryOptions,
+  getTeamsControllerListMyTeamsQueryOptions,
+} from '@/shared/api';
 import {
   allowedSettingsSections,
   createAuthorization,
@@ -12,13 +15,22 @@ function AdminSettingsLayout() {
 export const Route = createFileRoute('/_authenticated/admin-settings')({
   component: AdminSettingsLayout,
   // Admins reach every section. Non-admins reach only the sections their role
-  // permissions grant (Teams today); anything else redirects. Every settings
-  // sub-route flows through here, so admin-only screens stay admin-only.
+  // permissions or team admin roles grant (Teams today); anything else
+  // redirects. Every settings sub-route flows through here, so admin-only
+  // screens stay admin-only.
   beforeLoad: async ({ context: { user, queryClient }, location }) => {
-    const { permissions } = await queryClient.query(
-      getMyPermissionsControllerGetMineQueryOptions(),
+    const [{ permissions }, myTeams] = await Promise.all([
+      queryClient.query(getMyPermissionsControllerGetMineQueryOptions()),
+      queryClient.query(getTeamsControllerListMyTeamsQueryOptions()),
+    ]);
+    const teamAdminTeamIds = myTeams
+      .filter((team) => team.isTeamAdmin)
+      .map((team) => team.id);
+    const authorization = createAuthorization(
+      user.role,
+      permissions,
+      teamAdminTeamIds,
     );
-    const authorization = createAuthorization(user.role, permissions);
     const allowed = allowedSettingsSections(authorization);
 
     if (allowed.some((path) => location.pathname.startsWith(path))) {

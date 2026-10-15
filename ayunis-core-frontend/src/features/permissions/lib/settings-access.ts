@@ -5,16 +5,19 @@ const ALL_SETTINGS = '/admin-settings';
 
 /**
  * Settings sections a non-admin may reach if they hold one of the listed
- * permissions. Sections not listed here are admin-only. Extend this as more
- * role permissions map to settings screens.
+ * permissions, or administer a team where `teamAdmins` is set. Sections not
+ * listed here are admin-only. Extend this as more role permissions map to
+ * settings screens.
  */
 export const MANAGER_SETTINGS_SECTIONS: ReadonlyArray<{
   path: string;
   anyOf: AppPermission[];
+  teamAdmins?: boolean;
 }> = [
   {
     path: '/admin-settings/teams',
     anyOf: ['manage_teams', 'assign_users_to_teams'],
+    teamAdmins: true,
   },
 ];
 
@@ -30,7 +33,9 @@ export function allowedSettingsSections(
     return [ALL_SETTINGS];
   }
 
-  return MANAGER_SETTINGS_SECTIONS.filter((section) =>
-    authorization.canAny(...section.anyOf),
+  return MANAGER_SETTINGS_SECTIONS.filter(
+    (section) =>
+      authorization.canAny(...section.anyOf) ||
+      (section.teamAdmins === true && authorization.isTeamAdmin()),
   ).map((section) => section.path);
 }

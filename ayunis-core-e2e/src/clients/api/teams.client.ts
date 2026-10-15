@@ -1,4 +1,5 @@
-import type { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext, APIResponse } from "@playwright/test";
+import { config } from "../../config";
 import type {
   PaginatedTeamMembersResponseDto,
   PermittedImageGenerationModelResponseDto,
@@ -90,4 +91,26 @@ export async function deleteTeam(
   teamId: string,
 ): Promise<void> {
   await generatedApi.teamsControllerDeleteTeam(teamId, { api });
+}
+
+export function requestListTeams(api: APIRequestContext): Promise<APIResponse> {
+  return api.get(`${config.apiURL}/api/teams`);
+}
+
+export function requestGetTeam(
+  api: APIRequestContext,
+  teamId: string,
+): Promise<APIResponse> {
+  return api.get(`${config.apiURL}/api/teams/${teamId}`);
+}
+
+export function requestSetTeamAdmin(
+  api: APIRequestContext,
+  teamId: string,
+  userId: string,
+  isTeamAdmin: boolean,
+): Promise<APIResponse> {
+  return api.patch(`${config.apiURL}/api/teams/${teamId}/members/${userId}`, {
+    data: { isTeamAdmin },
+  });
 }

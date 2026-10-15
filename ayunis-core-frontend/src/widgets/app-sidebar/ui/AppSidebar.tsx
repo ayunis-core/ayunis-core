@@ -3,6 +3,7 @@ import {
   User2,
   ChevronUp,
   Settings2,
+  Building2,
   LogOut,
   Plus,
   Brain,
@@ -44,9 +45,8 @@ import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import {
-  useMyPermissions,
+  useAuthorization,
   allowedSettingsSections,
-  createAuthorization,
 } from '@/features/permissions';
 import {
   useIsAcademyAddonActive,
@@ -59,10 +59,9 @@ import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/u
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { user } = useMe();
-  const { permissions } = useMyPermissions();
-  const authorization = createAuthorization(user?.role, permissions);
-  // Admins and managers granted a settings-relevant permission (e.g. team
-  // management) get the settings entry point.
+  const authorization = useAuthorization();
+  // Admins, team admins and managers granted a settings-relevant permission
+  // (e.g. team management) get the settings entry point.
   const canOpenSettings = allowedSettingsSections(authorization).length > 0;
   const { logout } = useLogout();
   const { t } = useTranslation('common');
@@ -241,8 +240,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </DropdownMenuItem>
                 {canOpenSettings && (
                   <DropdownMenuItem asChild>
-                    <Link to="/admin-settings">
-                      <Settings2 />
+                    <Link to="/admin-settings" data-testid="menu-organisation">
+                      <Building2 />
                       {t('sidebar.adminSettings')}
                     </Link>
                   </DropdownMenuItem>

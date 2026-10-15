@@ -11,9 +11,13 @@
       "emptyDescription": "Erstellen Sie Ihr erstes Team, um Ihre Benutzer zu organisieren.",
       "noMatchesTitle": "Keine Teams gefunden",
       "noMatchesDescription": "Keine Teams entsprechen Ihrer Suche.",
-      "createdAt": "Erstellt am {{date}}",
       "memberCount_one": "{{count}} Mitglied",
-      "memberCount_other": "{{count}} Mitglieder"
+      "memberCount_other": "{{count}} Mitglieder",
+      "admins_one": "Team-Admin: {{names}}",
+      "admins_other": "Team-Admins: {{names}}",
+      "noAdmins": "Noch kein Team-Admin",
+      "forbiddenTitle": "Nur für Admins und Team-Admins",
+      "forbiddenDescription": "Teams verwalten Admins der Organisation und die Team-Admins des jeweiligen Teams."
     },
     "createDialog": {
       "title": "Team erstellen",
@@ -67,12 +71,20 @@
     },
     "members": {
       "title": "Mitglieder",
+      "description": "Team-Admins verwalten die Mitglieder dieses Teams und können weitere Team-Admins ernennen.",
       "name": "Name",
       "email": "E-Mail",
       "role": "Rolle",
       "joinedAt": "Beigetreten",
       "emptyTitle": "Noch keine Mitglieder",
-      "emptyDescription": "Fügen Sie Mitglieder zu diesem Team hinzu, um loszulegen."
+      "emptyDescription": "Fügen Sie Mitglieder zu diesem Team hinzu, um loszulegen.",
+      "roles": {
+        "member": "Mitglied",
+        "teamAdmin": "Team-Admin"
+      },
+      "roleLabel": "Rolle von {{name}}",
+      "remove": "Aus dem Team entfernen",
+      "removeLabel": "{{name}} aus dem Team entfernen"
     },
     "addMember": {
       "button": "Mitglieder hinzufügen",
@@ -126,9 +138,21 @@
       "confirmDescription": "Sind Sie sicher, dass Sie dieses Mitglied aus dem Team entfernen möchten?",
       "confirmButton": "Entfernen",
       "cancelButton": "Abbrechen",
-      "success": "Mitglied erfolgreich entfernt",
+      "success": "{{name}} ist nicht mehr im Team {{team}}.",
       "error": "Mitglied konnte nicht entfernt werden",
-      "notFound": "Mitglied nicht gefunden"
+      "notFound": "Mitglied nicht gefunden",
+      "lastTeamAdmin": "Den letzten Team-Admin eines Teams können nur Admins ändern oder entfernen."
+    },
+    "forbidden": {
+      "title": "Dieses Team können Sie nicht verwalten",
+      "description": "Öffnen Sie ein Team aus der Liste."
+    },
+    "setTeamAdmin": {
+      "promoted": "{{name}} ist jetzt Team-Admin von Team {{team}}.",
+      "demoted": "{{name}} ist jetzt Mitglied von Team {{team}}.",
+      "lastTeamAdmin": "Den letzten Team-Admin eines Teams können nur Admins ändern oder entfernen.",
+      "notFound": "Mitglied nicht gefunden",
+      "error": "Rolle konnte nicht geändert werden"
     }
   },
   "models": {
