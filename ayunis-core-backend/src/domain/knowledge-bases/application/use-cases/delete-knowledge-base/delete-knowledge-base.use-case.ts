@@ -61,7 +61,7 @@ export class DeleteKnowledgeBaseUseCase {
     if (!existing) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
-    await this.writeAccess.requireWrite(existing);
+    await this.writeAccess.requireManage(existing);
 
     const sources = await this.getSources.execute(
       new GetSourcesByKnowledgeBaseIdQuery(existing.id),

@@ -1,3 +1,10 @@
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import { anOwnershipViewer } from 'src/domain/ownership/application/testing/ownership.fixtures';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Test } from '@nestjs/testing';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
@@ -44,6 +51,12 @@ async function setup() {
   const workspaceWriteAccess = {
     execute: jest.fn(),
   } as unknown as jest.Mocked<AssertWorkspaceWriteAccessUseCase>;
+  const getViewer = {
+    execute: jest
+      .fn()
+      .mockResolvedValue(anOwnershipViewer({ userId: USER_ID, orgId: ORG_ID })),
+  };
+  const hasPermission = { execute: jest.fn().mockResolvedValue(true) };
   const module = await Test.createTestingModule({
     providers: [
       CreateKnowledgeBaseUseCase,
@@ -53,12 +66,16 @@ async function setup() {
         provide: AssertWorkspaceWriteAccessUseCase,
         useValue: workspaceWriteAccess,
       },
+      { provide: GetOwnershipViewerUseCase, useValue: getViewer },
+      { provide: HasPermissionUseCase, useValue: hasPermission },
     ],
   }).compile();
   return {
     useCase: module.get(CreateKnowledgeBaseUseCase),
     repository,
     workspaceWriteAccess,
+    getViewer,
+    hasPermission,
   };
 }
 
@@ -131,5 +148,77 @@ describe(CreateKnowledgeBaseUseCase.name, () => {
     await expect(
       useCase.execute(command({ type: 'personal' })),
     ).rejects.toBeInstanceOf(UnexpectedKnowledgeBaseError);
+  });
+
+  it('creates a team knowledge base for a team admin with the team right', async () => {
+    const { useCase, repository, getViewer } = await setup();
+    const teamId = '55555555-5555-4555-8555-555555555555' as UUID;
+    getViewer.execute.mockResolvedValue(
+      anOwnershipViewer({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        memberTeamIds: [teamId],
+        adminTeamIds: [teamId],
+        teamAdminPermissions: [TeamAdminPermission.TEAM_MANAGE_KNOWLEDGE],
+      }),
+    );
+
+    const created = await useCase.execute(
+      new CreateKnowledgeBaseCommand({
+        name: 'Merkblätter',
+        owner: { type: 'team', teamId },
+      }),
+    );
+
+    expect(created).toBeInstanceOf(TeamKnowledgeBase);
+    expect(repository.activate).not.toHaveBeenCalled();
+  });
+
+  it('rejects an organisation knowledge base without the organisation right', async () => {
+    const { useCase, repository } = await setup();
+
+    await expect(
+      useCase.execute(
+        new CreateKnowledgeBaseCommand({
+          name: 'Dienstanweisungen',
+          owner: { type: 'org' },
+        }),
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('requires the own-knowledge right for a personal knowledge base', async () => {
+    const { useCase, hasPermission } = await setup();
+    hasPermission.execute.mockResolvedValue(false);
+
+    await expect(
+      useCase.execute(
+        new CreateKnowledgeBaseCommand({
+          name: 'Eigene Notizen',
+          owner: { type: 'personal' },
+        }),
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+  });
+
+  it('accepts the organisation right for an organisation knowledge base', async () => {
+    const { useCase, getViewer } = await setup();
+    getViewer.execute.mockResolvedValue(
+      anOwnershipViewer({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        permissions: [Permission.MANAGE_ORG_KNOWLEDGE],
+      }),
+    );
+
+    await expect(
+      useCase.execute(
+        new CreateKnowledgeBaseCommand({
+          name: 'Dienstanweisungen',
+          owner: { type: 'org' },
+        }),
+      ),
+    ).resolves.toMatchObject({ name: 'Dienstanweisungen' });
   });
 });

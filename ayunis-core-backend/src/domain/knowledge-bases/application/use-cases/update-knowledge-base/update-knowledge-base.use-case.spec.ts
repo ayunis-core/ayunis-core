@@ -30,7 +30,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
     save: jest.fn(async (saved) => saved),
   };
   const writeAccess = {
-    requireWrite: jest.fn(),
+    requireManage: jest.fn(),
   } as unknown as jest.Mocked<KnowledgeBaseWriteAccessService>;
   const module = await Test.createTestingModule({
     providers: [
@@ -108,14 +108,14 @@ describe(UpdateKnowledgeBaseUseCase.name, () => {
   ])('does not mutate for %s', async (_scenario, makeKnowledgeBase) => {
     const existing = makeKnowledgeBase();
     const { useCase, repository, writeAccess } = await setup(existing);
-    writeAccess.requireWrite.mockRejectedValue(
+    writeAccess.requireManage.mockRejectedValue(
       new KnowledgeBaseNotFoundError(existing.id),
     );
 
     await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
       KnowledgeBaseNotFoundError,
     );
-    expect(writeAccess.requireWrite).toHaveBeenCalledWith(existing);
+    expect(writeAccess.requireManage).toHaveBeenCalledWith(existing);
     expect(repository.save).not.toHaveBeenCalled();
   });
 
@@ -153,7 +153,7 @@ describe(UpdateKnowledgeBaseUseCase.name, () => {
     await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
       KnowledgeBaseNotFoundError,
     );
-    expect(writeAccess.requireWrite).not.toHaveBeenCalled();
+    expect(writeAccess.requireManage).not.toHaveBeenCalled();
     expect(repository.save).not.toHaveBeenCalled();
   });
 

@@ -50,11 +50,15 @@ import { MyPermissionsController } from './presenters/http/my-permissions.contro
   // IamModule) can gate routes on stored per-role permissions;
   // SeedDefaultRolePermissionsUseCase so org creation can grant the defaults;
   // GetTeamAdminPermissionsUseCase so the teams module can check team admin
-  // rights without this module importing teams.
+  // rights without this module importing teams; GetMyPermissionsUseCase and
+  // GetRolePermissionsUseCase so the ownership module can decide who may edit
+  // team and organisation resources.
   exports: [
     HasPermissionUseCase,
     SeedDefaultRolePermissionsUseCase,
     GetTeamAdminPermissionsUseCase,
+    GetMyPermissionsUseCase,
+    GetRolePermissionsUseCase,
   ],
 })
 export class PermissionsModule {}

@@ -59,7 +59,7 @@ export class AddFileSourceToSkillUseCase {
     );
     const skill = await this.skillRepository.findById(command.skillId);
     if (!skill) throw new SkillNotFoundError(command.skillId);
-    await this.authorization.requireWrite(skill);
+    await this.authorization.requireManage(skill);
     return this.processFile(skill, command.file);
   }
 

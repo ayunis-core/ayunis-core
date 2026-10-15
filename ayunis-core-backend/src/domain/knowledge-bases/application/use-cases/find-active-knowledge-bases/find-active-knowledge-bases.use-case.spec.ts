@@ -1,4 +1,7 @@
 import { Test } from '@nestjs/testing';
+import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import { anOwnershipViewer } from 'src/domain/ownership/application/testing/ownership.fixtures';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -22,6 +25,20 @@ async function setup() {
       FindActiveKnowledgeBasesUseCase,
       { provide: KnowledgeBaseRepository, useValue: repository },
       { provide: ContextService, useValue: context },
+      {
+        provide: CollectiveKnowledgeBaseRepository,
+        useValue: { findActiveUsable: jest.fn().mockResolvedValue([]) },
+      },
+      {
+        provide: GetOwnershipViewerUseCase,
+        useValue: {
+          execute: jest
+            .fn()
+            .mockResolvedValue(
+              anOwnershipViewer({ userId: USER_ID, orgId: ORG_ID }),
+            ),
+        },
+      },
     ],
   }).compile();
   return { useCase: module.get(FindActiveKnowledgeBasesUseCase), repository };

@@ -1,4 +1,4 @@
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,8 +20,12 @@ import {
   type KnowledgeBaseListOptions,
   type WorkspaceKnowledgeBaseState,
 } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import type {
+  CollectiveKnowledgeBase,
+  KnowledgeBase,
+} from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { KnowledgeBaseRecord } from './schema/knowledge-base.record';
+import { buildAccessibleKnowledgeBasesQuery } from './local-knowledge-base-list.query';
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import type { Source } from 'src/domain/sources/domain/source.entity';
@@ -177,13 +181,17 @@ export class LocalKnowledgeBaseRepository
   }
 
   async isActive(knowledgeBaseId: UUID, userId: UUID): Promise<boolean> {
-    return this.activationRepository.existsBy({ knowledgeBaseId, userId });
+    return this.activationRepository.existsBy({
+      knowledgeBaseId,
+      userId,
+      isActive: true,
+    });
   }
 
   async getActiveIds(userId: UUID): Promise<Set<UUID>> {
     const activations = await this.activationRepository.find({
       select: { knowledgeBaseId: true },
-      where: { userId },
+      where: { userId, isActive: true },
     });
     return new Set(activations.map(({ knowledgeBaseId }) => knowledgeBaseId));
   }
@@ -294,7 +302,7 @@ export class LocalKnowledgeBaseRepository
     workspaceId: undefined,
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
-  ): Promise<Paginated<PersonalKnowledgeBase>>;
+  ): Promise<Paginated<PersonalKnowledgeBase | CollectiveKnowledgeBase>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
@@ -324,11 +332,9 @@ export class LocalKnowledgeBaseRepository
       'findPaginatedAccessible',
     );
 
-    const [records, total] = await this.buildAccessibleKnowledgeBasesQuery(
-      userId,
-      workspaceId,
-      sharedKnowledgeBaseIds,
-      options,
+    const [records, total] = await buildAccessibleKnowledgeBasesQuery(
+      this.knowledgeBaseRepository,
+      { userId, workspaceId, sharedKnowledgeBaseIds, options },
     )
       .orderBy('LOWER(knowledgeBase.name)', 'ASC')
       .addOrderBy('knowledgeBase.id', 'ASC')
@@ -337,53 +343,11 @@ export class LocalKnowledgeBaseRepository
       .getManyAndCount();
 
     return new Paginated({
-      data: records.map((record) =>
-        workspaceId === undefined
-          ? this.mapper.toPersonal(record)
-          : this.mapper.toWorkspace(record),
-      ),
+      data: records.map((record) => this.mapper.toDomain(record)),
       limit: options.limit,
       offset: options.offset,
       total,
     });
-  }
-
-  private buildAccessibleKnowledgeBasesQuery(
-    userId: UUID,
-    workspaceId: UUID | undefined,
-    sharedKnowledgeBaseIds: UUID[],
-    options: KnowledgeBaseListOptions,
-  ): SelectQueryBuilder<KnowledgeBaseRecord> {
-    const queryBuilder =
-      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
-
-    if (workspaceId) {
-      queryBuilder.where('knowledgeBase.workspaceId = :workspaceId', {
-        workspaceId,
-      });
-    } else {
-      queryBuilder
-        .where(
-          new Brackets((accessQuery) => {
-            accessQuery.where('knowledgeBase.userId = :userId', { userId });
-            if (sharedKnowledgeBaseIds.length > 0) {
-              accessQuery.orWhere(
-                'knowledgeBase.id IN (:...sharedKnowledgeBaseIds)',
-                { sharedKnowledgeBaseIds },
-              );
-            }
-          }),
-        )
-        .andWhere('knowledgeBase.workspaceId IS NULL');
-    }
-
-    if (options.search) {
-      queryBuilder.andWhere('knowledgeBase.name ILIKE :search', {
-        search: `%${options.search}%`,
-      });
-    }
-
-    return queryBuilder;
   }
 
   save(knowledgeBase: PersonalKnowledgeBase): Promise<PersonalKnowledgeBase>;
@@ -393,9 +357,7 @@ export class LocalKnowledgeBaseRepository
     this.logger.debug({ id: knowledgeBase.id }, 'save');
     const record = this.mapper.toRecord(knowledgeBase);
     const saved = await this.knowledgeBaseRepository.save(record);
-    return knowledgeBase instanceof PersonalKnowledgeBase
-      ? this.mapper.toPersonal(saved)
-      : this.mapper.toWorkspace(saved);
+    return this.mapper.toDomain(saved);
   }
 
   async delete(knowledgeBase: KnowledgeBase): Promise<void> {

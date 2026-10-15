@@ -11,7 +11,7 @@ import {
 } from 'src/domain/skills/application/skills.errors';
 import { InvalidSkillNameError } from 'src/domain/skills/domain/abstract-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
-import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { SkillNameLookupService } from 'src/domain/skills/application/services/skill-name-lookup.service';
 import { UpdateSkillCommand } from './update-skill.command';
 
 @Injectable()
@@ -21,6 +21,7 @@ export class UpdateSkillUseCase {
   constructor(
     private readonly repository: SkillRepository,
     private readonly authorization: SkillAuthorizationService,
+    private readonly names: SkillNameLookupService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
@@ -29,7 +30,7 @@ export class UpdateSkillUseCase {
     this.logger.log({ skillId: command.skillId }, 'Updating skill');
     const existing = await this.repository.findById(command.skillId);
     if (!existing) throw new SkillNotFoundError(command.skillId);
-    await this.authorization.requireWrite(existing);
+    await this.authorization.requireManage(existing);
     await this.assertUniqueName(existing, command.name);
     try {
       const updated = existing.withUpdates({
@@ -49,10 +50,7 @@ export class UpdateSkillUseCase {
 
   private async assertUniqueName(skill: Skill, name: string): Promise<void> {
     if (name === skill.name) return;
-    const duplicate =
-      skill instanceof WorkspaceSkill
-        ? await this.repository.findByNameAndWorkspace(name, skill.workspaceId)
-        : await this.repository.findByNameAndOwner(name, skill.userId);
+    const duplicate = await this.names.findSameOwnerByName(skill, name);
     if (duplicate && duplicate.id !== skill.id) {
       throw new DuplicateSkillNameError(name);
     }

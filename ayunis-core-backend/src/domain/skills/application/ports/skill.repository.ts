@@ -1,6 +1,7 @@
 import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
-import type { Skill } from 'src/domain/skills/domain/skill';
+import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
+import type { CollectiveSkillScope } from 'src/domain/skills/application/ports/collective-skill.repository';
 import type { UUID } from 'crypto';
 
 import type { Paginated } from 'src/common/pagination/paginated.entity';
@@ -9,6 +10,7 @@ export interface SkillListOptions {
   search?: string;
   limit: number;
   offset: number;
+  collective?: Pick<CollectiveSkillScope, 'orgId' | 'teamIds'>;
 }
 
 export interface WorkspaceSkillState {
@@ -43,7 +45,7 @@ export abstract class SkillRepository {
     workspaceId: undefined,
     sharedSkillIds: UUID[],
     options: SkillListOptions,
-  ): Promise<Paginated<PersonalSkill>>;
+  ): Promise<Paginated<PersonalSkill | CollectiveSkill>>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,

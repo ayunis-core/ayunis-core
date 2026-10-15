@@ -13,7 +13,8 @@ import {
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
 import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import type { Skill } from 'src/domain/skills/domain/skill';
+import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
+import { isCollectiveSkill } from 'src/domain/skills/application/models/collective-skill-owner';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 
 @Injectable()
@@ -63,9 +64,11 @@ export class FindActivatableSkillUseCase {
   private async findAccessiblePersonalSkill(
     skillId: UUID,
     userId: UUID,
-  ): Promise<PersonalSkill> {
+  ): Promise<PersonalSkill | CollectiveSkill> {
     const owned = await this.repository.findOne(skillId, userId);
     if (owned) return owned;
+    const collective = await this.findUsableCollectiveSkill(skillId);
+    if (collective) return collective;
     const share = await this.findShare.execute(
       new FindShareByEntityQuery(SharedEntityType.SKILL, skillId),
     );
@@ -74,6 +77,15 @@ export class FindActivatableSkillUseCase {
       : undefined;
     if (!shared) throw new SkillNotFoundError(skillId);
     return shared;
+  }
+
+  private async findUsableCollectiveSkill(
+    skillId: UUID,
+  ): Promise<CollectiveSkill | null> {
+    const skill = await this.repository.findById(skillId);
+    if (!skill || !isCollectiveSkill(skill)) return null;
+    await this.authorization.requireUse(skill);
+    return skill;
   }
 
   private async requireWorkspaceActivation(

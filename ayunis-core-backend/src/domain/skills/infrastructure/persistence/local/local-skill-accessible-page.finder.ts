@@ -7,6 +7,7 @@ import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { SkillListOptions } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillRecord } from './schema/skill.record';
+import { usableCollectiveSkills } from './local-collective-skill-scope.query';
 
 @Injectable()
 export class LocalSkillAccessiblePageFinder {
@@ -40,6 +41,9 @@ export class LocalSkillAccessiblePageFinder {
               accessQuery.orWhere('skill.id IN (:...sharedSkillIds)', {
                 sharedSkillIds,
               });
+            }
+            if (options.collective) {
+              accessQuery.orWhere(usableCollectiveSkills(options.collective));
             }
           }),
         )

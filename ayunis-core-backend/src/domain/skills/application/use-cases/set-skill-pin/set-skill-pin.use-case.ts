@@ -12,7 +12,9 @@ import {
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import type { Skill } from 'src/domain/skills/domain/skill';
+import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
+import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import { isCollectiveSkill } from 'src/domain/skills/application/models/collective-skill-owner';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
@@ -30,6 +32,7 @@ export class SetSkillPinUseCase {
 
   constructor(
     private readonly repository: SkillRepository,
+    private readonly collectiveRepository: CollectiveSkillRepository,
     private readonly authorization: SkillAuthorizationService,
     private readonly context: ContextService,
     private readonly hasPermission: HasPermissionUseCase,
@@ -41,12 +44,30 @@ export class SetSkillPinUseCase {
     this.logger.log(command, 'Setting skill pin');
     const skill = await this.repository.findById(command.skillId);
     if (!skill) throw new SkillNotFoundError(command.skillId);
-    if (skill instanceof PersonalSkill) {
+    if (isCollectiveSkill(skill)) {
+      await this.setCollective(skill, command.isPinned);
+    } else if (skill instanceof PersonalSkill) {
       await this.setPersonal(skill, command.isPinned);
     } else {
       await this.setWorkspace(skill, command.isPinned);
     }
     return skill;
+  }
+
+  private async setCollective(
+    skill: CollectiveSkill,
+    isPinned: boolean,
+  ): Promise<void> {
+    await this.authorization.requireUse(skill);
+    const userId = this.requireUserId();
+    const states = await this.collectiveRepository.getStates(
+      [skill.id],
+      userId,
+    );
+    if (isPinned && !states.get(skill.id)?.isActive) {
+      throw new SkillNotActiveError(skill.id);
+    }
+    await this.collectiveRepository.setPinned(skill.id, userId, isPinned);
   }
 
   private async setPersonal(

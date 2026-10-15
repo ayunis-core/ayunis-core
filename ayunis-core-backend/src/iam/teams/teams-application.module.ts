@@ -36,6 +36,7 @@ import { ListManageableTeamsUseCase } from 'src/iam/teams/application/use-cases/
 import { GetManageableTeamUseCase } from 'src/iam/teams/application/use-cases/get-manageable-team/get-manageable-team.use-case';
 import { FindAdministeredTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-administered-team-ids/find-administered-team-ids.use-case';
 import { SetTeamAdminUseCase } from 'src/iam/teams/application/use-cases/set-team-admin/set-team-admin.use-case';
+import { DescribeTeamsUseCase } from 'src/iam/teams/application/use-cases/describe-teams/describe-teams.use-case';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { SetTeamAdminUseCase } from 'src/iam/teams/application/use-cases/set-tea
     GetManageableTeamUseCase,
     FindAdministeredTeamIdsUseCase,
     SetTeamAdminUseCase,
+    DescribeTeamsUseCase,
     { provide: TeamsRepository, useClass: LocalTeamsRepository },
     { provide: TeamMembersRepository, useClass: LocalTeamMembersRepository },
     GetTeamManagementAccessUseCase,
@@ -76,6 +78,7 @@ import { SetTeamAdminUseCase } from 'src/iam/teams/application/use-cases/set-tea
     AssignUserToTeamsUseCase,
   ],
   exports: [
+    DescribeTeamsUseCase,
     ListManageableTeamsUseCase,
     GetManageableTeamUseCase,
     FindAdministeredTeamIdsUseCase,

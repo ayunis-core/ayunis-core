@@ -1,4 +1,14 @@
 import { randomUUID } from 'crypto';
+import {
+  OwnershipViewer,
+  type OwnershipViewerParams,
+} from 'src/domain/ownership/application/models/ownership-viewer';
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
@@ -27,13 +37,35 @@ function setup() {
     orgId: TEST_ORG_ID,
     workspaceId: randomUUID(),
   });
+  const viewer = { execute: jest.fn() };
+  const permission = { execute: jest.fn().mockResolvedValue(true) };
   return {
     context,
     workspaceAccess,
     personal,
     workspace,
-    policy: new KnowledgeBaseWriteAccessService(context, workspaceAccess),
+    viewer,
+    permission,
+    policy: new KnowledgeBaseWriteAccessService(
+      context,
+      workspaceAccess,
+      viewer as unknown as GetOwnershipViewerUseCase,
+      permission as unknown as HasPermissionUseCase,
+    ),
   };
+}
+
+function viewerOf(params: Partial<OwnershipViewerParams>): OwnershipViewer {
+  return new OwnershipViewer({
+    userId: TEST_USER_ID,
+    orgId: TEST_ORG_ID,
+    isAdmin: false,
+    permissions: [],
+    memberTeamIds: [],
+    adminTeamIds: [],
+    teamAdminPermissions: [],
+    ...params,
+  });
 }
 
 describe(KnowledgeBaseWriteAccessService.name, () => {
@@ -103,4 +135,60 @@ describe(KnowledgeBaseWriteAccessService.name, () => {
       );
     },
   );
+
+  it('lets team admins with the team right change a team knowledge base', async () => {
+    const { policy, viewer } = setup();
+    const teamId = randomUUID();
+    viewer.execute.mockResolvedValue(
+      viewerOf({
+        memberTeamIds: [teamId],
+        adminTeamIds: [teamId],
+        teamAdminPermissions: [TeamAdminPermission.TEAM_MANAGE_KNOWLEDGE],
+      }),
+    );
+    const team = new TeamKnowledgeBase({
+      name: 'Merkblätter',
+      orgId: TEST_ORG_ID,
+      teamId,
+    });
+
+    await expect(policy.requireManage(team)).resolves.toBeUndefined();
+  });
+
+  it('keeps members read-only on a team knowledge base', async () => {
+    const { policy, viewer } = setup();
+    const teamId = randomUUID();
+    viewer.execute.mockResolvedValue(viewerOf({ memberTeamIds: [teamId] }));
+    const team = new TeamKnowledgeBase({
+      name: 'Merkblätter',
+      orgId: TEST_ORG_ID,
+      teamId,
+    });
+
+    await expect(policy.requireWrite(team)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
+  });
+
+  it('lets holders of the organisation right change organisation knowledge', async () => {
+    const { policy, viewer } = setup();
+    viewer.execute.mockResolvedValue(
+      viewerOf({ permissions: [Permission.MANAGE_ORG_KNOWLEDGE] }),
+    );
+    const org = new OrgKnowledgeBase({
+      name: 'Dienstanweisungen',
+      orgId: TEST_ORG_ID,
+    });
+
+    await expect(policy.requireWrite(org)).resolves.toBeUndefined();
+  });
+
+  it('requires the own-knowledge right to change a personal knowledge base', async () => {
+    const { policy, personal, permission } = setup();
+    permission.execute.mockResolvedValue(false);
+
+    await expect(policy.requireManage(personal)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
+  });
 });

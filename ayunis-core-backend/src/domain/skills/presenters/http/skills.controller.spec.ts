@@ -21,16 +21,16 @@ describe(SkillsController.name, () => {
     ).toEqual([Permission.INSTALL_MARKETPLACE_SKILLS]);
   });
 
-  it('gates creating and editing own skills on manage_own_skills', () => {
+  it('leaves create and edit rights to the owner-aware use cases', () => {
     const prototype = SkillsController.prototype;
     for (const handler of [
       prototype.create,
       prototype.update,
       prototype.delete,
     ]) {
-      expect(Reflect.getMetadata(REQUIRE_PERMISSION_KEY, handler)).toEqual([
-        Permission.MANAGE_OWN_SKILLS,
-      ]);
+      expect(
+        Reflect.getMetadata(REQUIRE_PERMISSION_KEY, handler),
+      ).toBeUndefined();
     }
   });
 

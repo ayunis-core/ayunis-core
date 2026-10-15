@@ -32,7 +32,7 @@ export class RemoveSourceFromSkillUseCase {
     this.logger.log(command, 'Removing source from skill');
     const skill = await this.repository.findById(command.skillId);
     if (!skill) throw new SkillNotFoundError(command.skillId);
-    await this.authorization.requireWrite(skill);
+    await this.authorization.requireManage(skill);
     const orgId = this.requireOrgId();
     await this.removeSource(skill, command.sourceId, orgId);
   }

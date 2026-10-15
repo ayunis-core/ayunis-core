@@ -1,3 +1,5 @@
+import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
@@ -56,6 +58,8 @@ describe('FindSkillByNameUseCase', () => {
       skillRepository,
       findSharesByScopeUseCase,
       contextService,
+      {} as CollectiveSkillRepository,
+      {} as GetOwnershipViewerUseCase,
     );
   });
 

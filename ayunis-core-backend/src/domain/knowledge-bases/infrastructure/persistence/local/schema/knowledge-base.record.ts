@@ -13,11 +13,12 @@ import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/loca
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 
 @Entity('knowledge_bases')
 @Check(
   'CHK_knowledge_bases_exactly_one_owner',
-  '("userId" IS NOT NULL AND "workspaceId" IS NULL) OR ("userId" IS NULL AND "workspaceId" IS NOT NULL)',
+  'num_nonnulls("userId", "workspaceId", "teamId") <= 1',
 )
 export class KnowledgeBaseRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 255 })
@@ -49,6 +50,14 @@ export class KnowledgeBaseRecord extends BaseRecord {
   @ManyToOne(() => WorkspaceRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  teamId: UUID | null;
+
+  @ManyToOne(() => TeamRecord, { nullable: true, onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'teamId' })
+  team: TeamRecord | null;
 
   @OneToMany(() => SourceRecord, (source) => source.knowledgeBase)
   sources: SourceRecord[];

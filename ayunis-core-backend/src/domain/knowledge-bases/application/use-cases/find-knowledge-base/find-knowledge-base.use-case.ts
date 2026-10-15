@@ -10,6 +10,9 @@ import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/
 import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { isCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/application/models/collective-knowledge-base-owner';
+import { KnowledgeBaseOwnershipContextService } from 'src/domain/knowledge-bases/application/services/knowledge-base-ownership-context.service';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -21,6 +24,7 @@ export class FindKnowledgeBaseUseCase {
     private readonly repository: KnowledgeBaseRepository,
     private readonly readAccess: KnowledgeBaseReadAccessService,
     private readonly context: ContextService,
+    private readonly ownershipContext: KnowledgeBaseOwnershipContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
@@ -29,14 +33,42 @@ export class FindKnowledgeBaseUseCase {
     const knowledgeBase = await this.repository.findById(query.id);
     if (!knowledgeBase) throw new KnowledgeBaseNotFoundError(query.id);
     await this.readAccess.requireRead(knowledgeBase);
-    const [isActive, counts] = await Promise.all([
-      this.isActive(knowledgeBase),
+    if (knowledgeBase instanceof WorkspaceKnowledgeBase) {
+      return this.workspaceContext(knowledgeBase);
+    }
+    const [ownership, counts] = await Promise.all([
+      this.ownershipContext.lookup([knowledgeBase]),
       this.repository.countSourcesByKnowledgeBaseIds([knowledgeBase.id]),
     ]);
     return {
       knowledgeBase,
       isShared: this.isShared(knowledgeBase),
-      isActive,
+      isActive: isCollectiveKnowledgeBase(knowledgeBase)
+        ? ownership.isActive(knowledgeBase)
+        : await this.repository.isActive(
+            knowledgeBase.id,
+            ownership.viewer.userId,
+          ),
+      documentCount: counts.get(knowledgeBase.id) ?? 0,
+      viewer: ownership.rightsFor(knowledgeBase),
+      ownerDescription: ownership.describe(knowledgeBase),
+    };
+  }
+
+  private async workspaceContext(
+    knowledgeBase: WorkspaceKnowledgeBase,
+  ): Promise<KnowledgeBaseContext> {
+    const [states, counts] = await Promise.all([
+      this.repository.getWorkspaceStates(
+        [knowledgeBase.id],
+        knowledgeBase.workspaceId,
+      ),
+      this.repository.countSourcesByKnowledgeBaseIds([knowledgeBase.id]),
+    ]);
+    return {
+      knowledgeBase,
+      isShared: false,
+      isActive: states.get(knowledgeBase.id)?.isActive ?? false,
       documentCount: counts.get(knowledgeBase.id) ?? 0,
     };
   }
@@ -45,17 +77,5 @@ export class FindKnowledgeBaseUseCase {
     if (!(knowledgeBase instanceof PersonalKnowledgeBase)) return false;
     const { userId } = getRequiredUserContext(this.context);
     return knowledgeBase.userId !== userId;
-  }
-
-  private async isActive(knowledgeBase: KnowledgeBase): Promise<boolean> {
-    if (knowledgeBase instanceof PersonalKnowledgeBase) {
-      const { userId } = getRequiredUserContext(this.context);
-      return this.repository.isActive(knowledgeBase.id, userId);
-    }
-    const states = await this.repository.getWorkspaceStates(
-      [knowledgeBase.id],
-      knowledgeBase.workspaceId,
-    );
-    return states.get(knowledgeBase.id)?.isActive ?? false;
   }
 }
