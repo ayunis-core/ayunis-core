@@ -208,6 +208,7 @@ import type {
   SetOrgSsoStateRequestDto,
   SetOrgUsageVisibilityRequestDto,
   SetSkillActivationDto,
+  SetSkillMandatoryDto,
   SetSkillPinDto,
   SetTeamDefaultModelDto,
   SetUserConfigDto,
@@ -12135,6 +12136,75 @@ export const useKnowledgeBasesControllerRemoveDocument = <TError = void,
         TContext
       > => {
       return useMutation(getKnowledgeBasesControllerRemoveDocumentMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Make an organisation skill mandatory for everyone, or not
+ */
+export const skillMandatoryControllerMandatory = (
+    id: string,
+    setSkillMandatoryDto: SetSkillMandatoryDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SkillResponseDto>(
+      {url: `/skills/${id}/mandatory`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setSkillMandatoryDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillMandatoryControllerMandatoryMutationKey = () => ['skillMandatoryControllerMandatory'] as const;
+
+export const getSkillMandatoryControllerMandatoryMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillMandatoryControllerMandatory>>, TError,SkillMandatoryControllerMandatoryMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillMandatoryControllerMandatory>>, TError,SkillMandatoryControllerMandatoryMutationVariables, TContext> => {
+
+const mutationKey = getSkillMandatoryControllerMandatoryMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillMandatoryControllerMandatory>>, SkillMandatoryControllerMandatoryMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  skillMandatoryControllerMandatory(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillMandatoryControllerMandatoryMutationResult = NonNullable<Awaited<ReturnType<typeof skillMandatoryControllerMandatory>>>
+    export type SkillMandatoryControllerMandatoryMutationBody = SetSkillMandatoryDto
+    export type SkillMandatoryControllerMandatoryMutationError = void
+    export type SkillMandatoryControllerMandatoryMutationVariables = {id: string;data: SetSkillMandatoryDto}
+
+    /**
+ * @summary Make an organisation skill mandatory for everyone, or not
+ */
+export const useSkillMandatoryControllerMandatory = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillMandatoryControllerMandatory>>, TError,SkillMandatoryControllerMandatoryMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillMandatoryControllerMandatory>>,
+        TError,
+        SkillMandatoryControllerMandatoryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillMandatoryControllerMandatoryMutationOptions(options), queryClient);
     }
 
 /**

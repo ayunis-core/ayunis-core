@@ -7,6 +7,12 @@ export class SetSkillActivationDto {
   isActive: boolean;
 }
 
+export class SetSkillMandatoryDto {
+  @ApiProperty()
+  @IsBoolean()
+  isMandatory: boolean;
+}
+
 export class SetSkillPinDto {
   @ApiProperty()
   @IsBoolean()

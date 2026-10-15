@@ -12,6 +12,7 @@ import {
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
 import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
 import { isCollectiveSkill } from 'src/domain/skills/application/models/collective-skill-owner';
@@ -64,7 +65,8 @@ export class SetSkillPinUseCase {
       [skill.id],
       userId,
     );
-    if (isPinned && !states.get(skill.id)?.isActive) {
+    const isMandatory = skill instanceof OrgSkill && skill.isMandatory;
+    if (isPinned && !isMandatory && !states.get(skill.id)?.isActive) {
       throw new SkillNotActiveError(skill.id);
     }
     await this.collectiveRepository.setPinned(skill.id, userId, isPinned);

@@ -24,6 +24,8 @@ export enum SkillErrorCode {
   SKILL_TEXT_IMPROVEMENT_UNAVAILABLE = 'SKILL_TEXT_IMPROVEMENT_UNAVAILABLE',
   SKILL_OWNER_CHANGED = 'SKILL_OWNER_CHANGED',
   NAME_TAKEN_AT_TARGET = 'NAME_TAKEN_AT_TARGET',
+  SKILL_NOT_ORG_OWNED = 'SKILL_NOT_ORG_OWNED',
+  SKILL_IS_MANDATORY = 'SKILL_IS_MANDATORY',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
 }
 
@@ -75,6 +77,26 @@ export class SkillNameTakenAtTargetError extends SkillError {
     super(
       `The target already has a skill named "${name}"`,
       SkillErrorCode.NAME_TAKEN_AT_TARGET,
+      409,
+    );
+  }
+}
+
+export class SkillNotOrgOwnedError extends SkillError {
+  constructor(skillId: string) {
+    super(
+      `Skill ${skillId} is not owned by the organisation`,
+      SkillErrorCode.SKILL_NOT_ORG_OWNED,
+      400,
+    );
+  }
+}
+
+export class SkillIsMandatoryError extends SkillError {
+  constructor(skillId: string) {
+    super(
+      `Skill ${skillId} is mandatory and cannot be switched off`,
+      SkillErrorCode.SKILL_IS_MANDATORY,
       409,
     );
   }

@@ -11,6 +11,8 @@ import type { SkillRepository } from 'src/domain/skills/application/ports/skill.
 import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import { SkillIsMandatoryError } from 'src/domain/skills/application/skills.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
@@ -41,7 +43,9 @@ function setup() {
   const authorization = {
     requireRead: jest.fn(),
     requireWrite: jest.fn(),
+    requireUse: jest.fn(),
   };
+  const collective = { setActive: jest.fn() };
   const context = {
     get: jest.fn(
       (key: string) =>
@@ -61,9 +65,10 @@ function setup() {
     repository,
     authorization,
     permission,
+    collective,
     useCase: new SetSkillActivationUseCase(
       repository as unknown as SkillRepository,
-      {} as CollectiveSkillRepository,
+      collective as unknown as CollectiveSkillRepository,
       authorization as unknown as SkillAuthorizationService,
       context as unknown as ContextService,
       permission as unknown as HasPermissionUseCase,
@@ -97,5 +102,35 @@ describe(SetSkillActivationUseCase.name, () => {
       workspace.id,
       workspace.workspaceId,
     );
+  });
+
+  describe('mandatory organisation skills', () => {
+    const mandatory = new OrgSkill({
+      name: 'Datenschutz',
+      shortDescription: 'desc',
+      instructions: 'instructions',
+      orgId: randomUUID(),
+      isMandatory: true,
+    });
+
+    it('refuses to switch a mandatory skill off and keeps the stored state', async () => {
+      const { useCase, repository, collective } = setup();
+      repository.findById.mockResolvedValue(mandatory);
+
+      await expect(
+        useCase.execute({ skillId: mandatory.id, isActive: false }),
+      ).rejects.toBeInstanceOf(SkillIsMandatoryError);
+      expect(collective.setActive).not.toHaveBeenCalled();
+    });
+
+    it('accepts switching a mandatory skill on without storing anything', async () => {
+      const { useCase, repository, collective } = setup();
+      repository.findById.mockResolvedValue(mandatory);
+
+      await expect(
+        useCase.execute({ skillId: mandatory.id, isActive: true }),
+      ).resolves.toBe(mandatory);
+      expect(collective.setActive).not.toHaveBeenCalled();
+    });
   });
 });
