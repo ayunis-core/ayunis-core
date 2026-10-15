@@ -133,7 +133,12 @@
       "previous": "Zurück",
       "next": "Weiter"
     },
-    "hintTriggerLabel": "Weitere Informationen zu {{label}}"
+    "hintTriggerLabel": "Weitere Informationen zu {{label}}",
+    "copy": {
+      "label": "{{label}} kopieren",
+      "success": "In die Zwischenablage kopiert",
+      "error": "Kopieren in die Zwischenablage fehlgeschlagen"
+    }
   },
   "error": {
     "title": "Ein Fehler ist aufgetreten",

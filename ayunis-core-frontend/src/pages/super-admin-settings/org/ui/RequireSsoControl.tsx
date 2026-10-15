@@ -15,6 +15,7 @@ import { Label } from '@ayunis/ui/components/label';
 import { Switch } from '@ayunis/ui/components/switch';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CopyButton } from '@/shared/ui/copy-button';
 
 interface RequireSsoControlProps {
   orgId: string;
@@ -109,9 +110,20 @@ export default function RequireSsoControl({
             <p className="text-muted-foreground mt-3">
               {t('sso.idp.zitadelIdpId')}
             </p>
-            <p className="font-mono text-xs">
-              {connection.zitadelIdpId ?? t('sso.idp.notConfigured')}
-            </p>
+            {connection.zitadelIdpId ? (
+              <div className="flex items-center gap-2">
+                <code className="rounded bg-muted px-1.5 py-0.5 break-all text-xs">
+                  {connection.zitadelIdpId}
+                </code>
+                <CopyButton
+                  value={connection.zitadelIdpId}
+                  label={t('sso.idp.zitadelIdpId')}
+                  testId="sso-require-zitadel-idp-id-copy"
+                />
+              </div>
+            ) : (
+              <p className="text-xs">{t('sso.idp.notConfigured')}</p>
+            )}
           </div>
           <div className="flex items-start gap-2">
             <Checkbox

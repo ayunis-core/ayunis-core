@@ -499,9 +499,6 @@
   "orgDetails": {
     "name": "Name",
     "id": "ID",
-    "copyId": "Copy ID",
-    "copyIdSuccess": "ID copied to clipboard",
-    "copyIdError": "Failed to copy the ID",
     "rename": {
       "edit": "Rename",
       "save": "Save",
