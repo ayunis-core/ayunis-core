@@ -80,6 +80,7 @@ none of these packages implements the Agent Plugins standard.
 | [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal, workspace, team and organisation instruction bundles                                     |
 | [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal, workspace, team and organisation document collections                                    |
 | [ownership](ayunis-core-backend/src/domain/ownership/SUMMARY.md)                | AI Context     | Who may use, change and create team and organisation skills and knowledge                                      |
+| [handovers](ayunis-core-backend/src/domain/handovers/SUMMARY.md)                | AI Context     | Requests to hand own skills and knowledge over to a team or the organisation, with approval                    |
 | [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                    | Documents      | File and URL data sources                                                                                      |
 | [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md)                            | Retrieval      | Embeddings, chunking, semantic search                                                                          |
 | [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |

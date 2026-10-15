@@ -25,6 +25,10 @@ export abstract class CollectiveKnowledgeBaseRepository {
     knowledgeBaseIds: UUID[],
     userId: UUID,
   ): Promise<Map<UUID, boolean>>;
+  abstract transferFromPersonal(
+    knowledgeBaseId: UUID,
+    owner: { teamId: UUID | null; submittedByUserId: UUID },
+  ): Promise<boolean>;
   abstract setActive(
     knowledgeBaseId: UUID,
     userId: UUID,

@@ -8026,6 +8026,234 @@
         "tags": ["Super Admin Anonymization Whitelist"]
       }
     },
+    "/handover-requests/targets": {
+      "get": {
+        "operationId": "HandoverRequestsController_targets",
+        "parameters": [
+          {
+            "name": "resourceType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/HandoverResourceType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoverTargetsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Targets the caller may hand an own item over to",
+        "tags": ["handover-requests"]
+      }
+    },
+    "/handover-requests/summary": {
+      "get": {
+        "operationId": "HandoverRequestsController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoverSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Review rights and open request counts",
+        "tags": ["handover-requests"]
+      }
+    },
+    "/handover-requests/pending": {
+      "get": {
+        "operationId": "HandoverRequestsController_pending",
+        "parameters": [
+          {
+            "name": "resourceType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/HandoverResourceType"
+            }
+          },
+          {
+            "name": "resourceId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingHandoverResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The open request for an item, for its requester or reviewers",
+        "tags": ["handover-requests"]
+      }
+    },
+    "/handover-requests": {
+      "get": {
+        "operationId": "HandoverRequestsController_list",
+        "parameters": [
+          {
+            "name": "resourceType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/HandoverResourceType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HandoverRequestDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Open requests the caller may review",
+        "tags": ["handover-requests"]
+      },
+      "post": {
+        "description": "Applies immediately when the caller may review the target; otherwise a pending request is created.",
+        "operationId": "HandoverRequestsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHandoverRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoverRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Hand over an own item, or request it",
+        "tags": ["handover-requests"]
+      }
+    },
+    "/handover-requests/{id}/approve": {
+      "post": {
+        "operationId": "HandoverRequestsController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoverRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["handover-requests"]
+      }
+    },
+    "/handover-requests/{id}/reject": {
+      "post": {
+        "operationId": "HandoverRequestsController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoverRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["handover-requests"]
+      }
+    },
+    "/handover-requests/{id}": {
+      "delete": {
+        "operationId": "HandoverRequestsController_withdraw",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["handover-requests"]
+      }
+    },
     "/super-admin/platform-config/credits-per-euro": {
       "get": {
         "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
@@ -17349,13 +17577,24 @@
           "orgEditorsIncludeNonAdmins": {
             "type": "boolean",
             "description": "A non-admin role holds the organisation right for this resource"
+          },
+          "submittedBy": {
+            "nullable": true,
+            "description": "Who handed the item over to its team or organisation",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OwnerEditorDto"
+              }
+            ]
           }
         },
         "required": [
           "teamName",
           "audienceCount",
           "teamEditors",
-          "orgEditorsIncludeNonAdmins"
+          "orgEditorsIncludeNonAdmins",
+          "submittedBy"
         ]
       },
       "KnowledgeBaseResponseDto": {
@@ -19357,6 +19596,280 @@
           }
         },
         "required": ["added", "duplicates"]
+      },
+      "HandoverResourceType": {
+        "type": "string",
+        "enum": ["skill", "knowledge_base"]
+      },
+      "HandoverTargetType": {
+        "type": "string",
+        "enum": ["team", "org"]
+      },
+      "HandoverTargetDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverTargetType"
+              }
+            ]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamName": {
+            "type": "string"
+          },
+          "isOwnTeam": {
+            "type": "boolean"
+          },
+          "memberCount": {
+            "type": "number"
+          },
+          "appliesImmediately": {
+            "type": "boolean",
+            "description": "The caller may review this target, so no request is needed"
+          },
+          "reviewers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnerEditorDto"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "isOwnTeam",
+          "memberCount",
+          "appliesImmediately",
+          "reviewers"
+        ]
+      },
+      "HandoverTargetsResponseDto": {
+        "type": "object",
+        "properties": {
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HandoverTargetDto"
+            }
+          },
+          "orgEditorsIncludeNonAdmins": {
+            "type": "boolean"
+          }
+        },
+        "required": ["targets", "orgEditorsIncludeNonAdmins"]
+      },
+      "HandoverSummaryDto": {
+        "type": "object",
+        "properties": {
+          "canReviewSkills": {
+            "type": "boolean"
+          },
+          "canReviewKnowledgeBases": {
+            "type": "boolean"
+          },
+          "openSkillRequests": {
+            "type": "number"
+          },
+          "openKnowledgeBaseRequests": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "canReviewSkills",
+          "canReviewKnowledgeBases",
+          "openSkillRequests",
+          "openKnowledgeBaseRequests"
+        ]
+      },
+      "HandoverResourceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "HandoverTargetRefDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverTargetType"
+              }
+            ]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamName": {
+            "type": "string"
+          }
+        },
+        "required": ["type"]
+      },
+      "HandoverStatus": {
+        "type": "string",
+        "enum": ["pending", "approved", "rejected", "withdrawn"]
+      },
+      "PendingHandoverDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resourceType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverResourceType"
+              }
+            ]
+          },
+          "resource": {
+            "$ref": "#/components/schemas/HandoverResourceDto"
+          },
+          "target": {
+            "$ref": "#/components/schemas/HandoverTargetRefDto"
+          },
+          "requestedBy": {
+            "$ref": "#/components/schemas/OwnerEditorDto"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverStatus"
+              }
+            ]
+          },
+          "viewerIsRequester": {
+            "type": "boolean"
+          },
+          "viewerCanReview": {
+            "type": "boolean"
+          },
+          "reviewers": {
+            "description": "Team admins who may review a request to a team",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnerEditorDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "resourceType",
+          "resource",
+          "target",
+          "requestedBy",
+          "requestedAt",
+          "status",
+          "viewerIsRequester",
+          "viewerCanReview",
+          "reviewers"
+        ]
+      },
+      "PendingHandoverResponseDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PendingHandoverDto"
+              }
+            ]
+          }
+        },
+        "required": ["pending"]
+      },
+      "HandoverRequestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resourceType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverResourceType"
+              }
+            ]
+          },
+          "resource": {
+            "$ref": "#/components/schemas/HandoverResourceDto"
+          },
+          "target": {
+            "$ref": "#/components/schemas/HandoverTargetRefDto"
+          },
+          "requestedBy": {
+            "$ref": "#/components/schemas/OwnerEditorDto"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverStatus"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "resourceType",
+          "resource",
+          "target",
+          "requestedBy",
+          "requestedAt",
+          "status"
+        ]
+      },
+      "CreateHandoverRequestDto": {
+        "type": "object",
+        "properties": {
+          "resourceType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverResourceType"
+              }
+            ]
+          },
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandoverTargetType"
+              }
+            ]
+          },
+          "targetTeamId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["resourceType", "resourceId", "targetType"]
       },
       "CreditsPerEuroResponseDto": {
         "type": "object",

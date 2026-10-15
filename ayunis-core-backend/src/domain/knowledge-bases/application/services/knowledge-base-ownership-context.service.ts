@@ -44,7 +44,10 @@ export class KnowledgeBaseOwnershipLookup {
 
   describe(knowledgeBase: KnowledgeBase): OwnerDescription | undefined {
     return isCollectiveKnowledgeBase(knowledgeBase)
-      ? this.lookup.describe(collectiveOwnerOfKnowledgeBase(knowledgeBase))
+      ? this.lookup.describe(
+          collectiveOwnerOfKnowledgeBase(knowledgeBase),
+          knowledgeBase.submittedByUserId,
+        )
       : undefined;
   }
 
@@ -70,6 +73,9 @@ export class KnowledgeBaseOwnershipContextService {
         'knowledge_base',
         collective.map(collectiveOwnerOfKnowledgeBase),
         viewer,
+        collective.flatMap(({ submittedByUserId }) =>
+          submittedByUserId ? [submittedByUserId] : [],
+        ),
       ),
     );
     const activeStates =

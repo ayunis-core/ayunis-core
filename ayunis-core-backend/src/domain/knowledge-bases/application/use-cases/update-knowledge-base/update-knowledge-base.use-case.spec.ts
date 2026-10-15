@@ -7,7 +7,9 @@ import {
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
 import { UpdateKnowledgeBaseUseCase } from './update-knowledge-base.use-case';
@@ -169,5 +171,35 @@ describe(UpdateKnowledgeBaseUseCase.name, () => {
     await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
       UnexpectedKnowledgeBaseError,
     );
+  });
+  it.each([
+    [
+      'team',
+      new TeamKnowledgeBase({
+        name: 'Bauordnung',
+        description: 'Regeln für Bauanträge',
+        teamId: randomUUID(),
+        orgId: ORG_ID,
+        submittedByUserId: USER_ID,
+      }),
+    ],
+    [
+      'organisation',
+      new OrgKnowledgeBase({
+        name: 'Bauordnung',
+        description: 'Regeln für Bauanträge',
+        orgId: ORG_ID,
+        submittedByUserId: USER_ID,
+      }),
+    ],
+  ])('keeps who handed over a %s knowledge base', async (_owner, existing) => {
+    const { useCase } = await setup(existing);
+
+    const result = await useCase.execute(command(existing.id));
+
+    expect(result).toMatchObject({
+      name: 'Updated permit regulations',
+      submittedByUserId: USER_ID,
+    });
   });
 });

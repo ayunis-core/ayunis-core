@@ -20,14 +20,14 @@ describe(ListSkillSourcesUseCase.name, () => {
     const sources = {
       execute: jest.fn().mockResolvedValue([{ id: sourceId }]),
     };
-    const authorization = { requireRead: jest.fn() };
+    const authorization = { requireView: jest.fn() };
     const useCase = new ListSkillSourcesUseCase(
       repository as unknown as SkillRepository,
       sources as unknown as GetSourcesByIdsUseCase,
       authorization as unknown as SkillAuthorizationService,
     );
     const result = await useCase.execute(new ListSkillSourcesQuery(skill.id));
-    expect(authorization.requireRead).toHaveBeenCalledWith(skill);
+    expect(authorization.requireView).toHaveBeenCalledWith(skill);
     expect(result).toEqual([{ id: sourceId }]);
   });
 });

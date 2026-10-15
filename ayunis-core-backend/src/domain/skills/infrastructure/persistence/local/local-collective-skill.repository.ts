@@ -3,7 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID, type UUID } from 'crypto';
-import { type EntityManager, In, IsNull, type Repository } from 'typeorm';
+import {
+  type EntityManager,
+  In,
+  IsNull,
+  type Repository,
+  type UpdateResult,
+} from 'typeorm';
+import { isUniqueViolation } from 'src/common/db/is-unique-violation';
+import { SkillNameTakenAtTargetError } from 'src/domain/skills/application/skills.errors';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import {
   CollectiveSkillRepository,
   type CollectiveSkillScope,
@@ -130,6 +139,50 @@ export class LocalCollectiveSkillRepository implements CollectiveSkillRepository
     );
     if (!isPinned || result.affected) return;
     await this.insertState(skillId, userId, { isActive: true, isPinned });
+  }
+
+  async transferFromPersonal(
+    skill: PersonalSkill,
+    owner: { teamId: UUID | null; orgId: UUID; submittedByUserId: UUID },
+  ): Promise<boolean> {
+    const skillId = skill.id;
+    const result = await this.moveToCollective(skill, owner);
+    if (!result.affected) return false;
+    await this.manager
+      .createQueryBuilder()
+      .delete()
+      .from('skill_knowledge_bases')
+      .where('"skillsId" = :skillId', { skillId })
+      .execute();
+    await this.manager
+      .createQueryBuilder()
+      .delete()
+      .from('skill_mcp_integrations')
+      .where('"skillsId" = :skillId', { skillId })
+      .execute();
+    return true;
+  }
+
+  private async moveToCollective(
+    skill: PersonalSkill,
+    owner: { teamId: UUID | null; orgId: UUID; submittedByUserId: UUID },
+  ): Promise<UpdateResult> {
+    try {
+      return await this.skills.update(
+        { id: skill.id, userId: owner.submittedByUserId },
+        {
+          userId: null,
+          teamId: owner.teamId,
+          orgId: owner.orgId,
+          submittedByUserId: owner.submittedByUserId,
+        },
+      );
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new SkillNameTakenAtTargetError(skill.name);
+      }
+      throw error;
+    }
   }
 
   private async insertState(

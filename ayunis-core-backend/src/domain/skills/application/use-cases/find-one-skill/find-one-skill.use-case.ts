@@ -35,7 +35,7 @@ export class FindOneSkillUseCase {
     this.logger.log({ id: query.id }, 'Finding skill');
     const skill = await this.repository.findById(query.id);
     if (!skill) throw new SkillNotFoundError(query.id);
-    await this.authorization.requireRead(skill);
+    await this.authorization.requireView(skill);
     return this.resolveContext(skill);
   }
 

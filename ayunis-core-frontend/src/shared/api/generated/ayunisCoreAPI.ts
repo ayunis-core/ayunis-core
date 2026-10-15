@@ -71,6 +71,7 @@ import type {
   CreateCourseModuleRequestDto,
   CreateCustomIntegrationDto,
   CreateEmbeddingModelRequestDto,
+  CreateHandoverRequestDto,
   CreateImageGenerationModelRequestDto,
   CreateInviteDto,
   CreateInviteResponseDto,
@@ -112,6 +113,12 @@ import type {
   GetThreadsResponseDto,
   GlobalPiiWhitelistWordDto,
   GrantCrawlDomainRequestDto,
+  HandoverRequestDto,
+  HandoverRequestsControllerListParams,
+  HandoverRequestsControllerPendingParams,
+  HandoverRequestsControllerTargetsParams,
+  HandoverSummaryDto,
+  HandoverTargetsResponseDto,
   ImageGenerationModelResponseDto,
   ImproveSkillTextDto,
   ImprovedSkillTextResponseDto,
@@ -163,6 +170,7 @@ import type {
   PaginatedSuperAdminUsersListResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
+  PendingHandoverResponseDto,
   PermittedEmbeddingModelResponseDto,
   PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
@@ -16664,6 +16672,630 @@ export const useSuperAdminAnonymizationWhitelistControllerRemove = <TError = voi
         TContext
       > => {
       return useMutation(getSuperAdminAnonymizationWhitelistControllerRemoveMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Targets the caller may hand an own item over to
+ */
+export const handoverRequestsControllerTargets = (
+    params: HandoverRequestsControllerTargetsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<HandoverTargetsResponseDto>(
+      {url: `/handover-requests/targets`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerTargetsQueryKey = (params?: HandoverRequestsControllerTargetsParams,) => {
+    return [
+    `/handover-requests/targets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getHandoverRequestsControllerTargetsQueryOptions = <TData = Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError = unknown>(params: HandoverRequestsControllerTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHandoverRequestsControllerTargetsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>> = ({ signal }) => handoverRequestsControllerTargets(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HandoverRequestsControllerTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>>
+export type HandoverRequestsControllerTargetsQueryError = unknown
+
+
+export function useHandoverRequestsControllerTargets<TData = Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError = unknown>(
+ params: HandoverRequestsControllerTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerTargets>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerTargets>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerTargets<TData = Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError = unknown>(
+ params: HandoverRequestsControllerTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerTargets>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerTargets>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerTargets<TData = Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError = unknown>(
+ params: HandoverRequestsControllerTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Targets the caller may hand an own item over to
+ */
+
+export function useHandoverRequestsControllerTargets<TData = Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError = unknown>(
+ params: HandoverRequestsControllerTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerTargets>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHandoverRequestsControllerTargetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Review rights and open request counts
+ */
+export const handoverRequestsControllerSummary = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<HandoverSummaryDto>(
+      {url: `/handover-requests/summary`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerSummaryQueryKey = () => {
+    return [
+    `/handover-requests/summary`
+    ] as const;
+    }
+
+
+export const getHandoverRequestsControllerSummaryQueryOptions = <TData = Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHandoverRequestsControllerSummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>> = ({ signal }) => handoverRequestsControllerSummary(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HandoverRequestsControllerSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>>
+export type HandoverRequestsControllerSummaryQueryError = unknown
+
+
+export function useHandoverRequestsControllerSummary<TData = Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerSummary>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerSummary>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerSummary<TData = Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerSummary>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerSummary>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerSummary<TData = Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Review rights and open request counts
+ */
+
+export function useHandoverRequestsControllerSummary<TData = Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerSummary>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHandoverRequestsControllerSummaryQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary The open request for an item, for its requester or reviewers
+ */
+export const handoverRequestsControllerPending = (
+    params: HandoverRequestsControllerPendingParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<PendingHandoverResponseDto>(
+      {url: `/handover-requests/pending`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerPendingQueryKey = (params?: HandoverRequestsControllerPendingParams,) => {
+    return [
+    `/handover-requests/pending`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getHandoverRequestsControllerPendingQueryOptions = <TData = Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError = unknown>(params: HandoverRequestsControllerPendingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHandoverRequestsControllerPendingQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof handoverRequestsControllerPending>>> = ({ signal }) => handoverRequestsControllerPending(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HandoverRequestsControllerPendingQueryResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerPending>>>
+export type HandoverRequestsControllerPendingQueryError = unknown
+
+
+export function useHandoverRequestsControllerPending<TData = Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError = unknown>(
+ params: HandoverRequestsControllerPendingParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerPending>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerPending>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerPending<TData = Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError = unknown>(
+ params: HandoverRequestsControllerPendingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerPending>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerPending>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerPending<TData = Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError = unknown>(
+ params: HandoverRequestsControllerPendingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary The open request for an item, for its requester or reviewers
+ */
+
+export function useHandoverRequestsControllerPending<TData = Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError = unknown>(
+ params: HandoverRequestsControllerPendingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerPending>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHandoverRequestsControllerPendingQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Open requests the caller may review
+ */
+export const handoverRequestsControllerList = (
+    params: HandoverRequestsControllerListParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<HandoverRequestDto[]>(
+      {url: `/handover-requests`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerListQueryKey = (params?: HandoverRequestsControllerListParams,) => {
+    return [
+    `/handover-requests`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getHandoverRequestsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError = unknown>(params: HandoverRequestsControllerListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHandoverRequestsControllerListQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof handoverRequestsControllerList>>> = ({ signal }) => handoverRequestsControllerList(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HandoverRequestsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerList>>>
+export type HandoverRequestsControllerListQueryError = unknown
+
+
+export function useHandoverRequestsControllerList<TData = Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError = unknown>(
+ params: HandoverRequestsControllerListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerList<TData = Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError = unknown>(
+ params: HandoverRequestsControllerListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof handoverRequestsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof handoverRequestsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHandoverRequestsControllerList<TData = Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError = unknown>(
+ params: HandoverRequestsControllerListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Open requests the caller may review
+ */
+
+export function useHandoverRequestsControllerList<TData = Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError = unknown>(
+ params: HandoverRequestsControllerListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof handoverRequestsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHandoverRequestsControllerListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Applies immediately when the caller may review the target; otherwise a pending request is created.
+ * @summary Hand over an own item, or request it
+ */
+export const handoverRequestsControllerCreate = (
+    createHandoverRequestDto: CreateHandoverRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<HandoverRequestDto>(
+      {url: `/handover-requests`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createHandoverRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerCreateMutationKey = () => ['handoverRequestsControllerCreate'] as const;
+
+export const getHandoverRequestsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerCreate>>, TError,HandoverRequestsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerCreate>>, TError,HandoverRequestsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getHandoverRequestsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof handoverRequestsControllerCreate>>, HandoverRequestsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  handoverRequestsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HandoverRequestsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerCreate>>>
+    export type HandoverRequestsControllerCreateMutationBody = CreateHandoverRequestDto
+    export type HandoverRequestsControllerCreateMutationError = unknown
+    export type HandoverRequestsControllerCreateMutationVariables = {data: CreateHandoverRequestDto}
+
+    /**
+ * @summary Hand over an own item, or request it
+ */
+export const useHandoverRequestsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerCreate>>, TError,HandoverRequestsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof handoverRequestsControllerCreate>>,
+        TError,
+        HandoverRequestsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getHandoverRequestsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const handoverRequestsControllerApprove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<HandoverRequestDto>(
+      {url: `/handover-requests/${id}/approve`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerApproveMutationKey = () => ['handoverRequestsControllerApprove'] as const;
+
+export const getHandoverRequestsControllerApproveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerApprove>>, TError,HandoverRequestsControllerApproveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerApprove>>, TError,HandoverRequestsControllerApproveMutationVariables, TContext> => {
+
+const mutationKey = getHandoverRequestsControllerApproveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof handoverRequestsControllerApprove>>, HandoverRequestsControllerApproveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  handoverRequestsControllerApprove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HandoverRequestsControllerApproveMutationResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerApprove>>>
+
+    export type HandoverRequestsControllerApproveMutationError = unknown
+    export type HandoverRequestsControllerApproveMutationVariables = {id: string}
+
+    export const useHandoverRequestsControllerApprove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerApprove>>, TError,HandoverRequestsControllerApproveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof handoverRequestsControllerApprove>>,
+        TError,
+        HandoverRequestsControllerApproveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getHandoverRequestsControllerApproveMutationOptions(options), queryClient);
+    }
+
+export const handoverRequestsControllerReject = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<HandoverRequestDto>(
+      {url: `/handover-requests/${id}/reject`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerRejectMutationKey = () => ['handoverRequestsControllerReject'] as const;
+
+export const getHandoverRequestsControllerRejectMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerReject>>, TError,HandoverRequestsControllerRejectMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerReject>>, TError,HandoverRequestsControllerRejectMutationVariables, TContext> => {
+
+const mutationKey = getHandoverRequestsControllerRejectMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof handoverRequestsControllerReject>>, HandoverRequestsControllerRejectMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  handoverRequestsControllerReject(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HandoverRequestsControllerRejectMutationResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerReject>>>
+
+    export type HandoverRequestsControllerRejectMutationError = unknown
+    export type HandoverRequestsControllerRejectMutationVariables = {id: string}
+
+    export const useHandoverRequestsControllerReject = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerReject>>, TError,HandoverRequestsControllerRejectMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof handoverRequestsControllerReject>>,
+        TError,
+        HandoverRequestsControllerRejectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getHandoverRequestsControllerRejectMutationOptions(options), queryClient);
+    }
+
+export const handoverRequestsControllerWithdraw = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/handover-requests/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getHandoverRequestsControllerWithdrawMutationKey = () => ['handoverRequestsControllerWithdraw'] as const;
+
+export const getHandoverRequestsControllerWithdrawMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerWithdraw>>, TError,HandoverRequestsControllerWithdrawMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerWithdraw>>, TError,HandoverRequestsControllerWithdrawMutationVariables, TContext> => {
+
+const mutationKey = getHandoverRequestsControllerWithdrawMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof handoverRequestsControllerWithdraw>>, HandoverRequestsControllerWithdrawMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  handoverRequestsControllerWithdraw(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HandoverRequestsControllerWithdrawMutationResult = NonNullable<Awaited<ReturnType<typeof handoverRequestsControllerWithdraw>>>
+
+    export type HandoverRequestsControllerWithdrawMutationError = unknown
+    export type HandoverRequestsControllerWithdrawMutationVariables = {id: string}
+
+    export const useHandoverRequestsControllerWithdraw = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof handoverRequestsControllerWithdraw>>, TError,HandoverRequestsControllerWithdrawMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof handoverRequestsControllerWithdraw>>,
+        TError,
+        HandoverRequestsControllerWithdrawMutationVariables,
+        TContext
+      > => {
+      return useMutation(getHandoverRequestsControllerWithdrawMutationOptions(options), queryClient);
     }
 
 /**
