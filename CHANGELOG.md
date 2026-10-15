@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.55.0](https://github.com/ayunis-core/ayunis-core/compare/v2.54.0...v2.55.0) (2026-10-15)
+
+
+### Features
+
+* **frontend:** add copy buttons for oauth callback uris and sso ids (AYC-000) ([#1957](https://github.com/ayunis-core/ayunis-core/issues/1957)) ([cabf969](https://github.com/ayunis-core/ayunis-core/commit/cabf9696d73837dbd84ed5505157ca09bb022392))
+* **super-admin:** add copy button for the org id on the org detail page (AYC-000) ([#1955](https://github.com/ayunis-core/ayunis-core/issues/1955)) ([d575c39](https://github.com/ayunis-core/ayunis-core/commit/d575c39933a8b4ba6303a093133cdad766e370c1))
+
+
+### Bug Fixes
+
+* **agent-runtime:** retry rate limits with retry-after up to 30 s and spread the wait (AYC-1268) ([#1965](https://github.com/ayunis-core/ayunis-core/issues/1965)) ([a054ad2](https://github.com/ayunis-core/ayunis-core/commit/a054ad26532cef0d2e4f11fc2aa6245de85f746f))
+* **logger:** emit safe error classifications and diagnostic summaries (AYC-1246) ([#1905](https://github.com/ayunis-core/ayunis-core/issues/1905)) ([8c434d4](https://github.com/ayunis-core/ayunis-core/commit/8c434d474f7872f3f83d15a3d216fd64f9447f4e))
+* **runs:** classify truncated tool calls as a client error with a clear toast (AYC-1315) ([#1968](https://github.com/ayunis-core/ayunis-core/issues/1968)) ([facca01](https://github.com/ayunis-core/ayunis-core/commit/facca0149982d1fd500f03913743f298fefd4233))
+* **runs:** stop reporting consumer-ended calls and empty responses as runtime failures (AYC-1308) ([#1969](https://github.com/ayunis-core/ayunis-core/issues/1969)) ([5a11330](https://github.com/ayunis-core/ayunis-core/commit/5a1133068d5d7bdd0e96a238b5a69e910a80378d))
+
+
+### Code Refactoring
+
+* **models:** read the Retry-After cap from the agent-runtime default on every inference path (AYC-1268) ([#1980](https://github.com/ayunis-core/ayunis-core/issues/1980)) ([f96c54f](https://github.com/ayunis-core/ayunis-core/commit/f96c54f355f9a9112512319f63b81a9c015f2bb5))
+
+
+### Documentation
+
+* add security policy with vulnerability reporting contact (AYC-000) ([#1958](https://github.com/ayunis-core/ayunis-core/issues/1958)) ([aa10d4a](https://github.com/ayunis-core/ayunis-core/commit/aa10d4a4a8b23be26ed907adc62c7278a91f05d8))
+
 ## [2.54.0](https://github.com/ayunis-core/ayunis-core/compare/v2.53.0...v2.54.0) (2026-10-14)
 
 
