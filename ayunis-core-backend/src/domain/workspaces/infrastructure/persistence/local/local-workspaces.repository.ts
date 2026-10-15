@@ -8,6 +8,7 @@ import {
   WorkspacesRepository,
   type WorkspaceContextRefs,
   type WorkspaceListStats,
+  type WorkspacePrincipal,
 } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -66,12 +67,12 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     );
   }
 
-  async findAllByUserId(
-    userId: UUID,
+  async findAllAccessible(
+    principal: WorkspacePrincipal,
     query: WorkspaceListOptions,
   ): Promise<Paginated<Workspace>> {
-    const countQuery = this.createWorkspaceCountQuery(userId, query);
-    const listQuery = this.createWorkspaceListQuery(userId, query);
+    const countQuery = this.createWorkspaceCountQuery(principal, query);
+    const listQuery = this.createWorkspaceListQuery(principal, query);
 
     const [records, total] = await Promise.all([
       listQuery
@@ -90,25 +91,96 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     });
   }
 
+  async findAllAccessibleByIds(
+    principal: WorkspacePrincipal,
+    ids: UUID[],
+  ): Promise<Workspace[]> {
+    if (ids.length === 0) return [];
+    const records = await this.accessibleQuery(principal)
+      .andWhere('workspace.id IN (:...ids)', { ids })
+      .getMany();
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async findAccessibleIds(principal: WorkspacePrincipal): Promise<UUID[]> {
+    const rows = await this.accessibleQuery(principal)
+      .select('workspace.id', 'id')
+      .getRawMany<{ id: UUID }>();
+    return rows.map(({ id }) => id);
+  }
+
+  async findOne(id: UUID): Promise<Workspace | null> {
+    const record = await this.repo.findOne({ where: { id } });
+    return record ? this.mapper.toDomain(record) : null;
+  }
+
+  async findManyByIds(ids: UUID[]): Promise<Workspace[]> {
+    if (ids.length === 0) return [];
+    const records = await this.repo.find({ where: { id: In(ids) } });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  // Read-only seam onto team_members by name: importing the teams module's
+  // persistence here would couple two aggregates for one membership check.
+  private accessibleQuery(
+    principal: WorkspacePrincipal,
+  ): SelectQueryBuilder<WorkspaceRecord> {
+    return this.repo
+      .createQueryBuilder('workspace')
+      .where('workspace."orgId" = :orgId', { orgId: principal.orgId })
+      .andWhere(
+        `(
+          workspace."userId" = :userId
+          OR EXISTS (
+            SELECT 1 FROM workspace_access_people person
+            WHERE person."workspaceId" = workspace.id
+              AND person."userId" = :userId
+          )
+          OR EXISTS (
+            SELECT 1 FROM workspace_access_teams grant_row
+            JOIN team_members member
+              ON member.team_id = grant_row."teamId"
+             AND member.user_id = :userId
+            WHERE grant_row."workspaceId" = workspace.id
+              AND NOT EXISTS (
+                SELECT 1 FROM workspace_access_team_overrides override_row
+                WHERE override_row."teamGrantId" = grant_row.id
+                  AND override_row."userId" = :userId
+                  AND override_row.excluded
+              )
+          )
+          OR (
+            workspace."isSharedWithOrganization"
+            AND NOT EXISTS (
+              SELECT 1 FROM workspace_access_org_exclusions exclusion
+              WHERE exclusion."workspaceId" = workspace.id
+                AND exclusion."userId" = :userId
+            )
+          )
+        )`,
+        { userId: principal.userId },
+      );
+  }
+
   private createWorkspaceCountQuery(
-    userId: UUID,
+    principal: WorkspacePrincipal,
     query: Pick<WorkspaceListOptions, 'search'>,
   ): SelectQueryBuilder<WorkspaceRecord> {
-    const countQuery = this.repo
-      .createQueryBuilder('workspace')
-      .where('workspace.userId = :userId', { userId });
+    const countQuery = this.accessibleQuery(principal);
     this.applyWorkspaceSearch(countQuery, query.search);
     return countQuery;
   }
 
   private createWorkspaceListQuery(
-    userId: UUID,
+    principal: WorkspacePrincipal,
     query: Pick<WorkspaceListOptions, 'search' | 'sort'>,
   ): SelectQueryBuilder<WorkspaceRecord> {
-    const listQuery = this.repo
-      .createQueryBuilder('workspace')
-      .leftJoin('threads', 'thread', 'thread."workspaceId" = workspace.id')
-      .where('workspace.userId = :userId', { userId })
+    const listQuery = this.accessibleQuery(principal)
+      .leftJoin(
+        'threads',
+        'thread',
+        'thread."workspaceId" = workspace.id AND thread."userId" = :userId',
+      )
       .addGroupBy('workspace.id');
 
     this.applyWorkspaceSearch(listQuery, query.search);
@@ -153,17 +225,12 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
       .orderBy('effective_activity_at', 'DESC');
   }
 
-  async findAllByIds(userId: UUID, ids: UUID[]): Promise<Workspace[]> {
-    if (ids.length === 0) return [];
-    const records = await this.repo.find({ where: { userId, id: In(ids) } });
-    return records.map((record) => this.mapper.toDomain(record));
-  }
-
   // Read-only seam onto the threads and link tables by name. Importing the
   // threads, skills or knowledge-bases modules here would close a dependency
   // cycle, so this aggregate query stays raw SQL instead.
   async getListStats(
     workspaceIds: UUID[],
+    userId: UUID,
   ): Promise<Map<UUID, WorkspaceListStats>> {
     if (workspaceIds.length === 0) {
       return new Map();
@@ -172,9 +239,9 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
       await this.repo.manager.query(
         `SELECT w."id" AS "workspaceId",
                 (SELECT COUNT(*)::int FROM threads t
-                  WHERE t."workspaceId" = w."id") AS "chatCount",
+                  WHERE t."workspaceId" = w."id" AND t."userId" = $2) AS "chatCount",
                 (SELECT MAX(COALESCE(t."lastActivityAt", t."createdAt")) FROM threads t
-                  WHERE t."workspaceId" = w."id") AS "lastActivityAt",
+                  WHERE t."workspaceId" = w."id" AND t."userId" = $2) AS "lastActivityAt",
                 (SELECT COUNT(*)::int FROM skills s
                   WHERE s."workspaceId" = w."id")
                   + (SELECT COUNT(*)::int FROM workspace_skill_links sl
@@ -185,7 +252,7 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
                   WHERE kl."workspaceId" = w."id") AS "knowledgeBaseCount"
          FROM workspaces w
          WHERE w."id" = ANY($1)`,
-        [workspaceIds],
+        [workspaceIds, userId],
       );
     return new Map(
       rows.map(({ workspaceId, ...stats }) => [workspaceId, stats]),
@@ -198,8 +265,12 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
   }
 
   async save(workspace: Workspace): Promise<Workspace> {
-    const saved = await this.repo.save(this.mapper.toRecord(workspace));
-    return this.mapper.toDomain(saved);
+    const record: Partial<WorkspaceRecord> = this.mapper.toRecord(workspace);
+    delete record.isSharedWithOrganization;
+    await this.repo.save(record);
+    return this.mapper.toDomain(
+      await this.repo.findOneByOrFail({ id: workspace.id }),
+    );
   }
 
   async getContextRefs(workspaceId: UUID): Promise<WorkspaceContextRefs> {

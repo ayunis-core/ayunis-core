@@ -7880,7 +7880,7 @@
             }
           }
         },
-        "summary": "List the current user’s workspaces",
+        "summary": "List every workspace the current user can open",
         "tags": ["workspaces"]
       }
     },
@@ -8050,6 +8050,287 @@
           }
         },
         "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/sharing": {
+      "get": {
+        "operationId": "WorkspaceSharingController_sharing",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSharingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Who has access to a workspace, and what the caller may change",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{id}/share-candidates": {
+      "get": {
+        "operationId": "WorkspaceSharingController_candidates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareCandidatesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "People, teams and the organisation the caller may invite",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{id}/shares": {
+      "post": {
+        "operationId": "WorkspaceSharingController_invite",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharingChangeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Give people and teams access; they get it at once",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{id}/members/{userId}": {
+      "put": {
+        "operationId": "WorkspaceSharingController_setAccess",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetWorkspaceMemberAccessDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharingChangeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Change what a member may do",
+        "tags": ["workspace-sharing"]
+      },
+      "delete": {
+        "operationId": "WorkspaceSharingController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": false,
+            "in": "query",
+            "description": "The team section the person was removed from",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharingChangeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Take a member out of where they are shown (direct grant, team or organisation)",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{id}/teams/{teamId}": {
+      "delete": {
+        "operationId": "WorkspaceSharingController_endTeam",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharingChangeResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No right to manage this team, or the caller would lose access"
+          },
+          "404": {
+            "description": "The team has no access"
+          }
+        },
+        "summary": "End a team share: everyone who only has access through this team loses it, later team members get none",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{id}/sharing/organization": {
+      "put": {
+        "operationId": "WorkspaceSharingController_organization",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetWorkspaceOrganizationSharingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharingChangeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Share the workspace with the whole organisation, or stop",
+        "tags": ["workspace-sharing"]
       }
     },
     "/favorites": {
@@ -19366,6 +19647,16 @@
             "description": "When the workspace was last updated",
             "example": "2026-08-11T10:30:00.000Z"
           },
+          "accessLevel": {
+            "type": "string",
+            "enum": ["owner", "full", "edit", "use"],
+            "description": "What the caller may do in the workspace"
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "Everyone with access, the owner included (list and detail responses)",
+            "example": 5
+          },
           "chatCount": {
             "type": "number",
             "description": "Number of chats filed under the workspace (list responses only)",
@@ -19373,12 +19664,12 @@
           },
           "skillCount": {
             "type": "number",
-            "description": "Number of skills owned by the workspace (list responses only)",
+            "description": "Number of skills owned by or linked into the workspace (list responses only)",
             "example": 2
           },
           "knowledgeBaseCount": {
             "type": "number",
-            "description": "Number of knowledge bases owned by the workspace (list responses only)",
+            "description": "Number of knowledge bases owned by or linked into the workspace (list responses only)",
             "example": 4
           },
           "lastActivityAt": {
@@ -19395,7 +19686,8 @@
           "icon",
           "color",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "accessLevel"
         ]
       },
       "WorkspaceListResponseDto": {
@@ -19536,6 +19828,349 @@
           }
         },
         "required": ["instruction"]
+      },
+      "SharingViewerDto": {
+        "type": "object",
+        "properties": {
+          "accessLevel": {
+            "type": "string",
+            "enum": ["owner", "full", "edit", "use"]
+          },
+          "canInvite": {
+            "type": "boolean"
+          },
+          "inviteScopeTeamIds": {
+            "nullable": true,
+            "description": "Teams the caller may invite from; null means everyone",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "canShareWithOrganization": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accessLevel",
+          "canInvite",
+          "inviteScopeTeamIds",
+          "canShareWithOrganization"
+        ]
+      },
+      "SharingMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "string",
+            "nullable": true,
+            "description": "Primary team of the person; null without a team"
+          },
+          "accessLevel": {
+            "type": "string",
+            "enum": ["owner", "full", "edit", "use"]
+          },
+          "isOwner": {
+            "type": "boolean"
+          },
+          "canChange": {
+            "type": "boolean",
+            "description": "Whether the caller may change or remove them"
+          }
+        },
+        "required": [
+          "userId",
+          "name",
+          "affiliation",
+          "accessLevel",
+          "isOwner",
+          "canChange"
+        ]
+      },
+      "SharingTeamDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "accessLevel": {
+            "type": "string",
+            "enum": ["owner", "full", "edit", "use"]
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "Everyone in the team who has access through it"
+          },
+          "members": {
+            "description": "Members shown in this section; a person shows in their first granted team only",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharingMemberDto"
+            }
+          },
+          "canEnd": {
+            "type": "boolean",
+            "description": "Whether the caller may end the team share without losing their own access"
+          }
+        },
+        "required": [
+          "teamId",
+          "name",
+          "accessLevel",
+          "memberCount",
+          "members",
+          "canEnd"
+        ]
+      },
+      "SharingOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "memberCount": {
+            "type": "number"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharingMemberDto"
+            }
+          }
+        },
+        "required": ["memberCount", "members"]
+      },
+      "SharingInvitersDto": {
+        "type": "object",
+        "properties": {
+          "managers": {
+            "type": "boolean",
+            "description": "Managers hold \"Arbeitsbereiche verwalten\""
+          },
+          "teamAdmins": {
+            "type": "boolean",
+            "description": "Team admins may invite their own teams"
+          }
+        },
+        "required": ["managers", "teamAdmins"]
+      },
+      "WorkspaceSharingResponseDto": {
+        "type": "object",
+        "properties": {
+          "isSharedWithOrganization": {
+            "type": "boolean"
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "Everyone with access, the owner included"
+          },
+          "viewer": {
+            "$ref": "#/components/schemas/SharingViewerDto"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/SharingMemberDto"
+          },
+          "people": {
+            "description": "People invited directly who are not shown in a team",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharingMemberDto"
+            }
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharingTeamDto"
+            }
+          },
+          "organization": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SharingOrganizationDto"
+              }
+            ]
+          },
+          "inviters": {
+            "description": "Who besides admins may invite people in this organisation",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SharingInvitersDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "isSharedWithOrganization",
+          "memberCount",
+          "viewer",
+          "owner",
+          "people",
+          "teams",
+          "organization",
+          "inviters"
+        ]
+      },
+      "ShareCandidateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "memberCount": {
+            "type": "number"
+          }
+        },
+        "required": ["memberCount"]
+      },
+      "ShareCandidateTeamDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "number"
+          },
+          "memberIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["teamId", "name", "memberCount", "memberIds"]
+      },
+      "ShareCandidateTeamRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "ShareCandidatePersonDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "primaryTeam": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShareCandidateTeamRefDto"
+              }
+            ]
+          }
+        },
+        "required": ["userId", "name", "primaryTeam"]
+      },
+      "ShareCandidatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "organization": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShareCandidateOrganizationDto"
+              }
+            ]
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShareCandidateTeamDto"
+            }
+          },
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShareCandidatePersonDto"
+            }
+          }
+        },
+        "required": ["organization", "teams", "people"]
+      },
+      "ShareWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "teamIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "accessLevel": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          }
+        },
+        "required": ["userIds", "teamIds", "accessLevel"]
+      },
+      "SharingChangeResponseDto": {
+        "type": "object",
+        "properties": {
+          "unlinkedCount": {
+            "type": "number",
+            "description": "Own skills and knowledge collections of people who lost access that were unlinked"
+          }
+        },
+        "required": ["unlinkedCount"]
+      },
+      "SetWorkspaceMemberAccessDto": {
+        "type": "object",
+        "properties": {
+          "accessLevel": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The team section the change was made in"
+          }
+        },
+        "required": ["accessLevel"]
+      },
+      "SetWorkspaceOrganizationSharingDto": {
+        "type": "object",
+        "properties": {
+          "shared": {
+            "type": "boolean"
+          }
+        },
+        "required": ["shared"]
       },
       "WorkspaceFavoriteResponseDto": {
         "type": "object",

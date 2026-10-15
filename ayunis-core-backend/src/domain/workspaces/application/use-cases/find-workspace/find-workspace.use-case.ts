@@ -1,41 +1,38 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from 'src/domain/workspaces/application/workspaces.errors';
+  WorkspaceSummaryService,
+  type WorkspaceSummary,
+} from 'src/domain/workspaces/application/services/workspace-summary.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { FindWorkspaceQuery } from './find-workspace.query';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+
+export interface WorkspaceDetail extends WorkspaceSummary {
+  workspace: Workspace;
+}
 
 @Injectable()
 export class FindWorkspaceUseCase {
   private readonly logger = new Logger(FindWorkspaceUseCase.name);
 
   constructor(
-    private readonly workspacesRepository: WorkspacesRepository,
-    private readonly contextService: ContextService,
+    private readonly access: WorkspaceAccessService,
+    private readonly summaries: WorkspaceSummaryService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
-  async execute(query: FindWorkspaceQuery): Promise<Workspace> {
+  async execute(query: FindWorkspaceQuery): Promise<WorkspaceDetail> {
     this.logger.log({ workspaceId: query.id }, 'Finding workspace');
-
-    const workspace = await this.workspacesRepository.findById(
-      this.resolveUserId(),
-      query.id,
+    const { workspace, level } = await this.access.require(query.id, 'use');
+    const summary = (await this.summaries.summarize([workspace])).get(
+      workspace.id,
     );
-    if (!workspace) {
-      throw new WorkspaceNotFoundError(query.id);
-    }
-    return workspace;
-  }
-
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
+    return {
+      workspace,
+      accessLevel: level,
+      memberCount: summary?.memberCount ?? 1,
+    };
   }
 }

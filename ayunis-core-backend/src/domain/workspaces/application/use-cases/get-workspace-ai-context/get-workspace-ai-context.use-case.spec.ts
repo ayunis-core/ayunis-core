@@ -4,7 +4,7 @@ import type { GetWorkspaceSkillsUseCase } from 'src/domain/skills/application/us
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import {
   aWorkspace,
-  createMockContextService,
+  createMockWorkspaceAccessService,
   createMockWorkspacesRepository,
   TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
@@ -12,12 +12,14 @@ import type { GetLinkedWorkspaceSkillsUseCase } from 'src/domain/skills/applicat
 import type { GetLinkedWorkspaceKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-linked-workspace-knowledge-bases/get-linked-workspace-knowledge-bases.use-case';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import type { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { GetWorkspaceAiContextUseCase } from './get-workspace-ai-context.use-case';
 
 function setup() {
   const repository = createMockWorkspacesRepository();
-  repository.findById.mockResolvedValue(
+  const access = createMockWorkspaceAccessService(
     aWorkspace({ instruction: 'Use building department wording.' }),
+    'use',
   );
   const skill = new WorkspaceSkill({
     name: 'Permit Check',
@@ -81,7 +83,7 @@ function setup() {
       repository,
       getWorkspaceSkills,
       countKnowledgeBaseDocuments,
-      createMockContextService(),
+      access as unknown as WorkspaceAccessService,
       getLinkedSkills,
       getLinkedKnowledgeBases,
     ),

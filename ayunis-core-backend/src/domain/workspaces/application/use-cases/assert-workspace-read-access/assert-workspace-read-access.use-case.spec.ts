@@ -8,7 +8,7 @@ import { AssertWorkspaceReadAccessUseCase } from './assert-workspace-read-access
 
 function setup() {
   const access = {
-    requireOwned: jest.fn().mockResolvedValue(undefined),
+    require: jest.fn().mockResolvedValue(undefined),
   } as unknown as jest.Mocked<WorkspaceAccessService>;
   return {
     access,
@@ -21,19 +21,19 @@ describe(AssertWorkspaceReadAccessUseCase.name, () => {
   it('allows the authenticated workspace owner', async () => {
     const { access, useCase, query } = setup();
     await expect(useCase.execute(query)).resolves.toBeUndefined();
-    expect(access.requireOwned).toHaveBeenCalledWith(query.workspaceId);
+    expect(access.require).toHaveBeenCalledWith(query.workspaceId, 'use');
   });
 
   it('preserves an ownership denial', async () => {
     const { access, useCase, query } = setup();
     const error = new WorkspaceNotFoundError(query.workspaceId);
-    access.requireOwned.mockRejectedValue(error);
+    access.require.mockRejectedValue(error);
     await expect(useCase.execute(query)).rejects.toBe(error);
   });
 
   it('wraps unexpected policy failures', async () => {
     const { access, useCase, query } = setup();
-    access.requireOwned.mockRejectedValue(new Error('Database unavailable'));
+    access.require.mockRejectedValue(new Error('Database unavailable'));
     await expect(useCase.execute(query)).rejects.toBeInstanceOf(
       UnexpectedWorkspaceError,
     );

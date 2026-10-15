@@ -7,6 +7,17 @@ export interface WorkspaceSkillLink {
   linkedAt: Date;
 }
 
+export interface PersonalSkillLink {
+  workspaceId: UUID;
+  skillId: UUID;
+  ownerId: UUID;
+}
+
+export interface PersonalLinkFilter {
+  workspaceIds?: UUID[];
+  ownerIds?: UUID[];
+}
+
 export abstract class WorkspaceSkillLinkRepository {
   abstract findByWorkspace(workspaceId: UUID): Promise<WorkspaceSkillLink[]>;
   abstract findBySkill(skillId: UUID): Promise<WorkspaceSkillLink[]>;
@@ -17,4 +28,10 @@ export abstract class WorkspaceSkillLinkRepository {
     linkedByUserId: UUID,
   ): Promise<void>;
   abstract unlink(workspaceId: UUID, skillId: UUID): Promise<void>;
+  abstract findPersonalLinks(
+    filter: PersonalLinkFilter,
+  ): Promise<PersonalSkillLink[]>;
+  abstract removeMany(
+    links: Pick<PersonalSkillLink, 'workspaceId' | 'skillId'>[],
+  ): Promise<number>;
 }

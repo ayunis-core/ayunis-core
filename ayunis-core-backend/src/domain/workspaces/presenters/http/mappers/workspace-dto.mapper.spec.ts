@@ -17,6 +17,8 @@ describe('WorkspaceDtoMapper', () => {
         data: [
           {
             workspace,
+            accessLevel: 'edit',
+            memberCount: 5,
             chatCount: 4,
             skillCount: 2,
             knowledgeBaseCount: 3,
@@ -40,6 +42,8 @@ describe('WorkspaceDtoMapper', () => {
           color: workspace.color,
           createdAt: workspace.createdAt.toISOString(),
           updatedAt: workspace.updatedAt.toISOString(),
+          accessLevel: 'edit',
+          memberCount: 5,
           chatCount: 4,
           skillCount: 2,
           knowledgeBaseCount: 3,

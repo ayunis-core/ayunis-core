@@ -75,7 +75,7 @@ export class WorkspacesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List the current user’s workspaces' })
+  @ApiOperation({ summary: 'List every workspace the current user can open' })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({
     name: 'sort',
@@ -117,10 +117,10 @@ export class WorkspacesController {
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<WorkspaceResponseDto> {
     this.logger.log({ id }, 'findOne');
-    const workspace = await this.findWorkspaceUseCase.execute(
+    const detail = await this.findWorkspaceUseCase.execute(
       new FindWorkspaceQuery(id),
     );
-    return this.workspaceDtoMapper.toDto(workspace);
+    return this.workspaceDtoMapper.toDetailDto(detail);
   }
 
   @Patch(':id')

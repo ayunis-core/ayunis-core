@@ -72,6 +72,8 @@ import { UsersModule } from 'src/iam/users/users.module';
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
 import { SkillSourcesController } from './presenters/http/skill-sources.controller';
+import { FindPersonalSkillLinksUseCase } from './application/use-cases/find-personal-skill-links/find-personal-skill-links.use-case';
+import { RemoveSkillLinksUseCase } from './application/use-cases/remove-skill-links/remove-skill-links.use-case';
 import { SkillLinksController } from './presenters/http/skill-links.controller';
 import { ListLinkedWorkspaceSkillsUseCase } from './application/use-cases/list-linked-workspace-skills/list-linked-workspace-skills.use-case';
 import { ListLinkableWorkspaceSkillsUseCase } from './application/use-cases/list-linkable-workspace-skills/list-linkable-workspace-skills.use-case';
@@ -135,6 +137,8 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     UnlinkSkillFromWorkspaceUseCase,
     GetLinkedWorkspaceSkillsUseCase,
     ListSkillLinkedWorkspacesUseCase,
+    FindPersonalSkillLinksUseCase,
+    RemoveSkillLinksUseCase,
     // Services
     SkillAuthorizationService,
     SkillNameLookupService,
@@ -195,6 +199,8 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     ActivateWorkspaceSkillByNameUseCase,
     GetWorkspaceSkillsUseCase,
     GetLinkedWorkspaceSkillsUseCase,
+    FindPersonalSkillLinksUseCase,
+    RemoveSkillLinksUseCase,
     SkillRepository,
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,

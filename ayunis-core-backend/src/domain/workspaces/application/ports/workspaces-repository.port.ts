@@ -31,20 +31,32 @@ export interface WorkspaceContextRefs {
   knowledgeBases: WorkspaceKnowledgeBaseRef[];
 }
 
+export interface WorkspacePrincipal {
+  userId: UUID;
+  orgId: UUID;
+}
+
 export abstract class WorkspacesRepository {
-  /** Ordered by the workspace's last update, newest first. */
-  abstract findAllByUserId(
-    userId: UUID,
+  abstract findAllAccessible(
+    principal: WorkspacePrincipal,
     query: WorkspaceListOptions,
   ): Promise<Paginated<Workspace>>;
-  abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Workspace[]>;
+  abstract findAllAccessibleByIds(
+    principal: WorkspacePrincipal,
+    ids: UUID[],
+  ): Promise<Workspace[]>;
+  abstract findAccessibleIds(principal: WorkspacePrincipal): Promise<UUID[]>;
+  abstract findOne(id: UUID): Promise<Workspace | null>;
+  abstract findManyByIds(ids: UUID[]): Promise<Workspace[]>;
 
   /**
-   * Chat, skill and knowledge-base counts plus the latest chat activity per
-   * workspace, for the list page. Missing entries mean "nothing yet".
+   * Skill and knowledge-base counts plus the viewer's own chat count and
+   * latest chat activity per workspace, for the list page. Missing entries
+   * mean "nothing yet".
    */
   abstract getListStats(
     workspaceIds: UUID[],
+    userId: UUID,
   ): Promise<Map<UUID, WorkspaceListStats>>;
   abstract findById(userId: UUID, id: UUID): Promise<Workspace | null>;
   abstract save(workspace: Workspace): Promise<Workspace>;

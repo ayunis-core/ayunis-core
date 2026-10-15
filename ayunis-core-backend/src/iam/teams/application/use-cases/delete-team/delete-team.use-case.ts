@@ -8,6 +8,9 @@ import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
 import { getRequiredOrgId } from 'src/common/context/required-context';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
+import { TeamMembershipEndedEvent } from 'src/iam/teams/application/events/team-membership-ended.event';
 
 @Injectable()
 export class DeleteTeamUseCase {
@@ -17,6 +20,8 @@ export class DeleteTeamUseCase {
     private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
+    private readonly teamMembersRepository: TeamMembersRepository,
+    private readonly events: EventEmitter2,
   ) {}
 
   @Transactional()
@@ -49,7 +54,14 @@ export class DeleteTeamUseCase {
     // "conversation no longer accessible" disclaimer when the user tries
     // to continue the chat. The history is preserved.
 
+    const memberIds = await this.teamMembersRepository.findAllUserIdsByTeamId(
+      command.teamId,
+    );
     await this.teamsRepository.delete(command.teamId);
+    await this.events.emitAsync(
+      TeamMembershipEndedEvent.EVENT_NAME,
+      new TeamMembershipEndedEvent(orgId, command.teamId, memberIds),
+    );
 
     this.logger.debug({ teamId: command.teamId }, 'Team deleted successfully');
   }

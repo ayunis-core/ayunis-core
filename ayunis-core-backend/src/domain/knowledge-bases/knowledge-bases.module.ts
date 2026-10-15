@@ -41,6 +41,8 @@ import { FindActiveKnowledgeBasesUseCase } from './application/use-cases/find-ac
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
 import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base-dto.mapper';
 
+import { FindPersonalKnowledgeBaseLinksUseCase } from './application/use-cases/find-personal-knowledge-base-links/find-personal-knowledge-base-links.use-case';
+import { RemoveKnowledgeBaseLinksUseCase } from './application/use-cases/remove-knowledge-base-links/remove-knowledge-base-links.use-case';
 import { KnowledgeBaseLinksController } from './presenters/http/knowledge-base-links.controller';
 import { ListLinkedWorkspaceKnowledgeBasesUseCase } from './application/use-cases/list-linked-workspace-knowledge-bases/list-linked-workspace-knowledge-bases.use-case';
 import { ListLinkableWorkspaceKnowledgeBasesUseCase } from './application/use-cases/list-linkable-workspace-knowledge-bases/list-linkable-workspace-knowledge-bases.use-case';
@@ -71,6 +73,8 @@ import { ListKnowledgeBaseLinkedWorkspacesUseCase } from './application/use-case
     UnlinkKnowledgeBaseFromWorkspaceUseCase,
     GetLinkedWorkspaceKnowledgeBasesUseCase,
     ListKnowledgeBaseLinkedWorkspacesUseCase,
+    FindPersonalKnowledgeBaseLinksUseCase,
+    RemoveKnowledgeBaseLinksUseCase,
     TransferKnowledgeBaseOwnershipUseCase,
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
@@ -103,6 +107,8 @@ import { ListKnowledgeBaseLinkedWorkspacesUseCase } from './application/use-case
   exports: [
     TransferKnowledgeBaseOwnershipUseCase,
     GetLinkedWorkspaceKnowledgeBasesUseCase,
+    FindPersonalKnowledgeBaseLinksUseCase,
+    RemoveKnowledgeBaseLinksUseCase,
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
     FindAccessibleKnowledgeBasesByIdsUseCase,

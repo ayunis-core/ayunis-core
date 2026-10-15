@@ -15,6 +15,7 @@ export class Workspace {
   public instruction: string | null;
   public icon: string;
   public color: string;
+  public isSharedWithOrganization: boolean;
   public updatedAt: Date;
 
   constructor(params: {
@@ -26,6 +27,7 @@ export class Workspace {
     instruction?: string | null;
     icon?: string;
     color?: string;
+    isSharedWithOrganization?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -37,6 +39,7 @@ export class Workspace {
     this.instruction = params.instruction ?? null;
     this.icon = params.icon ?? DEFAULT_WORKSPACE_ICON;
     this.color = params.color ?? DEFAULT_WORKSPACE_COLOR;
+    this.isSharedWithOrganization = params.isSharedWithOrganization ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

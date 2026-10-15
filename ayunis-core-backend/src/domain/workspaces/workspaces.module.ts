@@ -26,21 +26,65 @@ import { WorkspacesController } from './presenters/http/workspaces.controller';
 import { WorkspaceContextDtoMapper } from './presenters/http/mappers/workspace-context-dto.mapper';
 import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapper';
 
+import { TeamsModule } from 'src/iam/teams/teams.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { WorkspaceSharingRepository } from './application/ports/workspace-sharing.repository';
+import { LocalWorkspaceSharingRepository } from './infrastructure/persistence/local/local-workspace-sharing.repository';
+import { WorkspaceDirectoryService } from './application/services/workspace-directory.service';
+import { WorkspaceSummaryService } from './application/services/workspace-summary.service';
+import { WorkspaceLinkCleanupService } from './application/services/workspace-link-cleanup.service';
+import { WorkspaceSharingContextService } from './application/services/workspace-sharing-context.service';
+import { GetWorkspaceSharingUseCase } from './application/use-cases/get-workspace-sharing/get-workspace-sharing.use-case';
+import { ListShareCandidatesUseCase } from './application/use-cases/list-share-candidates/list-share-candidates.use-case';
+import { ShareWorkspaceUseCase } from './application/use-cases/share-workspace/share-workspace.use-case';
+import { SetWorkspaceMemberAccessUseCase } from './application/use-cases/set-workspace-member-access/set-workspace-member-access.use-case';
+import { RemoveWorkspaceMemberUseCase } from './application/use-cases/remove-workspace-member/remove-workspace-member.use-case';
+import { SetWorkspaceOrganizationSharingUseCase } from './application/use-cases/set-workspace-organization-sharing/set-workspace-organization-sharing.use-case';
+import { EndWorkspaceTeamSharingUseCase } from './application/use-cases/end-workspace-team-sharing/end-workspace-team-sharing.use-case';
+import { FindAccessibleWorkspaceIdsUseCase } from './application/use-cases/find-accessible-workspace-ids/find-accessible-workspace-ids.use-case';
+import { WorkspacesTeamMembershipEndedListener } from './application/listeners/team-membership-ended.listener';
+import { WorkspaceSharingController } from './presenters/http/workspace-sharing.controller';
+
 @Module({
   imports: [
     LocalWorkspacesRepositoryModule,
     OwnershipModule,
+    TeamsModule,
+    UsersModule,
+    PermissionsModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
     forwardRef(() => ThreadsModule),
   ],
-  controllers: [WorkspacesController, WorkspaceContextController],
+  controllers: [
+    WorkspacesController,
+    WorkspaceContextController,
+    WorkspaceSharingController,
+  ],
   providers: [
     {
       provide: WorkspacesRepository,
       useExisting: LocalWorkspacesRepository,
     },
+    {
+      provide: WorkspaceSharingRepository,
+      useExisting: LocalWorkspaceSharingRepository,
+    },
+    WorkspaceDirectoryService,
+    WorkspaceSummaryService,
+    WorkspaceLinkCleanupService,
+    WorkspaceSharingContextService,
+    GetWorkspaceSharingUseCase,
+    ListShareCandidatesUseCase,
+    ShareWorkspaceUseCase,
+    SetWorkspaceMemberAccessUseCase,
+    RemoveWorkspaceMemberUseCase,
+    SetWorkspaceOrganizationSharingUseCase,
+    EndWorkspaceTeamSharingUseCase,
+    FindAccessibleWorkspaceIdsUseCase,
+    WorkspacesTeamMembershipEndedListener,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
@@ -59,6 +103,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     WorkspaceContextDtoMapper,
   ],
   exports: [
+    FindAccessibleWorkspaceIdsUseCase,
     AssertWorkspaceReadAccessUseCase,
     AssertWorkspaceWriteAccessUseCase,
     AssertWorkspaceExecutionAccessUseCase,
