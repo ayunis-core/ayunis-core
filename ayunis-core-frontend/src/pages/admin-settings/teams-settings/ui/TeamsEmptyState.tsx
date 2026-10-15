@@ -22,3 +22,15 @@ export function NoTeamsFoundEmptyState() {
     />
   );
 }
+
+export function NoManageableTeamsEmptyState() {
+  const { t } = useTranslation('admin-settings-teams');
+
+  return (
+    <EmptyState
+      title={t('teams.list.forbiddenTitle')}
+      description={t('teams.list.forbiddenDescription')}
+      testId="teams-forbidden"
+    />
+  );
+}

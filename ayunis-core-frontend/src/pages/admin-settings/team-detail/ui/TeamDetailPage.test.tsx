@@ -3,7 +3,11 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TeamDetailPage } from './TeamDetailPage';
 
-const state = vi.hoisted(() => ({ isAdmin: true }));
+const state = vi.hoisted(() => ({
+  isAdmin: true,
+  granted: [] as string[],
+  teamAdminOf: [] as string[],
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -22,9 +26,14 @@ vi.mock('@/pages/admin-settings/admin-settings-layout', () => ({
   ),
 }));
 vi.mock('@/features/permissions', () => ({
-  useAuthorization: () => ({ hasRole: () => state.isAdmin }),
-  PermissionGate: ({ children }: { children: ReactNode }) => children,
+  useAuthorization: () => ({
+    hasRole: () => state.isAdmin,
+    can: (permission: string) =>
+      state.isAdmin || state.granted.includes(permission),
+    isTeamAdminOf: (teamId: string) => state.teamAdminOf.includes(teamId),
+  }),
 }));
+vi.mock('@/widgets/pagination', () => ({ PaginationWidget: () => null }));
 vi.mock('@/features/credit-limits', () => ({
   useHasCreditBudget: (enabled: boolean) => enabled,
 }));
@@ -70,6 +79,8 @@ const props = {
 afterEach(cleanup);
 beforeEach(() => {
   state.isAdmin = true;
+  state.granted = [];
+  state.teamAdminOf = [];
 });
 
 describe('team policy shortcuts', () => {
@@ -89,6 +100,22 @@ describe('team policy shortcuts', () => {
     expect(screen.getByText('Team members')).toBeTruthy();
     expect(screen.queryByTestId('team-manage-models')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Credit limit' })).toBeNull();
+  });
+});
+
+describe('team admin access', () => {
+  it('lets a team admin of this team add members', () => {
+    state.isAdmin = false;
+    state.teamAdminOf = ['team-id'];
+    render(<TeamDetailPage {...props} />);
+    expect(screen.getByTestId('team-members-add')).toBeTruthy();
+  });
+
+  it('hides adding members from viewers who may only see the team', () => {
+    state.isAdmin = false;
+    state.granted = ['manage_teams'];
+    render(<TeamDetailPage {...props} />);
+    expect(screen.queryByTestId('team-members-add')).toBeNull();
   });
 });
 

@@ -12,7 +12,12 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
-export function useRemoveTeamMember(teamId: string) {
+interface RemoveTeamMemberInput {
+  userId: string;
+  userName: string;
+}
+
+export function useRemoveTeamMember(teamId: string, teamName: string) {
   const { t } = useTranslation('admin-settings-teams');
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -23,15 +28,14 @@ export function useRemoveTeamMember(teamId: string) {
 
   const mutation = useTeamMembersControllerRemoveTeamMember({
     mutation: {
-      onSuccess: () => {
-        showSuccess(t('teamDetail.removeMember.success'));
-      },
       onError: (error: unknown) => {
         const errorObj = error as { response?: { data?: { code?: string } } };
         const errorCode = errorObj.response?.data?.code;
 
         if (errorCode === 'TEAM_MEMBER_NOT_FOUND') {
           showError(t('teamDetail.removeMember.notFound'));
+        } else if (errorCode === 'LAST_TEAM_ADMIN') {
+          showError(t('teamDetail.removeMember.lastTeamAdmin'));
         } else {
           showError(t('teamDetail.removeMember.error'));
         }
@@ -60,7 +64,7 @@ export function useRemoveTeamMember(teamId: string) {
     },
   });
 
-  function removeTeamMember(userId: string) {
+  function removeTeamMember({ userId, userName }: RemoveTeamMemberInput) {
     confirm({
       title: t('teamDetail.removeMember.confirmTitle'),
       description: t('teamDetail.removeMember.confirmDescription'),
@@ -69,7 +73,18 @@ export function useRemoveTeamMember(teamId: string) {
       variant: 'destructive',
       onConfirm: () => {
         setRemovingUserIds((prev) => new Set(prev).add(userId));
-        mutation.mutate({ id: teamId, userId });
+        mutation.mutate(
+          { id: teamId, userId },
+          {
+            onSuccess: () =>
+              showSuccess(
+                t('teamDetail.removeMember.success', {
+                  name: userName,
+                  team: teamName,
+                }),
+              ),
+          },
+        );
       },
     });
   }
