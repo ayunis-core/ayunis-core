@@ -39,6 +39,17 @@ describe('useHandoverState', () => {
     });
   });
 
+  it('shows someone else’s personal item without a request as a plain read-only view', () => {
+    const { result } = renderHook(() =>
+      useHandoverState('skill', { ...ownItem, viewer: { canUse: false } }),
+    );
+
+    expect(result.current).toMatchObject({
+      isReviewing: false,
+      mayHandOver: false,
+    });
+  });
+
   it('offers the handover on an own item only once no open request exists', () => {
     mocks.isLoading = true;
     const loading = renderHook(() => useHandoverState('skill', ownItem));

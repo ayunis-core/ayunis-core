@@ -80,7 +80,7 @@
     "deleteLabel": "Löschen",
     "confirmDelete": {
       "title": "Wissenssammlung löschen",
-      "description": "Sind Sie sicher, dass Sie „{{title}}“ löschen möchten? Alle Dokumente darin werden mitgelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "description": "Sind Sie sicher, dass Sie „{{title}}“ löschen möchten? Alle Dokumente darin werden mitgelöscht.{{hint}} Diese Aktion kann nicht rückgängig gemacht werden.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen"
     },

@@ -61,13 +61,10 @@
     "skills": {
       "title": "Workspace skills",
       "description": "Skills available for the assistant to activate when needed in workspace chats.",
-      "create": "Create skill",
       "createDescription": "Create a skill owned by this workspace.",
       "name": "Name",
       "shortDescription": "Short description",
       "instructions": "Instructions",
-      "emptyTitle": "No workspace skills",
-      "empty": "No skills have been created in this workspace yet.",
       "delete": "Delete workspace skill",
       "active": "Active",
       "inactive": "Inactive",
@@ -78,12 +75,9 @@
     "knowledge": {
       "title": "Knowledge bases",
       "description": "Workspace-owned knowledge bases available to all workspace chats.",
-      "create": "Create knowledge base",
       "createDescription": "Create a knowledge base owned by this workspace.",
       "name": "Name",
       "descriptionLabel": "Description",
-      "emptyTitle": "No workspace knowledge bases",
-      "empty": "No knowledge bases have been created in this workspace yet.",
       "detach": "Delete workspace knowledge base",
       "documentCount": "{{count}} documents",
       "active": "Active",
@@ -102,5 +96,89 @@
       "saveSuccess": "Instructions were saved.",
       "saveError": "Instructions could not be saved."
     }
+  },
+  "links": {
+    "sections": {
+      "created": "Created in the workspace",
+      "linked": "Linked"
+    },
+    "skills": {
+      "addMenu": "Add skill",
+      "linkExisting": "Link existing",
+      "create": "Create yourself",
+      "createDescription": "Belongs to “{{workspace}}”. All members can use it; anyone who may edit the workspace can change it.",
+      "dialogTitle": "Link existing skills",
+      "dialogDescription": "All members of “{{workspace}}” can use them afterwards, but not change them.",
+      "search": "Search skills",
+      "allLinked": "All skills you can use are already in this workspace.",
+      "emptyOwnTitle": "No own skills yet",
+      "emptyOwn": "Skills that belong only to this workspace.",
+      "emptyLinkedTitle": "No linked skills yet",
+      "emptyLinked": "Link skills from you, your team or the organisation.",
+      "unlinkDescription": "Members of “{{workspace}}” can then no longer use “{{name}}” here. The skill itself is kept and can be linked again at any time."
+    },
+    "knowledge": {
+      "addMenu": "Add knowledge collection",
+      "linkExisting": "Link existing",
+      "create": "Create new",
+      "createDescription": "Belongs to “{{workspace}}”. All members can use it. You add documents afterwards.",
+      "dialogTitle": "Link existing knowledge",
+      "dialogDescription": "All members of “{{workspace}}” can use it afterwards, but not change it.",
+      "search": "Search knowledge",
+      "allLinked": "All knowledge collections you can use are already in this workspace.",
+      "emptyOwnTitle": "No own knowledge yet",
+      "emptyOwn": "Knowledge collections that belong only to this workspace.",
+      "emptyLinkedTitle": "No linked knowledge yet",
+      "emptyLinked": "Link knowledge collections from you, your team or the organisation.",
+      "unlinkDescription": "Members of “{{workspace}}” can then no longer use “{{name}}” here. The knowledge collection itself is kept and can be linked again at any time."
+    },
+    "picker": {
+      "groups": {
+        "own": "Your own",
+        "team": "From your teams",
+        "org": "From the organisation"
+      },
+      "allLinkedTitle": "Everything is already linked",
+      "noResults": "No results",
+      "cancel": "Cancel",
+      "link": "Link",
+      "linkCount": "Link {{count}}",
+      "linked": "Linked.",
+      "error": "The link could not be saved. Please try again."
+    },
+    "owner": {
+      "you": "You",
+      "person": "{{name}}",
+      "team": "Team {{team}}",
+      "org": "Organisation"
+    },
+    "belongs": {
+      "you": "Belongs to you",
+      "person": "Belongs to {{name}}",
+      "team": "Belongs to team {{team}}",
+      "org": "Belongs to the organisation"
+    },
+    "linkedBy": {
+      "you": "Linked by you",
+      "person": "Linked by {{name}}"
+    },
+    "unlink": {
+      "label": "Remove link",
+      "title": "Remove link?",
+      "confirm": "Remove link",
+      "cancel": "Cancel",
+      "success": "“{{name}}” is no longer linked.",
+      "error": "The link could not be removed. Please try again."
+    },
+    "linkedWorkspaces": {
+      "title": "Linked in workspaces",
+      "by": "by {{name}}",
+      "hidden_one": "Also linked in {{count}} other workspace",
+      "hidden_other": "Also linked in {{count}} other workspaces",
+      "hiddenOnly_one": "Linked in {{count}} workspace you cannot open",
+      "hiddenOnly_other": "Linked in {{count}} workspaces you cannot open"
+    },
+    "deleteHint_one": "It is linked in one workspace. Members there will no longer be able to use it.",
+    "deleteHint_other": "It is linked in {{count}} workspaces. Members there will no longer be able to use it."
   }
 }
