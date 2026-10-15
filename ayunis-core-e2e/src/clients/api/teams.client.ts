@@ -106,3 +106,13 @@ export function requestSetTeamAdmin(
     data: { isTeamAdmin },
   });
 }
+
+export function requestAddTeamMember(
+  api: APIRequestContext,
+  teamId: string,
+  userId: string,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/teams/${teamId}/members`, {
+    data: { userId },
+  });
+}

@@ -71,7 +71,7 @@
     },
     "members": {
       "title": "Mitglieder",
-      "description": "Team-Admins verwalten die Mitglieder dieses Teams und können weitere Team-Admins ernennen.",
+      "description": "Team-Admins verwalten das Team. Was sie dürfen, legen Admins unter Rollen & Berechtigungen fest.",
       "name": "Name",
       "email": "E-Mail",
       "role": "Rolle",

@@ -36,11 +36,13 @@ interface TeamDetailPageProps {
 
 function useTeamMemberRights(teamId: string): TeamMemberRights {
   const { canManageTeams } = useTeamManagementAccess();
-  const { can, hasRole, isTeamAdminOf } = useAuthorization();
-  const isTeamAdmin = isTeamAdminOf(teamId);
+  const { can, hasRole, teamAdminCan } = useAuthorization();
   return {
-    canAppoint: can('manage_teams') || isTeamAdmin,
-    canManageMembers: can('assign_users_to_teams') || isTeamAdmin,
+    canAppoint:
+      can('manage_teams') || teamAdminCan(teamId, 'team_appoint_admins'),
+    canManageMembers:
+      can('assign_users_to_teams') ||
+      teamAdminCan(teamId, 'team_manage_members'),
     isAdminViewer: hasRole(MeResponseDtoRole.admin),
     isMutationAllowed: canManageTeams,
   };

@@ -37,4 +37,21 @@ describe('createAuthorization', () => {
       authorization.canAny('manage_own_skills', 'request_skill_transfer'),
     ).toBe(false);
   });
+
+  it('grants team admin rights only inside the administered teams', () => {
+    const authorization = createAuthorization(MeResponseDtoRole.user, [], {
+      teamIds: ['team-1'],
+      permissions: ['team_manage_members'],
+    });
+
+    expect(authorization.teamAdminCan('team-1', 'team_manage_members')).toBe(
+      true,
+    );
+    expect(authorization.teamAdminCan('team-1', 'team_appoint_admins')).toBe(
+      false,
+    );
+    expect(authorization.teamAdminCan('team-2', 'team_manage_members')).toBe(
+      false,
+    );
+  });
 });

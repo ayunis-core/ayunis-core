@@ -154,6 +154,10 @@ function MemberRow({
   onRemove: () => void;
 }>) {
   const isProtected = !rights.isAdminViewer && isOnlyTeamAdmin(team, member);
+  const canRemove =
+    rights.canManageMembers &&
+    !isProtected &&
+    (!member.isTeamAdmin || rights.canAppoint);
 
   return (
     <TableRow data-testid={`team-member-${member.userId}`}>
@@ -169,7 +173,7 @@ function MemberRow({
       </TableCell>
       <TableCell>{new Date(member.joinedAt).toLocaleDateString()}</TableCell>
       <TableCell>
-        {rights.canManageMembers && !isProtected && (
+        {canRemove && (
           <RemoveMemberButton
             member={member}
             disabled={!rights.isMutationAllowed || isRemoving}

@@ -32,7 +32,7 @@ describe('allowedSettingsSections', () => {
     const authorization = createAuthorization(
       MeResponseDtoRole.user,
       ['manage_own_skills'],
-      ['team-1'],
+      { teamIds: ['team-1'], permissions: [] },
     );
 
     expect(allowedSettingsSections(authorization)).toEqual([
