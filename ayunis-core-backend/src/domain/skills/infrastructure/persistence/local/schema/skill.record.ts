@@ -80,6 +80,13 @@ export class SkillRecord extends BaseRecord {
   @JoinColumn({ name: 'orgId' })
   org: OrgRecord | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  submittedByUserId: UUID | null;
+
+  @ManyToOne(() => UserRecord, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'submittedByUserId' })
+  submittedBy?: UserRecord | null;
+
   @ManyToMany(() => SourceRecord)
   @JoinTable({ name: 'skill_sources' })
   sources?: SourceRecord[];

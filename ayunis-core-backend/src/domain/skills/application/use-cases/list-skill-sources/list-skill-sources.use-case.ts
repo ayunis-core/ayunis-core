@@ -26,7 +26,7 @@ export class ListSkillSourcesUseCase {
     this.logger.log({ skillId: query.skillId }, 'Listing sources for skill');
     const skill = await this.repository.findById(query.skillId);
     if (!skill) throw new SkillNotFoundError(query.skillId);
-    await this.authorization.requireRead(skill);
+    await this.authorization.requireView(skill);
     if (!skill.sourceIds.length) return [];
     return this.getSourcesByIds.execute(
       new GetSourcesByIdsQuery(skill.sourceIds),

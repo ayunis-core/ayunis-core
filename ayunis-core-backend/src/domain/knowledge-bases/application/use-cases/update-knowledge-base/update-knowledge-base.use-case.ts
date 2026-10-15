@@ -61,7 +61,14 @@ function withSameOwner(
     });
   }
   if (existing instanceof TeamKnowledgeBase) {
-    return new TeamKnowledgeBase({ ...params, teamId: existing.teamId });
+    return new TeamKnowledgeBase({
+      ...params,
+      teamId: existing.teamId,
+      submittedByUserId: existing.submittedByUserId,
+    });
   }
-  return new OrgKnowledgeBase(params);
+  return new OrgKnowledgeBase({
+    ...params,
+    submittedByUserId: existing.submittedByUserId,
+  });
 }

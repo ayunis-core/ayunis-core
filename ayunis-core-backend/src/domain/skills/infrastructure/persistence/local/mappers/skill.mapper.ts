@@ -17,11 +17,12 @@ export class SkillMapper {
     if (workspaceId !== null && userId === null) {
       return new WorkspaceSkill({ ...params, workspaceId });
     }
+    const submittedByUserId = record.submittedByUserId ?? null;
     if (teamId && orgId) {
-      return new TeamSkill({ ...params, teamId, orgId });
+      return new TeamSkill({ ...params, teamId, orgId, submittedByUserId });
     }
     if (orgId) {
-      return new OrgSkill({ ...params, orgId });
+      return new OrgSkill({ ...params, orgId, submittedByUserId });
     }
     throw new Error(`Skill ${record.id} has invalid ownership`);
   }
@@ -67,10 +68,10 @@ export class SkillMapper {
     record.workspaceId =
       domain instanceof WorkspaceSkill ? domain.workspaceId : null;
     record.teamId = domain instanceof TeamSkill ? domain.teamId : null;
-    record.orgId =
-      domain instanceof TeamSkill || domain instanceof OrgSkill
-        ? domain.orgId
-        : null;
+    const collective =
+      domain instanceof TeamSkill || domain instanceof OrgSkill;
+    record.orgId = collective ? domain.orgId : null;
+    record.submittedByUserId = collective ? domain.submittedByUserId : null;
     return record;
   }
 }

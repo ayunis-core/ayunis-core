@@ -36,6 +36,10 @@ export abstract class CollectiveSkillRepository {
     userId: UUID,
     isActive: boolean,
   ): Promise<void>;
+  abstract transferFromPersonal(
+    skillId: UUID,
+    owner: { teamId: UUID | null; orgId: UUID; submittedByUserId: UUID },
+  ): Promise<boolean>;
   abstract setPinned(
     skillId: UUID,
     userId: UUID,

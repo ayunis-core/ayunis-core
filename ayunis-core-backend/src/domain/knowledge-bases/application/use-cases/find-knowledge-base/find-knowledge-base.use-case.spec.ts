@@ -44,7 +44,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
       .mockResolvedValue(new Map([[knowledgeBase.id, 2]])),
   };
   const readAccess = {
-    requireRead: jest.fn(),
+    requireView: jest.fn(),
   } as unknown as jest.Mocked<KnowledgeBaseReadAccessService>;
   const context = {
     get: jest.fn(getFromUserContext({ userId: USER_ID, orgId: ORG_ID })),
@@ -101,7 +101,7 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       viewer: { canUse: true, canEdit: true },
       ownerDescription: undefined,
     });
-    expect(readAccess.requireRead).toHaveBeenCalledWith(knowledgeBase);
+    expect(readAccess.requireView).toHaveBeenCalledWith(knowledgeBase);
   });
 
   it('preserves read access to a personal knowledge base shared by another user', async () => {
@@ -122,7 +122,7 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       viewer: { canUse: false, canEdit: false },
       ownerDescription: undefined,
     });
-    expect(readAccess.requireRead).toHaveBeenCalledWith(sharedKnowledgeBase);
+    expect(readAccess.requireView).toHaveBeenCalledWith(sharedKnowledgeBase);
   });
 
   it('returns an authorized workspace knowledge base without a caller-supplied workspace id', async () => {
@@ -141,7 +141,7 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       isActive: true,
       documentCount: 2,
     });
-    expect(readAccess.requireRead).toHaveBeenCalledWith(workspaceKnowledgeBase);
+    expect(readAccess.requireView).toHaveBeenCalledWith(workspaceKnowledgeBase);
   });
 
   it('shows an organisation knowledge base as active and read-only by default', async () => {
@@ -162,6 +162,7 @@ describe(FindKnowledgeBaseUseCase.name, () => {
         audienceCount: null,
         teamEditors: [],
         orgEditorsIncludeNonAdmins: false,
+        submittedBy: null,
       },
     });
   });
@@ -173,7 +174,7 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       orgId: randomUUID(),
     });
     const { useCase, readAccess } = await setup(inaccessible);
-    readAccess.requireRead.mockRejectedValue(
+    readAccess.requireView.mockRejectedValue(
       new KnowledgeBaseNotFoundError(inaccessible.id),
     );
 
@@ -194,7 +195,7 @@ describe(FindKnowledgeBaseUseCase.name, () => {
     await expect(
       useCase.execute(query(knowledgeBase.id)),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
-    expect(readAccess.requireRead).not.toHaveBeenCalled();
+    expect(readAccess.requireView).not.toHaveBeenCalled();
   });
 
   it('wraps unexpected read failures', async () => {
@@ -204,7 +205,7 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       orgId: ORG_ID,
     });
     const { useCase, readAccess } = await setup(knowledgeBase);
-    readAccess.requireRead.mockRejectedValue(new Error('Connection refused'));
+    readAccess.requireView.mockRejectedValue(new Error('Connection refused'));
 
     await expect(
       useCase.execute(query(knowledgeBase.id)),

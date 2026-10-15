@@ -24,7 +24,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
     findSourcesByKnowledgeBaseId: jest.fn().mockResolvedValue(documents),
   };
   const readAccess = {
-    requireRead: jest.fn(),
+    requireView: jest.fn(),
   } as unknown as jest.Mocked<KnowledgeBaseReadAccessService>;
   const module = await Test.createTestingModule({
     providers: [
@@ -75,7 +75,7 @@ describe(ListKnowledgeBaseDocumentsUseCase.name, () => {
       await expect(
         useCase.execute(new ListKnowledgeBaseDocumentsQuery(knowledgeBase.id)),
       ).resolves.toEqual(documents);
-      expect(readAccess.requireRead).toHaveBeenCalledWith(knowledgeBase);
+      expect(readAccess.requireView).toHaveBeenCalledWith(knowledgeBase);
     },
   );
 
@@ -86,7 +86,7 @@ describe(ListKnowledgeBaseDocumentsUseCase.name, () => {
       orgId: randomUUID(),
     });
     const { useCase, repository, readAccess } = await setup(knowledgeBase);
-    readAccess.requireRead.mockRejectedValue(
+    readAccess.requireView.mockRejectedValue(
       new KnowledgeBaseNotFoundError(knowledgeBase.id),
     );
 
@@ -108,7 +108,7 @@ describe(ListKnowledgeBaseDocumentsUseCase.name, () => {
     await expect(
       useCase.execute(new ListKnowledgeBaseDocumentsQuery(knowledgeBase.id)),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
-    expect(readAccess.requireRead).not.toHaveBeenCalled();
+    expect(readAccess.requireView).not.toHaveBeenCalled();
     expect(repository.findSourcesByKnowledgeBaseId).not.toHaveBeenCalled();
   });
 });
