@@ -1,0 +1,44 @@
+{
+  "field": {
+    "label": "Gehört"
+  },
+  "options": {
+    "personal": "Ihnen",
+    "team": "Team {{team}}",
+    "org": "Organisation"
+  },
+  "hints": {
+    "personal": "Nur Sie können sie ändern.",
+    "team": "Alle im Team {{team}} können sie nutzen. {{editors}}",
+    "org": "Alle {{total}} Personen in der Organisation können sie nutzen. {{editors}}"
+  },
+  "editors": {
+    "youAndOthers": "Ändern können Sie und die anderen Team-Admins.",
+    "youOnly": "Ändern können Sie als Team-Admin.",
+    "one": "Ändern kann {{name}} als Team-Admin.",
+    "teamAdmins": "Ändern können die Team-Admins.",
+    "adminsOnly": "Ändern können Admins.",
+    "orgWithRight": "Ändern können Admins und alle mit dem Recht dazu."
+  },
+  "card": {
+    "title": {
+      "personal": "Gehört Ihnen",
+      "team": "Gehört dem Team {{team}}",
+      "org": "Gehört der Organisation"
+    },
+    "audience": {
+      "personal": "Nur Sie können die {{noun}} ändern.",
+      "team": "Alle {{total}} Mitglieder können die {{noun}} nutzen.",
+      "org": "Alle {{total}} Personen in der Organisation können die {{noun}} nutzen."
+    }
+  },
+  "nouns": {
+    "skill": "Fähigkeit",
+    "knowledge_base": "Wissenssammlung"
+  },
+  "readOnly": "Nur lesen",
+  "created": {
+    "team": "„{{name}}“ gehört jetzt Team {{team}}.",
+    "org": "„{{name}}“ gehört jetzt der Organisation. Alle können sie nutzen."
+  }
+}

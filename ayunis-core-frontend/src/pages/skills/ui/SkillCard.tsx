@@ -8,7 +8,7 @@ import {
 } from '@ayunis/ui/components/tooltip';
 import { Trash2, Pin } from 'lucide-react';
 import { useDeleteSkill } from '@/pages/skills/api/useDeleteSkill';
-import { PermissionGate } from '@/features/permissions';
+import { OwnerBadge } from '@/features/resource-ownership';
 import {
   useSetSkillActivation,
   useSetSkillPin,
@@ -62,29 +62,35 @@ export default function SkillCard({
     void router.navigate({ to: '/skills/$id', params: { id: skill.id } });
   }
 
-  const pinButton = skill.isActive ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleTogglePinned();
-          }}
-          disabled={setPin.isPending}
-          aria-label={
-            skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')
-          }
-        >
-          <Pin className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`} />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
-      </TooltipContent>
-    </Tooltip>
-  ) : null;
+  const canUse = skill.viewer?.canUse ?? true;
+  const canDelete = skill.viewer?.canDelete ?? false;
+
+  const pinButton =
+    canUse && skill.isActive ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTogglePinned();
+            }}
+            disabled={setPin.isPending}
+            aria-label={
+              skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')
+            }
+          >
+            <Pin
+              className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
+        </TooltipContent>
+      </Tooltip>
+    ) : null;
 
   return (
     <SkillListItem
@@ -92,6 +98,7 @@ export default function SkillCard({
       title={
         <>
           <span>{skill.name}</span>
+          <OwnerBadge resource={skill} testId={`skill-owner-${skill.id}`} />
           {skill.isShared && (
             <Badge variant="secondary" className="ml-2 text-xs">
               {t('shared.badge')}
@@ -108,16 +115,22 @@ export default function SkillCard({
       onClick={handleNavigateToDetail}
       actions={
         <>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {skill.isActive ? t('card.activeLabel') : t('card.inactiveLabel')}
-            </span>
-            <Switch
-              checked={skill.isActive}
-              onCheckedChange={handleToggleActive}
-              disabled={setActivation.isPending}
-            />
-          </div>
+          {canUse && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {skill.isActive
+                  ? t('card.activeLabel')
+                  : t('card.inactiveLabel')}
+              </span>
+              <Switch
+                checked={skill.isActive}
+                onCheckedChange={handleToggleActive}
+                disabled={setActivation.isPending}
+                aria-label={t('card.activeSwitchLabel')}
+                data-testid={`skill-active-${skill.id}`}
+              />
+            </div>
+          )}
           {pinButton &&
             (pinTourTarget ? (
               <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
@@ -126,24 +139,22 @@ export default function SkillCard({
             ) : (
               pinButton
             ))}
-          {!skill.isShared && (
-            <PermissionGate permission="manage_own_skills">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={handleDelete}
-                    disabled={deleteSkill.isPending}
-                    aria-label={t('card.deleteLabel')}
-                  >
-                    <Trash2 />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('card.deleteLabel')}</TooltipContent>
-              </Tooltip>
-            </PermissionGate>
+          {canDelete && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive"
+                  onClick={handleDelete}
+                  disabled={deleteSkill.isPending}
+                  aria-label={t('card.deleteLabel')}
+                >
+                  <Trash2 />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('card.deleteLabel')}</TooltipContent>
+            </Tooltip>
           )}
         </>
       }

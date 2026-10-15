@@ -43,7 +43,9 @@
     "manage_own_knowledge": "Eigene Wissenssammlungen und ihre Dokumente erstellen, bearbeiten und löschen.",
     "request_knowledge_transfer": "Eine eigene Wissenssammlung für ein Team freigeben, in dem man Mitglied ist.",
     "request_knowledge_transfer_org": "Eine eigene Wissenssammlung für die gesamte Organisation freigeben.",
-    "create_workspaces": "Eigene Arbeitsbereiche anlegen."
+    "create_workspaces": "Eigene Arbeitsbereiche anlegen.",
+    "manage_org_skills": "Fähigkeiten für alle in der Organisation erstellen, bearbeiten und löschen.",
+    "manage_org_knowledge": "Wissenssammlungen für alle in der Organisation erstellen, bearbeiten und löschen."
   },
   "permissions": {
     "manage_teams": "Teams verwalten",
@@ -55,7 +57,9 @@
     "manage_own_knowledge": "Eigene Wissenssammlungen verwalten",
     "request_knowledge_transfer": "Mit eigenen Teams teilen",
     "request_knowledge_transfer_org": "Mit der Organisation teilen",
-    "create_workspaces": "Arbeitsbereiche erstellen"
+    "create_workspaces": "Arbeitsbereiche erstellen",
+    "manage_org_skills": "Fähigkeiten der Organisation verwalten",
+    "manage_org_knowledge": "Wissenssammlungen der Organisation verwalten"
   },
   "teamAdmins": {
     "title": "Team-Admins",
@@ -64,11 +68,15 @@
     "note": "Den letzten Team-Admin eines Teams können nur Admins ändern oder entfernen.",
     "permissions": {
       "team_manage_members": "Mitglieder hinzufügen und entfernen",
-      "team_appoint_admins": "Team-Admins ernennen"
+      "team_appoint_admins": "Team-Admins ernennen",
+      "team_manage_skills": "Fähigkeiten für das Team verwalten",
+      "team_manage_knowledge": "Wissenssammlungen für das Team verwalten"
     },
     "permissionHints": {
       "team_manage_members": "Personen ins eigene Team aufnehmen und wieder entfernen.",
-      "team_appoint_admins": "Andere Mitglieder des eigenen Teams zum Team-Admin machen oder die Rolle wieder entziehen."
+      "team_appoint_admins": "Andere Mitglieder des eigenen Teams zum Team-Admin machen oder die Rolle wieder entziehen.",
+      "team_manage_skills": "Fähigkeiten des Teams erstellen, bearbeiten und löschen.",
+      "team_manage_knowledge": "Wissenssammlungen des Teams erstellen, bearbeiten und löschen."
     }
   },
   "save": "Änderungen speichern",

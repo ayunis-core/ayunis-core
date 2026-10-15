@@ -43,7 +43,9 @@
     "manage_own_knowledge": "Create, edit and delete your own knowledge bases and their documents.",
     "request_knowledge_transfer": "Make one of your own knowledge bases available to a team you belong to.",
     "request_knowledge_transfer_org": "Make one of your own knowledge bases available to the whole organisation.",
-    "create_workspaces": "Create your own workspaces."
+    "create_workspaces": "Create your own workspaces.",
+    "manage_org_skills": "Create, edit and delete skills for everyone in the organisation.",
+    "manage_org_knowledge": "Create, edit and delete knowledge bases for everyone in the organisation."
   },
   "permissions": {
     "manage_teams": "Manage teams",
@@ -55,7 +57,9 @@
     "manage_own_knowledge": "Manage own knowledge bases",
     "request_knowledge_transfer": "Share with own teams",
     "request_knowledge_transfer_org": "Share with the organisation",
-    "create_workspaces": "Create workspaces"
+    "create_workspaces": "Create workspaces",
+    "manage_org_skills": "Manage organisation skills",
+    "manage_org_knowledge": "Manage organisation knowledge bases"
   },
   "teamAdmins": {
     "title": "Team admins",
@@ -64,11 +68,15 @@
     "note": "Only admins can change or remove the last team admin of a team.",
     "permissions": {
       "team_manage_members": "Add and remove members",
-      "team_appoint_admins": "Appoint team admins"
+      "team_appoint_admins": "Appoint team admins",
+      "team_manage_skills": "Manage team skills",
+      "team_manage_knowledge": "Manage team knowledge bases"
     },
     "permissionHints": {
       "team_manage_members": "Add people to their own team and remove them again.",
-      "team_appoint_admins": "Make other members of their own team team admin or take the role away again."
+      "team_appoint_admins": "Make other members of their own team team admin or take the role away again.",
+      "team_manage_skills": "Create, edit and delete the team's skills.",
+      "team_manage_knowledge": "Create, edit and delete the team's knowledge bases."
     }
   },
   "save": "Save changes",

@@ -9,7 +9,7 @@
     "configuration": "Konfiguration",
     "shares": "Freigaben",
     "personal": "Eigene Wissenssammlungen",
-    "shared": "Geteilte Wissenssammlungen"
+    "shared": "Team und Organisation"
   },
   "shares": {
     "org": {
@@ -65,8 +65,8 @@
       "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und verwenden Sie sie als Kontext für die KI in Ihren Chats."
     },
     "shared": {
-      "title": "Noch keine geteilten Wissenssammlungen",
-      "description": "Wissenssammlungen, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt werden, erscheinen hier."
+      "title": "Noch keine Wissenssammlungen aus Team und Organisation",
+      "description": "Wissenssammlungen Ihrer Teams und der Organisation sowie mit Ihnen geteilte Wissenssammlungen erscheinen hier."
     }
   },
   "card": {

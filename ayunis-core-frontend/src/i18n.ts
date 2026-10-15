@@ -40,6 +40,8 @@ import enInstallIntegration from './shared/locales/en/install-integration.json';
 import deInstallIntegration from './shared/locales/de/install-integration.json';
 import enWorkspaces from './shared/locales/en/workspaces.json';
 import deWorkspaces from './shared/locales/de/workspaces.json';
+import enResourceOwnership from './shared/locales/en/resource-ownership.json';
+import deResourceOwnership from './shared/locales/de/resource-ownership.json';
 import enWorkspace from './shared/locales/en/workspace.json';
 import deWorkspace from './shared/locales/de/workspace.json';
 import enSkills from './shared/locales/en/skills.json';
@@ -110,6 +112,7 @@ const resources = {
     'install-integration': enInstallIntegration,
     skills: enSkills,
     workspaces: enWorkspaces,
+    'resource-ownership': enResourceOwnership,
     workspace: enWorkspace,
     skill: enSkill,
     'knowledge-bases': enKnowledgeBases,
@@ -154,6 +157,7 @@ const resources = {
     'install-integration': deInstallIntegration,
     skills: deSkills,
     workspaces: deWorkspaces,
+    'resource-ownership': deResourceOwnership,
     workspace: deWorkspace,
     skill: deSkill,
     'knowledge-bases': deKnowledgeBases,

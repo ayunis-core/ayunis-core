@@ -8,31 +8,52 @@ import {
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { toOwnerChoice, type OwnerOption } from '@/features/resource-ownership';
 
 export type CreateKnowledgeBaseData = {
   name: string;
   description?: string;
+  owner?: OwnerOption;
 };
+
+const PERSONAL_OWNER: OwnerOption = { type: 'personal' };
 
 export function useCreateKnowledgeBase() {
   const { t } = useTranslation('knowledge-bases');
+  const { t: tOwnership } = useTranslation('resource-ownership');
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useMutation({
-    mutationFn: (data: CreateKnowledgeBaseData) =>
+    mutationFn: ({
+      owner = PERSONAL_OWNER,
+      ...data
+    }: CreateKnowledgeBaseData) =>
       knowledgeBasesControllerCreate({
-        ownerType: 'personal',
+        ...toOwnerChoice(owner),
         name: data.name,
         description: data.description ?? '',
       }),
-    onSuccess: () => {
+    onSuccess: (data, { owner = PERSONAL_OWNER }) => {
       void queryClient.invalidateQueries({
         queryKey: getKnowledgeBasesControllerFindAllQueryKey(
           personalKnowledgeBaseListParams,
         ),
       });
       void router.invalidate();
-      showSuccess(t('create.success'));
+      if (owner.type === 'personal') {
+        showSuccess(t('create.success'));
+        return;
+      }
+      showSuccess(
+        tOwnership(`created.${owner.type}`, {
+          name: data.name,
+          team: owner.teamName,
+        }),
+      );
+      void router.navigate({
+        to: '/knowledge-bases',
+        search: { tab: 'shared' },
+      });
     },
     onError: (error) => {
       try {

@@ -56,13 +56,13 @@ export const Route = createFileRoute('/_authenticated/skills/$id')({
     const isEmbeddingModelEnabled = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),
     );
-    // Only query shares and user teams if the user owns the skill (not shared)
-    const shares = skill.isShared
-      ? []
-      : await queryClient.query(sharesQueryOptions(id));
-    const userTeams = skill.isShared
-      ? []
-      : await queryClient.query(userTeamsQueryOptions());
+    const isOwnPersonal = skill.ownerType === 'personal' && !skill.isShared;
+    const shares = isOwnPersonal
+      ? await queryClient.query(sharesQueryOptions(id))
+      : [];
+    const userTeams = isOwnPersonal
+      ? await queryClient.query(userTeamsQueryOptions())
+      : [];
     return { skill, isEmbeddingModelEnabled, shares, userTeams };
   },
 });
