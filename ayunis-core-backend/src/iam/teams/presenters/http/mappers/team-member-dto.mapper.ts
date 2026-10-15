@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
-import { TeamMemberResponseDto } from '../dtos/team-member-response.dto';
+import { TeamMemberResponseDto } from 'src/iam/teams/presenters/http/dtos/team-member-response.dto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @Injectable()
@@ -12,6 +12,7 @@ export class TeamMemberDtoMapper {
       userName: teamMember.user?.name ?? '',
       userEmail: teamMember.user?.email ?? '',
       userRole: teamMember.user?.role ?? UserRole.USER,
+      isTeamAdmin: teamMember.isTeamAdmin,
       joinedAt: teamMember.createdAt,
     };
   }

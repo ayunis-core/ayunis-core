@@ -22,10 +22,10 @@ import {
   useComboboxAnchor,
 } from '@ayunis/ui/components/combobox';
 import { keepPreviousData } from '@tanstack/react-query';
-import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamMembersControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
-import { useAddTeamMembers } from '../api/useAddTeamMembers';
+import { useAddTeamMembers } from '@/pages/admin-settings/team-detail/api/useAddTeamMembers';
 
 interface UserOption {
   value: string;
@@ -69,7 +69,7 @@ export function AddTeamMemberDialog({
   );
 
   // Fetch existing team members to exclude them from selection
-  const { data: membersResponse } = useTeamsControllerListTeamMembers(
+  const { data: membersResponse } = useTeamMembersControllerListTeamMembers(
     teamId,
     { limit: 100, offset: 0 },
     { query: { enabled: open } },

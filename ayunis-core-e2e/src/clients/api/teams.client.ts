@@ -19,7 +19,7 @@ export async function addTeamMember(
   teamId: string,
   userId: string,
 ): Promise<void> {
-  await generatedApi.teamsControllerAddTeamMember(teamId, { userId }, { api });
+  await generatedApi.teamMembersControllerAddTeamMember(teamId, { userId }, { api });
 }
 
 export function bulkAddTeamMembers(
@@ -27,14 +27,14 @@ export function bulkAddTeamMembers(
   teamId: string,
   userIds: string[],
 ) {
-  return generatedApi.teamsControllerBulkAddTeamMembers(teamId, { userIds }, { api });
+  return generatedApi.teamMembersControllerBulkAddTeamMembers(teamId, { userIds }, { api });
 }
 
 export function listTeamMembers(
   api: APIRequestContext,
   teamId: string,
 ): Promise<PaginatedTeamMembersResponseDto> {
-  return generatedApi.teamsControllerListTeamMembers(
+  return generatedApi.teamMembersControllerListTeamMembers(
     teamId,
     { limit: 100, offset: 0 },
     { api },

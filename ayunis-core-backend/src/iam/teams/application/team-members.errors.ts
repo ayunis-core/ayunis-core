@@ -5,6 +5,8 @@ export enum TeamMemberErrorCode {
   TEAM_MEMBER_NOT_FOUND = 'TEAM_MEMBER_NOT_FOUND',
   USER_ALREADY_TEAM_MEMBER = 'USER_ALREADY_TEAM_MEMBER',
   USER_NOT_IN_SAME_ORG = 'USER_NOT_IN_SAME_ORG',
+  TEAM_ACCESS_DENIED = 'TEAM_ACCESS_DENIED',
+  LAST_TEAM_ADMIN = 'LAST_TEAM_ADMIN',
   UNEXPECTED_TEAM_MEMBER_ERROR = 'UNEXPECTED_TEAM_MEMBER_ERROR',
 }
 
@@ -36,6 +38,30 @@ export class UserAlreadyTeamMemberError extends TeamMemberError {
       `User '${userId}' is already a member of team '${teamId}'`,
       TeamMemberErrorCode.USER_ALREADY_TEAM_MEMBER,
       409,
+      metadata,
+    );
+  }
+}
+
+export class TeamAccessDeniedError extends TeamMemberError {
+  constructor(teamId?: string, metadata?: ErrorMetadata) {
+    super(
+      teamId
+        ? `Not allowed to manage team '${teamId}'`
+        : 'Not allowed to manage teams',
+      TeamMemberErrorCode.TEAM_ACCESS_DENIED,
+      403,
+      metadata,
+    );
+  }
+}
+
+export class LastTeamAdminError extends TeamMemberError {
+  constructor(teamId: string, userId: string, metadata?: ErrorMetadata) {
+    super(
+      `User '${userId}' is the last team admin of team '${teamId}'; only organization admins may change that`,
+      TeamMemberErrorCode.LAST_TEAM_ADMIN,
+      403,
       metadata,
     );
   }

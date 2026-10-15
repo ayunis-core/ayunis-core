@@ -2,8 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
 import {
-  useTeamsControllerBulkAddTeamMembers,
-  getTeamsControllerListTeamMembersQueryKey,
+  useTeamMembersControllerBulkAddTeamMembers,
+  getTeamMembersControllerListTeamMembersQueryKey,
   getTeamsControllerGetTeamQueryKey,
   getTeamsControllerListTeamsQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
@@ -15,7 +15,7 @@ export function useAddTeamMembers(teamId: string, onSuccess?: () => void) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const mutation = useTeamsControllerBulkAddTeamMembers({
+  const mutation = useTeamMembersControllerBulkAddTeamMembers({
     mutation: {
       onSuccess: (added) => {
         // The API skips users that are already members / not in the org, so a
@@ -32,7 +32,7 @@ export function useAddTeamMembers(teamId: string, onSuccess?: () => void) {
       },
       onSettled: () => {
         void queryClient.invalidateQueries({
-          queryKey: getTeamsControllerListTeamMembersQueryKey(teamId),
+          queryKey: getTeamMembersControllerListTeamMembersQueryKey(teamId),
         });
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerGetTeamQueryKey(teamId),

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredOrgId } from 'src/common/context/required-context';
 import type { UUID } from 'crypto';
@@ -20,12 +21,17 @@ export class BulkAddTeamMembersUseCase {
 
   constructor(
     private readonly createMember: TeamMemberCreationService,
+    private readonly teamAccess: TeamAccessService,
     private readonly context: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedTeamMemberError)
   async execute(command: BulkAddTeamMembersCommand): Promise<TeamMember[]> {
     const orgId = getRequiredOrgId(this.context, command.orgId);
+    await this.teamAccess.assertCanManageMembers({
+      teamId: command.teamId,
+      targetOrgId: command.orgId,
+    });
     const uniqueUserIds = [...new Set(command.userIds)];
     this.logger.log(
       { teamId: command.teamId, count: uniqueUserIds.length },

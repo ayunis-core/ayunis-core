@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { BulkAddTeamMembersUseCase } from './bulk-add-team-members.use-case';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
 import { TeamMemberCreationService } from 'src/iam/teams/application/services/team-member-creation.service';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
@@ -34,6 +35,10 @@ describe('BulkAddTeamMembersUseCase', () => {
           useValue: { get: () => '11111111-1111-4111-8111-111111111111' },
         },
         { provide: TeamMemberCreationService, useValue: mockCreateMember },
+        {
+          provide: TeamAccessService,
+          useValue: { assertCanManageMembers: jest.fn() },
+        },
       ],
     }).compile();
 
