@@ -111,7 +111,8 @@
   "actions": {
     "more": "More workspace actions",
     "edit": "Edit workspace",
-    "delete": "Delete workspace"
+    "delete": "Delete workspace",
+    "transfer": "Transfer ownership"
   },
   "settingsDialog": {
     "title": "Workspace settings",
@@ -126,7 +127,21 @@
     "description": "“{{name}}” and every chat inside it will be permanently deleted.",
     "confirmNameLabel": "If you really want to delete this workspace, enter its name: “{{name}}”.",
     "confirmText": "Delete",
-    "cancelText": "Cancel"
+    "cancelText": "Cancel",
+    "membersLoseAccess": "All members lose access."
+  },
+  "transferDialog": {
+    "title": "Transfer ownership",
+    "description": "This person becomes the owner of “{{name}}” and can then also delete the workspace. You keep full access.",
+    "noCandidates": "Invite someone to the workspace first.",
+    "loadError": "The people could not be loaded.",
+    "retry": "Try again",
+    "label": "To",
+    "placeholder": "Choose a person",
+    "noMatch": "Nobody found",
+    "hint": "Everyone who has been invited can be chosen.",
+    "cancel": "Cancel",
+    "confirm": "Transfer"
   },
   "picker": {
     "empty": "No workspaces yet",
@@ -160,6 +175,10 @@
     "chatMoved": "Chat moved",
     "chatRemoved": "Chat removed from the workspace",
     "chatMoveError": "The chat could not be moved",
-    "chatNotFound": "Chat not found"
+    "chatNotFound": "Chat not found",
+    "transferSuccess": "“{{workspace}}” now belongs to {{name}}.",
+    "transferError": "Ownership could not be transferred",
+    "transferNotEligible": "This person no longer has access to the workspace",
+    "transferOwnerOnly": "Only the owner can transfer the workspace"
   }
 }

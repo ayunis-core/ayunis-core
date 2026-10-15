@@ -44,6 +44,8 @@ export function WorkspaceDeleteDialog({
           <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
           <AlertDialogDescription>
             {t('deleteDialog.description', { name: workspace.name })}
+            {(workspace.memberCount ?? 1) > 1 &&
+              ` ${t('deleteDialog.membersLoseAccess')}`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="grid gap-2">

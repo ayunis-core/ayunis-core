@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ArrowRightLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
@@ -14,18 +14,25 @@ import {
   useFavorites,
   useToggleFavorite,
 } from '@/features/favorites';
-import { isWorkspaceOwner, type Workspace } from '@/features/workspaces';
+import {
+  canManageWorkspace,
+  isWorkspaceOwner,
+  type Workspace,
+} from '@/features/workspaces';
 import { WorkspaceMembersButton } from '@/widgets/workspace-members-dialog';
+import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 
 interface WorkspaceHeaderActionsProps {
   workspace: Workspace;
   onOpenSettings: () => void;
+  onOpenTransfer: () => void;
   onOpenDelete: () => void;
 }
 
 export function WorkspaceHeaderActions({
   workspace,
   onOpenSettings,
+  onOpenTransfer,
   onOpenDelete,
 }: Readonly<WorkspaceHeaderActionsProps>) {
   const { t } = useTranslation('workspace');
@@ -33,6 +40,8 @@ export function WorkspaceHeaderActions({
   const { favorites } = useFavorites();
   const { toggle: togglePinned } = useToggleFavorite();
   const isPinned = isFavorite(favorites, workspace.id, 'workspace');
+  const { requestDialogOpen, handleCloseAutoFocus } =
+    useDropdownDialogTransition();
 
   return (
     <div className="flex items-center gap-1">
@@ -44,7 +53,7 @@ export function WorkspaceHeaderActions({
         onToggle={() => togglePinned('workspace', workspace.id)}
       />
       <WorkspaceMembersButton workspace={workspace} />
-      {isWorkspaceOwner(workspace.accessLevel) && (
+      {canManageWorkspace(workspace.accessLevel) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -56,15 +65,33 @@ export function WorkspaceHeaderActions({
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onOpenSettings}>
+          <DropdownMenuContent
+            align="end"
+            onCloseAutoFocus={handleCloseAutoFocus}
+          >
+            <DropdownMenuItem onClick={() => requestDialogOpen(onOpenSettings)}>
               <Pencil />
               <span>{tWorkspaces('actions.edit')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={onOpenDelete}>
-              <Trash2 />
-              <span>{tWorkspaces('actions.delete')}</span>
-            </DropdownMenuItem>
+            {isWorkspaceOwner(workspace.accessLevel) && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => requestDialogOpen(onOpenTransfer)}
+                  data-testid="workspace-transfer-action"
+                >
+                  <ArrowRightLeft />
+                  <span>{tWorkspaces('actions.transfer')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => requestDialogOpen(onOpenDelete)}
+                  data-testid="workspace-delete-action"
+                >
+                  <Trash2 />
+                  <span>{tWorkspaces('actions.delete')}</span>
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
