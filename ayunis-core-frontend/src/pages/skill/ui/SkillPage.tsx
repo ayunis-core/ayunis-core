@@ -4,12 +4,12 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
-import {
-  ResourceOwnershipCard,
-  showsOwnershipCard,
-} from '@/widgets/resource-ownership-card';
 import { ReadOnlyBadge } from '@/features/resource-ownership';
-import { useRouter } from '@tanstack/react-router';
+import {
+  useHandoverState,
+  type HandoverState,
+} from '@/features/resource-handover';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -24,6 +24,8 @@ import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
 import { SkillHeaderActions } from './SkillHeaderActions';
 import { SkillReadOnlyContent } from './SkillReadOnlyContent';
+import { SkillHandoverButton } from './SkillHandoverButton';
+import { SkillOwnershipSection } from './SkillOwnershipSection';
 
 function useUpdateSkillProperties(skillId: string) {
   const queryClient = useQueryClient();
@@ -44,22 +46,33 @@ function useUpdateSkillProperties(skillId: string) {
 function SkillConfiguration({
   skill,
   isEmbeddingModelEnabled,
-}: Readonly<{ skill: SkillResponseDto; isEmbeddingModelEnabled: boolean }>) {
+  handover,
+  onDecided,
+}: Readonly<{
+  skill: SkillResponseDto;
+  isEmbeddingModelEnabled: boolean;
+  handover: HandoverState;
+  onDecided: () => Promise<void>;
+}>) {
   const access = skillAccess(skill);
   const sourcesHook = useSkillSources({ skill });
   const updateProperties = useUpdateSkillProperties(skill.id);
-  const linksResources = !access.isCollective;
-  const isReadOnlyCollective = access.isCollective && !access.canEdit;
+  const linksResources = !access.isCollective && !handover.isReviewing;
+  const isReadOnly =
+    (access.isCollective && !access.canEdit) || handover.isReviewing;
 
   return (
     <div className="grid gap-4">
-      {showsOwnershipCard(skill) && (
-        <ResourceOwnershipCard kind="skill" resource={skill} />
-      )}
-      {isReadOnlyCollective ? (
+      <SkillOwnershipSection
+        skill={skill}
+        handover={handover}
+        onDecided={onDecided}
+      />
+      {isReadOnly ? (
         <SkillReadOnlyContent
           trigger={skill.shortDescription}
           instructions={skill.instructions}
+          showDescription={!handover.isReviewing}
         />
       ) : (
         <SkillPropertiesCard
@@ -95,6 +108,10 @@ export function SkillPage({
 }>) {
   const { t } = useTranslation('skill');
   const access = skillAccess(skill);
+  const handover = useHandoverState('skill', skill);
+  const navigate = useNavigate();
+  const leaveAfterDecision = () =>
+    navigate({ to: '/skills', search: { tab: 'requests' } });
 
   return (
     <AppLayout>
@@ -106,13 +123,25 @@ export function SkillPage({
               { label: skill.name },
             ]}
             badge={access.canEdit ? null : <ReadOnlyBadge />}
-            action={<SkillHeaderActions skill={skill} access={access} />}
+            action={
+              <SkillHeaderActions
+                skill={skill}
+                access={access}
+                handoverAction={
+                  handover.mayHandOver ? (
+                    <SkillHandoverButton skill={skill} />
+                  ) : null
+                }
+              />
+            }
           />
         }
         contentArea={
           <SkillConfiguration
             skill={skill}
             isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+            handover={handover}
+            onDecided={leaveAfterDecision}
           />
         }
       />

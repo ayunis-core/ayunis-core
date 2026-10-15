@@ -39,11 +39,15 @@
     "assign_users_to_teams": "Add members to any team and remove them again. Does not allow creating or deleting teams.",
     "manage_own_skills": "Create, edit and delete your own skills, including their instructions, sources and integrations.",
     "install_marketplace_skills": "Add skills from the Ayunis Core Marketplace to your own skills. Without this permission, Marketplace hints and the menu item are hidden.",
-    "request_skill_transfer": "Make one of your own skills available to a team you belong to.",
-    "request_skill_transfer_org": "Make one of your own skills available to the whole organisation.",
+    "request_skill_transfer": "Offer an own skill to a team one is a member of. Once approved it belongs to the team.",
+    "request_skill_transfer_other_teams": "Also offer an own skill to teams one is not a member of. Their team admins review the request.",
+    "request_skill_transfer_org": "Offer an own skill to the whole organisation. Once approved it belongs to the organisation.",
+    "review_all_skill_requests": "Approve or reject requests to the organisation and to every team, even without being team admin there.",
     "manage_own_knowledge": "Create, edit and delete your own knowledge bases and the documents inside them.",
-    "request_knowledge_transfer": "Make one of your own knowledge bases available to a team you belong to.",
-    "request_knowledge_transfer_org": "Make one of your own knowledge bases available to the whole organisation.",
+    "request_knowledge_transfer": "Offer an own knowledge base to a team one is a member of. Once approved it belongs to the team.",
+    "request_knowledge_transfer_other_teams": "Also offer an own knowledge base to teams one is not a member of. Their team admins review the request.",
+    "request_knowledge_transfer_org": "Offer an own knowledge base to the whole organisation. Once approved it belongs to the organisation.",
+    "review_all_knowledge_requests": "Approve or reject requests to the organisation and to every team, even without being team admin there.",
     "create_workspaces": "Create your own workspaces.",
     "manage_org_skills": "Create, edit and delete skills for everyone in the organisation.",
     "manage_org_knowledge": "Create, edit and delete knowledge bases for everyone in the organisation."
@@ -53,11 +57,15 @@
     "assign_users_to_teams": "Maintain members of all teams",
     "manage_own_skills": "Manage own skills",
     "install_marketplace_skills": "Add from the Marketplace",
-    "request_skill_transfer": "Share with own teams",
-    "request_skill_transfer_org": "Share with the organisation",
+    "request_skill_transfer": "Hand over to own teams",
+    "request_skill_transfer_other_teams": "Hand over to other teams",
+    "request_skill_transfer_org": "Hand over to the organisation",
+    "review_all_skill_requests": "Answer all requests",
     "manage_own_knowledge": "Manage own knowledge bases",
-    "request_knowledge_transfer": "Share with own teams",
-    "request_knowledge_transfer_org": "Share with the organisation",
+    "request_knowledge_transfer": "Hand over to own teams",
+    "request_knowledge_transfer_other_teams": "Hand over to other teams",
+    "request_knowledge_transfer_org": "Hand over to the organisation",
+    "review_all_knowledge_requests": "Answer all requests",
     "create_workspaces": "Create workspaces",
     "manage_org_skills": "Manage organisation skills",
     "manage_org_knowledge": "Manage organisation knowledge bases"
@@ -71,13 +79,15 @@
       "team_manage_members": "Add and remove members",
       "team_appoint_admins": "Appoint team admins",
       "team_manage_skills": "Manage team skills",
-      "team_manage_knowledge": "Manage team knowledge bases"
+      "team_manage_knowledge": "Manage team knowledge bases",
+      "team_review_requests": "Answer requests to the team"
     },
     "permissionHints": {
       "team_manage_members": "Add people to their own team and remove them again.",
       "team_appoint_admins": "Make other members of their own team team admin or take the role away again.",
       "team_manage_skills": "Create, edit and delete the team's skills.",
-      "team_manage_knowledge": "Create, edit and delete the team's knowledge bases."
+      "team_manage_knowledge": "Create, edit and delete the team's knowledge bases.",
+      "team_review_requests": "Approve or reject handovers to their own team."
     }
   },
   "save": "Save changes",

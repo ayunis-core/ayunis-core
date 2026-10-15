@@ -12,14 +12,21 @@ import { Textarea } from '@ayunis/ui/components/textarea';
 export function SkillReadOnlyContent({
   trigger,
   instructions,
-}: Readonly<{ trigger: string; instructions: string }>) {
+  showDescription = true,
+}: Readonly<{
+  trigger: string;
+  instructions: string;
+  showDescription?: boolean;
+}>) {
   const { t } = useTranslation('skill');
 
   return (
     <Card data-testid="skill-read-only-content">
       <CardHeader>
         <CardTitle>{t('readOnly.title')}</CardTitle>
-        <CardDescription>{t('readOnly.description')}</CardDescription>
+        {showDescription && (
+          <CardDescription>{t('readOnly.description')}</CardDescription>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

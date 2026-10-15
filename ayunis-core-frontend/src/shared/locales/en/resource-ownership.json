@@ -8,7 +8,7 @@
     "org": "Organisation"
   },
   "hints": {
-    "personal": "Only you can change it.",
+    "personal": "Only you can use and change it.",
     "team": "Everyone in team {{team}} can use it. {{editors}}",
     "org": "All {{total}} people in the organisation can use it. {{editors}}"
   },
@@ -24,12 +24,14 @@
     "title": {
       "personal": "Belongs to you",
       "team": "Belongs to team {{team}}",
-      "org": "Belongs to the organisation"
+      "org": "Belongs to the organisation",
+      "review": "Belongs to {{name}}"
     },
     "audience": {
-      "personal": "Only you can change the {{noun}}.",
+      "personal": "Only you can use and change the {{noun}}.",
       "team": "All {{total}} members can use the {{noun}}.",
-      "org": "All {{total}} people in the organisation can use the {{noun}}."
+      "org": "All {{total}} people in the organisation can use the {{noun}}.",
+      "review": "You are reviewing this request and can view the {{noun}}, but not use or change it."
     }
   },
   "nouns": {
@@ -40,5 +42,9 @@
   "created": {
     "team": "“{{name}}” now belongs to team {{team}}.",
     "org": "“{{name}}” now belongs to the organisation. Everyone can use it."
+  },
+  "submittedBy": {
+    "you": "Submitted by you",
+    "other": "Submitted by {{name}}"
   }
 }
