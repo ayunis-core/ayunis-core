@@ -43,7 +43,9 @@ export class GetThreadAiContextUseCase {
     );
     const [skills, activeKnowledgeBases, attachedKnowledgeBases, workspace] =
       await Promise.all([
-        this.findActiveSkills.execute(new FindActiveSkillsQuery()),
+        this.findActiveSkills.execute(
+          new FindActiveSkillsQuery(!refs.workspaceId),
+        ),
         this.findActiveKnowledgeBases.execute(),
         this.findAccessibleKnowledgeBasesByIds.execute({
           knowledgeBaseIds: refs.knowledgeBaseIds,

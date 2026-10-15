@@ -130,6 +130,7 @@
   "/skills/owner-options",
   "/skills/{id}",
   "/skills/{id}/activation",
+  "/skills/{id}/mandatory",
   "/skills/{id}/pin",
   "/skills/{id}/sources",
   "/skills/{id}/sources/file",

@@ -94,3 +94,23 @@ export function requestDeleteKnowledgeBase(
 ): Promise<APIResponse> {
   return api.delete(`${config.apiURL}/api/knowledge-bases/${knowledgeBaseId}`);
 }
+
+export function requestSetSkillPin(
+  api: APIRequestContext,
+  skillId: string,
+  isPinned: boolean,
+): Promise<APIResponse> {
+  return api.patch(`${config.apiURL}/api/skills/${skillId}/pin`, {
+    data: { isPinned },
+  });
+}
+
+export function requestSetSkillMandatory(
+  api: APIRequestContext,
+  skillId: string,
+  isMandatory: boolean,
+): Promise<APIResponse> {
+  return api.patch(`${config.apiURL}/api/skills/${skillId}/mandatory`, {
+    data: { isMandatory },
+  });
+}

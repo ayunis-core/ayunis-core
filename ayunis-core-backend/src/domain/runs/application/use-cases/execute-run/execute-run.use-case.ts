@@ -132,7 +132,9 @@ export class ExecuteRunUseCase {
     const model = permittedModel.model;
     await this.inferenceAdmissionGuard.preflight({ userId, orgId }, model);
     const anonymous = found.thread.isAnonymous || permittedModel.anonymousOnly;
-    const activeSkills = await this.toolAssemblyService.findActiveSkills();
+    const activeSkills = await this.toolAssemblyService.findActiveSkills(
+      found.thread.workspaceId !== null,
+    );
     const workspaceContext = await this.buildWorkspaceContext(found.thread);
     const activated = await this.activateSkillIfRequested(
       command,

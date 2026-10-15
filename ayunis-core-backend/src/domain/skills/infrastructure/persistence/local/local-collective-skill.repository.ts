@@ -81,7 +81,11 @@ export class LocalCollectiveSkillRepository implements CollectiveSkillRepository
 
   async findActiveUsable(
     scope: CollectiveSkillScope,
+    options: { includeMandatory: boolean },
   ): Promise<CollectiveSkill[]> {
+    const active = options.includeMandatory
+      ? '(activation.id IS NULL OR activation.isActive = true OR skill.isMandatory = true)'
+      : '(activation.id IS NULL OR activation.isActive = true)';
     const rows = await this.skills
       .createQueryBuilder('skill')
       .select('skill.id')
@@ -92,9 +96,13 @@ export class LocalCollectiveSkillRepository implements CollectiveSkillRepository
         { userId: scope.userId },
       )
       .where(usableCollectiveSkills(scope))
-      .andWhere('(activation.id IS NULL OR activation.isActive = true)')
+      .andWhere(active)
       .getMany();
     return this.loadByIds(rows);
+  }
+
+  async setMandatory(skillId: UUID, isMandatory: boolean): Promise<void> {
+    await this.skills.update({ id: skillId }, { isMandatory });
   }
 
   async getStates(
@@ -133,10 +141,8 @@ export class LocalCollectiveSkillRepository implements CollectiveSkillRepository
     userId: UUID,
     isPinned: boolean,
   ): Promise<void> {
-    const result = await this.activations.update(
-      { skillId, userId },
-      { isPinned },
-    );
+    const changes = isPinned ? { isPinned, isActive: true } : { isPinned };
+    const result = await this.activations.update({ skillId, userId }, changes);
     if (!isPinned || result.affected) return;
     await this.insertState(skillId, userId, { isActive: true, isPinned });
   }
