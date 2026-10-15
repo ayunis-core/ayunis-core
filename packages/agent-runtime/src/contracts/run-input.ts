@@ -74,10 +74,16 @@ export const DEFAULT_RETRY_CONFIG: ResolvedRetryConfig = Object.freeze({
     maxDelayMs: 8_000,
     jitterRatio: 0,
   }),
-  // Honouring a provider's Retry-After and spreading it is standard practice:
-  // failed requests still count against the provider's quota. maxWaitMs bounds
-  // how long an interactive run will sit on a Retry-After; hosts override both
-  // values per run.
+  // Honouring a provider's Retry-After and spreading it is standard practice,
+  // because failed requests still count against the provider's quota. Azure
+  // documents exactly this (learn.microsoft.com/azure/foundry/openai/how-to/
+  // quota, "Rate limit best practices": use retry-after-ms if present,
+  // otherwise exponential backoff with random jitter). maxWaitMs covers every
+  // Retry-After seen in Ayunis production (AYC-1268: 0.2 to 29 s). Do not
+  // raise it to absorb sustained throttling: a longer wait only delays the
+  // same demand, and the fix for that is provider quota (AYC-1269). jitterMs
+  // only spreads calls throttled in the same second; 2 s does that and is
+  // invisible next to a 20 s wait.
   retryAfter: Object.freeze({
     precedence: 'retry_after',
     maxWaitMs: 30_000,
