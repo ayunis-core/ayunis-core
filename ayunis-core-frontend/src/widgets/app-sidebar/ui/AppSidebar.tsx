@@ -42,7 +42,7 @@ import { useTheme } from '@/features/theme';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
-import { useMarketplaceConfig } from '@/features/marketplace';
+import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import {
   useMyPermissions,
   allowedSettingsSections,
@@ -68,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const handleMobileNavigation = useMobileSidebarNavigationHandler();
-  const marketplace = useMarketplaceConfig();
+  const marketplaceUrl = useSkillMarketplaceUrl();
   const academyAddonActive = useIsAcademyAddonActive();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const location = useLocation();
@@ -162,13 +162,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
-            {marketplace.enabled && marketplace.url && (
+            {marketplaceUrl && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a
-                    href={marketplace.url}
+                    href={marketplaceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-testid="sidebar-marketplace"
                   >
                     <Store />
                     <span>{t('sidebar.marketplace')}</span>

@@ -1,8 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
-import { useMarketplaceControllerGetSkill } from '../api/useFetchMarketplaceSkill';
-import { useInstallFromMarketplace } from '../api/useInstallFromMarketplace';
+import { useMyPermissions } from '@/features/permissions';
+import { useMarketplaceControllerGetSkill } from '@/pages/install/api/useFetchMarketplaceSkill';
+import { useInstallFromMarketplace } from '@/pages/install/api/useInstallFromMarketplace';
 import { InstallErrorState } from './InstallErrorState';
 import { InstallLoadingSkeleton } from './InstallLoadingSkeleton';
 import { InstallSkillCard } from './InstallSkillCard';
@@ -42,6 +43,7 @@ function InstallPageContent({
   skillIdentifier,
 }: Readonly<{ skillIdentifier: string }>) {
   const { t } = useTranslation('install');
+  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const {
     data: skill,
     isLoading,
@@ -49,8 +51,17 @@ function InstallPageContent({
   } = useMarketplaceControllerGetSkill(skillIdentifier);
   const installMutation = useInstallFromMarketplace();
 
-  if (isLoading) {
+  if (isLoading || isLoadingPermissions) {
     return <InstallLoadingSkeleton />;
+  }
+
+  if (!can('install_marketplace_skills')) {
+    return (
+      <InstallErrorState
+        title={t('error.noPermission.title')}
+        description={t('error.noPermission.description')}
+      />
+    );
   }
 
   if (isError || !skill) {
