@@ -298,27 +298,29 @@ const invalidFallbackError = (
     { usage: result.usage },
   );
 
+// Truncation wins over unparseable arguments: a call cut off at the output
+// token limit leaves incomplete JSON behind, and that is the cause to report.
 const malformedError = (
   result: ModelCallResult,
 ): MalformedToolCallError | undefined => {
-  if (result.invalidToolCallSnapshots.length > 0) {
+  const invalidNames = result.invalidToolCallSnapshots.map((call) => call.name);
+  const validNames = result.message.content
+    .filter((content) => content.type === 'tool_use')
+    .map((content) => content.name);
+  const toolNames = [...invalidNames, ...validNames];
+  if (result.finishReason === 'length' && toolNames.length > 0) {
     return new MalformedToolCallError(
-      {
-        toolNames: result.invalidToolCallSnapshots.map((call) => call.name),
-        reason: 'unparseable_arguments',
-      },
+      { toolNames, reason: 'token_limit_reached' },
       { usage: result.usage },
     );
   }
-  const names = result.message.content
-    .filter((content) => content.type === 'tool_use')
-    .map((content) => content.name);
-  return result.finishReason === 'length' && names.length > 0
-    ? new MalformedToolCallError(
-        { toolNames: names, reason: 'token_limit_reached' },
-        { usage: result.usage },
-      )
-    : undefined;
+  if (invalidNames.length > 0) {
+    return new MalformedToolCallError(
+      { toolNames: invalidNames, reason: 'unparseable_arguments' },
+      { usage: result.usage },
+    );
+  }
+  return undefined;
 };
 
 function* invalidSnapshots(

@@ -99,6 +99,65 @@ describe('useRunErrorHandler', () => {
     expect(showError).toHaveBeenCalledWith('chat.errorToolExecutionFailed');
   });
 
+  it('explains that the model response was cut off when a tool call hit the output token limit', () => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message:
+        "Inference failed: model's tool call was cut off at the output token limit",
+      threadId: 'thread-1',
+      timestamp: '2026-10-15T09:03:00.000Z',
+      code: 'INFERENCE_MALFORMED_TOOL_CALL',
+      details: {
+        malformedReason: 'token_limit_reached',
+        toolNames: ['create_document'],
+        provider: 'bedrock',
+        modelId: 'claude-opus-5-5',
+      },
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith(
+      'chat.errorMalformedToolCallTokenLimit',
+    );
+  });
+
+  it.each(['unparseable_arguments', 'tool_disabled_fallback'])(
+    'asks for a retry when the model produced an invalid tool call (%s)',
+    (malformedReason) => {
+      const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+      const error: RunErrorResponseDto = {
+        type: 'error',
+        message:
+          'Inference failed: model emitted unparseable tool call arguments',
+        threadId: 'thread-1',
+        timestamp: '2026-10-15T09:03:00.000Z',
+        code: 'INFERENCE_MALFORMED_TOOL_CALL',
+        details: { malformedReason, toolNames: ['create_document'] },
+      };
+
+      act(() => result.current(error));
+
+      expect(showError).toHaveBeenCalledWith('chat.errorMalformedToolCall');
+    },
+  );
+
+  it('asks for a retry when a malformed tool call arrives without details', () => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message: 'Internal server error',
+      threadId: 'thread-1',
+      timestamp: '2026-10-15T09:03:00.000Z',
+      code: 'INFERENCE_MALFORMED_TOOL_CALL',
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith('chat.errorMalformedToolCall');
+  });
+
   it('shows the timeout explanation when the provider stream stalls', () => {
     const { result } = renderHook(() => useRunErrorHandler('thread-1'));
     const error: RunErrorResponseDto = {

@@ -27,6 +27,7 @@ import {
   InferenceFailedError,
   InferenceStreamStalledError,
   InferenceImageTooLargeError,
+  InferenceMalformedToolCallError,
 } from 'src/domain/models/application/models.errors';
 import {
   RunPiiMasksUpdate,
@@ -1297,11 +1298,115 @@ describe('adaptRunEventsToStream', () => {
     },
   );
 
-  it('maps a malformed tool call to the inference-failed error', async () => {
-    // Truncated/unparseable tool-call arguments must surface as one clear
-    // inference failure instead of a generic runtime error (AYC-646).
-    await expect(
-      collect(
+  describe('malformed tool calls', () => {
+    const malformedEvent = (
+      reason: string,
+      modelCall?: Extract<RunEventPayload, { type: 'error' }>['modelCall'],
+    ): RunEventPayload => ({
+      type: 'error',
+      code: 'MALFORMED_TOOL_CALL',
+      message:
+        'Model emitted a tool call whose arguments did not arrive intact',
+      details: { toolNames: ['create_document'], reason },
+      ...(modelCall ? { modelCall } : {}),
+    });
+
+    it('maps a tool call cut off at the output token limit to a client-visible 400 with the cause', async () => {
+      // A retry of the same request cannot succeed and there is no server
+      // defect, so the failure stays out of AppSignal error incidents and is
+      // observable through the `Model call rejected` warn log (AYC-1315).
+      const error: unknown = await collect(
+        eventsFrom([
+          malformedEvent('token_limit_reached', {
+            modelCallId: 'call-truncated',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          }),
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        createLoggerMock(),
+        runtimeModels(),
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+      expect(error).toMatchObject({
+        code: 'INFERENCE_MALFORMED_TOOL_CALL',
+        statusCode: 400,
+        message:
+          "Inference failed: model's tool call was cut off at the output token limit",
+        metadata: {
+          malformedReason: 'token_limit_reached',
+          toolNames: ['create_document'],
+          provider: 'anthropic',
+          modelId: 'claude-sonnet-4-5',
+        },
+      });
+      expect(
+        (error as InferenceMalformedToolCallError).toClientResponse(),
+      ).toEqual({
+        code: 'INFERENCE_MALFORMED_TOOL_CALL',
+        message:
+          "Inference failed: model's tool call was cut off at the output token limit",
+        metadata: {
+          malformedReason: 'token_limit_reached',
+          toolNames: ['create_document'],
+          provider: 'anthropic',
+          modelId: 'claude-sonnet-4-5',
+        },
+      });
+    });
+
+    it('names unparseable arguments as the cause without provider metadata when the model call is unknown', async () => {
+      const error: unknown = await collect(
+        eventsFrom([
+          malformedEvent('unparseable_arguments'),
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+      expect(error).toMatchObject({
+        statusCode: 400,
+        message:
+          'Inference failed: model emitted unparseable tool call arguments',
+        metadata: {
+          malformedReason: 'unparseable_arguments',
+          toolNames: ['create_document'],
+        },
+      });
+      expect(error).not.toHaveProperty('metadata.provider');
+      expect(error).not.toHaveProperty('metadata.modelId');
+    });
+
+    it('omits provider metadata when the model call names an unregistered provider', async () => {
+      const error: unknown = await collect(
+        eventsFrom([
+          malformedEvent('tool_disabled_fallback', {
+            modelCallId: 'call-fallback',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 4,
+            trigger: 'fallback',
+            provider: 'azure:unknown-model',
+          }),
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        createLoggerMock(),
+        runtimeModels(),
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+      expect(error).toMatchObject({
+        metadata: { malformedReason: 'tool_disabled_fallback' },
+      });
+      expect(error).not.toHaveProperty('metadata.provider');
+    });
+
+    it('keeps tool names only and never the arguments in the error metadata', async () => {
+      const error: unknown = await collect(
         eventsFrom([
           {
             type: 'error',
@@ -1311,12 +1416,15 @@ describe('adaptRunEventsToStream', () => {
             details: {
               toolNames: ['create_document'],
               reason: 'unparseable_arguments',
+              argumentsJson: '{"title":"Haushaltsplan"',
             },
           },
           { type: 'run_end', status: 'error', usage: {} },
         ]),
-      ),
-    ).rejects.toBeInstanceOf(InferenceFailedError);
+      ).catch((caught: unknown) => caught);
+
+      expect(JSON.stringify(error)).not.toContain('Haushaltsplan');
+    });
   });
 
   it('maps a repeatedly failing tool to the transcript-preserving run error', async () => {
