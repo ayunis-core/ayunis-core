@@ -9,7 +9,7 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
-export function useDeleteSkill() {
+export function useDeleteSkill(name: string) {
   const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -22,7 +22,7 @@ export function useDeleteSkill() {
           queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
         });
         void router.invalidate();
-        showSuccess(t('delete.success'));
+        showSuccess(t('delete.success', { name }));
         void navigate({ to: '/skills' });
       },
       onError: (error) => {

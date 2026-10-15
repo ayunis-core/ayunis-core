@@ -111,7 +111,7 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
     .nth(2)
     .fill("Prüfe Bauanträge anhand der Projektvorgaben.");
   await createSkillDialog
-    .getByRole("button", { name: "Fähigkeit erstellen" })
+    .getByRole("button", { name: "Erstellen", exact: true })
     .click();
   await expect(page).toHaveURL(/\/workspaces\/[^/]+\/skills\/[^/]+$/);
   await expect(page.getByTestId("skill-properties-card")).toBeVisible();

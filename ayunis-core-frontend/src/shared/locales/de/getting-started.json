@@ -129,7 +129,7 @@
       "description": "Fähigkeiten aktivieren sich automatisch, wenn sie zu Ihrer Frage passen. Sie können sie auch hier anheften, um sie gezielt in einem neuen Chat zu verwenden.",
       "action": "Fähigkeit anheften",
       "spotlightTitle": "Fähigkeit anheften",
-      "spotlightDescription": "Klicken Sie auf das Pin-Symbol, um eine Fähigkeit an neue Chats anzuheften."
+      "spotlightDescription": "Öffnen Sie eine Fähigkeit und heften Sie sie oben mit dem Pin-Symbol an neue Chats an."
     },
     "activateSkillInChat": {
       "title": "Angeheftete Fähigkeit im Chat nutzen",

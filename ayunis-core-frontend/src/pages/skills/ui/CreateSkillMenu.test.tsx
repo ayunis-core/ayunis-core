@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateSkillMenu from './CreateSkillMenu';
-import SkillsEmptyState from './SkillsEmptyState';
 
 const MARKETPLACE_URL = 'https://marketplace.ayunis.com/';
 
@@ -163,23 +162,5 @@ describe('CreateSkillMenu', () => {
     openMenu();
 
     expect(screen.queryByTestId('create-skill-guided')).toBeNull();
-  });
-
-  it('is the first-skill action on the empty skills page', () => {
-    render(<SkillsEmptyState />);
-
-    expect(screen.getByTestId('create-skill-menu')).toBeTruthy();
-  });
-
-  it('offers the marketplace on the empty page to someone who may only install skills', () => {
-    mocks.can = vi.fn(
-      (permission: string) => permission !== 'manage_own_skills',
-    );
-    mocks.ownerOptions = [];
-    render(<SkillsEmptyState />);
-
-    expect(screen.getByTestId('skills-empty-marketplace')).toBeTruthy();
-    expect(screen.queryByTestId('create-skill-menu')).toBeNull();
-    expect(screen.getByText('emptyState.noAccessDescription')).toBeTruthy();
   });
 });

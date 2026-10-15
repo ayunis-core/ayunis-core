@@ -6,9 +6,9 @@ export {
 export { useOwnershipCopy } from './model/useOwnershipCopy';
 export { toOwnerChoice } from './lib/owner-copy';
 export { OwnerField } from './ui/OwnerField';
-export { OwnerBadge } from './ui/OwnerBadge';
 export { ReadOnlyBadge } from './ui/ReadOnlyBadge';
 export { SubmittedByLabel } from './ui/SubmittedByLabel';
+export { OwnerSectionList } from './ui/OwnerSectionList';
 export type {
   OwnedResource,
   OwnedResourceKind,

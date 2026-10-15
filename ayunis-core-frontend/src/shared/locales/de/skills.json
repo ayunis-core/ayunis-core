@@ -3,26 +3,25 @@
     "title": "Fähigkeiten"
   },
   "tabs": {
-    "personal": "Eigene Fähigkeiten",
+    "own": "Eigene Fähigkeiten",
     "shared": "Team und Organisation"
   },
   "marketplaceBanner": {
-    "title": "Weitere Fähigkeiten im Ayunis Core Marketplace entdecken",
-    "description": "Durchsuchen Sie kuratierte Fähigkeiten und installieren Sie neue direkt aus dem Ayunis Core Marketplace."
+    "title": "Fähigkeiten im Ayunis Core Marketplace entdecken",
+    "description": "Finden Sie fertige Fähigkeiten für Ihren Verwaltungsalltag.",
+    "button": "Marketplace öffnen"
   },
   "emptyState": {
-    "title": "Noch keine Fähigkeiten",
-    "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können.",
     "noAccessDescription": "Bitten Sie einen Administrator, Ihnen die Berechtigung zum Erstellen zu geben. Fähigkeiten Ihrer Teams und der Organisation finden Sie unter „Team und Organisation“.",
     "personal": {
       "title": "Noch keine eigenen Fähigkeiten",
       "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können."
     },
     "shared": {
-      "title": "Noch keine Fähigkeiten aus Team und Organisation",
-      "description": "Fähigkeiten Ihrer Teams und der Organisation erscheinen hier."
+      "title": "Noch nichts von Team oder Organisation",
+      "description": "Hier erscheinen Fähigkeiten, die Ihrem Team oder der Organisation gehören."
     },
-    "browseMarketplace": "Oder durchsuchen Sie den Ayunis Core Marketplace"
+    "search": "Keine Fähigkeit gefunden"
   },
   "badge": {
     "active": "Aktiv",
@@ -31,7 +30,6 @@
   "card": {
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
-    "activeTooltip": "Aktive Fähigkeiten stehen Ayunis Core in Chats zur Verfügung. Inaktive Fähigkeiten werden erst wieder verwendet, wenn sie aktiviert werden.",
     "pinLabel": "An neuen Chat anheften",
     "unpinLabel": "Von neuem Chat lösen",
     "deleteLabel": "Löschen",
@@ -41,25 +39,26 @@
       "confirmText": "Löschen",
       "cancelText": "Abbrechen"
     },
-    "activeSwitchLabel": "Fähigkeit aktiv"
+    "activeSwitchLabel": "Fähigkeit aktiv",
+    "activeOn": "Aktiv: Ayunis Core kann die Fähigkeit in Chats nutzen.",
+    "activeOff": "Inaktiv: Ayunis Core nutzt die Fähigkeit nicht in Chats."
   },
   "createDialog": {
     "buttonText": "Fähigkeit hinzufügen",
-    "buttonTextFirst": "Erstellen Sie Ihre erste Fähigkeit",
     "title": "Neue Fähigkeit erstellen",
     "description": "Erstellen Sie eine neue Fähigkeit mit spezifischem Wissen und Funktionen. Füllen Sie die Details unten aus.",
     "form": {
       "nameLabel": "Name",
-      "namePlaceholder": "Name der Fähigkeit eingeben...",
+      "namePlaceholder": "Zum Beispiel: Sitzungsvorlage Haushalt",
       "shortDescriptionLabel": "Auslöser",
-      "shortDescriptionPlaceholder": "Beschreiben Sie, wann Ayunis Core diese Fähigkeit aktivieren soll...",
+      "shortDescriptionPlaceholder": "Beschreiben Sie, wann Ayunis Core diese Fähigkeit nutzen soll.",
       "shortDescriptionHint": "Ein guter Auslöser hilft Ayunis Core zu verstehen, wann diese Fähigkeit verwendet werden soll.",
-      "instructionsLabel": "Detaillierte Anweisungen",
-      "instructionsPlaceholder": "Detaillierte Anweisungen für diese Fähigkeit eingeben..."
+      "instructionsLabel": "Anweisungen",
+      "instructionsPlaceholder": "Soll eine Wissenssammlung genutzt werden? Nennen Sie sie hier."
     },
     "buttons": {
       "cancel": "Abbrechen",
-      "create": "Fähigkeit erstellen",
+      "create": "Erstellen",
       "creating": "Wird erstellt..."
     },
     "marketplaceHint": "Fähigkeiten werden nicht automatisch im Marketplace veröffentlicht.",
@@ -77,7 +76,6 @@
     "duplicateNameShared": "Im Team oder in der Organisation gibt es bereits eine Fähigkeit mit diesem Namen. Bitte wählen Sie einen anderen Namen."
   },
   "toggleActive": {
-    "success": "Fähigkeits-Status erfolgreich aktualisiert!",
     "error": "Fähigkeits-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
     "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
   },
@@ -95,7 +93,7 @@
     "guided": "Mit Ayunis Core erstellen",
     "editor": "Selbst erstellen",
     "marketplace": "Aus dem Marketplace hinzufügen",
-    "guidedPrompt": "Hilf mir, eine neue Fähigkeit anzulegen. Stelle mir nacheinander die Fragen, die du dafür brauchst — immer nur eine pro Nachricht: Wofür soll die Fähigkeit da sein? In welchen Situationen soll sie sich einschalten? Worauf soll sie achten, was soll sie vermeiden? Was du aus meinen Antworten schon ableiten kannst, schlägst du vor, statt danach zu fragen. Wenn das Bild steht, lege die Fähigkeit mit Name, Kurzbeschreibung und Anweisungen an."
+    "guidedPrompt": "Hilf mir, eine neue Fähigkeit anzulegen. Stelle mir nacheinander die Fragen, die du dafür brauchst, immer nur eine pro Nachricht: Wofür soll die Fähigkeit da sein? In welchen Situationen soll sie sich einschalten? Worauf soll sie achten, was soll sie vermeiden? Was du aus meinen Antworten schon ableiten kannst, schlägst du vor, statt danach zu fragen. Wenn das Bild steht, lege die Fähigkeit mit Name, Kurzbeschreibung und Anweisungen an."
   },
   "improve": {
     "action": "Verbessern",
@@ -114,5 +112,20 @@
   "fieldHints": {
     "trigger": "Der Auslöser entscheidet, wann sich diese Fähigkeit von selbst einschaltet. Beschreiben Sie die Situation so konkret wie möglich: um welche Themen es geht, welche Wörter vorkommen, welche Fragen gestellt werden. Beispiel: „Wenn es um Fristen bei Bauanträgen geht oder nach einem Stichtag gefragt wird.\"",
     "instructions": "Die Anweisung beschreibt, wie gearbeitet werden soll, sobald die Fähigkeit aktiv ist: Vorgehen, Tonfall, Aufbau der Antwort und das, was weggelassen werden soll. Beispiel: „Antworte sachlich und in ganzen Sätzen, nenne immer die Rechtsgrundlage und frage nach, wenn das Aktenzeichen fehlt.\""
+  },
+  "search": {
+    "placeholder": "Fähigkeiten durchsuchen"
+  },
+  "starter": {
+    "title": "Was erledigen Sie immer wieder?",
+    "description": "Beschreiben Sie es in einem Satz. Ayunis Core stellt ein paar Fragen und legt die Fähigkeit für Sie an.",
+    "placeholder": "Zum Beispiel: Antworten auf Anfragen zu Baugenehmigungen",
+    "submit": "Loslegen",
+    "examples": [
+      "Bürgeranfragen beantworten",
+      "Protokolle zusammenfassen",
+      "Vermerke schreiben"
+    ],
+    "topicSuffix": "Die Fähigkeit soll mir hierbei helfen: {{topic}}"
   }
 }

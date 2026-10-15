@@ -90,11 +90,11 @@
     "error": "Fähigkeit konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
   },
   "delete": {
-    "success": "Fähigkeit erfolgreich gelöscht!",
+    "success": "„{{name}}“ wurde gelöscht.",
     "error": "Fähigkeit konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht.",
     "confirmTitle": "Fähigkeit löschen",
-    "confirmDescription": "Sind Sie sicher, dass Sie \"{{name}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmDescription": "Sind Sie sicher, dass Sie „{{name}}“ löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
   },
@@ -103,5 +103,6 @@
     "description": "Sie können diese Fähigkeit nutzen, aber nicht ändern.",
     "trigger": "Auslöser",
     "instructions": "Anweisungen"
-  }
+  },
+  "knowledgeTip": "Soll die Fähigkeit eine Wissenssammlung nutzen? Nennen Sie sie in der Anweisung, zum Beispiel „Nutze die Wissenssammlung Haushaltssatzung 2026“."
 }
