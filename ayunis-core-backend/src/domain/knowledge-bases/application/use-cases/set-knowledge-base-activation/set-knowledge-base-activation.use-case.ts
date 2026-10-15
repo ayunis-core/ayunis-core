@@ -15,6 +15,9 @@ import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/ha
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { isCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/application/models/collective-knowledge-base-owner';
 import { SetKnowledgeBaseActivationCommand } from './set-knowledge-base-activation.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -24,6 +27,7 @@ export class SetKnowledgeBaseActivationUseCase {
 
   constructor(
     private readonly repository: KnowledgeBaseRepository,
+    private readonly collectiveRepository: CollectiveKnowledgeBaseRepository,
     private readonly readAccess: KnowledgeBaseReadAccessService,
     private readonly writeAccess: KnowledgeBaseWriteAccessService,
     private readonly context: ContextService,
@@ -49,7 +53,15 @@ export class SetKnowledgeBaseActivationUseCase {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 
-    if (knowledgeBase instanceof PersonalKnowledgeBase) {
+    if (isCollectiveKnowledgeBase(knowledgeBase)) {
+      await this.readAccess.requireUse(knowledgeBase);
+      const { userId } = getRequiredUserContext(this.context);
+      await this.collectiveRepository.setActive(
+        knowledgeBase.id,
+        userId,
+        command.isActive,
+      );
+    } else if (knowledgeBase instanceof PersonalKnowledgeBase) {
       await this.setPersonalActivation(knowledgeBase, command.isActive);
     } else {
       await this.setWorkspaceActivation(knowledgeBase, command.isActive);
@@ -58,7 +70,7 @@ export class SetKnowledgeBaseActivationUseCase {
   }
 
   private async setWorkspaceActivation(
-    knowledgeBase: Exclude<KnowledgeBase, PersonalKnowledgeBase>,
+    knowledgeBase: WorkspaceKnowledgeBase,
     isActive: boolean,
   ): Promise<void> {
     await this.writeAccess.requireWrite(knowledgeBase);

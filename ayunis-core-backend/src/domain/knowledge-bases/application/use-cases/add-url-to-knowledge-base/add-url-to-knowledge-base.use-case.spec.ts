@@ -38,7 +38,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
     assignSourceToKnowledgeBase: jest.fn(),
   };
   const writeAccess = {
-    requireWrite: jest.fn(),
+    requireManage: jest.fn(),
   } as unknown as jest.Mocked<KnowledgeBaseWriteAccessService>;
   const source = new UrlSource({
     url: 'https://stadt.example/permit-guidance',
@@ -125,14 +125,14 @@ describe(AddUrlToKnowledgeBaseUseCase.name, () => {
   ])('does not start a crawl for an %s', async (_scenario, knowledgeBase) => {
     const { useCase, writeAccess, crawl, repository } =
       await setup(knowledgeBase);
-    writeAccess.requireWrite.mockRejectedValue(
+    writeAccess.requireManage.mockRejectedValue(
       new KnowledgeBaseNotFoundError(knowledgeBase.id),
     );
 
     await expect(
       useCase.execute(command(knowledgeBase.id)),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
-    expect(writeAccess.requireWrite).toHaveBeenCalledWith(knowledgeBase);
+    expect(writeAccess.requireManage).toHaveBeenCalledWith(knowledgeBase);
     expect(crawl.execute).not.toHaveBeenCalled();
     expect(repository.assignSourceToKnowledgeBase).not.toHaveBeenCalled();
   });

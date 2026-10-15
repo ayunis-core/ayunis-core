@@ -42,7 +42,7 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
     if (!knowledgeBase) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
-    await this.writeAccess.requireWrite(knowledgeBase);
+    await this.writeAccess.requireManage(knowledgeBase);
 
     const source = await this.repository.findSourceByIdAndKnowledgeBaseId(
       command.documentId,

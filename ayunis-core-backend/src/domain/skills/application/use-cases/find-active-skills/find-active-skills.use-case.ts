@@ -4,14 +4,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindActiveSkillsQuery } from './find-active-skills.query';
 
-import { ContextService } from 'src/common/context/services/context.service';
+import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import type { CollectiveSkill } from 'src/domain/skills/domain/skill';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { UUID } from 'crypto';
-import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindActiveSkillsUseCase {
@@ -20,15 +21,28 @@ export class FindActiveSkillsUseCase {
   constructor(
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
-    private readonly contextService: ContextService,
+    private readonly collectiveRepository: CollectiveSkillRepository,
+    private readonly getViewer: GetOwnershipViewerUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
-  async execute(query: FindActiveSkillsQuery): Promise<PersonalSkill[]> {
+  async execute(
+    query: FindActiveSkillsQuery,
+  ): Promise<Array<PersonalSkill | CollectiveSkill>> {
     this.logger.log(query, 'Finding active skills');
+    const viewer = await this.getViewer.execute();
+    const [personal, collective] = await Promise.all([
+      this.findActivePersonal(viewer.userId),
+      this.collectiveRepository.findActiveUsable({
+        userId: viewer.userId,
+        orgId: viewer.orgId,
+        teamIds: viewer.teamIds,
+      }),
+    ]);
+    return [...personal, ...collective];
+  }
 
-    const { userId } = getRequiredUserContext(this.contextService);
-
+  private async findActivePersonal(userId: UUID): Promise<PersonalSkill[]> {
     // 1. Fetch owned active skills
     const ownedActiveSkills =
       await this.skillRepository.findActiveByOwner(userId);

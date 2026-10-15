@@ -2,7 +2,16 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import type {
+  CollectiveKnowledgeBase,
+  KnowledgeBase,
+} from 'src/domain/knowledge-bases/domain/knowledge-base';
+import {
+  collectiveOwnerOfKnowledgeBase,
+  isCollectiveKnowledgeBase,
+} from 'src/domain/knowledge-bases/application/models/collective-knowledge-base-owner';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
@@ -25,11 +34,20 @@ export class KnowledgeBaseReadAccessService {
     @Inject(forwardRef(() => AssertWorkspaceExecutionAccessUseCase))
     private readonly workspaceExecution: AssertWorkspaceExecutionAccessUseCase,
     private readonly context: ContextService,
+    private readonly getViewer: GetOwnershipViewerUseCase,
   ) {}
 
   async requireRead(knowledgeBase: KnowledgeBase): Promise<void> {
     const knowledgeBaseId = knowledgeBase.id;
     const userId = this.requirePrincipalInOrganization(knowledgeBase);
+    if (isCollectiveKnowledgeBase(knowledgeBase)) {
+      const viewer = await this.getViewer.execute();
+      const owner = collectiveOwnerOfKnowledgeBase(knowledgeBase);
+      if (!viewer.canRead('knowledge_base', owner)) {
+        throw new KnowledgeBaseNotFoundError(knowledgeBaseId);
+      }
+      return;
+    }
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
       await this.requirePersonalRead(knowledgeBase, userId);
       return;
@@ -48,6 +66,10 @@ export class KnowledgeBaseReadAccessService {
   ): Promise<void> {
     const knowledgeBaseId = knowledgeBase.id;
     const userId = this.requirePrincipalInOrganization(knowledgeBase);
+    if (isCollectiveKnowledgeBase(knowledgeBase)) {
+      await this.requireUse(knowledgeBase);
+      return;
+    }
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
       await this.requirePersonalRead(knowledgeBase, userId);
       return;
@@ -61,6 +83,17 @@ export class KnowledgeBaseReadAccessService {
         threadId,
       }),
     );
+  }
+
+  async requireUse(knowledgeBase: CollectiveKnowledgeBase): Promise<void> {
+    this.requirePrincipalInOrganization(knowledgeBase);
+    const viewer = await this.getViewer.execute();
+    const owner = collectiveOwnerOfKnowledgeBase(knowledgeBase);
+    if (viewer.canUse(owner)) return;
+    if (viewer.canRead('knowledge_base', owner)) {
+      throw new UnauthorizedAccessError();
+    }
+    throw new KnowledgeBaseNotFoundError(knowledgeBase.id);
   }
 
   private requirePrincipalInOrganization(knowledgeBase: KnowledgeBase): UUID {

@@ -1,7 +1,14 @@
+import {
+  OwnershipViewer,
+  type OwnershipViewerParams,
+} from 'src/domain/ownership/application/models/ownership-viewer';
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { randomUUID } from 'crypto';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
@@ -37,6 +44,20 @@ function setup() {
   const context = {
     get: jest.fn(getFromUserContext({ userId, orgId })),
   };
+  const viewer = { execute: jest.fn() };
+  const viewerWith = (params: Partial<OwnershipViewerParams>) =>
+    viewer.execute.mockResolvedValue(
+      new OwnershipViewer({
+        userId,
+        orgId,
+        isAdmin: false,
+        permissions: [],
+        memberTeamIds: [],
+        adminTeamIds: [],
+        teamAdminPermissions: [],
+        ...params,
+      }),
+    );
   return {
     userId,
     orgId,
@@ -53,7 +74,9 @@ function setup() {
       workspaceRead as unknown as AssertWorkspaceReadAccessUseCase,
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
+      viewer as unknown as GetOwnershipViewerUseCase,
     ),
+    viewerWith,
   };
 }
 
@@ -159,4 +182,59 @@ describe(KnowledgeBaseReadAccessService.name, () => {
       );
     },
   );
+
+  describe('team and organisation knowledge bases', () => {
+    it('lets team members read and use a team knowledge base', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const teamId = randomUUID();
+      const team = new TeamKnowledgeBase({
+        name: 'Merkblätter',
+        orgId,
+        teamId,
+      });
+      viewerWith({ memberTeamIds: [teamId] });
+
+      await expect(service.requireRead(team)).resolves.toBeUndefined();
+      await expect(
+        service.requireExecution(team, randomUUID()),
+      ).resolves.toBeUndefined();
+    });
+
+    it('hides a team knowledge base from people outside the team', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const team = new TeamKnowledgeBase({
+        name: 'Merkblätter',
+        orgId,
+        teamId: randomUUID(),
+      });
+      viewerWith({});
+
+      await expect(service.requireRead(team)).rejects.toBeInstanceOf(
+        KnowledgeBaseNotFoundError,
+      );
+    });
+
+    it('lets admins read but not use a team knowledge base of another team', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const team = new TeamKnowledgeBase({
+        name: 'Merkblätter',
+        orgId,
+        teamId: randomUUID(),
+      });
+      viewerWith({ isAdmin: true });
+
+      await expect(service.requireRead(team)).resolves.toBeUndefined();
+      await expect(service.requireUse(team)).rejects.toBeInstanceOf(
+        UnauthorizedAccessError,
+      );
+    });
+
+    it('lets everyone in the organisation use an organisation knowledge base', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const org = new OrgKnowledgeBase({ name: 'Dienstanweisungen', orgId });
+      viewerWith({});
+
+      await expect(service.requireUse(org)).resolves.toBeUndefined();
+    });
+  });
 });

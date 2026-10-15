@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { ValidationArguments, ValidationOptions } from 'class-validator';
 import { IsEnum, isUUID, registerDecorator } from 'class-validator';
 import type { UUID } from 'crypto';
-import type { SkillOwner } from 'src/domain/skills/application/models/skill-owner';
+import type { SkillListScope } from 'src/domain/skills/application/models/skill-owner';
 
 export enum SkillOwnerType {
   PERSONAL = 'personal',
@@ -47,7 +47,7 @@ export abstract class SkillOwnerDto {
   workspaceId?: UUID;
 }
 
-export function toSkillOwner(dto: SkillOwnerDto): SkillOwner {
+export function toSkillListScope(dto: SkillOwnerDto): SkillListScope {
   return dto.ownerType === SkillOwnerType.WORKSPACE
     ? { type: 'workspace', workspaceId: dto.workspaceId! }
     : { type: 'personal' };

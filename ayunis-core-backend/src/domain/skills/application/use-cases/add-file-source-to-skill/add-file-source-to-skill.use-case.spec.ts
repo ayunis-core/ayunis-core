@@ -74,7 +74,7 @@ describe('AddFileSourceToSkillUseCase', () => {
       get: jest.fn((key: string) => (key === 'orgId' ? orgId : userId)),
     } as unknown as ContextService;
 
-    const authorization = { requireWrite: jest.fn() };
+    const authorization = { requireManage: jest.fn() };
 
     useCase = new AddFileSourceToSkillUseCase(
       skillRepository,

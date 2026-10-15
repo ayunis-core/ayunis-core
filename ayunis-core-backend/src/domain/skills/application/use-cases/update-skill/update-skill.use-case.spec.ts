@@ -2,6 +2,8 @@ jest.mock('@nestjs-cls/transactional', () => ({
   Transactional: () => (_t: unknown, _p: string, d: PropertyDescriptor) => d,
 }));
 
+import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import { SkillNameLookupService } from 'src/domain/skills/application/services/skill-name-lookup.service';
 import { randomUUID } from 'crypto';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
@@ -24,10 +26,14 @@ describe(UpdateSkillUseCase.name, () => {
         .fn()
         .mockImplementation((updated) => Promise.resolve(updated)),
     };
-    const authorization = { requireWrite: jest.fn() };
+    const authorization = { requireManage: jest.fn() };
     const useCase = new UpdateSkillUseCase(
       repository as unknown as SkillRepository,
       authorization as unknown as SkillAuthorizationService,
+      new SkillNameLookupService(
+        repository as unknown as SkillRepository,
+        {} as CollectiveSkillRepository,
+      ),
     );
     const updated = await useCase.execute(
       new UpdateSkillCommand({
@@ -37,7 +43,7 @@ describe(UpdateSkillUseCase.name, () => {
         instructions: 'New instructions',
       }),
     );
-    expect(authorization.requireWrite).toHaveBeenCalledWith(skill);
+    expect(authorization.requireManage).toHaveBeenCalledWith(skill);
     expect((updated as WorkspaceSkill).workspaceId).toBe(skill.workspaceId);
     expect(updated.name).toBe('New');
   });

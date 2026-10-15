@@ -10,7 +10,10 @@ import {
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { isCollectiveSkill } from 'src/domain/skills/application/models/collective-skill-owner';
+import { SkillOwnershipContextService } from 'src/domain/skills/application/services/skill-ownership-context.service';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { FindOneSkillQuery } from './find-one-skill.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
@@ -23,6 +26,7 @@ export class FindOneSkillUseCase {
     private readonly repository: SkillRepository,
     private readonly authorization: SkillAuthorizationService,
     private readonly creatorNames: SkillCreatorNameService,
+    private readonly ownershipContext: SkillOwnershipContextService,
     private readonly context: ContextService,
   ) {}
 
@@ -36,7 +40,7 @@ export class FindOneSkillUseCase {
   }
 
   private async resolveContext(skill: Skill): Promise<SkillContext> {
-    if (!(skill instanceof PersonalSkill)) {
+    if (skill instanceof WorkspaceSkill) {
       const states = await this.repository.getWorkspaceSkillStates(
         [skill.id],
         skill.workspaceId,
@@ -47,7 +51,21 @@ export class FindOneSkillUseCase {
       };
       return { skill, ...state, isShared: false, creatorName: null };
     }
-    return this.resolvePersonalContext(skill);
+    const ownership = await this.ownershipContext.lookup([skill]);
+    const extras = {
+      viewer: ownership.rightsFor(skill),
+      ownerDescription: ownership.describe(skill),
+    };
+    if (isCollectiveSkill(skill)) {
+      return {
+        skill,
+        ...ownership.stateOf(skill),
+        isShared: false,
+        creatorName: null,
+        ...extras,
+      };
+    }
+    return { ...(await this.resolvePersonalContext(skill)), ...extras };
   }
 
   private async resolvePersonalContext(

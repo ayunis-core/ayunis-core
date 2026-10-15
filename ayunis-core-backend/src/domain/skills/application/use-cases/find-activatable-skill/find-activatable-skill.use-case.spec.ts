@@ -29,6 +29,7 @@ function fixture() {
         new Map([[skill.id, { isActive: true, isPinned: false }]]),
       ),
     findOne: jest.fn().mockResolvedValue(null),
+    findById: jest.fn().mockResolvedValue(null),
   };
   const findShare = { execute: jest.fn().mockResolvedValue(null) };
   const principal = { userId, orgId };

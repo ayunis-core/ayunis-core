@@ -8,6 +8,16 @@ import { TeamRecord } from './schema/team.record';
 import { TeamMemberRecord } from './schema/team-member.record';
 import { TeamMapper } from './mappers/team.mapper';
 import { UUID } from 'crypto';
+import { TeamOwnsResourcesError } from 'src/iam/teams/application/teams.errors';
+
+const PG_FOREIGN_KEY_VIOLATION = '23503';
+
+function isForeignKeyViolation(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const record = error as Record<string, unknown>;
+  const driverError = record.driverError as Record<string, unknown> | undefined;
+  return (driverError?.code ?? record.code) === PG_FOREIGN_KEY_VIOLATION;
+}
 
 @Injectable()
 export class LocalTeamsRepository extends TeamsRepository {
@@ -149,7 +159,12 @@ export class LocalTeamsRepository extends TeamsRepository {
   async delete(id: UUID): Promise<void> {
     this.logger.log({ id }, 'delete');
 
-    await this.teamRepository.delete(id);
+    try {
+      await this.teamRepository.delete(id);
+    } catch (error) {
+      if (isForeignKeyViolation(error)) throw new TeamOwnsResourcesError(id);
+      throw error;
+    }
     this.logger.debug({ id }, 'Team deleted successfully');
   }
 

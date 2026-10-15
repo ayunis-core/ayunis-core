@@ -1,4 +1,3 @@
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { EntityManager } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { Skill } from 'src/domain/skills/domain/skill';
@@ -77,8 +76,6 @@ export async function updateSkill(
       where: { id: skill.id },
       relations: [...SKILL_RELATIONS],
     });
-    return skill instanceof PersonalSkill
-      ? mapper.toPersonal(record)
-      : mapper.toWorkspace(record);
+    return mapper.toDomain(record);
   });
 }

@@ -42,7 +42,7 @@ export class AddDocumentToKnowledgeBaseUseCase {
     const knowledgeBase = await this.txHost.withTransaction(async () => {
       const knowledgeBase = await this.repository.findById(knowledgeBaseId);
       if (!knowledgeBase) throw new KnowledgeBaseNotFoundError(knowledgeBaseId);
-      await this.access.requireWrite(knowledgeBase);
+      await this.access.requireManage(knowledgeBase);
       const count =
         await this.repository.countSourcesByKnowledgeBaseId(knowledgeBaseId);
       if (count >= KnowledgeBasesConstants.MAX_SOURCES) {

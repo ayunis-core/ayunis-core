@@ -5,6 +5,7 @@ export enum TeamErrorCode {
   TEAM_NOT_FOUND = 'TEAM_NOT_FOUND',
   TEAM_NAME_ALREADY_EXISTS = 'TEAM_NAME_ALREADY_EXISTS',
   TEAM_INVALID_INPUT = 'TEAM_INVALID_INPUT',
+  TEAM_OWNS_RESOURCES = 'TEAM_OWNS_RESOURCES',
   UNEXPECTED_TEAM_ERROR = 'UNEXPECTED_TEAM_ERROR',
 }
 
@@ -50,6 +51,17 @@ export class TeamInvalidInputError extends TeamError {
       `Invalid team input: ${reason}`,
       TeamErrorCode.TEAM_INVALID_INPUT,
       400,
+      metadata,
+    );
+  }
+}
+
+export class TeamOwnsResourcesError extends TeamError {
+  constructor(teamId: string, metadata?: ErrorMetadata) {
+    super(
+      `Team '${teamId}' still owns skills or knowledge bases`,
+      TeamErrorCode.TEAM_OWNS_RESOURCES,
+      409,
       metadata,
     );
   }

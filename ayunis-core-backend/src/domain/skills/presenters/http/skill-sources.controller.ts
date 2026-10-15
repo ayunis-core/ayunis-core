@@ -36,8 +36,6 @@ import { ApiSkillFileSourceUpload } from './decorators/skill-sources.decorators'
 import { MissingFileError } from 'src/domain/skills/application/skills.errors';
 import { AddFileSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('skills')
 @Controller('skills')
@@ -78,7 +76,6 @@ export class SkillSourcesController {
     return this.skillDtoMapper.sourcesToDtoArray(sources);
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Post(':id/sources/file')
   @ApiSkillFileSourceUpload()
   async addFileSource(
@@ -119,7 +116,6 @@ export class SkillSourcesController {
     return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Delete(':id/sources/:sourceId')
   @ApiOperation({ summary: 'Remove a source from a skill' })
   @ApiParam({

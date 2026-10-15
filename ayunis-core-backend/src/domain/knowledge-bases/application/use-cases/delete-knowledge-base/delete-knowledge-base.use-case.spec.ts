@@ -38,7 +38,7 @@ async function setup(knowledgeBase: KnowledgeBase = personalKnowledgeBase()) {
     findById: jest.fn().mockResolvedValue(knowledgeBase),
     delete: jest.fn(),
   };
-  const writeAccess = { requireWrite: jest.fn() };
+  const writeAccess = { requireManage: jest.fn() };
   const getSources = { execute: jest.fn().mockResolvedValue([]) };
   const cleanupProcessing = { execute: jest.fn() };
   const module = await Test.createTestingModule({
@@ -110,7 +110,7 @@ describe(DeleteKnowledgeBaseUseCase.name, () => {
   ])('does not delete for %s', async (_scenario, existing) => {
     const { useCase, repository, writeAccess, getSources, cleanupProcessing } =
       await setup(existing);
-    writeAccess.requireWrite.mockRejectedValue(
+    writeAccess.requireManage.mockRejectedValue(
       new KnowledgeBaseNotFoundError(existing.id),
     );
     await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
@@ -134,7 +134,7 @@ describe(DeleteKnowledgeBaseUseCase.name, () => {
     await expect(
       useCase.execute(command(knowledgeBase.id)),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
-    expect(writeAccess.requireWrite).not.toHaveBeenCalled();
+    expect(writeAccess.requireManage).not.toHaveBeenCalled();
     expect(getSources.execute).not.toHaveBeenCalled();
     expect(cleanupProcessing.execute).not.toHaveBeenCalled();
     expect(repository.delete).not.toHaveBeenCalled();

@@ -1,7 +1,11 @@
 import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import type { UUID } from 'crypto';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import type {
+  CollectiveKnowledgeBase,
+  KnowledgeBase,
+} from 'src/domain/knowledge-bases/domain/knowledge-base';
+import type { CollectiveKnowledgeBaseScope } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -9,6 +13,7 @@ export interface KnowledgeBaseListOptions {
   search?: string;
   limit: number;
   offset: number;
+  collective?: Pick<CollectiveKnowledgeBaseScope, 'orgId' | 'teamIds'>;
 }
 
 export interface KnowledgeBaseByIdsOptions {
@@ -66,7 +71,7 @@ export abstract class KnowledgeBaseRepository {
     workspaceId: undefined,
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
-  ): Promise<Paginated<PersonalKnowledgeBase>>;
+  ): Promise<Paginated<PersonalKnowledgeBase | CollectiveKnowledgeBase>>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,

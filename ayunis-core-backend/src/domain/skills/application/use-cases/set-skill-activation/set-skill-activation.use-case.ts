@@ -5,6 +5,8 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import { isCollectiveSkill } from 'src/domain/skills/application/models/collective-skill-owner';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
   SkillNotFoundError,
@@ -29,6 +31,7 @@ export class SetSkillActivationUseCase {
 
   constructor(
     private readonly repository: SkillRepository,
+    private readonly collectiveRepository: CollectiveSkillRepository,
     private readonly authorization: SkillAuthorizationService,
     private readonly context: ContextService,
     private readonly hasPermission: HasPermissionUseCase,
@@ -40,7 +43,14 @@ export class SetSkillActivationUseCase {
     this.logger.log(command, 'Setting skill activation');
     const skill = await this.repository.findById(command.skillId);
     if (!skill) throw new SkillNotFoundError(command.skillId);
-    if (skill instanceof PersonalSkill) {
+    if (isCollectiveSkill(skill)) {
+      await this.authorization.requireUse(skill);
+      await this.collectiveRepository.setActive(
+        skill.id,
+        this.requireUserId(),
+        command.isActive,
+      );
+    } else if (skill instanceof PersonalSkill) {
       await this.setPersonal(skill, command.isActive);
     } else {
       await this.setWorkspace(skill, command.isActive);

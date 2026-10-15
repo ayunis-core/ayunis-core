@@ -1,3 +1,5 @@
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { randomUUID } from 'crypto';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TransactionHost } from '@nestjs-cls/transactional';
@@ -81,7 +83,14 @@ function setup(scope: 'personal' | 'workspace' = 'personal') {
   };
   const useCase = new AddDocumentToKnowledgeBaseUseCase(
     repository,
-    new KnowledgeBaseWriteAccessService(context, workspaceAccess),
+    new KnowledgeBaseWriteAccessService(
+      context,
+      workspaceAccess,
+      { execute: jest.fn() } as unknown as GetOwnershipViewerUseCase,
+      {
+        execute: jest.fn().mockResolvedValue(true),
+      } as unknown as HasPermissionUseCase,
+    ),
     processing,
     deleteSource,
     txHost as unknown as TransactionHost<TransactionalAdapterTypeOrm>,

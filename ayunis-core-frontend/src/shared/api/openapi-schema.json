@@ -5563,6 +5563,7 @@
     },
     "/knowledge-bases": {
       "post": {
+        "description": "The owner must be one the caller may create for: personal needs manage_own_knowledge, team needs team admin rights for that team, org needs manage_org_knowledge.",
         "operationId": "KnowledgeBasesController_create",
         "parameters": [],
         "requestBody": {
@@ -5655,6 +5656,26 @@
           }
         },
         "summary": "List all knowledge bases for the current user",
+        "tags": ["knowledge-bases"]
+      }
+    },
+    "/knowledge-bases/owner-options": {
+      "get": {
+        "operationId": "KnowledgeBasesController_ownerOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerOptionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the owners the caller may create knowledge bases for",
         "tags": ["knowledge-bases"]
       }
     },
@@ -6211,6 +6232,7 @@
     },
     "/skills": {
       "post": {
+        "description": "The owner must be one the caller may create for: personal needs manage_own_skills, team needs team admin rights for that team, org needs manage_org_skills.",
         "operationId": "SkillsController_create",
         "parameters": [],
         "requestBody": {
@@ -6300,6 +6322,26 @@
           }
         },
         "summary": "List skills for an owner scope",
+        "tags": ["skills"]
+      }
+    },
+    "/skills/owner-options": {
+      "get": {
+        "operationId": "SkillsController_ownerOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerOptionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the owners the caller may create skills for",
         "tags": ["skills"]
       }
     },
@@ -17228,9 +17270,13 @@
         "properties": {
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamId": {
             "type": "string",
             "format": "uuid"
           },
@@ -17250,6 +17296,68 @@
         },
         "required": ["ownerType", "name"]
       },
+      "ResourceViewerDto": {
+        "type": "object",
+        "properties": {
+          "canUse": {
+            "type": "boolean",
+            "description": "The viewer is in the audience of the item"
+          },
+          "canEdit": {
+            "type": "boolean",
+            "description": "The viewer may change the item"
+          },
+          "canDelete": {
+            "type": "boolean",
+            "description": "The viewer may delete the item"
+          }
+        },
+        "required": ["canUse", "canEdit", "canDelete"]
+      },
+      "OwnerEditorDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["userId", "name"]
+      },
+      "OwnerDescriptionDto": {
+        "type": "object",
+        "properties": {
+          "teamName": {
+            "type": "string",
+            "nullable": true
+          },
+          "audienceCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Team members or organisation users who can use the item"
+          },
+          "teamEditors": {
+            "description": "Team admins who may change items of the owning team",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnerEditorDto"
+            }
+          },
+          "orgEditorsIncludeNonAdmins": {
+            "type": "boolean",
+            "description": "A non-admin role holds the organisation right for this resource"
+          }
+        },
+        "required": [
+          "teamName",
+          "audienceCount",
+          "teamEditors",
+          "orgEditorsIncludeNonAdmins"
+        ]
+      },
       "KnowledgeBaseResponseDto": {
         "type": "object",
         "properties": {
@@ -17261,12 +17369,33 @@
           },
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "workspaceId": {
             "type": "string",
             "format": "uuid",
             "description": "The owning workspace for workspace-owned knowledge bases"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The owning team for team-owned knowledge bases"
+          },
+          "viewer": {
+            "description": "What the caller may do; omitted for workspace items",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResourceViewerDto"
+              }
+            ]
+          },
+          "ownerDescription": {
+            "description": "Audience and editors of a team or organisation item",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OwnerDescriptionDto"
+              }
+            ]
           },
           "name": {
             "type": "string",
@@ -17316,6 +17445,55 @@
           "documentCount",
           "isActive"
         ]
+      },
+      "OwnerOptionType": {
+        "type": "string",
+        "enum": ["personal", "team", "org"]
+      },
+      "OwnerOptionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OwnerOptionType"
+              }
+            ]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamName": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "number"
+          },
+          "editors": {
+            "description": "Team admins who may change items of this team",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnerEditorDto"
+            }
+          }
+        },
+        "required": ["type"]
+      },
+      "OwnerOptionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnerOptionDto"
+            }
+          },
+          "orgEditorsIncludeNonAdmins": {
+            "type": "boolean"
+          }
+        },
+        "required": ["options", "orgEditorsIncludeNonAdmins"]
       },
       "KnowledgeBaseListResponseDto": {
         "type": "object",
@@ -17585,7 +17763,7 @@
           },
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "userId": {
             "type": "string",
@@ -17594,6 +17772,26 @@
           "workspaceId": {
             "type": "string",
             "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "viewer": {
+            "description": "What the caller may do; omitted for workspace skills",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResourceViewerDto"
+              }
+            ]
+          },
+          "ownerDescription": {
+            "description": "Audience and editors of a team or organisation skill",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OwnerDescriptionDto"
+              }
+            ]
           },
           "name": {
             "type": "string"
@@ -17705,15 +17903,19 @@
           },
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "workspaceId": {
             "type": "string",
             "format": "uuid"
           },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "isActive": {
             "type": "boolean",
-            "description": "Whether a personal skill is active (defaults to true)",
+            "description": "Whether the skill is active for its owner, or for the creator of a team or organisation skill (defaults to true)",
             "example": true
           }
         },

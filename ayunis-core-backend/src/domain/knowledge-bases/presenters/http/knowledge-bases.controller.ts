@@ -58,7 +58,12 @@ import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowl
 
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
 import { ListKnowledgeBasesQueryDto } from './dto/list-knowledge-bases-query.dto';
-import { toKnowledgeBaseOwner } from './dto/knowledge-base-owner.dto';
+import { toKnowledgeBaseListScope } from './dto/knowledge-base-owner.dto';
+import { toCreateKnowledgeBaseOwner } from './dto/create-knowledge-base-owner.dto';
+import { OwnerOptionsResponseDto } from 'src/domain/ownership/presenters/http/dto/ownership.dto';
+import { toOwnerOptionsDto } from 'src/domain/ownership/presenters/http/owner-options.mapper';
+import { ListOwnerOptionsQuery } from 'src/domain/ownership/application/use-cases/list-owner-options/list-owner-options.query';
+import { ListOwnerOptionsUseCase } from 'src/domain/ownership/application/use-cases/list-owner-options/list-owner-options.use-case';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
 import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
 import { SetKnowledgeBaseActivationRequestDto } from './dto/set-knowledge-base-activation.request-dto';
@@ -71,8 +76,6 @@ import {
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 const KB_ID_PARAM: ApiParamOptions = {
   name: 'id',
@@ -117,11 +120,15 @@ export class KnowledgeBasesController {
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
+    private readonly listOwnerOptions: ListOwnerOptionsUseCase,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_OWN_KNOWLEDGE)
   @Post()
-  @ApiOperation({ summary: 'Create a new knowledge base' })
+  @ApiOperation({
+    summary: 'Create a new knowledge base',
+    description:
+      'The owner must be one the caller may create for: personal needs manage_own_knowledge, team needs team admin rights for that team, org needs manage_org_knowledge.',
+  })
   @ApiBody({ type: CreateKnowledgeBaseDto })
   @ApiResponse({
     status: 201,
@@ -137,14 +144,23 @@ export class KnowledgeBasesController {
       new CreateKnowledgeBaseCommand({
         name: dto.name,
         description: dto.description,
-        owner: toKnowledgeBaseOwner(dto),
+        owner: toCreateKnowledgeBaseOwner(dto),
       }),
     );
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
-      isActive: true,
-      isShared: false,
-      documentCount: 0,
-    });
+    return this.findOne(knowledgeBase.id);
+  }
+
+  @Get('owner-options')
+  @ApiOperation({
+    summary: 'List the owners the caller may create knowledge bases for',
+  })
+  @ApiResponse({ status: 200, type: OwnerOptionsResponseDto })
+  async ownerOptions(): Promise<OwnerOptionsResponseDto> {
+    return toOwnerOptionsDto(
+      await this.listOwnerOptions.execute(
+        new ListOwnerOptionsQuery('knowledge_base'),
+      ),
+    );
   }
 
   @Get()
@@ -162,7 +178,7 @@ export class KnowledgeBasesController {
     this.logger.log({ ownerType: query.ownerType }, 'findAll');
     const page = await this.listKnowledgeBasesUseCase.execute(
       new ListKnowledgeBasesQuery({
-        owner: toKnowledgeBaseOwner(query),
+        owner: toKnowledgeBaseListScope(query),
         search: query.search,
         limit: query.limit,
         offset: query.offset,
@@ -205,7 +221,6 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, context);
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_KNOWLEDGE)
   @Patch(':id')
   @ApiOperation({ summary: 'Update a knowledge base' })
   @ApiParam({
@@ -257,7 +272,6 @@ export class KnowledgeBasesController {
     return this.findOne(id);
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_KNOWLEDGE)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a knowledge base' })
   @ApiParam({
@@ -309,7 +323,6 @@ export class KnowledgeBasesController {
     };
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_KNOWLEDGE)
   @Post(':id/documents')
   @ApiOperation({ summary: 'Add a document to a knowledge base' })
   @ApiParam(KB_ID_PARAM)
@@ -376,7 +389,6 @@ export class KnowledgeBasesController {
     });
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_KNOWLEDGE)
   @Post(':id/urls')
   @ApiOperation({ summary: 'Add a URL source to a knowledge base' })
   @ApiParam({
@@ -417,7 +429,6 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_KNOWLEDGE)
   @Delete(':id/documents/:documentId')
   @ApiOperation({ summary: 'Remove a document from a knowledge base' })
   @ApiParam({

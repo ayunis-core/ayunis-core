@@ -1,4 +1,14 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
+import {
+  OwnershipViewer,
+  type OwnershipViewerParams,
+} from 'src/domain/ownership/application/models/ownership-viewer';
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -37,7 +47,24 @@ function setup() {
   const context = {
     get: jest.fn(getFromUserContext({ userId, orgId })),
   };
+  const viewer = { execute: jest.fn() };
+  const hasPermission = { execute: jest.fn().mockResolvedValue(true) };
+  const viewerWith = (params: Partial<OwnershipViewerParams>) =>
+    viewer.execute.mockResolvedValue(
+      new OwnershipViewer({
+        userId,
+        orgId,
+        isAdmin: false,
+        permissions: [],
+        memberTeamIds: [],
+        adminTeamIds: [],
+        teamAdminPermissions: [],
+        ...params,
+      }),
+    );
   return {
+    viewerWith,
+    hasPermission,
     userId,
     orgId,
     personal,
@@ -53,7 +80,21 @@ function setup() {
       workspaceWrite as unknown as AssertWorkspaceWriteAccessUseCase,
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
+      viewer as unknown as GetOwnershipViewerUseCase,
+      hasPermission as unknown as HasPermissionUseCase,
     ),
+  };
+}
+
+function collectiveSkills(orgId: UUID, teamId: UUID) {
+  const params = {
+    name: 'Bauantrag vorprüfen',
+    shortDescription: 'Prüft Bauanträge',
+    instructions: 'Prüfe die Unterlagen.',
+  };
+  return {
+    team: new TeamSkill({ ...params, teamId, orgId }),
+    org: new OrgSkill({ ...params, orgId }),
   };
 }
 
@@ -129,4 +170,103 @@ describe(SkillAuthorizationService.name, () => {
       );
     },
   );
+
+  describe('team and organisation skills', () => {
+    it('lets team members read and use a team skill but not change it', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const teamId = randomUUID();
+      const { team } = collectiveSkills(orgId, teamId);
+      viewerWith({ memberTeamIds: [teamId] });
+
+      await expect(service.requireRead(team)).resolves.toBeUndefined();
+      await expect(service.requireUse(team)).resolves.toBeUndefined();
+      await expect(service.requireWrite(team)).rejects.toBeInstanceOf(
+        UnauthorizedAccessError,
+      );
+    });
+
+    it('hides a team skill from people outside the team', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const { team } = collectiveSkills(orgId, randomUUID());
+      viewerWith({ memberTeamIds: [randomUUID()] });
+
+      await expect(service.requireRead(team)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
+
+    it('lets team admins with the team right change a team skill', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const teamId = randomUUID();
+      const { team } = collectiveSkills(orgId, teamId);
+      viewerWith({
+        memberTeamIds: [teamId],
+        adminTeamIds: [teamId],
+        teamAdminPermissions: [TeamAdminPermission.TEAM_MANAGE_SKILLS],
+      });
+
+      await expect(service.requireWrite(team)).resolves.toBeUndefined();
+    });
+
+    it('keeps team admins read-only when the team right is off', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const teamId = randomUUID();
+      const { team } = collectiveSkills(orgId, teamId);
+      viewerWith({ memberTeamIds: [teamId], adminTeamIds: [teamId] });
+
+      await expect(service.requireWrite(team)).rejects.toBeInstanceOf(
+        UnauthorizedAccessError,
+      );
+    });
+
+    it('lets admins change but not use a team skill of another team', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const { team } = collectiveSkills(orgId, randomUUID());
+      viewerWith({ isAdmin: true });
+
+      await expect(service.requireRead(team)).resolves.toBeUndefined();
+      await expect(service.requireWrite(team)).resolves.toBeUndefined();
+      await expect(service.requireUse(team)).rejects.toBeInstanceOf(
+        UnauthorizedAccessError,
+      );
+    });
+
+    it('lets holders of the organisation right change organisation skills', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const { org } = collectiveSkills(orgId, randomUUID());
+      viewerWith({ permissions: [Permission.MANAGE_ORG_SKILLS] });
+
+      await expect(service.requireWrite(org)).resolves.toBeUndefined();
+    });
+
+    it('keeps organisation skills read-only without the organisation right', async () => {
+      const { service, orgId, viewerWith } = setup();
+      const { org } = collectiveSkills(orgId, randomUUID());
+      viewerWith({});
+
+      await expect(service.requireRead(org)).resolves.toBeUndefined();
+      await expect(service.requireWrite(org)).rejects.toBeInstanceOf(
+        UnauthorizedAccessError,
+      );
+    });
+
+    it('hides organisation skills of another organisation', async () => {
+      const { service, viewerWith } = setup();
+      const { org } = collectiveSkills(randomUUID(), randomUUID());
+      viewerWith({ isAdmin: true, permissions: Object.values(Permission) });
+
+      await expect(service.requireRead(org)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
+  });
+
+  it('requires the own-skills right to change a personal skill', async () => {
+    const { service, personal, hasPermission } = setup();
+    hasPermission.execute.mockResolvedValue(false);
+
+    await expect(service.requireManage(personal)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
+  });
 });

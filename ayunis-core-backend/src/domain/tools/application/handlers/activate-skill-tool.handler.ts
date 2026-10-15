@@ -8,15 +8,20 @@ import {
 import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
-import { FindSkillByNameQuery } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.query';
+import {
+  FindSkillByNameQuery,
+  type SkillNameScope,
+} from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.query';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { FindAlwaysOnTemplateByNameUseCase } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
 import { FindAlwaysOnTemplateByNameQuery } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.query';
 import {
+  ORG_PREFIX,
   parseSkillSlug,
   SYSTEM_PREFIX,
+  TEAM_PREFIX,
   USER_PREFIX,
   WORKSPACE_PREFIX,
 } from 'src/common/util/skill-slug';
@@ -63,11 +68,11 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
             })
           ).instructions;
         case USER_PREFIX:
-          return await this.activateUserSkill(
-            tool.name,
-            originalName,
-            threadId,
-          );
+          return await this.activateUserSkill(originalName, threadId);
+        case TEAM_PREFIX:
+          return await this.activateUserSkill(originalName, threadId, 'team');
+        case ORG_PREFIX:
+          return await this.activateUserSkill(originalName, threadId, 'org');
         default: {
           const _exhaustive: never = prefix;
           throw new ToolExecutionFailedError({
@@ -122,13 +127,13 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
   }
 
   private async activateUserSkill(
-    toolName: string,
     skillName: string,
     threadId: UUID,
+    scope: SkillNameScope = 'personal',
   ): Promise<string> {
     // findSkillByNameUseCase throws SkillNotFoundError if missing
     const skill = await this.findSkillByNameUseCase.execute(
-      new FindSkillByNameQuery(skillName),
+      new FindSkillByNameQuery(skillName, scope),
     );
 
     const threadResult = await this.findThreadUseCase.execute(
