@@ -15,10 +15,24 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminOrgListItemResponseDto } from '@/shared/api';
+import type {
+  OrgLifecycleStatus,
+  SuperAdminOrgListItemResponseDto,
+} from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
 import { formatDate } from '@/shared/lib/format-date';
 import type { ReactNode } from 'react';
+
+const LIFECYCLE_BADGE_VARIANT: Record<
+  OrgLifecycleStatus,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  paying: 'default',
+  expired: 'destructive',
+  trial: 'outline',
+  'no-plan': 'outline',
+  archived: 'secondary',
+};
 
 interface OrgsTableProps {
   orgs: SuperAdminOrgListItemResponseDto[];
@@ -71,20 +85,13 @@ export default function OrgsTable({
                 >
                   <TableCell className="font-medium">{org.name}</TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      <Badge variant={org.archived ? 'secondary' : 'outline'}>
-                        {t(
-                          org.archived
-                            ? 'statuses.archived'
-                            : 'statuses.active',
-                        )}
-                      </Badge>
-                      {org.paying && (
-                        <Badge data-testid="org-paying-badge">
-                          {t('statuses.paying')}
-                        </Badge>
-                      )}
-                    </div>
+                    <Badge
+                      variant={LIFECYCLE_BADGE_VARIANT[org.lifecycleStatus]}
+                      data-testid="org-lifecycle-badge"
+                      data-status={org.lifecycleStatus}
+                    >
+                      {t(`lifecycle.${org.lifecycleStatus}`)}
+                    </Badge>
                   </TableCell>
                   <TableCell>{formatDate(org.createdAt)}</TableCell>
                 </TableRow>

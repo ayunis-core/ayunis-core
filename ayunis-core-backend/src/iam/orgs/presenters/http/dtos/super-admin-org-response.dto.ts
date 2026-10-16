@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import {
+  ORG_LIFECYCLE_STATUSES,
+  type OrgLifecycleStatus,
+} from 'src/iam/orgs/application/models/org-lifecycle-status';
 
 export class SuperAdminOrgResponseDto {
   @ApiProperty({
@@ -35,10 +39,12 @@ export class SuperAdminOrgResponseDto {
 
 export class SuperAdminOrgListItemResponseDto extends SuperAdminOrgResponseDto {
   @ApiProperty({
+    enum: ORG_LIFECYCLE_STATUSES,
+    enumName: 'OrgLifecycleStatus',
     description:
-      'Whether the organization currently has an active subscription',
+      'Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan',
   })
-  paying: boolean;
+  lifecycleStatus: OrgLifecycleStatus;
 }
 
 export class SuperAdminOrgListResponseDto {

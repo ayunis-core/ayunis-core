@@ -5,8 +5,13 @@ import { DataSource, EntitySchema } from 'typeorm';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
+import {
+  ORG_LIFECYCLE_STATUSES,
+  type OrgLifecycleStatus,
+} from 'src/iam/orgs/application/models/org-lifecycle-status';
 import type { OrgsFilters } from 'src/iam/orgs/application/ports/orgs.repository';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
 import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
@@ -18,6 +23,7 @@ import {
   type SeatBasedSubscriptionRecord,
   SubscriptionRecord,
 } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
+import { TrialRecord } from 'src/iam/trials/infrastructure/persistence/local/schema/trial.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { LocalOrgsRepository } from './local-orgs.repository';
 
@@ -75,6 +81,20 @@ const subscriptionSchema = new EntitySchema<
   },
 });
 
+const trialSchema = new EntitySchema<TrialRecord>({
+  name: 'TrialRecord',
+  target: TrialRecord,
+  tableName: 'trials',
+  columns: {
+    id: { type: String, primary: true },
+    createdAt: { type: 'timestamp', createDate: true },
+    updatedAt: { type: 'timestamp', updateDate: true },
+    orgId: { type: String },
+    messagesSent: { type: 'integer', default: 0 },
+    maxMessages: { type: 'integer' },
+  },
+});
+
 const billingInfo = new SubscriptionBillingInfo({
   companyName: 'Gemeinde Musterstadt',
   street: 'Hauptstraße',
@@ -121,93 +141,170 @@ const byName = (names: string[]) =>
 
 const at = (iso: string) => new Date(`${iso}T09:00:00Z`);
 
-const cases: [string, Subscription[]][] = [
-  ['trial only, no subscription', []],
-  ['open-ended seat-based', [seatBased(RenewalCycle.MONTHLY)]],
-  ['open-ended usage-based', [usageBased()]],
-  [
-    'scheduled to start next month',
-    [seatBased(RenewalCycle.MONTHLY, { startsAt: at('2026-04-15') })],
-  ],
-  [
-    'explicit access end in the future',
-    [
+type OrgCase = {
+  name: string;
+  archived?: boolean;
+  trial?: boolean;
+  subscriptions?: Subscription[];
+};
+
+const cases: OrgCase[] = [
+  { name: 'never had a trial or a subscription' },
+  { name: 'trial only', trial: true },
+  {
+    name: 'archived with a running subscription',
+    archived: true,
+    subscriptions: [usageBased()],
+  },
+  { name: 'archived without anything', archived: true },
+  {
+    name: 'open-ended seat-based',
+    trial: true,
+    subscriptions: [seatBased(RenewalCycle.MONTHLY)],
+  },
+  { name: 'open-ended usage-based', subscriptions: [usageBased()] },
+  {
+    name: 'scheduled to start next month',
+    subscriptions: [
+      seatBased(RenewalCycle.MONTHLY, { startsAt: at('2026-04-15') }),
+    ],
+  },
+  {
+    name: 'explicit access end in the future',
+    subscriptions: [
       usageBased({
         cancelledAt: at('2026-03-01'),
         accessEndsAt: at('2026-04-01'),
       }),
     ],
-  ],
-  [
-    'explicit access end in the past',
-    [usageBased({ accessEndsAt: at('2026-03-01') })],
-  ],
-  [
-    'legacy monthly cancellation inside the paid period',
-    [seatBased(RenewalCycle.MONTHLY, { cancelledAt: at('2026-03-20') })],
-  ],
-  [
-    'legacy monthly cancellation whose period has ended',
-    [seatBased(RenewalCycle.MONTHLY, { cancelledAt: at('2026-03-10') })],
-  ],
-  [
-    'legacy yearly cancellation inside the paid year',
-    [seatBased(RenewalCycle.YEARLY, { cancelledAt: at('2026-02-01') })],
-  ],
-  [
-    'legacy yearly cancellation whose year has ended',
-    [
+  },
+  {
+    name: 'explicit access end in the past',
+    subscriptions: [usageBased({ accessEndsAt: at('2026-03-01') })],
+  },
+  {
+    name: 'trial plus a subscription that ended',
+    trial: true,
+    subscriptions: [usageBased({ accessEndsAt: at('2026-03-01') })],
+  },
+  {
+    name: 'ended subscription with a scheduled renewal',
+    subscriptions: [
+      usageBased({ accessEndsAt: at('2026-03-01') }),
+      usageBased({ startsAt: at('2026-04-15') }),
+    ],
+  },
+  {
+    name: 'cancelled before start with an explicit access end',
+    subscriptions: [
+      seatBased(RenewalCycle.MONTHLY, {
+        renewalCycleAnchor: at('2026-02-01'),
+        cancelledAt: at('2026-01-20'),
+        accessEndsAt: at('2026-02-01'),
+      }),
+    ],
+  },
+  {
+    name: 'legacy monthly cancellation inside the paid period',
+    subscriptions: [
+      seatBased(RenewalCycle.MONTHLY, { cancelledAt: at('2026-03-20') }),
+    ],
+  },
+  {
+    name: 'legacy monthly cancellation whose period has ended',
+    subscriptions: [
+      seatBased(RenewalCycle.MONTHLY, { cancelledAt: at('2026-03-10') }),
+    ],
+  },
+  {
+    name: 'legacy yearly cancellation inside the paid year',
+    subscriptions: [
+      seatBased(RenewalCycle.YEARLY, { cancelledAt: at('2026-02-01') }),
+    ],
+  },
+  {
+    name: 'legacy yearly cancellation whose year has ended',
+    subscriptions: [
       seatBased(RenewalCycle.YEARLY, {
         renewalCycleAnchor: new Date('2024-01-15T00:00:00Z'),
         cancelledAt: at('2024-06-01'),
       }),
     ],
-  ],
-  [
+  },
+  {
     // Renewals clamp and stick at day 28 (Feb 28 -> Mar 28), so the period
     // ended on Mar 28 even though Jan 31 + 14 months is Mar 31.
-    'legacy cancellation on a month-end anchor after the clamped renewal',
-    [
+    name: 'legacy cancellation on a month-end anchor after the clamped renewal',
+    subscriptions: [
       seatBased(RenewalCycle.MONTHLY, {
         renewalCycleAnchor: new Date('2025-01-31T00:00:00Z'),
         cancelledAt: at('2026-03-27'),
       }),
     ],
-  ],
-  [
-    'legacy cancellation before the subscription started',
-    [
+  },
+  {
+    name: 'legacy cancellation before the subscription started',
+    subscriptions: [
       seatBased(RenewalCycle.MONTHLY, {
         renewalCycleAnchor: new Date('2026-03-01T00:00:00Z'),
         cancelledAt: new Date('2026-02-20T00:00:00Z'),
       }),
     ],
-  ],
-  [
-    'legacy usage-based cancellation',
-    [usageBased({ cancelledAt: at('2026-03-20') })],
-  ],
-  [
-    'ended subscription replaced by an active one',
-    [
+  },
+  {
+    name: 'legacy usage-based cancellation',
+    subscriptions: [usageBased({ cancelledAt: at('2026-03-20') })],
+  },
+  {
+    name: 'legacy usage-based cancellation on its start date',
+    subscriptions: [
+      usageBased({ startsAt: at('2026-01-10'), cancelledAt: at('2026-01-10') }),
+    ],
+  },
+  {
+    name: 'ended subscription replaced by an active one',
+    subscriptions: [
       usageBased({ accessEndsAt: at('2025-12-31') }),
       seatBased(RenewalCycle.MONTHLY, { startsAt: at('2025-12-31') }),
     ],
-  ],
+  },
 ];
 
-describe('LocalOrgsRepository.findAllForSuperAdmin subscription filter', () => {
+const wasEverActive = (subscription: Subscription) => {
+  const accessEnd = getEffectiveAccessEnd(subscription);
+  return (
+    subscription.startsAt <= new Date() &&
+    (accessEnd === null || accessEnd > subscription.startsAt)
+  );
+};
+
+const expectedStatus = ({
+  archived,
+  trial,
+  subscriptions = [],
+}: OrgCase): OrgLifecycleStatus => {
+  if (archived) return 'archived';
+  if (subscriptions.some(isActive)) return 'paying';
+  if (subscriptions.some(wasEverActive)) return 'expired';
+  if (trial || subscriptions.length > 0) return 'trial';
+  return 'no-plan';
+};
+
+const namesWithStatus = (status: OrgLifecycleStatus) =>
+  byName(cases.filter((c) => expectedStatus(c) === status).map((c) => c.name));
+
+describe('LocalOrgsRepository super-admin lifecycle status', () => {
   let dataSource: DataSource;
   let schemaName: string;
   let repository: LocalOrgsRepository;
 
   beforeAll(async () => {
-    schemaName = `orgs_paying_${randomUUID().replaceAll('-', '')}`;
+    schemaName = `orgs_lifecycle_${randomUUID().replaceAll('-', '')}`;
     dataSource = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema: schemaName,
       logging: false,
-      entities: [orgSchema, userSchema, subscriptionSchema],
+      entities: [orgSchema, userSchema, subscriptionSchema, trialSchema],
       migrations: [],
       migrationsRun: false,
     });
@@ -230,9 +327,18 @@ describe('LocalOrgsRepository.findAllForSuperAdmin subscription filter', () => {
       }),
     );
 
-    for (const [name, subscriptions] of cases) {
+    for (const { name, archived = false, trial, subscriptions = [] } of cases) {
       const orgId = randomUUID();
-      await dataSource.getRepository(OrgRecord).insert({ id: orgId, name });
+      await dataSource
+        .getRepository(OrgRecord)
+        .insert({ id: orgId, name, archived });
+      if (trial) {
+        await dataSource.getRepository(TrialRecord).insert({
+          id: randomUUID(),
+          orgId,
+          maxMessages: 100,
+        });
+      }
       for (const subscription of subscriptions) {
         await dataSource.getRepository(SubscriptionRecord).insert({
           id: randomUUID(),
@@ -269,79 +375,54 @@ describe('LocalOrgsRepository.findAllForSuperAdmin subscription filter', () => {
     await dataSource.destroy();
   });
 
-  const list = async (filters: OrgsFilters) => {
-    const page = await repository.findAllForSuperAdmin(
-      { limit: 100, offset: 0 },
-      { status: 'all', ...filters },
-    );
-    return page;
-  };
+  const list = (filters: OrgsFilters) =>
+    repository.findAllForSuperAdmin({ limit: 100, offset: 0 }, filters);
 
-  const payingCaseNames = () =>
-    cases
-      .filter(([, subscriptions]) => subscriptions.some(isActive))
-      .map(([name]) => name)
-      .sort((a, b) => a.localeCompare(b));
-
-  it('covers both paying and non-paying organizations', () => {
-    expect(payingCaseNames()).toEqual(
-      [
-        'ended subscription replaced by an active one',
-        'explicit access end in the future',
-        'legacy monthly cancellation inside the paid period',
-        'legacy yearly cancellation inside the paid year',
-        'open-ended seat-based',
-        'open-ended usage-based',
-      ].sort((a, b) => a.localeCompare(b)),
-    );
+  it.each(ORG_LIFECYCLE_STATUSES)('has at least one %s case', (status) => {
+    expect(namesWithStatus(status)).not.toHaveLength(0);
   });
 
-  it('lists exactly the organizations with a subscription that isActive', async () => {
-    const page = await list({ subscription: 'paying' });
-    expect(
-      page.data.map((org) => org.name).sort((a, b) => a.localeCompare(b)),
-    ).toEqual(payingCaseNames());
-    expect(page.total).toBe(payingCaseNames().length);
-  });
+  it.each(ORG_LIFECYCLE_STATUSES)(
+    'filters to exactly the %s organizations',
+    async (status) => {
+      const page = await list({ lifecycle: status });
+      expect(byName(page.data.map((org) => org.name))).toEqual(
+        namesWithStatus(status),
+      );
+      expect(page.total).toBe(namesWithStatus(status).length);
+    },
+  );
 
-  it('lists every other organization as non-paying', async () => {
-    const page = await list({ subscription: 'non-paying' });
-    expect(
-      page.data.map((org) => org.name).sort((a, b) => a.localeCompare(b)),
-    ).toEqual(
-      cases
-        .map(([name]) => name)
-        .filter((name) => !payingCaseNames().includes(name))
-        .sort((a, b) => a.localeCompare(b)),
-    );
-  });
-
-  it('keeps listing every organization when the filter is omitted', async () => {
+  it('lists every organization, archived included, when the filter is all or omitted', async () => {
     expect((await list({})).total).toBe(cases.length);
-    expect((await list({ subscription: 'all' })).total).toBe(cases.length);
+    expect((await list({ lifecycle: 'all' })).total).toBe(cases.length);
   });
 
   it('combines the filter with search', async () => {
-    const page = await list({ subscription: 'paying', search: 'legacy' });
+    const page = await list({ lifecycle: 'paying', search: 'legacy' });
     expect(byName(page.data.map((org) => org.name))).toEqual([
       'legacy monthly cancellation inside the paid period',
       'legacy yearly cancellation inside the paid year',
     ]);
   });
 
-  it('flags exactly the paying organizations among the given ids', async () => {
+  it('reports the lifecycle status of each given organization', async () => {
     const page = await list({});
-    const nameById = new Map(page.data.map((org) => [org.id, org.name]));
+    const statuses = await repository.findLifecycleStatuses(
+      page.data.map((org) => org.id),
+    );
 
-    const payingIds = await repository.findPayingOrgIds([...nameById.keys()]);
-
-    expect(byName(payingIds.map((id) => nameById.get(id) ?? id))).toEqual(
-      payingCaseNames(),
+    expect(
+      Object.fromEntries(
+        page.data.map((org) => [org.name, statuses.get(org.id)]),
+      ),
+    ).toEqual(
+      Object.fromEntries(cases.map((c) => [c.name, expectedStatus(c)])),
     );
   });
 
-  it('flags nothing for an empty page', async () => {
-    expect(await repository.findPayingOrgIds([])).toEqual([]);
+  it('reports nothing for an empty page', async () => {
+    expect((await repository.findLifecycleStatuses([])).size).toBe(0);
   });
 });
 

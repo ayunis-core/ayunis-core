@@ -23,9 +23,9 @@ export class SuperAdminOrgResponseDtoMapper {
     paginated: Paginated<SuperAdminOrgListItem>,
   ): SuperAdminOrgListResponseDto {
     return {
-      data: paginated.data.map(({ org, paying }) => ({
+      data: paginated.data.map(({ org, lifecycleStatus }) => ({
         ...this.toDto(org),
-        paying,
+        lifecycleStatus,
       })),
       pagination: {
         limit: paginated.limit,

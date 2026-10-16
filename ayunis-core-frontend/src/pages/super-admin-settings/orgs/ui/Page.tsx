@@ -1,5 +1,4 @@
-import OrgStatusFilter from './OrgStatusFilter';
-import OrgSubscriptionFilter from './OrgSubscriptionFilter';
+import OrgLifecycleFilter from './OrgLifecycleFilter';
 import { useTranslation } from 'react-i18next';
 import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import CreateOrgDialog from './CreateOrgDialog';
@@ -9,16 +8,14 @@ import OrgsSearch from './OrgsSearch';
 import type {
   SuperAdminOrgListItemResponseDto,
   PaginationDto,
-  SuperAdminOrgsControllerGetAllOrgsStatus,
-  SuperAdminOrgsControllerGetAllOrgsSubscription,
+  OrgLifecycleFilter as OrgLifecycleFilterValue,
 } from '@/shared/api';
 
 interface SuperAdminOrgsPageProps {
   orgs: SuperAdminOrgListItemResponseDto[];
   pagination?: PaginationDto;
   search?: string;
-  status: SuperAdminOrgsControllerGetAllOrgsStatus;
-  subscription: SuperAdminOrgsControllerGetAllOrgsSubscription;
+  lifecycle: OrgLifecycleFilterValue;
   currentPage: number;
 }
 
@@ -26,8 +23,7 @@ export default function SuperAdminOrgsPage({
   orgs,
   pagination,
   search,
-  status,
-  subscription,
+  lifecycle,
   currentPage,
 }: Readonly<SuperAdminOrgsPageProps>) {
   const { t } = useTranslation('super-admin-settings-layout');
@@ -46,8 +42,7 @@ export default function SuperAdminOrgsPage({
           searchSlot={
             <div className="flex flex-wrap gap-2">
               <OrgsSearch search={search} />
-              <OrgStatusFilter status={status} />
-              <OrgSubscriptionFilter subscription={subscription} />
+              <OrgLifecycleFilter lifecycle={lifecycle} />
             </div>
           }
         />
@@ -55,8 +50,7 @@ export default function SuperAdminOrgsPage({
           currentPage={currentPage}
           totalPages={totalPages}
           search={search}
-          status={status}
-          subscription={subscription}
+          lifecycle={lifecycle}
         />
       </div>
     </SuperAdminSettingsLayout>

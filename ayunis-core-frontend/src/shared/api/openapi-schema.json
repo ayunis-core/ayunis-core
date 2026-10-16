@@ -1525,24 +1525,12 @@
         "operationId": "SuperAdminOrgsController_getAllOrgs",
         "parameters": [
           {
-            "name": "status",
+            "name": "lifecycle",
             "required": false,
             "in": "query",
+            "description": "Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan",
             "schema": {
-              "default": "active",
-              "type": "string",
-              "enum": ["active", "archived", "all"]
-            }
-          },
-          {
-            "name": "subscription",
-            "required": false,
-            "in": "query",
-            "description": "Filter by whether the organization currently has an active subscription",
-            "schema": {
-              "default": "all",
-              "type": "string",
-              "enum": ["all", "paying", "non-paying"]
+              "$ref": "#/components/schemas/OrgLifecycleFilter"
             }
           },
           {
@@ -13467,6 +13455,15 @@
           "createdAt"
         ]
       },
+      "OrgLifecycleFilter": {
+        "type": "string",
+        "enum": ["all", "archived", "paying", "expired", "trial", "no-plan"]
+      },
+      "OrgLifecycleStatus": {
+        "type": "string",
+        "enum": ["archived", "paying", "expired", "trial", "no-plan"],
+        "description": "Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan"
+      },
       "SuperAdminOrgListItemResponseDto": {
         "type": "object",
         "properties": {
@@ -13496,9 +13493,13 @@
             "description": "Date when the organization was created",
             "example": "2024-01-15T10:30:00Z"
           },
-          "paying": {
-            "type": "boolean",
-            "description": "Whether the organization currently has an active subscription"
+          "lifecycleStatus": {
+            "description": "Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrgLifecycleStatus"
+              }
+            ]
           }
         },
         "required": [
@@ -13507,7 +13508,7 @@
           "archived",
           "hideIndividualUsage",
           "createdAt",
-          "paying"
+          "lifecycleStatus"
         ]
       },
       "SuperAdminOrgListResponseDto": {

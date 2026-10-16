@@ -32,16 +32,15 @@ describe(invalidateOrgSubscriptionQueries.name, () => {
     expect(router.invalidate).toHaveBeenCalledOnce();
   });
 
-  it('marks every cached organizations list stale so paying filters refetch', () => {
+  it('marks every cached organizations list stale so lifecycle filters refetch', () => {
     const queryClient = new QueryClient();
-    const nonPayingKey = getSuperAdminOrgsControllerGetAllOrgsQueryKey({
-      status: 'active',
-      subscription: 'non-paying',
+    const trialKey = getSuperAdminOrgsControllerGetAllOrgsQueryKey({
+      lifecycle: 'trial',
       limit: 25,
       offset: 0,
     });
     const allKey = getSuperAdminOrgsControllerGetAllOrgsQueryKey();
-    queryClient.setQueryData(nonPayingKey, { data: [], pagination: {} });
+    queryClient.setQueryData(trialKey, { data: [], pagination: {} });
     queryClient.setQueryData(allKey, { data: [], pagination: {} });
 
     invalidateOrgSubscriptionQueries(
@@ -50,7 +49,7 @@ describe(invalidateOrgSubscriptionQueries.name, () => {
       ORG_ID,
     );
 
-    expect(queryClient.getQueryState(nonPayingKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(trialKey)?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(allKey)?.isInvalidated).toBe(true);
   });
 });

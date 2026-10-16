@@ -2,8 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import SuperAdminOrgsPage from '@/pages/super-admin-settings/orgs';
 import {
-  SuperAdminOrgsControllerGetAllOrgsStatus,
-  SuperAdminOrgsControllerGetAllOrgsSubscription,
+  OrgLifecycleFilter,
   getSuperAdminOrgsControllerGetAllOrgsQueryKey,
   superAdminOrgsControllerGetAllOrgs,
 } from '@/shared/api';
@@ -12,14 +11,10 @@ const ORGS_PER_PAGE = 25;
 
 const searchSchema = z.object({
   search: z.string().optional(),
-  orgStatus: z
-    .enum(SuperAdminOrgsControllerGetAllOrgsStatus)
+  orgLifecycle: z
+    .enum(OrgLifecycleFilter)
     .optional()
-    .catch(SuperAdminOrgsControllerGetAllOrgsStatus.active),
-  orgSubscription: z
-    .enum(SuperAdminOrgsControllerGetAllOrgsSubscription)
-    .optional()
-    .catch(SuperAdminOrgsControllerGetAllOrgsSubscription.all),
+    .catch(OrgLifecycleFilter.all),
   page: z.number().min(1).optional().catch(1),
 });
 
@@ -32,47 +27,35 @@ export const Route = createFileRoute(
   loader: async ({
     deps: {
       search,
-      orgStatus: status = SuperAdminOrgsControllerGetAllOrgsStatus.active,
-      orgSubscription:
-        subscription = SuperAdminOrgsControllerGetAllOrgsSubscription.all,
+      orgLifecycle: lifecycle = OrgLifecycleFilter.all,
       page = 1,
     },
     context: { queryClient },
   }) => {
     const offset = (page - 1) * ORGS_PER_PAGE;
+    const params = { search, lifecycle, limit: ORGS_PER_PAGE, offset };
     const response = await queryClient.query({
-      queryKey: getSuperAdminOrgsControllerGetAllOrgsQueryKey({
-        search,
-        status,
-        subscription,
-        limit: ORGS_PER_PAGE,
-        offset,
-      }),
-      queryFn: () =>
-        superAdminOrgsControllerGetAllOrgs({
-          search,
-          status,
-          subscription,
-          limit: ORGS_PER_PAGE,
-          offset,
-        }),
+      queryKey: getSuperAdminOrgsControllerGetAllOrgsQueryKey(params),
+      queryFn: () => superAdminOrgsControllerGetAllOrgs(params),
     });
-    const orgs = response.data;
-    const pagination = response.pagination;
-    return { orgs, pagination, search, status, subscription, page };
+    return {
+      orgs: response.data,
+      pagination: response.pagination,
+      search,
+      lifecycle,
+      page,
+    };
   },
 });
 
 function RouteComponent() {
-  const { orgs, pagination, search, status, subscription, page } =
-    Route.useLoaderData();
+  const { orgs, pagination, search, lifecycle, page } = Route.useLoaderData();
   return (
     <SuperAdminOrgsPage
       orgs={orgs}
       pagination={pagination}
       search={search}
-      status={status}
-      subscription={subscription}
+      lifecycle={lifecycle}
       currentPage={page}
     />
   );

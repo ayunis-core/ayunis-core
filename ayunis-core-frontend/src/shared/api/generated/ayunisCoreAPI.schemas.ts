@@ -579,6 +579,32 @@ export interface SuperAdminOrgResponseDto {
   createdAt: string;
 }
 
+export type OrgLifecycleFilter = typeof OrgLifecycleFilter[keyof typeof OrgLifecycleFilter];
+
+
+export const OrgLifecycleFilter = {
+  all: 'all',
+  archived: 'archived',
+  paying: 'paying',
+  expired: 'expired',
+  trial: 'trial',
+  'no-plan': 'no-plan',
+} as const;
+
+/**
+ * Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
+ */
+export type OrgLifecycleStatus = typeof OrgLifecycleStatus[keyof typeof OrgLifecycleStatus];
+
+
+export const OrgLifecycleStatus = {
+  archived: 'archived',
+  paying: 'paying',
+  expired: 'expired',
+  trial: 'trial',
+  'no-plan': 'no-plan',
+} as const;
+
 export interface SuperAdminOrgListItemResponseDto {
   /** Organization unique identifier */
   id: string;
@@ -590,8 +616,8 @@ export interface SuperAdminOrgListItemResponseDto {
   hideIndividualUsage: boolean;
   /** Date when the organization was created */
   createdAt: string;
-  /** Whether the organization currently has an active subscription */
-  paying: boolean;
+  /** Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan */
+  lifecycleStatus: OrgLifecycleStatus;
 }
 
 export interface SuperAdminOrgListResponseDto {
@@ -5689,11 +5715,10 @@ offset?: number;
 };
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
-status?: SuperAdminOrgsControllerGetAllOrgsStatus;
 /**
- * Filter by whether the organization currently has an active subscription
+ * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
  */
-subscription?: SuperAdminOrgsControllerGetAllOrgsSubscription;
+lifecycle?: OrgLifecycleFilter;
 /**
  * Search organizations by name, or by exact organization ID.
  */
@@ -5707,24 +5732,6 @@ limit?: number;
  */
 offset?: number;
 };
-
-export type SuperAdminOrgsControllerGetAllOrgsStatus = typeof SuperAdminOrgsControllerGetAllOrgsStatus[keyof typeof SuperAdminOrgsControllerGetAllOrgsStatus];
-
-
-export const SuperAdminOrgsControllerGetAllOrgsStatus = {
-  active: 'active',
-  archived: 'archived',
-  all: 'all',
-} as const;
-
-export type SuperAdminOrgsControllerGetAllOrgsSubscription = typeof SuperAdminOrgsControllerGetAllOrgsSubscription[keyof typeof SuperAdminOrgsControllerGetAllOrgsSubscription];
-
-
-export const SuperAdminOrgsControllerGetAllOrgsSubscription = {
-  all: 'all',
-  paying: 'paying',
-  'non-paying': 'non-paying',
-} as const;
 
 export type TeamsControllerListTeamMembersParams = {
 /**

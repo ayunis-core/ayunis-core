@@ -29,12 +29,6 @@
     "updatedAt": "Aktualisiert am",
     "actions": "Aktionen"
   },
-  "statuses": {
-    "active": "Aktiv",
-    "inactive": "Inaktiv",
-    "archived": "Archiviert",
-    "paying": "Zahlend"
-  },
   "empty": {
     "title": "Noch keine Organisationen",
     "description": "Neue Organisationen erscheinen hier."
@@ -46,16 +40,13 @@
   "search": {
     "placeholder": "Nach Name oder ID suchen..."
   },
-  "filter": {
-    "label": "Organisationsstatus",
-    "active": "Aktiv",
-    "archived": "Archiviert",
-    "all": "Alle Organisationen"
-  },
-  "subscriptionFilter": {
-    "label": "Abonnement",
-    "all": "Alle Abonnements",
+  "lifecycle": {
+    "label": "Lebenszyklus-Status",
+    "all": "Alle Organisationen",
     "paying": "Zahlend",
-    "non-paying": "Nicht zahlend"
+    "expired": "Abgelaufen",
+    "trial": "Testphase",
+    "no-plan": "Kein Tarif",
+    "archived": "Archiviert"
   }
 }
