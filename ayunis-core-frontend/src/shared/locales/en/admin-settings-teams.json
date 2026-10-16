@@ -59,7 +59,8 @@
       "cancelText": "Cancel",
       "success": "Team deleted successfully",
       "error": "Failed to delete team",
-      "notFound": "Team not found"
+      "notFound": "Team not found",
+      "ownsResources": "The team still owns skills or knowledge bases. Delete them first."
     }
   },
   "teamDetail": {

@@ -1,0 +1,44 @@
+{
+  "field": {
+    "label": "Belongs to"
+  },
+  "options": {
+    "personal": "You",
+    "team": "Team {{team}}",
+    "org": "Organisation"
+  },
+  "hints": {
+    "personal": "Only you can change it.",
+    "team": "Everyone in team {{team}} can use it. {{editors}}",
+    "org": "All {{total}} people in the organisation can use it. {{editors}}"
+  },
+  "editors": {
+    "youAndOthers": "You and the other team admins can change it.",
+    "youOnly": "You can change it as team admin.",
+    "one": "{{name}} can change it as team admin.",
+    "teamAdmins": "The team admins can change it.",
+    "adminsOnly": "Admins can change it.",
+    "orgWithRight": "Admins and everyone with the right can change it."
+  },
+  "card": {
+    "title": {
+      "personal": "Belongs to you",
+      "team": "Belongs to team {{team}}",
+      "org": "Belongs to the organisation"
+    },
+    "audience": {
+      "personal": "Only you can change the {{noun}}.",
+      "team": "All {{total}} members can use the {{noun}}.",
+      "org": "All {{total}} people in the organisation can use the {{noun}}."
+    }
+  },
+  "nouns": {
+    "skill": "skill",
+    "knowledge_base": "knowledge base"
+  },
+  "readOnly": "Read only",
+  "created": {
+    "team": "“{{name}}” now belongs to team {{team}}.",
+    "org": "“{{name}}” now belongs to the organisation. Everyone can use it."
+  }
+}

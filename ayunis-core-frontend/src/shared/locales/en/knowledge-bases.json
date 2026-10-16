@@ -9,7 +9,7 @@
     "configuration": "Configuration",
     "shares": "Share",
     "personal": "Own Knowledge Bases",
-    "shared": "Shared Knowledge Bases"
+    "shared": "Team and organisation"
   },
   "shares": {
     "org": {
@@ -65,8 +65,8 @@
       "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI."
     },
     "shared": {
-      "title": "No shared knowledge bases yet",
-      "description": "Knowledge bases shared with you by other members of your organization will appear here."
+      "title": "No team or organisation knowledge bases yet",
+      "description": "Knowledge bases of your teams and the organisation, and knowledge bases shared with you, appear here."
     }
   },
   "card": {

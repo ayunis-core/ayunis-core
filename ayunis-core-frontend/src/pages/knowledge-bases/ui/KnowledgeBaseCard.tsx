@@ -2,7 +2,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Trash2 } from 'lucide-react';
 import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
-import { PermissionGate } from '@/features/permissions';
+import { OwnerBadge } from '@/features/resource-ownership';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
@@ -38,6 +38,8 @@ export default function KnowledgeBaseCard({
   }
 
   const isShared = knowledgeBase.isShared;
+  const canUse = knowledgeBase.viewer?.canUse ?? true;
+  const canDelete = knowledgeBase.viewer?.canDelete ?? false;
 
   return (
     <KnowledgeBaseListItem
@@ -45,6 +47,10 @@ export default function KnowledgeBaseCard({
       title={
         <>
           <span>{knowledgeBase.name}</span>
+          <OwnerBadge
+            resource={knowledgeBase}
+            testId={`knowledge-base-owner-${knowledgeBase.id}`}
+          />
           {isShared && (
             <Badge
               variant="secondary"
@@ -65,23 +71,23 @@ export default function KnowledgeBaseCard({
       }
       actions={
         <>
-          <KnowledgeBaseActivationToggle
-            knowledgeBaseId={knowledgeBase.id}
-            isActive={knowledgeBase.isActive}
-            testId={`knowledge-base-active-toggle-${knowledgeBase.id}`}
-          />
-          {!isShared && (
-            <PermissionGate permission="manage_own_knowledge">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive"
-                onClick={handleDelete}
-                disabled={deleteKnowledgeBase.isPending}
-              >
-                <Trash2 />
-              </Button>
-            </PermissionGate>
+          {canUse && (
+            <KnowledgeBaseActivationToggle
+              knowledgeBaseId={knowledgeBase.id}
+              isActive={knowledgeBase.isActive}
+              testId={`knowledge-base-active-toggle-${knowledgeBase.id}`}
+            />
+          )}
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+              onClick={handleDelete}
+              disabled={deleteKnowledgeBase.isPending}
+            >
+              <Trash2 />
+            </Button>
           )}
         </>
       }

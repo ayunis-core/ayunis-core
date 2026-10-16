@@ -27,6 +27,8 @@ export function useDeleteTeam() {
           const { code } = extractErrorData(error);
           if (code === 'TEAM_NOT_FOUND') {
             showError(t('teams.deleteTeam.notFound'));
+          } else if (code === 'TEAM_OWNS_RESOURCES') {
+            showError(t('teams.deleteTeam.ownsResources'));
           } else {
             showError(t('teams.deleteTeam.error'));
           }

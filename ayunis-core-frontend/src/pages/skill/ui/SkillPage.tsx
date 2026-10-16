@@ -1,17 +1,19 @@
 import AppLayout from '@/layouts/app-layout';
-import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type {
   ShareResponseDto,
+  SkillResponseDto,
   TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
-import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
-import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
 import { SharesTab } from '@/widgets/shares-tab';
-import { useMyPermissions } from '@/features/permissions';
+import {
+  ResourceOwnershipCard,
+  showsOwnershipCard,
+} from '@/widgets/resource-ownership-card';
+import { ReadOnlyBadge } from '@/features/resource-ownership';
 import {
   Tabs,
   TabsList,
@@ -19,31 +21,151 @@ import {
   TabsContent,
 } from '@ayunis/ui/components/tabs';
 import { Badge } from '@ayunis/ui/components/badge';
-import { Button } from '@ayunis/ui/components/button';
-import { Switch } from '@ayunis/ui/components/switch';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@ayunis/ui/components/tooltip';
-import { Trash2, Pin } from 'lucide-react';
-import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDeleteSkill, useSkillSources } from '@/pages/skill/api';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   skillsControllerUpdate,
   getSkillsControllerFindAllQueryKey,
   getSkillsControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import {
-  useSetSkillActivation,
-  useSetSkillPin,
-} from '@/features/skill-actions';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import { useSkillSources } from '@/pages/skill/api';
+import { skillAccess } from '@/pages/skill/model/skill-access';
+import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
+import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
+import { SkillHeaderActions } from './SkillHeaderActions';
+import { SkillReadOnlyContent } from './SkillReadOnlyContent';
+
+function useUpdateSkillProperties(skillId: string) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return async (data: Parameters<typeof skillsControllerUpdate>[1]) => {
+    await skillsControllerUpdate(skillId, data);
+    await Promise.all(
+      [
+        getSkillsControllerFindAllQueryKey(personalSkillListParams),
+        getSkillsControllerFindOneQueryKey(skillId),
+      ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+    );
+    await router.invalidate();
+  };
+}
+
+function SkillHeaderBadge({ skill }: Readonly<{ skill: SkillResponseDto }>) {
+  const { t } = useTranslation('skill');
+  if (skill.isShared) {
+    return (
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary">{t('shared.badge')}</Badge>
+        {skill.creatorName && (
+          <span className="text-sm text-muted-foreground">
+            {t('shared.by', { name: skill.creatorName })}
+          </span>
+        )}
+      </div>
+    );
+  }
+  return skillAccess(skill).canEdit ? null : <ReadOnlyBadge />;
+}
+
+function SkillConfiguration({
+  skill,
+  isEmbeddingModelEnabled,
+}: Readonly<{ skill: SkillResponseDto; isEmbeddingModelEnabled: boolean }>) {
+  const access = skillAccess(skill);
+  const sourcesHook = useSkillSources({ skill });
+  const updateProperties = useUpdateSkillProperties(skill.id);
+  const linksResources = !access.isCollective;
+  const isReadOnlyCollective = access.isCollective && !access.canEdit;
+
+  return (
+    <div className="grid gap-4">
+      {showsOwnershipCard(skill) && (
+        <ResourceOwnershipCard kind="skill" resource={skill} />
+      )}
+      {isReadOnlyCollective ? (
+        <SkillReadOnlyContent
+          trigger={skill.shortDescription}
+          instructions={skill.instructions}
+        />
+      ) : (
+        <SkillPropertiesCard
+          key={skill.id}
+          skill={skill}
+          disabled={!access.canEdit}
+          onUpdate={updateProperties}
+        />
+      )}
+      {linksResources && isEmbeddingModelEnabled && (
+        <SkillKnowledgeBasesCard disabled={!access.canEdit} />
+      )}
+      {linksResources && (
+        <SkillMcpIntegrationsCard disabled={!access.canEdit} />
+      )}
+      <KnowledgeBaseCard
+        entity={skill}
+        isEnabled={isEmbeddingModelEnabled}
+        disabled={!access.canEdit}
+        translationNamespace="skill"
+        sourcesHook={sourcesHook}
+      />
+    </div>
+  );
+}
+
+function OwnSkillTabs({
+  skill,
+  shares,
+  userTeams,
+  isEmbeddingModelEnabled,
+  initialTab,
+}: Readonly<{
+  skill: SkillResponseDto;
+  shares: ShareResponseDto[];
+  userTeams: TeamResponseDto[];
+  isEmbeddingModelEnabled: boolean;
+  initialTab: 'config' | 'share';
+}>) {
+  const navigate = useNavigate();
+  const { t } = useTranslation('skill');
+  const { id } = useParams({ from: '/_authenticated/skills/$id' });
+  const handleTabChange = useCallback(
+    (value: string) => {
+      void navigate({
+        to: '/skills/$id',
+        params: { id },
+        search: value === 'config' ? {} : { tab: value as 'share' },
+      });
+    },
+    [navigate, id],
+  );
+
+  return (
+    <Tabs value={initialTab} onValueChange={handleTabChange} className="w-full">
+      <TabsList>
+        <TabsTrigger value="config">{t('tabs.configuration')}</TabsTrigger>
+        <TabsTrigger value="share">{t('tabs.shares')}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="config" className="mt-4">
+        <SkillConfiguration
+          skill={skill}
+          isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+        />
+      </TabsContent>
+      <TabsContent value="share" className="mt-4">
+        <SharesTab
+          entityType="skill"
+          entityId={skill.id}
+          shares={shares}
+          userTeams={userTeams}
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
 
 export function SkillPage({
   skill,
@@ -58,50 +180,8 @@ export function SkillPage({
   isEmbeddingModelEnabled: boolean;
   initialTab?: 'config' | 'share';
 }>) {
-  const navigate = useNavigate();
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const { t } = useTranslation('skill');
-  const { id } = useParams({
-    from: '/_authenticated/skills/$id',
-  });
-  const { t: tSkills } = useTranslation('skills');
-  const deleteSkill = useDeleteSkill();
-  const setActivation = useSetSkillActivation();
-  const setPin = useSetSkillPin();
-  const { confirm } = useConfirmation();
-
-  const sourcesHook = useSkillSources({
-    skill,
-  });
-
-  const handleTabChange = useCallback(
-    (value: string) => {
-      void navigate({
-        to: '/skills/$id',
-        params: { id },
-        search: value === 'config' ? {} : { tab: value as 'share' },
-      });
-    },
-    [navigate, id],
-  );
-
-  function handleDelete() {
-    confirm({
-      title: t('delete.confirmTitle'),
-      description: t('delete.confirmDescription', { name: skill.name }),
-      confirmText: t('delete.confirmText'),
-      cancelText: t('delete.cancelText'),
-      variant: 'destructive',
-      onConfirm: () => {
-        deleteSkill.mutate({ id: skill.id });
-      },
-    });
-  }
-
-  const isReadOnly = skill.isShared;
-  const { can } = useMyPermissions();
-  const canManageSkills = can('manage_own_skills');
+  const isOwnPersonal = skill.ownerType === 'personal' && !skill.isShared;
 
   return (
     <AppLayout>
@@ -112,174 +192,26 @@ export function SkillPage({
               { label: t('breadcrumb.skills'), href: '/skills' },
               { label: skill.name },
             ]}
-            badge={
-              isReadOnly ? (
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{t('shared.badge')}</Badge>
-                  {skill.creatorName && (
-                    <span className="text-sm text-muted-foreground">
-                      {t('shared.by', { name: skill.creatorName })}
-                    </span>
-                  )}
-                </div>
-              ) : undefined
-            }
+            badge={<SkillHeaderBadge skill={skill} />}
             action={
-              <>
-                <HelpLink path="skills/" />
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {skill.isActive
-                      ? tSkills('card.activeLabel')
-                      : tSkills('card.inactiveLabel')}
-                  </span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex">
-                        <Switch
-                          checked={skill.isActive}
-                          onCheckedChange={() =>
-                            setActivation.mutate({
-                              id: skill.id,
-                              isActive: !skill.isActive,
-                            })
-                          }
-                          disabled={setActivation.isPending}
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      {tSkills('card.activeTooltip')}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                {skill.isActive && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          setPin.mutate({
-                            id: skill.id,
-                            isPinned: !skill.isPinned,
-                          })
-                        }
-                        disabled={setPin.isPending}
-                        aria-label={
-                          skill.isPinned
-                            ? tSkills('card.unpinLabel')
-                            : tSkills('card.pinLabel')
-                        }
-                      >
-                        <Pin
-                          className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {skill.isPinned
-                        ? tSkills('card.unpinLabel')
-                        : tSkills('card.pinLabel')}
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                {!isReadOnly && canManageSkills && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={handleDelete}
-                        disabled={deleteSkill.isPending}
-                        aria-label={tSkills('card.deleteLabel')}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {tSkills('card.deleteLabel')}
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </>
+              <SkillHeaderActions skill={skill} access={skillAccess(skill)} />
             }
           />
         }
         contentArea={
-          isReadOnly ? (
-            <div className="grid gap-4">
-              <SkillPropertiesCard
-                skill={skill}
-                disabled
-                onUpdate={(data) => skillsControllerUpdate(skill.id, data)}
-              />
-              {isEmbeddingModelEnabled && <SkillKnowledgeBasesCard disabled />}
-              <SkillMcpIntegrationsCard disabled />
-              <KnowledgeBaseCard
-                entity={skill}
-                isEnabled={isEmbeddingModelEnabled}
-                disabled
-                translationNamespace="skill"
-                sourcesHook={sourcesHook}
-              />
-            </div>
+          isOwnPersonal ? (
+            <OwnSkillTabs
+              skill={skill}
+              shares={shares}
+              userTeams={userTeams}
+              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+              initialTab={initialTab}
+            />
           ) : (
-            <Tabs
-              value={initialTab}
-              onValueChange={handleTabChange}
-              className="w-full"
-            >
-              <TabsList>
-                <TabsTrigger value="config">
-                  {t('tabs.configuration')}
-                </TabsTrigger>
-                <TabsTrigger value="share">{t('tabs.shares')}</TabsTrigger>
-              </TabsList>
-              <TabsContent value="config" className="mt-4">
-                <div className="grid gap-4">
-                  <SkillPropertiesCard
-                    key={skill.id}
-                    skill={skill}
-                    disabled={!canManageSkills}
-                    onUpdate={async (data) => {
-                      await skillsControllerUpdate(skill.id, data);
-                      await Promise.all(
-                        [
-                          getSkillsControllerFindAllQueryKey(
-                            personalSkillListParams,
-                          ),
-                          getSkillsControllerFindOneQueryKey(skill.id),
-                        ].map((queryKey) =>
-                          queryClient.invalidateQueries({ queryKey }),
-                        ),
-                      );
-                      await router.invalidate();
-                    }}
-                  />
-                  {isEmbeddingModelEnabled && (
-                    <SkillKnowledgeBasesCard disabled={!canManageSkills} />
-                  )}
-                  <SkillMcpIntegrationsCard disabled={!canManageSkills} />
-                  <KnowledgeBaseCard
-                    entity={skill}
-                    isEnabled={isEmbeddingModelEnabled}
-                    disabled={!canManageSkills}
-                    translationNamespace="skill"
-                    sourcesHook={sourcesHook}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="share" className="mt-4">
-                <SharesTab
-                  entityType="skill"
-                  entityId={skill.id}
-                  shares={shares}
-                  userTeams={userTeams}
-                />
-              </TabsContent>
-            </Tabs>
+            <SkillConfiguration
+              skill={skill}
+              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+            />
           )
         }
       />

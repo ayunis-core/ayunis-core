@@ -9,6 +9,7 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '@/features/permissions';
+import { useOwnerOptions } from '@/features/resource-ownership';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   Tabs,
@@ -18,30 +19,49 @@ import {
 } from '@ayunis/ui/components/tabs';
 import { EmptyState } from '@/widgets/empty-state';
 
+export type KnowledgeBasesTab = 'personal' | 'shared';
+
 interface KnowledgeBasesPageProps {
   knowledgeBases: KnowledgeBase[];
+  tab: KnowledgeBasesTab;
+  onTabChange: (tab: KnowledgeBasesTab) => void;
+}
+
+function isOwnPersonal(knowledgeBase: KnowledgeBase): boolean {
+  return knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared;
 }
 
 export default function KnowledgeBasesPage({
   knowledgeBases,
+  tab,
+  onTabChange,
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const canCreate = isLoadingPermissions || can('manage_own_knowledge');
+  const { options, isLoading: isLoadingOwners } =
+    useOwnerOptions('knowledge_base');
+  const canCreate =
+    isLoadingPermissions ||
+    isLoadingOwners ||
+    can('manage_own_knowledge') ||
+    options.length > 0;
 
   const personalKnowledgeBases = knowledgeBases
-    .filter((kb) => !kb.isShared)
+    .filter(isOwnPersonal)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const sharedKnowledgeBases = knowledgeBases
-    .filter((kb) => kb.isShared)
+    .filter((kb) => !isOwnPersonal(kb))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const headerAction = (
     <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="knowledge-collections/" />
       <OnboardingTourTarget name={TOUR_TARGET.createKnowledgeBase}>
-        <CreateKnowledgeBaseDialog buttonClassName="max-sm:max-w-full" />
+        <CreateKnowledgeBaseDialog
+          buttonClassName="max-sm:max-w-full"
+          buttonTestId="knowledge-base-create"
+        />
       </OnboardingTourTarget>
     </div>
   );
@@ -73,7 +93,11 @@ export default function KnowledgeBasesPage({
           />
         }
         contentArea={
-          <Tabs defaultValue="personal" className="w-full">
+          <Tabs
+            value={tab}
+            onValueChange={(next) => onTabChange(next as KnowledgeBasesTab)}
+            className="w-full"
+          >
             <TabsList>
               <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
               <TabsTrigger

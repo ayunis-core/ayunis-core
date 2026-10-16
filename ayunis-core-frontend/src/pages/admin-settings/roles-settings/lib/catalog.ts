@@ -17,6 +17,7 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
     group: 'skills',
     permissions: [
       'manage_own_skills',
+      'manage_org_skills',
       'install_marketplace_skills',
       'request_skill_transfer',
       'request_skill_transfer_org',
@@ -26,6 +27,7 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
     group: 'knowledge_bases',
     permissions: [
       'manage_own_knowledge',
+      'manage_org_knowledge',
       'request_knowledge_transfer',
       'request_knowledge_transfer_org',
     ],
@@ -34,6 +36,8 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
 ];
 
 export const NEW_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
+  'manage_org_skills',
+  'manage_org_knowledge',
   'install_marketplace_skills',
   'request_skill_transfer',
   'request_skill_transfer_org',
@@ -45,4 +49,6 @@ export const NEW_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
 export const TEAM_ADMIN_PERMISSIONS: readonly TeamAdminPermission[] = [
   'team_manage_members',
   'team_appoint_admins',
+  'team_manage_skills',
+  'team_manage_knowledge',
 ];
