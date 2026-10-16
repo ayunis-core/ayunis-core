@@ -12,6 +12,7 @@ import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mas
 import { toUnmaskedWhitelistEntry } from 'src/domain/thread-pii-masks/domain/unmasked-mask-whitelist';
 import {
   ThreadPiiMaskAnonymizationError,
+  ThreadPiiMaskThreadMissingError,
   type ThreadPiiMaskAnonymizationStage,
 } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import type { AnonymizeTextForThreadCommand } from './anonymize-text-for-thread.command';
@@ -27,7 +28,9 @@ export interface ThreadAnonymizationResult extends AnonymizationResult {
  * the result is returned, so anonymized text never circulates without its
  * dictionary entries. Engine failures (AnonymizationFailedError) propagate
  * unchanged so callers keep their fail-safe handling; lookup, build, and
- * persistence failures are wrapped in ThreadPiiMaskAnonymizationError.
+ * persistence failures are wrapped in ThreadPiiMaskAnonymizationError,
+ * except a thread deleted mid-run (ThreadPiiMaskThreadMissingError), which
+ * propagates unchanged so runs can abort instead of failing.
  */
 @Injectable()
 export class AnonymizeTextForThreadUseCase {
@@ -127,6 +130,13 @@ export class AnonymizeTextForThreadUseCase {
     try {
       return await operation();
     } catch (cause) {
+      if (cause instanceof ThreadPiiMaskThreadMissingError) {
+        this.logger.warn(
+          { stage, ...metadata },
+          'Thread was deleted while anonymizing; masks were not persisted',
+        );
+        throw cause;
+      }
       const error = new ThreadPiiMaskAnonymizationError(stage, metadata, cause);
       this.logger.error(
         { errorCode: error.code, ...error.metadata },

@@ -43,7 +43,10 @@ import type { CreateUserMessageUseCase } from 'src/domain/messages/application/u
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { ThreadPiiMaskAnonymizationError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import {
+  ThreadPiiMaskAnonymizationError,
+  ThreadPiiMaskThreadMissingError,
+} from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import {
   AnonymizationFailedError,
   AnonymizationInputTooLongError,
@@ -2140,6 +2143,49 @@ describe('ExecuteRunUseCase', () => {
     });
     expect(createUser).not.toHaveBeenCalled();
     expect(provider.requests).toHaveLength(0);
+  });
+
+  it('aborts without an error when the thread disappears while persisting user-message masks', async () => {
+    const { useCase, anonymize, createUser, provider, cleanup } = buildHarness({
+      anonymous: true,
+    });
+    anonymize.mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+
+    const stream = await useCase.execute(userCommand());
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('aborts without an error when the thread disappears while persisting tool-result masks', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collectToolResults = jest
+      .fn()
+      .mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+    const { useCase, createSeedToolResult, provider, cleanup } = buildHarness({
+      anonymous: true,
+      lastMessage,
+      toolResultCollector: { collectToolResults } as never,
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart for Jane'),
+    });
+
+    const stream = await useCase.execute(command);
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(createSeedToolResult).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
   });
 
   it('activates a requested skill before the run and folds in its instructions', async () => {

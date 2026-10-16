@@ -62,6 +62,17 @@ export class ThreadPiiMaskAnonymizationError extends ApplicationError {
   }
 }
 
+/**
+ * The thread was deleted while a run was still anonymizing, so its new masks
+ * have no parent row. An expected run abort, not a persistence failure.
+ */
+export class ThreadPiiMaskThreadMissingError extends Error {
+  constructor(readonly threadId: string) {
+    super(`PII mask parent thread '${threadId}' no longer exists`);
+    this.name = ThreadPiiMaskThreadMissingError.name;
+  }
+}
+
 export class ThreadPiiMaskNotFoundError extends ApplicationError {
   constructor(threadId: string, maskId: string) {
     super(
