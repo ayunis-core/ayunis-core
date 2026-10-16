@@ -15,6 +15,7 @@ import {
   type HandoverRequest,
 } from '@/features/resource-handover';
 import { EmptyState } from '@/widgets/empty-state';
+import { ListSection } from '@/shared/ui/list-section/ListSection';
 import {
   requestSections,
   type RequestSection,
@@ -36,13 +37,13 @@ function RequestRow({
   return (
     <Item
       variant="outline"
-      className="cursor-pointer hover:bg-accent/50"
+      className="cursor-pointer"
       onClick={openItem}
       data-testid={`handover-request-${request.id}`}
     >
       <ItemContent>
         <ItemTitle>{request.resource.name}</ItemTitle>
-        <ItemDescription className="line-clamp-1">
+        <ItemDescription>
           {t('requests.row', {
             name: request.requestedBy.name,
             date: date(request.requestedAt),
@@ -77,17 +78,19 @@ function GroupedRequests({
   return (
     <div className="space-y-6">
       {sections.map((section) => (
-        <section key={section.key} className="space-y-2">
-          <h2 className="text-sm font-medium">
-            {section.teamName === null
+        <ListSection
+          key={section.key}
+          title={
+            section.teamName === null
               ? t('requests.groupOrg')
-              : t('requests.groupTeam', { team: section.teamName })}
-            <span className="ml-2 font-normal tabular-nums text-muted-foreground">
-              {section.requests.length}
-            </span>
-          </h2>
-          <RequestRows kind={kind} requests={section.requests} />
-        </section>
+              : t('requests.groupTeam', { team: section.teamName })
+          }
+          count={section.requests.length}
+        >
+          {section.requests.map((request) => (
+            <RequestRow key={request.id} kind={kind} request={request} />
+          ))}
+        </ListSection>
       ))}
     </div>
   );

@@ -8,7 +8,7 @@ import {
   skillsControllerActivate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import { showError } from '@/shared/lib/toast';
 
 interface SetSkillActivationParams {
   id: string;
@@ -31,7 +31,6 @@ export function useSetSkillActivation() {
         queryKey: getSkillsControllerFindOneQueryKey(id),
       });
       void router.invalidate();
-      showSuccess(t('toggleActive.success'));
     },
     onError: (error) => {
       try {

@@ -1,30 +1,28 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { CountTabTrigger } from '@/shared/ui/count-tab-trigger/CountTabTrigger';
+import { Tabs, TabsContent, TabsList } from '@ayunis/ui/components/tabs';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { ListToolbar, ListToolbarSearch } from '@/widgets/list-toolbar';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import CreateKnowledgeBaseDialog from './CreateKnowledgeBaseDialog';
-import KnowledgeBaseCard from './KnowledgeBaseCard';
-import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
-import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
-import { useTranslation } from 'react-i18next';
+import { HandoverRequestList } from '@/widgets/handover-requests';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { matchesSearch } from '@/shared/lib/matches-search';
 import { useMyPermissions } from '@/features/permissions';
-import { useOwnerOptions } from '@/features/resource-ownership';
 import {
   RequestsTabTrigger,
   useHandoverSummary,
 } from '@/features/resource-handover';
-import { HandoverRequestList } from '@/widgets/handover-requests';
-import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
+import CreateKnowledgeBaseDialog from './CreateKnowledgeBaseDialog';
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@ayunis/ui/components/tabs';
-import { EmptyState } from '@/widgets/empty-state';
+  OwnKnowledgeBaseList,
+  SharedKnowledgeBaseList,
+} from './KnowledgeBaseLists';
 
-export type KnowledgeBasesTab = 'personal' | 'shared' | 'requests';
+export type KnowledgeBasesTab = 'own' | 'shared' | 'requests';
 
 interface KnowledgeBasesPageProps {
   knowledgeBases: KnowledgeBase[];
@@ -32,8 +30,48 @@ interface KnowledgeBasesPageProps {
   onTabChange: (tab: KnowledgeBasesTab) => void;
 }
 
-function isOwnPersonal(knowledgeBase: KnowledgeBase): boolean {
-  return knowledgeBase.ownerType === 'personal';
+function useVisibleKnowledgeBases(
+  knowledgeBases: KnowledgeBase[],
+  query: string,
+) {
+  const visible = knowledgeBases
+    .filter((knowledgeBase) =>
+      matchesSearch(query, [knowledgeBase.name, knowledgeBase.description]),
+    )
+    .sort((left, right) => left.name.localeCompare(right.name));
+  return {
+    own: visible.filter((item) => item.ownerType === 'personal'),
+    shared: visible.filter((item) => item.ownerType !== 'personal'),
+  };
+}
+
+function KnowledgeBasesHeader({
+  query,
+  onQueryChange,
+}: Readonly<{ query: string; onQueryChange: (query: string) => void }>) {
+  const { t } = useTranslation('knowledge-bases');
+  return (
+    <ContentAreaHeader
+      breadcrumbs={[{ label: t('page.title') }]}
+      action={
+        <ListToolbar>
+          <ListToolbarSearch
+            placeholder={t('search.placeholder')}
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            data-testid="knowledge-bases-search"
+          />
+          <HelpLink path="knowledge-collections/" />
+          <OnboardingTourTarget name={TOUR_TARGET.createKnowledgeBase}>
+            <CreateKnowledgeBaseDialog
+              buttonClassName="max-sm:max-w-full"
+              buttonTestId="knowledge-base-create"
+            />
+          </OnboardingTourTarget>
+        </ListToolbar>
+      }
+    />
+  );
 }
 
 export default function KnowledgeBasesPage({
@@ -43,62 +81,18 @@ export default function KnowledgeBasesPage({
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const { options, isLoading: isLoadingOwners } =
-    useOwnerOptions('knowledge_base');
   const reviews = useHandoverSummary().knowledge_base;
+  const [query, setQuery] = useState('');
+  const { own, shared } = useVisibleKnowledgeBases(knowledgeBases, query);
+  const isSearching = query.trim().length > 0;
   const mayReview = reviews.canReview || reviews.isLoading;
-  const activeTab = tab === 'requests' && !mayReview ? 'personal' : tab;
-  const canCreate =
-    isLoadingPermissions ||
-    isLoadingOwners ||
-    can('manage_own_knowledge') ||
-    options.length > 0;
-
-  const personalKnowledgeBases = knowledgeBases
-    .filter(isOwnPersonal)
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const sharedKnowledgeBases = knowledgeBases
-    .filter((kb) => !isOwnPersonal(kb))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const headerAction = (
-    <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
-      <HelpLink path="knowledge-collections/" />
-      <OnboardingTourTarget name={TOUR_TARGET.createKnowledgeBase}>
-        <CreateKnowledgeBaseDialog
-          buttonClassName="max-sm:max-w-full"
-          buttonTestId="knowledge-base-create"
-        />
-      </OnboardingTourTarget>
-    </div>
-  );
-
-  if (knowledgeBases.length === 0 && !mayReview) {
-    return (
-      <AppLayout>
-        <FullScreenMessageLayout
-          header={
-            <ContentAreaHeader
-              breadcrumbs={[{ label: t('page.title') }]}
-              action={headerAction}
-            />
-          }
-        >
-          <KnowledgeBasesEmptyState />
-        </FullScreenMessageLayout>
-      </AppLayout>
-    );
-  }
+  const activeTab = tab === 'requests' && !mayReview ? 'own' : tab;
 
   return (
     <AppLayout>
       <ContentAreaLayout
         contentHeader={
-          <ContentAreaHeader
-            breadcrumbs={[{ label: t('page.title') }]}
-            action={headerAction}
-          />
+          <KnowledgeBasesHeader query={query} onQueryChange={setQuery} />
         }
         contentArea={
           <Tabs
@@ -107,13 +101,18 @@ export default function KnowledgeBasesPage({
             className="w-full"
           >
             <TabsList>
-              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
-              <TabsTrigger
+              <CountTabTrigger
+                testIdPrefix="knowledge-base-tab"
+                value="own"
+                label={t('tabs.own')}
+                count={own.length}
+              />
+              <CountTabTrigger
+                testIdPrefix="knowledge-base-tab"
                 value="shared"
-                data-testid="knowledge-base-tab-shared"
-              >
-                {t('tabs.shared')}
-              </TabsTrigger>
+                label={t('tabs.shared')}
+                count={shared.length}
+              />
               {reviews.canReview && (
                 <RequestsTabTrigger
                   count={reviews.openRequests}
@@ -121,45 +120,20 @@ export default function KnowledgeBasesPage({
                 />
               )}
             </TabsList>
-            <TabsContent value="personal" className="mt-4">
-              {personalKnowledgeBases.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.personal.title')}
-                  description={
-                    canCreate
-                      ? t('emptyState.personal.description')
-                      : t('emptyState.noAccessDescription')
-                  }
-                  action={
-                    canCreate ? (
-                      <CreateKnowledgeBaseDialog
-                        buttonText={t('createDialog.buttonTextFirst')}
-                        showIcon={true}
-                      />
-                    ) : undefined
-                  }
-                />
-              ) : (
-                <div className="space-y-3">
-                  {personalKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
-              )}
+            <TabsContent value="own" className="mt-4">
+              <OwnKnowledgeBaseList
+                knowledgeBases={own}
+                isSearching={isSearching}
+                canCreateOwn={
+                  isLoadingPermissions || can('manage_own_knowledge')
+                }
+              />
             </TabsContent>
             <TabsContent value="shared" className="mt-4">
-              {sharedKnowledgeBases.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.shared.title')}
-                  description={t('emptyState.shared.description')}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {sharedKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
-              )}
+              <SharedKnowledgeBaseList
+                knowledgeBases={shared}
+                isSearching={isSearching}
+              />
             </TabsContent>
             {mayReview && (
               <TabsContent value="requests" className="mt-4">

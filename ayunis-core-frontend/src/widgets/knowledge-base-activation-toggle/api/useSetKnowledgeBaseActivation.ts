@@ -8,7 +8,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import { showError } from '@/shared/lib/toast';
 
 export function useSetKnowledgeBaseActivation() {
   const { t } = useTranslation('knowledge-bases');
@@ -28,7 +28,6 @@ export function useSetKnowledgeBaseActivation() {
         queryKey: getKnowledgeBasesControllerFindOneQueryKey(id),
       });
       void router.invalidate();
-      showSuccess(t('activation.success'));
     },
     onError: (error) => {
       try {

@@ -8,7 +8,7 @@ import {
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 const searchSchema = z.object({
-  tab: z.enum(['personal', 'shared', 'requests']).optional(),
+  tab: z.enum(['own', 'shared', 'requests']).optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/_authenticated/skills/')({
@@ -25,7 +25,7 @@ export const Route = createFileRoute('/_authenticated/skills/')({
 
 function RouteComponent() {
   const { skills } = Route.useLoaderData();
-  const { tab = 'personal' } = Route.useSearch();
+  const { tab = 'own' } = Route.useSearch();
   const navigate = useNavigate();
   return (
     <SkillsPage
@@ -34,7 +34,7 @@ function RouteComponent() {
       onTabChange={(next) =>
         void navigate({
           to: '/skills',
-          search: next === 'personal' ? {} : { tab: next },
+          search: next === 'own' ? {} : { tab: next },
           replace: true,
         })
       }
