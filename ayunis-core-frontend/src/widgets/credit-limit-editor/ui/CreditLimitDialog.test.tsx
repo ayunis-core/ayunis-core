@@ -1,3 +1,5 @@
+import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreditLimitEditorTarget } from '@/widgets/credit-limit-editor/model/types';
 import {
   act,
   fireEvent,
@@ -33,6 +35,9 @@ vi.mock('@/shared/api', () => ({
   creditLimitsControllerRemoveTeamLimit: api.removeTeam,
   getCreditLimitsControllerGetUserLimitsQueryKey: () => ['user-limits'],
   getCreditLimitsControllerGetTeamLimitsQueryKey: () => ['team-limits'],
+  getCreditLimitsControllerGetDefaultUserLimitQueryKey: () => [
+    'default-user-limit',
+  ],
 }));
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: vi.fn() }),
@@ -48,7 +53,7 @@ vi.mock('react-i18next', () => ({
 function DialogHarness({
   initialLimit,
   target,
-}: Readonly<{ initialLimit: number | null; target: 'teams' | 'users' }>) {
+}: Readonly<{ initialLimit: number | null; target: CreditLimitEditorTarget }>) {
   const [open, setOpen] = useState(true);
   return open ? (
     <CreditLimitDialog
@@ -63,7 +68,7 @@ function DialogHarness({
 
 function renderDialog(
   initialLimit: number | null,
-  target: 'teams' | 'users' = 'users',
+  target: CreditLimitEditorTarget = CreditLimitScope.USER,
 ) {
   const client = new QueryClient({
     defaultOptions: { mutations: { retry: false } },
@@ -134,7 +139,7 @@ describe('CreditLimitDialog', () => {
   it('removes an existing zero team limit even when the edited input is invalid', async () => {
     const limits = new Map([['target', 0]]);
     api.removeTeam.mockImplementation(async (id: string) => limits.delete(id));
-    renderDialog(0, 'teams');
+    renderDialog(0, CreditLimitScope.TEAM);
     const remove = screen.getByRole('button', { name: 'form.remove' });
     expect(remove.getAttribute('data-variant')).toBe('destructive');
     expect(remove.getAttribute('data-size')).toBe('icon');

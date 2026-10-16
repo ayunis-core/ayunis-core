@@ -4294,6 +4294,33 @@ export interface ProviderUsageResponseDto {
   providers: ProviderUsageDto[];
 }
 
+export type CreditLimitScope = typeof CreditLimitScope[keyof typeof CreditLimitScope];
+
+
+export const CreditLimitScope = {
+  USER: 'USER',
+  TEAM: 'TEAM',
+  API_KEY: 'API_KEY',
+  USER_DEFAULT: 'USER_DEFAULT',
+} as const;
+
+export interface DefaultUserCreditLimitResponseDto {
+  scope: CreditLimitScope;
+  /**
+     * Personal limit for every user without an individual limit; null when no default is set.
+     * @nullable
+     */
+  monthlyCredits: number | null;
+}
+
+export interface SetCreditLimitDto {
+  /**
+     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
+     * @minimum 0
+     */
+  monthlyCredits: number;
+}
+
 export interface UserCreditLimitItemDto {
   userId: string;
   name: string;
@@ -4322,27 +4349,22 @@ export interface ApiKeyCreditLimitItemDto {
   creditsUsed: number;
 }
 
-export interface SetCreditLimitDto {
-  /**
-     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
-     * @minimum 0
-     */
-  monthlyCredits: number;
-}
-
 export interface UserCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   userId: string;
 }
 
 export interface TeamCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   teamId: string;
 }
 
 export interface ApiKeyCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   apiKeyId: string;
