@@ -22,6 +22,14 @@ Workspaces group chats and own workspace-scoped skills and knowledge bases. A wo
 - Losing access removes the person's linked personal skills and knowledge bases from that workspace (`WorkspaceLinkCleanupService`), after every sharing change and after `TeamMembershipEndedEvent` (team member removed, team deleted). Their chats in the workspace are hidden from chat lists but kept.
 - `OrgDirectory` (people, teams, memberships of the caller's organisation) backs the sharing view, the invite candidates and member counts.
 
+## Management and ownership
+
+- Editing details (name, description, icon, colour) needs `full`; `edit` and `use` get 403. The project instruction needs `edit` (`UpdateWorkspaceInstructionUseCase`).
+- Only the owner deletes a workspace or hands it over (403 `WORKSPACE_OWNER_ONLY` for members, 404 without access).
+- `TransferWorkspaceOwnershipUseCase` locks the workspace row, checks that the new owner currently has access (direct, team or organisation, not excluded; else 422 `WORKSPACE_TRANSFER_TARGET_NOT_ELIGIBLE`) and lets `WorkspaceSharing.transferOwnershipTo` move ownership: the new owner's direct grant goes, the previous owner becomes a `full` member (in a granted team they belong to, if any) and loses an organisation exclusion. `WorkspacesRepository.changeOwner` writes `workspaces.userId`; `WorkspaceSharingRepository.save` writes only grants and the organisation flag, so a sharing change can never write an old owner back. Every sharing change, detail edit and transfer locks the workspace row first (`WorkspaceSharingContextService.loadForChange`, `lockForUpdate`), so they run one after the other. Skills, knowledge, links, chats and favourites stay as they are.
+- `WorkspaceOwnershipService` lists who may take over (everyone with access except the owner, by name) and picks a successor: highest level first, then people invited directly or through a team before organisation-only members, then name.
+- Owner account deletion: `WorkspacesUserDeletionRequestedListener` hands every owned workspace that someone else can open to the successor before the user row goes. `WorkspaceOwnershipService.handOverFrom` does this per workspace in one transaction: lock the row, re-read it, skip it if someone else owns it by now, then pick the successor from the fresh sharing. Workspaces nobody else can open are announced with `WorkspaceDeletionRequestedEvent`; their deferred cleanup is forwarded to the user event and only runs if the workspace is really gone after the user row delete and the `workspaces.userId` cascade removes the rows. The listener does not suppress errors, so a failed hand-over stops the user deletion. The knowledge-bases module cleans up only personal knowledge bases on user deletion; knowledge in workspaces follows the workspace.
+
 ## Access boundary
 
 `WorkspaceAccessService` and the repository port are internal. Other modules use:
@@ -36,7 +44,7 @@ Workspace-owned resource lifecycle is exposed by the canonical `/skills` and `/k
 
 ## Deletion
 
-`DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent` before deleting and drains deferred cleanup only after the database delete succeeds. Favorites, threads, skills, and knowledge bases listen for their cleanup responsibilities. Database cascades remove owned rows and relation state; listeners handle external object and processing cleanup.
+`DeleteWorkspaceUseCase` (owner only) emits `WorkspaceDeletionRequestedEvent` through `WorkspaceDeletionService` before deleting and drains deferred cleanup only after the database delete succeeds. Favorites, threads, skills, and knowledge bases listen for their cleanup responsibilities. Database cascades remove owned rows and relation state; listeners handle external object and processing cleanup.
 
 ## HTTP API
 
@@ -45,8 +53,10 @@ Workspace-owned resource lifecycle is exposed by the canonical `/skills` and `/k
 | POST   | `/workspaces`                          | Create a workspace (`create_workspaces`)               |
 | GET    | `/workspaces`                          | List accessible workspaces with level and member count |
 | GET    | `/workspaces/:id`                      | Read one workspace                                     |
-| PATCH  | `/workspaces/:id`                      | Update metadata and appearance                         |
-| DELETE | `/workspaces/:id`                      | Delete a workspace                                     |
+| PATCH  | `/workspaces/:id`                      | Update metadata and appearance (owner, `full`)         |
+| DELETE | `/workspaces/:id`                      | Delete a workspace and its chats (owner)               |
+| GET    | `/workspaces/:id/ownership/candidates` | Who the owner may hand the workspace to                |
+| POST   | `/workspaces/:id/ownership`            | Hand the workspace over; the owner keeps `full`        |
 | GET    | `/workspaces/:id/context`              | Read the full runtime context                          |
 | GET    | `/workspaces/:id/sharing`              | Members by section and the caller's rights             |
 | GET    | `/workspaces/:id/share-candidates`     | People, teams and organisation to invite               |

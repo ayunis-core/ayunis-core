@@ -77,7 +77,7 @@ function setup(params: {
     rights,
   } as unknown as SharingContext;
   const service = {
-    load: jest.fn().mockResolvedValue(context),
+    loadForChange: jest.fn().mockResolvedValue(context),
     save: jest.fn().mockResolvedValue({ unlinkedCount: 1 }),
   };
   return {

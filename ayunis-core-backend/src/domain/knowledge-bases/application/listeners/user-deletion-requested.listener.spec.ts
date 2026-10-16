@@ -11,7 +11,7 @@ import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/use
 describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
   let listener: KnowledgeBasesUserDeletionRequestedListener;
   let knowledgeBaseRepository: {
-    findAllOwnedByUserId: jest.Mock;
+    findAllByUserId: jest.Mock;
     findSourcesByKnowledgeBaseIds: jest.Mock;
   };
   let cleanupSourceProcessingUseCase: { execute: jest.Mock };
@@ -22,7 +22,7 @@ describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
 
   beforeEach(async () => {
     knowledgeBaseRepository = {
-      findAllOwnedByUserId: jest.fn().mockResolvedValue([]),
+      findAllByUserId: jest.fn().mockResolvedValue([]),
       findSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue([]),
     };
     cleanupSourceProcessingUseCase = {
@@ -56,7 +56,7 @@ describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
   afterEach(() => jest.clearAllMocks());
 
   it('loads all sources in one bulk query and defers processing and index cleanup', async () => {
-    knowledgeBaseRepository.findAllOwnedByUserId.mockResolvedValue([
+    knowledgeBaseRepository.findAllByUserId.mockResolvedValue([
       { id: 'kb-1' },
       { id: 'kb-2' },
     ]);
@@ -105,9 +105,7 @@ describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
   });
 
   it('defers nothing when the owned knowledge bases have no sources', async () => {
-    knowledgeBaseRepository.findAllOwnedByUserId.mockResolvedValue([
-      { id: 'kb-1' },
-    ]);
+    knowledgeBaseRepository.findAllByUserId.mockResolvedValue([{ id: 'kb-1' }]);
     const event = new UserDeletionRequestedEvent(userId, orgId);
 
     await listener.handleUserDeletionRequested(event);
@@ -119,9 +117,7 @@ describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
   });
 
   it('defers index cleanup but not processing cleanup for ready sources', async () => {
-    knowledgeBaseRepository.findAllOwnedByUserId.mockResolvedValue([
-      { id: 'kb-1' },
-    ]);
+    knowledgeBaseRepository.findAllByUserId.mockResolvedValue([{ id: 'kb-1' }]);
     knowledgeBaseRepository.findSourcesByKnowledgeBaseIds.mockResolvedValue([
       { id: 'src-1', status: SourceStatus.READY },
     ]);
@@ -139,7 +135,7 @@ describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
   });
 
   it('never throws when knowledge-base lookup fails', async () => {
-    knowledgeBaseRepository.findAllOwnedByUserId.mockRejectedValue(
+    knowledgeBaseRepository.findAllByUserId.mockRejectedValue(
       new Error('db down'),
     );
     const event = new UserDeletionRequestedEvent(userId, orgId);
@@ -151,9 +147,7 @@ describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
   });
 
   it('never throws when bulk source lookup fails', async () => {
-    knowledgeBaseRepository.findAllOwnedByUserId.mockResolvedValue([
-      { id: 'kb-1' },
-    ]);
+    knowledgeBaseRepository.findAllByUserId.mockResolvedValue([{ id: 'kb-1' }]);
     knowledgeBaseRepository.findSourcesByKnowledgeBaseIds.mockRejectedValue(
       new Error('db down'),
     );

@@ -10,6 +10,8 @@ export enum WorkspaceErrorCode {
   WORKSPACE_MEMBER_NOT_FOUND = 'WORKSPACE_MEMBER_NOT_FOUND',
   WORKSPACE_INVALID_SHARE_TARGET = 'WORKSPACE_INVALID_SHARE_TARGET',
   WORKSPACE_TEAM_NOT_SHARED = 'WORKSPACE_TEAM_NOT_SHARED',
+  WORKSPACE_OWNER_ONLY = 'WORKSPACE_OWNER_ONLY',
+  WORKSPACE_TRANSFER_TARGET_NOT_ELIGIBLE = 'WORKSPACE_TRANSFER_TARGET_NOT_ELIGIBLE',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -111,6 +113,28 @@ export class InvalidWorkspaceShareTargetError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_INVALID_SHARE_TARGET,
       400,
       metadata,
+    );
+  }
+}
+
+export class WorkspaceOwnerOnlyError extends WorkspaceError {
+  constructor(workspaceId: string) {
+    super(
+      `Only the owner may do this with workspace '${workspaceId}'`,
+      WorkspaceErrorCode.WORKSPACE_OWNER_ONLY,
+      403,
+      { workspaceId },
+    );
+  }
+}
+
+export class WorkspaceTransferTargetNotEligibleError extends WorkspaceError {
+  constructor(workspaceId: string, userId: string) {
+    super(
+      `User '${userId}' cannot take over workspace '${workspaceId}': they need access to it`,
+      WorkspaceErrorCode.WORKSPACE_TRANSFER_TARGET_NOT_ELIGIBLE,
+      422,
+      { workspaceId, userId },
     );
   }
 }

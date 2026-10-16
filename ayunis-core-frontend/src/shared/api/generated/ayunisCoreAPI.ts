@@ -169,6 +169,7 @@ import type {
   OrgSubscriptionsResponseDto,
   OrgSystemPromptResponseDto,
   OwnerOptionsResponseDto,
+  OwnershipCandidatesResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedOrgCertificateStatusesResponseDto,
   PaginatedSuperAdminUsersListResponseDto,
@@ -272,6 +273,7 @@ import type {
   ToggleFavoriteDto,
   TranscriptionResponseDto,
   TranscriptionsControllerTranscribeBody,
+  TransferWorkspaceOwnershipDto,
   TriggerPasswordResetResponseDto,
   UpdateApiKeyDto,
   UpdateArtifactDto,
@@ -17316,6 +17318,168 @@ export const useWorkspaceSharingControllerOrganization = <TError = unknown,
         TContext
       > => {
       return useMutation(getWorkspaceSharingControllerOrganizationMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Who the owner may hand the workspace over to
+ */
+export const workspaceOwnershipControllerCandidates = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OwnershipCandidatesResponseDto>(
+      {url: `/workspaces/${id}/ownership/candidates`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceOwnershipControllerCandidatesQueryKey = (id: string,) => {
+    return [
+    `/workspaces/${id}/ownership/candidates`
+    ] as const;
+    }
+
+
+export const getWorkspaceOwnershipControllerCandidatesQueryOptions = <TData = Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceOwnershipControllerCandidatesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>> = ({ signal }) => workspaceOwnershipControllerCandidates(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceOwnershipControllerCandidatesQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>>
+export type WorkspaceOwnershipControllerCandidatesQueryError = void
+
+
+export function useWorkspaceOwnershipControllerCandidates<TData = Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceOwnershipControllerCandidates<TData = Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceOwnershipControllerCandidates<TData = Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Who the owner may hand the workspace over to
+ */
+
+export function useWorkspaceOwnershipControllerCandidates<TData = Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceOwnershipControllerCandidatesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Hand the workspace over; the previous owner keeps full access (Vollzugriff)
+ */
+export const workspaceOwnershipControllerTransferOwnership = (
+    id: string,
+    transferWorkspaceOwnershipDto: TransferWorkspaceOwnershipDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<WorkspaceResponseDto>(
+      {url: `/workspaces/${id}/ownership`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: transferWorkspaceOwnershipDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceOwnershipControllerTransferOwnershipMutationKey = () => ['workspaceOwnershipControllerTransferOwnership'] as const;
+
+export const getWorkspaceOwnershipControllerTransferOwnershipMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerTransferOwnership>>, TError,WorkspaceOwnershipControllerTransferOwnershipMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerTransferOwnership>>, TError,WorkspaceOwnershipControllerTransferOwnershipMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceOwnershipControllerTransferOwnershipMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceOwnershipControllerTransferOwnership>>, WorkspaceOwnershipControllerTransferOwnershipMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workspaceOwnershipControllerTransferOwnership(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceOwnershipControllerTransferOwnershipMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceOwnershipControllerTransferOwnership>>>
+    export type WorkspaceOwnershipControllerTransferOwnershipMutationBody = TransferWorkspaceOwnershipDto
+    export type WorkspaceOwnershipControllerTransferOwnershipMutationError = void
+    export type WorkspaceOwnershipControllerTransferOwnershipMutationVariables = {id: string;data: TransferWorkspaceOwnershipDto}
+
+    /**
+ * @summary Hand the workspace over; the previous owner keeps full access (Vollzugriff)
+ */
+export const useWorkspaceOwnershipControllerTransferOwnership = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceOwnershipControllerTransferOwnership>>, TError,WorkspaceOwnershipControllerTransferOwnershipMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceOwnershipControllerTransferOwnership>>,
+        TError,
+        WorkspaceOwnershipControllerTransferOwnershipMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceOwnershipControllerTransferOwnershipMutationOptions(options), queryClient);
     }
 
 /**

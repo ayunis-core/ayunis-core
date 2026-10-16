@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import type { WorkspaceSummary } from 'src/domain/workspaces/application/services/workspace-summary.service';
-import type { WorkspaceDetail } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
+import type {
+  WorkspaceDetail,
+  WorkspaceSummary,
+} from 'src/domain/workspaces/application/services/workspace-summary.service';
 import type { WorkspaceListItem } from 'src/domain/workspaces/application/use-cases/find-all-workspaces/find-all-workspaces.use-case';
 import { WorkspaceResponseDto } from 'src/domain/workspaces/presenters/http/dtos/workspace-response.dto';
 import { WorkspaceListResponseDto } from 'src/domain/workspaces/presenters/http/dtos/workspace-list-response.dto';

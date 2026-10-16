@@ -40,7 +40,6 @@ export abstract class KnowledgeBaseRepository {
     options?: KnowledgeBaseByIdsOptions,
   ): Promise<KnowledgeBase[]>;
   abstract findAllByUserId(userId: UUID): Promise<PersonalKnowledgeBase[]>;
-  abstract findAllOwnedByUserId(userId: UUID): Promise<KnowledgeBase[]>;
   abstract findAllByWorkspaceId(
     workspaceId: UUID,
   ): Promise<WorkspaceKnowledgeBase[]>;

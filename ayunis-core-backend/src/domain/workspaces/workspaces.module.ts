@@ -45,6 +45,12 @@ import { EndWorkspaceTeamSharingUseCase } from './application/use-cases/end-work
 import { FindAccessibleWorkspaceIdsUseCase } from './application/use-cases/find-accessible-workspace-ids/find-accessible-workspace-ids.use-case';
 import { WorkspacesTeamMembershipEndedListener } from './application/listeners/team-membership-ended.listener';
 import { WorkspaceSharingController } from './presenters/http/workspace-sharing.controller';
+import { WorkspaceOwnershipController } from './presenters/http/workspace-ownership.controller';
+import { WorkspaceOwnershipService } from './application/services/workspace-ownership.service';
+import { WorkspaceDeletionService } from './application/services/workspace-deletion.service';
+import { TransferWorkspaceOwnershipUseCase } from './application/use-cases/transfer-workspace-ownership/transfer-workspace-ownership.use-case';
+import { ListOwnershipCandidatesUseCase } from './application/use-cases/list-ownership-candidates/list-ownership-candidates.use-case';
+import { WorkspacesUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 
 @Module({
   imports: [
@@ -62,6 +68,7 @@ import { WorkspaceSharingController } from './presenters/http/workspace-sharing.
     WorkspacesController,
     WorkspaceContextController,
     WorkspaceSharingController,
+    WorkspaceOwnershipController,
   ],
   providers: [
     {
@@ -85,6 +92,11 @@ import { WorkspaceSharingController } from './presenters/http/workspace-sharing.
     EndWorkspaceTeamSharingUseCase,
     FindAccessibleWorkspaceIdsUseCase,
     WorkspacesTeamMembershipEndedListener,
+    WorkspaceOwnershipService,
+    WorkspaceDeletionService,
+    TransferWorkspaceOwnershipUseCase,
+    ListOwnershipCandidatesUseCase,
+    WorkspacesUserDeletionRequestedListener,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,

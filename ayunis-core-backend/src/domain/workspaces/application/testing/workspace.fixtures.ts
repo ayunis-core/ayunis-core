@@ -48,7 +48,9 @@ export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesReposito
     findOne: jest.fn().mockResolvedValue(null),
     findManyByIds: jest.fn().mockResolvedValue([]),
     getListStats: jest.fn().mockResolvedValue(new Map()),
-    findById: jest.fn().mockResolvedValue(null),
+    findAllOwnedBy: jest.fn().mockResolvedValue([]),
+    lockForUpdate: jest.fn().mockResolvedValue(undefined),
+    changeOwner: jest.fn().mockResolvedValue(undefined),
     getContextRefs: jest.fn().mockResolvedValue({
       skillIds: [],
       knowledgeBases: [],

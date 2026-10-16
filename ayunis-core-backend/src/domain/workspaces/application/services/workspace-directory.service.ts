@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { OrgDirectory } from 'src/domain/workspaces/application/models/org-directory';
@@ -19,6 +20,10 @@ export class WorkspaceDirectoryService {
 
   async load(): Promise<OrgDirectory> {
     const { orgId } = getRequiredUserContext(this.context);
+    return this.loadForOrg(orgId);
+  }
+
+  async loadForOrg(orgId: UUID): Promise<OrgDirectory> {
     const [people, teams] = await Promise.all([
       this.findPeople.execute(new FindAllUserSummariesByOrgIdQuery(orgId)),
       this.findTeams.execute(new FindTeamsByOrgIdQuery(orgId)),

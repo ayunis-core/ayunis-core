@@ -7952,6 +7952,9 @@
               }
             }
           },
+          "403": {
+            "description": "Only the owner and people with full access may edit"
+          },
           "404": {
             "description": "Workspace not found"
           }
@@ -7976,6 +7979,9 @@
         "responses": {
           "204": {
             "description": "The workspace was deleted"
+          },
+          "403": {
+            "description": "Only the owner may delete"
           },
           "404": {
             "description": "Workspace not found"
@@ -8331,6 +8337,91 @@
         },
         "summary": "Share the workspace with the whole organisation, or stop",
         "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{id}/ownership/candidates": {
+      "get": {
+        "operationId": "WorkspaceOwnershipController_candidates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnershipCandidatesResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller is not the owner"
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "Who the owner may hand the workspace over to",
+        "tags": ["workspace-ownership"]
+      }
+    },
+    "/workspaces/{id}/ownership": {
+      "post": {
+        "operationId": "WorkspaceOwnershipController_transferOwnership",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferWorkspaceOwnershipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The workspace as the previous owner now sees it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller is not the owner"
+          },
+          "404": {
+            "description": "Workspace not found"
+          },
+          "422": {
+            "description": "The person has no access to the workspace"
+          }
+        },
+        "summary": "Hand the workspace over; the previous owner keeps full access (Vollzugriff)",
+        "tags": ["workspace-ownership"]
       }
     },
     "/favorites": {
@@ -20171,6 +20262,48 @@
           }
         },
         "required": ["shared"]
+      },
+      "OwnershipCandidateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "string",
+            "nullable": true,
+            "description": "Primary team of the person; null without a team"
+          }
+        },
+        "required": ["id", "name", "affiliation"]
+      },
+      "OwnershipCandidatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "people": {
+            "description": "Everyone with access except the owner, sorted by name",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnershipCandidateDto"
+            }
+          }
+        },
+        "required": ["people"]
+      },
+      "TransferWorkspaceOwnershipDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Someone who has access to the workspace today"
+          }
+        },
+        "required": ["userId"]
       },
       "WorkspaceFavoriteResponseDto": {
         "type": "object",
