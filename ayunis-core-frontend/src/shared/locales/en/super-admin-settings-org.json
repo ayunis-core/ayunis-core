@@ -637,6 +637,7 @@
       },
       "validation": {
         "contextWindowSize": {
+          "required": "Context window size is required",
           "isInt": "Context window size must be a whole number",
           "min": "Context window size must be at least 1",
           "invalid": "Enter a valid context window size"

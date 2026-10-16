@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { ollama } from '@ayunis/provider-ollama';
 import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { ThinkingTagInferenceHandler } from '../runtime/thinking-tag-inference.handler';
-import type { Model } from '../../domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
+import { ThinkingTagInferenceHandler } from 'src/domain/models/infrastructure/runtime/thinking-tag-inference.handler';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { ollamaContextWindow } from 'src/domain/models/infrastructure/runtime/ollama-context-window';
 
 @Injectable()
 export class SynaforceInferenceHandler extends ThinkingTagInferenceHandler {
@@ -20,6 +21,7 @@ export class SynaforceInferenceHandler extends ThinkingTagInferenceHandler {
     return ollama({
       baseUrl: this.configService.get<string>('models.synaforce.baseURL') ?? '',
       model: model.name,
+      numCtx: ollamaContextWindow(model),
       maxRetries: INFERENCE_MAX_RETRIES,
     });
   }

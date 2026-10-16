@@ -1698,9 +1698,8 @@ export interface CreateLanguageModelRequestDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
@@ -1777,9 +1776,8 @@ export interface UpdateLanguageModelRequestDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
