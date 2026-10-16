@@ -1,6 +1,7 @@
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 
 const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
+  'create_file',
   'create_document',
   'update_document',
   'edit_document',

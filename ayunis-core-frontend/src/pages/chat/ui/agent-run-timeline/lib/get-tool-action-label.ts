@@ -31,6 +31,11 @@ export function getToolActionLabel(
   const name = toolUse.name;
 
   switch (name) {
+    case 'create_file':
+      return {
+        verb: t('chat.timeline.actions.create_file'),
+        target: asString(params.filename),
+      };
     case 'create_document':
       return {
         verb: t('chat.timeline.actions.create_document'),
