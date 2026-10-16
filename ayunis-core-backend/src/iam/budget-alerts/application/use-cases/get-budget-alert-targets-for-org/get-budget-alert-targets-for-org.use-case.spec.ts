@@ -5,6 +5,7 @@ import { GetMonthlyCreditUsageUseCase } from 'src/domain/usage/application/use-c
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { GetUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/get-user-credit-limits-overview.use-case';
 import { GetTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.use-case';
+import { GetApiKeyCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/get-api-key-credit-limits-overview.use-case';
 import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 import { GetBudgetAlertTargetsForOrgQuery } from './get-budget-alert-targets-for-org.query';
 import { GetBudgetAlertTargetsForOrgUseCase } from './get-budget-alert-targets-for-org.use-case';
@@ -15,10 +16,12 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
   let orgUsage: { execute: jest.Mock };
   let userOverview: { execute: jest.Mock };
   let teamOverview: { execute: jest.Mock };
+  let apiKeyOverview: { execute: jest.Mock };
 
   const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
   const userId = '22222222-2222-2222-2222-222222222222' as UUID;
   const teamId = '33333333-3333-3333-3333-333333333333' as UUID;
+  const apiKeyId = '44444444-4444-4444-4444-444444444444' as UUID;
   const startsAt = new Date('2026-07-10T00:00:00.000Z');
 
   beforeEach(async () => {
@@ -47,6 +50,17 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
       ]),
     };
 
+    apiKeyOverview = {
+      execute: jest.fn().mockResolvedValue([
+        {
+          apiKeyId,
+          name: 'Citizen portal',
+          monthlyCredits: 400,
+          creditsUsed: 330,
+        },
+      ]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetBudgetAlertTargetsForOrgUseCase,
@@ -60,13 +74,17 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
           provide: GetTeamCreditLimitsOverviewUseCase,
           useValue: teamOverview,
         },
+        {
+          provide: GetApiKeyCreditLimitsOverviewUseCase,
+          useValue: apiKeyOverview,
+        },
       ],
     }).compile();
 
     useCase = module.get(GetBudgetAlertTargetsForOrgUseCase);
   });
 
-  it('builds org, user, and team targets over the windows enforcement uses', async () => {
+  it('builds org, user, team, and API key targets over the windows enforcement uses', async () => {
     const result = await useCase.execute(
       new GetBudgetAlertTargetsForOrgQuery(orgId),
     );
@@ -93,13 +111,22 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
         monthlyCredits: 500,
         creditsUsed: 300,
       },
+      {
+        scope: BudgetAlertScope.API_KEY,
+        targetId: apiKeyId,
+        name: 'Citizen portal',
+        monthlyCredits: 400,
+        creditsUsed: 330,
+      },
     ]);
     expect(orgUsage.execute.mock.calls[0][0].since).toEqual(startsAt);
-    // User and team limits are enforced over the calendar month (see
-    // CreditLimitGuardService), so alerts must not narrow the window to the
-    // subscription start.
+    // User, team and API key limits are enforced over the calendar month
+    // (see CreditLimitGuardService, ApiKeyCreditLimitGuardService), so alerts
+    // must not narrow the window to the subscription start.
     expect(userOverview.execute.mock.calls[0][0].since).toBeUndefined();
     expect(teamOverview.execute.mock.calls[0][0].since).toBeUndefined();
+    expect(apiKeyOverview.execute.mock.calls[0][0].since).toBeUndefined();
+    expect(apiKeyOverview.execute.mock.calls[0][0].onlyActiveKeys).toBe(true);
   });
 
   it('skips all usage reads without an active usage-based subscription', async () => {
@@ -114,5 +141,6 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
     expect(orgUsage.execute).not.toHaveBeenCalled();
     expect(userOverview.execute).not.toHaveBeenCalled();
     expect(teamOverview.execute).not.toHaveBeenCalled();
+    expect(apiKeyOverview.execute).not.toHaveBeenCalled();
   });
 });

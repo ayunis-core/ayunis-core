@@ -1,13 +1,15 @@
 import {
+  ApiKeyBudgetAlertNotification,
   OrgBudgetAlertNotification,
   TeamBudgetAlertNotification,
   UserBudgetAlertNotification,
-} from '../../../../domain/budget-alert-notification.entity';
+} from 'src/iam/budget-alerts/domain/budget-alert-notification.entity';
 import {
+  ApiKeyBudgetAlertNotificationRecord,
   OrgBudgetAlertNotificationRecord,
   TeamBudgetAlertNotificationRecord,
   UserBudgetAlertNotificationRecord,
-} from '../schema/budget-alert-notification.record';
+} from 'src/iam/budget-alerts/infrastructure/persistence/local/schema/budget-alert-notification.record';
 import { BudgetAlertNotificationMapper } from './budget-alert-notification.mapper';
 
 describe('BudgetAlertNotificationMapper', () => {
@@ -61,5 +63,25 @@ describe('BudgetAlertNotificationMapper', () => {
     expect((record as TeamBudgetAlertNotificationRecord).teamId).toBe(
       notification.teamId,
     );
+  });
+
+  it('preserves API key subtype fields on a domain → record → domain round-trip', () => {
+    const original = new ApiKeyBudgetAlertNotification({
+      id: '55555555-5555-5555-5555-555555555555',
+      orgId: '11111111-1111-1111-1111-111111111111',
+      apiKeyId: '44444444-4444-4444-4444-444444444444',
+      threshold: 100,
+      periodStart: new Date('2026-07-01T00:00:00.000Z'),
+      createdAt: new Date('2026-07-07T03:00:00.000Z'),
+      updatedAt: new Date('2026-07-07T03:00:00.000Z'),
+    });
+
+    const record = mapper.toRecord(original);
+    expect(record).toBeInstanceOf(ApiKeyBudgetAlertNotificationRecord);
+    expect((record as ApiKeyBudgetAlertNotificationRecord).apiKeyId).toBe(
+      original.apiKeyId,
+    );
+
+    expect(mapper.toDomain(record)).toEqual(original);
   });
 });

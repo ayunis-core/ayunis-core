@@ -3,15 +3,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import type { QueryDeepPartialEntity } from 'typeorm';
 import type { UUID } from 'crypto';
-import { BudgetAlertNotificationRepository } from '../../../application/ports/budget-alert-notification.repository';
-import { BudgetAlertNotification } from '../../../domain/budget-alert-notification.entity';
+import { BudgetAlertNotificationRepository } from 'src/iam/budget-alerts/application/ports/budget-alert-notification.repository';
+import { BudgetAlertNotification } from 'src/iam/budget-alerts/domain/budget-alert-notification.entity';
 import {
+  ApiKeyBudgetAlertNotificationRecord,
   BudgetAlertNotificationRecord,
   OrgBudgetAlertNotificationRecord,
   TeamBudgetAlertNotificationRecord,
   UserBudgetAlertNotificationRecord,
-} from './schema/budget-alert-notification.record';
-import { BudgetAlertNotificationMapper } from './mappers/budget-alert-notification.mapper';
+} from 'src/iam/budget-alerts/infrastructure/persistence/local/schema/budget-alert-notification.record';
+import { BudgetAlertNotificationMapper } from 'src/iam/budget-alerts/infrastructure/persistence/local/mappers/budget-alert-notification.mapper';
+
+const CHILD_RECORD_TYPES = [
+  OrgBudgetAlertNotificationRecord,
+  UserBudgetAlertNotificationRecord,
+  TeamBudgetAlertNotificationRecord,
+  ApiKeyBudgetAlertNotificationRecord,
+] as const;
 
 @Injectable()
 export class LocalBudgetAlertNotificationRepository extends BudgetAlertNotificationRepository {
@@ -42,35 +50,16 @@ export class LocalBudgetAlertNotificationRepository extends BudgetAlertNotificat
       this.mapper.toRecord(notification),
     );
 
-    const orgRecords = records.filter(
-      (record): record is OrgBudgetAlertNotificationRecord =>
-        record instanceof OrgBudgetAlertNotificationRecord,
-    );
-    const userRecords = records.filter(
-      (record): record is UserBudgetAlertNotificationRecord =>
-        record instanceof UserBudgetAlertNotificationRecord,
-    );
-    const teamRecords = records.filter(
-      (record): record is TeamBudgetAlertNotificationRecord =>
-        record instanceof TeamBudgetAlertNotificationRecord,
-    );
-
     // Each child repository supplies the correct STI discriminator. The
     // transaction keeps mixed batches atomic, while ON CONFLICT DO NOTHING
     // makes concurrent/duplicate writes idempotent.
     await this.repository.manager.transaction(async (manager) => {
-      await this.insertBatch(
-        manager.getRepository(OrgBudgetAlertNotificationRecord),
-        orgRecords,
-      );
-      await this.insertBatch(
-        manager.getRepository(UserBudgetAlertNotificationRecord),
-        userRecords,
-      );
-      await this.insertBatch(
-        manager.getRepository(TeamBudgetAlertNotificationRecord),
-        teamRecords,
-      );
+      for (const recordType of CHILD_RECORD_TYPES) {
+        await this.insertBatch(
+          manager.getRepository<BudgetAlertNotificationRecord>(recordType),
+          records.filter((record) => record instanceof recordType),
+        );
+      }
     });
   }
 
