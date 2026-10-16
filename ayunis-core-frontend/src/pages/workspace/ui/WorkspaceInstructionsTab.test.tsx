@@ -35,7 +35,7 @@ describe('WorkspaceInstructionsTab', () => {
   });
 
   it('keeps the tour target mounted while the context loads', () => {
-    render(<WorkspaceInstructionsTab workspaceId="workspace-1" />);
+    render(<WorkspaceInstructionsTab canEdit workspaceId="workspace-1" />);
 
     expect(
       document.querySelector('[data-tour="workspace-instruction"]'),
@@ -50,7 +50,7 @@ describe('WorkspaceInstructionsTab', () => {
     mocks.isLoading = false;
     mocks.context = { instruction: 'Immer sachlich bleiben.' };
 
-    render(<WorkspaceInstructionsTab workspaceId="workspace-1" />);
+    render(<WorkspaceInstructionsTab canEdit workspaceId="workspace-1" />);
 
     expect(screen.getByTestId('workspace-instruction-input')).toHaveProperty(
       'disabled',
@@ -62,11 +62,27 @@ describe('WorkspaceInstructionsTab', () => {
     mocks.isLoading = false;
     mocks.error = new Error('nope');
 
-    render(<WorkspaceInstructionsTab workspaceId="workspace-1" />);
+    render(<WorkspaceInstructionsTab canEdit workspaceId="workspace-1" />);
 
     expect(
       document.querySelector('[data-tour="workspace-instruction"]'),
     ).toBeNull();
     expect(screen.getByText('context.loadError.title')).toBeTruthy();
+  });
+
+  it('shows the instructions read-only to people who may only use the workspace', () => {
+    mocks.isLoading = false;
+    mocks.context = { instruction: 'Immer sachlich bleiben.' };
+
+    render(
+      <WorkspaceInstructionsTab canEdit={false} workspaceId="workspace-1" />,
+    );
+
+    expect(screen.getByTestId('workspace-instruction-input')).toHaveProperty(
+      'readOnly',
+      true,
+    );
+    expect(screen.queryByTestId('workspace-instruction-save')).toBeNull();
+    expect(screen.getByText('context.instructions.readOnlyHint')).toBeTruthy();
   });
 });

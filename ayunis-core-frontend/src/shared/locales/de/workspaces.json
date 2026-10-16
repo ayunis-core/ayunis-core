@@ -3,12 +3,14 @@
     "title": "Arbeitsbereiche",
     "addWorkspace": "Arbeitsbereich hinzufügen",
     "emptyTitle": "Noch keine Arbeitsbereiche",
-    "emptyDescription": "Legen Sie einen Arbeitsbereich an, um Ihre Chats thematisch zu bündeln.",
+    "emptyDescription": "Legen Sie einen an, oder lassen Sie sich zu einem einladen.",
     "emptyDescriptionNoCreate": "Sie dürfen keine Arbeitsbereiche anlegen. Wenden Sie sich an Ihre Administration.",
     "skillCount_one": "{{count}} Fähigkeit",
     "skillCount_other": "{{count}} Fähigkeiten",
     "knowledgeBaseCount_one": "{{count}} Wissenssammlung",
-    "knowledgeBaseCount_other": "{{count}} Wissenssammlungen"
+    "knowledgeBaseCount_other": "{{count}} Wissenssammlungen",
+    "memberCount_one": "{{count}} Mitglied",
+    "memberCount_other": "{{count}} Mitglieder"
   },
   "card": {
     "pin": "Zu Favoriten hinzufügen",

@@ -36,7 +36,14 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
       'review_all_knowledge_requests',
     ],
   },
-  { group: 'workspaces', permissions: ['create_workspaces'] },
+  {
+    group: 'workspaces',
+    permissions: [
+      'create_workspaces',
+      'share_workspaces',
+      'share_workspaces_org',
+    ],
+  },
 ];
 
 export const NEW_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
@@ -52,6 +59,8 @@ export const NEW_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
   'request_knowledge_transfer_org',
   'review_all_knowledge_requests',
   'create_workspaces',
+  'share_workspaces',
+  'share_workspaces_org',
 ]);
 
 export const TEAM_ADMIN_PERMISSIONS: readonly TeamAdminPermission[] = [
@@ -60,4 +69,5 @@ export const TEAM_ADMIN_PERMISSIONS: readonly TeamAdminPermission[] = [
   'team_manage_skills',
   'team_manage_knowledge',
   'team_review_requests',
+  'team_share_workspaces',
 ];

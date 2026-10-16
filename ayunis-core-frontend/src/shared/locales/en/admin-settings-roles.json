@@ -50,7 +50,9 @@
     "review_all_knowledge_requests": "Approve or reject requests to the organisation and to every team, even without being team admin there.",
     "create_workspaces": "Create your own workspaces.",
     "manage_org_skills": "Create, edit and delete skills for everyone in the organisation and make them mandatory for everyone.",
-    "manage_org_knowledge": "Create, edit and delete knowledge bases for everyone in the organisation."
+    "manage_org_knowledge": "Create, edit and delete knowledge bases for everyone in the organisation.",
+    "share_workspaces": "Invite people and teams into workspaces where one has full access. Invited people use everything linked there.",
+    "share_workspaces_org": "Open a workspace for everyone in the organisation. Everyone then uses what is linked there."
   },
   "permissions": {
     "manage_teams": "Manage teams",
@@ -68,7 +70,9 @@
     "review_all_knowledge_requests": "Answer all requests",
     "create_workspaces": "Create workspaces",
     "manage_org_skills": "Manage organisation skills",
-    "manage_org_knowledge": "Manage organisation knowledge bases"
+    "manage_org_knowledge": "Manage organisation knowledge bases",
+    "share_workspaces": "Manage workspaces",
+    "share_workspaces_org": "Share with the whole organisation"
   },
   "teamAdmins": {
     "title": "Team admins",
@@ -80,14 +84,16 @@
       "team_appoint_admins": "Appoint team admins",
       "team_manage_skills": "Manage team skills",
       "team_manage_knowledge": "Manage team knowledge bases",
-      "team_review_requests": "Answer requests to the team"
+      "team_review_requests": "Answer requests to the team",
+      "team_share_workspaces": "Manage workspaces for the team"
     },
     "permissionHints": {
       "team_manage_members": "Add people to their own team and remove them again.",
       "team_appoint_admins": "Make other members of their own team team admin or take the role away again.",
       "team_manage_skills": "Create, edit and delete the team's skills.",
       "team_manage_knowledge": "Create, edit and delete the team's knowledge bases.",
-      "team_review_requests": "Approve or reject handovers to their own team."
+      "team_review_requests": "Approve or reject handovers to their own team.",
+      "team_share_workspaces": "Invite the own team or single members of it into workspaces where they have full access. Also applies when users and managers may not manage workspaces."
     }
   },
   "save": "Save changes",
