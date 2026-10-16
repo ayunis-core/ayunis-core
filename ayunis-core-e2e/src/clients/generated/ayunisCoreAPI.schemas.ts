@@ -605,7 +605,7 @@ export const OrgLifecycleStatus = {
   'no-plan': 'no-plan',
 } as const;
 
-export interface SuperAdminOrgListItemResponseDto {
+export interface SuperAdminOrgOverviewResponseDto {
   /** Organization unique identifier */
   id: string;
   /** Organization display name */
@@ -622,7 +622,7 @@ export interface SuperAdminOrgListItemResponseDto {
 
 export interface SuperAdminOrgListResponseDto {
   /** Array of organizations for the current page */
-  data: SuperAdminOrgListItemResponseDto[];
+  data: SuperAdminOrgOverviewResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
 }

@@ -1,6 +1,6 @@
 import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import type {
-  SuperAdminOrgResponseDto,
+  SuperAdminOrgOverviewResponseDto,
   SubscriptionResponseDto,
   UserResponseDto,
   SuperAdminTrialResponseDto,
@@ -32,7 +32,7 @@ import SuperAdminInvitesSearch from './SuperAdminInvitesSearch';
 import SuperAdminInvitesPagination from './SuperAdminInvitesPagination';
 
 interface SuperAdminSettingsOrgPageProps {
-  org: SuperAdminOrgResponseDto;
+  org: SuperAdminOrgOverviewResponseDto;
   users: UserResponseDto[];
   usersPagination?: PaginationDto;
   usersSearch?: string;

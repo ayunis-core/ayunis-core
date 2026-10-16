@@ -652,8 +652,6 @@
     "archive": "Organisation archivieren",
     "restore": "Organisation wiederherstellen",
     "delete": "Organisation löschen",
-    "active": "Aktiv",
-    "archived": "Archiviert",
     "archiveTitle": "Organisation archivieren?",
     "restoreTitle": "Organisation wiederherstellen?",
     "archiveDescription": "Alle Daten bleiben erhalten. Mitglieder werden abgemeldet und können sich erst nach der Wiederherstellung wieder anmelden.",

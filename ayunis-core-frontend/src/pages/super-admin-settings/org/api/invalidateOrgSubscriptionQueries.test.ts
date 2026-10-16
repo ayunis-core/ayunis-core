@@ -2,6 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import {
   getSuperAdminOrgsControllerGetAllOrgsQueryKey,
+  getSuperAdminOrgsControllerGetOrgByIdQueryKey,
   getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey,
   getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
 } from '@/shared/api';
@@ -32,7 +33,7 @@ describe(invalidateOrgSubscriptionQueries.name, () => {
     expect(router.invalidate).toHaveBeenCalledOnce();
   });
 
-  it('marks every cached organizations list stale so lifecycle filters refetch', () => {
+  it('marks every cached organizations list stale and the org detail so lifecycle badges refetch', () => {
     const queryClient = new QueryClient();
     const trialKey = getSuperAdminOrgsControllerGetAllOrgsQueryKey({
       lifecycle: 'trial',
@@ -42,6 +43,10 @@ describe(invalidateOrgSubscriptionQueries.name, () => {
     const allKey = getSuperAdminOrgsControllerGetAllOrgsQueryKey();
     queryClient.setQueryData(trialKey, { data: [], pagination: {} });
     queryClient.setQueryData(allKey, { data: [], pagination: {} });
+    queryClient.setQueryData(
+      getSuperAdminOrgsControllerGetOrgByIdQueryKey(ORG_ID),
+      {},
+    );
 
     invalidateOrgSubscriptionQueries(
       queryClient,
@@ -51,5 +56,10 @@ describe(invalidateOrgSubscriptionQueries.name, () => {
 
     expect(queryClient.getQueryState(trialKey)?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(allKey)?.isInvalidated).toBe(true);
+    expect(
+      queryClient.getQueryState(
+        getSuperAdminOrgsControllerGetOrgByIdQueryKey(ORG_ID),
+      )?.isInvalidated,
+    ).toBe(true);
   });
 });

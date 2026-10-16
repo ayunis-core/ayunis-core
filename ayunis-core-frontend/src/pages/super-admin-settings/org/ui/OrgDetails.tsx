@@ -1,4 +1,5 @@
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgOverviewResponseDto } from '@/shared/api';
+import { OrgLifecycleBadge } from '@/widgets/org-lifecycle-badge';
 import {
   Card,
   CardAction,
@@ -6,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import { Badge } from '@ayunis/ui/components/badge';
 import {
   Item,
   ItemActions,
@@ -23,7 +23,7 @@ import OrgLifecycleActions from './OrgLifecycleActions';
 import OrgNameItem from '@/pages/super-admin-settings/org/ui/OrgNameItem';
 
 interface OrgDetailsProps {
-  org: SuperAdminOrgResponseDto;
+  org: SuperAdminOrgOverviewResponseDto;
 }
 
 export default function OrgDetails({ org }: Readonly<OrgDetailsProps>) {
@@ -35,12 +35,10 @@ export default function OrgDetails({ org }: Readonly<OrgDetailsProps>) {
         <CardHeader>
           <CardTitle>{t('orgDetails.title')}</CardTitle>
           <CardAction>
-            <Badge
-              variant={org.archived ? 'secondary' : 'outline'}
-              data-testid="org-status"
-            >
-              {t(org.archived ? 'lifecycle.archived' : 'lifecycle.active')}
-            </Badge>
+            <OrgLifecycleBadge
+              status={org.lifecycleStatus}
+              testId="org-status"
+            />
           </CardAction>
         </CardHeader>
         <CardContent>

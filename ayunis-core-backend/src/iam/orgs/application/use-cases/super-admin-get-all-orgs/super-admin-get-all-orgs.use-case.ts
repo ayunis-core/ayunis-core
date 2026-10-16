@@ -10,7 +10,7 @@ import {
 import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import type { SuperAdminOrgListItem } from 'src/iam/orgs/application/models/super-admin-org-list-item';
+import type { SuperAdminOrgOverview } from 'src/iam/orgs/application/models/super-admin-org-overview';
 
 @Injectable()
 export class SuperAdminGetAllOrgsUseCase {
@@ -24,7 +24,7 @@ export class SuperAdminGetAllOrgsUseCase {
   @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(
     query: SuperAdminGetAllOrgsQuery,
-  ): Promise<Paginated<SuperAdminOrgListItem>> {
+  ): Promise<Paginated<SuperAdminOrgOverview>> {
     this.logger.log(
       {
         limit: query.limit,
@@ -58,7 +58,7 @@ export class SuperAdminGetAllOrgsUseCase {
     const statuses = await this.orgsRepository.findLifecycleStatuses(
       page.data.map((org) => org.id),
     );
-    return new Paginated<SuperAdminOrgListItem>({
+    return new Paginated<SuperAdminOrgOverview>({
       data: page.data.map((org) => ({
         org,
         lifecycleStatus: statuses.get(org.id) ?? 'no-plan',

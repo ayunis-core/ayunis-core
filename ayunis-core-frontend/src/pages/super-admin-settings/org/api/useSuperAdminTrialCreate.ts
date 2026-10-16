@@ -2,6 +2,7 @@ import {
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
   useSuperAdminTrialsControllerCreateTrial,
 } from '@/shared/api';
+import { invalidateOrgLifecycleQueries } from './invalidateOrgLifecycleQueries';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -63,6 +64,7 @@ export default function useSuperAdminTrialCreate({
         void queryClient.invalidateQueries({
           queryKey: getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId),
         });
+        invalidateOrgLifecycleQueries(queryClient, orgId);
         void router.invalidate();
       },
     },

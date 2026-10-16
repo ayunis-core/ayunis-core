@@ -29,11 +29,12 @@ import { OrgErrorResponseDto } from './dtos/org-error-response.dto';
 import { SuperAdminOrgResponseDtoMapper } from './mappers/super-admin-org-response-dto.mapper';
 import {
   SuperAdminOrgListResponseDto,
+  SuperAdminOrgOverviewResponseDto,
   SuperAdminOrgResponseDto,
 } from './dtos/super-admin-org-response.dto';
 import { UUID } from 'crypto';
-import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
-import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import { SuperAdminGetOrgQuery } from 'src/iam/orgs/application/use-cases/super-admin-get-org/super-admin-get-org.query';
+import { SuperAdminGetOrgUseCase } from 'src/iam/orgs/application/use-cases/super-admin-get-org/super-admin-get-org.use-case';
 import { CreateOrgUseCase } from 'src/iam/orgs/application/use-cases/create-org/create-org.use-case';
 import { CreateOrgCommand } from 'src/iam/orgs/application/use-cases/create-org/create-org.command';
 import { CreateOrgRequestDto } from './dtos/create-org-request.dto';
@@ -54,7 +55,7 @@ export class SuperAdminOrgsController {
   constructor(
     private readonly superAdminGetAllOrgsUseCase: SuperAdminGetAllOrgsUseCase,
     private readonly superAdminOrgResponseDtoMapper: SuperAdminOrgResponseDtoMapper,
-    private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
+    private readonly superAdminGetOrgUseCase: SuperAdminGetOrgUseCase,
     private readonly createOrgUseCase: CreateOrgUseCase,
     private readonly updateOrgUseCase: UpdateOrgUseCase,
   ) {}
@@ -148,7 +149,7 @@ export class SuperAdminOrgsController {
   })
   @ApiOkResponse({
     description: 'Successfully retrieved organization for the super admin.',
-    type: SuperAdminOrgResponseDto,
+    type: SuperAdminOrgOverviewResponseDto,
   })
   @ApiForbiddenResponse({
     description: 'The requester is not a super admin.',
@@ -159,9 +160,13 @@ export class SuperAdminOrgsController {
     type: String,
     description: 'The ID of the organization to retrieve.',
   })
-  async getOrgById(@Param('id') id: UUID): Promise<SuperAdminOrgResponseDto> {
-    const org = await this.findOrgByIdUseCase.execute(new FindOrgByIdQuery(id));
-    return this.superAdminOrgResponseDtoMapper.toDto(org);
+  async getOrgById(
+    @Param('id') id: UUID,
+  ): Promise<SuperAdminOrgOverviewResponseDto> {
+    const overview = await this.superAdminGetOrgUseCase.execute(
+      new SuperAdminGetOrgQuery(id),
+    );
+    return this.superAdminOrgResponseDtoMapper.toOverviewDto(overview);
   }
 
   @Patch(':id')

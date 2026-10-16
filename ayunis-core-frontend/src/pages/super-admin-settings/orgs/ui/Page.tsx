@@ -6,13 +6,13 @@ import OrgsTable from './OrgsTable';
 import OrgsPagination from './OrgsPagination';
 import OrgsSearch from './OrgsSearch';
 import type {
-  SuperAdminOrgListItemResponseDto,
+  SuperAdminOrgOverviewResponseDto,
   PaginationDto,
   OrgLifecycleFilter as OrgLifecycleFilterValue,
 } from '@/shared/api';
 
 interface SuperAdminOrgsPageProps {
-  orgs: SuperAdminOrgListItemResponseDto[];
+  orgs: SuperAdminOrgOverviewResponseDto[];
   pagination?: PaginationDto;
   search?: string;
   lifecycle: OrgLifecycleFilterValue;

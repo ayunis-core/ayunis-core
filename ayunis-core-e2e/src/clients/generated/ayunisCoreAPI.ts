@@ -201,6 +201,7 @@ import type {
   SuccessResponseDto,
   SuperAdminInvitesControllerGetInvitesParams,
   SuperAdminOrgListResponseDto,
+  SuperAdminOrgOverviewResponseDto,
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
   SuperAdminTeamsControllerGetMembersParams,
@@ -858,8 +859,8 @@ const superAdminOrgsControllerGetAllOrgs = (
  */
 const superAdminOrgsControllerGetOrgById = (
     id: string,
- options?: SecondParameter<typeof playwrightApiClient<SuperAdminOrgResponseDto>>,) => {
-      return playwrightApiClient<SuperAdminOrgResponseDto>(
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminOrgOverviewResponseDto>>,) => {
+      return playwrightApiClient<SuperAdminOrgOverviewResponseDto>(
       {url: `/super-admin/orgs/${id}`, method: 'GET'
     },
       options);
