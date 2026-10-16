@@ -41,7 +41,9 @@
     },
     "activeSwitchLabel": "Skill active",
     "activeOn": "Active: Ayunis Core can use the skill in chats.",
-    "activeOff": "Inactive: Ayunis Core does not use the skill in chats."
+    "activeOff": "Inactive: Ayunis Core does not use the skill in chats.",
+    "alwaysActive": "Always active",
+    "alwaysActiveTooltip": "Your administration has made this skill mandatory for everyone."
   },
   "createDialog": {
     "buttonText": "Add Skill",
