@@ -14,6 +14,12 @@ import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import type { CollectiveSkill } from 'src/domain/skills/domain/skill';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { skillSlugName } from 'src/domain/skills/domain/skill-slug-prefix';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 
 @Injectable()
 export class FindSkillByNameUseCase {
@@ -23,17 +29,50 @@ export class FindSkillByNameUseCase {
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
+    private readonly collectiveRepository: CollectiveSkillRepository,
+    private readonly getViewer: GetOwnershipViewerUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
-  async execute(query: FindSkillByNameQuery): Promise<PersonalSkill> {
-    this.logger.log({ name: query.name }, 'Finding skill by name');
+  async execute(
+    query: FindSkillByNameQuery,
+  ): Promise<PersonalSkill | CollectiveSkill> {
+    this.logger.log(
+      { name: query.name, scope: query.scope },
+      'Finding skill by name',
+    );
+    return query.scope === 'personal'
+      ? this.findPersonal(query.name)
+      : this.findCollective(query.name, query.scope);
+  }
 
+  private async findCollective(
+    name: string,
+    scope: 'team' | 'org',
+  ): Promise<CollectiveSkill> {
+    const viewer = await this.getViewer.execute();
+    const usable = await this.collectiveRepository.findUsable({
+      userId: viewer.userId,
+      orgId: viewer.orgId,
+      teamIds: viewer.teamIds,
+    });
+    const match = usable.find(
+      (skill) =>
+        skillSlugName(skill) === name &&
+        (scope === 'team'
+          ? skill instanceof TeamSkill
+          : skill instanceof OrgSkill),
+    );
+    if (!match) throw new SkillNotFoundError(name);
+    return match;
+  }
+
+  private async findPersonal(name: string): Promise<PersonalSkill> {
     const { userId } = getRequiredUserContext(this.contextService);
 
     // Owned skills take priority
     const ownedSkill = await this.skillRepository.findByNameAndOwner(
-      query.name,
+      name,
       userId,
     );
 
@@ -52,13 +91,13 @@ export class FindSkillByNameUseCase {
         sharedSkillIds,
         null,
       );
-      const matchingSkill = sharedSkills.find((s) => s.name === query.name);
+      const matchingSkill = sharedSkills.find((s) => s.name === name);
 
       if (matchingSkill) {
         return matchingSkill;
       }
     }
 
-    throw new SkillNotFoundError(query.name);
+    throw new SkillNotFoundError(name);
   }
 }

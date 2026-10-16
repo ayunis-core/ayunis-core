@@ -4,8 +4,9 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import type { CollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 
 @Injectable()
 export class FindAccessibleKnowledgeBasesByIdsUseCase {
@@ -15,13 +16,14 @@ export class FindAccessibleKnowledgeBasesByIdsUseCase {
 
   constructor(
     private readonly repository: AccessibleKnowledgeBasesByIdsRepository,
-    private readonly contextService: ContextService,
+    private readonly collectiveRepository: CollectiveKnowledgeBaseRepository,
+    private readonly getViewer: GetOwnershipViewerUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: {
     knowledgeBaseIds: UUID[];
-  }): Promise<PersonalKnowledgeBase[]> {
+  }): Promise<Array<PersonalKnowledgeBase | CollectiveKnowledgeBase>> {
     const knowledgeBaseIds = [...new Set(query.knowledgeBaseIds)];
     this.logger.log(
       { count: knowledgeBaseIds.length },
@@ -29,15 +31,20 @@ export class FindAccessibleKnowledgeBasesByIdsUseCase {
     );
     if (knowledgeBaseIds.length === 0) return [];
 
-    const { userId, orgId } = getRequiredUserContext(this.contextService);
-
-    const accessibleKnowledgeBases = await this.repository.findAccessibleByIds(
-      knowledgeBaseIds,
-      userId,
-      orgId,
-    );
+    const viewer = await this.getViewer.execute();
+    const [personal, collective] = await Promise.all([
+      this.repository.findAccessibleByIds(
+        knowledgeBaseIds,
+        viewer.userId,
+        viewer.orgId,
+      ),
+      this.collectiveRepository.findUsable(
+        { userId: viewer.userId, orgId: viewer.orgId, teamIds: viewer.teamIds },
+        knowledgeBaseIds,
+      ),
+    ]);
     const accessibleById = new Map(
-      accessibleKnowledgeBases.map((knowledgeBase) => [
+      [...personal, ...collective].map((knowledgeBase) => [
         knowledgeBase.id,
         knowledgeBase,
       ]),

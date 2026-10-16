@@ -14,6 +14,17 @@ import {
 } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import type {
+  CollectiveKnowledgeBase,
+  KnowledgeBase,
+} from 'src/domain/knowledge-bases/domain/knowledge-base';
+import {
+  CollectiveKnowledgeBaseRepository,
+  type CollectiveKnowledgeBaseScope,
+} from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { isCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/application/models/collective-knowledge-base-owner';
+import { KnowledgeBaseOwnershipContextService } from 'src/domain/knowledge-bases/application/services/knowledge-base-ownership-context.service';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
@@ -34,6 +45,9 @@ export class ListKnowledgeBasesUseCase {
     private readonly findShares: FindSharesByScopeUseCase,
     private readonly findSkillSharedIds: FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
     private readonly context: ContextService,
+    private readonly collectiveRepository: CollectiveKnowledgeBaseRepository,
+    private readonly ownershipContext: KnowledgeBaseOwnershipContextService,
+    private readonly getViewer: GetOwnershipViewerUseCase,
     @Inject(forwardRef(() => AssertWorkspaceReadAccessUseCase))
     private readonly workspaceRead: AssertWorkspaceReadAccessUseCase,
   ) {}
@@ -76,60 +90,69 @@ export class ListKnowledgeBasesUseCase {
           )
         : this.findAllWorkspace(query.owner.workspaceId);
     }
-    return this.hasExplicitPaging(query)
-      ? this.findPersonalPaginated(userId, this.paginationOptions(query))
-      : this.findAllPersonal(userId, orgId);
+    return this.findPersonal(query, userId, orgId);
   }
 
-  private async findAllPersonal(
+  private async findPersonal(
+    query: ListKnowledgeBasesQuery,
     userId: UUID,
     orgId: UUID,
-  ): Promise<Paginated<KnowledgeBaseWithUserContext<PersonalKnowledgeBase>>> {
-    const [owned, sharedIds, activeIds] = await Promise.all([
-      this.repository.findAllByUserId(userId),
+  ): Promise<Paginated<KnowledgeBaseWithUserContext>> {
+    const [viewer, sharedIds, activeIds] = await Promise.all([
+      this.getViewer.execute(),
       this.findAccessibleSharedIds(),
       this.repository.getActiveIds(userId),
     ]);
-    const ownedIds = new Set(owned.map(({ id }) => id));
-    const ids = sharedIds.filter((id) => !ownedIds.has(id));
-    const shared = ids.length
-      ? await this.repository.findByIds(ids, { orgId, workspaceId: null })
-      : [];
-    return this.unpaginated([
-      ...owned.map((knowledgeBase) => ({
-        knowledgeBase,
-        isShared: false,
-        isActive: activeIds.has(knowledgeBase.id),
-      })),
-      ...shared.map((knowledgeBase) => ({
-        knowledgeBase,
-        isShared: true,
-        isActive: activeIds.has(knowledgeBase.id),
-      })),
-    ]);
-  }
-
-  private async findPersonalPaginated(
-    userId: UUID,
-    options: KnowledgeBaseListOptions,
-  ): Promise<Paginated<KnowledgeBaseWithUserContext<PersonalKnowledgeBase>>> {
-    const [sharedIds, activeIds] = await Promise.all([
-      this.findAccessibleSharedIds(),
-      this.repository.getActiveIds(userId),
-    ]);
-    const page = await this.repository.findPaginatedAccessible(
-      userId,
-      undefined,
-      sharedIds,
-      options,
-    );
+    const scope = { userId, orgId, teamIds: viewer.teamIds };
+    const page = this.hasExplicitPaging(query)
+      ? await this.repository.findPaginatedAccessible(
+          userId,
+          undefined,
+          sharedIds,
+          { ...this.paginationOptions(query), collective: scope },
+        )
+      : await this.findAllPersonal(scope, sharedIds);
+    const ownership = await this.ownershipContext.lookup(page.data, viewer);
     const sharedIdSet = new Set(sharedIds);
     return this.mapPage(page, (knowledgeBase) => ({
       knowledgeBase,
       isShared:
-        knowledgeBase.userId !== userId && sharedIdSet.has(knowledgeBase.id),
-      isActive: activeIds.has(knowledgeBase.id),
+        knowledgeBase instanceof PersonalKnowledgeBase &&
+        knowledgeBase.userId !== userId &&
+        sharedIdSet.has(knowledgeBase.id),
+      isActive: isCollectiveKnowledgeBase(knowledgeBase)
+        ? ownership.isActive(knowledgeBase)
+        : activeIds.has(knowledgeBase.id),
+      viewer: ownership.rightsFor(knowledgeBase),
+      ownerDescription: ownership.describe(knowledgeBase),
     }));
+  }
+
+  private async findAllPersonal(
+    scope: CollectiveKnowledgeBaseScope,
+    sharedIds: UUID[],
+  ): Promise<Paginated<PersonalKnowledgeBase | CollectiveKnowledgeBase>> {
+    const [owned, collective] = await Promise.all([
+      this.repository.findAllByUserId(scope.userId),
+      this.collectiveRepository.findUsable(scope),
+    ]);
+    const ownedIds = new Set(owned.map(({ id }) => id));
+    const ids = sharedIds.filter((id) => !ownedIds.has(id));
+    const shared = ids.length
+      ? await this.repository.findByIds(ids, {
+          orgId: scope.orgId,
+          workspaceId: null,
+        })
+      : [];
+    const data = [...owned, ...shared, ...collective].sort((left, right) =>
+      this.compareByNameAndId(left, right),
+    );
+    return new Paginated({
+      data,
+      limit: data.length,
+      offset: 0,
+      total: data.length,
+    });
   }
 
   private async findAllWorkspace(
@@ -187,7 +210,9 @@ export class ListKnowledgeBasesUseCase {
   private unpaginated<T extends KnowledgeBaseWithUserContext>(
     data: T[],
   ): Paginated<T> {
-    data.sort((left, right) => this.compareByNameAndId(left, right));
+    data.sort((left, right) =>
+      this.compareByNameAndId(left.knowledgeBase, right.knowledgeBase),
+    );
     return new Paginated({
       data,
       limit: data.length,
@@ -196,7 +221,7 @@ export class ListKnowledgeBasesUseCase {
     });
   }
 
-  private mapPage<T extends PersonalKnowledgeBase | WorkspaceKnowledgeBase>(
+  private mapPage<T extends KnowledgeBase>(
     page: Paginated<T>,
     map: (knowledgeBase: T) => KnowledgeBaseWithUserContext<T>,
   ): Paginated<KnowledgeBaseWithUserContext<T>> {
@@ -209,17 +234,13 @@ export class ListKnowledgeBasesUseCase {
   }
 
   private compareByNameAndId(
-    left: KnowledgeBaseWithUserContext,
-    right: KnowledgeBaseWithUserContext,
+    left: KnowledgeBase,
+    right: KnowledgeBase,
   ): number {
-    const byName = left.knowledgeBase.name.localeCompare(
-      right.knowledgeBase.name,
-      undefined,
-      { sensitivity: 'base' },
-    );
-    return (
-      byName || left.knowledgeBase.id.localeCompare(right.knowledgeBase.id)
-    );
+    const byName = left.name.localeCompare(right.name, undefined, {
+      sensitivity: 'base',
+    });
+    return byName || left.id.localeCompare(right.id);
   }
 
   private paginationOptions(query: ListKnowledgeBasesQuery) {

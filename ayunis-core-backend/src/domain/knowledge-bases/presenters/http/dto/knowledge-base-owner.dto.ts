@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { ValidationArguments, ValidationOptions } from 'class-validator';
 import { IsEnum, isUUID, registerDecorator } from 'class-validator';
 import type { UUID } from 'crypto';
-import type { KnowledgeBaseOwner } from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
+import type { KnowledgeBaseListScope } from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
 
 export enum KnowledgeBaseOwnerType {
   PERSONAL = 'personal',
@@ -47,9 +47,9 @@ export abstract class KnowledgeBaseOwnerDto {
   workspaceId?: UUID;
 }
 
-export function toKnowledgeBaseOwner(
+export function toKnowledgeBaseListScope(
   dto: KnowledgeBaseOwnerDto,
-): KnowledgeBaseOwner {
+): KnowledgeBaseListScope {
   return dto.ownerType === KnowledgeBaseOwnerType.WORKSPACE
     ? { type: 'workspace', workspaceId: dto.workspaceId! }
     : { type: 'personal' };

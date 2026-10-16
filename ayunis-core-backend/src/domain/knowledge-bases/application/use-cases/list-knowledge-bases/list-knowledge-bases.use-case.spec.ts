@@ -1,3 +1,12 @@
+import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { KnowledgeBaseOwnershipContextService } from 'src/domain/knowledge-bases/application/services/knowledge-base-ownership-context.service';
+import { BuildOwnershipLookupUseCase } from 'src/domain/ownership/application/use-cases/build-ownership-lookup/build-ownership-lookup.use-case';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import {
+  anOwnershipLookup,
+  anOwnershipViewer,
+} from 'src/domain/ownership/application/testing/ownership.fixtures';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { Test } from '@nestjs/testing';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
@@ -36,6 +45,11 @@ async function setup() {
     get: jest.fn((key: keyof typeof principal) => principal[key]),
   };
   const workspaceRead = { execute: jest.fn() };
+  const viewer = anOwnershipViewer({
+    userId: USER_ID,
+    orgId: ORG_ID,
+    permissions: [Permission.MANAGE_OWN_KNOWLEDGE],
+  });
   const module = await Test.createTestingModule({
     providers: [
       ListKnowledgeBasesUseCase,
@@ -47,6 +61,26 @@ async function setup() {
       },
       { provide: ContextService, useValue: context },
       { provide: AssertWorkspaceReadAccessUseCase, useValue: workspaceRead },
+      {
+        provide: CollectiveKnowledgeBaseRepository,
+        useValue: {
+          findUsable: jest.fn().mockResolvedValue([]),
+          getActiveStates: jest.fn().mockResolvedValue(new Map()),
+        },
+      },
+      KnowledgeBaseOwnershipContextService,
+      {
+        provide: BuildOwnershipLookupUseCase,
+        useValue: {
+          execute: jest
+            .fn()
+            .mockResolvedValue(anOwnershipLookup('knowledge_base', viewer)),
+        },
+      },
+      {
+        provide: GetOwnershipViewerUseCase,
+        useValue: { execute: jest.fn().mockResolvedValue(viewer) },
+      },
     ],
   }).compile();
   return {
@@ -91,12 +125,16 @@ describe(ListKnowledgeBasesUseCase.name, () => {
         isShared: false,
         isActive: true,
         documentCount: 2,
+        viewer: { canUse: true, canEdit: true },
+        ownerDescription: undefined,
       },
       {
         knowledgeBase: shared,
         isShared: true,
         isActive: false,
         documentCount: 1,
+        viewer: { canUse: false, canEdit: false },
+        ownerDescription: undefined,
       },
     ]);
     expect(result).toMatchObject({ limit: 2, offset: 0, total: 2 });

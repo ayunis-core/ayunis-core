@@ -2,19 +2,38 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import {
+  OwnerDescriptionDto,
+  ResourceViewerDto,
+} from 'src/domain/ownership/presenters/http/dto/ownership.dto';
 
 export class SkillResponseDto {
   @ApiProperty({ type: 'string', format: 'uuid' })
   id: UUID;
 
-  @ApiProperty({ enum: ['personal', 'workspace'] })
-  ownerType: 'personal' | 'workspace';
+  @ApiProperty({ enum: ['personal', 'workspace', 'team', 'org'] })
+  ownerType: 'personal' | 'workspace' | 'team' | 'org';
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
   userId?: UUID;
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
   workspaceId?: UUID;
+
+  @ApiPropertyOptional({ type: 'string', format: 'uuid' })
+  teamId?: UUID;
+
+  @ApiPropertyOptional({
+    type: ResourceViewerDto,
+    description: 'What the caller may do; omitted for workspace skills',
+  })
+  viewer?: ResourceViewerDto;
+
+  @ApiPropertyOptional({
+    type: OwnerDescriptionDto,
+    description: 'Audience and editors of a team or organisation skill',
+  })
+  ownerDescription?: OwnerDescriptionDto;
 
   @ApiProperty()
   name: string;

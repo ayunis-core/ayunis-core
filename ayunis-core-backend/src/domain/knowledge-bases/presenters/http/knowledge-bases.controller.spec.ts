@@ -47,6 +47,12 @@ describe(KnowledgeBasesController.name, () => {
       orgId: ORG_ID,
     });
     create.execute.mockResolvedValue(knowledgeBase);
+    useCase(FindKnowledgeBaseUseCase).execute.mockResolvedValue({
+      knowledgeBase,
+      isShared: false,
+      isActive: true,
+      documentCount: 0,
+    });
 
     const result = await (
       controller.create as unknown as (dto: object) => Promise<object>

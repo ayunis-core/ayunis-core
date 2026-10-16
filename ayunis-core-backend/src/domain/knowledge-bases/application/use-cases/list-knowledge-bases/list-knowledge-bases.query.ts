@@ -1,13 +1,13 @@
-import type { KnowledgeBaseOwner } from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
+import type { KnowledgeBaseListScope } from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
 
 export class ListKnowledgeBasesQuery {
-  public readonly owner: KnowledgeBaseOwner;
+  public readonly owner: KnowledgeBaseListScope;
   public readonly search?: string;
   public readonly limit?: number;
   public readonly offset?: number;
 
   constructor(params: {
-    owner: KnowledgeBaseOwner;
+    owner: KnowledgeBaseListScope;
     search?: string;
     limit?: number;
     offset?: number;

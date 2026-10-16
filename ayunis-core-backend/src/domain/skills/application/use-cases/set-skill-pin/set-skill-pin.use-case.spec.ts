@@ -2,6 +2,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
   Transactional: () => (_t: unknown, _p: string, d: PropertyDescriptor) => d,
 }));
 
+import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
@@ -38,6 +39,7 @@ function setup() {
   const permission = { execute: jest.fn().mockResolvedValue(true) };
   const useCase = new SetSkillPinUseCase(
     repository as unknown as SkillRepository,
+    {} as CollectiveSkillRepository,
     authorization as unknown as SkillAuthorizationService,
     context as unknown as ContextService,
     permission as unknown as HasPermissionUseCase,

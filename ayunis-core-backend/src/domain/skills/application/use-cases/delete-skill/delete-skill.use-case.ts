@@ -24,7 +24,7 @@ export class DeleteSkillUseCase {
     this.logger.log({ skillId: command.skillId }, 'Deleting skill');
     const skill = await this.repository.findById(command.skillId);
     if (!skill) throw new SkillNotFoundError(command.skillId);
-    await this.authorization.requireWrite(skill);
+    await this.authorization.requireManage(skill);
     await this.repository.delete(skill.id);
   }
 }

@@ -1,3 +1,5 @@
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { randomUUID } from 'crypto';
@@ -50,7 +52,7 @@ describe(KnowledgeBaseMapper.name, () => {
     );
   });
 
-  it.each(['missing', 'both'] as const)('rejects %s ownership', (ownership) => {
+  it('rejects more than one owner', () => {
     const record = mapper.toRecord(
       new PersonalKnowledgeBase({
         name: 'KB',
@@ -58,9 +60,25 @@ describe(KnowledgeBaseMapper.name, () => {
         userId: randomUUID(),
       }),
     );
-    if (ownership === 'missing') record.userId = null;
-    else record.workspaceId = randomUUID();
+    record.workspaceId = randomUUID();
     expect(() => mapper.toDomain(record)).toThrow('invalid ownership');
+  });
+
+  it('maps a record without user, workspace or team to the organisation', () => {
+    const orgId = randomUUID();
+    const record = mapper.toRecord(new OrgKnowledgeBase({ name: 'KB', orgId }));
+    const entity = mapper.toDomain(record);
+    expect(entity).toBeInstanceOf(OrgKnowledgeBase);
+    expect(entity.orgId).toBe(orgId);
+  });
+
+  it('round-trips team ownership', () => {
+    const teamId = randomUUID();
+    const record = mapper.toRecord(
+      new TeamKnowledgeBase({ name: 'KB', orgId: randomUUID(), teamId }),
+    );
+    expect(record.teamId).toBe(teamId);
+    expect(mapper.toDomain(record)).toMatchObject({ teamId });
   });
 
   it('preserves exclusive personal ownership', () => {

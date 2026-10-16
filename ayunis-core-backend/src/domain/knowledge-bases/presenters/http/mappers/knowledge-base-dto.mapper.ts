@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import type {
+  OwnerDescription,
+  ResourceViewerRights,
+} from 'src/domain/ownership/application/models/ownership-lookup';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   TextSource,
@@ -17,12 +23,19 @@ export class KnowledgeBaseDtoMapper {
       isActive: boolean;
       isShared?: boolean;
       documentCount: number;
+      viewer?: ResourceViewerRights;
+      ownerDescription?: OwnerDescription;
     },
   ): KnowledgeBaseResponseDto {
     const dto: KnowledgeBaseResponseDto = {
       id: entity.id,
-      ownerType:
-        entity instanceof PersonalKnowledgeBase ? 'personal' : 'workspace',
+      ...this.ownerFields(entity),
+      ...(context.viewer && {
+        viewer: { ...context.viewer, canDelete: context.viewer.canEdit },
+      }),
+      ...(context.ownerDescription && {
+        ownerDescription: context.ownerDescription,
+      }),
       name: entity.name,
       description: entity.description,
       createdAt: entity.createdAt,
@@ -30,13 +43,24 @@ export class KnowledgeBaseDtoMapper {
       isActive: context.isActive,
       documentCount: context.documentCount,
     };
-    if (!(entity instanceof PersonalKnowledgeBase)) {
-      dto.workspaceId = entity.workspaceId;
-    }
     if (context.isShared !== undefined) {
       dto.isShared = context.isShared;
     }
     return dto;
+  }
+
+  private ownerFields(
+    entity: KnowledgeBase,
+  ): Pick<KnowledgeBaseResponseDto, 'ownerType' | 'workspaceId' | 'teamId'> {
+    if (entity instanceof PersonalKnowledgeBase)
+      return { ownerType: 'personal' };
+    if (entity instanceof WorkspaceKnowledgeBase) {
+      return { ownerType: 'workspace', workspaceId: entity.workspaceId };
+    }
+    if (entity instanceof TeamKnowledgeBase) {
+      return { ownerType: 'team', teamId: entity.teamId };
+    }
+    return { ownerType: 'org' };
   }
 
   toDocumentDto(source: Source): KnowledgeBaseDocumentResponseDto {

@@ -2,17 +2,26 @@ import { Injectable } from '@nestjs/common';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
 
 @Injectable()
 export class SkillMapper {
   toDomain(record: SkillRecord): Skill {
     const params = this.toParams(record);
-    if (record.userId !== null && record.workspaceId === null) {
-      return new PersonalSkill({ ...params, userId: record.userId });
+    const { userId, workspaceId, teamId, orgId } = record;
+    if (userId !== null && workspaceId === null) {
+      return new PersonalSkill({ ...params, userId });
     }
-    if (record.workspaceId !== null && record.userId === null) {
-      return new WorkspaceSkill({ ...params, workspaceId: record.workspaceId });
+    if (workspaceId !== null && userId === null) {
+      return new WorkspaceSkill({ ...params, workspaceId });
+    }
+    if (teamId && orgId) {
+      return new TeamSkill({ ...params, teamId, orgId });
+    }
+    if (orgId) {
+      return new OrgSkill({ ...params, orgId });
     }
     throw new Error(`Skill ${record.id} has invalid ownership`);
   }
@@ -57,6 +66,11 @@ export class SkillMapper {
     record.userId = domain instanceof PersonalSkill ? domain.userId : null;
     record.workspaceId =
       domain instanceof WorkspaceSkill ? domain.workspaceId : null;
+    record.teamId = domain instanceof TeamSkill ? domain.teamId : null;
+    record.orgId =
+      domain instanceof TeamSkill || domain instanceof OrgSkill
+        ? domain.orgId
+        : null;
     return record;
   }
 }

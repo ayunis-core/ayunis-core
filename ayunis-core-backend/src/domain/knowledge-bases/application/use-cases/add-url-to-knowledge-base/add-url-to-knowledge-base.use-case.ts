@@ -56,7 +56,7 @@ export class AddUrlToKnowledgeBaseUseCase {
     await this.txHost.withTransaction(async () => {
       const knowledgeBase = await this.repository.findById(knowledgeBaseId);
       if (!knowledgeBase) throw new KnowledgeBaseNotFoundError(knowledgeBaseId);
-      await this.writeAccess.requireWrite(knowledgeBase);
+      await this.writeAccess.requireManage(knowledgeBase);
       const sourceCount =
         await this.repository.countSourcesByKnowledgeBaseId(knowledgeBaseId);
       if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {

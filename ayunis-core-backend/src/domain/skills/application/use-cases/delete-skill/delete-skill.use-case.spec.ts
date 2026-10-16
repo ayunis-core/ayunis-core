@@ -24,13 +24,13 @@ describe(DeleteSkillUseCase.name, () => {
       findById: jest.fn().mockResolvedValue(skill),
       delete: jest.fn(),
     };
-    const authorization = { requireWrite: jest.fn() };
+    const authorization = { requireManage: jest.fn() };
     const useCase = new DeleteSkillUseCase(
       repository as unknown as SkillRepository,
       authorization as unknown as SkillAuthorizationService,
     );
     await useCase.execute(new DeleteSkillCommand(skill.id));
-    expect(authorization.requireWrite).toHaveBeenCalledWith(skill);
+    expect(authorization.requireManage).toHaveBeenCalledWith(skill);
     expect(repository.delete).toHaveBeenCalledWith(skill.id);
   });
 
@@ -39,7 +39,7 @@ describe(DeleteSkillUseCase.name, () => {
       findById: jest.fn().mockResolvedValue(null),
       delete: jest.fn(),
     };
-    const authorization = { requireWrite: jest.fn() };
+    const authorization = { requireManage: jest.fn() };
     const useCase = new DeleteSkillUseCase(
       repository as unknown as SkillRepository,
       authorization as unknown as SkillAuthorizationService,
@@ -47,6 +47,6 @@ describe(DeleteSkillUseCase.name, () => {
     await expect(
       useCase.execute(new DeleteSkillCommand(randomUUID())),
     ).rejects.toBeInstanceOf(SkillNotFoundError);
-    expect(authorization.requireWrite).not.toHaveBeenCalled();
+    expect(authorization.requireManage).not.toHaveBeenCalled();
   });
 });

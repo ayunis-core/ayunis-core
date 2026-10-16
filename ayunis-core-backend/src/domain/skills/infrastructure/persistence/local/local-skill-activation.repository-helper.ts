@@ -59,7 +59,9 @@ export async function isSkillActive(
   skillId: UUID,
   userId: UUID,
 ): Promise<boolean> {
-  return (await repository.count({ where: { skillId, userId } })) > 0;
+  return (
+    (await repository.count({ where: { skillId, userId, isActive: true } })) > 0
+  );
 }
 
 export async function getActiveSkillIds(
@@ -67,7 +69,7 @@ export async function getActiveSkillIds(
   userId: UUID,
 ): Promise<Set<UUID>> {
   const activations = await repository.find({
-    where: { userId },
+    where: { userId, isActive: true },
     select: ['skillId'],
   });
   return new Set(activations.map(({ skillId }) => skillId));

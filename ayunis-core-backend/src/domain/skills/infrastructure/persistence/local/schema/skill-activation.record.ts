@@ -49,6 +49,9 @@ export class SkillActivationRecord {
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
 
+  @Column({ default: true })
+  isActive: boolean;
+
   @Column({ default: false })
   isPinned: boolean;
 

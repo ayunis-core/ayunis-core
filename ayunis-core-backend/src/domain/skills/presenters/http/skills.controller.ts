@@ -53,7 +53,12 @@ import {
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { InstalledMarketplaceSkillResponseDto } from './dto/installed-marketplace-skill-response.dto';
 import { ListSkillsQueryDto } from './dto/list-skills-query.dto';
-import { toSkillOwner } from './dto/skill-owner.dto';
+import { toSkillListScope } from './dto/skill-owner.dto';
+import { toCreateSkillOwner } from './dto/create-skill-owner.dto';
+import { OwnerOptionsResponseDto } from 'src/domain/ownership/presenters/http/dto/ownership.dto';
+import { toOwnerOptionsDto } from 'src/domain/ownership/presenters/http/owner-options.mapper';
+import { ListOwnerOptionsQuery } from 'src/domain/ownership/application/use-cases/list-owner-options/list-owner-options.query';
+import { ListOwnerOptionsUseCase } from 'src/domain/ownership/application/use-cases/list-owner-options/list-owner-options.use-case';
 import {
   SkillListResponseDto,
   SkillResponseDto,
@@ -82,6 +87,7 @@ export class SkillsController {
     private readonly setPin: SetSkillPinUseCase,
     private readonly mapper: SkillDtoMapper,
     private readonly improveSkillText: ImproveSkillTextUseCase,
+    private readonly listOwnerOptions: ListOwnerOptionsUseCase,
   ) {}
 
   @RequirePermission(Permission.INSTALL_MARKETPLACE_SKILLS)
@@ -142,9 +148,12 @@ export class SkillsController {
     return { text };
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Post()
-  @ApiOperation({ summary: 'Create a new skill' })
+  @ApiOperation({
+    summary: 'Create a new skill',
+    description:
+      'The owner must be one the caller may create for: personal needs manage_own_skills, team needs team admin rights for that team, org needs manage_org_skills.',
+  })
   @ApiBody({ type: CreateSkillDto })
   @ApiResponse({ status: 201, type: SkillResponseDto })
   async create(@Body() dto: CreateSkillDto): Promise<SkillResponseDto> {
@@ -155,14 +164,21 @@ export class SkillsController {
         shortDescription: dto.shortDescription,
         instructions: dto.instructions,
         isActive: dto.isActive,
-        owner: toSkillOwner(dto),
+        owner: toCreateSkillOwner(dto),
       }),
     );
-    return this.mapper.toDto(skill, {
-      isActive: dto.isActive ?? true,
-      isShared: false,
-      isPinned: false,
-    });
+    return this.findOne(skill.id);
+  }
+
+  @Get('owner-options')
+  @ApiOperation({
+    summary: 'List the owners the caller may create skills for',
+  })
+  @ApiResponse({ status: 200, type: OwnerOptionsResponseDto })
+  async ownerOptions(): Promise<OwnerOptionsResponseDto> {
+    return toOwnerOptionsDto(
+      await this.listOwnerOptions.execute(new ListOwnerOptionsQuery('skill')),
+    );
   }
 
   @Get()
@@ -173,7 +189,7 @@ export class SkillsController {
   ): Promise<SkillListResponseDto> {
     const page = await this.listSkills.execute(
       new ListAccessibleSkillsQuery({
-        owner: toSkillOwner(dto),
+        owner: toSkillListScope(dto),
         search: dto.search,
         limit: dto.limit,
         offset: dto.offset,
@@ -215,7 +231,6 @@ export class SkillsController {
     return this.mapper.toDto(skill, context, creatorName);
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Put(':id')
   @ApiOperation({ summary: 'Update a skill' })
   @ApiResponse({ status: 200, type: SkillResponseDto })
@@ -229,7 +244,6 @@ export class SkillsController {
     return this.findOne(id);
   }
 
-  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {

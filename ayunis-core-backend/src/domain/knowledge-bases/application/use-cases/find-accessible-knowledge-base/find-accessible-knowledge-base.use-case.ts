@@ -10,6 +10,8 @@ import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/
 import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import type { CollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { isCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/application/models/collective-knowledge-base-owner';
 
 @Injectable()
 export class FindAccessibleKnowledgeBaseUseCase {
@@ -24,14 +26,18 @@ export class FindAccessibleKnowledgeBaseUseCase {
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: {
     knowledgeBaseId: UUID;
-  }): Promise<PersonalKnowledgeBase> {
+  }): Promise<PersonalKnowledgeBase | CollectiveKnowledgeBase> {
     this.logger.debug(query, 'Finding accessible personal knowledge base');
     const { orgId } = getRequiredUserContext(this.context);
     const knowledgeBase = await this.repository.findById(query.knowledgeBaseId);
-    if (
-      !(knowledgeBase instanceof PersonalKnowledgeBase) ||
-      knowledgeBase.orgId !== orgId
-    ) {
+    if (knowledgeBase?.orgId !== orgId) {
+      throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
+    }
+    if (isCollectiveKnowledgeBase(knowledgeBase)) {
+      await this.readAccess.requireUse(knowledgeBase);
+      return knowledgeBase;
+    }
+    if (!(knowledgeBase instanceof PersonalKnowledgeBase)) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
     }
     await this.readAccess.requireRead(knowledgeBase);

@@ -9,6 +9,9 @@ import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/appl
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import type { AbstractKnowledgeBaseParams } from 'src/domain/knowledge-bases/domain/abstract-knowledge-base.entity';
 import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
 
 @Injectable()
@@ -30,7 +33,7 @@ export class UpdateKnowledgeBaseUseCase {
     if (!existing) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
-    await this.writeAccess.requireWrite(existing);
+    await this.writeAccess.requireManage(existing);
 
     const params = {
       id: existing.id,
@@ -40,13 +43,25 @@ export class UpdateKnowledgeBaseUseCase {
       createdAt: existing.createdAt,
       updatedAt: new Date(),
     };
-    const updated =
-      existing instanceof PersonalKnowledgeBase
-        ? new PersonalKnowledgeBase({ ...params, userId: existing.userId })
-        : new WorkspaceKnowledgeBase({
-            ...params,
-            workspaceId: existing.workspaceId,
-          });
-    return this.repository.save(updated);
+    return this.repository.save(withSameOwner(existing, params));
   }
+}
+
+function withSameOwner(
+  existing: KnowledgeBase,
+  params: AbstractKnowledgeBaseParams,
+): KnowledgeBase {
+  if (existing instanceof PersonalKnowledgeBase) {
+    return new PersonalKnowledgeBase({ ...params, userId: existing.userId });
+  }
+  if (existing instanceof WorkspaceKnowledgeBase) {
+    return new WorkspaceKnowledgeBase({
+      ...params,
+      workspaceId: existing.workspaceId,
+    });
+  }
+  if (existing instanceof TeamKnowledgeBase) {
+    return new TeamKnowledgeBase({ ...params, teamId: existing.teamId });
+  }
+  return new OrgKnowledgeBase(params);
 }
