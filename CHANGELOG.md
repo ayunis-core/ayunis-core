@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.56.0](https://github.com/ayunis-core/ayunis-core/compare/v2.55.0...v2.56.0) (2026-10-16)
+
+
+### Features
+
+* **academy:** require a minimum time on each video page before confirming a chapter (AYC-913) ([#1945](https://github.com/ayunis-core/ayunis-core/issues/1945)) ([144c73a](https://github.com/ayunis-core/ayunis-core/commit/144c73afdb3df17605e2b09287a0470e91f594bf))
+* **orgs:** replace super-admin org badges with one lifecycle status (AYC-1311) ([#1974](https://github.com/ayunis-core/ayunis-core/issues/1974)) ([104a7e4](https://github.com/ayunis-core/ayunis-core/commit/104a7e4d482af3d8dae3052184cb7399f9bf81c8))
+* **orgs:** show the derived lifecycle status on the super-admin org detail page (AYC-1319) ([#1976](https://github.com/ayunis-core/ayunis-core/issues/1976)) ([1b90e02](https://github.com/ayunis-core/ayunis-core/commit/1b90e02c06b86eb51bf2d19b7e6a3446b8f980a2))
+
+
+### Bug Fixes
+
+* **app:** keep startup loading feedback and add a deploy-restart banner (AYC-1186) ([#1991](https://github.com/ayunis-core/ayunis-core/issues/1991)) ([102678d](https://github.com/ayunis-core/ayunis-core/commit/102678d8984f630bb329e489952b2fb5d8e78e3a))
+* **models:** hide anonymous-only toggle for non-language models (AYC-1352) ([#1992](https://github.com/ayunis-core/ayunis-core/issues/1992)) ([fb272e9](https://github.com/ayunis-core/ayunis-core/commit/fb272e9cf32ac3407da66a41f05eed6ddfc62d91))
+* **runs:** abort runs whose thread is deleted while persisting PII masks (AYC-1343) ([#1988](https://github.com/ayunis-core/ayunis-core/issues/1988)) ([b6e3433](https://github.com/ayunis-core/ayunis-core/commit/b6e3433c245c02b45ab8de54a195613dc33775e5))
+* **spreadsheet:** write grid clipboard synchronously and keep cut data on failure (AYC-1162) ([#1916](https://github.com/ayunis-core/ayunis-core/issues/1916)) ([dc59526](https://github.com/ayunis-core/ayunis-core/commit/dc5952604e7e1cfee19036048b2d8430e1313f63))
+* **usage:** keep team management available when user usage is hidden (AYC-1342) ([#1987](https://github.com/ayunis-core/ayunis-core/issues/1987)) ([ce29a57](https://github.com/ayunis-core/ayunis-core/commit/ce29a573655294bf43c8dafcd8832e646c8c0827))
+
 ## [2.55.0](https://github.com/ayunis-core/ayunis-core/compare/v2.54.0...v2.55.0) (2026-10-15)
 
 
