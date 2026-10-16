@@ -32,10 +32,18 @@ export function useConfirmChapter(chapterId: string) {
     onError: (error: unknown) => {
       try {
         const { code } = extractErrorData(error);
-        if (code === 'CHAPTER_NOT_FOUND') {
-          showError(t('confirmation.errors.chapterNotFound'));
-        } else {
-          showError(t('confirmation.errors.submitFailed'));
+        switch (code) {
+          case 'CHAPTER_NOT_FOUND':
+            showError(t('confirmation.errors.chapterNotFound'));
+            break;
+          case 'MODULES_BELOW_MINIMUM_TIME':
+            showError(t('confirmation.errors.modulesBelowMinimumTime'));
+            void queryClient.invalidateQueries({
+              queryKey: getAcademyProgressControllerGetProgressQueryKey(),
+            });
+            break;
+          default:
+            showError(t('confirmation.errors.submitFailed'));
         }
       } catch {
         showError(t('confirmation.errors.submitFailed'));

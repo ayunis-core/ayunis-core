@@ -4063,6 +4063,14 @@ export interface SetAppAlertRequestDto {
   message: string;
 }
 
+export interface AcademyMinimumModuleSecondsDto {
+  /**
+     * Seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement.
+     * @minimum 0
+     */
+  seconds: number;
+}
+
 export interface AppAlertResponseDto {
   /** Whether the app-wide alert banner is currently shown */
   enabled: boolean;
@@ -5191,6 +5199,14 @@ export interface ChapterProgressResponseDto {
   confirmationValid: boolean;
   /** When the learner most recently confirmed the chapter */
   confirmedAt: string;
+  /** Whether confirming again now returns this confirmation unchanged instead of re-checking page time, so a lost response can be retried */
+  replayable: boolean;
+}
+
+export interface CourseModuleProgressResponseDto {
+  courseModuleId: string;
+  /** Seconds the video page was open and visible since the last certificate. This is page time, not watch time. */
+  visibleSeconds: number;
 }
 
 export interface AcademyProgressResponseDto {
@@ -5206,6 +5222,15 @@ export interface AcademyProgressResponseDto {
      * @nullable
      */
   academyCompletionExpiresAt: string | null;
+  /** Recorded page time per course module; modules never opened are omitted */
+  courseModules: CourseModuleProgressResponseDto[];
+  /** Seconds every video page of a chapter must reach before the chapter can be confirmed */
+  minimumModuleSeconds: number;
+}
+
+export interface RecordModuleHeartbeatRequestDto {
+  /** True when the page just became visible; only starts the clock without crediting time since the previous heartbeat. */
+  sessionStart: boolean;
 }
 
 export interface CreateChapterRequestDto {

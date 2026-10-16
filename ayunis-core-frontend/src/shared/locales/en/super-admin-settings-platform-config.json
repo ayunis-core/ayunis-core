@@ -51,5 +51,18 @@
       "limit": "Images must be a positive integer.",
       "windowHours": "Window must be at least 0.01 hours."
     }
+  },
+  "academyMinimumModuleSeconds": {
+    "title": "Academy: Minimum time per video page",
+    "description": "How many seconds each video page must be open and visible before a chapter can be completed. This measures time on the page, not video playback.",
+    "label": "Seconds per video page",
+    "loading": "Loading…",
+    "loadError": "Failed to load the minimum time.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Minimum time updated successfully.",
+    "updateError": "Failed to update the minimum time.",
+    "validationError": "Please enter a whole number of 0 or more.",
+    "hint": "0 disables the minimum time. Chapters already completed stay valid."
   }
 }

@@ -28,6 +28,7 @@ import type {
   AcademyAccessControllerListOrgCertificatesParams,
   AcademyAccessStatusResponseDto,
   AcademyChapterResponseDto,
+  AcademyMinimumModuleSecondsDto,
   AcademyProgressResponseDto,
   AcceptInviteDto,
   AcceptInviteResponseDto,
@@ -170,6 +171,7 @@ import type {
   PromoteToSuperAdminDto,
   ProviderUsageChartResponseDto,
   ProviderUsageResponseDto,
+  RecordModuleHeartbeatRequestDto,
   RecoveryCodesResponseDto,
   RegisterDto,
   ReorderChaptersRequestDto,
@@ -16702,6 +16704,169 @@ export const useSuperAdminPlatformConfigControllerSetAppAlert = <TError = void,
     }
 
 /**
+ * Seconds each academy video page must be open and visible before its chapter can be confirmed. Defaults to 60 when unset. Super admin only.
+ * @summary Get the academy minimum time per video page
+ */
+export const superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<AcademyMinimumModuleSecondsDto>(
+      {url: `/super-admin/platform-config/academy-minimum-module-seconds`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSecondsQueryKey = () => {
+    return [
+    `/super-admin/platform-config/academy-minimum-module-seconds`
+    ] as const;
+    }
+
+
+export const getSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSecondsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSecondsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>> = ({ signal }) => superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminPlatformConfigControllerGetAcademyMinimumModuleSecondsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>>
+export type SuperAdminPlatformConfigControllerGetAcademyMinimumModuleSecondsQueryError = void
+
+
+export function useSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the academy minimum time per video page
+ */
+
+export function useSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSecondsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Update the seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement. Super admin only.
+ * @summary Set the academy minimum time per video page
+ */
+export const superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds = (
+    academyMinimumModuleSecondsDto: AcademyMinimumModuleSecondsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/academy-minimum-module-seconds`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: academyMinimumModuleSecondsDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationKey = () => ['superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds'] as const;
+
+export const getSuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds>>, TError,SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds>>, TError,SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds>>, SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds>>>
+    export type SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationBody = AcademyMinimumModuleSecondsDto
+    export type SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationError = void
+    export type SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationVariables = {data: AcademyMinimumModuleSecondsDto}
+
+    /**
+ * @summary Set the academy minimum time per video page
+ */
+export const useSuperAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds>>, TError,SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds>>,
+        TError,
+        SuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminPlatformConfigControllerSetAcademyMinimumModuleSecondsMutationOptions(options), queryClient);
+    }
+
+/**
  * Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.
  * @summary Get the current app-wide alert banner
  */
@@ -22743,6 +22908,76 @@ export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnTy
 
 
 
+
+/**
+ * Sent periodically while the video page is visible. The server credits the time since the previous heartbeat, capped at one heartbeat interval.
+ * @summary Record time on a course module page
+ */
+export const academyProgressControllerRecordModuleHeartbeat = (
+    courseModuleId: string,
+    recordModuleHeartbeatRequestDto: RecordModuleHeartbeatRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/academy/course-modules/${courseModuleId}/heartbeat`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: recordModuleHeartbeatRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getAcademyProgressControllerRecordModuleHeartbeatMutationKey = () => ['academyProgressControllerRecordModuleHeartbeat'] as const;
+
+export const getAcademyProgressControllerRecordModuleHeartbeatMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyProgressControllerRecordModuleHeartbeat>>, TError,AcademyProgressControllerRecordModuleHeartbeatMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof academyProgressControllerRecordModuleHeartbeat>>, TError,AcademyProgressControllerRecordModuleHeartbeatMutationVariables, TContext> => {
+
+const mutationKey = getAcademyProgressControllerRecordModuleHeartbeatMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyProgressControllerRecordModuleHeartbeat>>, AcademyProgressControllerRecordModuleHeartbeatMutationVariables> = (props) => {
+          const {courseModuleId,data} = props ?? {};
+
+          return  academyProgressControllerRecordModuleHeartbeat(courseModuleId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcademyProgressControllerRecordModuleHeartbeatMutationResult = NonNullable<Awaited<ReturnType<typeof academyProgressControllerRecordModuleHeartbeat>>>
+    export type AcademyProgressControllerRecordModuleHeartbeatMutationBody = RecordModuleHeartbeatRequestDto
+    export type AcademyProgressControllerRecordModuleHeartbeatMutationError = void
+    export type AcademyProgressControllerRecordModuleHeartbeatMutationVariables = {courseModuleId: string;data: RecordModuleHeartbeatRequestDto}
+
+    /**
+ * @summary Record time on a course module page
+ */
+export const useAcademyProgressControllerRecordModuleHeartbeat = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyProgressControllerRecordModuleHeartbeat>>, TError,AcademyProgressControllerRecordModuleHeartbeatMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof academyProgressControllerRecordModuleHeartbeat>>,
+        TError,
+        AcademyProgressControllerRecordModuleHeartbeatMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAcademyProgressControllerRecordModuleHeartbeatMutationOptions(options), queryClient);
+    }
 
 /**
  * Render the KI-Schulung nach EU AI Act participation confirmation PDF for the current user. Available once the whole academy has been completed.

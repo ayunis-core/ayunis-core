@@ -27,9 +27,11 @@
     "description": "Bestätigen Sie, dass Sie alle Videos dieses Kapitels angesehen haben.",
     "watchedVideos": "Ich habe die Videos angesehen",
     "completeChapter": "Kapitel abschließen",
+    "minimumTime": "Jede Videoseite dieses Kapitels muss mindestens {{seconds}} Sekunden geöffnet sein. Noch nicht erreicht:",
     "errors": {
       "chapterNotFound": "Das Kapitel wurde nicht gefunden.",
-      "submitFailed": "Das Kapitel konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
+      "submitFailed": "Das Kapitel konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "modulesBelowMinimumTime": "Nicht alle Videoseiten dieses Kapitels waren lange genug geöffnet."
     }
   },
   "progress": {
