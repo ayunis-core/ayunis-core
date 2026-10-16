@@ -56,11 +56,37 @@ describe('context budget helper', () => {
   });
 });
 
+describe('countMessageTokens', () => {
+  const fixed: TokenEstimator = {
+    exact: true,
+    tokensPerMessage: 3,
+    tokensPerImage: 7,
+    minTokensPerImage: 1,
+    countText: (text) => text.length,
+    countTools: () => 0,
+  };
+  const parts = [
+    { kind: 'text', text: 'ab' } as const,
+    { kind: 'image' } as const,
+  ];
+
+  it('prices each image at the estimator ceiling unless told otherwise', () => {
+    expect(countMessageTokens(fixed, parts)).toBe(3 + 2 + 7);
+  });
+
+  it('prices each image at the given cost instead', () => {
+    expect(countMessageTokens(fixed, parts, fixed.minTokensPerImage)).toBe(
+      3 + 2 + 1,
+    );
+  });
+});
+
 describe('countThreadTokens', () => {
   const fixed: TokenEstimator = {
     exact: true,
     tokensPerMessage: 3,
     tokensPerImage: 7,
+    minTokensPerImage: 1,
     countText: (text) => text.length,
     countTools: () => 0,
   };
@@ -104,6 +130,7 @@ describe('message budget', () => {
     exact,
     tokensPerMessage: 2,
     tokensPerImage: 100,
+    minTokensPerImage: 10,
     countText: (text) => text.length,
     countTools: (tools) => tools.length * 10,
   });

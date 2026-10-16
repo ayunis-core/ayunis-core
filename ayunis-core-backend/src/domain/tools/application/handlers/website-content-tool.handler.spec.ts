@@ -196,6 +196,7 @@ function contextTransform(
     exact: false,
     tokensPerMessage: 0,
     tokensPerImage: 1_600,
+    minTokensPerImage: 53,
     countText: (text) => Math.ceil(text.length / 4),
     countTools: () => 0,
   };

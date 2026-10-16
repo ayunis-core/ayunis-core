@@ -45,6 +45,7 @@ describe('openai token estimator selection', () => {
     expect(provider.tokenEstimator).toMatchObject({
       exact: true,
       tokensPerImage: 48_169,
+      minTokensPerImage: 8_500,
     });
   });
 
@@ -144,7 +145,11 @@ it('estimates an Azure deployment alias conservatively', () => {
       endpoint: 'https://municipality.openai.azure.com',
       model: 'chat-prod',
     }).tokenEstimator,
-  ).toMatchObject({ exact: false, tokensPerImage: 48169 });
+  ).toMatchObject({
+    exact: false,
+    tokensPerImage: 48169,
+    minTokensPerImage: 2,
+  });
 });
 it('prices an Azure alias with its explicitly supplied underlying model', () => {
   expect(
@@ -154,5 +159,9 @@ it('prices an Azure alias with its explicitly supplied underlying model', () => 
       model: 'chat-prod',
       underlyingModel: 'gpt-4.1',
     }).tokenEstimator,
-  ).toMatchObject({ exact: true, tokensPerImage: 1445 });
+  ).toMatchObject({
+    exact: true,
+    tokensPerImage: 1445,
+    minTokensPerImage: 255,
+  });
 });

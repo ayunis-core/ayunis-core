@@ -16,6 +16,11 @@ export interface TokenEstimator {
   readonly tokensPerMessage: number;
   /** Fixed cost per image; estimators do not decode image bytes. */
   readonly tokensPerImage: number;
+  /**
+   * Fewest tokens the provider bills for one image: what a host may charge
+   * for an image whose real cost it never learns.
+   */
+  readonly minTokensPerImage: number;
   countText(text: string): number;
   /** Estimates the serialized tool definitions; provider wire framing may differ. */
   countTools(tools: readonly ToolDescription[]): number;
@@ -26,12 +31,18 @@ export interface TiktokenEstimatorOptions {
   readonly exact: boolean;
   readonly tokensPerMessage: number;
   readonly tokensPerImage: number;
+  readonly minTokensPerImage: number;
 }
 
 // Anthropic's documented ceiling: images are scaled to about 1.15 megapixels,
 // billed as roughly 1,600 tokens. It is the conservative default for every
 // provider that does not state its own cost.
 export const DEFAULT_TOKENS_PER_IMAGE = 1_600;
+
+// Anthropic bills about one token per 750 pixels and warns that an edge under
+// 200 px degrades, so a 200 px square costs about 53 tokens. It is the floor
+// for every provider that does not state its own cost.
+export const DEFAULT_MIN_TOKENS_PER_IMAGE = 53;
 
 const encoders = new Map<TokenEncoding, Tiktoken>();
 
@@ -52,6 +63,7 @@ export const createTiktokenEstimator = (
     exact: options.exact,
     tokensPerMessage: options.tokensPerMessage,
     tokensPerImage: options.tokensPerImage,
+    minTokensPerImage: options.minTokensPerImage,
     countText,
     countTools: (tools) =>
       tools.length === 0
@@ -70,7 +82,7 @@ export const createTiktokenEstimator = (
 
 /**
  * The estimate for providers that keep their tokenizer private: cl100k_base
- * text counts, no per-message framing, the default image cost. Hosts should
+ * text counts, no per-message framing, the default image costs. Hosts should
  * keep a margin on top of it.
  */
 export const estimatedTokens = (): TokenEstimator =>
@@ -79,4 +91,5 @@ export const estimatedTokens = (): TokenEstimator =>
     exact: false,
     tokensPerMessage: 0,
     tokensPerImage: DEFAULT_TOKENS_PER_IMAGE,
+    minTokensPerImage: DEFAULT_MIN_TOKENS_PER_IMAGE,
   });

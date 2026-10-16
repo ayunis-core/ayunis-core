@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createTiktokenEstimator,
+  DEFAULT_MIN_TOKENS_PER_IMAGE,
   DEFAULT_TOKENS_PER_IMAGE,
   estimatedTokens,
 } from './token-estimator';
@@ -15,12 +16,14 @@ const tool = {
 describe('estimatedTokens', () => {
   const estimator = estimatedTokens();
 
-  it('is an estimate with the default image cost and no message framing', () => {
+  it('is an estimate with the default image costs and no message framing', () => {
     expect(estimator).toMatchObject({
       exact: false,
       tokensPerMessage: 0,
       tokensPerImage: DEFAULT_TOKENS_PER_IMAGE,
+      minTokensPerImage: DEFAULT_MIN_TOKENS_PER_IMAGE,
     });
+    expect(DEFAULT_MIN_TOKENS_PER_IMAGE).toBeLessThan(DEFAULT_TOKENS_PER_IMAGE);
   });
 
   it('counts text with cl100k_base and empty text as nothing', () => {
@@ -41,12 +44,18 @@ describe('createTiktokenEstimator', () => {
       encoding: 'o200k_base',
       exact: true,
       tokensPerMessage: 3,
-      tokensPerImage: 1,
+      tokensPerImage: 9,
+      minTokensPerImage: 1,
     });
 
     expect(o200k.countText(text)).toBeGreaterThan(0);
     expect(o200k.countText(text)).not.toBe(estimatedTokens().countText(text));
-    expect(o200k).toMatchObject({ exact: true, tokensPerMessage: 3 });
+    expect(o200k).toMatchObject({
+      exact: true,
+      tokensPerMessage: 3,
+      tokensPerImage: 9,
+      minTokensPerImage: 1,
+    });
   });
 });
 
@@ -59,6 +68,7 @@ describe('literal tokenizer markers', () => {
         exact: true,
         tokensPerMessage: 3,
         tokensPerImage: 1,
+        minTokensPerImage: 1,
       });
       expect(
         estimator.countText('Please explain <|endoftext|>'),

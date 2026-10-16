@@ -173,6 +173,7 @@ function fixedEstimator(tokensPerContent: number): TokenEstimator {
     exact: false,
     tokensPerMessage: 0,
     tokensPerImage: 1_600,
+    minTokensPerImage: 53,
     countText: (text) => (text ? tokensPerContent : 0),
     countTools: () => 0,
   };
@@ -212,6 +213,7 @@ it('reserves instruction and tool overhead before materializing history', async 
         exact: false,
         tokensPerMessage: 0,
         tokensPerImage: 1600,
+        minTokensPerImage: 53,
         countText: (text) => text.length,
         countTools: () => 20,
       },
