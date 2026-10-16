@@ -93,7 +93,7 @@ test("members granted the user-list permission still receive no team data and ca
   }
 });
 
-test("single invites preserve the hidden-usage team assignment restriction", async ({
+test("single invites keep team assignments while individual usage is hidden", async ({
   api,
   org,
 }) => {
@@ -109,20 +109,18 @@ test("single invites preserve the hidden-usage team assignment restriction", asy
         })
       ).status(),
     ).toBe(200);
-    const denied = await requestInviteWithTeams(api, {
+    const allowed = await requestInviteWithTeams(api, {
       email,
       role: "user",
       teamIds: [team.id],
     });
-    expect(denied.status()).toBe(403);
-    expect((await denied.json()).code).toBe("TEAM_MANAGEMENT_RESTRICTED");
-    expect((await listPendingInvites(api, email)).data).toEqual([]);
-    const allowed = await requestInviteWithTeams(api, {
-      email,
-      role: "user",
-      teamIds: [],
-    });
     expect(allowed.status()).toBe(201);
+    expect((await listPendingInvites(api, email)).data).toContainEqual(
+      expect.objectContaining({
+        email,
+        teams: [{ id: team.id, name: team.name }],
+      }),
+    );
   } finally {
     await requestUsageVisibilityChange(superAdminApi, org.orgId, {
       hideIndividualUsage: false,

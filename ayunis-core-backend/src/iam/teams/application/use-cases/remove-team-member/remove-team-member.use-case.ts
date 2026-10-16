@@ -1,6 +1,5 @@
 import { UnexpectedTeamMemberError } from 'src/iam/teams/application/team-members.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
@@ -17,7 +16,6 @@ export class RemoveTeamMemberUseCase {
   private readonly logger = new Logger(RemoveTeamMemberUseCase.name);
 
   constructor(
-    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly contextService: ContextService,
@@ -27,7 +25,6 @@ export class RemoveTeamMemberUseCase {
   @HandleUnexpectedErrors(UnexpectedTeamMemberError)
   async execute(command: RemoveTeamMemberCommand): Promise<void> {
     const orgId = getRequiredOrgId(this.contextService, command.orgId);
-    await this.teamManagementAccess.execute({ orgId });
 
     this.logger.log(
       {

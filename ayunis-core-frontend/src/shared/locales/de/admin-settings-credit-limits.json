@@ -49,8 +49,7 @@
   "creditLimits": {
     "teamCard": {
       "title": "Guthaben-Limit",
-      "current": "{{used}} / {{limit}} Credits diesen Monat verbraucht",
-      "limitOnly": "Monatliches Guthaben-Limit: {{limit}}"
+      "current": "{{used}} / {{limit}} Credits diesen Monat verbraucht"
     },
     "set": {
       "success": "Guthaben-Limit gespeichert",

@@ -49,8 +49,7 @@
   "creditLimits": {
     "teamCard": {
       "title": "Credit limit",
-      "current": "{{used}} / {{limit}} credits used this month",
-      "limitOnly": "Monthly credit limit: {{limit}}"
+      "current": "{{used}} / {{limit}} credits used this month"
     },
     "set": {
       "success": "Credit limit saved",

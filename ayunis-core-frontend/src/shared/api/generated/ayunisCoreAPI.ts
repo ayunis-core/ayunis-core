@@ -238,7 +238,6 @@ import type {
   SuperAdminUsersControllerGetUsersByOrgIdParams,
   TeamCreditLimitItemDto,
   TeamCreditLimitResponseDto,
-  TeamManagementAccessDto,
   TeamMemberResponseDto,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
@@ -8256,93 +8255,6 @@ export const useSuperAdminImageGenerationCatalogModelsControllerUpdateImageGener
       > => {
       return useMutation(getSuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelMutationOptions(options), queryClient);
     }
-
-export const teamManagementControllerGetTeamManagementAccess = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<TeamManagementAccessDto>(
-      {url: `/teams/management-access`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getTeamManagementControllerGetTeamManagementAccessQueryKey = () => {
-    return [
-    `/teams/management-access`
-    ] as const;
-    }
-
-
-export const getTeamManagementControllerGetTeamManagementAccessQueryOptions = <TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTeamManagementControllerGetTeamManagementAccessQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>> = ({ signal }) => teamManagementControllerGetTeamManagementAccess(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TeamManagementControllerGetTeamManagementAccessQueryResult = NonNullable<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>>
-export type TeamManagementControllerGetTeamManagementAccessQueryError = unknown
-
-
-export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>,
-          TError,
-          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>,
-          TError,
-          Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTeamManagementControllerGetTeamManagementAccess<TData = Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamManagementControllerGetTeamManagementAccess>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTeamManagementControllerGetTeamManagementAccessQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
 
 /**
  * @summary List all teams for the current organization

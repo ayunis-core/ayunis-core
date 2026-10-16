@@ -22,6 +22,14 @@ export async function addTeamMember(
   await generatedApi.teamsControllerAddTeamMember(teamId, { userId }, { api });
 }
 
+export function bulkAddTeamMembers(
+  api: APIRequestContext,
+  teamId: string,
+  userIds: string[],
+) {
+  return generatedApi.teamsControllerBulkAddTeamMembers(teamId, { userIds }, { api });
+}
+
 export function listTeamMembers(
   api: APIRequestContext,
   teamId: string,

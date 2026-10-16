@@ -79,7 +79,3 @@ describe('CreditLimitsSettingsPage', () => {
     },
   );
 });
-
-vi.mock('@/features/permissions/api/useTeamManagementAccess', () => ({
-  useTeamManagementAccess: () => ({ canManageTeams: true, isLoading: false }),
-}));

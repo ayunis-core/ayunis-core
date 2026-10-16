@@ -100,12 +100,7 @@ export class AcceptInviteUseCase {
         preparedUser,
       );
     await this.assignUserToTeams.execute(
-      new AssignUserToTeamsCommand(
-        user.id,
-        invite.orgId,
-        invite.teamIds,
-        invite.inviterId,
-      ),
+      new AssignUserToTeamsCommand(user.id, invite.orgId, invite.teamIds),
     );
     return user;
   }

@@ -1977,11 +1977,6 @@ export interface UpdateImageGenerationModelRequestDto {
   outputTokenCost?: number;
 }
 
-export interface TeamManagementAccessDto {
-  /** Whether the current human principal satisfies the organisation usage-privacy restriction; mutation permissions are checked separately */
-  canManage: boolean;
-}
-
 export interface CreateTeamDto {
   /** The name of the team */
   name: string;
@@ -4288,8 +4283,8 @@ export interface TeamCreditLimitItemDto {
   name: string;
   /** Configured monthly credit limit */
   monthlyCredits: number;
-  /** Credits consumed by all current team members in the current month; omitted when individual usage is hidden */
-  creditsUsed?: number;
+  /** Credits consumed by all current team members in the current month */
+  creditsUsed: number;
 }
 
 export interface ApiKeyCreditLimitItemDto {

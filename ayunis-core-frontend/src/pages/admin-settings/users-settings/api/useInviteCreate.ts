@@ -37,9 +37,6 @@ export function useInviteCreate(
             case 'TEAM_NOT_FOUND':
               showError(t('inviteCreate.teamNotFound'));
               break;
-            case 'TEAM_MANAGEMENT_RESTRICTED':
-              showError(t('inviteDialog.teamsRestricted'));
-              break;
             case 'USER_ALREADY_EXISTS':
               showError(t('inviteCreate.userAlreadyExists'));
               break;

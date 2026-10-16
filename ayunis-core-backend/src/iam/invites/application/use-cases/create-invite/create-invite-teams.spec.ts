@@ -1,5 +1,4 @@
 import { FindTeamsByIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-ids-and-org-id/find-teams-by-ids-and-org-id.use-case';
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
@@ -30,10 +29,6 @@ describe('single invite team assignments', () => {
               .fn()
               .mockResolvedValue([{ id: teamId, name: 'Bauamt', orgId }]),
           },
-        },
-        {
-          provide: AssertTeamManagementAllowedUseCase,
-          useValue: { execute: jest.fn() },
         },
         {
           provide: InvitesRepository,
