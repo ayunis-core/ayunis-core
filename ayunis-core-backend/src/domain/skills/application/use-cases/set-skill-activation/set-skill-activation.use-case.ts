@@ -9,9 +9,11 @@ import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/c
 import { isCollectiveSkill } from 'src/domain/skills/application/models/collective-skill-owner';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
+  SkillIsMandatoryError,
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
@@ -45,6 +47,10 @@ export class SetSkillActivationUseCase {
     if (!skill) throw new SkillNotFoundError(command.skillId);
     if (isCollectiveSkill(skill)) {
       await this.authorization.requireUse(skill);
+      if (skill instanceof OrgSkill && skill.isMandatory) {
+        if (!command.isActive) throw new SkillIsMandatoryError(skill.id);
+        return skill;
+      }
       await this.collectiveRepository.setActive(
         skill.id,
         this.requireUserId(),

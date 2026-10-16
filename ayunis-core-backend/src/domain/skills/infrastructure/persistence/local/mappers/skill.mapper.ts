@@ -22,7 +22,12 @@ export class SkillMapper {
       return new TeamSkill({ ...params, teamId, orgId, submittedByUserId });
     }
     if (orgId) {
-      return new OrgSkill({ ...params, orgId, submittedByUserId });
+      return new OrgSkill({
+        ...params,
+        orgId,
+        submittedByUserId,
+        isMandatory: record.isMandatory,
+      });
     }
     throw new Error(`Skill ${record.id} has invalid ownership`);
   }
@@ -72,6 +77,7 @@ export class SkillMapper {
       domain instanceof TeamSkill || domain instanceof OrgSkill;
     record.orgId = collective ? domain.orgId : null;
     record.submittedByUserId = collective ? domain.submittedByUserId : null;
+    record.isMandatory = domain instanceof OrgSkill && domain.isMandatory;
     return record;
   }
 }

@@ -58,6 +58,12 @@ export class SkillResponseDto {
 
   @ApiProperty()
   isPinned: boolean;
+
+  @ApiProperty({
+    description:
+      'Organisation skill that is always active for everyone; isActive is then always true',
+  })
+  isMandatory: boolean;
 }
 
 export class SkillListResponseDto {

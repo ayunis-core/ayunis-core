@@ -23,6 +23,11 @@ import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema
   'CHK_skills_exactly_one_owner',
   '("userId" IS NOT NULL AND "workspaceId" IS NULL AND "teamId" IS NULL AND "orgId" IS NULL) OR ("workspaceId" IS NOT NULL AND "userId" IS NULL AND "teamId" IS NULL AND "orgId" IS NULL) OR ("teamId" IS NOT NULL AND "orgId" IS NOT NULL AND "userId" IS NULL AND "workspaceId" IS NULL) OR ("orgId" IS NOT NULL AND "userId" IS NULL AND "workspaceId" IS NULL AND "teamId" IS NULL)',
 )
+@Check(
+  'CHK_skills_mandatory_org_only',
+  '"isMandatory" = false OR ("orgId" IS NOT NULL AND "teamId" IS NULL)',
+)
+@Index('IDX_skills_mandatory_org', ['orgId'], { where: '"isMandatory" = true' })
 @Index(['name', 'userId'], { unique: true, where: '"workspaceId" IS NULL' })
 @Index(['name', 'workspaceId'], {
   unique: true,
@@ -37,6 +42,9 @@ import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema
   where: '"orgId" IS NOT NULL AND "teamId" IS NULL',
 })
 export class SkillRecord extends BaseRecord {
+  @Column({ type: 'boolean', default: false })
+  isMandatory: boolean;
+
   @Column({ nullable: false })
   name: string;
 

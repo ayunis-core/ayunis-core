@@ -72,6 +72,8 @@ import { UsersModule } from 'src/iam/users/users.module';
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
 import { SkillSourcesController } from './presenters/http/skill-sources.controller';
+import { SkillMandatoryController } from './presenters/http/skill-mandatory.controller';
+import { SetSkillMandatoryUseCase } from './application/use-cases/set-skill-mandatory/set-skill-mandatory.use-case';
 import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
 import { SkillKnowledgeBasesController } from './presenters/http/skill-knowledge-bases.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
@@ -103,6 +105,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     forwardRef(() => HandoversModule),
   ],
   providers: [
+    SetSkillMandatoryUseCase,
     ActivateWorkspaceSkillByNameUseCase,
     GetWorkspaceSkillsUseCase,
     {
@@ -161,6 +164,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     KnowledgeBaseDtoMapper,
   ],
   controllers: [
+    SkillMandatoryController,
     SkillsController,
     SkillSourcesController,
     SkillMcpIntegrationsController,

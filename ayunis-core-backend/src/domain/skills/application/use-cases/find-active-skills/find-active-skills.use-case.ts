@@ -27,11 +27,14 @@ export class FindActiveSkillsUseCase {
     const viewer = await this.getViewer.execute();
     const [personal, collective] = await Promise.all([
       this.skillRepository.findActiveByOwner(viewer.userId),
-      this.collectiveRepository.findActiveUsable({
-        userId: viewer.userId,
-        orgId: viewer.orgId,
-        teamIds: viewer.teamIds,
-      }),
+      this.collectiveRepository.findActiveUsable(
+        {
+          userId: viewer.userId,
+          orgId: viewer.orgId,
+          teamIds: viewer.teamIds,
+        },
+        { includeMandatory: query.includeMandatory },
+      ),
     ]);
     return [...personal, ...collective];
   }

@@ -3161,9 +3161,8 @@ export interface AddUrlToKnowledgeBaseDto {
   maxDepth?: number;
 }
 
-export interface InstallSkillFromMarketplaceDto {
-  /** The unique identifier (slug) of the marketplace skill */
-  identifier: string;
+export interface SetSkillMandatoryDto {
+  isMandatory: boolean;
 }
 
 export type SkillResponseDtoOwnerType = typeof SkillResponseDtoOwnerType[keyof typeof SkillResponseDtoOwnerType];
@@ -3195,6 +3194,13 @@ export interface SkillResponseDto {
   createdAt: string;
   updatedAt: string;
   isPinned: boolean;
+  /** Organisation skill that is always active for everyone; isActive is then always true */
+  isMandatory: boolean;
+}
+
+export interface InstallSkillFromMarketplaceDto {
+  /** The unique identifier (slug) of the marketplace skill */
+  identifier: string;
 }
 
 /**
