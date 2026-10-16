@@ -3,7 +3,6 @@ import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/w
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
-  Brackets,
   In,
   IsNull,
   Repository,
@@ -32,12 +31,7 @@ import type { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import {
-  applyKnowledgeBaseTargetFilter,
-  buildKnowledgeBaseAccessSubqueries,
-} from './queries/knowledge-base-access.db-query';
+import { applyKnowledgeBaseTargetFilter } from './queries/knowledge-base-access.db-query';
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 
 @Injectable()
@@ -274,51 +268,32 @@ export class LocalKnowledgeBaseRepository
     userId: UUID,
     orgId: UUID,
   ): SelectQueryBuilder<KnowledgeBaseRecord> {
-    const query =
-      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
-    const access = buildKnowledgeBaseAccessSubqueries(query);
-    return query
+    return this.knowledgeBaseRepository
+      .createQueryBuilder('knowledgeBase')
       .where('knowledgeBase.workspaceId IS NULL')
       .andWhere('knowledgeBase.orgId = :orgId')
-      .andWhere(
-        new Brackets((accessQuery) => {
-          accessQuery
-            .where('knowledgeBase.userId = :userId')
-            .orWhere(`EXISTS ${access.directShare}`)
-            .orWhere(`EXISTS ${access.sharedSkill}`);
-        }),
-      )
-      .setParameters({
-        userId,
-        orgId,
-        skillEntityType: SharedEntityType.SKILL,
-        orgScopeType: ShareScopeType.ORG,
-        teamScopeType: ShareScopeType.TEAM,
-      });
+      .andWhere('knowledgeBase.userId = :userId')
+      .setParameters({ userId, orgId });
   }
 
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): Promise<Paginated<PersonalKnowledgeBase | CollectiveKnowledgeBase>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): Promise<Paginated<WorkspaceKnowledgeBase>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): Promise<Paginated<KnowledgeBase>>;
   async findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): Promise<Paginated<KnowledgeBase>> {
     this.logger.debug(
@@ -334,7 +309,7 @@ export class LocalKnowledgeBaseRepository
 
     const [records, total] = await buildAccessibleKnowledgeBasesQuery(
       this.knowledgeBaseRepository,
-      { userId, workspaceId, sharedKnowledgeBaseIds, options },
+      { userId, workspaceId, options },
     )
       .orderBy('LOWER(knowledgeBase.name)', 'ASC')
       .addOrderBy('knowledgeBase.id', 'ASC')

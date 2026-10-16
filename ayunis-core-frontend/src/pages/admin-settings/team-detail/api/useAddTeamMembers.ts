@@ -40,7 +40,6 @@ export function useAddTeamMembers(teamId: string, onSuccess?: () => void) {
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerListTeamsQueryKey(),
         });
-        // Invalidate my teams cache since membership changes affect shares tab
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerListMyTeamsQueryKey(),
         });

@@ -7,19 +7,13 @@ import { usableCollectiveKnowledgeBases } from './local-collective-knowledge-bas
 interface AccessibleKnowledgeBasesFilter {
   userId: UUID;
   workspaceId: UUID | undefined;
-  sharedKnowledgeBaseIds: UUID[];
   options: KnowledgeBaseListOptions;
 }
 
 function personalAccess(filter: AccessibleKnowledgeBasesFilter): Brackets {
-  const { userId, sharedKnowledgeBaseIds, options } = filter;
+  const { userId, options } = filter;
   return new Brackets((accessQuery) => {
     accessQuery.where('knowledgeBase.userId = :userId', { userId });
-    if (sharedKnowledgeBaseIds.length > 0) {
-      accessQuery.orWhere('knowledgeBase.id IN (:...sharedKnowledgeBaseIds)', {
-        sharedKnowledgeBaseIds,
-      });
-    }
     if (options.collective) {
       accessQuery.orWhere(usableCollectiveKnowledgeBases(options.collective));
     }

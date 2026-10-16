@@ -1,5 +1,4 @@
 import { Button } from '@ayunis/ui/components/button';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Switch } from '@ayunis/ui/components/switch';
 import {
   Tooltip,
@@ -99,16 +98,6 @@ export default function SkillCard({
         <>
           <span>{skill.name}</span>
           <OwnerBadge resource={skill} testId={`skill-owner-${skill.id}`} />
-          {skill.isShared && (
-            <Badge variant="secondary" className="ml-2 text-xs">
-              {t('shared.badge')}
-            </Badge>
-          )}
-          {skill.isShared && skill.creatorName && (
-            <span className="text-xs text-muted-foreground">
-              {t('shared.by', { name: skill.creatorName })}
-            </span>
-          )}
         </>
       }
       description={skill.shortDescription}

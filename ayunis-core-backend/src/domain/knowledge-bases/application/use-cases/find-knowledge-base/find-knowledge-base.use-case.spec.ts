@@ -95,7 +95,6 @@ describe(FindKnowledgeBaseUseCase.name, () => {
 
     await expect(useCase.execute(query(knowledgeBase.id))).resolves.toEqual({
       knowledgeBase,
-      isShared: false,
       isActive: true,
       documentCount: 2,
       viewer: { canUse: true, canEdit: true },
@@ -104,25 +103,24 @@ describe(FindKnowledgeBaseUseCase.name, () => {
     expect(readAccess.requireView).toHaveBeenCalledWith(knowledgeBase);
   });
 
-  it('preserves read access to a personal knowledge base shared by another user', async () => {
-    const sharedKnowledgeBase = new PersonalKnowledgeBase({
+  it("lets a handover reviewer read another person's knowledge base without using it", async () => {
+    const foreignKnowledgeBase = new PersonalKnowledgeBase({
       name: 'Regional planning guidance',
       userId: OTHER_USER_ID,
       orgId: ORG_ID,
     });
-    const { useCase, readAccess } = await setup(sharedKnowledgeBase);
+    const { useCase, readAccess } = await setup(foreignKnowledgeBase);
 
     await expect(
-      useCase.execute(query(sharedKnowledgeBase.id)),
+      useCase.execute(query(foreignKnowledgeBase.id)),
     ).resolves.toEqual({
-      knowledgeBase: sharedKnowledgeBase,
-      isShared: true,
+      knowledgeBase: foreignKnowledgeBase,
       isActive: true,
       documentCount: 2,
       viewer: { canUse: false, canEdit: false },
       ownerDescription: undefined,
     });
-    expect(readAccess.requireView).toHaveBeenCalledWith(sharedKnowledgeBase);
+    expect(readAccess.requireView).toHaveBeenCalledWith(foreignKnowledgeBase);
   });
 
   it('returns an authorized workspace knowledge base without a caller-supplied workspace id', async () => {
@@ -137,7 +135,6 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       useCase.execute(query(workspaceKnowledgeBase.id)),
     ).resolves.toEqual({
       knowledgeBase: workspaceKnowledgeBase,
-      isShared: false,
       isActive: true,
       documentCount: 2,
     });
@@ -153,7 +150,6 @@ describe(FindKnowledgeBaseUseCase.name, () => {
 
     await expect(useCase.execute(query(knowledgeBase.id))).resolves.toEqual({
       knowledgeBase,
-      isShared: false,
       isActive: true,
       documentCount: 2,
       viewer: { canUse: true, canEdit: false },

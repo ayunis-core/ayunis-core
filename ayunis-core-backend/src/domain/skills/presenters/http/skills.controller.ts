@@ -103,7 +103,6 @@ export class SkillsController {
     );
     return this.mapper.toDto(skill, {
       isActive: true,
-      isShared: false,
       isPinned: false,
     });
   }
@@ -196,8 +195,8 @@ export class SkillsController {
       }),
     );
     return {
-      data: page.data.map(({ skill, creatorName, ...context }) =>
-        this.mapper.toDto(skill, context, creatorName),
+      data: page.data.map(({ skill, ...context }) =>
+        this.mapper.toDto(skill, context),
       ),
       pagination: { limit: page.limit, offset: page.offset, total: page.total },
     };
@@ -225,10 +224,10 @@ export class SkillsController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillResponseDto> {
-    const { skill, creatorName, ...context } = await this.findSkill.execute(
+    const { skill, ...context } = await this.findSkill.execute(
       new FindOneSkillQuery(id),
     );
-    return this.mapper.toDto(skill, context, creatorName);
+    return this.mapper.toDto(skill, context);
   }
 
   @Put(':id')

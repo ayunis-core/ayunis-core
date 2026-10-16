@@ -21,7 +21,7 @@ import { useMyPermissions } from '@/features/permissions';
 import { useOwnerOptions } from '@/features/resource-ownership';
 
 function isOwnPersonalSkill(skill: Skill): boolean {
-  return skill.ownerType === 'personal' && !skill.isShared;
+  return skill.ownerType === 'personal';
 }
 
 export type SkillsTab = 'personal' | 'shared';

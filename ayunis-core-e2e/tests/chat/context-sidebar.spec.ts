@@ -5,7 +5,15 @@ import { getThreadAiContextResponse } from '../../src/clients/api/threads.client
 import { config } from '../../src/config';
 import { createUser } from '../../src/factories/user.factory';
 import { generatedApi } from '../../src/clients/api/generated-api';
-import { createSharedSkillAccessFixture } from '../../src/factories/shared-skill-access.factory';
+import { handOverAtOnce } from '../../src/clients/api/handovers.client';
+import { requestDeleteKnowledgeBase } from '../../src/clients/api/owned-resources.client';
+import {
+  addTeamMember,
+  createTeam,
+  deleteTeam,
+  removeTeamMember,
+} from '../../src/clients/api/teams.client';
+import { createSignedInMember } from '../../src/factories/user.factory';
 import {
   createPersonalThread,
   createProjectContextFixture,
@@ -118,71 +126,79 @@ test('filters an attached knowledge base until a distinct user receives access',
   browser,
   mail,
 }) => {
-  const fixture = await createSharedSkillAccessFixture(
-    api,
-    mail,
-    `chat-context-access-${Date.now()}`,
+  const suffix = `chat-context-access-${Date.now()}`;
+  const team = await createTeam(api, `Ordnungsamt ${suffix}`);
+  const member = await createSignedInMember(api, mail, suffix);
+  await addTeamMember(api, team.id, member.id);
+  const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
+    {
+      ownerType: 'personal',
+      name: `Civic knowledge base ${suffix}`,
+      description: 'Knowledge base handed over to a team',
+    },
+    { api },
   );
-
   const memberContext = await browser.newContext({
-    storageState: await fixture.memberApi.storageState(),
+    storageState: member.storageState,
   });
   const memberPage = await memberContext.newPage();
 
   try {
-    const thread = await createPersonalThread(fixture.memberApi);
-    const deniedResponse = await fixture.memberApi.post(
-      `/api/threads/${thread.id}/knowledge-bases/${fixture.knowledgeBase.id}`,
+    const thread = await createPersonalThread(member.api);
+    const deniedResponse = await member.api.post(
+      `/api/threads/${thread.id}/knowledge-bases/${knowledgeBase.id}`,
     );
     expect(deniedResponse.status()).toBe(404);
     const contextBeforeGrant =
       await generatedApi.threadAiContextControllerGetAiContext(thread.id, {
-        api: fixture.memberApi,
+        api: member.api,
       });
     expect(contextBeforeGrant.knowledgeBases).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: fixture.knowledgeBase.id }),
+        expect.objectContaining({ id: knowledgeBase.id }),
       ]),
     );
 
-    const share = await fixture.shareSkill();
+    await handOverAtOnce(api, 'knowledge_base', knowledgeBase.id, {
+      teamId: team.id,
+    });
     await generatedApi.threadKnowledgeBasesControllerAddKnowledgeBase(
       thread.id,
-      fixture.knowledgeBase.id,
-      { api: fixture.memberApi },
+      knowledgeBase.id,
+      { api: member.api },
     );
     const context = await generatedApi.threadAiContextControllerGetAiContext(
       thread.id,
-      { api: fixture.memberApi },
+      { api: member.api },
     );
     expect(context.knowledgeBases).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: fixture.knowledgeBase.id }),
+        expect.objectContaining({ id: knowledgeBase.id }),
       ]),
     );
     await openChatContext(memberPage, thread.id);
     await expect(
-      memberPage.getByTestId(
-        `chat-context-knowledge-base-${fixture.knowledgeBase.id}`,
-      ),
+      memberPage.getByTestId(`chat-context-knowledge-base-${knowledgeBase.id}`),
     ).toBeVisible();
 
-    await generatedApi.sharesControllerDeleteShare(share.id, { api });
+    await removeTeamMember(api, team.id, member.id);
     await expect
       .poll(async () => {
         const contextAfterRevoke =
           await generatedApi.threadAiContextControllerGetAiContext(thread.id, {
-            api: fixture.memberApi,
+            api: member.api,
           });
         return contextAfterRevoke.knowledgeBases.some(
-          ({ id }) => id === fixture.knowledgeBase.id,
+          ({ id }) => id === knowledgeBase.id,
         );
       })
       .toBe(false);
   } finally {
     await memberPage.close();
     await memberContext.close();
-    await fixture.memberApi.dispose();
+    await member.api.dispose();
+    await requestDeleteKnowledgeBase(api, knowledgeBase.id);
+    await deleteTeam(api, team.id);
   }
 });
 

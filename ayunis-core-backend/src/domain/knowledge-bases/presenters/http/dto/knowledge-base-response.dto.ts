@@ -84,14 +84,6 @@ export class KnowledgeBaseResponseDto {
     example: true,
   })
   isActive: boolean;
-
-  @ApiProperty({
-    description:
-      'Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases).',
-    example: false,
-    required: false,
-  })
-  isShared?: boolean;
 }
 
 export class KnowledgeBaseListResponseDto {

@@ -13,7 +13,6 @@ import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import type { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
@@ -39,7 +38,6 @@ function setup() {
     instructions: 'Use workspace regulations.',
     workspaceId,
   });
-  const shares = { execute: jest.fn().mockResolvedValue(null) };
   const workspaceRead = { execute: jest.fn().mockResolvedValue(undefined) };
   const workspaceWrite = { execute: jest.fn().mockResolvedValue(undefined) };
   const workspaceExecution = {
@@ -71,13 +69,11 @@ function setup() {
     orgId,
     personal,
     workspace,
-    shares,
     workspaceRead,
     workspaceWrite,
     workspaceExecution,
     context,
     service: new SkillAuthorizationService(
-      shares as unknown as FindShareByEntityUseCase,
       workspaceRead as unknown as AssertWorkspaceReadAccessUseCase,
       workspaceWrite as unknown as AssertWorkspaceWriteAccessUseCase,
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
@@ -104,19 +100,19 @@ function collectiveSkills(orgId: UUID, teamId: UUID) {
 
 describe(SkillAuthorizationService.name, () => {
   it('allows a personal skill owner to read', async () => {
-    const { service, personal, shares } = setup();
+    const { service, personal } = setup();
     await expect(service.requireRead(personal)).resolves.toBeUndefined();
-    expect(shares.execute).not.toHaveBeenCalled();
   });
 
-  it('allows a personal skill share recipient to read', async () => {
-    const { service, personal, shares } = setup();
-    const shared = new PersonalSkill({ ...personal, userId: randomUUID() });
-    shares.execute.mockResolvedValue({});
-    await expect(service.requireRead(shared)).resolves.toBeUndefined();
+  it('hides a personal skill from everyone but its owner', async () => {
+    const { service, personal } = setup();
+    const foreign = new PersonalSkill({ ...personal, userId: randomUUID() });
+    await expect(service.requireRead(foreign)).rejects.toBeInstanceOf(
+      SkillNotFoundError,
+    );
   });
 
-  it('does not grant write access through a personal share', async () => {
+  it('does not grant write access to another person', async () => {
     const { service, personal } = setup();
     const shared = new PersonalSkill({ ...personal, userId: randomUUID() });
     await expect(service.requireWrite(shared)).rejects.toBeInstanceOf(

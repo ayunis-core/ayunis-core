@@ -5,7 +5,6 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import type { SkillContext } from 'src/domain/skills/application/models/skill-context';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
-import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
@@ -25,7 +24,6 @@ export class FindOneSkillUseCase {
   constructor(
     private readonly repository: SkillRepository,
     private readonly authorization: SkillAuthorizationService,
-    private readonly creatorNames: SkillCreatorNameService,
     private readonly ownershipContext: SkillOwnershipContextService,
     private readonly context: ContextService,
   ) {}
@@ -49,7 +47,7 @@ export class FindOneSkillUseCase {
         isActive: false,
         isPinned: false,
       };
-      return { skill, ...state, isShared: false, creatorName: null };
+      return { skill, ...state };
     }
     const ownership = await this.ownershipContext.lookup([skill]);
     const extras = {
@@ -60,8 +58,6 @@ export class FindOneSkillUseCase {
       return {
         skill,
         ...ownership.stateOf(skill),
-        isShared: false,
-        creatorName: null,
         ...extras,
       };
     }
@@ -72,13 +68,11 @@ export class FindOneSkillUseCase {
     skill: PersonalSkill,
   ): Promise<SkillContext<PersonalSkill>> {
     const userId = this.requireUserId();
-    const isShared = skill.userId !== userId;
-    const [isActive, isPinned, creatorName] = await Promise.all([
+    const [isActive, isPinned] = await Promise.all([
       this.repository.isSkillActive(skill.id, userId),
       this.repository.isSkillPinned(skill.id, userId),
-      isShared ? this.creatorNames.resolveOne(skill.userId) : null,
     ]);
-    return { skill, isActive, isPinned, isShared, creatorName };
+    return { skill, isActive, isPinned };
   }
 
   private requireUserId(): UUID {

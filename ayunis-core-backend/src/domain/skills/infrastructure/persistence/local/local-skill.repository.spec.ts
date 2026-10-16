@@ -5,7 +5,6 @@ import { randomUUID } from 'crypto';
 
 import { LocalSkillRepository } from './local-skill.repository';
 import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
-import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
 import { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import type { SkillMapper } from './mappers/skill.mapper';
@@ -65,7 +64,6 @@ describe('LocalSkillRepository', () => {
       skillRepo,
       skillMapper as unknown as SkillMapper,
       {} as LocalSkillAccessiblePageFinder,
-      new LocalSkillKnowledgeBaseIdsFinder(),
       txHost,
     );
   });
@@ -258,7 +256,6 @@ describe('LocalSkillRepository', () => {
   });
 
   it('paginates workspace skills alphabetically without activation or pinning affecting order', async () => {
-    const sharedSkillId = randomUUID();
     const workspaceId = randomUUID();
     const records = [
       { id: randomUUID(), name: 'Citizen requests' } as SkillRecord,
@@ -288,7 +285,6 @@ describe('LocalSkillRepository', () => {
       new LocalSkillAccessiblePageFinder(skillRepository, {
         tx: undefined,
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>),
-      new LocalSkillKnowledgeBaseIdsFinder(),
       {
         tx: mockManager,
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
@@ -297,7 +293,6 @@ describe('LocalSkillRepository', () => {
     const result = await repository.findPaginatedAccessible(
       userId,
       workspaceId,
-      [sharedSkillId],
       {
         search: 'citizen',
         limit: 2,
@@ -341,40 +336,10 @@ describe('LocalSkillRepository', () => {
       tx: undefined,
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
 
-    finder.buildQuery(userId, undefined, [], { limit: 20, offset: 0 });
+    finder.buildQuery(userId, undefined, { limit: 20, offset: 0 });
 
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'skill.workspaceId IS NULL',
-    );
-  });
-
-  it('returns knowledge-base IDs linked to the supplied skills', async () => {
-    const linkedKnowledgeBaseIds = [randomUUID(), randomUUID()];
-    const queryBuilder = {
-      select: jest.fn().mockReturnThis(),
-      from: jest.fn().mockReturnThis(),
-      innerJoin: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      distinct: jest.fn().mockReturnThis(),
-      getRawMany: jest.fn().mockResolvedValue(
-        linkedKnowledgeBaseIds.map((knowledgeBaseId) => ({
-          knowledgeBaseId,
-        })),
-      ),
-    };
-    mockManager.createQueryBuilder.mockReturnValue(queryBuilder);
-
-    await expect(
-      repository.findKnowledgeBaseIdsBySkillIds([skillId]),
-    ).resolves.toEqual(linkedKnowledgeBaseIds);
-    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
-      'knowledge_bases',
-      'knowledgeBase',
-      '"knowledgeBase".id = skb."knowledgeBasesId"',
-    );
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      '"knowledgeBase"."userId" = skill."userId"',
     );
   });
 

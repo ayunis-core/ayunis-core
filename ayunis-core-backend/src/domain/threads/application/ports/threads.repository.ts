@@ -133,19 +133,6 @@ export abstract class ThreadsRepository {
   abstract findExpiredThreadRefsByOrg(
     params: FindExpiredThreadRefsParams,
   ): Promise<ExpiredThreadRef[]>;
-  abstract removeSourceAssignmentsByOriginSkill(params: {
-    originSkillId: UUID;
-    userIds: UUID[];
-  }): Promise<void>;
-  abstract removeKnowledgeBaseAssignmentsByOriginSkill(params: {
-    originSkillId: UUID;
-    userIds: UUID[];
-    knowledgeBaseId?: UUID;
-  }): Promise<void>;
-  abstract removeDirectKnowledgeBaseAssignments(params: {
-    knowledgeBaseId: UUID;
-    userIds: UUID[];
-  }): Promise<void>;
   /**
    * Returns source and owning-org IDs where (a) at least one direct
    * (non-skill) thread

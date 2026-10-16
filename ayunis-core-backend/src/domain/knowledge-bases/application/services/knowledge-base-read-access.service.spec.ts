@@ -13,8 +13,6 @@ import type { ContextService } from 'src/common/context/services/context.service
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
-import type { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import type { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
 import type { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import type { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -34,10 +32,6 @@ function setup() {
     workspaceId,
     orgId,
   });
-  const findShare = { execute: jest.fn().mockResolvedValue(null) };
-  const checkSkillShareAccess = {
-    execute: jest.fn().mockResolvedValue(false),
-  };
   const workspaceRead = { execute: jest.fn().mockResolvedValue(undefined) };
   const workspaceExecution = {
     execute: jest.fn().mockResolvedValue(undefined),
@@ -65,14 +59,10 @@ function setup() {
     orgId,
     personal,
     workspace,
-    findShare,
-    checkSkillShareAccess,
     workspaceRead,
     workspaceExecution,
     context,
     service: new KnowledgeBaseReadAccessService(
-      findShare as unknown as FindShareByEntityUseCase,
-      checkSkillShareAccess as unknown as CheckKnowledgeBaseSkillShareAccessUseCase,
       workspaceRead as unknown as AssertWorkspaceReadAccessUseCase,
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
@@ -85,32 +75,10 @@ function setup() {
 }
 
 describe(KnowledgeBaseReadAccessService.name, () => {
-  it('allows personal owners without checking shares', async () => {
-    const { service, personal, findShare, checkSkillShareAccess } = setup();
+  it('allows personal owners', async () => {
+    const { service, personal } = setup();
     await expect(service.requireRead(personal)).resolves.toBeUndefined();
-    expect(findShare.execute).not.toHaveBeenCalled();
-    expect(checkSkillShareAccess.execute).not.toHaveBeenCalled();
   });
-
-  it.each(['direct', 'skill'] as const)(
-    'allows personal knowledge bases shared through a %s share',
-    async (shareType) => {
-      const setupResult = setup();
-      const shared = new PersonalKnowledgeBase({
-        name: 'Shared regulations',
-        userId: randomUUID(),
-        orgId: setupResult.orgId,
-      });
-      if (shareType === 'direct') {
-        setupResult.findShare.execute.mockResolvedValue({ id: randomUUID() });
-      } else {
-        setupResult.checkSkillShareAccess.execute.mockResolvedValue(true);
-      }
-      await expect(
-        setupResult.service.requireRead(shared),
-      ).resolves.toBeUndefined();
-    },
-  );
 
   it('rejects inaccessible personal knowledge bases', async () => {
     const setupResult = setup();

@@ -197,12 +197,6 @@ export const minimalFixture = {
           ],
         },
       ],
-      sharedSkillKnowledgeBases: [
-        {
-          skillName: 'Geteiltes Bürgerwissen',
-          knowledgeBaseName: 'Geteiltes Bürgerwissen',
-        },
-      ],
       // Iteration-1 workspaces (AYC-700): enough to fill the sidebar group,
       // both list views and the manual ordering without clicking anything.
       workspaces: [
