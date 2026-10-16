@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
   isAdmin: true,
   granted: [] as string[],
   teamAdminOf: [] as string[],
+  teamAdminRights: ['team_manage_members', 'team_appoint_admins'] as string[],
 }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -30,7 +31,9 @@ vi.mock('@/features/permissions', () => ({
     hasRole: () => state.isAdmin,
     can: (permission: string) =>
       state.isAdmin || state.granted.includes(permission),
-    isTeamAdminOf: (teamId: string) => state.teamAdminOf.includes(teamId),
+    teamAdminCan: (teamId: string, permission: string) =>
+      state.teamAdminOf.includes(teamId) &&
+      state.teamAdminRights.includes(permission),
   }),
 }));
 vi.mock('@/widgets/pagination', () => ({ PaginationWidget: () => null }));
@@ -81,6 +84,7 @@ beforeEach(() => {
   state.isAdmin = true;
   state.granted = [];
   state.teamAdminOf = [];
+  state.teamAdminRights = ['team_manage_members', 'team_appoint_admins'];
 });
 
 describe('team policy shortcuts', () => {
@@ -109,6 +113,14 @@ describe('team admin access', () => {
     state.teamAdminOf = ['team-id'];
     render(<TeamDetailPage {...props} />);
     expect(screen.getByTestId('team-members-add')).toBeTruthy();
+  });
+
+  it('hides adding members from team admins without the right', () => {
+    state.isAdmin = false;
+    state.teamAdminOf = ['team-id'];
+    state.teamAdminRights = ['team_appoint_admins'];
+    render(<TeamDetailPage {...props} />);
+    expect(screen.queryByTestId('team-members-add')).toBeNull();
   });
 
   it('hides adding members from viewers who may only see the team', () => {

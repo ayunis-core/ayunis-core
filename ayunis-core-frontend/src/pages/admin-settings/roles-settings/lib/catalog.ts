@@ -2,6 +2,7 @@ import type {
   Permission,
   PermissionGroup,
 } from '@/pages/admin-settings/roles-settings/model/types';
+import type { TeamAdminPermission } from '@/features/permissions';
 
 export interface PermissionGroupSection {
   group: PermissionGroup;
@@ -40,3 +41,8 @@ export const NEW_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
   'request_knowledge_transfer_org',
   'create_workspaces',
 ]);
+
+export const TEAM_ADMIN_PERMISSIONS: readonly TeamAdminPermission[] = [
+  'team_manage_members',
+  'team_appoint_admins',
+];

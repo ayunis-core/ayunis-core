@@ -1,7 +1,7 @@
 import { useMyPermissionsControllerGetMine } from '@/shared/api';
-import { createAuthorization } from '../lib/authorization';
+import { createAuthorization } from '@/features/permissions/lib/authorization';
 
-export type { AppPermission } from '../lib/authorization';
+export type { AppPermission } from '@/features/permissions/lib/authorization';
 
 /**
  * The current user's effective permissions. Admins implicitly hold all of them
@@ -20,10 +20,12 @@ export function useMyPermissions() {
     },
   });
   const permissions = data?.permissions ?? [];
+  const teamAdminPermissions = data?.teamAdminPermissions ?? [];
   const { can } = createAuthorization(undefined, permissions);
 
   return {
     permissions,
+    teamAdminPermissions,
     isLoading,
     can,
   };

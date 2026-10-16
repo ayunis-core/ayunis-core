@@ -19,18 +19,17 @@ export const Route = createFileRoute('/_authenticated/admin-settings')({
   // redirects. Every settings sub-route flows through here, so admin-only
   // screens stay admin-only.
   beforeLoad: async ({ context: { user, queryClient }, location }) => {
-    const [{ permissions }, myTeams] = await Promise.all([
+    const [{ permissions, teamAdminPermissions }, myTeams] = await Promise.all([
       queryClient.query(getMyPermissionsControllerGetMineQueryOptions()),
       queryClient.query(getTeamsControllerListMyTeamsQueryOptions()),
     ]);
     const teamAdminTeamIds = myTeams
       .filter((team) => team.isTeamAdmin)
       .map((team) => team.id);
-    const authorization = createAuthorization(
-      user.role,
-      permissions,
-      teamAdminTeamIds,
-    );
+    const authorization = createAuthorization(user.role, permissions, {
+      teamIds: teamAdminTeamIds,
+      permissions: teamAdminPermissions,
+    });
     const allowed = allowedSettingsSections(authorization);
 
     if (allowed.some((path) => location.pathname.startsWith(path))) {

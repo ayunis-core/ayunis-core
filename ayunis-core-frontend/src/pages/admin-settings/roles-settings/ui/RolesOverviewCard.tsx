@@ -16,7 +16,13 @@ import {
   ItemSeparator,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { ROLE_COLUMNS } from '@/pages/admin-settings/roles-settings/model/types';
+
+const ROLE_SUMMARIES = [
+  { role: 'user', scope: 'scopeOrganisation' },
+  { role: 'manager', scope: 'scopeOrganisation' },
+  { role: 'admin', scope: 'scopeOrganisation' },
+  { role: 'teamAdmin', scope: 'scopeTeam' },
+] as const;
 
 export function RolesOverviewCard() {
   const { t } = useTranslation('admin-settings-roles');
@@ -29,16 +35,14 @@ export function RolesOverviewCard() {
       </CardHeader>
       <CardContent>
         <ItemGroup>
-          {ROLE_COLUMNS.map((role, index) => (
+          {ROLE_SUMMARIES.map(({ role, scope }, index) => (
             <Fragment key={role}>
               {index > 0 && <ItemSeparator />}
               <Item size="sm">
                 <ItemContent>
                   <ItemTitle>
-                    {t(`columns.${role}`)}
-                    <Badge variant="outline">
-                      {t('overview.scopeOrganisation')}
-                    </Badge>
+                    {t(`overview.names.${role}`)}
+                    <Badge variant="outline">{t(`overview.${scope}`)}</Badge>
                   </ItemTitle>
                   <ItemDescription className="line-clamp-none">
                     {t(`overview.roles.${role}`)}

@@ -71,7 +71,7 @@
     },
     "members": {
       "title": "Members",
-      "description": "Team admins manage this team's members and can appoint further team admins.",
+      "description": "Team admins manage the team. What they may do is set by admins under Roles & Permissions.",
       "name": "Name",
       "email": "Email",
       "role": "Role",
