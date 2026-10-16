@@ -41,7 +41,16 @@ export function useOwnershipCopy(kind: OwnedResourceKind) {
     return t('hints.personal');
   }
 
-  function cardTitle(resource: OwnedResource): string {
+  function submittedByLabel(resource: OwnedResource): string | null {
+    const submittedBy = resource.ownerDescription?.submittedBy;
+    if (!submittedBy) return null;
+    return submittedBy.userId === me?.id
+      ? t('submittedBy.you')
+      : t('submittedBy.other', { name: submittedBy.name });
+  }
+
+  function cardTitle(resource: OwnedResource, reviewedFor?: string): string {
+    if (reviewedFor) return t('card.title.review', { name: reviewedFor });
     if (resource.ownerType === 'team') {
       return t('card.title.team', {
         team: resource.ownerDescription?.teamName ?? '',
@@ -50,7 +59,14 @@ export function useOwnershipCopy(kind: OwnedResourceKind) {
     return t(`card.title.${resource.ownerType === 'org' ? 'org' : 'personal'}`);
   }
 
-  function cardSentence(resource: OwnedResource): string {
+  function cardSentence(resource: OwnedResource, reviewedFor?: string): string {
+    if (reviewedFor) return t('card.audience.review', { noun });
+    const submitted = submittedByLabel(resource);
+    const sentence = audienceSentence(resource);
+    return submitted ? `${sentence} ${submitted}.` : sentence;
+  }
+
+  function audienceSentence(resource: OwnedResource): string {
     const description = resource.ownerDescription;
     if (resource.ownerType === 'team') {
       const editors = teamEditorsCopy(description?.teamEditors ?? [], me?.id);
@@ -65,5 +81,11 @@ export function useOwnershipCopy(kind: OwnedResourceKind) {
     return t('card.audience.personal', { noun });
   }
 
-  return { optionLabel, optionHint, cardTitle, cardSentence };
+  return {
+    optionLabel,
+    optionHint,
+    cardTitle,
+    cardSentence,
+    submittedByLabel,
+  };
 }

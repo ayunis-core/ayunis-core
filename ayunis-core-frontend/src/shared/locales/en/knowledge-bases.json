@@ -9,14 +9,14 @@
   "emptyState": {
     "title": "No knowledge bases yet",
     "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI.",
-    "noAccessDescription": "Ask an admin to share a knowledge base with you, or to give you permission to create your own.",
+    "noAccessDescription": "Ask an admin to give you permission to create your own. Knowledge bases of your teams and the organisation are under “Team and organisation”.",
     "personal": {
       "title": "No own knowledge bases yet",
       "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI."
     },
     "shared": {
       "title": "No team or organisation knowledge bases yet",
-      "description": "Knowledge bases of your teams and the organisation, and knowledge bases shared with you, appear here."
+      "description": "Knowledge bases of your teams and the organisation appear here."
     }
   },
   "card": {

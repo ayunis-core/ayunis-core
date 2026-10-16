@@ -10,6 +10,11 @@ import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '@/features/permissions';
 import { useOwnerOptions } from '@/features/resource-ownership';
+import {
+  RequestsTabTrigger,
+  useHandoverSummary,
+} from '@/features/resource-handover';
+import { HandoverRequestList } from '@/widgets/handover-requests';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   Tabs,
@@ -19,7 +24,7 @@ import {
 } from '@ayunis/ui/components/tabs';
 import { EmptyState } from '@/widgets/empty-state';
 
-export type KnowledgeBasesTab = 'personal' | 'shared';
+export type KnowledgeBasesTab = 'personal' | 'shared' | 'requests';
 
 interface KnowledgeBasesPageProps {
   knowledgeBases: KnowledgeBase[];
@@ -40,6 +45,9 @@ export default function KnowledgeBasesPage({
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const { options, isLoading: isLoadingOwners } =
     useOwnerOptions('knowledge_base');
+  const reviews = useHandoverSummary().knowledge_base;
+  const mayReview = reviews.canReview || reviews.isLoading;
+  const activeTab = tab === 'requests' && !mayReview ? 'personal' : tab;
   const canCreate =
     isLoadingPermissions ||
     isLoadingOwners ||
@@ -66,7 +74,7 @@ export default function KnowledgeBasesPage({
     </div>
   );
 
-  if (knowledgeBases.length === 0) {
+  if (knowledgeBases.length === 0 && !mayReview) {
     return (
       <AppLayout>
         <FullScreenMessageLayout
@@ -94,7 +102,7 @@ export default function KnowledgeBasesPage({
         }
         contentArea={
           <Tabs
-            value={tab}
+            value={activeTab}
             onValueChange={(next) => onTabChange(next as KnowledgeBasesTab)}
             className="w-full"
           >
@@ -106,6 +114,12 @@ export default function KnowledgeBasesPage({
               >
                 {t('tabs.shared')}
               </TabsTrigger>
+              {reviews.canReview && (
+                <RequestsTabTrigger
+                  count={reviews.openRequests}
+                  testId="knowledge-base-tab-requests"
+                />
+              )}
             </TabsList>
             <TabsContent value="personal" className="mt-4">
               {personalKnowledgeBases.length === 0 ? (
@@ -147,6 +161,11 @@ export default function KnowledgeBasesPage({
                 </div>
               )}
             </TabsContent>
+            {mayReview && (
+              <TabsContent value="requests" className="mt-4">
+                <HandoverRequestList kind="knowledge_base" />
+              </TabsContent>
+            )}
           </Tabs>
         }
       />

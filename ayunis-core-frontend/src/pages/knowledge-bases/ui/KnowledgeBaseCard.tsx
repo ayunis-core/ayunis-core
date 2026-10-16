@@ -1,7 +1,7 @@
 import { Button } from '@ayunis/ui/components/button';
 import { Trash2 } from 'lucide-react';
 import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
-import { OwnerBadge } from '@/features/resource-ownership';
+import { OwnerBadge, SubmittedByLabel } from '@/features/resource-ownership';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
@@ -48,6 +48,11 @@ export default function KnowledgeBaseCard({
           <OwnerBadge
             resource={knowledgeBase}
             testId={`knowledge-base-owner-${knowledgeBase.id}`}
+          />
+          <SubmittedByLabel
+            kind="knowledge_base"
+            resource={knowledgeBase}
+            testId={`knowledge-base-submitted-by-${knowledgeBase.id}`}
           />
         </>
       }

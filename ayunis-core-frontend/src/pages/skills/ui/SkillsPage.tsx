@@ -19,12 +19,17 @@ import {
 import { EmptyState } from '@/widgets/empty-state';
 import { useMyPermissions } from '@/features/permissions';
 import { useOwnerOptions } from '@/features/resource-ownership';
+import {
+  RequestsTabTrigger,
+  useHandoverSummary,
+} from '@/features/resource-handover';
+import { HandoverRequestList } from '@/widgets/handover-requests';
 
 function isOwnPersonalSkill(skill: Skill): boolean {
   return skill.ownerType === 'personal';
 }
 
-export type SkillsTab = 'personal' | 'shared';
+export type SkillsTab = 'personal' | 'shared' | 'requests';
 
 interface SkillsPageProps {
   skills: Skill[];
@@ -40,6 +45,9 @@ export default function SkillsPage({
   const { t } = useTranslation('skills');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const { options, isLoading: isLoadingOwners } = useOwnerOptions('skill');
+  const reviews = useHandoverSummary().skill;
+  const mayReview = reviews.canReview || reviews.isLoading;
+  const activeTab = tab === 'requests' && !mayReview ? 'personal' : tab;
   const canCreate =
     isLoadingPermissions ||
     isLoadingOwners ||
@@ -80,7 +88,7 @@ export default function SkillsPage({
   );
 
   // If no skills at all, show full-screen empty state
-  if (skills.length === 0) {
+  if (skills.length === 0 && !mayReview) {
     return (
       <AppLayout>
         <FullScreenMessageLayout
@@ -108,15 +116,21 @@ export default function SkillsPage({
         }
         contentArea={
           <Tabs
-            value={tab}
+            value={activeTab}
             onValueChange={(next) => onTabChange(next as SkillsTab)}
             className="w-full"
           >
             <TabsList>
               <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
               <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+              {reviews.canReview && (
+                <RequestsTabTrigger
+                  count={reviews.openRequests}
+                  testId="skills-tab-requests"
+                />
+              )}
             </TabsList>
-            <MarketplacePromoCard />
+            {activeTab !== 'requests' && <MarketplacePromoCard />}
             <TabsContent value="personal" className="mt-4">
               {personalSkills.length === 0 ? (
                 <EmptyState
@@ -161,6 +175,11 @@ export default function SkillsPage({
                 </div>
               )}
             </TabsContent>
+            {mayReview && (
+              <TabsContent value="requests" className="mt-4">
+                <HandoverRequestList kind="skill" />
+              </TabsContent>
+            )}
           </Tabs>
         }
       />
