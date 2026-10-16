@@ -30,7 +30,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RootLayout from './layouts/root-layout';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
-import { PagePending } from '@/shared/ui/page-pending/PagePending';
+import { StartupPending } from '@/shared/ui/startup-pending/StartupPending';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
 import { shouldRetryQuery } from '@/shared/api/client';
 import {
@@ -69,9 +69,6 @@ const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
-  // Shown after the router's 1s pendingMs, e.g. while reads retry through a
-  // deploy restart, so the page isn't blank.
-  defaultPendingComponent: PagePending,
   defaultErrorComponent: ({ error }) => {
     // Auto-reload on chunk load errors (stale deployment)
     if (isChunkLoadError(error) && attemptChunkReload()) {
@@ -116,6 +113,7 @@ if (rootElement && !rootElement.innerHTML) {
         <RootLayout>
           <QueryClientProvider client={queryClient}>
             <RouterProvider router={router} />
+            <StartupPending router={router} />
           </QueryClientProvider>
         </RootLayout>
       </ErrorBoundary>
