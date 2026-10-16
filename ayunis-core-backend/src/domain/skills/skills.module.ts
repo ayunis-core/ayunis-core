@@ -72,6 +72,15 @@ import { UsersModule } from 'src/iam/users/users.module';
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
 import { SkillSourcesController } from './presenters/http/skill-sources.controller';
+import { SkillLinksController } from './presenters/http/skill-links.controller';
+import { ListLinkedWorkspaceSkillsUseCase } from './application/use-cases/list-linked-workspace-skills/list-linked-workspace-skills.use-case';
+import { ListLinkableWorkspaceSkillsUseCase } from './application/use-cases/list-linkable-workspace-skills/list-linkable-workspace-skills.use-case';
+import { LinkSkillsToWorkspaceUseCase } from './application/use-cases/link-skills-to-workspace/link-skills-to-workspace.use-case';
+import { UnlinkSkillFromWorkspaceUseCase } from './application/use-cases/unlink-skill-from-workspace/unlink-skill-from-workspace.use-case';
+import { GetLinkedWorkspaceSkillsUseCase } from './application/use-cases/get-linked-workspace-skills/get-linked-workspace-skills.use-case';
+import { ListSkillLinkedWorkspacesUseCase } from './application/use-cases/list-skill-linked-workspaces/list-skill-linked-workspaces.use-case';
+import { WorkspaceSkillLinkRepository } from './application/ports/workspace-skill-link.repository';
+import { LocalWorkspaceSkillLinkRepository } from './infrastructure/persistence/local/local-workspace-skill-link.repository';
 import { SkillMandatoryController } from './presenters/http/skill-mandatory.controller';
 import { SetSkillMandatoryUseCase } from './application/use-cases/set-skill-mandatory/set-skill-mandatory.use-case';
 import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
@@ -116,6 +125,16 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
       provide: CollectiveSkillRepository,
       useClass: LocalCollectiveSkillRepository,
     },
+    {
+      provide: WorkspaceSkillLinkRepository,
+      useExisting: LocalWorkspaceSkillLinkRepository,
+    },
+    ListLinkedWorkspaceSkillsUseCase,
+    ListLinkableWorkspaceSkillsUseCase,
+    LinkSkillsToWorkspaceUseCase,
+    UnlinkSkillFromWorkspaceUseCase,
+    GetLinkedWorkspaceSkillsUseCase,
+    ListSkillLinkedWorkspacesUseCase,
     // Services
     SkillAuthorizationService,
     SkillNameLookupService,
@@ -165,6 +184,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
   ],
   controllers: [
     SkillMandatoryController,
+    SkillLinksController,
     SkillsController,
     SkillSourcesController,
     SkillMcpIntegrationsController,
@@ -174,6 +194,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     TransferSkillOwnershipUseCase,
     ActivateWorkspaceSkillByNameUseCase,
     GetWorkspaceSkillsUseCase,
+    GetLinkedWorkspaceSkillsUseCase,
     SkillRepository,
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,

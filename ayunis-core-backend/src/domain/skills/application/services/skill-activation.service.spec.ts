@@ -153,6 +153,21 @@ describe(SkillActivationService.name, () => {
       expect(result.skillName).toBe('Legal Research');
     });
 
+    it('runs the files but not the integrations of another person’s linked skill', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({ userId: randomUUID() });
+      findActivatableSkill.execute.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([
+        makeSource(sourceId1),
+        makeSource(sourceId2),
+      ]);
+
+      await service.activateOnThread(skillId, thread);
+
+      expect(addSourceToThreadUseCase.execute).toHaveBeenCalledTimes(2);
+      expect(addMcpIntegrationToThreadUseCase.execute).not.toHaveBeenCalled();
+    });
+
     it('loads workspace instructions and attaches resources only when explicitly activated', async () => {
       const thread = makeThread();
       thread.workspaceId = randomUUID();

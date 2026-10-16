@@ -159,8 +159,8 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     return records.map((record) => this.mapper.toDomain(record));
   }
 
-  // Read-only seam onto the threads table by name. Importing the threads
-  // module here would reverse the threads → workspaces dependency and close a
+  // Read-only seam onto the threads and link tables by name. Importing the
+  // threads, skills or knowledge-bases modules here would close a dependency
   // cycle, so this aggregate query stays raw SQL instead.
   async getListStats(
     workspaceIds: UUID[],
@@ -176,9 +176,13 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
                 (SELECT MAX(COALESCE(t."lastActivityAt", t."createdAt")) FROM threads t
                   WHERE t."workspaceId" = w."id") AS "lastActivityAt",
                 (SELECT COUNT(*)::int FROM skills s
-                  WHERE s."workspaceId" = w."id") AS "skillCount",
+                  WHERE s."workspaceId" = w."id")
+                  + (SELECT COUNT(*)::int FROM workspace_skill_links sl
+                  WHERE sl."workspaceId" = w."id") AS "skillCount",
                 (SELECT COUNT(*)::int FROM knowledge_bases k
-                  WHERE k."workspaceId" = w."id") AS "knowledgeBaseCount"
+                  WHERE k."workspaceId" = w."id")
+                  + (SELECT COUNT(*)::int FROM workspace_knowledge_base_links kl
+                  WHERE kl."workspaceId" = w."id") AS "knowledgeBaseCount"
          FROM workspaces w
          WHERE w."id" = ANY($1)`,
         [workspaceIds],

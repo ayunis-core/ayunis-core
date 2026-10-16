@@ -19,7 +19,9 @@ describe(WorkspaceContextDtoMapper.name, () => {
       const dto = mapper.toContextDto({
         instruction: null,
         skills: [{ skill, isActive: true, isPinned }],
+        linkedSkills: [],
         knowledgeBases: [],
+        linkedKnowledgeBases: [],
         runtimeKnowledgeBases: [],
       });
       expect(dto.skills).toEqual([

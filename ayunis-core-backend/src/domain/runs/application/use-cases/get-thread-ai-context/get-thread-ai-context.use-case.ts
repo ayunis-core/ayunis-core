@@ -75,32 +75,59 @@ export class GetThreadAiContextUseCase {
     const counts = await this.countKnowledgeBaseDocuments.execute({
       knowledgeBaseIds: personalKnowledgeBases.map(({ id }) => id),
     });
+    const workspaceSkills = this.workspaceSkills(workspace, workspaceId);
+    const workspaceKnowledgeBases = this.workspaceKnowledgeBases(
+      workspace,
+      workspaceId,
+    );
     return {
       skills: [
-        ...skills.map((skill) => this.toSkill(skill, null)),
-        ...(workspace?.skills
-          .filter(({ isActive }) => isActive)
-          .map(({ skill }) => this.toSkill(skill, skill.workspaceId)) ?? []),
+        ...withoutIds(skills, workspaceSkills).map((skill) =>
+          this.toSkill(skill, null),
+        ),
+        ...workspaceSkills,
       ],
       knowledgeBases: [
-        ...personalKnowledgeBases.map((knowledgeBase) =>
-          this.toKnowledgeBase(
-            knowledgeBase,
-            counts.get(knowledgeBase.id) ?? 0,
-            null,
-          ),
-        ),
-        ...(workspace?.knowledgeBases
-          .filter(({ isActive }) => isActive)
-          .map((knowledgeBase) =>
+        ...withoutIds(personalKnowledgeBases, workspaceKnowledgeBases).map(
+          (knowledgeBase) =>
             this.toKnowledgeBase(
               knowledgeBase,
-              knowledgeBase.documentCount,
-              workspaceId,
+              counts.get(knowledgeBase.id) ?? 0,
+              null,
             ),
-          ) ?? []),
+        ),
+        ...workspaceKnowledgeBases,
       ],
     };
+  }
+
+  private workspaceSkills(
+    workspace: WorkspaceAiContext | undefined,
+    workspaceId: UUID | null,
+  ): ThreadAiContextSkill[] {
+    if (!workspace) return [];
+    return [
+      ...workspace.skills
+        .filter(({ isActive }) => isActive)
+        .map(({ skill }) => skill),
+      ...workspace.linkedSkills,
+    ].map((skill) => this.toSkill(skill, workspaceId));
+  }
+
+  private workspaceKnowledgeBases(
+    workspace: WorkspaceAiContext | undefined,
+    workspaceId: UUID | null,
+  ): ThreadAiContextKnowledgeBase[] {
+    if (!workspace) return [];
+    return [...workspace.knowledgeBases, ...workspace.linkedKnowledgeBases]
+      .filter(({ isActive }) => isActive)
+      .map((knowledgeBase) =>
+        this.toKnowledgeBase(
+          knowledgeBase,
+          knowledgeBase.documentCount,
+          workspaceId,
+        ),
+      );
   }
 
   private toSkill(
@@ -136,4 +163,12 @@ export class GetThreadAiContextUseCase {
       new GetWorkspaceAiContextQuery(workspaceId),
     );
   }
+}
+
+function withoutIds<T extends { id: UUID }>(
+  items: T[],
+  covered: { id: UUID }[],
+): T[] {
+  const coveredIds = new Set(covered.map(({ id }) => id));
+  return items.filter(({ id }) => !coveredIds.has(id));
 }

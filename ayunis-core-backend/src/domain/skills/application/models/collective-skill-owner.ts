@@ -1,4 +1,6 @@
 import type { CollectiveOwner } from 'src/domain/ownership/application/models/collective-owner';
+import type { LookupOwner } from 'src/domain/ownership/application/models/ownership-lookup';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
 import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
@@ -11,4 +13,12 @@ export function collectiveOwnerOf(skill: CollectiveSkill): CollectiveOwner {
   return skill instanceof TeamSkill
     ? { type: 'team', teamId: skill.teamId, orgId: skill.orgId }
     : { type: 'org', orgId: skill.orgId };
+}
+
+export function lookupOwnerOf(skill: Skill): LookupOwner | null {
+  if (isCollectiveSkill(skill)) return collectiveOwnerOf(skill);
+  if (skill instanceof PersonalSkill) {
+    return { type: 'personal', userId: skill.userId };
+  }
+  return null;
 }

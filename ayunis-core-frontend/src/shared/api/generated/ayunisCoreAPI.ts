@@ -126,12 +126,21 @@ import type {
   IsCloudResponseDto,
   KnowledgeBaseDocumentListResponseDto,
   KnowledgeBaseDocumentResponseDto,
+  KnowledgeBaseLinksControllerLinkableParams,
+  KnowledgeBaseLinksControllerLinkedParams,
   KnowledgeBaseListResponseDto,
   KnowledgeBaseResponseDto,
   KnowledgeBasesControllerAddDocumentBody,
   KnowledgeBasesControllerFindAllParams,
   LanguageModelResponseDto,
   LetterheadResponseDto,
+  LinkKnowledgeBasesDto,
+  LinkSkillsDto,
+  LinkableKnowledgeBasesResponseDto,
+  LinkableSkillsResponseDto,
+  LinkedKnowledgeBaseListResponseDto,
+  LinkedSkillListResponseDto,
+  LinkedWorkspacesResponseDto,
   LoginDto,
   LoginResponseDto,
   LogoutResponseDto,
@@ -213,6 +222,8 @@ import type {
   SetTeamDefaultModelDto,
   SetUserConfigDto,
   SetUserDefaultModelDto,
+  SkillLinksControllerLinkableParams,
+  SkillLinksControllerLinkedParams,
   SkillListResponseDto,
   SkillResponseDto,
   SkillSourceResponseDto,
@@ -11286,6 +11297,437 @@ export function useMessageImagesControllerDownload<TData = Awaited<ReturnType<ty
 
 
 /**
+ * @summary List knowledge bases linked into a workspace
+ */
+export const knowledgeBaseLinksControllerLinked = (
+    workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkedParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LinkedKnowledgeBaseListResponseDto>(
+      {url: `/workspaces/${workspaceId}/linked-knowledge-bases`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseLinksControllerLinkedQueryKey = (workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkedParams,) => {
+    return [
+    `/workspaces/${workspaceId}/linked-knowledge-bases`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getKnowledgeBaseLinksControllerLinkedQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError = unknown>(workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBaseLinksControllerLinkedQueryKey(workspaceId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>> = ({ signal }) => knowledgeBaseLinksControllerLinked(workspaceId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: workspaceId !== null && workspaceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeBaseLinksControllerLinkedQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>>
+export type KnowledgeBaseLinksControllerLinkedQueryError = unknown
+
+
+export function useKnowledgeBaseLinksControllerLinked<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params: undefined |  KnowledgeBaseLinksControllerLinkedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseLinksControllerLinked<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseLinksControllerLinked<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List knowledge bases linked into a workspace
+ */
+
+export function useKnowledgeBaseLinksControllerLinked<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinked>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeBaseLinksControllerLinkedQueryOptions(workspaceId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Link knowledge bases into a workspace; already linked ones are kept
+ */
+export const knowledgeBaseLinksControllerLink = (
+    workspaceId: string,
+    linkKnowledgeBasesDto: LinkKnowledgeBasesDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/linked-knowledge-bases`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: linkKnowledgeBasesDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseLinksControllerLinkMutationKey = () => ['knowledgeBaseLinksControllerLink'] as const;
+
+export const getKnowledgeBaseLinksControllerLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLink>>, TError,KnowledgeBaseLinksControllerLinkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLink>>, TError,KnowledgeBaseLinksControllerLinkMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseLinksControllerLinkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLink>>, KnowledgeBaseLinksControllerLinkMutationVariables> = (props) => {
+          const {workspaceId,data} = props ?? {};
+
+          return  knowledgeBaseLinksControllerLink(workspaceId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseLinksControllerLinkMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLink>>>
+    export type KnowledgeBaseLinksControllerLinkMutationBody = LinkKnowledgeBasesDto
+    export type KnowledgeBaseLinksControllerLinkMutationError = unknown
+    export type KnowledgeBaseLinksControllerLinkMutationVariables = {workspaceId: string;data: LinkKnowledgeBasesDto}
+
+    /**
+ * @summary Link knowledge bases into a workspace; already linked ones are kept
+ */
+export const useKnowledgeBaseLinksControllerLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLink>>, TError,KnowledgeBaseLinksControllerLinkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseLinksControllerLink>>,
+        TError,
+        KnowledgeBaseLinksControllerLinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseLinksControllerLinkMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List knowledge bases the caller may link into a workspace, by owner
+ */
+export const knowledgeBaseLinksControllerLinkable = (
+    workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkableParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LinkableKnowledgeBasesResponseDto>(
+      {url: `/workspaces/${workspaceId}/linkable-knowledge-bases`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseLinksControllerLinkableQueryKey = (workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkableParams,) => {
+    return [
+    `/workspaces/${workspaceId}/linkable-knowledge-bases`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getKnowledgeBaseLinksControllerLinkableQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError = unknown>(workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBaseLinksControllerLinkableQueryKey(workspaceId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>> = ({ signal }) => knowledgeBaseLinksControllerLinkable(workspaceId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: workspaceId !== null && workspaceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeBaseLinksControllerLinkableQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>>
+export type KnowledgeBaseLinksControllerLinkableQueryError = unknown
+
+
+export function useKnowledgeBaseLinksControllerLinkable<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params: undefined |  KnowledgeBaseLinksControllerLinkableParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseLinksControllerLinkable<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseLinksControllerLinkable<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List knowledge bases the caller may link into a workspace, by owner
+ */
+
+export function useKnowledgeBaseLinksControllerLinkable<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params?: KnowledgeBaseLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkable>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeBaseLinksControllerLinkableQueryOptions(workspaceId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Remove a knowledge base link from a workspace
+ */
+export const knowledgeBaseLinksControllerUnlink = (
+    workspaceId: string,
+    knowledgeBaseId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/linked-knowledge-bases/${knowledgeBaseId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseLinksControllerUnlinkMutationKey = () => ['knowledgeBaseLinksControllerUnlink'] as const;
+
+export const getKnowledgeBaseLinksControllerUnlinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerUnlink>>, TError,KnowledgeBaseLinksControllerUnlinkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerUnlink>>, TError,KnowledgeBaseLinksControllerUnlinkMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseLinksControllerUnlinkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseLinksControllerUnlink>>, KnowledgeBaseLinksControllerUnlinkMutationVariables> = (props) => {
+          const {workspaceId,knowledgeBaseId} = props ?? {};
+
+          return  knowledgeBaseLinksControllerUnlink(workspaceId,knowledgeBaseId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseLinksControllerUnlinkMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseLinksControllerUnlink>>>
+
+    export type KnowledgeBaseLinksControllerUnlinkMutationError = unknown
+    export type KnowledgeBaseLinksControllerUnlinkMutationVariables = {workspaceId: string;knowledgeBaseId: string}
+
+    /**
+ * @summary Remove a knowledge base link from a workspace
+ */
+export const useKnowledgeBaseLinksControllerUnlink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerUnlink>>, TError,KnowledgeBaseLinksControllerUnlinkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseLinksControllerUnlink>>,
+        TError,
+        KnowledgeBaseLinksControllerUnlinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseLinksControllerUnlinkMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List the workspaces a knowledge base is linked into
+ */
+export const knowledgeBaseLinksControllerLinkedWorkspaces = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LinkedWorkspacesResponseDto>(
+      {url: `/knowledge-bases/${id}/linked-workspaces`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseLinksControllerLinkedWorkspacesQueryKey = (id: string,) => {
+    return [
+    `/knowledge-bases/${id}/linked-workspaces`
+    ] as const;
+    }
+
+
+export const getKnowledgeBaseLinksControllerLinkedWorkspacesQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBaseLinksControllerLinkedWorkspacesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>> = ({ signal }) => knowledgeBaseLinksControllerLinkedWorkspaces(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeBaseLinksControllerLinkedWorkspacesQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>>
+export type KnowledgeBaseLinksControllerLinkedWorkspacesQueryError = unknown
+
+
+export function useKnowledgeBaseLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the workspaces a knowledge base is linked into
+ */
+
+export function useKnowledgeBaseLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseLinksControllerLinkedWorkspaces>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeBaseLinksControllerLinkedWorkspacesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * The owner must be one the caller may create for: personal needs manage_own_knowledge, team needs team admin rights for that team, org needs manage_org_knowledge.
  * @summary Create a new knowledge base
  */
@@ -12206,6 +12648,437 @@ export const useSkillMandatoryControllerMandatory = <TError = void,
       > => {
       return useMutation(getSkillMandatoryControllerMandatoryMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary List skills linked into a workspace
+ */
+export const skillLinksControllerLinked = (
+    workspaceId: string,
+    params?: SkillLinksControllerLinkedParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LinkedSkillListResponseDto>(
+      {url: `/workspaces/${workspaceId}/linked-skills`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillLinksControllerLinkedQueryKey = (workspaceId: string,
+    params?: SkillLinksControllerLinkedParams,) => {
+    return [
+    `/workspaces/${workspaceId}/linked-skills`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSkillLinksControllerLinkedQueryOptions = <TData = Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError = unknown>(workspaceId: string,
+    params?: SkillLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillLinksControllerLinkedQueryKey(workspaceId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillLinksControllerLinked>>> = ({ signal }) => skillLinksControllerLinked(workspaceId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: workspaceId !== null && workspaceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillLinksControllerLinkedQueryResult = NonNullable<Awaited<ReturnType<typeof skillLinksControllerLinked>>>
+export type SkillLinksControllerLinkedQueryError = unknown
+
+
+export function useSkillLinksControllerLinked<TData = Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params: undefined |  SkillLinksControllerLinkedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillLinksControllerLinked>>,
+          TError,
+          Awaited<ReturnType<typeof skillLinksControllerLinked>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillLinksControllerLinked<TData = Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params?: SkillLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillLinksControllerLinked>>,
+          TError,
+          Awaited<ReturnType<typeof skillLinksControllerLinked>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillLinksControllerLinked<TData = Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params?: SkillLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List skills linked into a workspace
+ */
+
+export function useSkillLinksControllerLinked<TData = Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError = unknown>(
+ workspaceId: string,
+    params?: SkillLinksControllerLinkedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinked>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillLinksControllerLinkedQueryOptions(workspaceId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Link skills into a workspace; already linked ones are kept
+ */
+export const skillLinksControllerLink = (
+    workspaceId: string,
+    linkSkillsDto: LinkSkillsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/linked-skills`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: linkSkillsDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillLinksControllerLinkMutationKey = () => ['skillLinksControllerLink'] as const;
+
+export const getSkillLinksControllerLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillLinksControllerLink>>, TError,SkillLinksControllerLinkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillLinksControllerLink>>, TError,SkillLinksControllerLinkMutationVariables, TContext> => {
+
+const mutationKey = getSkillLinksControllerLinkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillLinksControllerLink>>, SkillLinksControllerLinkMutationVariables> = (props) => {
+          const {workspaceId,data} = props ?? {};
+
+          return  skillLinksControllerLink(workspaceId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillLinksControllerLinkMutationResult = NonNullable<Awaited<ReturnType<typeof skillLinksControllerLink>>>
+    export type SkillLinksControllerLinkMutationBody = LinkSkillsDto
+    export type SkillLinksControllerLinkMutationError = unknown
+    export type SkillLinksControllerLinkMutationVariables = {workspaceId: string;data: LinkSkillsDto}
+
+    /**
+ * @summary Link skills into a workspace; already linked ones are kept
+ */
+export const useSkillLinksControllerLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillLinksControllerLink>>, TError,SkillLinksControllerLinkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillLinksControllerLink>>,
+        TError,
+        SkillLinksControllerLinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillLinksControllerLinkMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List skills the caller may link into a workspace, by owner
+ */
+export const skillLinksControllerLinkable = (
+    workspaceId: string,
+    params?: SkillLinksControllerLinkableParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LinkableSkillsResponseDto>(
+      {url: `/workspaces/${workspaceId}/linkable-skills`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillLinksControllerLinkableQueryKey = (workspaceId: string,
+    params?: SkillLinksControllerLinkableParams,) => {
+    return [
+    `/workspaces/${workspaceId}/linkable-skills`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSkillLinksControllerLinkableQueryOptions = <TData = Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError = unknown>(workspaceId: string,
+    params?: SkillLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillLinksControllerLinkableQueryKey(workspaceId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillLinksControllerLinkable>>> = ({ signal }) => skillLinksControllerLinkable(workspaceId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: workspaceId !== null && workspaceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillLinksControllerLinkableQueryResult = NonNullable<Awaited<ReturnType<typeof skillLinksControllerLinkable>>>
+export type SkillLinksControllerLinkableQueryError = unknown
+
+
+export function useSkillLinksControllerLinkable<TData = Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params: undefined |  SkillLinksControllerLinkableParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillLinksControllerLinkable>>,
+          TError,
+          Awaited<ReturnType<typeof skillLinksControllerLinkable>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillLinksControllerLinkable<TData = Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params?: SkillLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillLinksControllerLinkable>>,
+          TError,
+          Awaited<ReturnType<typeof skillLinksControllerLinkable>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillLinksControllerLinkable<TData = Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params?: SkillLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List skills the caller may link into a workspace, by owner
+ */
+
+export function useSkillLinksControllerLinkable<TData = Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError = unknown>(
+ workspaceId: string,
+    params?: SkillLinksControllerLinkableParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkable>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillLinksControllerLinkableQueryOptions(workspaceId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Remove a skill link from a workspace
+ */
+export const skillLinksControllerUnlink = (
+    workspaceId: string,
+    skillId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/linked-skills/${skillId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillLinksControllerUnlinkMutationKey = () => ['skillLinksControllerUnlink'] as const;
+
+export const getSkillLinksControllerUnlinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillLinksControllerUnlink>>, TError,SkillLinksControllerUnlinkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillLinksControllerUnlink>>, TError,SkillLinksControllerUnlinkMutationVariables, TContext> => {
+
+const mutationKey = getSkillLinksControllerUnlinkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillLinksControllerUnlink>>, SkillLinksControllerUnlinkMutationVariables> = (props) => {
+          const {workspaceId,skillId} = props ?? {};
+
+          return  skillLinksControllerUnlink(workspaceId,skillId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillLinksControllerUnlinkMutationResult = NonNullable<Awaited<ReturnType<typeof skillLinksControllerUnlink>>>
+
+    export type SkillLinksControllerUnlinkMutationError = unknown
+    export type SkillLinksControllerUnlinkMutationVariables = {workspaceId: string;skillId: string}
+
+    /**
+ * @summary Remove a skill link from a workspace
+ */
+export const useSkillLinksControllerUnlink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillLinksControllerUnlink>>, TError,SkillLinksControllerUnlinkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillLinksControllerUnlink>>,
+        TError,
+        SkillLinksControllerUnlinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillLinksControllerUnlinkMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List the workspaces a skill is linked into
+ */
+export const skillLinksControllerLinkedWorkspaces = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LinkedWorkspacesResponseDto>(
+      {url: `/skills/${id}/linked-workspaces`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillLinksControllerLinkedWorkspacesQueryKey = (id: string,) => {
+    return [
+    `/skills/${id}/linked-workspaces`
+    ] as const;
+    }
+
+
+export const getSkillLinksControllerLinkedWorkspacesQueryOptions = <TData = Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillLinksControllerLinkedWorkspacesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>> = ({ signal }) => skillLinksControllerLinkedWorkspaces(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillLinksControllerLinkedWorkspacesQueryResult = NonNullable<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>>
+export type SkillLinksControllerLinkedWorkspacesQueryError = unknown
+
+
+export function useSkillLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>,
+          TError,
+          Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>,
+          TError,
+          Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the workspaces a skill is linked into
+ */
+
+export function useSkillLinksControllerLinkedWorkspaces<TData = Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillLinksControllerLinkedWorkspaces>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillLinksControllerLinkedWorkspacesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Install a skill from the marketplace

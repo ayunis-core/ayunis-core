@@ -131,13 +131,16 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     threadId: UUID,
     scope: SkillNameScope = 'personal',
   ): Promise<string> {
-    // findSkillByNameUseCase throws SkillNotFoundError if missing
-    const skill = await this.findSkillByNameUseCase.execute(
-      new FindSkillByNameQuery(skillName, scope),
-    );
-
     const threadResult = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),
+    );
+    // findSkillByNameUseCase throws SkillNotFoundError if missing
+    const skill = await this.findSkillByNameUseCase.execute(
+      new FindSkillByNameQuery(
+        skillName,
+        scope,
+        threadResult.thread.workspaceId ?? undefined,
+      ),
     );
 
     const { instructions } = await this.skillActivationService.activateOnThread(

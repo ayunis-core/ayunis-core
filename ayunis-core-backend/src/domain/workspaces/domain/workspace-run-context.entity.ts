@@ -1,3 +1,4 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
@@ -17,7 +18,9 @@ export interface WorkspaceKnowledgeBaseContext extends KnowledgeBaseSummary {
 export interface WorkspaceAiContext {
   instruction: string | null;
   skills: WorkspaceSkillContext[];
+  linkedSkills: Skill[];
   knowledgeBases: WorkspaceKnowledgeBaseContext[];
+  linkedKnowledgeBases: WorkspaceKnowledgeBaseContext[];
 }
 
 export interface WorkspaceRunContext extends WorkspaceAiContext {
