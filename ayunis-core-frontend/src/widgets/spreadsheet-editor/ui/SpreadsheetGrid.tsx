@@ -18,6 +18,7 @@ import {
 import type { GridRow } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
 import { columnKey } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
 import { columnIndexToLetter } from '@/widgets/spreadsheet-editor/model/formula-references';
+import { attachGridClipboardWrite } from '@/widgets/spreadsheet-editor/lib/grid-clipboard';
 
 const DISPLAY_VALUES_KEY = Symbol('spreadsheetDisplayValues');
 
@@ -229,6 +230,11 @@ export function SpreadsheetGrid({
     };
     grid.addEventListener('beforecolumndragend', handleDragEnd);
     return () => grid.removeEventListener('beforecolumndragend', handleDragEnd);
+  }, [isEmpty]);
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    return grid ? attachGridClipboardWrite(grid) : undefined;
   }, [isEmpty]);
 
   const gridColumns = useMemo<ColumnRegular[]>(
