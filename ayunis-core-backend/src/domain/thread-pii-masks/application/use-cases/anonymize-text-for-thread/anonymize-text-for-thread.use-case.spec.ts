@@ -14,6 +14,8 @@ import {
   UnexpectedAnonymizationSettingsError,
   UnexpectedGlobalAnonymizationWhitelistError,
 } from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import { Logger } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 
 describe('AnonymizeTextForThreadUseCase', () => {
@@ -48,6 +50,10 @@ describe('AnonymizeTextForThreadUseCase', () => {
       } as unknown as GetGlobalPiiWhitelistUseCase,
       { execute: anonymizeExecute } as unknown as AnonymizeTextUseCase,
     );
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const command = () =>
@@ -209,6 +215,35 @@ describe('AnonymizeTextForThreadUseCase', () => {
     await expect(useCase.execute(command())).rejects.toMatchObject({
       code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
     });
+  });
+
+  it('propagates a thread deleted before mask persistence as a warning, not a persistence failure', async () => {
+    const errorLog = jest.spyOn(Logger.prototype, 'error');
+    const warnLog = jest.spyOn(Logger.prototype, 'warn');
+    findByThreadId.mockResolvedValue([
+      new ThreadPiiMask({
+        threadId,
+        category: PiiCategory.EMAIL_ADDRESS,
+        maskIndex: 1,
+        value: 'dani@example.org',
+      }),
+    ]);
+    saveMany.mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+
+    await expect(useCase.execute(command())).rejects.toBeInstanceOf(
+      ThreadPiiMaskThreadMissingError,
+    );
+    expect(findByThreadId).toHaveBeenCalledWith(threadId);
+    expect(errorLog).not.toHaveBeenCalled();
+    expect(warnLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stage: 'new_masks_persistence',
+        threadId,
+        existingMaskCount: 1,
+        newMaskCount: 1,
+      }),
+      expect.any(String),
+    );
   });
 
   it('classifies existing-mask lookup failures without raw database messages', async () => {

@@ -16,6 +16,7 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -167,7 +168,10 @@ export class ToolResultCollectorService {
     try {
       return await this.executeByRuntimePolicy(tool, content, input, context);
     } catch (error) {
-      if (error instanceof ApplicationError) {
+      if (
+        error instanceof ApplicationError ||
+        error instanceof ThreadPiiMaskThreadMissingError
+      ) {
         throw error;
       }
       this.logger.error(
@@ -406,6 +410,7 @@ export class ToolResultCollectorService {
       );
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
+      if (error instanceof ThreadPiiMaskThreadMissingError) throw error;
       throw new RunAnonymizationUnavailableError(
         {
           originalError:

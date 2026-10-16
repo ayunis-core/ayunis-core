@@ -4,7 +4,7 @@ import type {
   ToolExecutionContext as RuntimeToolContext,
   ToolExecutionResult as RuntimeToolResult,
 } from '@ayunis/agent-runtime';
-import { AgentRuntimeError } from '@ayunis/agent-runtime';
+import { AgentRuntimeError, RunAbortedError } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
@@ -13,6 +13,7 @@ import { ExecuteToolCommand } from 'src/domain/tools/application/use-cases/execu
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import {
@@ -137,6 +138,11 @@ export class BackendToolAdapter {
         ),
       )
       .catch((error: unknown) => {
+        if (error instanceof ThreadPiiMaskThreadMissingError) {
+          throw new RunAbortedError(
+            'Run aborted because the thread no longer exists',
+          );
+        }
         // Classified failures must cross the runtime boundary in `details` —
         // `cause` is process-local and the event stream only serializes details
         // — so mapRunError can rebuild safe AppSignal grouping information.

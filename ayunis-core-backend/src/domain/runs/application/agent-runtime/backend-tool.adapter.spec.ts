@@ -1,4 +1,4 @@
-import { RunContext } from '@ayunis/agent-runtime';
+import { RunAbortedError, RunContext } from '@ayunis/agent-runtime';
 import type { ToolExecutionContext } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
@@ -22,7 +22,10 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
-import { ThreadPiiMaskAnonymizationError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import {
+  ThreadPiiMaskAnonymizationError,
+  ThreadPiiMaskThreadMissingError,
+} from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { BackendToolAdapter } from './backend-tool.adapter';
 import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 
@@ -273,6 +276,23 @@ describe('BackendToolAdapter', () => {
     await expect(tool.execute!({}, ctx)).rejects.toMatchObject({
       code: 'ANONYMIZATION_UNAVAILABLE',
     });
+  });
+
+  it('aborts the runtime instead of failing when the thread was deleted during redaction', async () => {
+    execute.mockResolvedValue('call Jane at 555-1234');
+    anonymize.mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+    const piiTool = {
+      ...fakeTool('lookup'),
+      returnsPii: true,
+    } as unknown as BackendTool;
+    const ctx = toolCtx(true);
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+
+    await expect(tool.execute!({}, ctx)).rejects.toBeInstanceOf(
+      RunAbortedError,
+    );
+    expect(ctx.emit).not.toHaveBeenCalled();
   });
 
   // `cause` is process-local and the runtime error event serializes details
