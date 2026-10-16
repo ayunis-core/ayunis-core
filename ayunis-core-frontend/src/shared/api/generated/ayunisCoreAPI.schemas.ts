@@ -4331,6 +4331,12 @@ export interface UserCreditLimitItemDto {
   creditsUsed?: number;
 }
 
+export interface UserCreditUsageItemDto {
+  userId: string;
+  /** Credits consumed in the current calendar month; omitted when individual usage is hidden */
+  creditsUsed?: number;
+}
+
 export interface TeamCreditLimitItemDto {
   teamId: string;
   name: string;
@@ -6043,6 +6049,13 @@ startDate?: string;
  * Exclusive end of the range in ISO format
  */
 endDate?: string;
+};
+
+export type CreditLimitsControllerGetUserUsageParams = {
+/**
+ * Users whose current monthly credit consumption to return
+ */
+userIds: string[];
 };
 
 export type ArtifactsControllerFindByWorkspaceParams = {
