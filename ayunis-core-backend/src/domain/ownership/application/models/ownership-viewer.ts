@@ -58,6 +58,10 @@ export class OwnershipViewer {
     return this.adminTeamIds.size > 0 && this.teamAdminPermissions.has(right);
   }
 
+  teamIdsWithAdminRight(right: TeamAdminPermission): UUID[] {
+    return this.teamAdminPermissions.has(right) ? [...this.adminTeamIds] : [];
+  }
+
   canManageOwn(kind: OwnedResourceKind): boolean {
     return this.has(OWNERSHIP_RIGHTS[kind].own);
   }

@@ -36,4 +36,7 @@ export class WorkspaceRecord extends BaseRecord {
   @ManyToOne(() => OrgRecord, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'orgId' })
   org: OrgRecord;
+
+  @Column({ default: false })
+  isSharedWithOrganization: boolean;
 }
