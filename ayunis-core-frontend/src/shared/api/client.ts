@@ -22,6 +22,25 @@ type RetryableConfig = InternalAxiosRequestConfig & {
   deployGapRetries?: number;
 };
 
+let deployGapRetriesInFlight = 0;
+const deployGapListeners = new Set<() => void>();
+
+function setDeployGapRetriesInFlight(count: number) {
+  deployGapRetriesInFlight = count;
+  deployGapListeners.forEach((listener) => listener());
+}
+
+export function isRetryingThroughDeployGap() {
+  return deployGapRetriesInFlight > 0;
+}
+
+export function subscribeToDeployGap(listener: () => void) {
+  deployGapListeners.add(listener);
+  return () => {
+    deployGapListeners.delete(listener);
+  };
+}
+
 async function retryThroughDeployGap(error: AxiosError) {
   const requestConfig = error.config as RetryableConfig | undefined;
   const attempt = requestConfig?.deployGapRetries ?? 0;
@@ -33,6 +52,23 @@ async function retryThroughDeployGap(error: AxiosError) {
   ) {
     return undefined;
   }
+  // Later attempts re-enter this interceptor nested inside the first one's
+  // await, so only the first attempt counts the request as in flight.
+  if (attempt > 0) {
+    return retryAfterDelay(requestConfig, attempt);
+  }
+  setDeployGapRetriesInFlight(deployGapRetriesInFlight + 1);
+  try {
+    return await retryAfterDelay(requestConfig, attempt);
+  } finally {
+    setDeployGapRetriesInFlight(deployGapRetriesInFlight - 1);
+  }
+}
+
+async function retryAfterDelay(
+  requestConfig: RetryableConfig,
+  attempt: number,
+) {
   await new Promise((resolve) =>
     setTimeout(resolve, DEPLOY_GAP_RETRY_DELAYS_MS[attempt]),
   );

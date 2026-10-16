@@ -1,4 +1,5 @@
 import { runtimeEnv } from '@/shared/config/runtime-env';
+import { DeployGapBanner } from '@/shared/ui/deploy-gap-banner/DeployGapBanner';
 
 export default function RootLayout({
   children,
@@ -14,6 +15,7 @@ export default function RootLayout({
         <script async src={plausibleSrc} data-domain={plausibleDomain}></script>
       )}
       {children}
+      <DeployGapBanner />
     </>
   );
 }

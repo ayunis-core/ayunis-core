@@ -128,6 +128,10 @@
       "title": "Seite wird geladen …",
       "description": "Das kann einen Moment dauern."
     },
+    "deployGapBanner": {
+      "title": "Verbindung wird wiederhergestellt …",
+      "description": "Ayunis startet nach einem Update neu. Diese Seite lädt automatisch weiter."
+    },
     "helpLink": "Hilfe",
     "pagination": {
       "previous": "Zurück",
