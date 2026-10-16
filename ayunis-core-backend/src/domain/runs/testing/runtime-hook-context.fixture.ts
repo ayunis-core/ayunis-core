@@ -76,6 +76,7 @@ export function callOutcome(
     providerConsumptionStarted: false,
     producedOutput: false,
     visibleOutput: false,
+    partialToolCalls: [],
     durationMs: 0,
   };
   return options.failure

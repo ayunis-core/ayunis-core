@@ -35,6 +35,38 @@ describe('ChunkAccumulator', () => {
     });
   });
 
+  it('reports tool calls still streaming when a call ends early, outside its message', () => {
+    const accumulator = new ChunkAccumulator();
+    accumulator.accept({ textDelta: 'Searching.' });
+    accumulator.accept({
+      toolCallDeltas: [
+        {
+          index: 0,
+          id: 'call-1',
+          name: 'internet_search',
+          argumentsDelta: '{"query":"Bürgerbüro',
+        },
+      ],
+    });
+
+    const partial = accumulator.partialResult();
+
+    expect(partial.message.content).toEqual([
+      { type: 'text', text: 'Searching.' },
+    ]);
+    expect(partial.partialToolCalls).toEqual([
+      {
+        index: 0,
+        id: 'call-1',
+        name: 'internet_search',
+        argumentsJson: '{"query":"Bürgerbüro',
+        input: null,
+        status: 'streaming',
+      },
+    ]);
+    expect(accumulator.finalize().partialToolCalls).toEqual([]);
+  });
+
   it('reports malformed terminal tool calls as invalid snapshots', () => {
     const accumulator = new ChunkAccumulator();
     accumulator.accept({
