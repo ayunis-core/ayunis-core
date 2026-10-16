@@ -61,13 +61,10 @@
     "skills": {
       "title": "Fähigkeiten des Arbeitsbereichs",
       "description": "Fähigkeiten, die der Assistent bei Bedarf in Chats dieses Arbeitsbereichs aktivieren kann.",
-      "create": "Fähigkeit hinzufügen",
       "createDescription": "Erstellen Sie eine Fähigkeit, die diesem Arbeitsbereich gehört.",
       "name": "Name",
       "shortDescription": "Kurzbeschreibung",
       "instructions": "Anweisungen",
-      "emptyTitle": "Keine Fähigkeiten im Arbeitsbereich",
-      "empty": "Für diesen Arbeitsbereich wurden noch keine Fähigkeiten erstellt.",
       "delete": "Fähigkeit des Arbeitsbereichs löschen",
       "active": "Aktiv",
       "inactive": "Inaktiv",
@@ -78,12 +75,9 @@
     "knowledge": {
       "title": "Wissenssammlungen",
       "description": "Eigene Wissenssammlungen für alle Chats dieses Arbeitsbereichs.",
-      "create": "Wissenssammlung hinzufügen",
       "createDescription": "Erstellen Sie eine Wissenssammlung, die diesem Arbeitsbereich gehört.",
       "name": "Name",
       "descriptionLabel": "Beschreibung",
-      "emptyTitle": "Keine Wissenssammlungen im Arbeitsbereich",
-      "empty": "Für diesen Arbeitsbereich wurden noch keine Wissenssammlungen erstellt.",
       "detach": "Wissenssammlung des Arbeitsbereichs löschen",
       "documentCount": "{{count}} Dokumente",
       "active": "Aktiv",
@@ -102,5 +96,87 @@
       "saveSuccess": "Anweisungen wurden gespeichert.",
       "saveError": "Anweisungen konnten nicht gespeichert werden."
     }
+  },
+  "links": {
+    "sections": {
+      "created": "Im Arbeitsbereich erstellt",
+      "linked": "Verknüpft"
+    },
+    "skills": {
+      "addMenu": "Fähigkeit hinzufügen",
+      "linkExisting": "Vorhandene verknüpfen",
+      "create": "Selbst erstellen",
+      "createDescription": "Gehört „{{workspace}}“. Alle Mitglieder können sie nutzen, ändern kann jeder, der den Arbeitsbereich bearbeiten darf.",
+      "dialogTitle": "Vorhandene Fähigkeiten verknüpfen",
+      "dialogDescription": "Alle Mitglieder von „{{workspace}}“ können sie danach nutzen, aber nicht ändern.",
+      "search": "Fähigkeiten durchsuchen",
+      "allLinked": "Alle Fähigkeiten, die Sie nutzen können, sind bereits in diesem Arbeitsbereich.",
+      "emptyOwnTitle": "Noch keine eigenen Fähigkeiten",
+      "emptyOwn": "Fähigkeiten, die nur diesem Arbeitsbereich gehören.",
+      "emptyLinkedTitle": "Noch keine verknüpften Fähigkeiten",
+      "emptyLinked": "Verknüpfen Sie Fähigkeiten von Ihnen, Ihrem Team oder der Organisation.",
+      "unlinkDescription": "Danach können die Mitglieder von „{{workspace}}“ „{{name}}“ hier nicht mehr nutzen. Die Fähigkeit selbst bleibt erhalten und lässt sich jederzeit wieder verknüpfen."
+    },
+    "knowledge": {
+      "addMenu": "Wissenssammlung hinzufügen",
+      "linkExisting": "Vorhandene verknüpfen",
+      "create": "Neu erstellen",
+      "createDescription": "Gehört „{{workspace}}“. Alle Mitglieder können sie nutzen. Dokumente fügen Sie danach hinzu.",
+      "dialogTitle": "Vorhandenes Wissen verknüpfen",
+      "dialogDescription": "Alle Mitglieder von „{{workspace}}“ können es danach nutzen, aber nicht ändern.",
+      "search": "Wissen durchsuchen",
+      "allLinked": "Alle Wissenssammlungen, die Sie nutzen können, sind bereits in diesem Arbeitsbereich.",
+      "emptyOwnTitle": "Noch kein eigenes Wissen",
+      "emptyOwn": "Wissenssammlungen, die nur diesem Arbeitsbereich gehören.",
+      "emptyLinkedTitle": "Noch kein verknüpftes Wissen",
+      "emptyLinked": "Verknüpfen Sie Wissenssammlungen von Ihnen, Ihrem Team oder der Organisation.",
+      "unlinkDescription": "Danach können die Mitglieder von „{{workspace}}“ „{{name}}“ hier nicht mehr nutzen. Die Wissenssammlung selbst bleibt erhalten und lässt sich jederzeit wieder verknüpfen."
+    },
+    "picker": {
+      "groups": {
+        "own": "Eigene",
+        "team": "Aus Ihren Teams",
+        "org": "Von der Organisation"
+      },
+      "allLinkedTitle": "Alles schon verknüpft",
+      "noResults": "Keine Treffer",
+      "cancel": "Abbrechen",
+      "link": "Verknüpfen",
+      "linkCount": "{{count}} verknüpfen",
+      "linked": "Verknüpft.",
+      "error": "Die Verknüpfung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    },
+    "owner": {
+      "you": "Sie",
+      "person": "{{name}}",
+      "team": "Team {{team}}",
+      "org": "Organisation"
+    },
+    "belongs": {
+      "you": "Gehört Ihnen",
+      "person": "Gehört {{name}}",
+      "team": "Gehört dem Team {{team}}",
+      "org": "Gehört der Organisation"
+    },
+    "linkedBy": {
+      "you": "Verknüpft von Ihnen",
+      "person": "Verknüpft von {{name}}"
+    },
+    "unlink": {
+      "label": "Verknüpfung lösen",
+      "title": "Verknüpfung lösen?",
+      "confirm": "Verknüpfung lösen",
+      "cancel": "Abbrechen",
+      "success": "„{{name}}“ ist nicht mehr verknüpft.",
+      "error": "Die Verknüpfung konnte nicht gelöst werden. Bitte versuchen Sie es erneut."
+    },
+    "linkedWorkspaces": {
+      "title": "Verknüpft in Arbeitsbereichen",
+      "by": "von {{name}}",
+      "hidden_one": "{{count}} Arbeitsbereich, den Sie nicht öffnen können",
+      "hidden_other": "{{count}} Arbeitsbereiche, die Sie nicht öffnen können"
+    },
+    "deleteHint_one": "Sie ist in einem Arbeitsbereich verknüpft. Die Mitglieder dort können sie danach nicht mehr nutzen.",
+    "deleteHint_other": "Sie ist in {{count}} Arbeitsbereichen verknüpft. Die Mitglieder dort können sie danach nicht mehr nutzen."
   }
 }

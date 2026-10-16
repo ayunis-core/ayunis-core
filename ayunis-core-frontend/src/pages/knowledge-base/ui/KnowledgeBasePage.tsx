@@ -8,6 +8,10 @@ import {
 } from '@/widgets/resource-ownership-card';
 import { ReadOnlyBadge } from '@/features/resource-ownership';
 import {
+  LinkedWorkspacesSection,
+  useLinkedDeleteHint,
+} from '@/features/workspace-links';
+import {
   HandoverButton,
   HandoverRequestArea,
   useHandoverState,
@@ -50,6 +54,7 @@ function KnowledgeBaseDeleteButton({
     knowledgeBase.name,
     navigateToList,
   );
+  const linked = useLinkedDeleteHint('knowledgeBase', knowledgeBase.id, true);
   const { confirm } = useConfirmation();
 
   function handleDelete() {
@@ -57,6 +62,7 @@ function KnowledgeBaseDeleteButton({
       title: t('detail.confirmDelete.title'),
       description: t('detail.confirmDelete.description', {
         title: knowledgeBase.name,
+        hint: linked.hint,
       }),
       confirmText: t('detail.confirmDelete.confirmText'),
       cancelText: t('detail.confirmDelete.cancelText'),
@@ -75,7 +81,7 @@ function KnowledgeBaseDeleteButton({
           size="icon"
           className="text-destructive hover:text-destructive"
           onClick={handleDelete}
-          disabled={deleteKnowledgeBase.isPending}
+          disabled={deleteKnowledgeBase.isPending || !linked.isKnown}
           aria-label={t('detail.deleteLabel')}
           data-testid="knowledge-base-detail-delete"
         >
@@ -166,6 +172,9 @@ function KnowledgeBaseConfiguration({
           disabled={!canEdit}
         />
       </OnboardingTourTarget>
+      {!handover.isReviewing && (
+        <LinkedWorkspacesSection kind="knowledgeBase" id={knowledgeBase.id} />
+      )}
     </div>
   );
 }

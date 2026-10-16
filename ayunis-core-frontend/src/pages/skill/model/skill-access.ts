@@ -16,3 +16,15 @@ export function skillAccess(skill: SkillResponseDto): SkillAccess {
     isCollective: skill.ownerType === 'team' || skill.ownerType === 'org',
   };
 }
+
+export function skillContentMode(
+  skill: SkillResponseDto,
+  isReviewing: boolean,
+): { isReadOnly: boolean; linksResources: boolean } {
+  const { canUse, canEdit, isCollective } = skillAccess(skill);
+  const isOthersPersonal = skill.ownerType === 'personal' && !canUse;
+  return {
+    isReadOnly: (isCollective && !canEdit) || isOthersPersonal || isReviewing,
+    linksResources: !isCollective && !isOthersPersonal && !isReviewing,
+  };
+}

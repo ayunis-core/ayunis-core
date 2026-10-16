@@ -89,7 +89,7 @@ export function WorkspaceKnowledgeBaseDetailPage({
                           title: tKnowledge('detail.confirmDelete.title'),
                           description: tKnowledge(
                             'detail.confirmDelete.description',
-                            { title: knowledgeBase.name },
+                            { title: knowledgeBase.name, hint: '' },
                           ),
                           confirmText: tKnowledge(
                             'detail.confirmDelete.confirmText',

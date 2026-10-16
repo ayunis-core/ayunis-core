@@ -11,6 +11,7 @@ import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.sche
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { SkillActiveSwitch, useSetSkillPin } from '@/features/skill-actions';
+import { useLinkedDeleteHint } from '@/features/workspace-links';
 import { useDeleteSkill } from '@/pages/skill/api';
 import type { SkillAccess } from '@/pages/skill/model/skill-access';
 
@@ -43,12 +44,16 @@ function DeleteButton({ skill }: Readonly<{ skill: SkillResponseDto }>) {
   const { t } = useTranslation('skill');
   const { t: tSkills } = useTranslation('skills');
   const deleteSkill = useDeleteSkill(skill.name);
+  const linked = useLinkedDeleteHint('skill', skill.id, true);
   const { confirm } = useConfirmation();
 
   function handleDelete() {
     confirm({
       title: t('delete.confirmTitle'),
-      description: t('delete.confirmDescription', { name: skill.name }),
+      description: t('delete.confirmDescription', {
+        name: skill.name,
+        hint: linked.hint,
+      }),
       confirmText: t('delete.confirmText'),
       cancelText: t('delete.cancelText'),
       variant: 'destructive',
@@ -66,7 +71,7 @@ function DeleteButton({ skill }: Readonly<{ skill: SkillResponseDto }>) {
           size="icon"
           className="text-destructive hover:text-destructive"
           onClick={handleDelete}
-          disabled={deleteSkill.isPending}
+          disabled={deleteSkill.isPending || !linked.isKnown}
           aria-label={tSkills('card.deleteLabel')}
           data-testid="skill-detail-delete"
         >

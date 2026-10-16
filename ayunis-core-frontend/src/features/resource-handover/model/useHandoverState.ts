@@ -19,8 +19,9 @@ export function useHandoverState(
   const { pending, isLoading } = usePendingHandover(kind, item.id, isPersonal);
   return {
     pending,
-    isReviewing:
-      isSomeoneElses || (pending !== null && !pending.viewerIsRequester),
+    isReviewing: isSomeoneElses
+      ? isLoading || pending !== null
+      : pending !== null && !pending.viewerIsRequester,
     mayHandOver: isPersonal && !isSomeoneElses && !isLoading && !pending,
   };
 }

@@ -80,7 +80,7 @@
     "deleteLabel": "Delete",
     "confirmDelete": {
       "title": "Delete Knowledge Base",
-      "description": "Are you sure you want to delete “{{title}}”? All documents in it are deleted too. This action cannot be undone.",
+      "description": "Are you sure you want to delete “{{title}}”? All documents in it are deleted too.{{hint}} This action cannot be undone.",
       "confirmText": "Delete",
       "cancelText": "Cancel"
     },

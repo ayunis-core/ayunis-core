@@ -5,6 +5,7 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import { ReadOnlyBadge } from '@/features/resource-ownership';
+import { LinkedWorkspacesSection } from '@/features/workspace-links';
 import {
   useHandoverState,
   type HandoverState,
@@ -19,7 +20,10 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import { useSkillSources } from '@/pages/skill/api';
-import { skillAccess } from '@/pages/skill/model/skill-access';
+import {
+  skillAccess,
+  skillContentMode,
+} from '@/pages/skill/model/skill-access';
 import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
 import { SkillHeaderActions } from './SkillHeaderActions';
@@ -59,9 +63,10 @@ function SkillConfiguration({
   const access = skillAccess(skill);
   const sourcesHook = useSkillSources({ skill });
   const updateProperties = useUpdateSkillProperties(skill.id);
-  const linksResources = !access.isCollective && !handover.isReviewing;
-  const isReadOnly =
-    (access.isCollective && !access.canEdit) || handover.isReviewing;
+  const { isReadOnly, linksResources } = skillContentMode(
+    skill,
+    handover.isReviewing,
+  );
 
   return (
     <div className="grid gap-4">
@@ -98,6 +103,9 @@ function SkillConfiguration({
         translationNamespace="skill"
         sourcesHook={sourcesHook}
       />
+      {!handover.isReviewing && (
+        <LinkedWorkspacesSection kind="skill" id={skill.id} />
+      )}
       {skill.ownerType === 'org' && access.canEdit && (
         <MandatorySkillControl skill={skill} />
       )}
