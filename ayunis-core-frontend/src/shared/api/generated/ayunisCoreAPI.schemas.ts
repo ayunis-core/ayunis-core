@@ -2985,6 +2985,11 @@ export interface OwnerDescriptionDto {
   teamEditors: OwnerEditorDto[];
   /** A non-admin role holds the organisation right for this resource */
   orgEditorsIncludeNonAdmins: boolean;
+  /**
+     * Who handed the item over to its team or organisation
+     * @nullable
+     */
+  submittedBy: OwnerEditorDto | null;
 }
 
 export type KnowledgeBaseResponseDtoOwnerType = typeof KnowledgeBaseResponseDtoOwnerType[keyof typeof KnowledgeBaseResponseDtoOwnerType];
@@ -4133,6 +4138,102 @@ export interface AddGlobalPiiWhitelistWordsResponseDto {
   added: GlobalPiiWhitelistWordDto[];
   /** Submitted words that were already on the whitelist */
   duplicates: string[];
+}
+
+export type HandoverResourceType = typeof HandoverResourceType[keyof typeof HandoverResourceType];
+
+
+export const HandoverResourceType = {
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+export type HandoverTargetType = typeof HandoverTargetType[keyof typeof HandoverTargetType];
+
+
+export const HandoverTargetType = {
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface HandoverTargetDto {
+  type: HandoverTargetType;
+  teamId?: string;
+  teamName?: string;
+  isOwnTeam: boolean;
+  memberCount: number;
+  /** The caller may review this target, so no request is needed */
+  appliesImmediately: boolean;
+  reviewers: OwnerEditorDto[];
+}
+
+export interface HandoverTargetsResponseDto {
+  targets: HandoverTargetDto[];
+  orgEditorsIncludeNonAdmins: boolean;
+}
+
+export interface HandoverSummaryDto {
+  canReviewSkills: boolean;
+  canReviewKnowledgeBases: boolean;
+  openSkillRequests: number;
+  openKnowledgeBaseRequests: number;
+}
+
+export interface HandoverResourceDto {
+  id: string;
+  name: string;
+}
+
+export interface HandoverTargetRefDto {
+  type: HandoverTargetType;
+  teamId?: string;
+  teamName?: string;
+}
+
+export type HandoverStatus = typeof HandoverStatus[keyof typeof HandoverStatus];
+
+
+export const HandoverStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface PendingHandoverDto {
+  id: string;
+  resourceType: HandoverResourceType;
+  resource: HandoverResourceDto;
+  target: HandoverTargetRefDto;
+  requestedBy: OwnerEditorDto;
+  requestedAt: string;
+  status: HandoverStatus;
+  viewerIsRequester: boolean;
+  viewerCanReview: boolean;
+  /** Team admins who may review a request to a team */
+  reviewers: OwnerEditorDto[];
+}
+
+export interface PendingHandoverResponseDto {
+  /** @nullable */
+  pending: PendingHandoverDto | null;
+}
+
+export interface HandoverRequestDto {
+  id: string;
+  resourceType: HandoverResourceType;
+  resource: HandoverResourceDto;
+  target: HandoverTargetRefDto;
+  requestedBy: OwnerEditorDto;
+  requestedAt: string;
+  status: HandoverStatus;
+}
+
+export interface CreateHandoverRequestDto {
+  resourceType: HandoverResourceType;
+  resourceId: string;
+  targetType: HandoverTargetType;
+  targetTeamId?: string;
 }
 
 export interface CreditsPerEuroResponseDto {
@@ -6049,6 +6150,19 @@ export const WorkspacesControllerFindAllSort = {
   createdAt: 'createdAt',
   name: 'name',
 } as const;
+
+export type HandoverRequestsControllerTargetsParams = {
+resourceType: HandoverResourceType;
+};
+
+export type HandoverRequestsControllerPendingParams = {
+resourceType: HandoverResourceType;
+resourceId: string;
+};
+
+export type HandoverRequestsControllerListParams = {
+resourceType: HandoverResourceType;
+};
 
 export type UsageControllerGetUserUsageParams = {
 /**

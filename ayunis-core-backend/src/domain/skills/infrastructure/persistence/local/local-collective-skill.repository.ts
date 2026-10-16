@@ -132,6 +132,35 @@ export class LocalCollectiveSkillRepository implements CollectiveSkillRepository
     await this.insertState(skillId, userId, { isActive: true, isPinned });
   }
 
+  async transferFromPersonal(
+    skillId: UUID,
+    owner: { teamId: UUID | null; orgId: UUID; submittedByUserId: UUID },
+  ): Promise<boolean> {
+    const result = await this.skills.update(
+      { id: skillId, userId: owner.submittedByUserId },
+      {
+        userId: null,
+        teamId: owner.teamId,
+        orgId: owner.orgId,
+        submittedByUserId: owner.submittedByUserId,
+      },
+    );
+    if (!result.affected) return false;
+    await this.manager
+      .createQueryBuilder()
+      .delete()
+      .from('skill_knowledge_bases')
+      .where('"skillsId" = :skillId', { skillId })
+      .execute();
+    await this.manager
+      .createQueryBuilder()
+      .delete()
+      .from('skill_mcp_integrations')
+      .where('"skillsId" = :skillId', { skillId })
+      .execute();
+    return true;
+  }
+
   private async insertState(
     skillId: UUID,
     userId: UUID,

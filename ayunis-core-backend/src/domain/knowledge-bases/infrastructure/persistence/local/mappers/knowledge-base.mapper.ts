@@ -30,10 +30,15 @@ export class KnowledgeBaseMapper {
         workspaceId: record.workspaceId,
       });
     }
+    const submittedByUserId = record.submittedByUserId ?? null;
     if (record.teamId) {
-      return new TeamKnowledgeBase({ ...params, teamId: record.teamId });
+      return new TeamKnowledgeBase({
+        ...params,
+        teamId: record.teamId,
+        submittedByUserId,
+      });
     }
-    return new OrgKnowledgeBase(params);
+    return new OrgKnowledgeBase({ ...params, submittedByUserId });
   }
 
   toPersonal(record: KnowledgeBaseRecord): PersonalKnowledgeBase {
@@ -63,6 +68,10 @@ export class KnowledgeBaseMapper {
     record.workspaceId =
       entity instanceof WorkspaceKnowledgeBase ? entity.workspaceId : null;
     record.teamId = entity instanceof TeamKnowledgeBase ? entity.teamId : null;
+    record.submittedByUserId =
+      entity instanceof TeamKnowledgeBase || entity instanceof OrgKnowledgeBase
+        ? entity.submittedByUserId
+        : null;
     record.createdAt = entity.createdAt;
     record.updatedAt = entity.updatedAt;
     return record;

@@ -12,6 +12,8 @@ import { LocalCollectiveSkillRepository } from './infrastructure/persistence/loc
 import { SkillNameLookupService } from './application/services/skill-name-lookup.service';
 import { SkillOwnershipContextService } from './application/services/skill-ownership-context.service';
 import { OwnershipModule } from 'src/domain/ownership/ownership.module';
+import { HandoversModule } from 'src/domain/handovers/handovers.module';
+import { TransferSkillOwnershipUseCase } from './application/use-cases/transfer-skill-ownership/transfer-skill-ownership.use-case';
 import { SkillRecord } from './infrastructure/persistence/local/schema/skill.record';
 import { SkillActivationRecord } from './infrastructure/persistence/local/schema/skill-activation.record';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
@@ -109,6 +111,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     UsageModule,
     TrialsModule,
     OwnershipModule,
+    forwardRef(() => HandoversModule),
   ],
   providers: [
     ActivateWorkspaceSkillByNameUseCase,
@@ -125,6 +128,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     SkillAuthorizationService,
     SkillNameLookupService,
     SkillOwnershipContextService,
+    TransferSkillOwnershipUseCase,
     FindActivatableSkillUseCase,
     SkillActivationService,
     SkillCreatorNameService,
@@ -185,6 +189,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     SkillKnowledgeBasesController,
   ],
   exports: [
+    TransferSkillOwnershipUseCase,
     ActivateWorkspaceSkillByNameUseCase,
     GetWorkspaceSkillsUseCase,
     SkillRepository,

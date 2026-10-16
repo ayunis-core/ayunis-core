@@ -44,6 +44,20 @@ export class OwnershipViewer {
     return this.permissions.has(permission);
   }
 
+  isMemberOf(teamId: UUID): boolean {
+    return this.memberTeamIds.has(teamId);
+  }
+
+  hasTeamAdminRight(teamId: UUID, right: TeamAdminPermission): boolean {
+    return (
+      this.adminTeamIds.has(teamId) && this.teamAdminPermissions.has(right)
+    );
+  }
+
+  hasTeamAdminRightAnywhere(right: TeamAdminPermission): boolean {
+    return this.adminTeamIds.size > 0 && this.teamAdminPermissions.has(right);
+  }
+
   canManageOwn(kind: OwnedResourceKind): boolean {
     return this.has(OWNERSHIP_RIGHTS[kind].own);
   }
@@ -76,9 +90,6 @@ export class OwnershipViewer {
   }
 
   private isTeamEditor(kind: OwnedResourceKind, teamId: UUID): boolean {
-    return (
-      this.adminTeamIds.has(teamId) &&
-      this.teamAdminPermissions.has(OWNERSHIP_RIGHTS[kind].team)
-    );
+    return this.hasTeamAdminRight(teamId, OWNERSHIP_RIGHTS[kind].team);
   }
 }

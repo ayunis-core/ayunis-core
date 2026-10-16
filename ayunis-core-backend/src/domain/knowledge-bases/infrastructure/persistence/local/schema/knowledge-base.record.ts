@@ -59,6 +59,13 @@ export class KnowledgeBaseRecord extends BaseRecord {
   @JoinColumn({ name: 'teamId' })
   team: TeamRecord | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  submittedByUserId: UUID | null;
+
+  @ManyToOne(() => UserRecord, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'submittedByUserId' })
+  submittedBy?: UserRecord | null;
+
   @OneToMany(() => SourceRecord, (source) => source.knowledgeBase)
   sources: SourceRecord[];
 }
