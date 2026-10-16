@@ -16,15 +16,10 @@ import { PermissionGate } from '@/features/permissions';
 
 interface TeamsListProps {
   teams: Team[];
-  canManage?: boolean;
   onEditTeam: (team: Team) => void;
 }
 
-export function TeamsList({
-  teams,
-  onEditTeam,
-  canManage = true,
-}: Readonly<TeamsListProps>) {
+export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
 
@@ -76,7 +71,7 @@ export function TeamsList({
                   e.stopPropagation();
                   deleteTeam(team.id);
                 }}
-                disabled={!canManage || isDeleting}
+                disabled={isDeleting}
               >
                 <Trash2 />
               </Button>

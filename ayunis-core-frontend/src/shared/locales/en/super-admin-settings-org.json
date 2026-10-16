@@ -680,6 +680,6 @@
     "success": "Usage visibility updated",
     "error": "Could not update usage visibility",
     "notFound": "Organisation not found",
-    "description": "When enabled, only super admins can change team memberships or team limits, or delete teams and users."
+    "description": "When enabled, the user usage table is hidden for this organisation's admins and usage of individual users is no longer available to them."
   }
 }

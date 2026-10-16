@@ -1,5 +1,4 @@
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
@@ -19,7 +18,6 @@ export class SetTeamCreditLimitUseCase {
   private readonly logger = new Logger(SetTeamCreditLimitUseCase.name);
 
   constructor(
-    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly getTeamUseCase: GetTeamUseCase,
@@ -28,7 +26,6 @@ export class SetTeamCreditLimitUseCase {
   @HandleUnexpectedErrors(UnexpectedCreditLimitError)
   async execute(command: SetTeamCreditLimitCommand): Promise<TeamCreditLimit> {
     const orgId = getRequiredOrgId(this.contextService, command.orgId);
-    await this.teamManagementAccess.execute({ orgId });
     if (!isNonNegativeFinite(command.monthlyCredits)) {
       throw new InvalidCreditLimitError(
         'monthlyCredits must be a number greater than or equal to 0',

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TeamCreditLimitCard } from './TeamCreditLimitCard';
 
 const state = vi.hoisted(() => ({
-  limits: new Map<string, { monthlyCredits: number; creditsUsed?: number }>(),
+  limits: new Map<string, { monthlyCredits: number; creditsUsed: number }>(),
   isLoading: false,
   isError: false,
 }));
@@ -64,35 +64,4 @@ describe('TeamCreditLimitCard', () => {
       ).toBe(true);
     },
   );
-});
-
-it('shows only the configured limit when team consumption is hidden', () => {
-  state.limits.set('team', { monthlyCredits: 7000 });
-  render(<TeamCreditLimitCard teamId="team" teamName="Finance" />);
-  expect(screen.getByText('creditLimits.teamCard.limitOnly')).toBeTruthy();
-});
-
-it('keeps the saved limit visible but prevents configuration when management is restricted', () => {
-  state.limits.set('team', { monthlyCredits: 7000 });
-  render(
-    <TeamCreditLimitCard teamId="team" teamName="Finance" canManage={false} />,
-  );
-  expect(
-    screen.getByTestId('credit-limits-team-team').hasAttribute('disabled'),
-  ).toBe(true);
-  expect(screen.getByText('creditLimits.teamCard.limitOnly')).toBeTruthy();
-});
-
-it('closes an open editor when management is revoked and keeps it closed after restoration', () => {
-  const { rerender } = render(
-    <TeamCreditLimitCard teamId="team" teamName="Finance" canManage />,
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'table.configure' }));
-  expect(screen.getByRole('dialog')).toBeTruthy();
-  rerender(
-    <TeamCreditLimitCard teamId="team" teamName="Finance" canManage={false} />,
-  );
-  expect(screen.queryByRole('dialog')).toBeNull();
-  rerender(<TeamCreditLimitCard teamId="team" teamName="Finance" canManage />);
-  expect(screen.queryByRole('dialog')).toBeNull();
 });

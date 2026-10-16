@@ -4007,25 +4007,6 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/teams/management-access": {
-      "get": {
-        "operationId": "TeamManagementController_getTeamManagementAccess",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TeamManagementAccessDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["teams"]
-      }
-    },
     "/teams": {
       "get": {
         "operationId": "TeamsController_listTeams",
@@ -15513,16 +15494,6 @@
         },
         "required": ["name", "provider", "displayName", "isArchived"]
       },
-      "TeamManagementAccessDto": {
-        "type": "object",
-        "properties": {
-          "canManage": {
-            "type": "boolean",
-            "description": "Whether the current human principal satisfies the organisation usage-privacy restriction; mutation permissions are checked separately"
-          }
-        },
-        "required": ["canManage"]
-      },
       "CreateTeamDto": {
         "type": "object",
         "properties": {
@@ -19358,11 +19329,11 @@
           },
           "creditsUsed": {
             "type": "number",
-            "description": "Credits consumed by all current team members in the current month; omitted when individual usage is hidden",
+            "description": "Credits consumed by all current team members in the current month",
             "example": 8300
           }
         },
-        "required": ["teamId", "name", "monthlyCredits"]
+        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
       },
       "ApiKeyCreditLimitItemDto": {
         "type": "object",

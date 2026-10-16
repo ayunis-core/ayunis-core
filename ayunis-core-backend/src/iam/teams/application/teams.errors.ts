@@ -3,7 +3,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum TeamErrorCode {
   TEAM_NOT_FOUND = 'TEAM_NOT_FOUND',
-  TEAM_MANAGEMENT_RESTRICTED = 'TEAM_MANAGEMENT_RESTRICTED',
   TEAM_NAME_ALREADY_EXISTS = 'TEAM_NAME_ALREADY_EXISTS',
   TEAM_INVALID_INPUT = 'TEAM_INVALID_INPUT',
   UNEXPECTED_TEAM_ERROR = 'UNEXPECTED_TEAM_ERROR',
@@ -66,16 +65,6 @@ export class UnexpectedTeamError extends TeamError {
       TeamErrorCode.UNEXPECTED_TEAM_ERROR,
       500,
       { error },
-    );
-  }
-}
-
-export class TeamManagementRestrictedError extends TeamError {
-  constructor() {
-    super(
-      'Team membership and credit limits require a super admin when individual usage is hidden',
-      TeamErrorCode.TEAM_MANAGEMENT_RESTRICTED,
-      403,
     );
   }
 }

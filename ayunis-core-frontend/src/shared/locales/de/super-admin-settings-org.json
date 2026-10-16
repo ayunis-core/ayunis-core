@@ -680,6 +680,6 @@
     "success": "Verbrauchssichtbarkeit aktualisiert",
     "error": "Verbrauchssichtbarkeit konnte nicht aktualisiert werden",
     "notFound": "Organisation nicht gefunden",
-    "description": "Bei aktiviertem Schalter können nur Super-Admins Teammitgliedschaften und Teamlimits ändern sowie Teams und Benutzer löschen."
+    "description": "Bei aktiviertem Schalter wird die Tabelle „Benutzerverbrauch“ für Admins dieser Organisation ausgeblendet und der Verbrauch einzelner Benutzer ist für sie nicht mehr abrufbar."
   }
 }

@@ -1,4 +1,3 @@
-import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
@@ -22,7 +21,6 @@ interface TeamsSettingsPageProps {
 
 export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const { t } = useTranslation('admin-settings-teams');
-  const { canManageTeams } = useTeamManagementAccess();
   const { t: tLayout } = useTranslation('admin-settings-layout');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTeam, setEditTeam] = useState<Team | null>(null);
@@ -59,11 +57,7 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
         {showCreateFirstTeamEmptyState && <CreateFirstTeamEmptyState />}
         {showNoTeamsFoundEmptyState && <NoTeamsFoundEmptyState />}
         {showTeamsList && (
-          <TeamsList
-            canManage={canManageTeams}
-            teams={filteredTeams}
-            onEditTeam={setEditTeam}
-          />
+          <TeamsList teams={filteredTeams} onEditTeam={setEditTeam} />
         )}
 
         <CreateTeamDialog

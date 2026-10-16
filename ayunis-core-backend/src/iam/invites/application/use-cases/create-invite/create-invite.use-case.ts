@@ -1,6 +1,5 @@
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindTeamsByIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-ids-and-org-id/find-teams-by-ids-and-org-id.use-case';
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
@@ -45,7 +44,6 @@ export class CreateInviteUseCase {
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     private readonly configService: ConfigService,
     private readonly findTeams: FindTeamsByIdsAndOrgIdUseCase,
-    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
@@ -101,7 +99,6 @@ export class CreateInviteUseCase {
   private async validateTeams(command: CreateInviteCommand): Promise<void> {
     const teamIds = [...new Set(command.teamIds ?? [])];
     if (teamIds.length === 0) return;
-    await this.teamManagementAccess.execute({ orgId: command.orgId });
     const teams = await this.findTeams.execute({
       teamIds,
       orgId: command.orgId,
