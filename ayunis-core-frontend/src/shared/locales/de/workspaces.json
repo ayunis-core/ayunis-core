@@ -131,7 +131,9 @@
     "placeholder": "Arbeitsbereich auswählen",
     "addToWorkspace": "Zu Arbeitsbereich hinzufügen",
     "removeFromWorkspace": "Aus Arbeitsbereich entfernen",
-    "newWorkspace": "Neuer Arbeitsbereich"
+    "newWorkspace": "Neuer Arbeitsbereich",
+    "favorites": "Favoriten",
+    "otherWorkspaces": "Weitere Arbeitsbereiche"
   },
   "validation": {
     "invalid": "Ungültiger Wert",
