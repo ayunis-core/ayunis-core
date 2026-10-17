@@ -33,6 +33,7 @@ import { ShareDtoMapper } from './presenters/http/mappers/share-dto.mapper';
 import { SharesController } from './presenters/http/shares.controller';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 import { UsersModule } from 'src/iam/users/users.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { UsersModule } from 'src/iam/users/users.module';
     ]),
     forwardRef(() => TeamsModule), // For CheckUserTeamMembershipUseCase, ListMyTeamsUseCase, GetTeamUseCase
     UsersModule, // For ShareScopeResolverService
+    PermissionsModule,
   ],
   providers: [
     // Repository

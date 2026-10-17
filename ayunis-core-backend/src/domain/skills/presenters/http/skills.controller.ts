@@ -84,7 +84,7 @@ export class SkillsController {
     private readonly improveSkillText: ImproveSkillTextUseCase,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.INSTALL_MARKETPLACE_SKILLS)
   @Post('install-from-marketplace')
   @ApiOperation({ summary: 'Install a skill from the marketplace' })
   @ApiBody({ type: InstallSkillFromMarketplaceDto })
@@ -102,7 +102,7 @@ export class SkillsController {
     });
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @RequireSubscription()
   @RequireAcademyCertificate()
   @Post('improve-text')
@@ -142,7 +142,7 @@ export class SkillsController {
     return { text };
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Post()
   @ApiOperation({ summary: 'Create a new skill' })
   @ApiBody({ type: CreateSkillDto })
@@ -215,7 +215,7 @@ export class SkillsController {
     return this.mapper.toDto(skill, context, creatorName);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Put(':id')
   @ApiOperation({ summary: 'Update a skill' })
   @ApiResponse({ status: 200, type: SkillResponseDto })
@@ -229,7 +229,7 @@ export class SkillsController {
     return this.findOne(id);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {

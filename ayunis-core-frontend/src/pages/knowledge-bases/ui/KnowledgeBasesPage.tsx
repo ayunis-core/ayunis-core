@@ -27,7 +27,7 @@ export default function KnowledgeBasesPage({
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const canCreate = isLoadingPermissions || can('manage_knowledge_bases');
+  const canCreate = isLoadingPermissions || can('manage_own_knowledge');
 
   const personalKnowledgeBases = knowledgeBases
     .filter((kb) => !kb.isShared)

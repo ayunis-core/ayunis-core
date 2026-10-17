@@ -11,7 +11,7 @@ export const REQUIRE_PERMISSION_KEY = 'requiresPermission';
  *
  * @example
  * ```typescript
- * @RequirePermission(Permission.MANAGE_SKILLS)
+ * @RequirePermission(Permission.MANAGE_OWN_SKILLS)
  * @Post()
  * createSkill() {}
  * ```

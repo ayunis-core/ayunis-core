@@ -22,7 +22,7 @@ describe('UpdateRolePermissionsUseCase', () => {
     await expect(
       useCase.execute(
         new UpdateRolePermissionsCommand(orgId, UserRole.ADMIN, [
-          Permission.MANAGE_SKILLS,
+          Permission.MANAGE_OWN_SKILLS,
         ]),
       ),
     ).rejects.toBeInstanceOf(RoleNotConfigurableError);
@@ -32,16 +32,16 @@ describe('UpdateRolePermissionsUseCase', () => {
   it('deduplicates permissions before persisting', async () => {
     await useCase.execute(
       new UpdateRolePermissionsCommand(orgId, UserRole.MANAGER, [
-        Permission.MANAGE_SKILLS,
-        Permission.MANAGE_SKILLS,
-        Permission.SHARE_SKILLS,
+        Permission.MANAGE_OWN_SKILLS,
+        Permission.MANAGE_OWN_SKILLS,
+        Permission.REQUEST_SKILL_TRANSFER,
       ]),
     );
 
     expect(repository.setForRole).toHaveBeenCalledWith(
       orgId,
       UserRole.MANAGER,
-      [Permission.MANAGE_SKILLS, Permission.SHARE_SKILLS],
+      [Permission.MANAGE_OWN_SKILLS, Permission.REQUEST_SKILL_TRANSFER],
     );
   });
 });

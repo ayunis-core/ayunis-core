@@ -2,6 +2,8 @@ import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { RequestMethod } from '@nestjs/common';
 import { REQUIRE_ACADEMY_CERTIFICATE_KEY } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 import { REQUIRE_SUBSCRIPTION_KEY } from 'src/iam/authorization/application/decorators/subscription.decorator';
+import { REQUIRE_PERMISSION_KEY } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { SkillsController } from './skills.controller';
 
 interface RouteMetadata {
@@ -10,6 +12,28 @@ interface RouteMetadata {
 }
 
 describe(SkillsController.name, () => {
+  it('gates marketplace installs on their own permission', () => {
+    expect(
+      Reflect.getMetadata(
+        REQUIRE_PERMISSION_KEY,
+        SkillsController.prototype.installFromMarketplace,
+      ),
+    ).toEqual([Permission.INSTALL_MARKETPLACE_SKILLS]);
+  });
+
+  it('gates creating and editing own skills on manage_own_skills', () => {
+    const prototype = SkillsController.prototype;
+    for (const handler of [
+      prototype.create,
+      prototype.update,
+      prototype.delete,
+    ]) {
+      expect(Reflect.getMetadata(REQUIRE_PERMISSION_KEY, handler)).toEqual([
+        Permission.MANAGE_OWN_SKILLS,
+      ]);
+    }
+  });
+
   it('exposes explicit state setters and no bodyless toggle routes', () => {
     const prototype = SkillsController.prototype as unknown as Record<
       string,

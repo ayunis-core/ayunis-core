@@ -23,6 +23,8 @@ import {
 } from 'src/domain/shares/application/use-cases/create-share/create-share.command';
 import { randomUUID } from 'crypto';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
+import { REQUIRE_PERMISSION_KEY } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 describe('SharesController', () => {
   let controller: SharesController;
@@ -215,6 +217,32 @@ describe('SharesController', () => {
       await controller.deleteShare(shareId);
 
       expect(deleteShareUseCase.execute).toHaveBeenCalledWith(shareId);
+    });
+  });
+
+  describe('route permissions', () => {
+    it('lets holders of either scope permission reach the share routes', () => {
+      const permissionsOf = (handler: object) =>
+        Reflect.getMetadata(REQUIRE_PERMISSION_KEY, handler) as Permission[];
+
+      expect(
+        permissionsOf(SharesController.prototype.createSkillShare),
+      ).toEqual([
+        Permission.REQUEST_SKILL_TRANSFER,
+        Permission.REQUEST_SKILL_TRANSFER_ORG,
+      ]);
+      expect(
+        permissionsOf(SharesController.prototype.createKnowledgeBaseShare),
+      ).toEqual([
+        Permission.REQUEST_KNOWLEDGE_TRANSFER,
+        Permission.REQUEST_KNOWLEDGE_TRANSFER_ORG,
+      ]);
+      expect(permissionsOf(SharesController.prototype.deleteShare)).toEqual([
+        Permission.REQUEST_SKILL_TRANSFER,
+        Permission.REQUEST_SKILL_TRANSFER_ORG,
+        Permission.REQUEST_KNOWLEDGE_TRANSFER,
+        Permission.REQUEST_KNOWLEDGE_TRANSFER_ORG,
+      ]);
     });
   });
 });
