@@ -32,12 +32,14 @@ import ResolveSubscriptionOverlapDialog from './ResolveSubscriptionOverlapDialog
 
 interface SubscriptionHistorySectionProps {
   orgId: string;
+  readOnly?: boolean;
   subscriptions: SubscriptionHistoryItem[];
   activeCount: number;
 }
 
 export default function SubscriptionHistorySection({
   orgId,
+  readOnly = false,
   subscriptions,
   activeCount,
 }: Readonly<SubscriptionHistorySectionProps>) {
@@ -58,12 +60,14 @@ export default function SubscriptionHistorySection({
           <AlertDescription>
             {t('subscriptionHistory.multipleActive', { count: activeCount })}
           </AlertDescription>
-          <AlertAction>
-            <ResolveSubscriptionOverlapDialog
-              orgId={orgId}
-              subscriptions={subscriptions}
-            />
-          </AlertAction>
+          {!readOnly && (
+            <AlertAction>
+              <ResolveSubscriptionOverlapDialog
+                orgId={orgId}
+                subscriptions={subscriptions}
+              />
+            </AlertAction>
+          )}
         </Alert>
       )}
       <Card data-testid="subscription-history">

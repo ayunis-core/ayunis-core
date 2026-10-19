@@ -1,3 +1,5 @@
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
+import ExternalSubscriptionNotice from './ExternalSubscriptionNotice';
 import { useTranslation } from 'react-i18next';
 import { GraduationCapIcon } from 'lucide-react';
 import {
@@ -11,9 +13,9 @@ import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { Switch } from '@ayunis/ui/components/switch';
 import { Label } from '@ayunis/ui/components/label';
 import type { AddonType } from '@/shared/api';
-import { useSuperAdminAddons } from '../api/useSuperAdminAddons';
-import { useSuperAdminActivateAddon } from '../api/useSuperAdminActivateAddon';
-import { useSuperAdminDeactivateAddon } from '../api/useSuperAdminDeactivateAddon';
+import { useSuperAdminAddons } from '@/pages/super-admin-settings/org/api/useSuperAdminAddons';
+import { useSuperAdminActivateAddon } from '@/pages/super-admin-settings/org/api/useSuperAdminActivateAddon';
+import { useSuperAdminDeactivateAddon } from '@/pages/super-admin-settings/org/api/useSuperAdminDeactivateAddon';
 
 const ADDON_ICONS: Record<AddonType, typeof GraduationCapIcon> = {
   ayunis_core_academy: GraduationCapIcon,
@@ -25,6 +27,7 @@ interface AddonsSectionProps {
 
 export default function AddonsSection({ orgId }: Readonly<AddonsSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+  const readOnly = useIsFeatureEnabled('externalSubscriptionsEnabled');
   const { addons, isLoading, isError } = useSuperAdminAddons(orgId);
   const { activateAddon, isLoading: isActivating } =
     useSuperAdminActivateAddon(orgId);
@@ -65,7 +68,8 @@ export default function AddonsSection({ orgId }: Readonly<AddonsSectionProps>) {
               <Switch
                 id={`addon-${addon.type}`}
                 checked={addon.active}
-                disabled={isActivating || isDeactivating}
+                disabled={isActivating || isDeactivating || readOnly}
+                data-testid={`addon-${addon.type}-toggle`}
                 onCheckedChange={(checked) =>
                   checked
                     ? activateAddon(addon.type)
@@ -85,7 +89,10 @@ export default function AddonsSection({ orgId }: Readonly<AddonsSectionProps>) {
         <CardTitle>{t('addons.title')}</CardTitle>
         <CardDescription>{t('addons.description')}</CardDescription>
       </CardHeader>
-      <CardContent>{renderContent()}</CardContent>
+      <CardContent>
+        {readOnly && <ExternalSubscriptionNotice />}
+        {renderContent()}
+      </CardContent>
     </Card>
   );
 }
