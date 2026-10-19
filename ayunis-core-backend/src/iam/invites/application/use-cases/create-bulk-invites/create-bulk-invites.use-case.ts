@@ -17,7 +17,10 @@ import { InvitesRepository } from 'src/iam/invites/application/ports/invites.rep
 import { getInviteExpiresAt } from 'src/iam/invites/application/services/invite-expiration.util';
 import { CreateBulkInvitesCommand } from 'src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.command';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
-import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  InsufficientSeatsError,
+  SubscriptionNotFoundError,
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
@@ -163,6 +166,17 @@ export class CreateBulkInvitesUseCase {
       subscription.availableSeats !== null &&
       subscription.availableSeats < command.invites.length
     ) {
+      if (
+        this.configService.get<boolean>(
+          'features.externalSubscriptionsEnabled',
+          false,
+        ) === true
+      ) {
+        throw new InsufficientSeatsError(
+          command.invites.length,
+          subscription.availableSeats,
+        );
+      }
       const additionalSeats =
         command.invites.length - subscription.availableSeats;
       await this.updateSeatsUseCase.execute(

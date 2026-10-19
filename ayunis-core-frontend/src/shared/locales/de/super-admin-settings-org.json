@@ -89,7 +89,11 @@
     "changeErrorAccessOverlap": "Das neue Abonnement würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden. Passen Sie das Startdatum an oder beenden Sie zuerst das andere Abonnement.",
     "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
     "createErrorEndDate": "Das Enddatum muss nach dem Startdatum liegen (ohne Startdatum nach dem aktuellen Zeitpunkt).",
-    "endsAt": "Zugriff endet am {{date}}"
+    "endsAt": "Zugriff endet am {{date}}",
+    "managedExternally": "Durch ein externes Abrechnungssystem verwaltet. Wenden Sie sich an den Vertrieb, um das Abonnement oder das Academy-Add-on zu ändern.",
+    "managementUnavailable": "Die Abrechnungsverwaltung konnte nicht geladen werden. Änderungen sind vorübergehend deaktiviert.",
+    "managementLoading": "Abrechnungsverwaltung wird geladen…",
+    "retryManagement": "Erneut versuchen"
   },
   "subscriptionHistory": {
     "title": "Abo-Verlauf",

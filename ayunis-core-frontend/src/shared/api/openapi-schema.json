@@ -13057,7 +13057,14 @@
       },
       "FeatureTogglesResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "externalSubscriptionsEnabled": {
+            "type": "boolean",
+            "description": "Cloud subscriptions are managed externally",
+            "default": false
+          }
+        },
+        "required": ["externalSubscriptionsEnabled"]
       },
       "UserTeamResponseDto": {
         "type": "object",

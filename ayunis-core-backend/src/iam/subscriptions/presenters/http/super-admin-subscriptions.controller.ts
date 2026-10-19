@@ -1,3 +1,4 @@
+import { RequireManualSubscriptionEditing } from 'src/common/guards/manual-subscription-edit.guard';
 import {
   Controller,
   Get,
@@ -73,6 +74,7 @@ const UNAUTHORIZED_DESCRIPTION =
   'User not authenticated or not authorized as super admin';
 const INTERNAL_ERROR_DESCRIPTION = 'Internal server error';
 
+@RequireManualSubscriptionEditing()
 @ApiTags('Super Admin Subscriptions')
 @Controller('super-admin/subscriptions')
 @SystemRoles(SystemRole.SUPER_ADMIN)

@@ -1,6 +1,8 @@
 import { registerAs } from '@nestjs/config';
 
-export enum FeatureFlag {}
+export enum FeatureFlag {
+  ExternalSubscriptions = 'externalSubscriptionsEnabled',
+}
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
 
@@ -14,7 +16,11 @@ export const parseBooleanWithDefault = (
   return value.trim() === 'true';
 };
 
-export const featuresConfig = registerAs(
-  'features',
-  (): FeaturesConfig => ({}),
-);
+export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
+  externalSubscriptionsEnabled:
+    process.env.APP_ENVIRONMENT === 'cloud' &&
+    parseBooleanWithDefault(
+      process.env.FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED,
+      false,
+    ),
+}));
