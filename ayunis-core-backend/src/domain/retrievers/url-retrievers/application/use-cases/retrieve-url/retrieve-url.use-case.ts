@@ -1,3 +1,5 @@
+import type { UUID } from 'crypto';
+import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
 import { Injectable, Logger } from '@nestjs/common';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { RetrieveUrlCommand } from './retrieve-url.command';
@@ -29,6 +31,7 @@ export class RetrieveUrlUseCase {
     private readonly assertCrawlDomainAccessUseCase: AssertCrawlDomainAccessUseCase,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly preflightCheckUseCase: PreflightCheckUseCase,
+    private readonly pdfExtractionCache: PdfExtractionCachePort,
   ) {}
 
   async execute(command: RetrieveUrlCommand): Promise<UrlRetrieverResult> {
@@ -59,7 +62,7 @@ export class RetrieveUrlUseCase {
         assertContentType: (contentType, finalUrl) =>
           this.assertContentTypeAcceptable(contentType, finalUrl, command.url),
       });
-      return await this.parseByContentType(raw, command.url);
+      return await this.parseByContentType(raw, command.url, command.orgId);
     } catch (error) {
       return this.mapError(error, command.url);
     }
@@ -73,9 +76,12 @@ export class RetrieveUrlUseCase {
   private async parseByContentType(
     raw: RawUrlResponse,
     requestedUrl: string,
+    orgId: UUID,
   ): Promise<UrlRetrieverResult> {
     if (this.isPdf(raw.contentType, raw.finalUrl, requestedUrl)) {
-      return this.parsePdf(raw);
+      return this.pdfExtractionCache.getOrLoad(orgId, raw, () =>
+        this.parsePdf(raw),
+      );
     }
 
     this.assertSupportedContentType(raw.contentType, raw.finalUrl);
