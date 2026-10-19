@@ -78,6 +78,39 @@ Change `HOST_PORT` in the `.env` file in the project root
 
 ## ⚙️ Configuration
 
+### Client IP and reverse proxies
+
+The backend defaults to `TRUST_PROXY=0`: only the TCP peer determines the client
+IP. Client-supplied `X-Forwarded-For`, `X-Real-IP`, and `CF-Connecting-IP` cannot
+override it. This IP is used for rate limiting, IP allowlists, admin lockout
+protection, and access-denied audit logs.
+
+When deploying behind a reverse proxy, set `TRUST_PROXY` in
+`ayunis-core-backend/.env` and restart the backend. Prefer a comma-separated list
+of the actual proxy IPs/CIDRs, for example `10.20.0.10/32,fd00::10/128`.
+Express follows `X-Forwarded-For` from the socket toward the client and selects
+the nearest untrusted address. Other client-IP headers are ignored, including
+when the peer is trusted. Configure your proxy to supply `X-Forwarded-For`.
+
+A hop count such as `TRUST_PROXY=1` is also supported. Use it for a single Caddy
+edge **only after verifying** every request passes through that edge and the
+backend port cannot be reached directly. A hop count trusts proximity rather
+than the peer's identity; direct access or a shorter proxy path permits spoofing.
+Do not enable proxy trust in the default directly published Compose setup without
+first restricting backend access. Unset/blank/zero disables proxy trust;
+invalid values, booleans, and named subnet aliases fail startup. Trust only
+actual proxy addresses. CIDRs with a `/0` prefix are unsupported by Express
+and would crash application startup; they are rejected during environment
+validation. Numeric `TRUST_PROXY=0` remains valid and disables proxy trust.
+See [Express proxy configuration](https://expressjs.com/en/guide/behind-proxies/).
+
+Before rollout, check the proxy chain and reachable backend ports for **each**
+environment. Verify a spoofed-header request is still denied by an IP allowlist
+or consumes the same rate-limit quota, and verify a legitimately allowed client
+still has access. Existing allowlists must contain real client IPs when enabling
+proxy trust; otherwise operators can lose access. Verify the current admin IP
+before updating an allowlist.
+
 ### E-Mail Provider Configuration
 
 E-mails for email confirmation and user invite flows will only be sent if at least `SMPT_HOST` and `SMTP_PORT` are configured. See `/ayunis-core-backend/src/config/emails.config.ts`.
