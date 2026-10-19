@@ -5,7 +5,7 @@ import {
   SuperAdminOrgOverviewResponseDto,
   SuperAdminOrgResponseDto,
 } from 'src/iam/orgs/presenters/http/dtos/super-admin-org-response.dto';
-import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SuperAdminOrgList } from 'src/iam/orgs/application/models/super-admin-org-list';
 import type { SuperAdminOrgOverview } from 'src/iam/orgs/application/models/super-admin-org-overview';
 
 @Injectable()
@@ -27,16 +27,18 @@ export class SuperAdminOrgResponseDtoMapper {
     return { ...this.toDto(org), lifecycleStatus };
   }
 
-  toPaginatedDto(
-    paginated: Paginated<SuperAdminOrgOverview>,
-  ): SuperAdminOrgListResponseDto {
+  toListDto({
+    page,
+    lifecycleCounts,
+  }: SuperAdminOrgList): SuperAdminOrgListResponseDto {
     return {
-      data: paginated.data.map((overview) => this.toOverviewDto(overview)),
+      data: page.data.map((overview) => this.toOverviewDto(overview)),
       pagination: {
-        limit: paginated.limit,
-        offset: paginated.offset,
-        total: paginated.total,
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
       },
+      lifecycleCounts,
     };
   }
 }

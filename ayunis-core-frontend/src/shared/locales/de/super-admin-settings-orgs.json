@@ -48,5 +48,14 @@
     "trial": "Testphase",
     "no-plan": "Kein Tarif",
     "archived": "Archiviert"
+  },
+  "lifecycleSummary": {
+    "total_one": "{{count, number}} Organisation",
+    "total_other": "{{count, number}} Organisationen",
+    "paying": "{{count, number}} zahlend",
+    "expired": "{{count, number}} abgelaufen",
+    "trial": "{{count, number}} in der Testphase",
+    "no-plan": "{{count, number}} ohne Tarif",
+    "archived": "{{count, number}} archiviert"
   }
 }

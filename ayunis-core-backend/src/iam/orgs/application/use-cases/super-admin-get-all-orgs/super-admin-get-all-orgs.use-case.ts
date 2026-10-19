@@ -10,6 +10,7 @@ import {
 import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SuperAdminOrgList } from 'src/iam/orgs/application/models/super-admin-org-list';
 import type { SuperAdminOrgOverview } from 'src/iam/orgs/application/models/super-admin-org-overview';
 
 @Injectable()
@@ -22,9 +23,7 @@ export class SuperAdminGetAllOrgsUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedOrgError)
-  async execute(
-    query: SuperAdminGetAllOrgsQuery,
-  ): Promise<Paginated<SuperAdminOrgOverview>> {
+  async execute(query: SuperAdminGetAllOrgsQuery): Promise<SuperAdminOrgList> {
     this.logger.log(
       {
         limit: query.limit,
@@ -44,28 +43,28 @@ export class SuperAdminGetAllOrgsUseCase {
       throw new OrgUnauthorizedError('Super admin privileges required');
     }
 
-    const page = await this.orgsRepository.findAllForSuperAdmin(
-      {
-        limit: query.limit,
-        offset: query.offset,
-      },
-      {
-        search: query.search,
-        lifecycle: query.lifecycle,
-      },
-    );
+    const [page, lifecycleCounts] = await Promise.all([
+      this.orgsRepository.findAllForSuperAdmin(
+        { limit: query.limit, offset: query.offset },
+        { search: query.search, lifecycle: query.lifecycle },
+      ),
+      this.orgsRepository.countByLifecycleStatus(query.search),
+    ]);
 
     const statuses = await this.orgsRepository.findLifecycleStatuses(
       page.data.map((org) => org.id),
     );
-    return new Paginated<SuperAdminOrgOverview>({
-      data: page.data.map((org) => ({
-        org,
-        lifecycleStatus: statuses.get(org.id) ?? 'no-plan',
-      })),
-      limit: page.limit,
-      offset: page.offset,
-      total: page.total,
-    });
+    return {
+      page: new Paginated<SuperAdminOrgOverview>({
+        data: page.data.map((org) => ({
+          org,
+          lifecycleStatus: statuses.get(org.id) ?? 'no-plan',
+        })),
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
+      }),
+      lifecycleCounts,
+    };
   }
 }
