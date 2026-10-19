@@ -1,3 +1,5 @@
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
+import FynnManagedNotice from './FynnManagedNotice';
 import type { SubscriptionResponseDto } from '@/shared/api';
 import { SubscriptionResponseDtoType } from '@/shared/api';
 import { Badge } from '@ayunis/ui/components/badge';
@@ -28,23 +30,32 @@ export default function SubscriptionsTab({
   activeSubscriptionCount,
 }: Readonly<SubscriptionsTabProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+  const readOnly = useIsFeatureEnabled('fynnManagedSubscriptionsEnabled');
 
   if (!subscription) {
-    return <NoSubscriptionSection orgId={orgId} />;
+    return (
+      <div className="space-y-4" data-testid="subscription-readonly-details">
+        {readOnly && <FynnManagedNotice />}
+        <NoSubscriptionSection orgId={orgId} readOnly={readOnly} />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <ChangeSubscriptionDialog
-          orgId={orgId}
-          trigger={
-            <Button variant="outline">
-              {t('changeSubscriptionDialog.changeButton')}
-            </Button>
-          }
-        />
-      </div>
+    <div className="space-y-4" data-testid="subscription-readonly-details">
+      {readOnly && <FynnManagedNotice />}
+      {!readOnly && (
+        <div className="flex justify-end">
+          <ChangeSubscriptionDialog
+            orgId={orgId}
+            trigger={
+              <Button variant="outline" data-testid="subscription-change">
+                {t('changeSubscriptionDialog.changeButton')}
+              </Button>
+            }
+          />
+        </div>
+      )}
       {new Date(subscription.startsAt) > new Date() && (
         <Alert>
           <ClockIcon className="h-4 w-4" />
@@ -57,21 +68,32 @@ export default function SubscriptionsTab({
         </Alert>
       )}
       {subscription.type === SubscriptionResponseDtoType.SEAT_BASED && (
-        <LicenseSeatsSection subscription={subscription} orgId={orgId} />
+        <LicenseSeatsSection
+          subscription={subscription}
+          orgId={orgId}
+          readOnly={readOnly}
+        />
       )}
       {subscription.type === SubscriptionResponseDtoType.USAGE_BASED &&
         subscription.monthlyCredits !== undefined && (
           <CreditBudgetSection
+            readOnly={readOnly}
             orgId={orgId}
             monthlyCredits={subscription.monthlyCredits ?? 0}
           />
         )}
-      <BillingInfoSection subscription={subscription} orgId={orgId} />
+      <BillingInfoSection
+        subscription={subscription}
+        orgId={orgId}
+        readOnly={readOnly}
+      />
       <SubscriptionCancellationSection
+        readOnly={readOnly}
         subscription={subscription}
         orgId={orgId}
       />
       <SubscriptionHistorySection
+        readOnly={readOnly}
         orgId={orgId}
         subscriptions={subscriptionHistory}
         activeCount={activeSubscriptionCount}

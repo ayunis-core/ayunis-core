@@ -12801,7 +12801,14 @@
       },
       "FeatureTogglesResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "fynnManagedSubscriptionsEnabled": {
+            "type": "boolean",
+            "description": "Cloud subscriptions are managed in Fynn",
+            "default": false
+          }
+        },
+        "required": ["fynnManagedSubscriptionsEnabled"]
       },
       "UserTeamResponseDto": {
         "type": "object",

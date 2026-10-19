@@ -87,7 +87,11 @@
     "changeErrorSubscriptionNotFound": "No active subscription to change",
     "changeErrorTooManyUsedSeats": "Too many users are already in this organization. Choose more seats for the new subscription.",
     "changeErrorAccessOverlap": "The new subscription would overlap another subscription's access period. Adjust its start date or end the other subscription first.",
-    "changeErrorUnexpected": "An unexpected error occurred"
+    "changeErrorUnexpected": "An unexpected error occurred",
+    "managedInFynn": "Managed in Fynn. Contact Sales to change the subscription or Academy add-on.",
+    "managementUnavailable": "Could not load billing management settings. Editing is temporarily disabled.",
+    "managementLoading": "Loading billing management settings…",
+    "retryManagement": "Retry"
   },
   "subscriptionHistory": {
     "title": "Subscription history",

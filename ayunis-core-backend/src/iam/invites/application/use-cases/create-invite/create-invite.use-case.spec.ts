@@ -14,6 +14,7 @@ import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   MultipleActiveSubscriptionsError,
+  InsufficientSeatsError,
   SubscriptionNotFoundError,
 } from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
@@ -301,59 +302,74 @@ describe('CreateInviteUseCase', () => {
       );
     });
 
-    it('should update seats when no available seats in cloud instance', async () => {
-      // Arrange
-      const command = new CreateInviteCommand({
-        email: mockEmail,
-        orgId: mockOrgId,
-        role: UserRole.USER,
-        userId: mockUserId,
-      });
-
-      const mockSubscription = {
-        availableSeats: 0,
-        nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        subscription: new SeatBasedSubscription({
-          id: 'sub-id' as UUID,
+    it.each([false, true])(
+      'handles a full cloud subscription with Fynn management=%s',
+      async (managed) => {
+        // Arrange
+        const command = new CreateInviteCommand({
+          email: mockEmail,
           orgId: mockOrgId,
-          noOfSeats: 10,
-          pricePerSeat: 0,
-          renewalCycle: RenewalCycle.MONTHLY,
-          renewalCycleAnchor: new Date(),
-          billingInfo: new SubscriptionBillingInfo({
-            companyName: 'Test',
-            street: 'Test St',
-            houseNumber: '1',
-            postalCode: '12345',
-            city: 'Test',
-            country: 'DE',
+          role: UserRole.USER,
+          userId: mockUserId,
+        });
+
+        const mockSubscription = {
+          availableSeats: 0,
+          nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          subscription: new SeatBasedSubscription({
+            id: 'sub-id' as UUID,
+            orgId: mockOrgId,
+            noOfSeats: 10,
+            pricePerSeat: 0,
+            renewalCycle: RenewalCycle.MONTHLY,
+            renewalCycleAnchor: new Date(),
+            billingInfo: new SubscriptionBillingInfo({
+              companyName: 'Test',
+              street: 'Test St',
+              houseNumber: '1',
+              postalCode: '12345',
+              city: 'Test',
+              country: 'DE',
+            }),
           }),
-        }),
-      };
+        };
 
-      findUserByEmailUseCase.execute.mockResolvedValue(null);
-      configService.get
-        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
-        .mockReturnValueOnce(true) // app.isCloudHosted
-        .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
-        .mockReturnValueOnce(true); // emails.hasConfig
+        findUserByEmailUseCase.execute.mockResolvedValue(null);
+        configService.get
+          .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+          .mockReturnValueOnce(true) // app.isCloudHosted
+          .mockReturnValueOnce(managed)
+          .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
+          .mockReturnValueOnce(true); // emails.hasConfig
 
-      getActiveSubscriptionUseCase.execute.mockResolvedValue(mockSubscription);
-      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+        getActiveSubscriptionUseCase.execute.mockResolvedValue(
+          mockSubscription,
+        );
+        inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
-      // Act
-      await useCase.execute(command);
+        if (managed) {
+          await expect(useCase.execute(command)).rejects.toThrow(
+            InsufficientSeatsError,
+          );
+          expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
+          expect(invitesRepository.create).not.toHaveBeenCalled();
+          return;
+        }
 
-      // Assert
-      expect(updateSeatsUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orgId: mockOrgId,
-          requestingUserId: mockUserId,
-          noOfSeats: 11,
-        }),
-      );
-      expect(invitesRepository.create).toHaveBeenCalled();
-    });
+        // Act
+        await useCase.execute(command);
+
+        // Assert
+        expect(updateSeatsUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            orgId: mockOrgId,
+            requestingUserId: mockUserId,
+            noOfSeats: 11,
+          }),
+        );
+        expect(invitesRepository.create).toHaveBeenCalled();
+      },
+    );
 
     it('should throw EmailNotAvailableError when user already exists', async () => {
       // Arrange
