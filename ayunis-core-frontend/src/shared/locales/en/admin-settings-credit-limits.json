@@ -29,7 +29,8 @@
     "search": "Search teams or users",
     "empty": "No matching teams or users.",
     "blocked": "Paid-model usage blocked",
-    "defaultLimit": "Default ({{credits}})"
+    "defaultLimitHidden": "Default ({{credits}})",
+    "defaultLimit": "{{used}} / {{credits}} (Default)"
   },
   "defaultLimit": {
     "title": "Default limit per user",

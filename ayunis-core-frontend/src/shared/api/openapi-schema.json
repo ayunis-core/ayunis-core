@@ -9011,6 +9011,44 @@
         "tags": ["credit-limits"]
       }
     },
+    "/credit-limits/users/usage": {
+      "get": {
+        "operationId": "CreditLimitsController_getUserUsage",
+        "parameters": [
+          {
+            "name": "userIds",
+            "required": true,
+            "in": "query",
+            "description": "Users whose current monthly credit consumption to return",
+            "schema": {
+              "example": ["550e8400-e29b-41d4-a716-446655440001"],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserCreditUsageItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Current monthly credit consumption of the given users, whether or not they have an individual limit",
+        "tags": ["credit-limits"]
+      }
+    },
     "/credit-limits/teams": {
       "get": {
         "operationId": "CreditLimitsController_getTeamLimits",
@@ -19515,6 +19553,21 @@
           }
         },
         "required": ["userId", "name", "email", "monthlyCredits"]
+      },
+      "UserCreditUsageItemDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month; omitted when individual usage is hidden",
+            "example": 1240
+          }
+        },
+        "required": ["userId"]
       },
       "TeamCreditLimitItemDto": {
         "type": "object",

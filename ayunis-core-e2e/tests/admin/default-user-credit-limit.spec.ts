@@ -1,23 +1,26 @@
+import { login } from "../../src/clients/api/auth.client";
+import { requestUsageVisibilityChange } from "../../src/clients/api/usage-visibility.client";
 import {
   getDefaultUserCreditLimit,
   getUserCreditLimit,
+  getUserCreditUsage,
   removeDefaultUserCreditLimit,
   setDefaultUserCreditLimit,
-} from '../../src/clients/api/credit-limits.client';
+} from "../../src/clients/api/credit-limits.client";
 import {
   createEmptyThread,
   sendThreadMessage,
-} from '../../src/clients/api/threads.client';
-import { createCreditLimitsFixture } from '../../src/factories/credit-limits.factory';
+} from "../../src/clients/api/threads.client";
+import { createCreditLimitsFixture } from "../../src/factories/credit-limits.factory";
 import {
   openCreditLimitDialog,
   openDefaultUserCreditLimitDialog,
   removeCreditLimit,
   saveCreditLimit,
-} from '../../src/flows/credit-limits.flow';
-import { expect, test } from '../../src/fixtures/test';
+} from "../../src/flows/credit-limits.flow";
+import { expect, test } from "../../src/fixtures/test";
 
-test('default personal credit limit blocks users without an individual limit until overridden or removed', async ({
+test("default personal credit limit blocks users without an individual limit until overridden or removed", async ({
   page,
   api,
   publicApi,
@@ -39,7 +42,7 @@ test('default personal credit limit blocks users without an individual limit unt
     );
 
     await openDefaultUserCreditLimitDialog(page);
-    await expect(page.getByTestId('credit-limit-remove')).toHaveCount(0);
+    await expect(page.getByTestId("credit-limit-remove")).toHaveCount(0);
     await saveCreditLimit(page, 0);
     await expect.poll(() => getDefaultUserCreditLimit(api)).toBe(0);
     expect(await getUserCreditLimit(api, fixture.member.id)).toBeNull();
@@ -47,18 +50,24 @@ test('default personal credit limit blocks users without an individual limit unt
     const blockedByDefault = await sendThreadMessage(
       fixture.member.api,
       thread.id,
-      'Blocked by the org default',
+      "Blocked by the org default",
     );
     expect(await blockedByDefault.text()).toContain(
-      'USER_CREDIT_LIMIT_EXCEEDED',
+      "USER_CREDIT_LIMIT_EXCEEDED",
     );
+    expect(await getUserCreditUsage(api, [fixture.member.id])).toEqual([
+      { userId: fixture.member.id, creditsUsed: 0 },
+    ]);
 
     await openCreditLimitDialog(
       page,
-      'users',
+      "users",
       fixture.member.id,
       fixture.member.email,
     );
+    await expect(
+      page.getByTestId(`credit-limits-row-${fixture.member.id}`),
+    ).toContainText(/0 \/ 0 \(/);
     await saveCreditLimit(page, 1000);
     await expect
       .poll(() => getUserCreditLimit(api, fixture.member.id))
@@ -66,13 +75,13 @@ test('default personal credit limit blocks users without an individual limit unt
     const allowedByIndividual = await sendThreadMessage(
       fixture.member.api,
       thread.id,
-      'An individual limit overrides the default',
+      "An individual limit overrides the default",
     );
     expect(await allowedByIndividual.text()).toContain(mockReply);
 
     await openCreditLimitDialog(
       page,
-      'users',
+      "users",
       fixture.member.id,
       fixture.member.email,
     );
@@ -83,18 +92,18 @@ test('default personal credit limit blocks users without an individual limit unt
     const blockedAgain = await sendThreadMessage(
       fixture.member.api,
       thread.id,
-      'Removing the individual limit falls back to the default',
+      "Removing the individual limit falls back to the default",
     );
-    expect(await blockedAgain.text()).toContain('USER_CREDIT_LIMIT_EXCEEDED');
+    expect(await blockedAgain.text()).toContain("USER_CREDIT_LIMIT_EXCEEDED");
 
     await openDefaultUserCreditLimitDialog(page);
-    await expect(page.getByTestId('credit-limit-input')).toHaveValue('0');
+    await expect(page.getByTestId("credit-limit-input")).toHaveValue("0");
     await removeCreditLimit(page);
     await expect.poll(() => getDefaultUserCreditLimit(api)).toBeNull();
     const allowedWithoutDefault = await sendThreadMessage(
       fixture.member.api,
       thread.id,
-      'No default means no personal limit',
+      "No default means no personal limit",
     );
     expect(await allowedWithoutDefault.text()).toContain(mockReply);
   } finally {
@@ -103,7 +112,7 @@ test('default personal credit limit blocks users without an individual limit unt
   }
 });
 
-test('only admins can read or change the default personal credit limit', async ({
+test("only admins can read or change the default personal credit limit", async ({
   api,
   publicApi,
   mail,
@@ -129,7 +138,83 @@ test('only admins can read or change the default personal credit limit', async (
       removeDefaultUserCreditLimit(fixture.member.api),
     ).rejects.toThrow(/HTTP 403/);
     expect(await getDefaultUserCreditLimit(api)).toBe(50);
+
+    await expect(
+      getUserCreditUsage(fixture.member.api, [fixture.member.id]),
+    ).rejects.toThrow(/HTTP 403/);
+    await expect(getUserCreditUsage(api, ["not-a-user-id"])).rejects.toThrow(
+      /HTTP 400/,
+    );
+    expect(await getUserCreditUsage(api, [fixture.member.id])).toEqual([
+      { userId: fixture.member.id, creditsUsed: 0 },
+    ]);
   } finally {
+    await removeDefaultUserCreditLimit(api);
+    await fixture.cleanup();
+  }
+});
+
+test("default-user consumption follows individual usage visibility in an open admin page", async ({
+  page,
+  api,
+  publicApi,
+  mail,
+  org,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  await login(publicApi, "admin@demo.local", "admin");
+  const fixture = await createCreditLimitsFixture(
+    api,
+    publicApi,
+    mail,
+    `default-private-${Date.now()}`,
+  );
+  try {
+    await setDefaultUserCreditLimit(api, 100);
+    expect(await getUserCreditUsage(api, [fixture.member.id])).toEqual([
+      { userId: fixture.member.id, creditsUsed: 0 },
+    ]);
+    await page.goto(
+      `/admin-settings/credit-limits?tab=users&search=${fixture.member.email}`,
+    );
+    const row = page.getByTestId(`credit-limits-row-${fixture.member.id}`);
+    await expect(row).toContainText(/0 \/ 100 \(/);
+    const hidden = await requestUsageVisibilityChange(publicApi, org.orgId, {
+      hideIndividualUsage: true,
+    });
+    expect(hidden.status()).toBe(200);
+    expect(await getUserCreditUsage(api, [fixture.member.id])).toEqual([
+      { userId: fixture.member.id },
+    ]);
+    await expect(row).not.toContainText(" / ", { timeout: 15_000 });
+    await expect(row).toContainText(/\(100\)/);
+    for (const width of [375, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        ),
+      ).toBeLessThanOrEqual(1);
+      await page.screenshot({
+        path: testInfo.outputPath(`default-hidden-${width}.png`),
+        fullPage: true,
+      });
+    }
+    const visible = await requestUsageVisibilityChange(publicApi, org.orgId, {
+      hideIndividualUsage: false,
+    });
+    expect(visible.status()).toBe(200);
+    await expect(row).toContainText(/0 \/ 100 \(/, { timeout: 15_000 });
+    await page.screenshot({
+      path: testInfo.outputPath("default-visible.png"),
+      fullPage: true,
+    });
+  } finally {
+    await requestUsageVisibilityChange(publicApi, org.orgId, {
+      hideIndividualUsage: false,
+    });
     await removeDefaultUserCreditLimit(api);
     await fixture.cleanup();
   }

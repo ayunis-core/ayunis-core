@@ -108,9 +108,17 @@ function CreditLimitTableRow({
   if (limit !== null) {
     limitLabel = `${usagePrefix}${limit.monthlyCredits.toLocaleString(i18n.language)}`;
   } else if (defaultLimit !== null) {
-    limitLabel = t('table.defaultLimit', {
-      credits: defaultLimit.toLocaleString(i18n.language),
-    });
+    limitLabel = t(
+      row.creditsUsed === undefined
+        ? 'table.defaultLimitHidden'
+        : 'table.defaultLimit',
+      {
+        ...(row.creditsUsed === undefined
+          ? {}
+          : { used: row.creditsUsed.toLocaleString(i18n.language) }),
+        credits: defaultLimit.toLocaleString(i18n.language),
+      },
+    );
   } else {
     limitLabel = t('form.noLimit');
   }

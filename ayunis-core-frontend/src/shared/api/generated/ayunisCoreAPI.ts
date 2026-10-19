@@ -91,6 +91,7 @@ import type {
   CreateTrialRequestDto,
   CreateUserDto,
   CreateWorkspaceDto,
+  CreditLimitsControllerGetUserUsageParams,
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
   DefaultUserCreditLimitResponseDto,
@@ -300,6 +301,7 @@ import type {
   UserControllerGetUsersInOrganizationParams,
   UserCreditLimitItemDto,
   UserCreditLimitResponseDto,
+  UserCreditUsageItemDto,
   UserPasswordResetControllerValidateResetToken200,
   UserPasswordResetControllerValidateResetTokenParams,
   UserResponseDto,
@@ -18723,6 +18725,100 @@ export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnTyp
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCreditLimitsControllerGetUserLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Current monthly credit consumption of the given users, whether or not they have an individual limit
+ */
+export const creditLimitsControllerGetUserUsage = (
+    params: CreditLimitsControllerGetUserUsageParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UserCreditUsageItemDto[]>(
+      {url: `/credit-limits/users/usage`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreditLimitsControllerGetUserUsageQueryKey = (params?: CreditLimitsControllerGetUserUsageParams,) => {
+    return [
+    `/credit-limits/users/usage`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getCreditLimitsControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError = unknown>(params: CreditLimitsControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetUserUsageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>> = ({ signal }) => creditLimitsControllerGetUserUsage(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>>
+export type CreditLimitsControllerGetUserUsageQueryError = unknown
+
+
+export function useCreditLimitsControllerGetUserUsage<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError = unknown>(
+ params: CreditLimitsControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetUserUsage<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError = unknown>(
+ params: CreditLimitsControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetUserUsage<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError = unknown>(
+ params: CreditLimitsControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Current monthly credit consumption of the given users, whether or not they have an individual limit
+ */
+
+export function useCreditLimitsControllerGetUserUsage<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError = unknown>(
+ params: CreditLimitsControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetUserUsageQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
