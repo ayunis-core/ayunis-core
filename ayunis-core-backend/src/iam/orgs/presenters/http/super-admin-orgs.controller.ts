@@ -137,7 +137,7 @@ export class SuperAdminOrgsController {
       }),
     );
 
-    return this.superAdminOrgResponseDtoMapper.toPaginatedDto(orgs);
+    return this.superAdminOrgResponseDtoMapper.toListDto(orgs);
   }
 
   @Get(':id')

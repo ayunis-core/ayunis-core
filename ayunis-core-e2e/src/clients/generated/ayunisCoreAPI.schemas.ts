@@ -620,11 +620,23 @@ export interface SuperAdminOrgOverviewResponseDto {
   lifecycleStatus: OrgLifecycleStatus;
 }
 
+export interface OrgLifecycleCountsDto {
+  /** All organizations matching the search, archived included */
+  total: number;
+  archived: number;
+  paying: number;
+  expired: number;
+  trial: number;
+  'no-plan': number;
+}
+
 export interface SuperAdminOrgListResponseDto {
   /** Array of organizations for the current page */
   data: SuperAdminOrgOverviewResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
+  /** Organizations per lifecycle status for the search, ignoring the lifecycle filter */
+  lifecycleCounts: OrgLifecycleCountsDto;
 }
 
 export interface UpdateOrgRequestDto {

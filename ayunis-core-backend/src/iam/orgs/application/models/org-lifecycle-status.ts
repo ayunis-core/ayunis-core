@@ -7,3 +7,7 @@ export const ORG_LIFECYCLE_STATUSES = [
 ] as const;
 
 export type OrgLifecycleStatus = (typeof ORG_LIFECYCLE_STATUSES)[number];
+
+export type OrgLifecycleCounts = Record<OrgLifecycleStatus, number> & {
+  total: number;
+};
