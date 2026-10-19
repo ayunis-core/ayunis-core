@@ -28,6 +28,8 @@ import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
 import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
 import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
 import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
+import { recordSentPrompt } from '@/shared/lib/prompt-history';
+import { usePromptHistory } from '@/widgets/chat-input/hooks/usePromptHistory';
 import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
 import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
@@ -161,6 +163,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     useDraftCursorAtEnd(textareaRef, draftChatId);
+    const handlePromptHistoryKey = usePromptHistory(message, setMessage);
 
     // TextareaAutosize corrects its height during mount; the height transition
     // must not be active yet or that correction animates as a visible shrink
@@ -241,6 +244,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         altText: img.file.name || 'Pasted image',
       }));
 
+      recordSentPrompt(message);
       onSend(
         message,
         imageFiles.length > 0 ? imageFiles : undefined,
@@ -353,6 +357,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     readOnly={isSubmitting}
                     onChange={(e) => setMessage(e.target.value)}
                     onPaste={handlePaste}
+                    onKeyDown={
+                      isSubmitting ? undefined : handlePromptHistoryKey
+                    }
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     placeholder={t('chatInput.placeholder')}
