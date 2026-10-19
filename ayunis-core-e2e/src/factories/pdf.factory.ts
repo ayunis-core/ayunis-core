@@ -2,6 +2,10 @@ import { Buffer } from "node:buffer";
 
 /** A valid one-page PDF whose marker makes the OCR contract server reject it. */
 export function createOcrRejectedPdf(text: string): Buffer {
+  return createPdf(text, "AYC-1059-OCR-REJECT");
+}
+
+export function createPdf(text: string, marker: string): Buffer {
   const escaped = text.replace(/[\\()]/g, "\\$&");
   const stream = `BT /F1 12 Tf 50 700 Td (${escaped}) Tj ET`;
   const objects = [
@@ -11,7 +15,7 @@ export function createOcrRejectedPdf(text: string): Buffer {
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`,
   ];
-  let pdf = "%PDF-1.4\n% AYC-1059-OCR-REJECT\n";
+  let pdf = `%PDF-1.4\n% ${marker}\n`;
   const offsets = [0];
   for (const [index, object] of objects.entries()) {
     offsets.push(Buffer.byteLength(pdf));

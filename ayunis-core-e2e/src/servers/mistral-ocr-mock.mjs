@@ -4,9 +4,18 @@ import process from "node:process";
 
 const port = Number(process.env.E2E_MISTRAL_OCR_PORT ?? 3199);
 
+const extractionCounts = new Map();
+
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     return sendJson(response, 200, { status: "ok" });
+  }
+
+  if (request.method === "GET" && request.url.startsWith("/extractions/")) {
+    const marker = request.url.slice("/extractions/".length);
+    return sendJson(response, 200, {
+      count: extractionCounts.get(marker) ?? 0,
+    });
   }
 
   if (request.method === "POST" && request.url === "/v1/ocr") {
@@ -25,6 +34,9 @@ const server = createServer(async (request, response) => {
         code: "3740",
       });
     }
+    const marker = document.match(/AYC-1348-[a-f0-9-]+/)?.[0];
+    if (marker)
+      extractionCounts.set(marker, (extractionCounts.get(marker) ?? 0) + 1);
     if (!requestsImageTextAnnotations(body)) {
       return sendJson(response, 400, {
         message: "Expected image text annotations without base64 image data",
