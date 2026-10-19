@@ -102,6 +102,7 @@ describe('CreateThreadUseCase', () => {
         isArchived: false,
         canUseTools: false,
         canVision: false,
+        contextWindowSize: 128_000,
         createdAt: now,
         updatedAt: now,
       });
@@ -196,6 +197,7 @@ describe('CreateThreadUseCase', () => {
         updatedAt: now,
         canUseTools: false,
         canVision: false,
+        contextWindowSize: 128_000,
       });
       const mockModel = new PermittedLanguageModel({
         id: mockModelId,
@@ -246,6 +248,7 @@ describe('CreateThreadUseCase', () => {
         isArchived: false,
         canUseTools: false,
         canVision: false,
+        contextWindowSize: 128_000,
         createdAt: now,
         updatedAt: now,
       });

@@ -39,13 +39,11 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
 
   @ApiProperty({
     type: 'integer',
-    required: false,
-    nullable: true,
     minimum: 1,
     maximum: MAX_CONTEXT_WINDOW_SIZE,
     description: 'Maximum context window size in tokens',
   })
-  contextWindowSize?: number;
+  contextWindowSize: number;
 
   @ApiProperty({
     type: 'boolean',

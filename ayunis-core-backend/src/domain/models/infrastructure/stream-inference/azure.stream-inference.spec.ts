@@ -23,6 +23,7 @@ const createModel = (name: string, isReasoning: boolean): LanguageModel =>
     canUseTools: true,
     isReasoning,
     canVision: false,
+    contextWindowSize: 128_000,
     isArchived: false,
   });
 

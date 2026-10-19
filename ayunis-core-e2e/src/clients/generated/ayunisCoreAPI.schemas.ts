@@ -1172,7 +1172,7 @@ export interface ModelWithConfigResponseDto {
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
   /**
-     * Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.
+     * Maximum context window size in tokens. Undefined for non-language models.
      * @minimum 1
      * @maximum 2147483647
      */
@@ -1320,9 +1320,8 @@ export interface PermittedLanguageModelResponseDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** Whether this is the default model */
@@ -1555,7 +1554,7 @@ export interface LanguageModelResponseDto {
      * @minimum 1
      * @maximum 2147483647
      */
-  contextWindowSize?: number;
+  contextWindowSize: number;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** The date the model was created */
@@ -1736,9 +1735,8 @@ export interface CreateLanguageModelRequestDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
@@ -1815,9 +1813,8 @@ export interface UpdateLanguageModelRequestDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the model is archived */
   isArchived: boolean;
   /**

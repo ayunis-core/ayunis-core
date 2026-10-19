@@ -22,6 +22,7 @@ const model: LanguageModelResponseDto = {
   canUseTools: true,
   isReasoning: false,
   canVision: false,
+  contextWindowSize: 128_000,
   hasProviderFault: true,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',

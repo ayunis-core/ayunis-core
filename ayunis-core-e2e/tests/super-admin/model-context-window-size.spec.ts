@@ -24,7 +24,7 @@ async function saveDialog(dialog: Locator): Promise<void> {
   await expect(dialog).toBeHidden();
 }
 
-test('super admin can set, change, and clear a model context window', async ({
+test('super admin must keep a context window size on a model', async ({
   page,
   publicApi,
 }) => {
@@ -34,6 +34,7 @@ test('super admin can set, change, and clear a model context window', async ({
   const catalogModel = await createLanguageCatalogModel(publicApi, {
     name: `e2e-context-window-${uniqueKey}`,
     displayName: `E2E Context Window ${uniqueKey}`,
+    contextWindowSize: 128000,
   });
 
   try {
@@ -42,14 +43,6 @@ test('super admin can set, change, and clear a model context window', async ({
 
     let dialog = await openEditDialog(page, catalogModel.id);
     let contextWindowInput = dialog.getByTestId(
-      'model-catalog-context-window-size',
-    );
-    await expect(contextWindowInput).toHaveValue('');
-    await contextWindowInput.fill('128000');
-    await saveDialog(dialog);
-
-    dialog = await openEditDialog(page, catalogModel.id);
-    contextWindowInput = dialog.getByTestId(
       'model-catalog-context-window-size',
     );
     await expect(contextWindowInput).toHaveValue('128000');
@@ -62,12 +55,16 @@ test('super admin can set, change, and clear a model context window', async ({
     );
     await expect(contextWindowInput).toHaveValue('256000');
     await contextWindowInput.clear();
-    await saveDialog(dialog);
+    await dialog.getByRole('button', { name: /Save|Speichern/ }).click();
+    await expect(contextWindowInput).toHaveAttribute('aria-invalid', 'true');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
 
     dialog = await openEditDialog(page, catalogModel.id);
     await expect(
       dialog.getByTestId('model-catalog-context-window-size'),
-    ).toHaveValue('');
+    ).toHaveValue('256000');
   } finally {
     await deleteCatalogModel(publicApi, catalogModel.id);
   }

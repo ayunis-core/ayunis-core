@@ -38,6 +38,7 @@ describe('GetDefaultModelUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
   }
 
@@ -570,6 +571,7 @@ describe('GetDefaultModelUseCase with real effective model resolution', () => {
         isArchived: false,
         canUseTools: true,
         canVision: false,
+        contextWindowSize: 128_000,
       }),
       orgId,
       scope: PermittedModelScope.ORG,

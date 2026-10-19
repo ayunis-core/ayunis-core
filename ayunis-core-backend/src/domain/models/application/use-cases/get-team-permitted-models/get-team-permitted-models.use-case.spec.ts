@@ -83,6 +83,7 @@ describe('GetTeamPermittedModelsUseCase', () => {
       canUseTools: true,
       isReasoning: false,
       canVision: true,
+      contextWindowSize: 128_000,
       isArchived: false,
     });
     const permittedModel = new PermittedLanguageModel({
