@@ -1,3 +1,4 @@
+import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -13,12 +14,19 @@ const api = vi.hoisted(() => ({
   setUser: vi.fn(),
   removeTeam: vi.fn(),
   removeUser: vi.fn(),
+  setDefault: vi.fn(),
+  removeDefault: vi.fn(),
 }));
 vi.mock('@/shared/api', () => ({
   creditLimitsControllerSetTeamLimit: api.setTeam,
   creditLimitsControllerSetUserLimit: api.setUser,
   creditLimitsControllerRemoveTeamLimit: api.removeTeam,
   creditLimitsControllerRemoveUserLimit: api.removeUser,
+  creditLimitsControllerSetDefaultUserLimit: api.setDefault,
+  creditLimitsControllerRemoveDefaultUserLimit: api.removeDefault,
+  getCreditLimitsControllerGetDefaultUserLimitQueryKey: () => [
+    'default-user-limit',
+  ],
   getCreditLimitsControllerGetTeamLimitsQueryKey: () => ['team-limits'],
   getCreditLimitsControllerGetUserLimitsQueryKey: () => ['user-limits'],
 }));
@@ -47,12 +55,13 @@ function wrapper({ children }: Readonly<{ children: ReactNode }>) {
 
 describe('useSaveCreditLimit', () => {
   beforeEach(() => vi.resetAllMocks());
-  it.each(['teams', 'users'] as const)(
+  it.each([CreditLimitScope.TEAM, CreditLimitScope.USER] as const)(
     'persists zero and removes only the %s ceiling',
     async (target) => {
       const state = new Map<string, number>();
-      const set = target === 'teams' ? api.setTeam : api.setUser;
-      const remove = target === 'teams' ? api.removeTeam : api.removeUser;
+      const set = target === CreditLimitScope.TEAM ? api.setTeam : api.setUser;
+      const remove =
+        target === CreditLimitScope.TEAM ? api.removeTeam : api.removeUser;
       set.mockImplementation(
         async (id: string, data: { monthlyCredits: number }) =>
           state.set(id, data.monthlyCredits),
@@ -78,7 +87,7 @@ describe('useSaveCreditLimit', () => {
         'creditLimits.remove.success',
       );
       expect(
-        target === 'teams' ? api.setUser : api.setTeam,
+        target === CreditLimitScope.TEAM ? api.setUser : api.setTeam,
       ).not.toHaveBeenCalled();
     },
   );
@@ -113,7 +122,7 @@ describe('useSaveCreditLimit', () => {
       (value === null ? api.removeUser : api.setUser).mockRejectedValue(error);
       const { result } = renderHook(
         () => ({
-          mutation: useSaveCreditLimit('users', 'target', true),
+          mutation: useSaveCreditLimit(CreditLimitScope.USER, 'target', true),
           form: useForm<CreditLimitFields>(),
         }),
         { wrapper },
@@ -133,7 +142,7 @@ describe('useSaveCreditLimit', () => {
   it('leaves a missing ceiling absent without issuing a failing DELETE', async () => {
     const { result } = renderHook(
       () => ({
-        mutation: useSaveCreditLimit('users', 'target', false),
+        mutation: useSaveCreditLimit(CreditLimitScope.USER, 'target', false),
         form: useForm<CreditLimitFields>(),
       }),
       { wrapper },
@@ -157,7 +166,7 @@ describe('useSaveCreditLimit', () => {
     api.setUser.mockRejectedValue(error);
     const { result } = renderHook(
       () => ({
-        mutation: useSaveCreditLimit('users', 'target', true),
+        mutation: useSaveCreditLimit(CreditLimitScope.USER, 'target', true),
         form: useForm<CreditLimitFields>(),
       }),
       { wrapper },
@@ -170,5 +179,25 @@ describe('useSaveCreditLimit', () => {
     expect(
       result.current.form.getFieldState('monthlyCredits').error?.message,
     ).toBe('validation.monthlyCredits.invalid');
+  });
+
+  it('sets and removes the org default without touching any user limit', async () => {
+    const { result } = renderHook(
+      () => ({
+        mutation: useSaveCreditLimit(CreditLimitScope.USER_DEFAULT, '', true),
+        form: useForm<CreditLimitFields>(),
+      }),
+      { wrapper },
+    );
+    await act(async () => {
+      await result.current.mutation.onSave(100, result.current.form);
+    });
+    expect(api.setDefault).toHaveBeenCalledWith({ monthlyCredits: 100 });
+    await act(async () => {
+      await result.current.mutation.onSave(null, result.current.form);
+    });
+    expect(api.removeDefault).toHaveBeenCalledTimes(1);
+    expect(api.setUser).not.toHaveBeenCalled();
+    expect(api.removeUser).not.toHaveBeenCalled();
   });
 });

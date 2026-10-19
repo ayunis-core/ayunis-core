@@ -1,9 +1,14 @@
+import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { CreditLimitsTable } from './CreditLimitsTable';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) =>
+      options ? `${key}:${JSON.stringify(options)}` : key,
+    i18n: { language: 'en' },
+  }),
 }));
 vi.mock('@/widgets/credit-limit-editor/ui/CreditLimitDialog', () => ({
   CreditLimitDialog: ({
@@ -52,7 +57,9 @@ describe('CreditLimitsTable', () => {
       expect(action.getAttribute('data-slot')).toBe('button');
       fireEvent.click(action);
       const dialog = screen.getByRole('dialog', { name: 'Alice' });
-      expect(dialog.getAttribute('data-target')).toBe(tab);
+      expect(dialog.getAttribute('data-target')).toBe(
+        tab === 'users' ? CreditLimitScope.USER : CreditLimitScope.TEAM,
+      );
       expect(dialog.getAttribute('data-id')).toBe('alice');
       expect(
         screen
@@ -144,6 +151,58 @@ describe('CreditLimitsTable', () => {
       ).toBeNull();
     },
   );
+
+  it('shows the org default for users without an individual limit', () => {
+    render(
+      <CreditLimitsTable
+        rows={rows}
+        filters={filters}
+        defaultLimit={100}
+        isPending={false}
+        isError={false}
+      />,
+    );
+    const alice = screen.getAllByTestId('credit-limits-row-alice')[0];
+    expect(alice.textContent).toContain('table.defaultLimit:{"credits":"100"}');
+    expect(alice.textContent).not.toContain('form.noLimit');
+    const bob = screen.getAllByTestId('credit-limits-row-bob')[0];
+    expect(bob.textContent).not.toContain('table.defaultLimit');
+    fireEvent.click(screen.getByTestId('credit-limits-user-alice'));
+    expect(
+      screen
+        .getByRole('textbox', { name: 'monthlyCredits' })
+        .getAttribute('value'),
+    ).toBe('');
+  });
+
+  it('marks users on a zero default as blocked', () => {
+    render(
+      <CreditLimitsTable
+        rows={[rows[0]]}
+        filters={filters}
+        defaultLimit={0}
+        isPending={false}
+        isError={false}
+      />,
+    );
+    const alice = screen.getAllByTestId('credit-limits-row-alice')[0];
+    expect(alice.textContent).toContain('table.defaultLimit:{"credits":"0"}');
+    expect(alice.textContent).toContain('table.blocked');
+  });
+
+  it('never applies the user default to teams', () => {
+    render(
+      <CreditLimitsTable
+        rows={rows}
+        filters={{ ...filters, tab: 'teams' }}
+        defaultLimit={100}
+        isPending={false}
+        isError={false}
+      />,
+    );
+    expect(screen.queryByText(/table\.defaultLimit/)).toBeNull();
+    expect(screen.getByText('form.noLimit')).toBeTruthy();
+  });
 });
 
 it('allows configuring team limits', () => {
