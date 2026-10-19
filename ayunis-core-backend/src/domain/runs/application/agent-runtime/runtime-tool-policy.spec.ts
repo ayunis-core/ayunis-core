@@ -1,3 +1,4 @@
+import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
@@ -42,4 +43,11 @@ describe('runtime tool policy', () => {
     expect(isHybridArtifactTool(new CreateDocumentTool())).toBe(true);
     expect(isHybridArtifactTool(new InstallMarketplaceSkillTool())).toBe(false);
   });
+});
+
+it('acknowledges create_file without ending the run or creating an artifact', () => {
+  const tool = new CreateFileTool();
+  expect(isAcknowledgementOnlyTool(tool)).toBe(true);
+  expect(isExternallyHandledTool(tool)).toBe(false);
+  expect(isHybridArtifactTool(tool)).toBe(false);
 });

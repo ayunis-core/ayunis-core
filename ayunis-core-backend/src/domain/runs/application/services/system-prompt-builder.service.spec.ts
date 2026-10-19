@@ -531,3 +531,17 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 });
+
+it('routes downloadable text files separately from prose documents', () => {
+  const prompt = new SystemPromptBuilderService().build({
+    tools: [],
+    currentTime: new Date('2026-10-15'),
+  });
+  expect(prompt).toContain(
+    'Use create_file for downloadable XML, JSON and plain-text (TXT) files',
+  );
+  expect(prompt).toContain(
+    'Do not use create_document or markdown links for these files',
+  );
+  expect(prompt).toContain('Word/PDF');
+});
