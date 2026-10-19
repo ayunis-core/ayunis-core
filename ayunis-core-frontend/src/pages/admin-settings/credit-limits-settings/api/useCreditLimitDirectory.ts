@@ -3,7 +3,9 @@ import {
   useUserControllerGetUsersInOrganization,
 } from '@/shared/api';
 import {
+  useDefaultUserLimit,
   useTeamLimitOverview,
+  useUserCreditUsage,
   useUserLimitOverview,
 } from '@/features/credit-limits/api/useCreditLimitQueries';
 import {
@@ -26,6 +28,14 @@ export function useCreditLimitDirectory(
   });
   const userLimits = useUserLimitOverview(enabled && usersActive);
   const teamLimits = useTeamLimitOverview(enabled && !usersActive);
+  const defaultLimit = useDefaultUserLimit(enabled && usersActive);
+  const pageUsers = users.data?.data ?? [];
+  const defaultUserIds = pageUsers
+    .filter((user) => !userLimits.limits.has(user.id))
+    .map((user) => user.id);
+  const usageActive =
+    enabled && usersActive && defaultLimit.defaultLimit !== null;
+  const defaultUsage = useUserCreditUsage(defaultUserIds, usageActive);
   const filteredTeams = (teams.data ?? []).filter((team) =>
     team.name
       .toLocaleLowerCase()
@@ -34,9 +44,10 @@ export function useCreditLimitDirectory(
   const directory = usersActive ? users : teams;
   const limits = usersActive ? userLimits : teamLimits;
   const rows = usersActive
-    ? (users.data?.data ?? []).map((user) => ({
+    ? pageUsers.map((user) => ({
         ...user,
         limit: userLimits.limits.get(user.id) ?? null,
+        creditsUsed: defaultUsage.usage.get(user.id),
       }))
     : filteredTeams
         .slice(offset, offset + CREDIT_LIMIT_PAGE_SIZE)
@@ -44,16 +55,26 @@ export function useCreditLimitDirectory(
           ...team,
           limit: teamLimits.limits.get(team.id) ?? null,
         }));
+  const usageRequested = usageActive && defaultUserIds.length > 0;
+  const defaultPending =
+    (usersActive && defaultLimit.isPending) ||
+    (usageRequested && defaultUsage.isPending);
+  const defaultError =
+    (usersActive && defaultLimit.isError) ||
+    (usageRequested && defaultUsage.isError);
   return {
     rows,
+    defaultLimit: defaultLimit.defaultLimit,
     total: usersActive
       ? (users.data?.pagination.total ?? 0)
       : filteredTeams.length,
-    isPending: directory.isPending || limits.isPending,
-    isError: directory.isError || limits.isError,
+    isPending: directory.isPending || limits.isPending || defaultPending,
+    isError: directory.isError || limits.isError || defaultError,
     retry: () => {
       void directory.refetch();
       void limits.refetch();
+      if (usersActive) void defaultLimit.refetch();
+      if (usageRequested) void defaultUsage.refetch();
     },
   };
 }

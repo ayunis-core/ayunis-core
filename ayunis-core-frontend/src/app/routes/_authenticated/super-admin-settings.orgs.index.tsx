@@ -41,6 +41,7 @@ export const Route = createFileRoute(
     return {
       orgs: response.data,
       pagination: response.pagination,
+      lifecycleCounts: response.lifecycleCounts,
       search,
       lifecycle,
       page,
@@ -49,11 +50,13 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { orgs, pagination, search, lifecycle, page } = Route.useLoaderData();
+  const { orgs, pagination, lifecycleCounts, search, lifecycle, page } =
+    Route.useLoaderData();
   return (
     <SuperAdminOrgsPage
       orgs={orgs}
       pagination={pagination}
+      lifecycleCounts={lifecycleCounts}
       search={search}
       lifecycle={lifecycle}
       currentPage={page}

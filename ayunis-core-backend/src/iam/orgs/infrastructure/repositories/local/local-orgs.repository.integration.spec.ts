@@ -327,20 +327,15 @@ describe('LocalOrgsRepository super-admin lifecycle status', () => {
       }),
     );
 
+    const orgs: Partial<OrgRecord>[] = [];
+    const trials: Partial<TrialRecord>[] = [];
+    const subscriptionRows: Partial<SubscriptionRecord>[] = [];
     for (const { name, archived = false, trial, subscriptions = [] } of cases) {
       const orgId = randomUUID();
-      await dataSource
-        .getRepository(OrgRecord)
-        .insert({ id: orgId, name, archived });
-      if (trial) {
-        await dataSource.getRepository(TrialRecord).insert({
-          id: randomUUID(),
-          orgId,
-          maxMessages: 100,
-        });
-      }
+      orgs.push({ id: orgId, name, archived });
+      if (trial) trials.push({ id: randomUUID(), orgId, maxMessages: 100 });
       for (const subscription of subscriptions) {
-        await dataSource.getRepository(SubscriptionRecord).insert({
+        subscriptionRows.push({
           id: randomUUID(),
           orgId,
           type:
@@ -357,7 +352,10 @@ describe('LocalOrgsRepository super-admin lifecycle status', () => {
         } as Partial<SubscriptionRecord>);
       }
     }
-  });
+    await dataSource.getRepository(OrgRecord).insert(orgs);
+    await dataSource.getRepository(TrialRecord).insert(trials);
+    await dataSource.getRepository(SubscriptionRecord).insert(subscriptionRows);
+  }, 30_000);
 
   beforeEach(() => {
     jest.useFakeTimers({ now: NOW, doNotFake: [...timersOtherThanDate] });
@@ -373,7 +371,7 @@ describe('LocalOrgsRepository super-admin lifecycle status', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   const list = (filters: OrgsFilters) =>
     repository.findAllForSuperAdmin({ limit: 100, offset: 0 }, filters);
@@ -423,6 +421,31 @@ describe('LocalOrgsRepository super-admin lifecycle status', () => {
 
   it('reports nothing for an empty page', async () => {
     expect((await repository.findLifecycleStatuses([])).size).toBe(0);
+  });
+
+  it('counts every organization by lifecycle status', async () => {
+    expect(await repository.countByLifecycleStatus()).toEqual({
+      total: cases.length,
+      ...Object.fromEntries(
+        ORG_LIFECYCLE_STATUSES.map((status) => [
+          status,
+          namesWithStatus(status).length,
+        ]),
+      ),
+    });
+  });
+
+  it('counts only the organizations matching the search', async () => {
+    const legacy = cases.filter((c) => c.name.includes('legacy'));
+    const counts = await repository.countByLifecycleStatus('legacy');
+
+    expect(counts.total).toBe(legacy.length);
+    for (const status of ORG_LIFECYCLE_STATUSES) {
+      expect({ status, count: counts[status] }).toEqual({
+        status,
+        count: legacy.filter((c) => expectedStatus(c) === status).length,
+      });
+    }
   });
 });
 

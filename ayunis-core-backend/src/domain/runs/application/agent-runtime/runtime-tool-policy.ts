@@ -1,3 +1,4 @@
+import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
@@ -18,6 +19,7 @@ import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spre
 
 export function isAcknowledgementOnlyTool(tool: Tool): boolean {
   return (
+    tool instanceof CreateFileTool ||
     tool instanceof BarChartTool ||
     tool instanceof LineChartTool ||
     tool instanceof MapTool ||

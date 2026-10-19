@@ -3,7 +3,10 @@ import type { Span } from '@appsignal/javascript';
 
 // The package does not re-export its hook types (only Breadcrumb and Span).
 type Override = (span: Span) => Span | false;
-import { plugin as windowEventsPlugin } from '@appsignal/plugin-window-events';
+import {
+  installWindowErrorReporting,
+  sendErrorReport,
+} from './appsignal-request-reporting';
 import { runtimeEnv } from '@/shared/config/runtime-env';
 
 /**
@@ -107,7 +110,7 @@ export function initAppsignal() {
     appsignal.addDecorator(applyContextTags);
     appsignal.addOverride(dropBrowserExtensionErrors);
     // Captures uncaught errors and unhandled promise rejections
-    appsignal.use(windowEventsPlugin());
+    installWindowErrorReporting(appsignal);
   }
 }
 
@@ -119,11 +122,7 @@ export function reportError(
   error: Error,
   params?: Record<string, unknown>,
 ): void {
-  void appsignal?.sendError(error, (span) => {
-    if (params) {
-      span.setParams(params);
-    }
-  });
+  if (appsignal) void sendErrorReport(appsignal, error, params);
 }
 
 /**

@@ -10,6 +10,15 @@ import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
+const COUNTS = {
+  total: 56,
+  archived: 1,
+  paying: 14,
+  expired: 1,
+  trial: 36,
+  'no-plan': 4,
+};
+
 describe('SuperAdminGetAllOrgsUseCase', () => {
   let useCase: SuperAdminGetAllOrgsUseCase;
   let orgsRepository: jest.Mocked<OrgsRepository>;
@@ -24,6 +33,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
           useValue: {
             findAllForSuperAdmin: jest.fn(),
             findLifecycleStatuses: jest.fn(),
+            countByLifecycleStatus: jest.fn(),
           } satisfies Partial<OrgsRepository>,
         },
         {
@@ -42,6 +52,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     orgsRepository.findLifecycleStatuses.mockResolvedValue(new Map());
+    orgsRepository.countByLifecycleStatus.mockResolvedValue(COUNTS);
   });
 
   it('should return paginated orgs when requester is super admin', async () => {
@@ -69,9 +80,9 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
       { limit: 50, offset: 0 },
       { search: undefined },
     );
-    expect(result.data.map((item) => item.org)).toEqual(orgs);
-    expect(result.total).toBe(2);
-    expect(result.limit).toBe(50);
+    expect(result.page.data.map((item) => item.org)).toEqual(orgs);
+    expect(result.page.total).toBe(2);
+    expect(result.page.limit).toBe(50);
   });
 
   it('should filter orgs by search term', async () => {
@@ -93,7 +104,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
       { limit: 50, offset: 0 },
       { search: 'Acme' },
     );
-    expect(result.data).toHaveLength(1);
+    expect(result.page.data).toHaveLength(1);
   });
 
   it("reports each listed org's lifecycle status", async () => {
@@ -119,11 +130,30 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
       'org-expired',
     ]);
     expect(
-      result.data.map((item) => [item.org.name, item.lifecycleStatus]),
+      result.page.data.map((item) => [item.org.name, item.lifecycleStatus]),
     ).toEqual([
       ['Gemeinde Musterstadt', 'paying'],
       ['Gemeinde Beispielhausen', 'expired'],
     ]);
+  });
+
+  it('returns lifecycle counts for the search, ignoring the lifecycle filter', async () => {
+    contextService.get.mockReturnValue(SystemRole.SUPER_ADMIN);
+    orgsRepository.findAllForSuperAdmin.mockResolvedValue(
+      new Paginated<Org>({ data: [], limit: 50, offset: 0, total: 0 }),
+    );
+
+    const result = await useCase.execute(
+      new SuperAdminGetAllOrgsQuery({
+        search: 'Gemeinde',
+        lifecycle: 'paying',
+      }),
+    );
+
+    expect(orgsRepository.countByLifecycleStatus).toHaveBeenCalledWith(
+      'Gemeinde',
+    );
+    expect(result.lifecycleCounts).toEqual(COUNTS);
   });
 
   it('passes the lifecycle filter through to the repository', async () => {

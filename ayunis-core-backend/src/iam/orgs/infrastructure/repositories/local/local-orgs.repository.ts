@@ -13,7 +13,11 @@ import {
 } from 'typeorm';
 import { isUUID } from 'class-validator';
 import { OrgRecord } from './schema/org.record';
-import type { OrgLifecycleStatus } from 'src/iam/orgs/application/models/org-lifecycle-status';
+import {
+  ORG_LIFECYCLE_STATUSES,
+  type OrgLifecycleCounts,
+  type OrgLifecycleStatus,
+} from 'src/iam/orgs/application/models/org-lifecycle-status';
 import { orgLifecycleStatusSql } from './org-lifecycle-sql';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
@@ -174,6 +178,33 @@ export class LocalOrgsRepository extends OrgsRepository {
       );
       throw new OrgRetrievalFailedError(err.message);
     }
+  }
+
+  async countByLifecycleStatus(search?: string): Promise<OrgLifecycleCounts> {
+    const queryBuilder = this.orgRepository
+      .createQueryBuilder('org')
+      .setParameter('now', new Date());
+    const trimmed = search?.trim();
+    if (trimmed) {
+      queryBuilder.where(this.nameOrIdMatches(trimmed));
+    }
+    const rows = await queryBuilder
+      .select(orgLifecycleStatusSql(queryBuilder), 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('status')
+      .getRawMany<{ status: OrgLifecycleStatus; count: string }>();
+
+    const counts = Object.fromEntries(
+      ORG_LIFECYCLE_STATUSES.map((status) => [status, 0]),
+    ) as Record<OrgLifecycleStatus, number>;
+    for (const row of rows) {
+      counts[row.status] = Number(row.count);
+    }
+    const total = ORG_LIFECYCLE_STATUSES.reduce(
+      (sum, status) => sum + counts[status],
+      0,
+    );
+    return { ...counts, total };
   }
 
   async findLifecycleStatuses(

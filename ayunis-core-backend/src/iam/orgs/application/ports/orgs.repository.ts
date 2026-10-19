@@ -1,7 +1,10 @@
 import type { Org } from 'src/iam/orgs/domain/org.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
-import type { OrgLifecycleStatus } from 'src/iam/orgs/application/models/org-lifecycle-status';
+import type {
+  OrgLifecycleCounts,
+  OrgLifecycleStatus,
+} from 'src/iam/orgs/application/models/org-lifecycle-status';
 
 export interface OrgsPagination {
   limit: number;
@@ -21,6 +24,7 @@ export abstract class OrgsRepository {
     pagination: OrgsPagination,
     filters?: OrgsFilters,
   ): Promise<Paginated<Org>>;
+  abstract countByLifecycleStatus(search?: string): Promise<OrgLifecycleCounts>;
   abstract findLifecycleStatuses(
     orgIds: UUID[],
   ): Promise<Map<UUID, OrgLifecycleStatus>>;

@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import type { CreditLimit } from 'src/iam/credit-limits/domain/credit-limit.entity';
+import type { DefaultUserCreditLimit } from 'src/iam/credit-limits/domain/default-user-credit-limit.entity';
 import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 
@@ -25,6 +26,10 @@ export abstract class CreditLimitRepository {
     orgId: UUID,
     apiKeyId: UUID,
   ): Promise<ApiKeyCreditLimit | null>;
+  abstract findDefaultUserLimit(
+    orgId: UUID,
+  ): Promise<DefaultUserCreditLimit | null>;
+  abstract deleteDefaultUserLimit(orgId: UUID): Promise<void>;
   abstract deleteByUserId(orgId: UUID, userId: UUID): Promise<void>;
   abstract deleteByTeamId(orgId: UUID, teamId: UUID): Promise<void>;
   abstract deleteByApiKeyId(orgId: UUID, apiKeyId: UUID): Promise<void>;

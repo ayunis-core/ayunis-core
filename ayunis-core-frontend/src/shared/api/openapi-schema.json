@@ -8929,6 +8929,65 @@
         "tags": ["Super Admin Usage"]
       }
     },
+    "/credit-limits/default-user": {
+      "get": {
+        "operationId": "CreditLimitsController_getDefaultUserLimit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultUserCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the org-wide default personal credit limit",
+        "tags": ["credit-limits"]
+      },
+      "put": {
+        "operationId": "CreditLimitsController_setDefaultUserLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultUserCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the default personal credit limit for users without an individual limit",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeDefaultUserLimit",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove the default personal credit limit",
+        "tags": ["credit-limits"]
+      }
+    },
     "/credit-limits/users": {
       "get": {
         "operationId": "CreditLimitsController_getUserLimits",
@@ -8949,6 +9008,44 @@
           }
         },
         "summary": "List configured user credit limits with current consumption",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/users/usage": {
+      "get": {
+        "operationId": "CreditLimitsController_getUserUsage",
+        "parameters": [
+          {
+            "name": "userIds",
+            "required": true,
+            "in": "query",
+            "description": "Users whose current monthly credit consumption to return",
+            "schema": {
+              "example": ["550e8400-e29b-41d4-a716-446655440001"],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserCreditUsageItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Current monthly credit consumption of the given users, whether or not they have an individual limit",
         "tags": ["credit-limits"]
       }
     },
@@ -13609,6 +13706,38 @@
           "lifecycleStatus"
         ]
       },
+      "OrgLifecycleCountsDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "All organizations matching the search, archived included"
+          },
+          "archived": {
+            "type": "number"
+          },
+          "paying": {
+            "type": "number"
+          },
+          "expired": {
+            "type": "number"
+          },
+          "trial": {
+            "type": "number"
+          },
+          "no-plan": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "archived",
+          "paying",
+          "expired",
+          "trial",
+          "no-plan"
+        ]
+      },
       "SuperAdminOrgListResponseDto": {
         "type": "object",
         "properties": {
@@ -13626,9 +13755,17 @@
                 "$ref": "#/components/schemas/PaginationDto"
               }
             ]
+          },
+          "lifecycleCounts": {
+            "description": "Organizations per lifecycle status for the search, ignoring the lifecycle filter",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrgLifecycleCountsDto"
+              }
+            ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": ["data", "pagination", "lifecycleCounts"]
       },
       "UpdateOrgRequestDto": {
         "type": "object",
@@ -19394,6 +19531,41 @@
         },
         "required": ["providers"]
       },
+      "CreditLimitScope": {
+        "type": "string",
+        "enum": ["USER", "TEAM", "API_KEY", "USER_DEFAULT"]
+      },
+      "DefaultUserCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Personal limit for every user without an individual limit; null when no default is set.",
+            "example": 100,
+            "nullable": true
+          }
+        },
+        "required": ["scope", "monthlyCredits"]
+      },
+      "SetCreditLimitDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
+            "example": 5000,
+            "minimum": 0
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
       "UserCreditLimitItemDto": {
         "type": "object",
         "properties": {
@@ -19421,6 +19593,21 @@
           }
         },
         "required": ["userId", "name", "email", "monthlyCredits"]
+      },
+      "UserCreditUsageItemDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month; omitted when individual usage is hidden",
+            "example": 1240
+          }
+        },
+        "required": ["userId"]
       },
       "TeamCreditLimitItemDto": {
         "type": "object",
@@ -19470,21 +19657,16 @@
         },
         "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
       },
-      "SetCreditLimitDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
-            "example": 5000,
-            "minimum": 0
-          }
-        },
-        "required": ["monthlyCredits"]
-      },
       "UserCreditLimitResponseDto": {
         "type": "object",
         "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -19498,11 +19680,18 @@
             "example": "550e8400-e29b-41d4-a716-446655440001"
           }
         },
-        "required": ["id", "monthlyCredits", "userId"]
+        "required": ["scope", "id", "monthlyCredits", "userId"]
       },
       "TeamCreditLimitResponseDto": {
         "type": "object",
         "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -19516,11 +19705,18 @@
             "example": "550e8400-e29b-41d4-a716-446655440002"
           }
         },
-        "required": ["id", "monthlyCredits", "teamId"]
+        "required": ["scope", "id", "monthlyCredits", "teamId"]
       },
       "ApiKeyCreditLimitResponseDto": {
         "type": "object",
         "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -19534,7 +19730,7 @@
             "example": "550e8400-e29b-41d4-a716-446655440003"
           }
         },
-        "required": ["id", "monthlyCredits", "apiKeyId"]
+        "required": ["scope", "id", "monthlyCredits", "apiKeyId"]
       },
       "CreateApiKeyDto": {
         "type": "object",

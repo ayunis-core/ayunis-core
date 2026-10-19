@@ -48,5 +48,14 @@
     "trial": "Trial",
     "no-plan": "No plan",
     "archived": "Archived"
+  },
+  "lifecycleSummary": {
+    "total_one": "{{count, number}} organisation",
+    "total_other": "{{count, number}} organisations",
+    "paying": "{{count, number}} paying",
+    "expired": "{{count, number}} expired",
+    "trial": "{{count, number}} on trial",
+    "no-plan": "{{count, number}} with no plan",
+    "archived": "{{count, number}} archived"
   }
 }

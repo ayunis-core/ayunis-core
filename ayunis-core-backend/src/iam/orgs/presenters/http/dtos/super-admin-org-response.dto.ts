@@ -47,6 +47,19 @@ export class SuperAdminOrgOverviewResponseDto extends SuperAdminOrgResponseDto {
   lifecycleStatus: OrgLifecycleStatus;
 }
 
+export class OrgLifecycleCountsDto {
+  @ApiProperty({
+    description: 'All organizations matching the search, archived included',
+  })
+  total: number;
+
+  @ApiProperty() archived: number;
+  @ApiProperty() paying: number;
+  @ApiProperty() expired: number;
+  @ApiProperty() trial: number;
+  @ApiProperty({ name: 'no-plan' }) 'no-plan': number;
+}
+
 export class SuperAdminOrgListResponseDto {
   @ApiProperty({
     description: 'Array of organizations for the current page',
@@ -59,4 +72,11 @@ export class SuperAdminOrgListResponseDto {
     type: PaginationDto,
   })
   pagination: PaginationDto;
+
+  @ApiProperty({
+    description:
+      'Organizations per lifecycle status for the search, ignoring the lifecycle filter',
+    type: OrgLifecycleCountsDto,
+  })
+  lifecycleCounts: OrgLifecycleCountsDto;
 }

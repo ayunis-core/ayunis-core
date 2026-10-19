@@ -620,11 +620,23 @@ export interface SuperAdminOrgOverviewResponseDto {
   lifecycleStatus: OrgLifecycleStatus;
 }
 
+export interface OrgLifecycleCountsDto {
+  /** All organizations matching the search, archived included */
+  total: number;
+  archived: number;
+  paying: number;
+  expired: number;
+  trial: number;
+  'no-plan': number;
+}
+
 export interface SuperAdminOrgListResponseDto {
   /** Array of organizations for the current page */
   data: SuperAdminOrgOverviewResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
+  /** Organizations per lifecycle status for the search, ignoring the lifecycle filter */
+  lifecycleCounts: OrgLifecycleCountsDto;
 }
 
 export interface UpdateOrgRequestDto {
@@ -4302,12 +4314,45 @@ export interface ProviderUsageResponseDto {
   providers: ProviderUsageDto[];
 }
 
+export type CreditLimitScope = typeof CreditLimitScope[keyof typeof CreditLimitScope];
+
+
+export const CreditLimitScope = {
+  USER: 'USER',
+  TEAM: 'TEAM',
+  API_KEY: 'API_KEY',
+  USER_DEFAULT: 'USER_DEFAULT',
+} as const;
+
+export interface DefaultUserCreditLimitResponseDto {
+  scope: CreditLimitScope;
+  /**
+     * Personal limit for every user without an individual limit; null when no default is set.
+     * @nullable
+     */
+  monthlyCredits: number | null;
+}
+
+export interface SetCreditLimitDto {
+  /**
+     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
+     * @minimum 0
+     */
+  monthlyCredits: number;
+}
+
 export interface UserCreditLimitItemDto {
   userId: string;
   name: string;
   email: string;
   /** Configured monthly credit limit */
   monthlyCredits: number;
+  /** Credits consumed in the current calendar month; omitted when individual usage is hidden */
+  creditsUsed?: number;
+}
+
+export interface UserCreditUsageItemDto {
+  userId: string;
   /** Credits consumed in the current calendar month; omitted when individual usage is hidden */
   creditsUsed?: number;
 }
@@ -4330,27 +4375,22 @@ export interface ApiKeyCreditLimitItemDto {
   creditsUsed: number;
 }
 
-export interface SetCreditLimitDto {
-  /**
-     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
-     * @minimum 0
-     */
-  monthlyCredits: number;
-}
-
 export interface UserCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   userId: string;
 }
 
 export interface TeamCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   teamId: string;
 }
 
 export interface ApiKeyCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   apiKeyId: string;
@@ -6046,6 +6086,13 @@ startDate?: string;
  * Exclusive end of the range in ISO format
  */
 endDate?: string;
+};
+
+export type CreditLimitsControllerGetUserUsageParams = {
+/**
+ * Users whose current monthly credit consumption to return
+ */
+userIds: string[];
 };
 
 export type ArtifactsControllerFindByWorkspaceParams = {

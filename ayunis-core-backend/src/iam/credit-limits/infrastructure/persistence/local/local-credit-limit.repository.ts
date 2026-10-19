@@ -4,12 +4,14 @@ import { In, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { CreditLimit } from 'src/iam/credit-limits/domain/credit-limit.entity';
+import type { DefaultUserCreditLimit } from 'src/iam/credit-limits/domain/default-user-credit-limit.entity';
 import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
   ApiKeyCreditLimitRecord,
   CreditLimitRecord,
+  DefaultUserCreditLimitRecord,
   TeamCreditLimitRecord,
   UserCreditLimitRecord,
 } from './schema/credit-limit.record';
@@ -26,6 +28,8 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
     private readonly teamRepository: Repository<TeamCreditLimitRecord>,
     @InjectRepository(ApiKeyCreditLimitRecord)
     private readonly apiKeyRepository: Repository<ApiKeyCreditLimitRecord>,
+    @InjectRepository(DefaultUserCreditLimitRecord)
+    private readonly defaultUserRepository: Repository<DefaultUserCreditLimitRecord>,
     private readonly mapper: CreditLimitMapper,
   ) {
     super();
@@ -93,6 +97,19 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
       where: { orgId, apiKeyId },
     });
     return record ? this.mapper.toApiKeyDomain(record) : null;
+  }
+
+  async findDefaultUserLimit(
+    orgId: UUID,
+  ): Promise<DefaultUserCreditLimit | null> {
+    const record = await this.defaultUserRepository.findOne({
+      where: { orgId },
+    });
+    return record ? this.mapper.toDefaultUserDomain(record) : null;
+  }
+
+  async deleteDefaultUserLimit(orgId: UUID): Promise<void> {
+    await this.defaultUserRepository.delete({ orgId });
   }
 
   async deleteByUserId(orgId: UUID, userId: UUID): Promise<void> {
