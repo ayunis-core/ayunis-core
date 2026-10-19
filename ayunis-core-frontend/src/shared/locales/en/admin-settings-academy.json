@@ -43,9 +43,11 @@
       "notPassed": "Not yet completed"
     },
     "export": {
+      "fileName": "Training_status_Ayunis_Core_AI_training.csv",
       "button": "Export as CSV",
       "loading": "Exporting...",
-      "error": "The export could not be created. Please try again."
+      "error": "The export could not be created. Please try again.",
+      "rateLimited": "Too many exports. Please try again in a few minutes."
     },
     "certificate": {
       "download": "Download participation confirmation for {{name}}",

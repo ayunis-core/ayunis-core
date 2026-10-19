@@ -3,16 +3,14 @@ import { CertificateValidityStatus } from 'src/iam/academy-access/domain/value-o
 import 'src/config/env';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
-import { DataSource, EntitySchema } from 'typeorm';
+import { DataSource, EntitySchema, In } from 'typeorm';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { AcademyCompletionRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-completion.record';
 import { certificateExpiresAt } from 'src/domain/academy/application/util/certificate-validity';
-import {
-  CERTIFICATE_STATUS_URGENCY,
-  resolveCertificateValidityStatus,
-} from 'src/iam/academy-access/application/util/certificate-validity-status';
+import { CERTIFICATE_STATUS_URGENCY } from 'src/iam/academy-access/application/util/certificate-validity-status';
+import { resolveCertificateValidityStatus } from 'src/iam/academy-access/testing/certificate-validity-status-reference';
 import type { OrgCertificateStatusesCriteria } from 'src/iam/academy-access/application/ports/org-certificate-statuses.repository';
 import { PostgresOrgCertificateStatusesRepository } from './org-certificate-statuses.repository';
 import { AcademyCertificateMemberView } from './schema/academy-certificate-member-view.record';
@@ -211,6 +209,45 @@ describe('PostgresOrgCertificateStatusesRepository', () => {
 
   it('matches TypeScript validity, UTC month clamping, urgency and name ordering', async () => {
     expect(await repository.findAll(criteria())).toEqual(expected());
+  });
+
+  it('matches Academy calendar expiry across three years of month ends', async () => {
+    const calendarOrgId = randomUUID();
+    const samples = Array.from({ length: 36 }, (_, month) =>
+      [0, 12, 23].map((hour) => ({
+        id: randomUUID(),
+        date: new Date(Date.UTC(2023, month + 1, 0, hour, 59, 59, 999)),
+      })),
+    ).flat();
+    await db.getRepository(UserRecord).insert(
+      samples.map(({ id }) => ({
+        id,
+        orgId: calendarOrgId,
+        name: 'Calendar boundary',
+        email: `${id}@example.com`,
+      })),
+    );
+    await db.getRepository(AcademyCompletionRecord).insert(
+      samples.map(({ id, date }) => ({
+        id: randomUUID(),
+        userId: id,
+        completedAt: date,
+      })),
+    );
+    const completions = await db.getRepository(AcademyCompletionRecord).find({
+      where: { userId: In(samples.map(({ id }) => id)) },
+    });
+    const expectedDates = new Map(
+      completions.map((completion) => [
+        completion.userId,
+        certificateExpiresAt(completion.completedAt),
+      ]),
+    );
+    const rows = await repository.findAll(criteria({ orgId: calendarOrgId }));
+    expect(rows).toHaveLength(samples.length);
+    for (const row of rows) {
+      expect(row.expiresAt).toEqual(expectedDates.get(row.userId));
+    }
   });
 
   it('applies combined search/status filters before database pagination and count', async () => {

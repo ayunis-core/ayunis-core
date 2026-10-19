@@ -9,9 +9,9 @@ import { AcademyCompletionRecord } from 'src/domain/academy/infrastructure/persi
     dataSource
       .createQueryBuilder()
       .select('member.id', 'userId')
-      .addSelect('member.orgId', 'orgId')
-      .addSelect('member.name', 'name')
       .addSelect('member.email', 'email')
+      .addSelect('member.name', 'name')
+      .addSelect('member.orgId', 'orgId')
       .addSelect('completion.completedAt', 'completedAt')
       .from(UserRecord, 'member')
       .leftJoin(

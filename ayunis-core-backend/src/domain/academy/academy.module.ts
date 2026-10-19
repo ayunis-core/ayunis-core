@@ -34,7 +34,6 @@ import { ConfirmChapterUseCase } from './application/use-cases/confirm-chapter/c
 import { RecordModuleHeartbeatUseCase } from './application/use-cases/record-module-heartbeat/record-module-heartbeat.use-case';
 import { GetAcademyProgressUseCase } from './application/use-cases/get-academy-progress/get-academy-progress.use-case';
 import { GetAcademyCompletionUseCase } from './application/use-cases/get-academy-completion/get-academy-completion.use-case';
-import { GetAcademyCompletionsUseCase } from './application/use-cases/get-academy-completions/get-academy-completions.use-case';
 import { GetAcademyCertificateUseCase } from './application/use-cases/get-academy-certificate/get-academy-certificate.use-case';
 import { SuperAdminAcademyChaptersController } from './presenters/http/super-admin-academy-chapters.controller';
 import { SuperAdminAcademyCourseModulesController } from './presenters/http/super-admin-academy-course-modules.controller';
@@ -109,14 +108,12 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     RecordModuleHeartbeatUseCase,
     GetAcademyProgressUseCase,
     GetAcademyCompletionUseCase,
-    GetAcademyCompletionsUseCase,
     GetAcademyCertificateUseCase,
   ],
   exports: [
     GetAcademyContentUseCase,
     GetAcademyProgressUseCase,
     GetAcademyCompletionUseCase,
-    GetAcademyCompletionsUseCase,
     ConfirmChapterUseCase,
     GetAcademyCertificateUseCase,
   ],

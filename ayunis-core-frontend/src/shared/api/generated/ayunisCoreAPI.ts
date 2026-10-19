@@ -25938,7 +25938,7 @@ export const getAcademyAccessControllerExportOrgCertificatesQueryKey = (params?:
     }
 
 
-export const getAcademyAccessControllerExportOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = unknown>(params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
+export const getAcademyAccessControllerExportOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -25957,10 +25957,10 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type AcademyAccessControllerExportOrgCertificatesQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>>
-export type AcademyAccessControllerExportOrgCertificatesQueryError = unknown
+export type AcademyAccessControllerExportOrgCertificatesQueryError = void
 
 
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = unknown>(
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
  params: undefined |  AcademyAccessControllerExportOrgCertificatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
@@ -25970,7 +25970,7 @@ export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = unknown>(
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
  params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
@@ -25980,7 +25980,7 @@ export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = unknown>(
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
  params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -25988,7 +25988,7 @@ export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<
  * @summary Export the certificate overview as CSV
  */
 
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = unknown>(
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
  params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

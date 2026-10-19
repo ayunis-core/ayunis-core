@@ -43,9 +43,11 @@
       "notPassed": "Noch nicht abgeschlossen"
     },
     "export": {
+      "fileName": "Schulungsstatus_Ayunis_Core_KI-Schulung.csv",
       "button": "Als CSV exportieren",
       "loading": "Wird exportiert...",
-      "error": "Der Export konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+      "error": "Der Export konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+      "rateLimited": "Zu viele Exporte. Bitte versuchen Sie es in einigen Minuten erneut."
     },
     "certificate": {
       "download": "Teilnahmebestätigung für {{name}} herunterladen",

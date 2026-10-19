@@ -3,12 +3,14 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { convertCSVToString } from 'src/common/util/csv';
 import { UnexpectedAcademyAccessError } from 'src/iam/academy-access/application/academy-access.errors';
 import type { OrgCertificateStatus } from 'src/iam/academy-access/application/models/org-certificate-status';
-import { OrgCertificateStatusesService } from 'src/iam/academy-access/application/services/org-certificate-statuses.service';
+import { ContextService } from 'src/common/context/services/context.service';
+import { getRequiredOrgId } from 'src/common/context/required-context';
+import { OrgCertificateStatusesRepository } from 'src/iam/academy-access/application/ports/org-certificate-statuses.repository';
+import { GetOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.use-case';
+import { GetOrgAcademyAccessSettingsQuery } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.query';
+import { buildOrgCertificateStatusesCriteria } from 'src/iam/academy-access/application/util/org-certificate-statuses-criteria';
 import { CertificateValidityStatus } from 'src/iam/academy-access/domain/value-objects/certificate-validity-status.enum';
 import { ExportOrgCertificateStatusesQuery } from './export-org-certificate-statuses.query';
-
-export const CERTIFICATE_OVERVIEW_EXPORT_FILE_NAME =
-  'Schulungsstatus_Ayunis_Core_KI-Schulung.csv';
 
 const CSV_HEADERS = [
   'Name',
@@ -49,21 +51,29 @@ export class ExportOrgCertificateStatusesUseCase {
   );
 
   constructor(
-    private readonly statusesService: OrgCertificateStatusesService,
+    private readonly repository: OrgCertificateStatusesRepository,
+    private readonly getOrgSettingsUseCase: GetOrgAcademyAccessSettingsUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedAcademyAccessError)
   async execute(query: ExportOrgCertificateStatusesQuery): Promise<string> {
+    const orgId = getRequiredOrgId(this.contextService);
     this.logger.log(
-      { orgId: query.orgId, status: query.status },
+      { orgId, status: query.status },
       'Exporting org certificate statuses',
     );
 
-    const statuses = await this.statusesService.findAll({
-      orgId: query.orgId,
-      search: query.search,
-      status: query.status,
-    });
+    const settings = await this.getOrgSettingsUseCase.execute(
+      new GetOrgAcademyAccessSettingsQuery(orgId),
+    );
+    const statuses = await this.repository.findAll(
+      buildOrgCertificateStatusesCriteria(
+        { orgId, search: query.search, status: query.status },
+        settings.mode,
+        new Date(),
+      ),
+    );
 
     const csv = convertCSVToString(
       {

@@ -1,22 +1,22 @@
-import { Client } from "pg";
-import { randomUUID } from "node:crypto";
-import { config } from "../config";
+import { Client } from 'pg';
+import { randomUUID } from 'node:crypto';
+import { config } from '../config';
 
 function databasePort(): number {
   if (process.env.E2E_POSTGRES_PORT) {
     return Number(process.env.E2E_POSTGRES_PORT);
   }
-  const apiPort = Number(new URL(config.apiURL).port || "3000");
+  const apiPort = Number(new URL(config.apiURL).port || '3000');
   return 5432 + (apiPort - 3000);
 }
 
 function createDatabaseClient(): Client {
   return new Client({
-    host: process.env.E2E_POSTGRES_HOST ?? "localhost",
+    host: process.env.E2E_POSTGRES_HOST ?? 'localhost',
     port: databasePort(),
-    user: process.env.E2E_POSTGRES_USER ?? "postgres",
-    password: process.env.E2E_POSTGRES_PASSWORD ?? "postgres",
-    database: process.env.E2E_POSTGRES_DB ?? "ayunis",
+    user: process.env.E2E_POSTGRES_USER ?? 'postgres',
+    password: process.env.E2E_POSTGRES_PASSWORD ?? 'postgres',
+    database: process.env.E2E_POSTGRES_DB ?? 'ayunis',
   });
 }
 

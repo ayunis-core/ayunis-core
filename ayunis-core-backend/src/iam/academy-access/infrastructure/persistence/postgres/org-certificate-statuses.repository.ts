@@ -29,7 +29,8 @@ export class PostgresOrgCertificateStatusesRepository extends OrgCertificateStat
     const query = this.createQuery(criteria)
       .select('certificate.*')
       .from('filtered_certificates', 'certificate');
-    return this.order(query).getRawMany<OrgCertificateStatus>();
+    const rows = await this.order(query).getRawMany<OrgCertificateStatus>();
+    return rows.map(toStatus);
   }
 
   async findPage(

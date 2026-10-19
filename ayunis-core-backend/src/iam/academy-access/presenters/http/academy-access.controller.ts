@@ -38,10 +38,7 @@ import { UpsertOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/ap
 import { UpsertOrgAcademyAccessSettingsCommand } from 'src/iam/academy-access/application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.command';
 import { ListOrgCertificateStatusesUseCase } from 'src/iam/academy-access/application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.use-case';
 import { ListOrgCertificateStatusesQuery } from 'src/iam/academy-access/application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.query';
-import {
-  CERTIFICATE_OVERVIEW_EXPORT_FILE_NAME,
-  ExportOrgCertificateStatusesUseCase,
-} from 'src/iam/academy-access/application/use-cases/export-org-certificate-statuses/export-org-certificate-statuses.use-case';
+import { ExportOrgCertificateStatusesUseCase } from 'src/iam/academy-access/application/use-cases/export-org-certificate-statuses/export-org-certificate-statuses.use-case';
 import { ExportOrgCertificateStatusesQuery } from 'src/iam/academy-access/application/use-cases/export-org-certificate-statuses/export-org-certificate-statuses.query';
 import { GetOrgMemberCertificateUseCase } from 'src/iam/academy-access/application/use-cases/get-org-member-certificate/get-org-member-certificate.use-case';
 import { GetOrgMemberCertificateQuery } from 'src/iam/academy-access/application/use-cases/get-org-member-certificate/get-org-member-certificate.query';
@@ -130,7 +127,6 @@ export class AcademyAccessController {
     type: PaginatedOrgCertificateStatusesResponseDto,
   })
   async listOrgCertificates(
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query() queryParams: OrgCertificateStatusesQueryParamsDto,
   ): Promise<PaginatedOrgCertificateStatusesResponseDto> {
     // The search term is free text over member names and emails, so it is
@@ -138,7 +134,6 @@ export class AcademyAccessController {
     // centralized logs for their whole retention period.
     this.logger.log(
       {
-        orgId,
         status: queryParams.status,
         limit: queryParams.limit,
         offset: queryParams.offset,
@@ -149,7 +144,6 @@ export class AcademyAccessController {
 
     const statuses = await this.listOrgCertificateStatusesUseCase.execute(
       new ListOrgCertificateStatusesQuery({
-        orgId,
         search: queryParams.search,
         status: queryParams.status,
         pagination: {
@@ -171,11 +165,12 @@ export class AcademyAccessController {
 
   @Get('org-certificates/export.csv')
   @Roles(UserRole.ADMIN)
+  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000, keyBy: 'user' })
   @Header('Content-Type', 'text/csv; charset=utf-8')
-  @Header(
-    'Content-Disposition',
-    `attachment; filename="${CERTIFICATE_OVERVIEW_EXPORT_FILE_NAME}"`,
-  )
+  @ApiTooManyRequestsResponse({
+    description:
+      'The administrator has exceeded ten CSV exports per 15 minutes',
+  })
   @ApiOperation({
     summary: 'Export the certificate overview as CSV',
     description:
@@ -189,13 +184,11 @@ export class AcademyAccessController {
     },
   })
   async exportOrgCertificates(
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query() queryParams: OrgCertificateStatusesExportQueryParamsDto,
   ): Promise<string> {
     // Counted rather than logged for the same reason as in listOrgCertificates.
     this.logger.log(
       {
-        orgId,
         status: queryParams.status,
         hasSearch: queryParams.search !== undefined,
       },
@@ -204,7 +197,6 @@ export class AcademyAccessController {
 
     return this.exportOrgCertificateStatusesUseCase.execute(
       new ExportOrgCertificateStatusesQuery({
-        orgId,
         search: queryParams.search,
         status: queryParams.status,
       }),

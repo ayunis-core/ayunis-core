@@ -24,7 +24,6 @@ describe(CreateFederatedUserUseCase.name, () => {
         findManyByOrgId: jest.fn(),
         findAllForSuperAdmin: jest.fn(),
         findAllIdsByOrgId: jest.fn(),
-        findAllSummariesByOrgId: jest.fn(),
         create: jest.fn().mockImplementation(async (user) => user),
         update: jest.fn(),
         registerFailedLoginAttempt: jest.fn(),

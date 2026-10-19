@@ -34,9 +34,8 @@ export class GetOrgMemberCertificateUseCase {
       'Getting org member certificate',
     );
 
-    // The org-scoped lookup answers "not a member" for an unknown id and for a
-    // member of another org alike, so the response never reveals whether a
-    // user id exists outside the admin's org.
+    // The lookup uses the caller's org context; this check also verifies the
+    // explicit query org. Both missing and foreign members return the same 404.
     const members = await this.findUsersByIdsUseCase.execute(
       new FindUsersByIdsQuery([query.userId]),
     );

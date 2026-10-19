@@ -12178,6 +12178,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The administrator has exceeded ten CSV exports per 15 minutes"
           }
         },
         "summary": "Export the certificate overview as CSV",

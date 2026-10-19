@@ -57,7 +57,11 @@ test.describe("seeded org admin", () => {
 
       const csvDownload = page.waitForEvent("download");
       await page.getByTestId("academy-overview-export").click();
-      const csv = (await readDownload(await csvDownload)).toString("utf8");
+      const csvFile = await csvDownload;
+      expect(csvFile.suggestedFilename()).toBe(
+        "Schulungsstatus_Ayunis_Core_KI-Schulung.csv",
+      );
+      const csv = (await readDownload(csvFile)).toString("utf8");
       expect(csv.charCodeAt(0)).toBe(0xfeff);
       const lines = csv.trim().split("\n");
       expect(lines[0]).toBe(CSV_HEADER);

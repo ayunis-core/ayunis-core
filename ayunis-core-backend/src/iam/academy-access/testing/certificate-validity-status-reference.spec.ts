@@ -2,8 +2,8 @@ import { CertificateValidityStatus } from 'src/iam/academy-access/domain/value-o
 import {
   EXPIRING_SOON_DAYS,
   CERTIFICATE_STATUS_URGENCY,
-  resolveCertificateValidityStatus,
-} from './certificate-validity-status';
+} from 'src/iam/academy-access/application/util/certificate-validity-status';
+import { resolveCertificateValidityStatus } from './certificate-validity-status-reference';
 
 describe('resolveCertificateValidityStatus', () => {
   const now = new Date('2026-06-01T12:00:00.000Z');

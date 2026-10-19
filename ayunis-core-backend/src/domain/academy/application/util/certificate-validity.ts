@@ -4,7 +4,10 @@
  * only once ignore it.
  *
  * Academy owns the period; the certificate reporting query also imports it
- * so SQL and application calculations use the same policy.
+ * so SQL and application calculations use the same policy. Calendar-rule
+ * changes must also update academy-access reporting SQL; its integration
+ * tests compare SQL expiry with this function. Run the local timezone parity
+ * check in Academy Access's SUMMARY.md when changing expiry or timestamp handling.
  */
 export const ACADEMY_COMPLETION_VALIDITY_MONTHS = 12;
 

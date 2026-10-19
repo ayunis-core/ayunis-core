@@ -1,3 +1,6 @@
+// SQL status filtering and pagination require expiry in the database. Keep
+// this arithmetic aligned with Academy's certificateExpiresAt. Expiry or timestamp
+// changes also require the local timezone parity check in this module's SUMMARY.md.
 export function certificateExpirySql(timestampTimeZone: string): string {
   const instant = completionInstantSql(timestampTimeZone);
   return `CASE WHEN :renewalRequired THEN

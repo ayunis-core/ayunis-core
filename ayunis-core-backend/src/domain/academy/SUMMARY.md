@@ -67,8 +67,22 @@ to cross-module use-case composition. Reporting reads only whole-academy
 completion rows; it never reads chapter confirmations. SQL/TypeScript parity tests cover leap-day, UTC
 and daylight-saving boundaries.
 
-`GetAcademyCompletionsUseCase` provides a bulk many-user completion view for
-callers that need completion data without a reporting query.
+The academy-access reporting view `academy_certificate_members` depends on
+`academy_completion.userId` and `academy_completion.completedAt`. Migrations
+that drop or change the type of those columns must drop the view first and
+recreate it afterward, preserving the definition in academy-access's
+`AcademyCertificateMemberView` record. Coordinate that migration with the
+users module, whose columns are also referenced by the view.
+
+The reporting query duplicates calendar arithmetic in SQL so status filtering,
+urgency sorting and pagination all run in PostgreSQL. Changes to
+`certificateExpiresAt` must update that SQL and its parity coverage together.
+The reporting integration suite remains part of the regular backend tests.
+For expiry or timestamp-handling changes, run the local timezone check documented
+in [Academy Access](../../iam/academy-access/SUMMARY.md#timezone-parity-check).
+Fixtures include leap days, month ends and repeated local hours. Non-UTC handling
+preserves existing pg timestamp decoding in local development and other deployment
+timezones rather than assuming UTC.
 
 ## Participation confirmation PDF
 

@@ -19,7 +19,6 @@ import { ExportOrgCertificateStatusesUseCase } from './application/use-cases/exp
 import { GetOrgMemberCertificateUseCase } from './application/use-cases/get-org-member-certificate/get-org-member-certificate.use-case';
 import { OrgCertificateStatusesRepository } from './application/ports/org-certificate-statuses.repository';
 import { PostgresOrgCertificateStatusesRepository } from './infrastructure/persistence/postgres/org-certificate-statuses.repository';
-import { OrgCertificateStatusesService } from './application/services/org-certificate-statuses.service';
 
 import { AcademyCertificateGuard } from './application/guards/academy-certificate.guard';
 import { AcademyAccessController } from './presenters/http/academy-access.controller';
@@ -53,7 +52,6 @@ import { AcademyAccessController } from './presenters/http/academy-access.contro
       provide: OrgCertificateStatusesRepository,
       useClass: PostgresOrgCertificateStatusesRepository,
     },
-    OrgCertificateStatusesService,
     ListOrgCertificateStatusesUseCase,
     ExportOrgCertificateStatusesUseCase,
     GetOrgMemberCertificateUseCase,
