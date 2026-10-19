@@ -15,6 +15,7 @@ import {
 } from 'src/iam/academy-access/application/util/certificate-validity-status';
 import type { OrgCertificateStatusesCriteria } from 'src/iam/academy-access/application/ports/org-certificate-statuses.repository';
 import { PostgresOrgCertificateStatusesRepository } from './org-certificate-statuses.repository';
+import { AcademyCertificateMemberView } from './schema/academy-certificate-member-view.record';
 
 const NOW = new Date('2025-03-30T12:00:00Z');
 const userSchema = new EntitySchema<UserRecord>({
@@ -126,7 +127,7 @@ describe('PostgresOrgCertificateStatusesRepository', () => {
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [userSchema, completionSchema],
+      entities: [userSchema, completionSchema, AcademyCertificateMemberView],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -170,6 +171,42 @@ describe('PostgresOrgCertificateStatusesRepository', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
+  });
+
+  it('reads current completion data through the mapped view without a refresh', async () => {
+    const member = {
+      id: randomUUID(),
+      orgId: randomUUID(),
+      name: 'Lena Müller',
+      email: 'lena.mueller@example.com',
+    };
+    await db.getRepository(UserRecord).insert(member);
+    const view = db.getRepository(AcademyCertificateMemberView);
+    expect(await view.findOneByOrFail({ userId: member.id })).toEqual({
+      userId: member.id,
+      orgId: member.orgId,
+      name: member.name,
+      email: member.email,
+      completedAt: null,
+    });
+    const completedAt = new Date('2025-01-15T12:00:00Z');
+    await db.getRepository(AcademyCompletionRecord).insert({
+      id: randomUUID(),
+      userId: member.id,
+      completedAt,
+    });
+    expect(await view.findOneByOrFail({ userId: member.id })).toEqual(
+      expect.objectContaining({ completedAt }),
+    );
+    const report = await repository.findAll(criteria({ orgId: member.orgId }));
+    expect(report).toHaveLength(1);
+    expect(report[0]).toEqual(
+      expect.objectContaining({
+        userId: member.id,
+        completedAt,
+        status: CertificateValidityStatus.VALID,
+      }),
+    );
   });
 
   it('matches TypeScript validity, UTC month clamping, urgency and name ordering', async () => {

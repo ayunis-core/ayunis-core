@@ -6,7 +6,7 @@ export function certificateExpirySql(timestampTimeZone: string): string {
 }
 
 function completionInstantSql(timestampTimeZone: string): string {
-  const column = `date_trunc('milliseconds', completion."completedAt")`;
+  const column = `date_trunc('milliseconds', member."completedAt")`;
   const candidate = `(${column} AT TIME ZONE :timestampTimeZone)`;
   if (timestampTimeZone === 'UTC') return candidate;
 

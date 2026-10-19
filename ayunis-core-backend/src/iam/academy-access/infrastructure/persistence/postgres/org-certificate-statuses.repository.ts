@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
-import { AcademyCompletionRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-completion.record';
 import {
   OrgCertificateStatusesRepository,
   type OrgCertificateStatusesCriteria,
@@ -13,6 +11,7 @@ import { CERTIFICATE_STATUS_URGENCY } from 'src/iam/academy-access/application/u
 import { CertificateValidityStatus } from 'src/iam/academy-access/domain/value-objects/certificate-validity-status.enum';
 
 import { certificateExpirySql } from './org-certificate-statuses-sql';
+import { AcademyCertificateMemberView } from './schema/academy-certificate-member-view.record';
 
 type CountedCertificate = (OrgCertificateStatus | { userId: null }) & {
   total: string;
@@ -68,7 +67,7 @@ export class PostgresOrgCertificateStatusesRepository extends OrgCertificateStat
 
   private createQuery(
     criteria: OrgCertificateStatusesCriteria,
-  ): SelectQueryBuilder<UserRecord> {
+  ): SelectQueryBuilder<AcademyCertificateMemberView> {
     const filtered = this.dataSource
       .createQueryBuilder()
       .select('certificate.*')
@@ -77,7 +76,7 @@ export class PostgresOrgCertificateStatusesRepository extends OrgCertificateStat
       filtered.where('certificate.status = :status', {
         status: criteria.status,
       });
-    return new SelectQueryBuilder<UserRecord>(this.dataSource)
+    return new SelectQueryBuilder<AcademyCertificateMemberView>(this.dataSource)
       .addCommonTableExpression(this.datesQuery(criteria), 'certificate_dates')
       .addCommonTableExpression(this.statusQuery(), 'certificate_statuses')
       .addCommonTableExpression(filtered, 'filtered_certificates')
@@ -89,20 +88,15 @@ export class PostgresOrgCertificateStatusesRepository extends OrgCertificateStat
 
   private datesQuery(
     criteria: OrgCertificateStatusesCriteria,
-  ): SelectQueryBuilder<UserRecord> {
+  ): SelectQueryBuilder<AcademyCertificateMemberView> {
     const timestampTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const query = this.dataSource
-      .createQueryBuilder(UserRecord, 'member')
-      .select('member.id', 'userId')
+      .createQueryBuilder(AcademyCertificateMemberView, 'member')
+      .select('member.userId', 'userId')
       .addSelect('member.name', 'name')
       .addSelect('member.email', 'email')
-      .addSelect('completion.completedAt', 'completedAt')
+      .addSelect('member.completedAt', 'completedAt')
       .addSelect(certificateExpirySql(timestampTimeZone), 'expiresAt')
-      .leftJoin(
-        AcademyCompletionRecord,
-        'completion',
-        'completion.userId = member.id',
-      )
       .where('member.orgId = :orgId', { orgId: criteria.orgId })
       .setParameters({
         renewalRequired: criteria.renewalRequired,

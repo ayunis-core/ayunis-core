@@ -6,6 +6,7 @@ import { AddonsModule } from 'src/iam/addons/addons.module';
 import { UsersModule } from 'src/iam/users/users.module';
 
 import { OrgAcademyAccessSettingsRecord } from './infrastructure/persistence/postgres/schema/org-academy-access-settings.record';
+import { AcademyCertificateMemberView } from './infrastructure/persistence/postgres/schema/academy-certificate-member-view.record';
 import { OrgAcademyAccessSettingsMapper } from './infrastructure/persistence/postgres/mappers/org-academy-access-settings.mapper';
 import { OrgAcademyAccessSettingsRepository } from './application/ports/org-academy-access-settings.repository';
 import { PostgresOrgAcademyAccessSettingsRepository } from './infrastructure/persistence/postgres/org-academy-access-settings.repository';
@@ -30,7 +31,10 @@ import { AcademyAccessController } from './presenters/http/academy-access.contro
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrgAcademyAccessSettingsRecord]),
+    TypeOrmModule.forFeature([
+      OrgAcademyAccessSettingsRecord,
+      AcademyCertificateMemberView,
+    ]),
     AddonsModule,
     AcademyModule,
     UsersModule,

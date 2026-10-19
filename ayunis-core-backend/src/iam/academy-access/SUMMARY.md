@@ -91,8 +91,9 @@ Deliberately **not** gated:
 ## Admin overview
 
 `OrgCertificateStatusesService` pairs every member of the org with a
-`CertificateValidityStatus` (`not_passed`, `valid`, `expiring_soon`, `expired`),
-derived by the pure `resolveCertificateValidityStatus`. `expiring_soon` starts
+`CertificateValidityStatus` (`not_passed`, `valid`, `expiring_soon`, `expired`).
+SQL derives status using the same rules as the pure
+`resolveCertificateValidityStatus`. `expiring_soon` starts
 `EXPIRING_SOON_DAYS` (30) before expiry — deliberately the same moment the user
 gets their first expiry notification, so admin and member see the same thing.
 `expiring_soon`/`expired` can only occur in `required_annually`; a permanent pass
@@ -107,9 +108,12 @@ including an empty or out-of-range page. Only page rows reach the application.
 
 `PostgresOrgCertificateStatusesRepository` is a deliberate reporting exception
 to ordinary cross-module use-case composition, following the users-export read
-model: it reads `UserRecord` and `AcademyCompletionRecord` directly, without
-calling another module's ports or adapters. It selects only identity and
-completion fields, always scoped by org ID. The academy still owns the validity
+model: it queries the mapped `AcademyCertificateMemberView`. The ordinary
+PostgreSQL view `academy_certificate_members` joins `UserRecord` to
+`AcademyCompletionRecord`, exposing only member identity, org ID and completion
+date. The query applies org scoping before status filtering and pagination;
+the view itself is not an authorization boundary. Completion changes appear
+immediately without refreshing the view. The academy still owns the validity
 period; SQL receives that period rather than hardcoding it. Importing the
 shared policy constant is a deliberate exception to cross-module use-case
 composition; no wrapper use case or duplicate definition is needed.
@@ -124,7 +128,8 @@ collation, followed by user ID for stable pagination.
 Default order is most-urgent-first (`expired`, `expiring_soon`, `not_passed`,
 `valid`, then name and user ID). Export uses the same filters and order without
 pagination. Existing org/user indexes and the unique completion user ID support
-the join; no additional schema is required.
+the join. `CreateAcademyCertificateMembersView` creates the view; no new table
+or materialized copy is added.
 
 ## Member certificate download
 
@@ -143,5 +148,5 @@ academy's own `AcademyCompletionNotFoundError` (404).
 Standard hexagonal: `domain/` (settings entity + mode and validity-status
 enums), `application/` (port, errors, decorator, guard, use cases, the
 `OrgCertificateStatusesService`, the `OrgCertificateStatus` model, pure status
-util), `infrastructure/persistence/postgres/` (record + mapper + repository),
+util), `infrastructure/persistence/postgres/` (records, mapped view, mapper and repository),
 `presenters/http/`.

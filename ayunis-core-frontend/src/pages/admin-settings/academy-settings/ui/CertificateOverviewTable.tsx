@@ -145,18 +145,25 @@ function CertificateDownloadButton({
 
   return (
     <Tooltip>
+      {/* A disabled button swallows pointer events, so the tooltip hangs on a wrapper. */}
       <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => onDownload(userId)}
-          disabled={disabled}
-          aria-label={label}
-          aria-busy={isDownloading}
-          data-testid={`academy-certificate-download-${userId}`}
-        >
-          {isDownloading ? <Loader2 className="animate-spin" /> : <FileDown />}
-        </Button>
+        <span className="inline-flex">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onDownload(userId)}
+            disabled={disabled}
+            aria-label={label}
+            aria-busy={isDownloading}
+            data-testid={`academy-certificate-download-${userId}`}
+          >
+            {isDownloading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <FileDown />
+            )}
+          </Button>
+        </span>
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
