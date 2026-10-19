@@ -14,7 +14,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@ayunis/ui/components/empty';
-import { Users } from 'lucide-react';
+import { Button } from '@ayunis/ui/components/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
+import { FileDown, Loader2, Users } from 'lucide-react';
 import type { OrgCertificateStatusResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { formatDate } from '@/shared/lib/format-date';
 import { CertificateStatusBadge } from './CertificateStatusBadge';
@@ -23,11 +29,16 @@ interface CertificateOverviewTableProps {
   entries: OrgCertificateStatusResponseDto[];
   /** Only annual orgs have a renewal date, so the column is dropped otherwise. */
   showRenewalColumn: boolean;
+  onDownloadCertificate: (userId: string) => void;
+  /** The member whose certificate is being rendered right now, if any. */
+  downloadingUserId: string | null;
 }
 
 export function CertificateOverviewTable({
   entries,
   showRenewalColumn,
+  onDownloadCertificate,
+  downloadingUserId,
 }: Readonly<CertificateOverviewTableProps>) {
   const { t } = useTranslation('admin-settings-academy');
 
@@ -58,11 +69,17 @@ export function CertificateOverviewTable({
             <TableHead>{t('overview.column.renewalDue')}</TableHead>
           )}
           <TableHead>{t('overview.column.status')}</TableHead>
+          <TableHead>
+            <span className="sr-only">{t('overview.column.actions')}</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {entries.map((entry) => (
-          <TableRow key={entry.userId}>
+          <TableRow
+            key={entry.userId}
+            data-testid={`academy-overview-row-${entry.userId}`}
+          >
             <TableCell>
               <div className="font-medium">{entry.name}</div>
               <div className="text-sm text-muted-foreground">{entry.email}</div>
@@ -78,6 +95,17 @@ export function CertificateOverviewTable({
             <TableCell>
               <CertificateStatusBadge status={entry.status} />
             </TableCell>
+            <TableCell className="text-right">
+              {entry.completedAt !== null && (
+                <CertificateDownloadButton
+                  userId={entry.userId}
+                  memberName={entry.name}
+                  onDownload={onDownloadCertificate}
+                  isDownloading={downloadingUserId === entry.userId}
+                  disabled={downloadingUserId !== null}
+                />
+              )}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -90,4 +118,47 @@ function DateOrDash({ value }: Readonly<{ value: string | null }>) {
     return <span className="text-muted-foreground">—</span>;
   }
   return <>{formatDate(value)}</>;
+}
+
+interface CertificateDownloadButtonProps {
+  userId: string;
+  memberName: string;
+  onDownload: (userId: string) => void;
+  isDownloading: boolean;
+  disabled: boolean;
+}
+
+function CertificateDownloadButton({
+  userId,
+  memberName,
+  onDownload,
+  isDownloading,
+  disabled,
+}: Readonly<CertificateDownloadButtonProps>) {
+  const { t } = useTranslation('admin-settings-academy');
+  const label = t(
+    isDownloading
+      ? 'overview.certificate.downloading'
+      : 'overview.certificate.download',
+    { name: memberName },
+  );
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => onDownload(userId)}
+          disabled={disabled}
+          aria-label={label}
+          aria-busy={isDownloading}
+          data-testid={`academy-certificate-download-${userId}`}
+        >
+          {isDownloading ? <Loader2 className="animate-spin" /> : <FileDown />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
 }

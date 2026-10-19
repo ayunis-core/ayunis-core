@@ -30,9 +30,9 @@ request, so the checks are ordered cheapest-first and short-circuit:
    **fails open**: it cannot take the certificate at all, so gating on it would
    lock the org out with no way forward.
 3. `GetAcademyCompletionUseCase` (exported by `AcademyModule`) for
-   `completedAt`/`expiresAt`. Only the academy knows the validity period; this
-   module never imports it. Chapter confirmations remain entirely inside the
-   academy module.
+   `completedAt`/`expiresAt`. Access evaluation uses Academy's derived expiry
+   rather than calculating it locally. Chapter confirmations remain entirely
+   inside the academy module.
 
 `expiresAt` is reported only in `required_annually` — surfacing it elsewhere
 would imply a deadline that mode does not have. Nothing is cached: "passing
@@ -80,10 +80,17 @@ Deliberately **not** gated:
   able to read why). Returns the evaluation above.
 - `GET`/`PUT org-settings` — `@Roles(ADMIN)`.
 - `GET org-certificates` — `@Roles(ADMIN)`. The admin overview, see below.
+- `GET org-certificates/export.csv` — `@Roles(ADMIN)`. The overview as a CSV
+  file: the whole filtered list, not one page, with German headers, dates
+  formatted `dd.MM.yyyy` in `Europe/Berlin` and formula-prefixed cells
+  neutralized through PapaParse’s `escapeFormulae` option in `src/common/util/csv.ts`.
+- `GET org-certificates/:userId/certificate` — `@Roles(ADMIN)`, rate-limited
+  at 60 downloads per authenticated administrator per 15 minutes. The member's Teilnahmebestätigung PDF, see
+  below.
 
 ## Admin overview
 
-`ListOrgCertificateStatusesUseCase` pairs every member of the org with a
+`OrgCertificateStatusesService` pairs every member of the org with a
 `CertificateValidityStatus` (`not_passed`, `valid`, `expiring_soon`, `expired`),
 derived by the pure `resolveCertificateValidityStatus`. `expiring_soon` starts
 `EXPIRING_SOON_DAYS` (30) before expiry — deliberately the same moment the user
@@ -91,23 +98,50 @@ gets their first expiry notification, so admin and member see the same thing.
 `expiring_soon`/`expired` can only occur in `required_annually`; a permanent pass
 never lapses, so `required_once` reports `valid` however old the pass is.
 
-The status is derived from data owned by two modules — the mode here, the
-completion dates in the academy — so it cannot be filtered or sorted in SQL
-without a cross-module join. The use case therefore loads the whole member list
-(`FindAllUserSummariesByOrgIdUseCase`, exported by `UsersModule` — id, name and
-email only, so an admin listing never pulls password hashes) plus one bulk
-completion lookup, then filters, sorts and paginates **in memory**. Two queries
-serve the screen. That trade buys the module boundary at the cost of
-scaling with org size; it is affordable for the municipality-sized orgs this
-product serves, and `total` describes the filtered set so the table cannot page
-past the end.
+The service reads the org mode, uses Academy's
+`ACADEMY_COMPLETION_VALIDITY_MONTHS` constant directly, captures one clock,
+then delegates to `OrgCertificateStatusesRepository`. The reporting query filters, derives
+status, orders and paginates in PostgreSQL. A shared CTE serves both the table
+and the full CSV export; the table's count and page come from one SQL statement,
+including an empty or out-of-range page. Only page rows reach the application.
+
+`PostgresOrgCertificateStatusesRepository` is a deliberate reporting exception
+to ordinary cross-module use-case composition, following the users-export read
+model: it reads `UserRecord` and `AcademyCompletionRecord` directly, without
+calling another module's ports or adapters. It selects only identity and
+completion fields, always scoped by org ID. The academy still owns the validity
+period; SQL receives that period rather than hardcoding it. Importing the
+shared policy constant is a deliberate exception to cross-module use-case
+composition; no wrapper use case or duplicate definition is needed.
+
+The SQL normalizes pg's timestamp-without-time-zone interpretation to UTC before
+adding calendar months, matching Academy's month-end clamping across leap days
+and daylight-saving transitions. Status boundaries use the same captured clock
+and exact 30-day window as the TypeScript policy. Integration tests compare the
+SQL output against that policy. Name ordering uses PostgreSQL's ICU root
+collation, followed by user ID for stable pagination.
 
 Default order is most-urgent-first (`expired`, `expiring_soon`, `not_passed`,
-`valid`, then name), so the members an admin has to chase are on page one.
+`valid`, then name and user ID). Export uses the same filters and order without
+pagination. Existing org/user indexes and the unique completion user ID support
+the join; no additional schema is required.
+
+## Member certificate download
+
+`GetOrgMemberCertificateUseCase` lets an admin download a member's
+Teilnahmebestätigung for the personnel file. It resolves the member through
+`FindUsersByIdsUseCase`, which is scoped to the caller's org, and additionally
+compares the member's `orgId` with the admin's: an unknown id and a member of
+another org both answer `OrgMemberNotFoundError` (404), so the endpoint cannot
+be used to probe whether a user id exists elsewhere. The PDF itself comes from
+the academy's exported `GetAcademyCertificateUseCase`, so the admin receives
+exactly the file the member would; a member without a completion surfaces the
+academy's own `AcademyCompletionNotFoundError` (404).
 
 ## Layout
 
 Standard hexagonal: `domain/` (settings entity + mode and validity-status
-enums), `application/` (port, errors, decorator, guard, use cases, pure status
+enums), `application/` (port, errors, decorator, guard, use cases, the
+`OrgCertificateStatusesService`, the `OrgCertificateStatus` model, pure status
 util), `infrastructure/persistence/postgres/` (record + mapper + repository),
 `presenters/http/`.

@@ -3,9 +3,8 @@
  * require annual renewal gate on this window; orgs that require Academy completion
  * only once ignore it.
  *
- * The academy owns this period so no other module has to import it across a
- * module boundary — consumers read the already-applied `expiresAt` off
- * `AcademyCompletionView`.
+ * Academy owns the period; the certificate reporting query also imports it
+ * so SQL and application calculations use the same policy.
  */
 export const ACADEMY_COMPLETION_VALIDITY_MONTHS = 12;
 

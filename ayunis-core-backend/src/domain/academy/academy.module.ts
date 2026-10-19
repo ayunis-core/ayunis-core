@@ -118,6 +118,7 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     GetAcademyCompletionUseCase,
     GetAcademyCompletionsUseCase,
     ConfirmChapterUseCase,
+    GetAcademyCertificateUseCase,
   ],
 })
 export class AcademyModule {}

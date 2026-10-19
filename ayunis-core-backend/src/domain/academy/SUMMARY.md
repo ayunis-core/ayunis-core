@@ -60,12 +60,15 @@ and expiry dates, per-module `visibleSeconds`, and `minimumModuleSeconds`.
 
 `application/util/certificate-validity.ts` owns the 12-month period and derives
 `certificateExpiresAt` with month-end clamping. `AcademyCompletionView`
-publishes `{ completedAt, expiresAt }` to consumers. The academy-access module
-continues to consume only this whole-academy view; it never reads chapter
-confirmations.
+publishes `{ completedAt, expiresAt }` to consumers. For its database reporting
+query, academy-access directly imports `ACADEMY_COMPLETION_VALIDITY_MONTHS`
+from the same utility. This shared policy constant is a deliberate exception
+to cross-module use-case composition. Reporting reads only whole-academy
+completion rows; it never reads chapter confirmations. SQL/TypeScript parity tests cover leap-day, UTC
+and daylight-saving boundaries.
 
-`GetAcademyCompletionsUseCase` provides the bulk many-user view used by the
-organization certificate overview without N+1 queries.
+`GetAcademyCompletionsUseCase` provides a bulk many-user completion view for
+callers that need completion data without a reporting query.
 
 ## Participation confirmation PDF
 
@@ -73,7 +76,9 @@ organization certificate overview without N+1 queries.
 a German **Teilnahmebestätigung** for the “KI-Schulung nach EU AI Act” on demand
 from the whole-academy completion. The document states participation and contains
 no quiz or examination language. Rendering uses the owned HTML template and the
-lazy Puppeteer renderer under `infrastructure/certificate/`.
+lazy Puppeteer renderer under `infrastructure/certificate/`. The module exports
+it so `academy-access` can serve an org admin the same PDF for a member of their
+own organization; that caller performs the org-membership check.
 
 ## Ordering
 

@@ -33,12 +33,20 @@ export function parseCSV(csv: string, separator?: string): ParsedCSV {
  * downstream parsers and consistent with the admin export format. Inverse of
  * {@link parseCSV}.
  */
-export function convertCSVToString(data: {
-  headers: string[];
-  rows: string[][];
-}): string {
+export function convertCSVToString(
+  data: {
+    headers: string[];
+    rows: string[][];
+  },
+  options: { escapeFormulae?: boolean } = {},
+): string {
   return unparse(
     { fields: data.headers, data: data.rows },
-    { quotes: true, newline: '\n' },
+    {
+      quotes: true,
+      newline: '\n',
+      // PapaParse's default expression misses formula prefixes in multiline cells.
+      escapeFormulae: options.escapeFormulae ? /^[=+\-@\t\r]/ : false,
+    },
   );
 }

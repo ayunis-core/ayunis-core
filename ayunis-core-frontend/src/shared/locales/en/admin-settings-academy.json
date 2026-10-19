@@ -33,13 +33,26 @@
       "member": "Member",
       "lastPassed": "Last completed",
       "renewalDue": "Renewal due",
-      "status": "Status"
+      "status": "Status",
+      "actions": "Actions"
     },
     "status": {
       "valid": "Valid",
       "expiringSoon": "Expiring soon",
       "expired": "Expired",
       "notPassed": "Not yet completed"
+    },
+    "export": {
+      "button": "Export as CSV",
+      "loading": "Exporting...",
+      "error": "The export could not be created. Please try again."
+    },
+    "certificate": {
+      "download": "Download participation confirmation for {{name}}",
+      "error": "The participation confirmation could not be downloaded. Please try again.",
+      "notCompleted": "This member has not completed the training yet.",
+      "rateLimited": "Too many downloads in a short time. Please try again in a few minutes.",
+      "downloading": "Downloading participation confirmation for {{name}}"
     }
   }
 }

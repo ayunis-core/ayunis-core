@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AcademyModule } from 'src/domain/academy/academy.module';
-import { AddonsModule } from '../addons/addons.module';
+import { AddonsModule } from 'src/iam/addons/addons.module';
 import { UsersModule } from 'src/iam/users/users.module';
 
 import { OrgAcademyAccessSettingsRecord } from './infrastructure/persistence/postgres/schema/org-academy-access-settings.record';
@@ -14,6 +14,11 @@ import { GetOrgAcademyAccessSettingsUseCase } from './application/use-cases/get-
 import { UpsertOrgAcademyAccessSettingsUseCase } from './application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.use-case';
 import { EvaluateAcademyAccessUseCase } from './application/use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
 import { ListOrgCertificateStatusesUseCase } from './application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.use-case';
+import { ExportOrgCertificateStatusesUseCase } from './application/use-cases/export-org-certificate-statuses/export-org-certificate-statuses.use-case';
+import { GetOrgMemberCertificateUseCase } from './application/use-cases/get-org-member-certificate/get-org-member-certificate.use-case';
+import { OrgCertificateStatusesRepository } from './application/ports/org-certificate-statuses.repository';
+import { PostgresOrgCertificateStatusesRepository } from './infrastructure/persistence/postgres/org-certificate-statuses.repository';
+import { OrgCertificateStatusesService } from './application/services/org-certificate-statuses.service';
 
 import { AcademyCertificateGuard } from './application/guards/academy-certificate.guard';
 import { AcademyAccessController } from './presenters/http/academy-access.controller';
@@ -40,7 +45,14 @@ import { AcademyAccessController } from './presenters/http/academy-access.contro
     GetOrgAcademyAccessSettingsUseCase,
     UpsertOrgAcademyAccessSettingsUseCase,
     EvaluateAcademyAccessUseCase,
+    {
+      provide: OrgCertificateStatusesRepository,
+      useClass: PostgresOrgCertificateStatusesRepository,
+    },
+    OrgCertificateStatusesService,
     ListOrgCertificateStatusesUseCase,
+    ExportOrgCertificateStatusesUseCase,
+    GetOrgMemberCertificateUseCase,
     AcademyCertificateGuard,
   ],
   exports: [EvaluateAcademyAccessUseCase, AcademyCertificateGuard],
