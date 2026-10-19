@@ -12,6 +12,7 @@ import {
   validateSync,
   type ValidationError,
 } from 'class-validator';
+import { validateTrustProxy } from 'src/config/trust-proxy';
 import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
 
 const NODE_ENVS = ['development', 'production', 'test'] as const;
@@ -313,6 +314,7 @@ export function validateEnv(
   const messages = [
     ...collectConstraintMessages(errors),
     ...validateProductionRules(env),
+    ...validateTrustProxy(env.TRUST_PROXY),
     ...validateSsoOidcRules(env),
   ];
   if (messages.length > 0) {
