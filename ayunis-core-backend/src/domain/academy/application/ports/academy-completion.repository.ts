@@ -3,6 +3,5 @@ import type { AcademyCompletion } from 'src/domain/academy/domain/academy-comple
 
 export abstract class AcademyCompletionRepository {
   abstract findByUser(userId: UUID): Promise<AcademyCompletion | null>;
-  abstract findByUsers(userIds: UUID[]): Promise<AcademyCompletion[]>;
   abstract upsert(completion: AcademyCompletion): Promise<AcademyCompletion>;
 }

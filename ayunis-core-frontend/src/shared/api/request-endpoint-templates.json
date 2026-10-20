@@ -1,6 +1,8 @@
 [
   "/",
   "/academy-access/org-certificates",
+  "/academy-access/org-certificates/export.csv",
+  "/academy-access/org-certificates/{userId}/certificate",
   "/academy-access/org-settings",
   "/academy-access/status",
   "/academy/certificate",

@@ -35,7 +35,6 @@ describe('GetAcademyCertificateUseCase', () => {
   beforeEach(async () => {
     completionRepository = {
       findByUser: jest.fn(),
-      findByUsers: jest.fn(),
       upsert: jest.fn(),
     };
     findUserByIdUseCase = {

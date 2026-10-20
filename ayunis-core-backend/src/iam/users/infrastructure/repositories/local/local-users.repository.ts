@@ -5,12 +5,11 @@ import {
   UsersFilters,
   EmailVerificationResult,
 } from 'src/iam/users/application/ports/users.repository';
-import type { UserSummary } from 'src/iam/users/domain/user-summary';
 import { User } from 'src/iam/users/domain/user.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
-import { EntityManager, Repository, ILike, In, IsNull } from 'typeorm';
+import { EntityManager, Repository, In, IsNull } from 'typeorm';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { UserMapper } from 'src/iam/users/infrastructure/repositories/local/mappers/user.mapper';
 import {
@@ -264,29 +263,6 @@ export class LocalUsersRepository extends UsersRepository {
       select: { id: true },
     });
     return users.map((user) => user.id);
-  }
-
-  async findAllSummariesByOrgId(
-    orgId: UUID,
-    filters?: UsersFilters,
-  ): Promise<UserSummary[]> {
-    this.logger.log(
-      {
-        orgId,
-        hasSearch: filters?.search !== undefined,
-      },
-      'findAllSummariesByOrgId',
-    );
-    const search = filters?.search?.trim();
-    return this.users.find({
-      where: search
-        ? [
-            { orgId, name: ILike(`%${search}%`) },
-            { orgId, email: ILike(`%${search}%`) },
-          ]
-        : { orgId },
-      select: { id: true, name: true, email: true },
-    });
   }
 
   async create(user: User): Promise<User> {
