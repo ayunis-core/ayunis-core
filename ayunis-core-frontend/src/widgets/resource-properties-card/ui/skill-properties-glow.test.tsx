@@ -24,7 +24,10 @@ vi.mock('@/shared/lib/toast', () => ({
 }));
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { resolvedLanguage: 'de' },
+  }),
   initReactI18next: { type: '3rdParty', init: () => undefined },
   Trans: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));

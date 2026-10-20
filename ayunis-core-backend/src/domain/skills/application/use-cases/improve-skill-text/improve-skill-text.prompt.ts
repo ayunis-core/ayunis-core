@@ -26,7 +26,7 @@ export function buildImproveSkillTextPrompt(
 
 The other text of the skill is context, not material to copy: the trigger says when the skill applies, the instructions say how to work. Do not repeat in one what the other already says.
 
-Write in the same language the author used. Keep their voice and their level of formality — this stays their skill. Return only the rewritten text as plain text, without quotes, labels or any explanation. It is shown in a plain text field, so do not use Markdown: no #, no ** or __, no --- separators.
+When the author’s text has an identifiable language, write in that language, even if it differs from the UI language. Random characters, gibberish, numbers and punctuation are not evidence of English. If the language cannot be confidently determined, write in ${command.language === 'de' ? 'German' : 'English'}, the user's current UI language. Keep their voice and their level of formality — this stays their skill. Return only the rewritten text as plain text, without quotes, labels or any explanation. It is shown in a plain text field, so do not use Markdown: no #, no ** or __, no --- separators.
 
 Skill name: ${command.name?.trim() || '(not given yet)'}
 
